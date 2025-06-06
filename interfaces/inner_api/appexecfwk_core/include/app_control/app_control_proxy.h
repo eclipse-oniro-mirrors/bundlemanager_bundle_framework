@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -64,6 +64,8 @@ public:
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetDisposedRule(const std::string &appId,
         DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode SetDisposedRules(std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations,
+        int32_t userId) override;
     virtual ErrCode SetDisposedRule(const std::string &appId,
         DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetAbilityRunningControlRule(const std::string &bundleName, int32_t userId,
@@ -96,6 +98,8 @@ private:
     ErrCode GetParcelableInfosWithErrCode(AppControlManagerInterfaceCode code, MessageParcel &data,
         std::vector<T> &parcelableInfos);
     static inline BrokerDelegator<AppControlProxy> delegator_;
+    template<typename T>
+    ErrCode WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply);
 };
 } // namespace AppExecFwk
 } // namespace OHOS

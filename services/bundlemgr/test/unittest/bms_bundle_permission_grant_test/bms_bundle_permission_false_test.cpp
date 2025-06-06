@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -54,6 +54,7 @@ const int32_t FLAGS = 0;
 const int32_t UID = 0;
 const int32_t WAIT_TIME = 5; // init mocked bms
 constexpr int PERMISSION_NOT_GRANTED = -1;
+const int32_t APP_INDEX = 0;
 const uint32_t ACCESS_TOKEN_ID = 1765341;
 }  // namespace
 
@@ -1321,6 +1322,15 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8900, Functi
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 
     res = impl->DeleteDisposedStatus(APPID, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    disposedRuleConfiguration.appId = APPID;
+    disposedRuleConfiguration.appIndex = APP_INDEX;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+
+    res = impl->SetDisposedRules(disposedRuleConfigurations, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 

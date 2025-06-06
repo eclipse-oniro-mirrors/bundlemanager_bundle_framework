@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,9 @@ const char* ELEMENT_LIST = "elementList";
 const char* PRIORITY = "priority";
 const char* DEVICE_ID = "deviceId";
 const char* IS_EDM = "isEdm";
+const char* APP_ID = "appId";
+const char* APP_INDEX = "appIndex";
+const char* DISPOSED_RULE = "disposedRule";
 }  // namespace
 
 bool DisposedRule::ReadFromParcel(Parcel &parcel)
@@ -327,6 +330,75 @@ bool UninstallDisposedRule::FromString(const std::string &ruleString, UninstallD
     }
     from_json(jsonObject, rule);
     return true;
+}
+
+bool DisposedRuleConfiguration::ReadFromParcel(Parcel &parcel)
+{
+    std::unique_ptr<DisposedRule> rule(parcel.ReadParcelable<DisposedRule>());
+    if (!rule) {
+        APP_LOGE("ReadParcelable<DisposedRule> failed");
+        return false;
+    }
+    disposedRule = *rule;
+    appId = Str16ToStr8(parcel.ReadString16());
+    appIndex = parcel.ReadInt32();
+    return true;
+}
+
+bool DisposedRuleConfiguration::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &disposedRule);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    return true;
+}
+
+DisposedRuleConfiguration *DisposedRuleConfiguration::Unmarshalling(Parcel &parcel)
+{
+    DisposedRuleConfiguration *info = new (std::nothrow) DisposedRuleConfiguration();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const DisposedRuleConfiguration &disposedRuleConfiguration)
+{
+    jsonObject = nlohmann::json {
+        {DISPOSED_RULE, disposedRuleConfiguration.disposedRule},
+        {APP_ID, disposedRuleConfiguration.appId},
+        {APP_INDEX, disposedRuleConfiguration.appIndex},
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, DisposedRuleConfiguration &disposedRuleConfiguration)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<DisposedRule>(jsonObject,
+        jsonObjectEnd,
+        DISPOSED_RULE,
+        disposedRuleConfiguration.disposedRule,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        APP_ID,
+        disposedRuleConfiguration.appId,
+        false,
+        parseResult);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_INDEX,
+        disposedRuleConfiguration.appIndex,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
