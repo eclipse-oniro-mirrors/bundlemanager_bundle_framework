@@ -1448,7 +1448,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0025, Function | MediumTest | Lev
  * @tc.name: test query bundle information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
  *           2.install the hap
- *           3.get extensionInfos successfully
+ *           3.get BundleInfo successfully
  */
 HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0026, Function | MediumTest | Level1)
 {
