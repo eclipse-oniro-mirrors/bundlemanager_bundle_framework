@@ -226,6 +226,7 @@ struct ApplicationInfo : public Parcelable {
     bool debug = false;
     bool distributedNotificationEnabled = true;
     bool installedForAllUser = false;
+    bool isForceRotate = false;
 
     bool allowEnableNotification = false;
     bool allowArkTsLargeHeap = false;
