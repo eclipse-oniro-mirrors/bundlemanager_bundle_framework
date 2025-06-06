@@ -86,6 +86,7 @@ const char* EVENT_PARAM_ACTION_TYPE = "ACTION_TYPE";
 const char* EVENT_PARAM_RULE = "ACTION_RULE";
 const char* EVENT_PARAM_APP_INDEX = "APP_INDEX";
 const char* EVENT_PARAM_IS_PATCH = "IS_PATCH";
+const char* EVENT_PARAM_IS_INTERCEPTED = "IS_INTERCEPTED";
 
 const char* FREE_INSTALL_TYPE = "FreeInstall";
 const char* PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -324,7 +325,10 @@ void InnerEventReport::InnerSendBundleInstallExceptionEvent(const EventInfo& eve
         EVENT_PARAM_SCENE, std::to_string(eventInfo.callingUid),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
-        EVENT_PARAM_IS_PATCH, eventInfo.isPatch);
+        EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
 }
 
 void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& eventInfo)
@@ -344,7 +348,10 @@ void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& e
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, std::to_string(eventInfo.callingUid),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
-        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
 }
 
 void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& eventInfo)
@@ -359,7 +366,10 @@ void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& even
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, std::to_string(eventInfo.callingUid),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
-        EVENT_PARAM_IS_PATCH, eventInfo.isPatch);
+        EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
 }
 
 void InnerEventReport::InnerSendPreBundleRecoverExceptionEvent(const EventInfo& eventInfo)
@@ -373,7 +383,10 @@ void InnerEventReport::InnerSendPreBundleRecoverExceptionEvent(const EventInfo& 
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, PRE_BUNDLE_INSTALL_TYPE,
-        EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
 }
 
 void InnerEventReport::InnerSendBundleStateChangeExceptionEvent(const EventInfo& eventInfo)

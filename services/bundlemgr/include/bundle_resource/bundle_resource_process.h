@@ -53,6 +53,8 @@ public:
     static bool GetExtendResourceInfo(const std::string &bundleName, const std::string &moduleName,
         ExtendResourceInfo &extendResourceInfo);
 
+    static bool CheckThemeType(const std::string &bundleName, const int32_t userId, bool &isOnlineTheme);
+
 private:
     // used for show in settings
     static bool GetBundleResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
@@ -63,6 +65,8 @@ private:
     // get all ability resource
     static bool GetAbilityResourceInfos(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfos);
+
+    static bool IsOnlineTheme(const std::string &themePath);
 
     static ResourceInfo ConvertToLauncherAbilityResourceInfo(const AbilityInfo &ability);
 

@@ -891,6 +891,36 @@ ErrCode BundleMgrProxy::GetNameAndIndexForUid(const int32_t uid, std::string &bu
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+    std::string &appIdentifier, int32_t &appIndex)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetAppIdentifierAndAppIndex of %{public}d", accessTokenId);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAppIdentifierAndAppIndex due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(accessTokenId)) {
+        APP_LOGE("fail to GetAppIdentifierAndAppIndex due to write access tokenid fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_APPIDENTIFIER_AND_APPINDEX, data, reply)) {
+        APP_LOGE("fail to GetAppIdentifierAndAppIndex from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("Reply err : %{public}d", ret);
+        return ret;
+    }
+    appIdentifier = reply.ReadString();
+    appIndex = reply.ReadInt32();
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetSimpleAppInfoForUid(
     const std::vector<std::int32_t> &uids, std::vector<SimpleAppInfo> &simpleAppInfo)
 {
@@ -4006,7 +4036,7 @@ ErrCode BundleMgrProxy::BatchGetSpecifiedDistributionType(const std::vector<std:
         APP_LOGE("fail to BatchGetBundleInfo due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteInt32(bundleNames.size())) {
+    if (!data.WriteInt32(static_cast<int32_t>(bundleNames.size()))) {
         APP_LOGE("fail to BatchGetBundleInfo due to write bundle name count fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -6162,7 +6192,8 @@ ErrCode BundleMgrProxy::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &sho
         BundleMgrInterfaceCode::GET_ALL_SHORTCUT_INFO_FOR_SELF, data, shortcutInfos);
 }
 
-bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion, const int32_t patchVersion)
+bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
+    const int32_t patchVersion)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("BundleMgrProxy::GreatOrEqualTargetAPIVersion, major: %{public}d, minor: %{public}d, patch: %{public}d",

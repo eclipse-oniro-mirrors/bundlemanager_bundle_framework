@@ -217,6 +217,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_ALL_SHORTCUT_INFO_FOR_SELF = 191,
     GREAT_OR_EQUAL_API_TARGET_VERSION  = 192,
     BATCH_GET_SPECIFIED_DISTRIBUTED_TYPE = 193,
+    GET_APPIDENTIFIER_AND_APPINDEX = 194,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -287,7 +288,8 @@ enum class BundleStreamInstallerInterfaceCode : uint8_t {
     STREAM_INSTALL = 1,
     CREATE_SHARED_BUNDLE_STREAM = 2,
     CREATE_SIGNATURE_FILE_STREAM = 3,
-    CREATE_PGO_FILE_STREAM = 4
+    CREATE_PGO_FILE_STREAM = 4,
+    CREATE_EXT_PROFILE_FILE_STREAM = 5
 };
 
 /* SAID: 401-26 Interface No.26 subservice also provides the following interfaces */

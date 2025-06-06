@@ -6899,6 +6899,27 @@ HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0020, Function | SmallTes
 }
 
 /**
+ * @tc.number: SendBundleSystemEvent_0030
+ * @tc.name: test SendBundleSystemEvent
+ * @tc.desc: 1.SendBundleSystemEvent
+ */
+HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0030, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isPatch = true;
+    BaseBundleInstaller installer;
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::INSTALL, installParam, InstallScene::NORMAL,
+        ERR_APPEXECFWK_INSTALL_SELF_UPDATE_NOT_MDM);
+
+    installParam.isPatch = false;
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::INSTALL, installParam, InstallScene::NORMAL,
+        ERR_APPEXECFWK_INSTALL_FAILED_BAD_DIGEST);
+    ASSERT_FALSE(installer.sysEventInfo_.isIntercepted);
+}
+
+/**
  * @tc.number: CreateSharedBundleTempDir_0100
  * @tc.name: test CreateSharedBundleTempDir
  * @tc.desc: 1.test CreateSharedBundleTempDir of BundleUtil
@@ -7737,6 +7758,34 @@ HWTEST_F(BmsBundleInstallerTest, BundleStreamInstallerHostImpl_0200, Function | 
     std::string moduleName = "moduleName";
     std::string fileName = "test.file";
     int32_t ret = installer.CreateSignatureFileStream(moduleName, fileName);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0100
+ * @tc.name: test CreateExtProfileFileStream
+ * @tc.desc: 1.Test CreateExtProfileFileStream the BundleStreamInstallerHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleStreamInstallerHostImpl_0300, Function | MediumTest | Level1)
+{
+    BundleStreamInstallerHostImpl installer(0, 0);
+
+    std::string fileName;
+    int32_t ret = installer.CreateExtProfileFileStream(fileName);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0200
+ * @tc.name: test CreateExtProfileFileStream
+ * @tc.desc: 1.Test CreateExtProfileFileStream the BundleStreamInstallerHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleStreamInstallerHostImpl_0400, Function | MediumTest | Level1)
+{
+    BundleStreamInstallerHostImpl installer(0, 0);
+
+    std::string fileName = "test.file";
+    int32_t ret = installer.CreateExtProfileFileStream(fileName);
     EXPECT_EQ(ret, -1);
 }
 
@@ -11441,5 +11490,53 @@ HWTEST_F(BmsBundleInstallerTest, ProcessAddResourceInfo_0010, Function | SmallTe
     EXPECT_FALSE(res);
     res = BundleResourceHelper::DeleteResourceInfo(testBudnleName, -1);
     EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: ProcessExtProfile_0010
+ * @tc.name: test ProcessExtProfile
+ * @tc.desc: 1.Test the ProcessExtProfile of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessExtProfile_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    InstallParam installParam;
+    bool res = installer.ProcessExtProfile(installParam);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: ProcessExtProfile_0200
+ * @tc.name: test ProcessExtProfile
+ * @tc.desc: 1.Test ProcessExtProfile the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessExtProfile_0200, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "manifest.json";
+    bool res = installer.ProcessExtProfile(installParam);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: ProcessExtProfile_0300
+ * @tc.name: test ProcessExtProfile
+ * @tc.desc: 1.Test ProcessExtProfile the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessExtProfile_0300, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_BACKUP_NAME;
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "manifest.json";
+    bool res = installer.ProcessExtProfile(installParam);
+    EXPECT_FALSE(res);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 } // OHOS

@@ -1003,5 +1003,101 @@ HWTEST_F(BmsBundleInstallerProxyTest, InstallByBundleName_0200, Function | Small
     bool ret = installerProxy->InstallByBundleName("", installParam, nullptr);
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: WriteExtProfileFileToStream_0100
+ * @tc.name: test the WriteExtProfileFileToStream
+ * @tc.desc: 1. stream installer nullptr
+ *           2. test WriteExtProfileFileToStream
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, WriteExtProfileFileToStream_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    sptr<IBundleStreamInstaller> streamInstaller = nullptr;
+    std::string path = "path";
+    auto res = bundleInstallerProxy.WriteExtProfileFileToStream(streamInstaller, path);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+ 
+/**
+* @tc.number: WriteExtProfileFileToStream_0200
+* @tc.name: test the WriteExtProfileFileToStream
+* @tc.desc: 1. invalid file descriptor
+*           2. test WriteExtProfileFileToStream
+*/
+HWTEST_F(BmsBundleInstallerProxyTest, WriteExtProfileFileToStream_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    ASSERT_NE(systemAbilityManager, nullptr);
+    sptr<IRemoteObject> remoteObject =
+        systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    sptr<IBundleStreamInstaller> streamInstaller = iface_cast<IBundleStreamInstaller>(remoteObject);
+    std::string path = "/";
+    auto res = bundleInstallerProxy.WriteExtProfileFileToStream(streamInstaller, path);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: CopyExtProfileFileToService_0100
+ * @tc.name: test the CopyExtProfileFileToService
+ * @tc.desc: 1. stream installer nullptr
+ *           2. test CopyExtProfileFileToService
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, CopyExtProfileFileToService_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    sptr<IBundleStreamInstaller> streamInstaller = nullptr;
+    InstallParam installParam;
+    auto res = bundleInstallerProxy.CopyExtProfileFileToService(streamInstaller, installParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+* @tc.number: CopyExtProfileFileToService_0200
+* @tc.name: test the CopyExtProfileFileToService
+* @tc.desc: 1. pgoParams of installParam empty
+*           2. test CopyExtProfileFileToService
+*/
+HWTEST_F(BmsBundleInstallerProxyTest, CopyExtProfileFileToService_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    ASSERT_NE(systemAbilityManager, nullptr);
+    sptr<IRemoteObject> remoteObject =
+        systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    sptr<IBundleStreamInstaller> streamInstaller = iface_cast<IBundleStreamInstaller>(remoteObject);
+    InstallParam installParam;
+    auto res = bundleInstallerProxy.CopyExtProfileFileToService(streamInstaller, installParam);
+    EXPECT_EQ(res, ERR_OK);
+}
+ 
+/**
+* @tc.number: CopyExtProfileFileToService_0300
+* @tc.name: test the CopyExtProfileFileToService
+* @tc.desc: 1. system running normally
+*           2. test CopyExtProfileFileToService
+*/
+HWTEST_F(BmsBundleInstallerProxyTest, CopyExtProfileFileToService_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    ASSERT_NE(systemAbilityManager, nullptr);
+    sptr<IRemoteObject> remoteObject =
+        systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    sptr<IBundleStreamInstaller> streamInstaller = iface_cast<IBundleStreamInstaller>(remoteObject);
+    InstallParam installParam;
+    installParam.parameters["ohos.bms.param.enterpriseManifest"] = "manifest.json";
+    auto res = bundleInstallerProxy.CopyExtProfileFileToService(streamInstaller, installParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
 }
 }

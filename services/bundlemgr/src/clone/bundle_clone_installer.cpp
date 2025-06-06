@@ -66,6 +66,7 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
         .uid = uid_,
         .appIndex = appIndex,
         .bundleName = bundleName,
+        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
         .appId = appId_,
         .appIdentifier = appIdentifier_,
     };
@@ -99,6 +100,7 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
         .appIndex = appIndex,
         .appId = appId_,
         .appIdentifier = appIdentifier_,
+        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
         .developerId = GetDeveloperId(bundleName),
         .assetAccessGroups = GetAssetAccessGroups(bundleName)
     };
@@ -171,6 +173,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         APP_LOGE("the bundle is not installed");
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED;
     }
+    isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
 
     // 2. obtain userId
     if (userId < Constants::DEFAULT_USERID) {
@@ -299,6 +302,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         APP_LOGE("the bundle is not installed");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED;
     }
+    isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("the origin application is not installed at current user");
@@ -525,6 +529,7 @@ void BundleCloneInstaller::ResetInstallProperties()
     versionCode_ = 0;
     appId_ = "";
     appIdentifier_ = "";
+    isBundleCrossAppSharedConfig_ = false;
 }
 
 std::string BundleCloneInstaller::GetAssetAccessGroups(const std::string &bundleName)

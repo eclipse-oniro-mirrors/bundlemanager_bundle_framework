@@ -360,7 +360,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
     UpdateOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE);
     UpdateOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS);
-    UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION);
+    UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_ICON);
     (void)SaveBmsSystemTimeForShortcut();
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
     (void)SaveUpdatePermissionsFlag();
@@ -4346,6 +4346,7 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, 
     eventInfo.versionCode = bundleInfo.versionCode;
     eventInfo.errCode = errorCode;
     eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
+    eventInfo.callingUid = IPCSkeleton::GetCallingUid();
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
 }
 
@@ -4770,7 +4771,7 @@ bool BMSEventHandler::SaveBmsSystemTimeForShortcut()
 void BMSEventHandler::InnerProcessAllDynamicIconInfoWhenOta()
 {
     bool checkDynamicIcon = false;
-    CheckOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION, checkDynamicIcon);
+    CheckOtaFlag(OTAFlag::PROCESS_DYNAMIC_ICON, checkDynamicIcon);
     if (checkDynamicIcon) {
         LOG_I(BMS_TAG_DEFAULT, "Not need to process dynamic due to has checked");
         return;
@@ -4782,7 +4783,7 @@ void BMSEventHandler::InnerProcessAllDynamicIconInfoWhenOta()
         return;
     }
     dataMgr->ProcessDynamicIconForOta();
-    UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION);
+    UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_ICON);
 }
 
 void BMSEventHandler::InnerProcessBootCheckOnDemandBundle()

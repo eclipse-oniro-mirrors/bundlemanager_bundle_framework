@@ -41,6 +41,10 @@ public:
     {
         return Constants::DEFAULT_STREAM_FD;
     }
+    virtual int32_t CreateExtProfileFileStream(const std::string &fileName)
+    {
+        return Constants::DEFAULT_STREAM_FD;
+    }
     virtual bool Install()
     {
         return false;

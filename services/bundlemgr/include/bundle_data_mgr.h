@@ -384,6 +384,15 @@ public:
      */
     ErrCode GetNameForUid(const int uid, std::string &name) const;
     /**
+     * @brief Obtains the appIdentifier and appIndex with the given access tokenId.
+     * @param accessTokenId Indicates the access tokenId of the application.
+     * @param appIdentifier Indicates the app identifier of the application.
+     * @param appIndex Indicates the app index of the application.
+     * @return Returns ERR_OK if execute success; returns errCode otherwise.
+     */
+    ErrCode GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+        std::string &appIdentifier, int32_t &appIndex);
+    /**
      * @brief Obtains an array of all group IDs associated with a specified bundle.
      * @param bundleName Indicates the bundle name.
      * @param gids Indicates the group IDs associated with the specified bundle.
@@ -1089,7 +1098,7 @@ public:
     ErrCode GetContinueBundleNames(
         const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId);
     void HandleOTACodeEncryption();
-    ErrCode HasAppOrAtomicServiceInUser(const std::string &bundleName, int32_t userId) const;
+    bool HasAppOrAtomicServiceInUser(const std::string &bundleName, int32_t userId) const;
     bool GetAllAppAndAtomicServiceInUser(int32_t userId, std::vector<std::string> &bundleList) const;
 
     ErrCode IsBundleInstalled(const std::string &bundleName, int32_t userId, int32_t appIndex, bool &isInstalled);
@@ -1138,7 +1147,9 @@ public:
     ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible);
     ErrCode DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
     ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos);
-    bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion, const int32_t patchVersion);
+    bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
+        const int32_t patchVersion);
+    void CheckIfShortcutBundleExist(nlohmann::json &jsonResult);
 
 private:
     /**

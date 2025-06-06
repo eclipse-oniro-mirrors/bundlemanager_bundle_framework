@@ -219,6 +219,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .bundleName = bundleName_,
             .modulePackage = moduleName_,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .abilityName = mainAbility_,
             .appDistributionType = appDistributionType_,
         };
@@ -263,6 +264,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .bundleType = static_cast<int32_t>(bundleType_),
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .bundleName = bundleName,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .appDistributionType = appDistributionType_
         };
         if (installParam.concentrateSendEvent) {
@@ -304,6 +306,7 @@ ErrCode BaseBundleInstaller::Recover(
             .uid = uid,
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .appDistributionType = appDistributionType_
         };
         NotifyBundleStatus(installRes);
@@ -376,6 +379,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .appId = uninstallBundleAppId_,
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .keepData = installParam.isKeepData
         };
 
@@ -579,6 +583,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isBundleExist = isBundleExist_
         };
         NotifyBundleStatus(installRes);
@@ -869,6 +874,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
         hasInstalledInUser_ = oldInfo.HasInnerBundleUserInfo(userId_);
         if (!hasInstalledInUser_) {
+            if (AccountHelper::CheckOsAccountConstraintEnabled(userId_, ServiceConstants::CONSTRAINT_APPS_INSTALL)) {
+                APP_LOGE("user %{public}d is not allowed to install app", userId_);
+                return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
+            }
             LOG_D(BMS_TAG_INSTALLER, "new userInfo with bundleName %{public}s and userId %{public}d",
                 bundleName_.c_str(), userId_);
             InnerBundleUserInfo newInnerBundleUserInfo;
@@ -906,6 +915,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     auto it = newInfos.begin();
     if (!isAppExist_) {
+        if (AccountHelper::CheckOsAccountConstraintEnabled(userId_, ServiceConstants::CONSTRAINT_APPS_INSTALL)) {
+            APP_LOGE("user %{public}d is not allowed to install app", userId_);
+            return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
+        }
         if (!CheckInstallOnKeepData(bundleName_, installParam.isOTA, newInfos)) {
             LOG_E(BMS_TAG_INSTALLER, "check failed");
             return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
@@ -1413,6 +1426,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_SUCCESS);                         // ---- 100%
     LOG_D(BMS_TAG_INSTALLER, "finish ProcessBundleInstall bundlePath install touch off aging");
     moduleName_ = GetModuleNames(newInfos);
+    isBundleCrossAppSharedConfig_ = IsBundleCrossAppSharedConfig(newInfos);
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     if (installParam.installFlag == InstallFlag::FREE_INSTALL) {
         DelayedSingleton<BundleMgrService>::GetInstance()->GetAgingMgr()->Start(
@@ -1467,6 +1481,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CreateDataGroupDirs(hapVerifyResults, oldInfo);
     groupDirGuard.Dismiss();
     ProcessAddResourceInfo(installParam, bundleName_, userId_);
+    if (!ProcessExtProfile(installParam)) {
+        LOG_W(BMS_TAG_INSTALLER, "ProcessExtProfile failed");
+    }
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     return result;
@@ -1643,6 +1660,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     appIdentifier_ = oldInfo.GetAppIdentifier();
+    isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
@@ -1950,6 +1968,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_MODULE;
     }
+    isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
 
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
         LOG_D(BMS_TAG_INSTALLER, "bundleName: %{public}s is not allow uninstall", bundleName.c_str());
@@ -5177,6 +5196,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isPreBundleRecovered_ = false;
     callerToken_ = 0;
     isBundleExist_ = false;
+    isBundleCrossAppSharedConfig_ = false;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool killProcess)
@@ -7579,6 +7599,47 @@ ErrCode BaseBundleInstaller::RecoverOnDemandInstallBundle(const std::string &bun
         OnDemandInstallDataMgr::GetInstance().DeleteOnDemandInstallBundleInfo(bundleName);
     }
     return result;
+}
+
+bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
+{
+    auto extProfileDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_
+        + ServiceConstants::PATH_SEPARATOR + ServiceConstants::EXT_PROFILE;
+    std::string targetPath = extProfileDir + ServiceConstants::PATH_SEPARATOR + ServiceConstants::MANIFEST_JSON;
+    auto iter = installParam.parameters.find(ServiceConstants::ENTERPRISE_MANIFEST);
+    if ((iter == installParam.parameters.end()) || (iter->second.empty())) {
+        bool isExtProfileExist = false;
+        InstalldClient::GetInstance()->IsExistDir(extProfileDir, isExtProfileExist);
+        if (isExtProfileExist) {
+            if (RemoveModuleDir(targetPath) != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "fail to delete ext profile file, error is %{public}d", errno);
+                return false;
+            }
+        }
+        return true;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "create ext profile dir %{public}s", extProfileDir.c_str());
+    ErrCode result = InstalldClient::GetInstance()->CreateBundleDir(extProfileDir);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "fail to create ext profile dir, error is %{public}d", result);
+        return false;
+    }
+    if (InstalldClient::GetInstance()->CopyFile(iter->second, targetPath) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "copy file from %{public}s to %{public}s failed", iter->second.c_str(),
+            targetPath.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool BaseBundleInstaller::IsBundleCrossAppSharedConfig(const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    for (const auto &item : newInfos) {
+        if (item.second.IsBundleCrossAppSharedConfig()) {
+            return true;
+        }
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

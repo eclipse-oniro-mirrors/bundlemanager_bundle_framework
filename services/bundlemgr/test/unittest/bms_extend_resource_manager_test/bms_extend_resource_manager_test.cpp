@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,8 @@
 
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_resource_process.h"
+#include "directory_ex.h"
 #include "dynamic_icon_info.h"
 #include "extend_resource_manager_host_impl.h"
 #include "installd/installd_service.h"
@@ -53,6 +55,16 @@ const std::string EMPTY_STRING = "";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t USER_ID = 100;
 const int32_t INVALID_ID = -1;
+const std::string THEME_BUNDLE_NAME = "com.example.testTheme";
+const std::string THEME_A_ICON_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/icons/com.example.testTheme";
+const std::string THEME_A_FLAG_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/flag";
+const std::string THEME_BUNDLE_NAME_PATH =
+    "/data/service/el1/public/themes/20000";
+const std::string THEME_A_ICON_JSON_BUNDLE_NAME =
+    "/data/service/el1/public/themes/20000/a/app/icons/description.json";
+const int32_t THEME_TEST_USERID = 20000;
 }  // namespace
 
 class BmsExtendResourceManagerTest : public testing::Test {
@@ -488,7 +500,7 @@ HWTEST_F(BmsExtendResourceManagerTest, CreateFd_0100, Function | SmallTest | Lev
 HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0100, Function | SmallTest | Level1)
 {
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
+    bool ret = impl.ResetBundleResourceIcon(EXT_RESOURCE_FILE);
     EXPECT_FALSE(ret);
 }
 
@@ -1282,10 +1294,7 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1003, Function | SmallTes
 HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0200, Function | SmallTest | Level1)
 {
     ExtendResourceManagerHostImpl impl;
-    DelayedSingleton<BundleResourceInfo>::GetInstance();
-    auto manager = DelayedSingleton<BundleResourceInfo>::GetInstance();
-    ASSERT_NE(manager, nullptr);
-    bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
+    bool ret = impl.ResetBundleResourceIcon(TEST_BUNDLE);
     EXPECT_FALSE(ret);
 }
 
@@ -1322,6 +1331,97 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0200, Function | Smal
 }
 
 /**
+ * @tc.number: ParseBundleResource_0300
+ * @tc.name: test ParseBundleResource
+ * @tc.desc: 1.analyze bundled package resources
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0300, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string bundleName = BUNDLE_NAME;
+    std::vector<std::string> iconId;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.filePath = "";
+    extendResourceInfo.iconId = 0;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo,
+        Constants::UNSPECIFIED_USERID, Constants::DEFAULT_APP_INDEX);
+    EXPECT_FALSE(ret);
+
+    ret = impl.ParseBundleResource(bundleName, extendResourceInfo, Constants::UNSPECIFIED_USERID, 1);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ParseBundleResource_0400
+ * @tc.name: test ParseBundleResource
+ * @tc.desc: 1.analyze bundled package resources
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0400, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string bundleName = BUNDLE_NAME;
+    std::vector<std::string> iconId;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.filePath = "";
+    extendResourceInfo.iconId = 0;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 0);
+    EXPECT_FALSE(ret);
+
+    ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 1);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ParseBundleResource_0500
+ * @tc.name: test ParseBundleResource
+ * @tc.desc: 1.analyze bundled package resources
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    InnerBundleUserInfo userInfo2;
+    userInfo2.bundleUserInfo.userId = INVALID_ID;
+    InnerBundleInfo info;
+    info.innerBundleUserInfos_["100"] = userInfo;
+    info.innerBundleUserInfos_["-1"] = userInfo2;
+    dataMgr->bundleInfos_.emplace(TEST_BUNDLE, info);
+
+    std::string bundleName = TEST_BUNDLE;
+    std::vector<std::string> iconId;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.filePath = "";
+    extendResourceInfo.iconId = 0;
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, INVALID_ID, 0);
+    EXPECT_TRUE(ret);
+    auto iter = dataMgr->bundleInfos_.find(TEST_BUNDLE);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(iter);
+    }
+}
+
+/**
+ * @tc.number: ParseBundleResource_0600
+ * @tc.name: test ParseBundleResource
+ * @tc.desc: 1.analyze bundled package resources
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0600, Function | SmallTest | Level1)
+{
+    std::string bundleName = TEST_BUNDLE;
+    std::vector<std::string> iconId;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.filePath = BUNDLE_PATH;
+    extendResourceInfo.iconId = 16777217;
+
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 0);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: ResetBundleResourceIcon_0500
  * @tc.name: Test invalid path case
  * @tc.desc: Verify function fails with invalid resource path
@@ -1346,16 +1446,57 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0700, Function | 
 }
 
 /**
- * @tc.number: ResetBundleResourceIcon_DeleteFail_1000
- * @tc.name: Test delete resource failure (path not exist)
- * @tc.desc: Verify function returns false when resource path not exist
+ * @tc.number: ResetBundleResourceIcon_0800
+ * @tc.name: test ResetBundleResourceIcon
+ * @tc.desc: 1.reset bundle resource icon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0800, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.ResetBundleResourceIcon("not_exist", Constants::UNSPECIFIED_USERID, 1);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ResetBundleResourceIcon_0900
+ * @tc.name: test ResetBundleResourceIcon
+ * @tc.desc: 1.reset bundle resource icon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0900, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    DelayedSingleton<BundleResourceInfo>::GetInstance();
+    auto manager = DelayedSingleton<BundleResourceInfo>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    bool ret = impl.ResetBundleResourceIcon("not_exist", USER_ID, 1);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ResetBundleResourceIcon_1000
+ * @tc.name: test ResetBundleResourceIcon
+ * @tc.desc: 1.reset bundle resource icon
  */
 HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_1000, Function | SmallTest | Level1)
 {
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USER_ID;
+    InnerBundleUserInfo userInfo2;
+    userInfo2.bundleUserInfo.userId = INVALID_ID;
+    InnerBundleInfo info;
+    info.innerBundleUserInfos_["100"] = userInfo;
+    info.innerBundleUserInfos_["-1"] = userInfo2;
+    dataMgr->bundleInfos_.emplace(TEST_BUNDLE, info);
+
     ExtendResourceManagerHostImpl impl;
-    bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
-    
-    EXPECT_FALSE(ret);
+    bool ret = impl.ResetBundleResourceIcon(TEST_BUNDLE, INVALID_ID, 1);
+    EXPECT_TRUE(ret);
+    auto iter = dataMgr->bundleInfos_.find(TEST_BUNDLE);
+    if (iter != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(iter);
+    }
 }
 
 /**
@@ -1506,5 +1647,148 @@ HWTEST_F(BmsExtendResourceManagerTest, ProcessDynamicIconForOta_0001, Function |
     if (item != dataMgr->bundleInfos_.end()) {
         dataMgr->bundleInfos_.erase(item);
     }
+}
+
+/**
+ * @tc.number: EnableDynamicIcon_0010
+ * @tc.name: test EnableDynamicIcon
+ * @tc.desc: 1.EnableDynamic test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, EnableDynamicIcon_0010, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.SetCurDynamicIconModule(BUNDLE_NAME);
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = BUNDLE_NAME;
+    info.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    ExtendResourceManagerHostImpl impl;
+    auto ret = impl.EnableDynamicIcon(BUNDLE_NAME, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED);
+
+    auto item = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+    }
+}
+
+/**
+ * @tc.number: EnableDynamicIcon_0020
+ * @tc.name: test EnableDynamicIcon
+ * @tc.desc: 1.EnableDynamic test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, EnableDynamicIcon_0020, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = THEME_TEST_USERID;
+    userInfo.curDynamicIconModule = THEME_BUNDLE_NAME;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = THEME_BUNDLE_NAME;
+    info.AddInnerBundleUserInfo(userInfo);
+    info.SetCurDynamicIconModule(THEME_BUNDLE_NAME);
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = THEME_BUNDLE_NAME;
+    extendResourceInfo.iconId = 16777217;
+    extendResourceInfo.filePath = INVALID_SUFFIX;
+    info.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_[THEME_BUNDLE_NAME] = info;
+    dataMgr->AddUserId(THEME_TEST_USERID);
+
+    bool ret = OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+    std::ofstream file;
+    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+    file << "" << endl;
+    file.close();
+    std::ofstream file2;
+    file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{\"origin\":\"online\"}" << endl;
+    file2.close();
+
+    ExtendResourceManagerHostImpl impl;
+    auto errCode = impl.EnableDynamicIcon(THEME_BUNDLE_NAME, THEME_BUNDLE_NAME, THEME_TEST_USERID, 0);
+    EXPECT_EQ(errCode, ERR_OK);
+
+    errCode = impl.DisableDynamicIcon(THEME_BUNDLE_NAME, THEME_TEST_USERID, 0);
+    EXPECT_EQ(errCode, ERR_OK);
+
+    auto item = dataMgr->bundleInfos_.find(THEME_BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+        dataMgr->RemoveUserId(THEME_TEST_USERID);
+    }
+    ret = OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: CheckWhetherDynamicIconNeedProcess_0001
+ * @tc.name: Test CheckWhetherDynamicIconNeedProcess
+ * @tc.desc: 1.CheckWhetherDynamicIconNeedProcess
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0001, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, -1);
+    EXPECT_TRUE(ret);
+
+    ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, USER_ID);
+    EXPECT_TRUE(ret);
+
+    ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
+    EXPECT_TRUE(ret);
+
+    ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME2, USER_ID);
+    bool isOnlineTheme = false;
+    bool isThemeExist = BundleResourceProcess::CheckThemeType(BUNDLE_NAME2, USER_ID, isOnlineTheme);
+    if (isThemeExist && isOnlineTheme) {
+        EXPECT_FALSE(ret);
+    } else {
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: CheckWhetherDynamicIconNeedProcess_0002
+ * @tc.name: Test CheckWhetherDynamicIconNeedProcess
+ * @tc.desc: 1.CheckWhetherDynamicIconNeedProcess
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0002, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    setuid(20020001);
+    bool ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: CheckWhetherDynamicIconNeedProcess_0003
+ * @tc.name: Test CheckWhetherDynamicIconNeedProcess
+ * @tc.desc: 1.CheckWhetherDynamicIconNeedProcess
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0003, Function | SmallTest | Level1)
+{
+    bool ret = OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+
+    std::ofstream file;
+    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+    file << "" << endl;
+    file.close();
+    std::ofstream file2;
+    file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
+    file2 << "{\"origin\":\"online\"}" << endl;
+    file2.close();
+    ExtendResourceManagerHostImpl impl;
+    ret = impl.CheckWhetherDynamicIconNeedProcess(THEME_BUNDLE_NAME, THEME_TEST_USERID);
+    EXPECT_FALSE(ret);
+
+    ret = OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

@@ -201,6 +201,28 @@ typedef enum TypePermissionRulesEnum {
     PERMISSION_EDM_RULE = 0,
     PERMISSION_ACL_RULE
 } PermissionRulesEnum;
+
+/**
+ * @brief Declares hap token info class
+ */
+class HapTokenInfo final {
+public:
+    char ver;
+    int userID = 0;
+    std::string bundleName;
+    /** which version of the SDK is used to develop this hap */
+    int32_t apiVersion;
+    /** instance index */
+    int instIndex = 0;
+    /**
+     * dlp type, for details about the valid values,
+     * see the definition of HapDlpType in the access_token.h file.
+     */
+    int dlpType;
+    AccessTokenID tokenID;
+    /** token attribute */
+    AccessTokenAttr tokenAttr;
+};
 } // namespace AccessToken
 } // namespace Security
 } // namespace OHOS

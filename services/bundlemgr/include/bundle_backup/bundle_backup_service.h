@@ -17,22 +17,25 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_BACKUP_SERVICE_H
 
 #include "appexecfwk_errors.h"
+#include "bundle_data_mgr.h"
 #include "nlohmann/json.hpp"
 #include "shortcut_data_storage_interface.h"
+#include "singleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 
-class BundleBackupService {
+class BundleBackupService : public DelayedSingleton<BundleBackupService> {
 public:
     BundleBackupService();
     ~BundleBackupService();
-    static BundleBackupService &GetInstance();
+
     ErrCode OnBackup(nlohmann::json &jsonObject);
     ErrCode OnRestore(nlohmann::json &jsonObject);
 
 private:
     std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
+    std::shared_ptr<BundleDataMgr> dataMgr_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

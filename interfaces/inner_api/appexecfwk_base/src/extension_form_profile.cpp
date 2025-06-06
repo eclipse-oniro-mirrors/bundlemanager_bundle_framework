@@ -130,6 +130,7 @@ struct Metadata {
 struct FormFunInteractionParams {
     std::string abilityName;
     std::string targetBundleName;
+    std::string subBundleName;
     int32_t keepStateDuration = 10000;
 };
 
@@ -189,6 +190,12 @@ void from_json(const nlohmann::json &jsonObject, FormFunInteractionParams &funIn
         jsonObjectEnd,
         ExtensionFormProfileReader::TARGET_BUNDLE_NAME,
         funInteractionParams.targetBundleName,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::SUB_BUNDLE_NAME,
+        funInteractionParams.subBundleName,
         false,
         g_parseResult);
     GetValueIfFindKey<int32_t>(jsonObject,
@@ -643,6 +650,7 @@ void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormI
     info.updateDuration = form.updateDuration;
     info.funInteractionParams.abilityName = form.funInteractionParams.abilityName;
     info.funInteractionParams.targetBundleName = form.funInteractionParams.targetBundleName;
+    info.funInteractionParams.subBundleName = form.funInteractionParams.subBundleName;
     info.funInteractionParams.keepStateDuration = form.funInteractionParams.keepStateDuration;
     info.sceneAnimationParams.abilityName = form.sceneAnimationParams.abilityName;
     info.sceneAnimationParams.isAlwaysActive = form.sceneAnimationParams.isAlwaysActive;

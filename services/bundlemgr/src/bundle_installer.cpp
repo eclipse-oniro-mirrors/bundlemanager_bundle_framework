@@ -118,8 +118,12 @@ void BundleInstaller::InstallByBundleName(const std::string &bundleName, const I
 void BundleInstaller::Uninstall(const std::string &bundleName, const InstallParam &installParam)
 {
     ErrCode resultCode = ERR_OK;
+    bool isDriver = IsDriverForAllUser(bundleName);
+    if (installParam.userId < Constants::START_USERID && isDriver) {
+        resultCode = UninstallBundle(bundleName, installParam);
+    }
     if (installParam.userId == Constants::ALL_USERID ||
-        (!installParam.isRemoveUser && IsDriverForAllUser(bundleName))) {
+        (!installParam.isRemoveUser && isDriver)) {
         std::vector<ErrCode> errCode;
         auto userInstallParam = installParam;
         for (auto userId : GetExistsCommonUserIds()) {
@@ -162,7 +166,11 @@ void BundleInstaller::Uninstall(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {
     ErrCode resultCode = ERR_OK;
-    if (installParam.userId == Constants::ALL_USERID || IsDriverForAllUser(bundleName)) {
+    bool isDriver = IsDriverForAllUser(bundleName);
+    if (installParam.userId < Constants::START_USERID && isDriver) {
+        resultCode = UninstallBundle(bundleName, modulePackage, installParam);
+    }
+    if (installParam.userId == Constants::ALL_USERID || isDriver) {
         std::vector<ErrCode> errCode;
         auto userInstallParam = installParam;
         for (auto userId : GetExistsCommonUserIds()) {

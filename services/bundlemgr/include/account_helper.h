@@ -34,6 +34,8 @@ public:
     static int32_t GetCurrentActiveUserIdWithRetry(bool isOtaInstall = false);
 
     static void QueryAllCreatedOsAccounts(std::set<int32_t> &userIds);
+
+    static bool CheckOsAccountConstraintEnabled(const int32_t userId, const std::string &constraint);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -55,6 +55,7 @@ const int32_t UID = 0;
 const int32_t WAIT_TIME = 5; // init mocked bms
 constexpr int PERMISSION_NOT_GRANTED = -1;
 const int32_t APP_INDEX = 0;
+const uint32_t ACCESS_TOKEN_ID = 1765341;
 }  // namespace
 
 class BmsBundlePermissionFalseTest : public testing::Test {
@@ -1889,5 +1890,18 @@ HWTEST_F(BmsBundlePermissionFalseTest, ExtendResourceTest_0005, Function | Small
         EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
         EXPECT_TRUE(iconInfos.empty());
     }
+}
+
+/**
+ * @tc.number: GetAppIdentifierAndAppIndex_0001
+ * @tc.name: test GetAppIdentifierAndAppIndex
+ * @tc.desc: test GetAppIdentifierAndAppIndex
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetAppIdentifierAndAppIndex_0001, Function | SmallTest | Level1)
+{
+    std::string appIdentifier;
+    int32_t appIndex;
+    auto testRet = bundleMgrHostImpl_->GetAppIdentifierAndAppIndex(ACCESS_TOKEN_ID, appIdentifier, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS

@@ -180,6 +180,9 @@ void BmsBundleFreeInstallTest::UpdateInnerBundleInfo(InnerBundleInfo &innerBundl
     }
     auto ret = innerBundleInfo.SetInnerModuleAtomicPreload(MODULE_NAME_TEST, preloads);
     EXPECT_TRUE(ret);
+
+    ret = innerBundleInfo.SetInnerModuleAtomicResizeable(MODULE_NAME_TEST, true);
+    EXPECT_TRUE(ret);
 }
 
 void BmsBundleFreeInstallTest::AddInnerBundleInfo(const std::string bundleName, int32_t flag)

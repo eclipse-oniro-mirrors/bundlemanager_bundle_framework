@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,6 +55,7 @@ constexpr const char* SHORTCUT_CHANGED = "usual.event.SHORTCUT_CHANGED";
 constexpr const char* SHORTCUT_ID = "shortcutId";
 constexpr const char* MANAGE_SHORTCUTS = "ohos.permission.MANAGE_SHORTCUTS";
 constexpr const char* IS_BUNDLE_EXIST = "isBundleExist";
+constexpr const char* CROSS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -209,6 +210,7 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
         want.SetParam(DEVELOPERID, installResult.developerId);
     }
     want.SetParam(IS_BUNDLE_EXIST, installResult.isBundleExist);
+    want.SetParam(CROSS_APP_SHARED_CONFIG, installResult.crossAppSharedConfig);
 }
 
 ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info, int32_t uid, int32_t userId,

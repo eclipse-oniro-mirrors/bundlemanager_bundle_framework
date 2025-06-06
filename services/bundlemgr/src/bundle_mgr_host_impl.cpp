@@ -619,6 +619,33 @@ ErrCode BundleMgrHostImpl::GetNameAndIndexForUid(const int uid, std::string &bun
     return dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
 }
 
+ErrCode BundleMgrHostImpl::GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+    std::string &appIdentifier, int32_t &appIndex)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("start GetAppIdentifierAndAppIndex, accessTokenId : %{public}d", accessTokenId);
+    bool permissionVerify = []() {
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            return true;
+        }
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+            BundlePermissionMgr::IsSystemApp()) {
+            return true;
+        }
+        return false;
+    }();
+    if (!permissionVerify) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetAppIdentifierAndAppIndex(accessTokenId, appIdentifier, appIndex);
+}
+
 ErrCode BundleMgrHostImpl::GetSimpleAppInfoForUid(
     const std::vector<std::int32_t> &uids, std::vector<SimpleAppInfo> &simpleAppInfo)
 {
@@ -3839,7 +3866,7 @@ ErrCode BundleMgrHostImpl::GetSpecifiedDistributionType(const std::string &bundl
 }
 
 ErrCode BundleMgrHostImpl::BatchGetSpecifiedDistributionType(const std::vector<std::string> &bundleNames,
-        std::vector<BundleDistributionType> &specifiedDistributionTypes)
+    std::vector<BundleDistributionType> &specifiedDistributionTypes)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
@@ -3855,23 +3882,19 @@ ErrCode BundleMgrHostImpl::BatchGetSpecifiedDistributionType(const std::vector<s
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
-    for (std::string bundleName : bundleNames) {
+    for (const std::string &bundleName : bundleNames) {
         AppExecFwk::BundleDistributionType specifiedDistributionType;
         if (bundleName.empty()) {
-            specifiedDistributionTypes.push_back(specifiedDistributionType);
+            specifiedDistributionType.errCode = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+            specifiedDistributionTypes.emplace_back(specifiedDistributionType);
             continue;
         }
         ErrCode ret = dataMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType.distributionType);
         specifiedDistributionType.bundleName = bundleName;
-        if (ret == ERR_OK) {
-            specifiedDistributionType.errCode = ERR_OK;
-            specifiedDistributionTypes.push_back(specifiedDistributionType);
-        } else {
-            specifiedDistributionType.errCode = ret;
-            specifiedDistributionTypes.push_back(specifiedDistributionType);
-        }
+        specifiedDistributionType.errCode = ret;
+        specifiedDistributionTypes.emplace_back(specifiedDistributionType);
     }
-    
+
     return ERR_OK;
 }
 
@@ -4014,8 +4037,8 @@ bool BundleMgrHostImpl::GetLabelByBundleName(const std::string &bundleName, int3
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
-    auto findRes = dataMgr->HasAppOrAtomicServiceInUser(bundleName, userId);
-    if (findRes != ERR_OK) {
+    
+    if (!dataMgr->HasAppOrAtomicServiceInUser(bundleName, userId)) {
         APP_LOGE("find fail");
         return false;
     }
@@ -5621,8 +5644,10 @@ ErrCode BundleMgrHostImpl::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &
     return dataMgr->GetAllShortcutInfoForSelf(shortcutInfos);
 }
 
-// Internal interface. The application compares the API version number saved in the package management. No permission control is required
-bool BundleMgrHostImpl::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion, const int32_t patchVersion)
+// Internal interface. The application compares the API version number saved in the package management.
+//No permission control is required
+bool BundleMgrHostImpl::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
+    const int32_t patchVersion)
 {
     APP_LOGD("GreatOrEqualTargetAPIVersion begin");
     auto dataMgr = GetDataMgrFromService();

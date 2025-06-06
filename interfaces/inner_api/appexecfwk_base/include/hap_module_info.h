@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -123,6 +123,7 @@ struct HapModuleInfo : public Parcelable {
     bool isModuleJson = false;
     bool isStageBasedModel = false;
     bool hasIntent = false;
+    bool resizeable = false;
     uint32_t descriptionId = 0;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
@@ -161,9 +162,12 @@ struct HapModuleInfo : public Parcelable {
     std::string fileContextMenu;
     std::string routerMap;
     std::string packageName;
+    std::string crossAppSharedConfig;
     std::string abilitySrcEntryDelegator;
     std::string abilityStageSrcEntryDelegator;
     std::string appStartup;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
 
     // quick fix hqf info
     HqfInfo hqfInfo;

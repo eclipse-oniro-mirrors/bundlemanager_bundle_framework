@@ -202,6 +202,8 @@ constexpr const char* NEW_CLOUD_SHADER_PATH = "/data/app/el1/public/shader_cache
 constexpr const char* API_RELEASE_TYPE_RELEASE = "Release";
 constexpr const char* API_RELEASE_TYPE_BETA = "Beta";
 constexpr const char* API_RELEASE_TYPE_CANARY = "Canary";
+// account constraint
+constexpr const char* CONSTRAINT_APPS_INSTALL = "constraint.bundles.install";
 // allow multi icon bundle
 const std::set<std::string> ALLOW_MULTI_ICON_BUNDLE = {
     "com.ohos.contacts"
@@ -244,6 +246,10 @@ constexpr const char* DATA_PRELOAD_APP = "/data/preload/app/";
 //ota update permissions for not updated application, only updated once
 constexpr const char* UPDATE_PERMISSIONS_FLAG = "updatePermissionsFlag";
 constexpr const char* UPDATE_PERMISSIONS_FLAG_UPDATED = "updated";
+
+constexpr const char* EXT_PROFILE = "ext_profile";
+constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
+constexpr const char* MANIFEST_JSON = "manifest.json";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

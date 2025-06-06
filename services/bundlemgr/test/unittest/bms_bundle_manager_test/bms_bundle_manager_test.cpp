@@ -3095,14 +3095,10 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrService_0100, Function | MediumTest | Le
     #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(ret, 0);
     #else
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_GET_DATA_ERROR);
     #endif
     extension = "restore";
     ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, 0);
-    #else
-    EXPECT_EQ(ret, -1);
-    #endif
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
 }
 } // OHOS

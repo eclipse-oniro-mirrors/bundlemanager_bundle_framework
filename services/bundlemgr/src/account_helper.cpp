@@ -134,5 +134,21 @@ int32_t AccountHelper::GetCurrentActiveUserIdWithRetry(bool isOtaInstall)
     return Constants::INVALID_USERID;
 #endif
 }
+
+bool AccountHelper::CheckOsAccountConstraintEnabled(const int32_t userId, const std::string &constraint)
+{
+#ifdef ACCOUNT_ENABLE
+    bool isEnabled = false;
+    int32_t ret = AccountSA::OsAccountManager::CheckOsAccountConstraintEnabled(userId, constraint, isEnabled);
+    if (ret != 0) {
+        APP_LOGE("failed ret:%{public}d", ret);
+        return false;
+    }
+    return isEnabled;
+#else
+    APP_LOGI("ACCOUNT_ENABLE is false");
+    return false;
+#endif
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -189,6 +189,12 @@ int32_t AccessTokenKit::UpdateHapToken(AccessTokenIDEx& tokenIdEx, const UpdateH
     checkResult.permCheckResult.permissionName = "test"; // invalid Name
     return 0;
 }
+
+int AccessTokenKit::GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapTokenInfoRes)
+{
+    hapTokenInfoRes.bundleName = "tokenBundle";
+    return 0;
+}
 }
 }
 }

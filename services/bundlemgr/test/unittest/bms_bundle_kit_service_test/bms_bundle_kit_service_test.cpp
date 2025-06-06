@@ -177,6 +177,7 @@ const std::string FORM_SRC = "page/card/index";
 constexpr int32_t FORM_JS_WINDOW_DESIGNWIDTH = 720;
 const std::string FORM_ABILITY_NAME = "GameLoaderExtensionAbility";
 const std::string FORM_TARGET_BUNDLE_NAME = "Game";
+const std::string FORM_SUB_BUNDLE_NAME = "subGame";
 const std::string FORM_DISABLED_DESKTOP_BEHAVIORS = "PULL_DOWN_SEARCH|LONG_CLICK";
 constexpr int32_t FORM_KEEP_STATE_DURATION = 10000;
 const std::string SHORTCUT_TEST_ID = "shortcutTestId";
@@ -887,6 +888,7 @@ FormInfo BmsBundleKitServiceTest::MockFormInfo(
     }
     formInfo.funInteractionParams.abilityName = FORM_ABILITY_NAME;
     formInfo.funInteractionParams.targetBundleName = FORM_TARGET_BUNDLE_NAME;
+    formInfo.funInteractionParams.subBundleName = FORM_SUB_BUNDLE_NAME;
     formInfo.funInteractionParams.keepStateDuration = FORM_KEEP_STATE_DURATION;
     formInfo.sceneAnimationParams.abilityName = FORM_ABILITY_NAME;
     formInfo.sceneAnimationParams.isAlwaysActive = false;
@@ -1432,6 +1434,7 @@ void BmsBundleKitServiceTest::CheckFormInfoTest(const std::vector<FormInfo> &for
         EXPECT_EQ(formInfo.window.autoDesignWidth, true);
         EXPECT_EQ(formInfo.funInteractionParams.abilityName, FORM_ABILITY_NAME);
         EXPECT_EQ(formInfo.funInteractionParams.targetBundleName, FORM_TARGET_BUNDLE_NAME);
+        EXPECT_EQ(formInfo.funInteractionParams.subBundleName, FORM_SUB_BUNDLE_NAME);
         EXPECT_EQ(formInfo.funInteractionParams.keepStateDuration, FORM_KEEP_STATE_DURATION);
         EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, FORM_ABILITY_NAME);
         EXPECT_EQ(formInfo.sceneAnimationParams.isAlwaysActive, false);
@@ -1470,6 +1473,7 @@ void BmsBundleKitServiceTest::CheckFormInfoDemo(const std::vector<FormInfo> &for
         }
         EXPECT_EQ(formInfo.funInteractionParams.abilityName, FORM_ABILITY_NAME);
         EXPECT_EQ(formInfo.funInteractionParams.targetBundleName, FORM_TARGET_BUNDLE_NAME);
+        EXPECT_EQ(formInfo.funInteractionParams.subBundleName, FORM_SUB_BUNDLE_NAME);
         EXPECT_EQ(formInfo.funInteractionParams.keepStateDuration, FORM_KEEP_STATE_DURATION);
         EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, FORM_ABILITY_NAME);
         EXPECT_EQ(formInfo.sceneAnimationParams.isAlwaysActive, false);
