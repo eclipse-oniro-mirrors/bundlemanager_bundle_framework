@@ -156,6 +156,15 @@ const int32_t TEST_APP_INDEX2 = 2;
 const std::string BUNDLE_CODE_PATH_DIR_REAL = "/data/app/el1/bundle/public/com.example.example_test";
 const std::string BUNDLE_CODE_PATH_DIR_NEW = "/data/app/el1/bundle/public/+new-com.example.example_test";
 const std::string BUNDLE_CODE_PATH_DIR_OLD = "/data/app/el1/bundle/public/+old-com.example.example_test";
+const std::string BUNDLE_CODE_PATH_DIR_OLD_EXT_DIR =
+    "/data/app/el1/bundle/public/+old-com.example.example_test/ext_resource";
+const std::string BUNDLE_CODE_PATH_DIR_OLD_EXT_FILE =
+    "/data/app/el1/bundle/public/+old-com.example.example_test/ext_resource/moduleName.hsp";
+const std::string BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR =
+    "/data/app/el1/bundle/public/com.example.example_test/ext_resource";
+const std::string BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE =
+    "/data/app/el1/bundle/public/com.example.example_test/ext_resource/moduleName.hsp";
+const std::string MODULE_NAME_EXT = "moduleName";
 const std::string BUNDLE_NAME_FOR_TEST = "com.example.example_test";
 const std::string BUNDLE_NAME_FOR_TEST_U1ENABLE = "com.example.u1Enable_test";
 const int32_t TEST_U100 = 100;
@@ -9825,6 +9834,178 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9600, Function | MediumTest
    installer.InnerProcessTargetSoPath(info, true, modulePath, nativeLibraryPath, targetSoPath);
    EXPECT_NE(nativeLibraryPath, "");
    EXPECT_TRUE(targetSoPath.find(BUNDLE_CODE_PATH_DIR_NEW) == 0);
+}
+
+/**
+* @tc.number: ProcessDynamicIconFileWhenUpdate_0010
+* @tc.name: test ProcessDynamicIconFileWhenUpdate
+* @tc.desc: 1.Test ProcessDynamicIconFileWhenUpdate
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0010, Function | MediumTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    BaseBundleInstaller installer;
+    // extendResourceInfo not exist
+    ErrCode ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, "", "");
+    EXPECT_EQ(ret, ERR_OK);
+
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = MODULE_NAME_EXT;
+    oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    // ext file path not exist
+    ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, "", "");
+    EXPECT_EQ(ret, ERR_OK);
+
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_OLD_EXT_DIR);
+    EXPECT_TRUE(ans);
+    // ext file path exist
+    ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_CODE_PATH_DIR_OLD, BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_TRUE(ans);
+}
+
+/**
+* @tc.number: ProcessDynamicIconFileWhenUpdate_0020
+* @tc.name: test ProcessDynamicIconFileWhenUpdate
+* @tc.desc: 1.Test ProcessDynamicIconFileWhenUpdate
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0020, Function | MediumTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = MODULE_NAME_EXT;
+    oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_OLD_EXT_DIR);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_TRUE(ans);
+
+    // ext file path exist
+    BaseBundleInstaller installer;
+    auto ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_CODE_PATH_DIR_OLD, BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    auto exist = access(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_TRUE(ans);
+}
+
+/**
+* @tc.number: ProcessDynamicIconFileWhenUpdate_0030
+* @tc.name: test ProcessDynamicIconFileWhenUpdate
+* @tc.desc: 1.Test ProcessDynamicIconFileWhenUpdate
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0030, Function | MediumTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = MODULE_NAME_EXT;
+    oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_OLD_EXT_DIR);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_TRUE(ans);
+
+    std::ofstream file;
+    file.open(BUNDLE_CODE_PATH_DIR_OLD_EXT_FILE, ios::out);
+    file << "" << endl;
+    file.close();
+
+    // ext file path exist
+    BaseBundleInstaller installer;
+    auto ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_CODE_PATH_DIR_OLD, BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_EQ(ret, ERR_OK);
+    auto exist = access(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+    exist = access(BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_TRUE(ans);
+}
+
+/**
+* @tc.number: ProcessDynamicIconFileWhenUpdate_0040
+* @tc.name: test ProcessBundleCodePath
+* @tc.desc: 1.Test ProcessBundleCodePath
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0040, Function | MediumTest | Level1)
+{
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo oldInfo;
+    BaseBundleInstaller installer;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = MODULE_NAME_EXT;
+    oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+    EXPECT_TRUE(ans);
+
+    std::ofstream file;
+    file.open(BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE, ios::out);
+    file << "" << endl;
+    file.close();
+
+    auto ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto exist = access(BUNDLE_CODE_PATH_DIR_REAL.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    exist = access(BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+}
+
+/**
+* @tc.number: ProcessDynamicIconFileWhenUpdate_0050
+* @tc.name: test ProcessBundleCodePath
+* @tc.desc: 1.Test ProcessBundleCodePath
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0050, Function | MediumTest | Level1)
+{
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo oldInfo;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = MODULE_NAME_EXT;
+    oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+    EXPECT_TRUE(ans);
+
+    BaseBundleInstaller installer;
+    auto ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto exist = access(BUNDLE_CODE_PATH_DIR_REAL.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    exist = access(BUNDLE_CODE_PATH_DIR_NEW.c_str(), F_OK);
+    EXPECT_NE(exist, 0);
+
+    exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_NEW);
 }
 
 /**
