@@ -8729,6 +8729,7 @@ void BundleDataMgr::ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &i
             baseSharedBundleInfo.versionCode = bundleInfo.versionCode;
             baseSharedBundleInfo.nativeLibraryPath = hapModule.nativeLibraryPath;
             baseSharedBundleInfo.hapPath = hapModule.hapPath;
+            baseSharedBundleInfo.codeLanguage = hapModule.codeLanguage;
             baseSharedBundleInfo.compressNativeLibs = hapModule.compressNativeLibs;
             baseSharedBundleInfo.nativeLibraryFileNames = hapModule.nativeLibraryFileNames;
             baseSharedBundleInfos.emplace_back(baseSharedBundleInfo);
