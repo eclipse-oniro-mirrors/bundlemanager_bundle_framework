@@ -1069,7 +1069,8 @@ public:
 
     virtual ErrCode UpdateAppEncryptedStatus(const std::string &bundleName,
         bool isExisted, int32_t appIndex = 0) override;
-    virtual bool GreatOrEqualTargetAPIVersion(int32_t platformVersion, int32_t minorVersion, int32_t patchVersion) override;
+    virtual bool GreatOrEqualTargetAPIVersion(int32_t platformVersion, int32_t minorVersion,
+        int32_t patchVersion) override;
 
     /**
      * @brief Obtains continuable BundleInfo of all bundles available in the system.

@@ -3140,7 +3140,8 @@ HWTEST_F(BmsBundleAppControlTest, GreatOrEqualTargetAPIVersionTest001_InvaliDate
     ASSERT_NE(dataMgr, nullptr);
 
     BundleInfo bundleInfo;
-    auto ret = dataMgr->GetBundleInfoForSelf(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfo);
+    auto ret = dataMgr->GetBundleInfoForSelf(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GreatOrEqualTargetAPIVersion, GetBundleInfoForSelf fail");
         UnInstallBundle(BUNDLE_NAME);
@@ -3199,7 +3200,8 @@ HWTEST_F(BmsBundleAppControlTest, GreatOrEqualTargetAPIVersionTest001_VersionCom
     ASSERT_NE(dataMgr, nullptr);
 
     BundleInfo bundleInfo;
-    auto ret = dataMgr->GetBundleInfoForSelf(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfo);
+    auto ret = dataMgr->GetBundleInfoForSelf(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GreatOrEqualTargetAPIVersion, GetBundleInfoForSelf fail");
         UnInstallBundle(BUNDLE_NAME);
@@ -3274,7 +3276,7 @@ HWTEST_F(BmsBundleAppControlTest, GreatOrEqualTargetAPIVersionTest001_VersionCom
         EXPECT_EQ(result, true);
     }
     
-    minorVer += 1;  // Restoring the minor version    
+    minorVer += 1;  // Restoring the minor version
     // To verify the patch version + 1 returns false
     patchVer += 1;
     result = bundleMgrProxy->GreatOrEqualTargetAPIVersion(majorVer, minorVer, patchVer);

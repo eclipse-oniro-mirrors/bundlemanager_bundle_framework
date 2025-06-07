@@ -3839,7 +3839,7 @@ ErrCode BundleMgrHostImpl::GetSpecifiedDistributionType(const std::string &bundl
 }
 
 ErrCode BundleMgrHostImpl::BatchGetSpecifiedDistributionType(const std::vector<std::string> &bundleNames,
-        std::vector<BundleDistributionType> &specifiedDistributionTypes)
+    std::vector<BundleDistributionType> &specifiedDistributionTypes)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
@@ -5621,8 +5621,10 @@ ErrCode BundleMgrHostImpl::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &
     return dataMgr->GetAllShortcutInfoForSelf(shortcutInfos);
 }
 
-// Internal interface. The application compares the API version number saved in the package management. No permission control is required
-bool BundleMgrHostImpl::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion, const int32_t patchVersion)
+// Internal interface. The application compares the API version number saved in the package management.
+//No permission control is required
+bool BundleMgrHostImpl::GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
+    const int32_t minorVersion, const int32_t patchVersion)
 {
     APP_LOGD("GreatOrEqualTargetAPIVersion begin");
     auto dataMgr = GetDataMgrFromService();
