@@ -494,6 +494,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ADDITIONAL_INFO):
             errCode = this->HandleGetAdditionalInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_ADDITIONAL_INFO):
+            errCode = this->HandleBatchGetAdditionalInfo(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ADDITIONAL_INFO_FOR_ALL_USER):
             errCode = this->HandleGetAdditionalInfoForAllUser(data, reply);
             break;
@@ -3512,6 +3515,32 @@ ErrCode BundleMgrHost::HandleGetAdditionalInfo(MessageParcel &data, MessageParce
     }
     if ((ret == ERR_OK) && !reply.WriteString(additionalInfo)) {
         APP_LOGE("write additionalInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleBatchGetAdditionalInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t bundleNameCount = data.ReadInt32();
+    if (bundleNameCount <= 0 || bundleNameCount > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("bundleName count is incorrect");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    std::vector<std::string> bundleNames;
+    for (int32_t i = 0; i < bundleNameCount; i++) {
+        std::string bundleName = data.ReadString();
+        bundleNames.push_back(bundleName);
+    }
+    std::vector<BundleAdditionalInfo> additionalInfos;
+    ErrCode ret = BatchGetAdditionalInfo(bundleNames, additionalInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(additionalInfos, reply)) {
+        APP_LOGE("write dataGroupInfo failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
