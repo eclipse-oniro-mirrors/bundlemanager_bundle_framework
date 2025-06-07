@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,7 +51,8 @@ enum class BMSEventType : uint8_t {
     FREE_INSTALL_EVENT,
     BMS_DISK_SPACE,
     APP_CONTROL_RULE,
-    DB_ERROR
+    DB_ERROR,
+    DATA_PARTITION_USAGE_EVENT
 };
 
 enum class BundleEventType : uint8_t {
@@ -184,6 +185,8 @@ struct EventInfo {
     std::vector<std::string> totalBundleNames;
     std::vector<std::string> appIds;
     bool isIntercepted = false;
+    std::vector<uint64_t> fileSize;
+    std::vector<uint64_t> partitionSize;
 
     void Reset()
     {
@@ -206,6 +209,8 @@ struct EventInfo {
         callingAppId.clear();
         callingBundleName.clear();
         filePath.clear();
+        fileSize.clear();
+        partitionSize.clear();
         hashValue.clear();
         fingerprint.clear();
         hideDesktopIcon = false;
@@ -351,6 +356,11 @@ public:
      * @param eventInfo event info.
      */
     static EventInfo ProcessIsIntercepted(const EventInfo &eventInfo);
+
+    /**
+     * @brief rport the usage event of data partition.
+     */
+    static void ReportDataPartitionUsageEvent();
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

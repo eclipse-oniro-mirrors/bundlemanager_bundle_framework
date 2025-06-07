@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #include "bundle_data_storage_rdb.h"
 
 #include "bundle_exception_handler.h"
+#include "event_report.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -107,6 +108,7 @@ void BundleDataStorageRdb::TransformStrToInfo(
 void BundleDataStorageRdb::UpdateDataBase(std::map<std::string, InnerBundleInfo> &infos)
 {
     APP_LOGD("Begin to update database");
+    EventReport::ReportDataPartitionUsageEvent();
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
         return;
@@ -122,6 +124,7 @@ void BundleDataStorageRdb::UpdateDataBase(std::map<std::string, InnerBundleInfo>
 
 bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo)
 {
+    EventReport::ReportDataPartitionUsageEvent();
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
         return false;

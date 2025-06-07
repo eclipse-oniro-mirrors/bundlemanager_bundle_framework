@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,6 +42,7 @@ constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 constexpr int PATH_MAX_SIZE = 256;
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr uint8_t MAX_HAP_NUMBER = 128;
+constexpr double LOW_PARTITION_SPACE_THRESHOLD = 0.1;
 } // namespace
 
 namespace OHOS {
@@ -256,6 +257,36 @@ bool BundleFileUtil::IsExistDir(const std::string &dirPath)
     }
 
     return S_ISDIR(result.st_mode);
+}
+
+bool BundleFileUtil::IsReportDataPartitionUsageEvent(const std::string &path)
+{
+    if (!IsExistDir(path)) {
+        APP_LOGD("the path %{public}s does not exist", path.c_str());
+        return false;
+    }
+
+    struct statvfs stst;
+    if (statvfs(path.c_str(), &stst) != 0) {
+        APP_LOGE("failed to get space info for path %{public}s",
+            path.c_str());
+        return false;
+    }
+
+    uint64_t remainPartitionTotalitySize = static_cast<uint64_t>(stst.f_blocks) * stst.f_frsize;
+    uint64_t remainPartitionFreeSize = static_cast<uint64_t>(stst.f_bavail) * stst.f_frsize;
+
+    if (remainPartitionTotalitySize == 0) {
+        APP_LOGE("the partition %{public}s totality size is zero", path.c_str());
+        return false;
+    }
+
+    double ratio = static_cast<double>(remainPartitionFreeSize) / remainPartitionTotalitySize;
+    if (ratio < LOW_PARTITION_SPACE_THRESHOLD) {
+        APP_LOGW("start hisysevent and partitionsize is smaller then 10%%");
+        return true;
+    }
+    return false;
 }
 } // AppExecFwk
 } // OHOS
