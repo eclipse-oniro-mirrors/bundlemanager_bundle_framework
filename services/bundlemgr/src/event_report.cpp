@@ -18,6 +18,7 @@
 #include <set>
 #include "app_log_wrapper.h"
 #include "bundle_util.h"
+#include "bundle_file_util.h"
 #ifdef HISYSEVENT_ENABLE
 #include "inner_event_report.h"
 #endif
@@ -52,6 +53,7 @@ const std::set<int32_t> INTERCEPTED_ERROR_CODE_SET = {
     ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
     ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED
 };
+constexpr const char* PARTITION_NAME = "/data";
 }
 
 void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const EventInfo& eventInfo)
@@ -228,6 +230,16 @@ void EventReport::SendDbErrorEvent(const std::string &dbName, int32_t operationT
     eventInfo.operationType = operationType;
     eventInfo.errorCode = errorCode;
     EventReport::SendSystemEvent(BMSEventType::DB_ERROR, eventInfo);
+}
+
+void EventReport::ReportDataPartitionUsageEvent()
+{
+    if (!BundleFileUtil::IsReportDataPartitionUsageEvent(PARTITION_NAME)) {
+        APP_LOGD("data partitioning threshold has not been reached.");
+        return;
+    }
+    EventInfo eventInfo;
+    EventReport::SendSystemEvent(BMSEventType::DATA_PARTITION_USAGE_EVENT, eventInfo);
 }
 
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)

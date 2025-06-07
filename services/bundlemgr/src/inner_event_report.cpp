@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -87,6 +87,12 @@ const char* EVENT_PARAM_RULE = "ACTION_RULE";
 const char* EVENT_PARAM_APP_INDEX = "APP_INDEX";
 const char* EVENT_PARAM_IS_PATCH = "IS_PATCH";
 const char* EVENT_PARAM_IS_INTERCEPTED = "IS_INTERCEPTED";
+const char* FILE_OR_FOLDER_PATH = "FILE_OR_FOLDER_PATH";
+const char* FILE_OR_FOLDER_SIZE = "FILE_OR_FOLDER_SIZE";
+const char* COMPONENT_NAME_KEY = "COMPONENT_NAME";
+const char* PARTITION_NAME_KEY = "PARTITION_NAME";
+const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
+const char* USER_DATA_SIZE = "USER_DATA_SIZE";
 
 const char* FREE_INSTALL_TYPE = "FreeInstall";
 const char* PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -124,6 +130,8 @@ const char* OPERATION_TYPE = "operationType";
 const char* DB_NAME = "dbName";
 const char* ERROR_CODE = "errorCode";
 const char* REBUILD_TYPE = "rebuildType";
+const char* COMPONENT_NAME = "hisevent";
+const char* PARTITION_NAME = "/data";
 
 const InstallScene INSTALL_SCENE_STR_MAP_KEY[] = {
     InstallScene::NORMAL,
@@ -291,6 +299,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::APP_CONTROL_RULE,
             [](const EventInfo& eventInfo) {
                 InnerSendAppControlRule(eventInfo);
+            } },
+        { BMSEventType::DATA_PARTITION_USAGE_EVENT,
+            [](const EventInfo& eventInfo) {
+                InnerSendDataPartitionUsageEvent(eventInfo);
             } },
         { BMSEventType::DB_ERROR,
             [](const EventInfo& eventInfo) {
@@ -674,6 +686,23 @@ void InnerEventReport::InnerSendDbErrorEvent(const EventInfo& eventInfo)
         DB_NAME, eventInfo.dbName,
         OPERATION_TYPE, eventInfo.operationType,
         ERROR_CODE, eventInfo.errorCode);
+}
+
+void InnerEventReport::InnerSendDataPartitionUsageEvent(const EventInfo& eventInfo)
+{
+    HiSysEventWrite(
+#ifdef USE_EXTENSION_DATA
+        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
+#else
+        OHOS::HiviewDFX::HiSysEvent::Domain::BUNDLEMANAGER_UE,
+#endif
+        USER_DATA_SIZE,
+        HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        COMPONENT_NAME_KEY, COMPONENT_NAME,
+        PARTITION_NAME_KEY, PARTITION_NAME,
+        REMAIN_PARTITION_SIZE_KEY, eventInfo.partitionSize,
+        FILE_OR_FOLDER_PATH, eventInfo.filePath,
+        FILE_OR_FOLDER_SIZE, eventInfo.fileSize);
 }
 
 template<typename... Types>

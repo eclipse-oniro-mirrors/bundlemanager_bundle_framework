@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -3100,5 +3100,21 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrService_0100, Function | MediumTest | Le
     extension = "restore";
     ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
     EXPECT_EQ(ret, ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: ReportDataPartitionUsageEvent_0100
+ * @tc.name: test ReportDataPartitionUsageEvent
+ * @tc.desc: 1.test ReportDataPartitionUsageEvent
+ */
+HWTEST_F(BmsBundleManagerTest, ReportDataPartitionUsageEvent_0100, Function | MediumTest | Level1)
+{
+    EventReport::ReportDataPartitionUsageEvent();
+    std::string path1 = "/data";
+    auto ret = BundleFileUtil::IsReportDataPartitionUsageEvent(path1);
+    EXPECT_FALSE(ret);
+    std::string path2 = "dataErrorTest";
+    ret = BundleFileUtil::IsReportDataPartitionUsageEvent(path2);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

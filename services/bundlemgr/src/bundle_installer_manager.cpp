@@ -65,6 +65,7 @@ void BundleInstallerManager::CreateInstallTask(
         BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        EventReport::ReportDataPartitionUsageEvent();
         installer->Install(bundleFilePath, installParam);
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
@@ -105,6 +106,7 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
         BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        EventReport::ReportDataPartitionUsageEvent();
         installer->Install(bundleFilePaths, installParam);
         g_taskCounter--;
         XCollieHelper::CancelTimer(timerId);
