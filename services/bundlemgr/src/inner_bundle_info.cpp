@@ -4950,18 +4950,25 @@ void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &application
         ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
         return;
     }
-    AbilityInfo mainAbilityInfo;
-    GetMainAbilityInfo(mainAbilityInfo);
-    if ((mainAbilityInfo.labelId != 0) && (mainAbilityInfo.iconId != 0)) {
-        applicationInfo.labelId = mainAbilityInfo.labelId ;
-        applicationInfo.labelResource.id = mainAbilityInfo.labelId;
-        applicationInfo.labelResource.moduleName = mainAbilityInfo.moduleName;
-        applicationInfo.labelResource.bundleName = mainAbilityInfo.bundleName;
+    for (const auto& item : innerModuleInfos_) {
+        const std::string& key = item.second.entryAbilityKey;
+        if (!key.empty() && (baseAbilityInfos_.count(key) != 0)) {
+            const AbilityInfo &mainAbilityInfo = baseAbilityInfos_.at(key);
+            if ((mainAbilityInfo.labelId != 0) && (mainAbilityInfo.iconId != 0)) {
+                applicationInfo.labelId = mainAbilityInfo.labelId ;
+                applicationInfo.labelResource.id = mainAbilityInfo.labelId;
+                applicationInfo.labelResource.moduleName = mainAbilityInfo.moduleName;
+                applicationInfo.labelResource.bundleName = mainAbilityInfo.bundleName;
 
-        applicationInfo.iconId = mainAbilityInfo.iconId ;
-        applicationInfo.iconResource.id = mainAbilityInfo.iconId;
-        applicationInfo.iconResource.moduleName = mainAbilityInfo.moduleName;
-        applicationInfo.iconResource.bundleName = mainAbilityInfo.bundleName;
+                applicationInfo.iconId = mainAbilityInfo.iconId ;
+                applicationInfo.iconResource.id = mainAbilityInfo.iconId;
+                applicationInfo.iconResource.moduleName = mainAbilityInfo.moduleName;
+                applicationInfo.iconResource.bundleName = mainAbilityInfo.bundleName;
+            }
+            if (item.second.isEntry) {
+                return;
+            }
+        }
     }
 }
 
