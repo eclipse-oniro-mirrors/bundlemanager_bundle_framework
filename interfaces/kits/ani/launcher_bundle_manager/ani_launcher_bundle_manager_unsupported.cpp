@@ -25,7 +25,7 @@ constexpr const char* START_SHORTCUT = "StartShortcut";
 constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
 }
 
-static void StartShortcutSync(ani_env *env, ani_object aniShortcutInfo)
+static void StartShortcutSync(ani_env *env, ani_object aniShortcutInfo, ani_object aniStartOptions)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, START_SHORTCUT, "");
