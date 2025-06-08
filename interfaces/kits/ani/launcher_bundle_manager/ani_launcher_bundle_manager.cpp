@@ -17,6 +17,7 @@
 
 #include "ability_manager_client.h"
 #include "ani.h"
+#include "ani_common_start_options.h"
 #include <ani_signature_builder.h>
 #include "app_log_wrapper.h"
 #include "business_error_ani.h"
@@ -46,9 +47,10 @@ constexpr const char* PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.G
 constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
 constexpr const char* ERROR_EMPTY_BUNDLE_NAME = "bundle name is empty";
 constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
+constexpr const char* PARSE_START_OPTIONS = "parse StartOptions failed";
 } // namespace
 
-static void StartShortcutSync(ani_env *env, ani_object aniShortcutInfo)
+static void StartShortcutSync(ani_env *env, ani_object aniShortcutInfo, ani_object aniStartOptions)
 {
     ShortcutInfo shortcutInfo;
     if (!CommonFunAni::ParseShortcutInfo(env, aniShortcutInfo, shortcutInfo)) {
@@ -77,6 +79,13 @@ static void StartShortcutSync(ani_env *env, ani_object aniShortcutInfo)
         return;
     }
     StartOptions startOptions;
+    if (aniStartOptions != nullptr) {
+        if (!UnwrapStartOptions(env, aniStartOptions, startOptions)) {
+            APP_LOGE("ParseStartOptions error");
+            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS);
+            return;
+        }
+    }
     ErrCode result = abilityManagerClient->StartShortcut(want, startOptions);
     auto iter = START_SHORTCUT_RES_MAP.find(result);
     result = iter == START_SHORTCUT_RES_MAP.end() ? ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED : iter->second;
