@@ -435,6 +435,8 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
             ERROR_INSTALL_FAILED_CONTROLLED },
         { IStatusReceiver::ERR_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS,
             ERROR_INSTALL_FAILED_CONTROLLED },
+        { IStatusReceiver::ERR_INSTALL_U1_ENABLE_NOT_SUPPORT_APP_SERVICE_AND_SHARED_BUNDLE,
+            ERROR_INSTALL_FAILED_CONTROLLED},
     };
 }
 
