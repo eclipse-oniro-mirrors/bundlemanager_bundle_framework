@@ -28,6 +28,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "resource_helper.h"
 #include "system_ability_definition.h"
 
 namespace OHOS {
@@ -56,55 +57,6 @@ constexpr const char* GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = "GET_RESOURCE_INF
 constexpr const char* GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR = "GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR";
 constexpr const char* EXTENSION_ABILITY_TYPE = "extensionAbilityType";
 constexpr const char* GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY = "GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY";
-
-class ResourceHelper {
-public:
-    static sptr<IBundleResource> GetBundleResourceMgr();
-
-private:
-    class BundleResourceMgrDeathRecipient : public IRemoteObject::DeathRecipient {
-        void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
-    };
-    static sptr<IBundleResource> bundleResourceMgr_;
-    static std::mutex bundleResourceMutex_;
-    static sptr<IRemoteObject::DeathRecipient> deathRecipient_;
-};
-
-sptr<IBundleResource> ResourceHelper::bundleResourceMgr_ = nullptr;
-std::mutex ResourceHelper::bundleResourceMutex_;
-sptr<IRemoteObject::DeathRecipient> ResourceHelper::deathRecipient_(sptr<BundleResourceMgrDeathRecipient>::MakeSptr());
-
-void ResourceHelper::BundleResourceMgrDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote)
-{
-    APP_LOGI("BundleManagerService dead");
-    std::lock_guard<std::mutex> lock(bundleResourceMutex_);
-    bundleResourceMgr_ = nullptr;
-};
-
-sptr<IBundleResource> ResourceHelper::GetBundleResourceMgr()
-{
-    std::lock_guard<std::mutex> lock(bundleResourceMutex_);
-    if (bundleResourceMgr_ == nullptr) {
-        auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (systemAbilityManager == nullptr) {
-            APP_LOGE("systemAbilityManager is null");
-            return nullptr;
-        }
-        auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-        if (bundleMgrSa == nullptr) {
-            APP_LOGE("bundleMgrSa is null");
-            return nullptr;
-        }
-        auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-        if (bundleMgr == nullptr) {
-            APP_LOGE("iface_cast failed");
-            return nullptr;
-        }
-        bundleMgr->AsObject()->AddDeathRecipient(deathRecipient_);
-        bundleResourceMgr_ = bundleMgr->GetBundleResourceProxy();
-    }
-    return bundleResourceMgr_;
-}
 
 static void ConvertBundleResourceInfo(
     napi_env env,
