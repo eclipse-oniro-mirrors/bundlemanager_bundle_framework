@@ -1166,14 +1166,14 @@ ErrCode BaseBundleInstaller::CheckU1Enable(const InnerBundleInfo &info,
     if (u1Enable && isU1) {
         if (isAppExist_ && !onlyInstallInU1) {
             LOG_E(BMS_TAG_INSTALLER, "%{public}s existed in other users, but not u1", bundleName.c_str());
-            return ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS;
+            return ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS;
         }
     } else {
         // u1Enable is false and userid is not u1
         if (isAppExist_ && onlyInstallInU1) {
             LOG_E(BMS_TAG_INSTALLER, "%{public}s existed in u1, but u1Enable is false and userId is not u1",
                 bundleName.c_str());
-            return ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON;
+            return ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS;
         }
     }
     return ERR_OK;
