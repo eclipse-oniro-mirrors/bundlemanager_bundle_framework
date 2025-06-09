@@ -4101,7 +4101,7 @@ ErrCode BundleMgrProxy::BatchGetAdditionalInfo(const std::vector<std::string> &b
     }
     for (int32_t i = 0; i < bundleNameCount; i++) {
         if (!data.WriteString(bundleNames[i])) {
-            APP_LOGE("write bundleName %{public}zu failed", i);
+            APP_LOGE("write bundleName %{public}d failed", i);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }

@@ -99,24 +99,24 @@ private:
         return nullptr;
     }
 
-    // bundleManager.BundleFlag
-    // enum BundleFlag {
-    //     GET_BUNDLE_INFO_DEFAULT = 0x00000000,
-    //     GET_BUNDLE_INFO_WITH_APPLICATION = 0x00000001,
-    //     GET_BUNDLE_INFO_WITH_HAP_MODULE = 0x00000002,
-    //     GET_BUNDLE_INFO_WITH_ABILITY = 0x00000004,
-    //     GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY = 0x00000008,
-    //     GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION = 0x00000010,
-    //     GET_BUNDLE_INFO_WITH_METADATA = 0x00000020,
-    //     GET_BUNDLE_INFO_WITH_DISABLE = 0x00000040,
-    //     GET_BUNDLE_INFO_WITH_SIGNATURE_INFO = 0x00000080,
-    //     GET_BUNDLE_INFO_WITH_MENU = 0x00000100,
-    //     GET_BUNDLE_INFO_WITH_ROUTER_MAP = 0x00000200,
-    //     GET_BUNDLE_INFO_WITH_SKILL = 0x00000800,
-    //     GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY = 0x00001000,
-    //     GET_BUNDLE_INFO_OF_ANY_USER = 0x00002000,
-    //     GET_BUNDLE_INFO_EXCLUDE_CLONE = 0x00004000,
-    // }
+    /* bundleManager.BundleFlag
+    enum BundleFlag {
+        GET_BUNDLE_INFO_DEFAULT = 0x00000000,
+        GET_BUNDLE_INFO_WITH_APPLICATION = 0x00000001,
+        GET_BUNDLE_INFO_WITH_HAP_MODULE = 0x00000002,
+        GET_BUNDLE_INFO_WITH_ABILITY = 0x00000004,
+        GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY = 0x00000008,
+        GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION = 0x00000010,
+        GET_BUNDLE_INFO_WITH_METADATA = 0x00000020,
+        GET_BUNDLE_INFO_WITH_DISABLE = 0x00000040,
+        GET_BUNDLE_INFO_WITH_SIGNATURE_INFO = 0x00000080,
+        GET_BUNDLE_INFO_WITH_MENU = 0x00000100,
+        GET_BUNDLE_INFO_WITH_ROUTER_MAP = 0x00000200,
+        GET_BUNDLE_INFO_WITH_SKILL = 0x00000800,
+        GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY = 0x00001000,
+        GET_BUNDLE_INFO_OF_ANY_USER = 0x00002000,
+        GET_BUNDLE_INFO_EXCLUDE_CLONE = 0x00004000,
+    } */
     static constexpr std::array<int, 15> Array_BundleManager_BundleFlag = {
         0x00000000,
         0x00000001,
@@ -134,39 +134,39 @@ private:
         0x00002000,
         0x00004000,
     };
-    // bundleManager.ExtensionAbilityType
-    // enum ExtensionAbilityType {
-    //     FORM = 0,
-    //     WORK_SCHEDULER = 1,
-    //     INPUT_METHOD = 2,
-    //     SERVICE = 3,
-    //     ACCESSIBILITY = 4,
-    //     DATA_SHARE = 5,
-    //     FILE_SHARE = 6,
-    //     STATIC_SUBSCRIBER = 7,
-    //     WALLPAPER = 8,
-    //     BACKUP = 9,
-    //     WINDOW = 10,
-    //     ENTERPRISE_ADMIN = 11,
-    //     THUMBNAIL = 13,
-    //     PREVIEW = 14,
-    //     PRINT = 15,
-    //     SHARE = 16,
-    //     PUSH = 17,
-    //     DRIVER = 18,
-    //     ACTION = 19,
-    //     ADS_SERVICE = 20,
-    //     EMBEDDED_UI = 21,
-    //     INSIGHT_INTENT_UI = 22,
-    //     FENCE = 24,
-    //     CALLER_INFO_QUERY = 25,
-    //     ASSET_ACCELERATION = 26,
-    //     FORM_EDIT = 27,
-    //     DISTRIBUTED = 28,
-    //     APP_SERVICE = 29,
-    //     LIVE_FORM = 30,
-    //     UNSPECIFIED = 255
-    // }
+    /* bundleManager.ExtensionAbilityType
+    enum ExtensionAbilityType {
+        FORM = 0,
+        WORK_SCHEDULER = 1,
+        INPUT_METHOD = 2,
+        SERVICE = 3,
+        ACCESSIBILITY = 4,
+        DATA_SHARE = 5,
+        FILE_SHARE = 6,
+        STATIC_SUBSCRIBER = 7,
+        WALLPAPER = 8,
+        BACKUP = 9,
+        WINDOW = 10,
+        ENTERPRISE_ADMIN = 11,
+        THUMBNAIL = 13,
+        PREVIEW = 14,
+        PRINT = 15,
+        SHARE = 16,
+        PUSH = 17,
+        DRIVER = 18,
+        ACTION = 19,
+        ADS_SERVICE = 20,
+        EMBEDDED_UI = 21,
+        INSIGHT_INTENT_UI = 22,
+        FENCE = 24,
+        CALLER_INFO_QUERY = 25,
+        ASSET_ACCELERATION = 26,
+        FORM_EDIT = 27,
+        DISTRIBUTED = 28,
+        APP_SERVICE = 29,
+        LIVE_FORM = 30,
+        UNSPECIFIED = 255
+    } */
     static constexpr std::array<int, 30> Array_BundleManager_ExtensionAbilityType = {
         0,
         1,
@@ -199,38 +199,38 @@ private:
         30,
         255,
     };
-    // bundleManager.ApplicationFlag
-    // enum ApplicationFlag {
-    //     GET_APPLICATION_INFO_DEFAULT = 0x00000000,
-    //     GET_APPLICATION_INFO_WITH_PERMISSION = 0x00000001,
-    //     GET_APPLICATION_INFO_WITH_METADATA = 0x00000002,
-    //     GET_APPLICATION_INFO_WITH_DISABLE = 0x00000004
-    // }
+    /* bundleManager.ApplicationFlag
+    enum ApplicationFlag {
+        GET_APPLICATION_INFO_DEFAULT = 0x00000000,
+        GET_APPLICATION_INFO_WITH_PERMISSION = 0x00000001,
+        GET_APPLICATION_INFO_WITH_METADATA = 0x00000002,
+        GET_APPLICATION_INFO_WITH_DISABLE = 0x00000004
+    } */
     static constexpr std::array<int, 4> Array_BundleManager_ApplicationFlag = {
         0x00000000,
         0x00000001,
         0x00000002,
         0x00000004,
     };
-    // zlib.CompressLevel
-    // enum CompressLevel {
-    //     COMPRESS_LEVEL_NO_COMPRESSION = 0,
-    //     COMPRESS_LEVEL_BEST_SPEED = 1,
-    //     COMPRESS_LEVEL_BEST_COMPRESSION = 9,
-    //     COMPRESS_LEVEL_DEFAULT_COMPRESSION = -1
-    // }
+    /* zlib.CompressLevel
+    enum CompressLevel {
+        COMPRESS_LEVEL_NO_COMPRESSION = 0,
+        COMPRESS_LEVEL_BEST_SPEED = 1,
+        COMPRESS_LEVEL_BEST_COMPRESSION = 9,
+        COMPRESS_LEVEL_DEFAULT_COMPRESSION = -1
+    }*/
     static constexpr std::array<int, 4> Array_Zlib_CompressLevel = {
         0,
         1,
         9,
         -1,
     };
-    // zlib.MemLevel
-    // enum MemLevel {
-    //     MEM_LEVEL_MIN = 1,
-    //     MEM_LEVEL_MAX = 9,
-    //     MEM_LEVEL_DEFAULT = 8
-    // }
+    /* zlib.MemLevel
+    enum MemLevel {
+        MEM_LEVEL_MIN = 1,
+        MEM_LEVEL_MAX = 9,
+        MEM_LEVEL_DEFAULT = 8
+    } */
     static constexpr std::array<int, 3> Array_Zlib_MemLevel = {
         1,
         9,
@@ -269,67 +269,67 @@ public:
             env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_BUNDLE_FLAG, value, Array_BundleManager_BundleFlag);
     }
 
-    // bundleManager.BundleType
-    // enum BundleType {
-    //     APP = 0,
-    //     ATOMIC_SERVICE = 1
-    // }
+    /* bundleManager.BundleType
+    enum BundleType {
+        APP = 0,
+        ATOMIC_SERVICE = 1
+    } */
     static inline ani_enum_item EnumNativeToETS_BundleManager_BundleType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE, value, 0);
     }
 
-    // bundleManager.MultiAppModeType
-    // enum MultiAppModeType {
-    //     UNSPECIFIED = 0,
-    //     MULTI_INSTANCE = 1,
-    //     APP_CLONE = 2,
-    // }
+    /* bundleManager.MultiAppModeType
+    enum MultiAppModeType {
+        UNSPECIFIED = 0,
+        MULTI_INSTANCE = 1,
+        APP_CLONE = 2,
+    } */
     static inline ani_enum_item EnumNativeToETS_BundleManager_MultiAppModeType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_MULTIAPPMODE_TYPE, value, 0);
     }
 
-    // bundleManager.DisplayOrientation
-    // enum DisplayOrientation {
-    //     UNSPECIFIED,
-    //     LANDSCAPE,
-    //     PORTRAIT,
-    //     FOLLOW_RECENT,
-    //     LANDSCAPE_INVERTED,
-    //     PORTRAIT_INVERTED,
-    //     AUTO_ROTATION,
-    //     AUTO_ROTATION_LANDSCAPE,
-    //     AUTO_ROTATION_PORTRAIT,
-    //     AUTO_ROTATION_RESTRICTED,
-    //     AUTO_ROTATION_LANDSCAPE_RESTRICTED,
-    //     AUTO_ROTATION_PORTRAIT_RESTRICTED,
-    //     LOCKED,
-    //     AUTO_ROTATION_UNSPECIFIED,
-    //     FOLLOW_DESKTOP
-    // }
+    /* bundleManager.DisplayOrientation
+    enum DisplayOrientation {
+        UNSPECIFIED,
+        LANDSCAPE,
+        PORTRAIT,
+        FOLLOW_RECENT,
+        LANDSCAPE_INVERTED,
+        PORTRAIT_INVERTED,
+        AUTO_ROTATION,
+        AUTO_ROTATION_LANDSCAPE,
+        AUTO_ROTATION_PORTRAIT,
+        AUTO_ROTATION_RESTRICTED,
+        AUTO_ROTATION_LANDSCAPE_RESTRICTED,
+        AUTO_ROTATION_PORTRAIT_RESTRICTED,
+        LOCKED,
+        AUTO_ROTATION_UNSPECIFIED,
+        FOLLOW_DESKTOP
+    } */
     static inline ani_enum_item EnumNativeToETS_BundleManager_DisplayOrientation(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_DISPLAYORIENTATION, value, 0);
     }
 
-    // bundleManager.LaunchType
-    // enum LaunchType {
-    //     SINGLETON = 0,
-    //     MULTITON = 1,
-    //     SPECIFIED = 2
-    // }
+    /* bundleManager.LaunchType
+    enum LaunchType {
+        SINGLETON = 0,
+        MULTITON = 1,
+        SPECIFIED = 2
+    } */
     static inline ani_enum_item EnumNativeToETS_BundleManager_LaunchType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_LAUNCH_TYPE, value, 0);
     }
 
-    // bundleManager.SupportWindowMode
-    // SupportWindowMode {
-    //     FULL_SCREEN = 0,
-    //     SPLIT = 1,
-    //     FLOATING = 2
-    // }
+    /* bundleManager.SupportWindowMode
+    SupportWindowMode {
+        FULL_SCREEN = 0,
+        SPLIT = 1,
+        FLOATING = 2
+    } */
     static inline ani_enum_item EnumNativeToETS_BundleManager_SupportWindowMode(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_SUPPORTWINDOWMODE, value, 0);
@@ -342,22 +342,22 @@ public:
             Array_BundleManager_ExtensionAbilityType);
     }
 
-    // bundleManager.ModuleType
-    // enum ModuleType {
-    //     ENTRY = 1,
-    //     FEATURE = 2,
-    //     SHARED = 3
-    // }
+    /* bundleManager.ModuleType
+    enum ModuleType {
+        ENTRY = 1,
+        FEATURE = 2,
+        SHARED = 3
+    } */
     static inline ani_enum_item EnumNativeToETS_BundleManager_ModuleType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_MODULE_TYPE, value, 1);
     }
 
-    // bundleManager.PermissionGrantState
-    // enum PermissionGrantState {
-    //     PERMISSION_DENIED = -1,
-    //     PERMISSION_GRANTED = 0
-    // }
+    /* bundleManager.PermissionGrantState
+    enum PermissionGrantState {
+        PERMISSION_DENIED = -1,
+        PERMISSION_GRANTED = 0
+    } */
     static inline ani_enum_item EnumNativeToETS_BundleManager_PermissionGrantState(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_PERMISSIONGRANTSTATE, value, -1);
@@ -370,45 +370,45 @@ public:
             env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APPLICATION_FLAG, value, Array_BundleManager_ApplicationFlag);
     }
 
-    // bundle.DisplayOrientation
-    // enum DisplayOrientation {
-    //     UNSPECIFIED,
-    //     LANDSCAPE,
-    //     PORTRAIT,
-    //     FOLLOW_RECENT
-    // }
+    /* bundle.DisplayOrientation
+    enum DisplayOrientation {
+        UNSPECIFIED,
+        LANDSCAPE,
+        PORTRAIT,
+        FOLLOW_RECENT
+    } */
     static inline ani_enum_item EnumNativeToETS_Bundle_DisplayOrientation(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLE_DISPLAYORIENTATION, value, 0);
     }
 
-    // bundle.AbilityType
-    // enum AbilityType {
-    //     UNKNOWN,
-    //     PAGE,
-    //     SERVICE,
-    //     DATA
-    // }
+    /* bundle.AbilityType
+    enum AbilityType {
+        UNKNOWN,
+        PAGE,
+        SERVICE,
+        DATA
+    } */
     static inline ani_enum_item EnumNativeToETS_Bundle_AbilityType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLE_ABILITY_TYPE, value, 0);
     }
 
-    // bundle.AbilitySubType
-    // enum AbilitySubType {
-    //     UNSPECIFIED = 0,
-    //     CA = 1
-    // }
+    /* bundle.AbilitySubType
+    enum AbilitySubType {
+        UNSPECIFIED = 0,
+        CA = 1
+    } */
     static inline ani_enum_item EnumNativeToETS_Bundle_AbilitySubType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLE_ABILITYSUB_TYPE, value, 0);
     }
 
-    // bundle.LaunchMode
-    // enum LaunchMode {
-    //     SINGLETON = 0,
-    //     STANDARD = 1
-    // }
+    /* bundle.LaunchMode
+    enum LaunchMode {
+        SINGLETON = 0,
+        STANDARD = 1
+    } */
     static inline ani_enum_item EnumNativeToETS_Bundle_LaunchMode(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLE_LAUNCHMODE, value, 0);
@@ -427,14 +427,14 @@ public:
         return EnumNativeToETSByTable(env, CommonFunAniNS::CLASSNAME_ZLIB_MEMLEVEL, value, Array_Zlib_MemLevel);
     }
 
-    // zlib.CompressStrategy
-    // enum CompressStrategy {
-    //     COMPRESS_STRATEGY_DEFAULT_STRATEGY = 0,
-    //     COMPRESS_STRATEGY_FILTERED = 1,
-    //     COMPRESS_STRATEGY_HUFFMAN_ONLY = 2,
-    //     COMPRESS_STRATEGY_RLE = 3,
-    //     COMPRESS_STRATEGY_FIXED = 4
-    // }
+    /* zlib.CompressStrategy
+    enum CompressStrategy {
+        COMPRESS_STRATEGY_DEFAULT_STRATEGY = 0,
+        COMPRESS_STRATEGY_FILTERED = 1,
+        COMPRESS_STRATEGY_HUFFMAN_ONLY = 2,
+        COMPRESS_STRATEGY_RLE = 3,
+        COMPRESS_STRATEGY_FIXED = 4
+    } */
     static inline ani_enum_item EnumNativeToETS_Zlib_CompressStrategy(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_ZLIB_COMPRESSSTRATEGY, value, 0);

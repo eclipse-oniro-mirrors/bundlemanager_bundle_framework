@@ -210,6 +210,9 @@
                       ]
                     },
                     "name": "//foundation/bundlemanager/bundle_framework/interfaces/kits/ani/common:bms_ani_common"
+                  },
+                  {
+                    "name": "//foundation/bundlemanager/bundle_framework/interfaces/kits/ani/bundle_manager:copy_bundleManager_ets"
                   }
             ],
             "test": [

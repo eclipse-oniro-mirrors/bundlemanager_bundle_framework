@@ -20,6 +20,15 @@ group("ani_common") {
 
 group("ani_bms_packages") {
   deps = [
+    "bundle_manager:ability_info_etc",
+    "bundle_manager:anibundlemanager",
+    "bundle_manager:application_info_etc",
+    "bundle_manager:bundle_info_etc",
+    "bundle_manager:bundle_manager_etc",
+    "bundle_manager:extension_ability_info_etc",
+    "bundle_manager:hap_module_info_etc",
+    "bundle_manager:metadata_etc",
+    "bundle_manager:skill_etc",
     "zlib:ani_zlib",
     "zlib:zlib_etc",
   ]
