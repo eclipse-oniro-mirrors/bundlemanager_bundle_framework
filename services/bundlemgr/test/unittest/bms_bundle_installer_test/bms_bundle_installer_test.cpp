@@ -11297,7 +11297,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9900, Function | SmallTest 
     // set isAppExist_ true
     installer.isAppExist_ = true;
     auto ret = installer.CheckU1Enable(info, TEST_U1);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS);
 
     // set isAppExist_ false
     installer.isAppExist_ = false;
@@ -11335,7 +11335,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1001, Function | SmallTest 
     // set isAppExist_ true
     installer.isAppExist_ = true;
     auto ret = installer.CheckU1Enable(info, TEST_U1);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS);
 
     // set isAppExist_ false
     installer.isAppExist_ = false;
@@ -11376,7 +11376,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1002, Function | SmallTest 
     // set isAppExist_ true
     installer.isAppExist_ = true;
     auto ret = installer.CheckU1Enable(info, TEST_U1);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS);
 
     // set isAppExist_ false
     installer.isAppExist_ = false;
@@ -11409,7 +11409,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1003, Function | SmallTest 
     // set isAppExist_ true
     installer.isAppExist_ = true;
     auto ret = installer.CheckU1Enable(info, TEST_U1);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS);
 
     // set isAppExist_ false
     installer.isAppExist_ = false;
@@ -11439,7 +11439,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1004, Function | SmallTest 
     // set isAppExist_ true
     installer.isAppExist_ = true;
     auto ret = installer.CheckU1Enable(info, TEST_U100);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS);
     // set isAppExist_ false
     installer.isAppExist_ = false;
     ret = installer.CheckU1Enable(info, TEST_U100);
