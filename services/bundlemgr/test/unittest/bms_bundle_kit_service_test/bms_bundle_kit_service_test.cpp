@@ -9856,6 +9856,23 @@ HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoV9_0100, Function | MediumTest 
 }
 
 /**
+ * @tc.number: GetShortcutInfoByAppIndex_0100
+ * @tc.name: test query archive information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.query archive information without an ability information
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoByAppIndex_0100, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t appIndex = 0;
+    ErrCode testRet = hostImpl->GetShortcutInfoByAppIndex(BUNDLE_NAME_TEST, appIndex, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: BundleStreamInstallerHostImplInit_0100
  * @tc.name: test Init
  * @tc.desc: Init is false

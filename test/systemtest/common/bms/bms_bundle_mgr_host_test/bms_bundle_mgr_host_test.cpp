@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -926,6 +926,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetShortcutInfoV9_0100, Function | MediumTe
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleGetShortcutInfoV9(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetShortcutInfoByAppIndex_0100
+ * @tc.name: test the HandleGetShortcutInfoByAppIndex
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetShortcutInfoByAppIndex
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetShortcutInfoByAppIndex_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetShortcutInfoByAppIndex(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
 

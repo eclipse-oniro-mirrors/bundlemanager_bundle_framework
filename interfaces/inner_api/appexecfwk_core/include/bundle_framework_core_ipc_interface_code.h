@@ -219,6 +219,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     BATCH_GET_SPECIFIED_DISTRIBUTED_TYPE = 193,
     GET_APPIDENTIFIER_AND_APPINDEX = 194,
     BATCH_GET_ADDITIONAL_INFO = 195,
+    GET_SHORTCUT_INFO_BY_APPINDEX = 196,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

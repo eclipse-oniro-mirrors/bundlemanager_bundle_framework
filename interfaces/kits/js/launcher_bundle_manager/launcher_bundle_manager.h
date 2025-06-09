@@ -69,6 +69,7 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info);
 napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info);
 napi_value GetShortcutInfo(napi_env env, napi_callback_info info);
 napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info);
+napi_value GetShortcutInfoByAppIndex(napi_env env, napi_callback_info info);
 napi_value StartShortcut(napi_env env, napi_callback_info info);
 napi_value StartShortcutWithReason(napi_env env, napi_callback_info info);
 }

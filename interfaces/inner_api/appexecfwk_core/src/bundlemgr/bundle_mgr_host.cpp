@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -315,6 +315,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_V9):
             errCode = this->HandleGetShortcutInfoV9(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_APPINDEX):
+            errCode = this->HandleGetShortcutInfoByAppIndex(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_COMMON_EVENT_INFO):
             errCode = this->HandleGetAllCommonEventInfo(data, reply);
@@ -2368,6 +2371,24 @@ ErrCode BundleMgrHost::HandleGetShortcutInfoV9(MessageParcel &data, MessageParce
     int32_t userId = data.ReadInt32();
     std::vector<ShortcutInfo> infos;
     ErrCode ret = GetShortcutInfoV9(bundlename, infos, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(infos, reply)) {
+        APP_LOGE("write shortcut infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetShortcutInfoByAppIndex(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundlename = data.ReadString();
+    int32_t appIndex = data.ReadInt32();
+    std::vector<ShortcutInfo> infos;
+    ErrCode ret = GetShortcutInfoByAppIndex(bundlename, appIndex, infos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

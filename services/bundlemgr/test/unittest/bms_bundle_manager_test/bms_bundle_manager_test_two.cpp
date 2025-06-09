@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -621,6 +621,10 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_1500, Function | MediumTest | 
     EXPECT_EQ(retBool, false);
 
     retCode = hostImpl->GetShortcutInfoV9("", shortcutInfos);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    int32_t appIndex = 0;
+    retCode = hostImpl->GetShortcutInfoByAppIndex("", appIndex, shortcutInfos);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
     retBool = hostImpl->GetAllCommonEventInfo("", commonEventInfos);

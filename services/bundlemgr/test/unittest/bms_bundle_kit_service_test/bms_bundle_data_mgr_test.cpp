@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2832,6 +2832,22 @@ HWTEST_F(BmsBundleDataMgrTest, GetShortcutInfoV9_0100, Function | SmallTest | Le
     std::vector<ShortcutInfo> shortcutInfos;
     GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
     ErrCode res = GetBundleDataMgr()->GetShortcutInfoV9("", USERID, shortcutInfos);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAppIndex_0100
+ * @tc.name: test GetShortcutInfoByAppIndex
+ * @tc.desc: 1.system run normally
+ *           2.check GetShortcutInfoByAppIndex failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetShortcutInfoByAppIndex_0100, Function | SmallTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    int32_t appIndex = 0;
+    ErrCode res = GetBundleDataMgr()->GetShortcutInfoByAppIndex("", appIndex, shortcutInfos);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
 }

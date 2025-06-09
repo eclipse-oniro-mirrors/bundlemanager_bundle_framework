@@ -1366,6 +1366,19 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8600
 }
 
 /**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8700
+ * @tc.name: test GetShortcutInfoByAppIndex of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetShortcutInfoByAppIndex false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8700, Function | SmallTest | Level0)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = bundleMgrHostImpl_->GetShortcutInfoByAppIndex(BUNDLE_NAME, APP_INDEX, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
  * @tc.number: InstallByBundleNameTest
  * @tc.name: test InstallByBundleName of IBundleInstaller
  * @tc.desc: system running normally
