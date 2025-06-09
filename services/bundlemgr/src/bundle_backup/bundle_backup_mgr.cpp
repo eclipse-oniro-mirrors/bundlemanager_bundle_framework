@@ -49,15 +49,14 @@ ErrCode BundleBackupMgr::OnBackup(MessageParcel& data, MessageParcel& reply)
         return ret;
     }
 
-    FILE* filePtr = fopen(BACKUP_FILE_PATH, "r");
-    if (filePtr == nullptr) {
+    int32_t fd = open(BACKUP_FILE_PATH, O_RDONLY);
+    if (fd < 0) {
         APP_LOGE("Open backup file failed");
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
-    int32_t fd = fileno(filePtr);
     if (!reply.WriteFileDescriptor(fd)) {
         APP_LOGE("Write file descriptor failed");
-        fclose(filePtr);
+        close(fd);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -109,6 +108,7 @@ ErrCode BundleBackupMgr::SaveToFile(const std::string& config)
     int32_t ret = static_cast<int32_t>(fwrite(config.c_str(), 1, config.length(), fp));
     if (ret != (int32_t)config.length()) {
         APP_LOGE("Save config file: %{public}s, fwrite %{public}d failed", BACKUP_FILE_PATH, ret);
+        (void)fclose(fp);
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
     (void)fflush(fp);
