@@ -3357,9 +3357,20 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
 bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t userId,
     std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+    bool permissionVerify = [bundleName]() {
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            return true;
+        }
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+            BundlePermissionMgr::IsSystemApp()) {
+            return true;
+        }
+        if (BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+            return true;
+        }
+        return false;
+    }();
+    if (!permissionVerify) {
         APP_LOGE("verify permission failed");
         return false;
     }
@@ -3386,6 +3397,10 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
 
 bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
 {
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO})) {
         APP_LOGE("verify permission failed");
@@ -3677,9 +3692,20 @@ ErrCode BundleMgrHostImpl::GetAppProvisionInfo(const std::string &bundleName, in
 ErrCode BundleMgrHostImpl::GetProvisionMetadata(const std::string &bundleName, int32_t userId,
     std::vector<Metadata> &provisionMetadatas)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+    bool permissionVerify = [bundleName]() {
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            return true;
+        }
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+            BundlePermissionMgr::IsSystemApp()) {
+            return true;
+        }
+        if (BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+            return true;
+        }
+        return false;
+    }();
+    if (!permissionVerify) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }

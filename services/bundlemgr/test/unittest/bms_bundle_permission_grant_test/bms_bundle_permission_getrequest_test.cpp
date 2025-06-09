@@ -227,4 +227,51 @@ HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0006, Function | S
     ret = localBundleMgrHostImpl->DumpDebugBundleInfoNames(userId, result);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: BundleMgrHostImpl_0007
+ * @tc.name: BundleMgrHostImpl_0007
+ * @tc.desc: test GetBundleStats
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0007, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string bundleName;
+    int32_t userId = 100;
+    std::vector<int64_t> bundleStats;
+    bool ret = localBundleMgrHostImpl->GetBundleStats(bundleName, userId, bundleStats);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0008
+ * @tc.name: BundleMgrHostImpl_0008
+ * @tc.desc: test GetBundleStats
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0008, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    int32_t userId = 100;
+    std::vector<int64_t> bundleStats;
+    bool ret = localBundleMgrHostImpl->GetAllBundleStats(userId, bundleStats);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0009
+ * @tc.name: BundleMgrHostImpl_0009
+ * @tc.desc: test GetBundleStats
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0009, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string bundleName;
+    int32_t userId = 100;
+    std::vector<Metadata> provisionMetadatas;
+    bool ret = localBundleMgrHostImpl->GetProvisionMetadata(bundleName, userId, provisionMetadatas);
+    EXPECT_TRUE(ret);
+}
 } // OHOS

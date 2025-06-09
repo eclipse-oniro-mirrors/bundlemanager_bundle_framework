@@ -1055,6 +1055,18 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6900, Functi
 }
 
 /**
+ * @tc.number: BmsBundlePermissionFalseTest_6910
+ * @tc.name: test GetAllBundleStats of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetAllBundleStats false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6910, Function | SmallTest | Level0)
+{
+    std::vector<int64_t> bundleStats;
+    EXPECT_FALSE(bundleMgrHostImpl_->GetAllBundleStats(USERID, bundleStats));
+}
+
+/**
  * @tc.number: BmsBundlePermissionFalseTest_7000
  * @tc.name: test Install of BundleInstallerHost
  * @tc.desc: 1. system running normally
