@@ -2028,4 +2028,16 @@ HWTEST_F(BmsExtensionDataMgrTest, RegisterPreInstallWithCard_001, Function | Sma
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
 }
+
+/**
+ * @tc.number: IsMCFlagSet_0100
+ * @tc.name: IsMCFlagSet_0100
+ * @tc.desc: test IsMCFlagSet
+ */
+HWTEST_F(BmsExtensionDataMgrTest, IsMCFlagSet_0100, Function | SmallTest | Level1)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    bool ret = bundleMgrExtTest.IsMCFlagSet();
+    EXPECT_EQ(ret, false);
+}
 } // OHOS
