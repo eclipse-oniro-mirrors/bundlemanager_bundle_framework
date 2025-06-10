@@ -1234,6 +1234,7 @@ protected:
                 "cloudFileSyncEnabled": false,
                 "applicationFlags":1,
                 "installedForAllUser": false,
+                "isForceRotate": false,
                 "hasPlugin": false,
                 "startMode":1,
                 "appPreloadPhase":0
