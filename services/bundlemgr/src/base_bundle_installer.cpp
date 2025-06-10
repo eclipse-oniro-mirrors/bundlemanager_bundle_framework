@@ -7554,7 +7554,7 @@ void BaseBundleInstaller::ProcessOldCodePath(
         std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
     result = InstalldClient::GetInstance()->RemoveDir(oldAppCodePath);
     if (result != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "remove bundle %{publicl}s old code path error is %{public}d",
+        LOG_W(BMS_TAG_INSTALLER, "remove bundle %{public}s old code path error is %{public}d",
             bundleName.c_str(), result);
     }
     result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
