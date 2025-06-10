@@ -41,21 +41,21 @@ export default namespace overlay {
     p1.then(() => {
       let br: BusinessError = new BusinessError();
       callback(br, undefined);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
   function setOverlayEnabled(moduleName: string, isEnabled: boolean): Promise<void> {
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
         return overlay.setOverlayEnabledNative(moduleName, isEnabled);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -70,21 +70,21 @@ export default namespace overlay {
     p1.then(() => {
       let br: BusinessError = new BusinessError();
       callback(br, undefined);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
   function setOverlayEnabledByBundleName(bundleName: string, moduleName: string, isEnabled: boolean): Promise<void> {
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
         return overlay.setOverlayEnabledByBundleNameNative(bundleName, moduleName, isEnabled);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -100,9 +100,9 @@ export default namespace overlay {
       let result: OverlayModuleInfo = e as OverlayModuleInfo;
       let br: BusinessError = new BusinessError();
       callback(br, result);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let result: OverlayModuleInfo = new OverlayModuleInfoInner;
-      callback(err, result);
+      callback(err as BusinessError, result);
     });
   }
 
@@ -115,8 +115,8 @@ export default namespace overlay {
       p1.then((e: NullishType) => {
         let result: OverlayModuleInfo = e as OverlayModuleInfo;
         resolve(result);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
@@ -131,9 +131,9 @@ export default namespace overlay {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
       let br: BusinessError = new BusinessError();
       callback(br, resultArray);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultArray: Array<OverlayModuleInfo> = new Array<OverlayModuleInfo>;
-      callback(err, resultArray);
+      callback(err as BusinessError, resultArray);
     });
   }
 
@@ -146,8 +146,8 @@ export default namespace overlay {
       p1.then((e: NullishType) => {
         let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
         resolve(resultArray);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
@@ -162,9 +162,9 @@ export default namespace overlay {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
       let br: BusinessError = new BusinessError();
       callback(br, resultArray);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultArray: Array<OverlayModuleInfo> = new Array<OverlayModuleInfo>;
-      callback(err, resultArray);
+      callback(err as BusinessError, resultArray);
     });
   }
 
@@ -177,9 +177,9 @@ export default namespace overlay {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
       let br: BusinessError = new BusinessError();
       callback(br, resultArray);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultArray: Array<OverlayModuleInfo> = new Array<OverlayModuleInfo>;
-      callback(err, resultArray);
+      callback(err as BusinessError, resultArray);
     });
   }
 
@@ -193,8 +193,8 @@ export default namespace overlay {
       p1.then((e: NullishType) => {
         let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
         resolve(resultArray);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
@@ -209,9 +209,9 @@ export default namespace overlay {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
       let br: BusinessError = new BusinessError();
       callback(br, resultArray);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultArray: Array<OverlayModuleInfo> = new Array<OverlayModuleInfo>;
-      callback(err, resultArray);
+      callback(err as BusinessError, resultArray);
     });
   }
 
@@ -224,9 +224,9 @@ export default namespace overlay {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
       let br: BusinessError = new BusinessError();
       callback(br, resultArray);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultArray: Array<OverlayModuleInfo> = new Array<OverlayModuleInfo>;
-      callback(err, resultArray);
+      callback(err as BusinessError, resultArray);
     });
   }
 
@@ -240,8 +240,8 @@ export default namespace overlay {
       p1.then((e: NullishType) => {
         let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
         resolve(resultArray);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;

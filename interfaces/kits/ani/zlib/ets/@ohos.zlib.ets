@@ -65,21 +65,21 @@ export default namespace zlib {
     p1.then(() => {
       let r = new BusinessError();
       callback(r, undefined);
-    }).catch((err: BusinessError): void => {
-      callback(err, undefined);
+    }).catch((err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
   export function compressFile(inFile: string, outFile: string, options: Options): Promise<void> {
-    let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Object) => void) : void => {
+    let p: Promise<void> = new Promise<void>((resolve: (v:PromiseLike<void>) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
         zlib.CompressFile(inFile, outFile, options);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
@@ -95,8 +95,8 @@ export default namespace zlib {
     p1.then(() => {
       let r = new BusinessError();
       callback(r, undefined);
-    }).catch((err: BusinessError): void => {
-      callback(err, undefined);
+    }).catch((err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -108,22 +108,22 @@ export default namespace zlib {
     p1.then(() => {
       let r = new BusinessError();
       callback(r, undefined);
-    }).catch((err: BusinessError): void => {
-      callback(err, undefined);
+    }).catch((err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
   export function decompressFile(inFile: string, outFile: string, options?: Options): Promise<void> {
     let optionsParam = options ?? new OptionsInner();
-    let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Object) => void) : void => {
+    let p: Promise<void> = new Promise<void>((resolve: (v:PromiseLike<void>) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
         zlib.DecompressFile(inFile, outFile, optionsParam);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
@@ -159,8 +159,8 @@ export default namespace zlib {
         p1.then((e: NullishType) => {
           let result: number = e as number;
           resolve(result);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -175,8 +175,8 @@ export default namespace zlib {
         p1.then((e: NullishType) => {
           let result: number = e as number;
           resolve(result);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -191,8 +191,8 @@ export default namespace zlib {
         p1.then((e: NullishType) => {
           let result: number = e as number;
           resolve(result);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -207,8 +207,8 @@ export default namespace zlib {
         p1.then((e: NullishType) => {
           let result: number = e as number;
           resolve(result);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -223,8 +223,8 @@ export default namespace zlib {
         p1.then((e: NullishType) => {
           let result: number = e as number;
           resolve(result);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -239,8 +239,8 @@ export default namespace zlib {
         p1.then((e: NullishType) => {
           let resultArray: Array<number> = e as Array<number>;
           resolve(resultArray);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -255,8 +255,8 @@ export default namespace zlib {
         p1.then((e: NullishType) => {
           let resultArray: Array<number> = e as Array<number>;
           resolve(resultArray);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
       });
       return p;
@@ -266,15 +266,15 @@ export default namespace zlib {
   export native function CompressFiles(inFiles: Array<string>, outFile: string, options: Options): void;
 
   export function compressFiles(inFiles: Array<string>, outFile: string, options: Options): Promise<void> {
-    let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Object) => void) : void => {
+    let p: Promise<void> = new Promise<void>((resolve: (v:PromiseLike<void>) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
         zlib.CompressFiles(inFiles, outFile, options);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
@@ -291,8 +291,8 @@ export default namespace zlib {
       p1.then((e: NullishType) => {
         let result: number = e as number;
         resolve(result);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
@@ -309,8 +309,8 @@ export default namespace zlib {
       p1.then((e: NullishType) => {
         let result: Checksum = e as Checksum;
         resolve(result);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;

@@ -93,8 +93,8 @@ export default namespace appControl {
     p1.then(() => {
       let br: BusinessError = new BusinessError();
       callback(br, undefined);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -106,8 +106,8 @@ export default namespace appControl {
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -123,9 +123,9 @@ export default namespace appControl {
       let result: Want = e as Want;
       let br: BusinessError = new BusinessError();
       callback(br, result);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let result: Want = {};
-      callback(err, result);
+      callback(err as BusinessError, result);
     });
   }
 
@@ -138,8 +138,8 @@ export default namespace appControl {
       p1.then((e: NullishType) => {
         let result: Want = e as Want;
         resolve(result);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
@@ -153,8 +153,8 @@ export default namespace appControl {
     p1.then(() => {
       let br: BusinessError = new BusinessError();
       callback(br, undefined);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -166,8 +166,8 @@ export default namespace appControl {
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );

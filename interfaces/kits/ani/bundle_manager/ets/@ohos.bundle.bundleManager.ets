@@ -279,9 +279,9 @@ namespace bundleManager {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
       let r = new BusinessError();
       callback(r, resultBundleInfo);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultBundleInfo = new BundleInfoInner();
-      callback(err, resultBundleInfo);
+      callback(err as BusinessError, resultBundleInfo);
     });
   }
 
@@ -294,8 +294,8 @@ namespace bundleManager {
         p1.then((e: NullishType) => {
           let resultBundleInfo: BundleInfo = e as BundleInfo;
           resolve(resultBundleInfo);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
     }
     );
@@ -316,8 +316,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let resultBundleInfo: BundleInfo = e as BundleInfo;
         resolve(resultBundleInfo);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -333,9 +333,9 @@ namespace bundleManager {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
       let r = new BusinessError();
       callback(r, resultBundleInfo);
-    },(err: BusinessError): void => {
+    },(err: Error): void => {
       let resultBundleInfo = new BundleInfoInner();
-      callback(err, resultBundleInfo);
+      callback(err as BusinessError, resultBundleInfo);
     });
   }
 
@@ -348,9 +348,9 @@ namespace bundleManager {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
       let r = new BusinessError();
       callback(r, resultBundleInfo);
-    },(err: BusinessError): void => {
+    },(err: Error): void => {
       let resultBundleInfo = new BundleInfoInner();
-      callback(err, resultBundleInfo);
+      callback(err as BusinessError, resultBundleInfo);
     });
   }
 
@@ -369,8 +369,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
         resolve(resultBundleInfos);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -386,9 +386,9 @@ namespace bundleManager {
       let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
       let r = new BusinessError();
       callback(r, resultBundleInfos);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultBundleInfos = new Array<BundleInfo>;
-      callback(err, resultBundleInfos);
+      callback(err as BusinessError, resultBundleInfos);
     });
   }
 
@@ -401,9 +401,9 @@ namespace bundleManager {
       let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
       let r = new BusinessError();
       callback(r, resultBundleInfos);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultBundleInfos = new Array<BundleInfo>;
-      callback(err, resultBundleInfos);
+      callback(err as BusinessError, resultBundleInfos);
     });
   }
 
@@ -418,8 +418,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let resultApplicationInfos: Array<ApplicationInfo> = e as Array<ApplicationInfo>;
         resolve(resultApplicationInfos);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -435,9 +435,9 @@ namespace bundleManager {
       let resultApplicationInfos: Array<ApplicationInfo> = e as Array<ApplicationInfo>;
       let r = new BusinessError();
       callback(r, resultApplicationInfos);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultApplicationInfos = new Array<ApplicationInfo>;
-      callback(err, resultApplicationInfos);
+      callback(err as BusinessError, resultApplicationInfos);
     });
   }
 
@@ -451,9 +451,9 @@ namespace bundleManager {
       let resultApplicationInfos: Array<ApplicationInfo> = e as Array<ApplicationInfo>;
       let r = new BusinessError();
       callback(r, resultApplicationInfos);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultApplicationInfos = new Array<ApplicationInfo>;
-      callback(err, resultApplicationInfos);
+      callback(err as BusinessError, resultApplicationInfos);
     });
   }
 
@@ -466,8 +466,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let isEnabled: boolean = e as boolean;
         resolve(isEnabled);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -483,8 +483,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let isEnabled: boolean = e as boolean;
         resolve(isEnabled);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -500,8 +500,8 @@ namespace bundleManager {
       let isEnabled: boolean = e as boolean;
       let r = new BusinessError();
       callback(r, isEnabled);
-    }, (err: BusinessError): void => {
-      callback(err, false);
+    }, (err: Error): void => {
+      callback(err as BusinessError, false);
     });
   }
 
@@ -516,8 +516,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let resultAbilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
         resolve(resultAbilityInfos);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -533,9 +533,9 @@ namespace bundleManager {
       let resultAbilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
       let r = new BusinessError();
       callback(r, resultAbilityInfos);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultAbilityInfos = new Array<AbilityInfo>;
-      callback(err, resultAbilityInfos);
+      callback(err as BusinessError, resultAbilityInfos);
     });
   }
 
@@ -549,9 +549,9 @@ namespace bundleManager {
       let resultAbilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
       let r = new BusinessError();
       callback(r, resultAbilityInfos);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultAbilityInfos = new Array<AbilityInfo>;
-      callback(err, resultAbilityInfos);
+      callback(err as BusinessError, resultAbilityInfos);
     });
   }
 
@@ -566,8 +566,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let resultApplicationInfo: ApplicationInfo = e as ApplicationInfo;
         resolve(resultApplicationInfo);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -583,9 +583,9 @@ namespace bundleManager {
       let resultApplicationInfo: ApplicationInfo = e as ApplicationInfo;
       let r = new BusinessError();
       callback(r, resultApplicationInfo);
-    },(err: BusinessError): void => {
+    },(err: Error): void => {
       let resultApplicationInfo = new ApplicationInfoInner();
-      callback(err, resultApplicationInfo);
+      callback(err as BusinessError, resultApplicationInfo);
     });
   }
 
@@ -599,9 +599,9 @@ namespace bundleManager {
       let resultApplicationInfo: ApplicationInfo = e as ApplicationInfo;
       let r = new BusinessError();
       callback(r, resultApplicationInfo);
-    },(err: BusinessError): void => {
+    },(err: Error): void => {
       let resultApplicationInfo = new ApplicationInfoInner();
-      callback(err, resultApplicationInfo);
+      callback(err as BusinessError, resultApplicationInfo);
     });
   }
 
@@ -615,8 +615,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let resultAppCloneIdentity: AppCloneIdentity = e as AppCloneIdentity;
         resolve(resultAppCloneIdentity);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -633,8 +633,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let label: string = e as string;
         resolve(label);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -651,8 +651,8 @@ namespace bundleManager {
       let label: string = e as string;
       let r = new BusinessError();
       callback(r, label);
-    },(err: BusinessError): void => {
-      callback(err, "");
+    },(err: Error): void => {
+      callback(err as BusinessError, "");
     });
   }
 
@@ -667,8 +667,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let want: Want = e as Want;
         resolve(want);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -684,9 +684,9 @@ namespace bundleManager {
       let want: Want = e as Want;
       let r = new BusinessError();
       callback(r, want);
-    },(err: BusinessError): void => {
+    },(err: Error): void => {
       let want : Want = {};
-      callback(err, want);
+      callback(err as BusinessError, want);
     });
   }
 
@@ -699,9 +699,9 @@ namespace bundleManager {
       let want: Want = e as Want;
       let r = new BusinessError();
       callback(r, want);
-    },(err: BusinessError): void => {
+    },(err: Error): void => {
       let want : Want = {};
-      callback(err, want);
+      callback(err as BusinessError, want);
     });
   }
 
@@ -717,8 +717,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let resultBundleInfo: BundleInfo = e as BundleInfo;
         resolve(resultBundleInfo);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -734,8 +734,8 @@ namespace bundleManager {
       let result: string = e as string;
       let r = new BusinessError();
       callback(r, result);
-    }).catch((err: BusinessError): void => {
-      callback(err, "");
+    }).catch((err: Error): void => {
+      callback(err as BusinessError, "");
     });
   }
 
@@ -748,8 +748,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let result: string = e as string;
         resolve(result);
-      }).catch((err: BusinessError): void => {
-        reject(err);
+      }).catch((err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -767,9 +767,9 @@ namespace bundleManager {
       let extensionAbilityInfos: Array<ExtensionAbilityInfo> = e as Array<ExtensionAbilityInfo>;
       let r = new BusinessError();
       callback(r, extensionAbilityInfos);
-    },(err: BusinessError): void => {
+    },(err: Error): void => {
       let extensionAbilityInfos = new Array<ExtensionAbilityInfo>;
-      callback(err, extensionAbilityInfos);
+      callback(err as BusinessError, extensionAbilityInfos);
     });
   }
 
@@ -784,9 +784,9 @@ namespace bundleManager {
       let extensionAbilityInfos: Array<ExtensionAbilityInfo> = e as Array<ExtensionAbilityInfo>;
       let r = new BusinessError();
       callback(r, extensionAbilityInfos);
-    },(err: BusinessError): void => {
+    },(err: Error): void => {
       let extensionAbilityInfos = new Array<ExtensionAbilityInfo>;
-      callback(err, extensionAbilityInfos);
+      callback(err as BusinessError, extensionAbilityInfos);
     });
   }
 
@@ -804,8 +804,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let extensionAbilityInfos: Array<ExtensionAbilityInfo> = e as Array<ExtensionAbilityInfo>;
         resolve(extensionAbilityInfos);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -821,8 +821,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let isEnabled: boolean = e as boolean;
         resolve(isEnabled);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -838,8 +838,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let isEnabled: boolean = e as boolean;
         resolve(isEnabled);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -855,8 +855,8 @@ namespace bundleManager {
       let isEnabled: boolean = e as boolean;
       let r = new BusinessError();
       callback(r, isEnabled);
-    }, (err: BusinessError): void => {
-      callback(err, false);
+    }, (err: Error): void => {
+      callback(err as BusinessError, false);
     });
   }
 
@@ -868,8 +868,8 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -884,8 +884,8 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -900,8 +900,8 @@ namespace bundleManager {
     p1.then(() => {
       let r = new BusinessError();
       callback(r, undefined);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -913,8 +913,8 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -929,8 +929,8 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -945,8 +945,8 @@ namespace bundleManager {
     p1.then(() => {
       let r = new BusinessError();
       callback(r, undefined);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -960,8 +960,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let icon: string = e as string;
         resolve(icon);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -979,8 +979,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let resultAbilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
         resolve(resultAbilityInfos);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -995,8 +995,8 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
