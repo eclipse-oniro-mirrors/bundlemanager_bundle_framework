@@ -46,7 +46,7 @@ BundleMultiUserInstaller::~BundleMultiUserInstaller()
 
 ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleName, const int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("-n %{public}s -u %{public}d begin", bundleName.c_str(), userId);
 
     BmsExtensionDataMgr bmsExtensionDataMgr;

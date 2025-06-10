@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,7 +49,7 @@ ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bun
     bool isReplace)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to call DeployQuickFix");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
         LOG_E(BMS_TAG_DEFAULT, "DeployQuickFix failed due to params error");
@@ -103,7 +103,7 @@ ErrCode QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName, bool
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to call SwitchQuickFix");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (bundleName.empty() || (statusCallback == nullptr)) {
         LOG_E(BMS_TAG_DEFAULT, "SwitchQuickFix failed due to params error");
@@ -141,7 +141,7 @@ ErrCode QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to call DeleteQuickFix");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (bundleName.empty() || (statusCallback == nullptr)) {
         LOG_E(BMS_TAG_DEFAULT, "DeleteQuickFix failed due to params error");

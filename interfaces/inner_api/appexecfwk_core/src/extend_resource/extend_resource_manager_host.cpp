@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -76,7 +76,7 @@ int ExtendResourceManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& dat
 
 ErrCode ExtendResourceManagerHost::HandleAddExtResource(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::vector<std::string> filePaths;
     if (!data.ReadStringVector(&filePaths)) {
@@ -93,7 +93,7 @@ ErrCode ExtendResourceManagerHost::HandleAddExtResource(MessageParcel &data, Mes
 
 ErrCode ExtendResourceManagerHost::HandleRemoveExtResource(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::vector<std::string> moduleNames;
     if (!data.ReadStringVector(&moduleNames)) {
@@ -110,7 +110,7 @@ ErrCode ExtendResourceManagerHost::HandleRemoveExtResource(MessageParcel &data, 
 
 ErrCode ExtendResourceManagerHost::HandleGetExtResource(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::vector<std::string> moduleNames;
     ErrCode ret = GetExtResource(bundleName, moduleNames);
@@ -127,7 +127,7 @@ ErrCode ExtendResourceManagerHost::HandleGetExtResource(MessageParcel &data, Mes
 
 ErrCode ExtendResourceManagerHost::HandleEnableDynamicIcon(MessageParcel& data, MessageParcel& reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     int32_t userId = data.ReadInt32();
@@ -142,7 +142,7 @@ ErrCode ExtendResourceManagerHost::HandleEnableDynamicIcon(MessageParcel& data, 
 
 ErrCode ExtendResourceManagerHost::HandleDisableDynamicIcon(MessageParcel& data, MessageParcel& reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
@@ -156,7 +156,7 @@ ErrCode ExtendResourceManagerHost::HandleDisableDynamicIcon(MessageParcel& data,
 
 ErrCode ExtendResourceManagerHost::HandleGetDynamicIcon(MessageParcel& data, MessageParcel& reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
@@ -179,7 +179,7 @@ ErrCode ExtendResourceManagerHost::HandleGetDynamicIcon(MessageParcel& data, Mes
 ErrCode ExtendResourceManagerHost::HandleCreateFd(MessageParcel& data, MessageParcel& reply)
 {
     APP_LOGD("begin to HandleCreateFd");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string fileName = data.ReadString();
     int32_t fd = -1;
     std::string path;
@@ -207,7 +207,7 @@ ErrCode ExtendResourceManagerHost::HandleCreateFd(MessageParcel& data, MessagePa
 
 ErrCode ExtendResourceManagerHost::HandleGetAllDynamicIconInfo(MessageParcel& data, MessageParcel& reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t userId = data.ReadInt32();
     std::vector<DynamicIconInfo> dynamicIconInfos;
     ErrCode ret = GetAllDynamicIconInfo(userId, dynamicIconInfos);
@@ -223,7 +223,7 @@ ErrCode ExtendResourceManagerHost::HandleGetAllDynamicIconInfo(MessageParcel& da
 
 ErrCode ExtendResourceManagerHost::HandleGetDynamicIconInfo(MessageParcel& data, MessageParcel& reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::vector<DynamicIconInfo> dynamicIconInfos;
     ErrCode ret = GetDynamicIconInfo(bundleName, dynamicIconInfos);

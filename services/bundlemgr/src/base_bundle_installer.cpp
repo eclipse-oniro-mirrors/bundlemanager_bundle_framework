@@ -197,7 +197,7 @@ void BaseBundleInstaller::SendStartInstallNotify(const InstallParam &installPara
 ErrCode BaseBundleInstaller::InstallBundle(
     const std::vector<std::string> &bundlePaths, const InstallParam &installParam, const Constants::AppType appType)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to process bundle install");
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     int32_t uid = Constants::INVALID_UID;
@@ -327,7 +327,7 @@ ErrCode BaseBundleInstaller::Recover(
 
 ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, const InstallParam &installParam)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     CheckSystemFreeSizeAndClean();
     LOG_I(BMS_TAG_INSTALLER, "begin to process %{public}s bundle uninstall", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
@@ -543,7 +543,7 @@ ErrCode BaseBundleInstaller::UninstallHspAndBundle(InnerBundleInfo &info, int32_
 ErrCode BaseBundleInstaller::UninstallBundle(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     CheckSystemFreeSizeAndClean();
     LOG_I(BMS_TAG_INSTALLER, "begin to process %{public}s module in %{public}s uninstall",
         modulePackage.c_str(), bundleName.c_str());
@@ -771,7 +771,7 @@ bool BaseBundleInstaller::CheckDuplicateProxyData(const std::vector<ProxyData> &
 ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_I(BMS_TAG_INSTALLER, "-n %{public}s -u %{public}d -f %{public}hhd isAppExist:%{public}d",
         bundleName_.c_str(), userId_, installParam.installFlag, isAppExist_);
     if (!InitDataMgr()) {
@@ -1868,7 +1868,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 void BaseBundleInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
     const InnerBundleInfo& innerBundleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_INSTALLER, "call UninstallDebugAppSandbox start");
     bool isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);
     bool isDebugApp = innerBundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
@@ -3555,7 +3555,7 @@ bool BaseBundleInstaller::IsDataPreloadHap(const std::string &path) const
 
 ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::string &modulePath)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     // need remove modulePath, make sure the directory is empty
     if (InstalldClient::GetInstance()->RemoveDir(modulePath) != ERR_OK) {
         APP_LOGW("remove dir %{public}s failed", modulePath.c_str());
@@ -3950,7 +3950,7 @@ ErrCode BaseBundleInstaller::CheckMultipleHapsSignInfo(
     const InstallParam &installParam,
     std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     return bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes);
 }
 
@@ -4014,7 +4014,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
     std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     InstallCheckParam checkParam;
     checkParam.isPreInstallApp = installParam.isPreInstallApp;
     checkParam.crowdtestDeadline = installParam.crowdtestDeadline;
@@ -5115,7 +5115,7 @@ void BaseBundleInstaller::SaveHapPathToRecords(
 ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos,
     const InnerBundleInfo &oldInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     // size of code signature files should be same with the size of hap and hsp
     if (!signatureFileMap_.empty() && (signatureFileMap_.size() != hapPathRecords_.size())) {
         LOG_E(BMS_TAG_INSTALLER, "code signature file size not same with the size of hap and hsp");
@@ -5733,7 +5733,7 @@ void BaseBundleInstaller::RemoveOldHapIfOTA(const InstallParam &installParam,
 ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installParam,
     std::vector<std::string> &bundlePaths)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (!installParam.withCopyHaps) {
         LOG_D(BMS_TAG_INSTALLER, "no need to copy preInstallApp to secure dir");
         return ERR_OK;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,7 +62,7 @@ ErrCode BundleResourceProxy::GetBundleResourceInfo(const std::string &bundleName
     BundleResourceInfo &bundleResourceInfo,
     const int32_t appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
@@ -94,7 +94,7 @@ ErrCode BundleResourceProxy::GetLauncherAbilityResourceInfo(const std::string &b
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo,
     const int32_t appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
@@ -125,7 +125,7 @@ ErrCode BundleResourceProxy::GetLauncherAbilityResourceInfo(const std::string &b
 ErrCode BundleResourceProxy::GetAllBundleResourceInfo(const uint32_t flags,
     std::vector<BundleResourceInfo> &bundleResourceInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start, flags:%{public}u", flags);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -144,7 +144,7 @@ ErrCode BundleResourceProxy::GetAllBundleResourceInfo(const uint32_t flags,
 ErrCode BundleResourceProxy::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start, flags:%{public}u", flags);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -162,7 +162,7 @@ ErrCode BundleResourceProxy::GetAllLauncherAbilityResourceInfo(const uint32_t fl
 
 ErrCode BundleResourceProxy::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start, bundleName:%{public}s userId:%{private}d", bundleName.c_str(), userId);
     MessageParcel data;
     MessageParcel reply;
@@ -193,7 +193,7 @@ ErrCode BundleResourceProxy::AddResourceInfoByBundleName(const std::string &bund
 ErrCode BundleResourceProxy::AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, const int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start, bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s userId:%{private}d",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId);
     MessageParcel data;
@@ -232,7 +232,7 @@ ErrCode BundleResourceProxy::AddResourceInfoByAbility(const std::string &bundleN
 
 ErrCode BundleResourceProxy::DeleteResourceInfo(const std::string &key)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start, key:%{private}s", key.c_str());
     MessageParcel data;
     MessageParcel reply;
@@ -262,7 +262,7 @@ ErrCode BundleResourceProxy::GetExtensionAbilityResourceInfo(const std::string &
     std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo,
     const int32_t appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start, bundleName:%{public}s, extensionAbilityType:%{public}u, flags:%{public}u",
         bundleName.c_str(), extensionAbilityType, flags);
     MessageParcel data;

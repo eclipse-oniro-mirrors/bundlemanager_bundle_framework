@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,7 @@ ErrCode OverlayManagerProxy::GetAllOverlayModuleInfo(const std::string &bundleNa
     std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
     APP_LOGD("begin to call GetAllOverlayModuleInfo");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (bundleName.empty()) {
         APP_LOGE("GetAllOverlayModuleInfo failed due to params error");
@@ -67,7 +67,7 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfo(const std::string &bundleName,
     OverlayModuleInfo &overlayModuleInfo, int32_t userId)
 {
     APP_LOGD("begin to call GetOverlayModuleInfo");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("GetOverlayModuleInfo failed due to params error");
@@ -99,7 +99,7 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfo(const std::string &moduleName,
     OverlayModuleInfo &overlayModuleInfo, int32_t userId)
 {
     APP_LOGD("begin to call GetOverlayModuleInfo");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (moduleName.empty()) {
         APP_LOGE("GetOverlayModuleInfo failed due to params error");
@@ -127,7 +127,7 @@ ErrCode OverlayManagerProxy::GetTargetOverlayModuleInfo(const std::string &targe
     std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
 {
     APP_LOGD("begin to call GetTargetOverlayModuleInfo");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (targetModuleName.empty()) {
         APP_LOGE("GetTargetOverlayModuleInfo failed due to params error");
@@ -157,7 +157,7 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfoByBundleName(const std::string 
     const std::string &moduleName, std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
 {
     APP_LOGD("begin to call GetOverlayModuleInfoByBundleName");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (bundleName.empty()) {
         APP_LOGE("GetOverlayModuleInfoByBundleName failed due to params error");
@@ -191,7 +191,7 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfoForTarget(const std::string &ta
     int32_t userId)
 {
     APP_LOGD("begin to call GetOverlayModuleInfoForTarget");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (targetBundleName.empty()) {
         APP_LOGE("GetOverlayModuleInfoForTarget failed due to params error");
@@ -224,7 +224,7 @@ ErrCode OverlayManagerProxy::SetOverlayEnabledForSelf(const std::string &moduleN
     int32_t userId)
 {
     APP_LOGD("begin to call SetOverlayEnabledForSelf");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (moduleName.empty()) {
         APP_LOGE("SetOverlayEnabledForSelf failed due to params error");
@@ -265,7 +265,7 @@ ErrCode OverlayManagerProxy::SetOverlayEnabled(const std::string &bundleName, co
     bool isEnabled, int32_t userId)
 {
     APP_LOGD("begin to call SetOverlayEnabled");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("SetOverlayEnabled failed due to params error");
         return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
@@ -309,7 +309,7 @@ ErrCode OverlayManagerProxy::GetOverlayBundleInfoForTarget(const std::string &ta
     std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId)
 {
     APP_LOGD("begin to call GetOverlayBundleInfoForTarget");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (targetBundleName.empty()) {
         APP_LOGE("GetOverlayBundleInfoForTarget failed due to params error");

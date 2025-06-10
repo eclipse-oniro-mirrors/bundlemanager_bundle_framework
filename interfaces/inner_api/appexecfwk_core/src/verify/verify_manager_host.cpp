@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,7 +63,7 @@ int VerifyManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
 ErrCode VerifyManagerHost::HandleVerify(MessageParcel& data, MessageParcel& reply)
 {
     APP_LOGI("begin to HandleVerify");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::vector<std::string> abcPaths;
     if (!data.ReadStringVector(&abcPaths)) {
         APP_LOGE("read abcPaths failed");
@@ -81,7 +81,7 @@ ErrCode VerifyManagerHost::HandleVerify(MessageParcel& data, MessageParcel& repl
 ErrCode VerifyManagerHost::HandleDeleteAbc(MessageParcel& data, MessageParcel& reply)
 {
     APP_LOGD("begin to HandleDeleteAbc");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string path = data.ReadString();
     auto ret = DeleteAbc(path);
     if (!reply.WriteInt32(ret)) {

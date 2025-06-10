@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -705,7 +705,7 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleGetApplicationInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
     ApplicationFlag flag = static_cast<ApplicationFlag>(data.ReadInt32());
     int userId = data.ReadInt32();
@@ -728,7 +728,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfo(MessageParcel &data, MessageParc
 
 ErrCode BundleMgrHost::HandleGetApplicationInfoWithIntFlags(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
     int flags = data.ReadInt32();
     int userId = data.ReadInt32();
@@ -751,7 +751,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfoWithIntFlags(MessageParcel &data,
 
 ErrCode BundleMgrHost::HandleGetApplicationInfoWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
     int32_t flags = data.ReadInt32();
     int32_t userId = data.ReadInt32();
@@ -774,7 +774,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfoWithIntFlagsV9(MessageParcel &dat
 
 ErrCode BundleMgrHost::HandleGetApplicationInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     ApplicationFlag flag = static_cast<ApplicationFlag>(data.ReadInt32());
     int userId = data.ReadInt32();
     std::vector<ApplicationInfo> infos;
@@ -794,7 +794,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfos(MessageParcel &data, MessagePar
 
 ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlags(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int flags = data.ReadInt32();
     int userId = data.ReadInt32();
     std::vector<ApplicationInfo> infos;
@@ -814,7 +814,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlags(MessageParcel &data
 
 ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t flags = data.ReadInt32();
     int32_t userId = data.ReadInt32();
     std::vector<ApplicationInfo> infos;
@@ -834,7 +834,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9(MessageParcel &da
 
 ErrCode BundleMgrHost::HandleGetBundleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
     BundleFlag flag = static_cast<BundleFlag>(data.ReadInt32());
     int userId = data.ReadInt32();
@@ -851,7 +851,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfo(MessageParcel &data, MessageParcel &r
 
 ErrCode BundleMgrHost::HandleGetBundleInfoForSelf(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t flags = data.ReadInt32();
     APP_LOGD("GetBundleInfoForSelf, flags %{public}d", flags);
     BundleInfo info;
@@ -870,7 +870,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfoForSelf(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleGetDependentBundleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
     GetDependentBundleInfoFlag flag = static_cast<GetDependentBundleInfoFlag>(data.ReadUint32());
     APP_LOGD("GetDependentBundleInfo, bundle %{public}s", name.c_str());
@@ -890,7 +890,7 @@ ErrCode BundleMgrHost::HandleGetDependentBundleInfo(MessageParcel &data, Message
 
 ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlags(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
     int flags = data.ReadInt32();
     int userId = data.ReadInt32();
@@ -908,7 +908,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlags(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
     if (name.empty()) {
         APP_LOGE("bundleName is empty");
@@ -932,7 +932,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9(MessageParcel &data, Me
 
 ErrCode BundleMgrHost::HandleBatchGetBundleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t bundleNameCount = data.ReadInt32();
     if (bundleNameCount <= 0 || bundleNameCount > MAX_BATCH_QUERY_BUNDLE_SIZE) {
         APP_LOGE("bundleName count is error");
@@ -968,7 +968,7 @@ ErrCode BundleMgrHost::HandleBatchGetBundleInfo(MessageParcel &data, MessageParc
 
 ErrCode BundleMgrHost::HandleGetBundlePackInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
     BundlePackFlag flag = static_cast<BundlePackFlag>(data.ReadInt32());
     int userId = data.ReadInt32();
@@ -990,7 +990,7 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfo(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleGetBundlePackInfoWithIntFlags(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
     int flags = data.ReadInt32();
     int userId = data.ReadInt32();
@@ -1012,7 +1012,7 @@ ErrCode BundleMgrHost::HandleGetBundlePackInfoWithIntFlags(MessageParcel &data, 
 
 ErrCode BundleMgrHost::HandleGetBundleInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     BundleFlag flag = static_cast<BundleFlag>(data.ReadInt32());
     int userId = data.ReadInt32();
 
@@ -1035,7 +1035,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfos(MessageParcel &data, MessageParcel &
 
 ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlags(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int flags = data.ReadInt32();
     int userId = data.ReadInt32();
 
@@ -1058,7 +1058,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlags(MessageParcel &data, Mes
 
 ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t flags = data.ReadInt32();
     int32_t userId = data.ReadInt32();
 
@@ -1080,7 +1080,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, M
 
 ErrCode BundleMgrHost::HandleGetBundleNameForUid(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     auto uid = data.ReadInt32();
     std::string name;
     bool ret = GetBundleNameForUid(uid, name);
@@ -1099,7 +1099,7 @@ ErrCode BundleMgrHost::HandleGetBundleNameForUid(MessageParcel &data, MessagePar
 
 ErrCode BundleMgrHost::HandleGetBundlesForUid(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int uid = data.ReadInt32();
     std::vector<std::string> names;
     bool ret = GetBundlesForUid(uid, names);
@@ -1118,7 +1118,7 @@ ErrCode BundleMgrHost::HandleGetBundlesForUid(MessageParcel &data, MessageParcel
 
 ErrCode BundleMgrHost::HandleGetNameForUid(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int uid = data.ReadInt32();
     std::string name;
     ErrCode ret = GetNameForUid(uid, name);
@@ -1137,7 +1137,7 @@ ErrCode BundleMgrHost::HandleGetNameForUid(MessageParcel &data, MessageParcel &r
 
 ErrCode BundleMgrHost::HandleGetNameAndIndexForUid(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int uid = data.ReadInt32();
     std::string bundleName;
     int32_t appIndex;
@@ -1161,7 +1161,7 @@ ErrCode BundleMgrHost::HandleGetNameAndIndexForUid(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleGetAppIdentifierAndAppIndex(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     uint32_t accessTokenId = data.ReadUint32();
 
     std::string appIdentifier;
@@ -1180,7 +1180,7 @@ ErrCode BundleMgrHost::HandleGetAppIdentifierAndAppIndex(MessageParcel &data, Me
 
 ErrCode BundleMgrHost::HandleGetSimpleAppInfoForUid(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::vector<std::int32_t> uids;
     data.ReadInt32Vector(&uids);
     if (uids.size() <= 0 || uids.size() > MAX_GET_FOR_UIDS_SIZE) {
@@ -1205,7 +1205,7 @@ ErrCode BundleMgrHost::HandleGetSimpleAppInfoForUid(MessageParcel &data, Message
 
 ErrCode BundleMgrHost::HandleGetBundleGids(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
 
     std::vector<int> gids;
@@ -1225,7 +1225,7 @@ ErrCode BundleMgrHost::HandleGetBundleGids(MessageParcel &data, MessageParcel &r
 
 ErrCode BundleMgrHost::HandleGetBundleGidsByUid(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
     int uid = data.ReadInt32();
 
@@ -1246,7 +1246,7 @@ ErrCode BundleMgrHost::HandleGetBundleGidsByUid(MessageParcel &data, MessageParc
 
 ErrCode BundleMgrHost::HandleGetBundleInfosByMetaData(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string metaData = data.ReadString();
 
     std::vector<BundleInfo> infos;
@@ -1266,7 +1266,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosByMetaData(MessageParcel &data, Messa
 
 ErrCode BundleMgrHost::HandleQueryAbilityInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -1290,7 +1290,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfo(MessageParcel &data, MessageParcel
 
 ErrCode BundleMgrHost::HandleQueryAbilityInfoMutiparam(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -1315,7 +1315,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfoMutiparam(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleQueryAbilityInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -1339,7 +1339,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfos(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleQueryAbilityInfosMutiparam(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -1364,7 +1364,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfosMutiparam(MessageParcel &data, Mes
 
 ErrCode BundleMgrHost::HandleQueryAbilityInfosV9(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -1389,7 +1389,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfosV9(MessageParcel &data, MessagePar
 
 ErrCode BundleMgrHost::HandleGetAbilityInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string uri = data.ReadString();
     uint32_t flags = data.ReadUint32();
     std::vector<AbilityInfo> abilityInfos;
@@ -1409,7 +1409,7 @@ ErrCode BundleMgrHost::HandleGetAbilityInfos(MessageParcel &data, MessageParcel 
 
 ErrCode BundleMgrHost::HandleBatchQueryAbilityInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t wantCount = data.ReadInt32();
     if (wantCount <= 0 || wantCount > MAX_BATCH_QUERY_ABILITY_SIZE) {
         APP_LOGE("want count is error");
@@ -1486,7 +1486,7 @@ ErrCode BundleMgrHost::HandleGetLauncherAbilityInfoSync(MessageParcel &data, Mes
 
 ErrCode BundleMgrHost::HandleQueryAllAbilityInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -1510,7 +1510,7 @@ ErrCode BundleMgrHost::HandleQueryAllAbilityInfos(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleQueryAbilityInfoByUri(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string abilityUri = data.ReadString();
     AbilityInfo info;
     bool ret = QueryAbilityInfoByUri(abilityUri, info);
@@ -1529,7 +1529,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfoByUri(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleQueryAbilityInfosByUri(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string abilityUri = data.ReadString();
     std::vector<AbilityInfo> abilityInfos;
     bool ret = QueryAbilityInfosByUri(abilityUri, abilityInfos);
@@ -1567,7 +1567,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfoByUriForUserId(MessageParcel &data,
 
 ErrCode BundleMgrHost::HandleQueryKeepAliveBundleInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::vector<BundleInfo> infos;
     bool ret = QueryKeepAliveBundleInfos(infos);
     if (!reply.WriteBool(ret)) {
@@ -1585,7 +1585,7 @@ ErrCode BundleMgrHost::HandleQueryKeepAliveBundleInfos(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleGetAbilityLabel(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string abilityName = data.ReadString();
 
@@ -1601,7 +1601,7 @@ ErrCode BundleMgrHost::HandleGetAbilityLabel(MessageParcel &data, MessageParcel 
 
 ErrCode BundleMgrHost::HandleGetAbilityLabelWithModuleName(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     std::string abilityName = data.ReadString();
@@ -1625,7 +1625,7 @@ ErrCode BundleMgrHost::HandleGetAbilityLabelWithModuleName(MessageParcel &data, 
 
 ErrCode BundleMgrHost::HandleCheckIsSystemAppByUid(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int uid = data.ReadInt32();
     bool ret = CheckIsSystemAppByUid(uid);
     if (!reply.WriteBool(ret)) {
@@ -1637,7 +1637,7 @@ ErrCode BundleMgrHost::HandleCheckIsSystemAppByUid(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleGetBundleArchiveInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string hapFilePath = data.ReadString();
     BundleFlag flag = static_cast<BundleFlag>(data.ReadInt32());
     APP_LOGD("hapFilePath %{private}s, flag %{public}d", hapFilePath.c_str(), flag);
@@ -1659,7 +1659,7 @@ ErrCode BundleMgrHost::HandleGetBundleArchiveInfo(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlags(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string hapFilePath = data.ReadString();
     int32_t flags = data.ReadInt32();
     APP_LOGD("hapFilePath %{private}s, flagS %{public}d", hapFilePath.c_str(), flags);
@@ -1681,7 +1681,7 @@ ErrCode BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlags(MessageParcel &dat
 
 ErrCode BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlagsV9(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string hapFilePath = data.ReadString();
     int32_t flags = data.ReadInt32();
     APP_LOGD("hapFilePath %{private}s, flags %{public}d", hapFilePath.c_str(), flags);
@@ -1703,7 +1703,7 @@ ErrCode BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlagsV9(MessageParcel &d
 
 ErrCode BundleMgrHost::HandleGetHapModuleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
     if (!abilityInfo) {
         APP_LOGE("ReadParcelable<abilityInfo> failed");
@@ -1727,7 +1727,7 @@ ErrCode BundleMgrHost::HandleGetHapModuleInfo(MessageParcel &data, MessageParcel
 
 ErrCode BundleMgrHost::HandleGetHapModuleInfoWithUserId(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
     if (abilityInfo == nullptr) {
         APP_LOGE("ReadParcelable<abilityInfo> failed");
@@ -1752,7 +1752,7 @@ ErrCode BundleMgrHost::HandleGetHapModuleInfoWithUserId(MessageParcel &data, Mes
 
 ErrCode BundleMgrHost::HandleGetLaunchWantForBundle(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     APP_LOGD("name %{public}s", bundleName.c_str());
@@ -1774,7 +1774,7 @@ ErrCode BundleMgrHost::HandleGetLaunchWantForBundle(MessageParcel &data, Message
 
 ErrCode BundleMgrHost::HandleGetPermissionDef(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string permissionName = data.ReadString();
     APP_LOGD("name %{public}s", permissionName.c_str());
 
@@ -1795,7 +1795,7 @@ ErrCode BundleMgrHost::HandleGetPermissionDef(MessageParcel &data, MessageParcel
 
 ErrCode BundleMgrHost::HandleCleanBundleCacheFilesAutomatic(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     uint64_t cacheSize = data.ReadUint64();
     ErrCode ret = CleanBundleCacheFilesAutomatic(cacheSize);
@@ -1809,7 +1809,7 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFilesAutomatic(MessageParcel &data,
 
 ErrCode BundleMgrHost::HandleCleanBundleCacheFiles(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
@@ -1830,7 +1830,7 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFiles(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleCleanBundleDataFiles(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int userId = data.ReadInt32();
     int appIndex = data.ReadInt32();
@@ -1845,7 +1845,7 @@ ErrCode BundleMgrHost::HandleCleanBundleDataFiles(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
@@ -1872,7 +1872,7 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
 
 ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read IRemoteObject failed");
@@ -1893,7 +1893,7 @@ ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, Me
 
 ErrCode BundleMgrHost::HandleUnregisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read IRemoteObject failed");
@@ -1911,7 +1911,7 @@ ErrCode BundleMgrHost::HandleUnregisterBundleEventCallback(MessageParcel &data, 
 
 ErrCode BundleMgrHost::HandleClearBundleStatusCallback(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
@@ -1929,7 +1929,7 @@ ErrCode BundleMgrHost::HandleClearBundleStatusCallback(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleUnregisterBundleStatusCallback(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     bool ret = UnregisterBundleStatusCallback();
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
@@ -1940,7 +1940,7 @@ ErrCode BundleMgrHost::HandleUnregisterBundleStatusCallback(MessageParcel &data,
 
 ErrCode BundleMgrHost::HandleCompileProcessAOT(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string compileMode = data.ReadString();
     bool isAllBundle = data.ReadBool();
@@ -1964,7 +1964,7 @@ ErrCode BundleMgrHost::HandleCompileProcessAOT(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleCompileReset(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     bool isAllBundle = data.ReadBool();
 
@@ -1980,7 +1980,7 @@ ErrCode BundleMgrHost::HandleCompileReset(MessageParcel &data, MessageParcel &re
 
 ErrCode BundleMgrHost::HandleCopyAp(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     bool isAllBundle = data.ReadBool();
     std::vector<std::string> results;
@@ -1999,7 +1999,7 @@ ErrCode BundleMgrHost::HandleCopyAp(MessageParcel &data, MessageParcel &reply)
 
 ErrCode BundleMgrHost::HandleDumpInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     DumpFlag flag = static_cast<DumpFlag>(data.ReadInt32());
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
@@ -2024,7 +2024,7 @@ ErrCode BundleMgrHost::HandleDumpInfos(MessageParcel &data, MessageParcel &reply
 
 ErrCode BundleMgrHost::HandleIsApplicationEnabled(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     if (bundleName.empty()) {
         APP_LOGE("fail to IsApplicationEnabled due to params empty");
@@ -2045,7 +2045,7 @@ ErrCode BundleMgrHost::HandleIsApplicationEnabled(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleIsCloneApplicationEnabled(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     if (bundleName.empty()) {
         APP_LOGE("fail to HandleIsCloneApplicationEnabled due to params empty");
@@ -2065,7 +2065,7 @@ ErrCode BundleMgrHost::HandleIsCloneApplicationEnabled(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     if (bundleName.empty()) {
         APP_LOGE("fail to SetApplicationEnabled due to params empty");
@@ -2083,7 +2083,7 @@ ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleSetCloneApplicationEnabled(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     if (bundleName.empty()) {
         APP_LOGE("fail to SetCloneApplicationEnabled due to params empty");
@@ -2101,7 +2101,7 @@ ErrCode BundleMgrHost::HandleSetCloneApplicationEnabled(MessageParcel &data, Mes
 
 ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
     if (abilityInfo == nullptr) {
         APP_LOGE("ReadParcelable<abilityInfo> failed");
@@ -2122,7 +2122,7 @@ ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel
 
 ErrCode BundleMgrHost::HandleIsCloneAbilityEnabled(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
     if (abilityInfo == nullptr) {
         APP_LOGE("ReadParcelable<abilityInfo> failed");
@@ -2142,7 +2142,7 @@ ErrCode BundleMgrHost::HandleIsCloneAbilityEnabled(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleSetAbilityEnabled(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
     if (abilityInfo == nullptr) {
         APP_LOGE("ReadParcelable<abilityInfo> failed");
@@ -2160,7 +2160,7 @@ ErrCode BundleMgrHost::HandleSetAbilityEnabled(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleSetCloneAbilityEnabled(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
     if (abilityInfo == nullptr) {
         APP_LOGE("ReadParcelable<abilityInfo> failed");
@@ -2178,7 +2178,7 @@ ErrCode BundleMgrHost::HandleSetCloneAbilityEnabled(MessageParcel &data, Message
 
 ErrCode BundleMgrHost::HandleGetAbilityInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     AbilityInfo info;
     std::string bundleName = data.ReadString();
     std::string abilityName = data.ReadString();
@@ -2198,7 +2198,7 @@ ErrCode BundleMgrHost::HandleGetAbilityInfo(MessageParcel &data, MessageParcel &
 
 ErrCode BundleMgrHost::HandleGetAbilityInfoWithModuleName(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     AbilityInfo info;
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
@@ -2219,7 +2219,7 @@ ErrCode BundleMgrHost::HandleGetAbilityInfoWithModuleName(MessageParcel &data, M
 
 ErrCode BundleMgrHost::HandleGetBundleInstaller(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IBundleInstaller> installer = GetBundleInstaller();
     if (installer == nullptr) {
         APP_LOGE("bundle installer is nullptr");
@@ -2235,7 +2235,7 @@ ErrCode BundleMgrHost::HandleGetBundleInstaller(MessageParcel &data, MessageParc
 
 ErrCode BundleMgrHost::HandleGetBundleUserMgr(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IBundleUserMgr> bundleUserMgr = GetBundleUserMgr();
     if (bundleUserMgr == nullptr) {
         APP_LOGE("bundle installer is nullptr");
@@ -2251,7 +2251,7 @@ ErrCode BundleMgrHost::HandleGetBundleUserMgr(MessageParcel &data, MessageParcel
 
 ErrCode BundleMgrHost::HandleGetVerifyManager(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IVerifyManager> verifyManager = GetVerifyManager();
     if (verifyManager == nullptr) {
         APP_LOGE("verifyManager is nullptr");
@@ -2267,7 +2267,7 @@ ErrCode BundleMgrHost::HandleGetVerifyManager(MessageParcel &data, MessageParcel
 
 ErrCode BundleMgrHost::HandleGetExtendResourceManager(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IExtendResourceManager> extendResourceManager = GetExtendResourceManager();
     if (extendResourceManager == nullptr) {
         APP_LOGE("extendResourceManager is nullptr");
@@ -2283,7 +2283,7 @@ ErrCode BundleMgrHost::HandleGetExtendResourceManager(MessageParcel &data, Messa
 
 ErrCode BundleMgrHost::HandleGetAllFormsInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::vector<FormInfo> infos;
     bool ret = GetAllFormsInfo(infos);
     if (!reply.WriteBool(ret)) {
@@ -2302,7 +2302,7 @@ ErrCode BundleMgrHost::HandleGetAllFormsInfo(MessageParcel &data, MessageParcel 
 
 ErrCode BundleMgrHost::HandleGetFormsInfoByApp(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundlename = data.ReadString();
     std::vector<FormInfo> infos;
     bool ret = GetFormsInfoByApp(bundlename, infos);
@@ -2322,7 +2322,7 @@ ErrCode BundleMgrHost::HandleGetFormsInfoByApp(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleGetFormsInfoByModule(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundlename = data.ReadString();
     std::string modulename = data.ReadString();
     std::vector<FormInfo> infos;
@@ -2343,7 +2343,7 @@ ErrCode BundleMgrHost::HandleGetFormsInfoByModule(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleGetShortcutInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundlename = data.ReadString();
     std::vector<ShortcutInfo> infos;
     bool ret = GetShortcutInfos(bundlename, infos);
@@ -2363,7 +2363,7 @@ ErrCode BundleMgrHost::HandleGetShortcutInfos(MessageParcel &data, MessageParcel
 
 ErrCode BundleMgrHost::HandleGetShortcutInfoV9(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundlename = data.ReadString();
     int32_t userId = data.ReadInt32();
     std::vector<ShortcutInfo> infos;
@@ -2381,7 +2381,7 @@ ErrCode BundleMgrHost::HandleGetShortcutInfoV9(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleGetAllCommonEventInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string eventKey = data.ReadString();
     std::vector<CommonEventInfo> infos;
     bool ret = GetAllCommonEventInfo(eventKey, infos);
@@ -2460,7 +2460,7 @@ ErrCode BundleMgrHost::HandleQueryExtAbilityInfosWithoutType(MessageParcel &data
 
 ErrCode BundleMgrHost::HandleQueryExtAbilityInfosWithoutTypeV9(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (!want) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -2508,7 +2508,7 @@ ErrCode BundleMgrHost::HandleQueryExtAbilityInfos(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleQueryExtAbilityInfosV9(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -2563,7 +2563,7 @@ ErrCode BundleMgrHost::HandleVerifyCallingPermission(MessageParcel &data, Messag
 
 ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfoByUri(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string uri = data.ReadString();
     int32_t userId = data.ReadInt32();
     ExtensionAbilityInfo extensionAbilityInfo;
@@ -2583,7 +2583,7 @@ ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfoByUri(MessageParcel &data,
 
 ErrCode BundleMgrHost::HandleGetAppIdByBundleName(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     std::string appId = GetAppIdByBundleName(bundleName, userId);
@@ -2597,7 +2597,7 @@ ErrCode BundleMgrHost::HandleGetAppIdByBundleName(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleGetAppType(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string appType = GetAppType(bundleName);
     APP_LOGD("appType is %{public}s", appType.c_str());
@@ -2610,7 +2610,7 @@ ErrCode BundleMgrHost::HandleGetAppType(MessageParcel &data, MessageParcel &repl
 
 ErrCode BundleMgrHost::HandleGetUidByBundleName(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
@@ -2625,7 +2625,7 @@ ErrCode BundleMgrHost::HandleGetUidByBundleName(MessageParcel &data, MessageParc
 
 ErrCode BundleMgrHost::HandleGetUidByDebugBundleName(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     int32_t uid = GetUidByDebugBundleName(bundleName, userId);
@@ -2639,7 +2639,7 @@ ErrCode BundleMgrHost::HandleGetUidByDebugBundleName(MessageParcel &data, Messag
 
 ErrCode BundleMgrHost::HandleIsModuleRemovable(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
 
@@ -2659,7 +2659,7 @@ ErrCode BundleMgrHost::HandleIsModuleRemovable(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleSetModuleRemovable(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     bool isEnable = data.ReadBool();
@@ -2674,7 +2674,7 @@ ErrCode BundleMgrHost::HandleSetModuleRemovable(MessageParcel &data, MessageParc
 
 ErrCode BundleMgrHost::HandleGetModuleUpgradeFlag(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
 
@@ -2689,7 +2689,7 @@ ErrCode BundleMgrHost::HandleGetModuleUpgradeFlag(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleSetModuleUpgradeFlag(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     int32_t upgradeFlag = data.ReadInt32();
@@ -2704,7 +2704,7 @@ ErrCode BundleMgrHost::HandleSetModuleUpgradeFlag(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleImplicitQueryInfoByPriority(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -2734,7 +2734,7 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfoByPriority(MessageParcel &data, Me
 
 ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable want failed");
@@ -2770,7 +2770,7 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParc
 
 ErrCode BundleMgrHost::HandleGetAllDependentModuleNames(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     std::vector<std::string> dependentModuleNames;
@@ -2788,7 +2788,7 @@ ErrCode BundleMgrHost::HandleGetAllDependentModuleNames(MessageParcel &data, Mes
 
 ErrCode BundleMgrHost::HandleGetSandboxBundleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t appIndex = data.ReadInt32();
     int32_t userId = data.ReadInt32();
@@ -2807,7 +2807,7 @@ ErrCode BundleMgrHost::HandleGetSandboxBundleInfo(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleObtainCallingBundleName(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = "";
     auto ret = ObtainCallingBundleName(bundleName);
     if (!reply.WriteBool(ret)) {
@@ -2823,7 +2823,7 @@ ErrCode BundleMgrHost::HandleObtainCallingBundleName(MessageParcel &data, Messag
 
 ErrCode BundleMgrHost::HandleCheckAbilityEnableInstall(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -2844,7 +2844,7 @@ ErrCode BundleMgrHost::HandleCheckAbilityEnableInstall(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleGetStringById(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     uint32_t resId = data.ReadUint32();
@@ -2866,7 +2866,7 @@ ErrCode BundleMgrHost::HandleGetStringById(MessageParcel &data, MessageParcel &r
 
 ErrCode BundleMgrHost::HandleGetIconById(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     uint32_t resId = data.ReadUint32();
@@ -2889,7 +2889,7 @@ ErrCode BundleMgrHost::HandleGetIconById(MessageParcel &data, MessageParcel &rep
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 ErrCode BundleMgrHost::HandleGetDefaultAppProxy(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IDefaultApp> defaultAppProxy = GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         APP_LOGE("defaultAppProxy is nullptr");
@@ -2907,7 +2907,7 @@ ErrCode BundleMgrHost::HandleGetDefaultAppProxy(MessageParcel &data, MessageParc
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 ErrCode BundleMgrHost::HandleGetAppControlProxy(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IAppControlMgr> appControlProxy = GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("appControlProxy is nullptr");
@@ -2924,7 +2924,7 @@ ErrCode BundleMgrHost::HandleGetAppControlProxy(MessageParcel &data, MessageParc
 
 ErrCode BundleMgrHost::HandleGetBundleMgrExtProxy(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IBundleMgrExt> bundleMgrExtProxy = GetBundleMgrExtProxy();
     if (bundleMgrExtProxy == nullptr) {
         APP_LOGE("bundleMgrExtProxy is nullptr");
@@ -2940,7 +2940,7 @@ ErrCode BundleMgrHost::HandleGetBundleMgrExtProxy(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleGetSandboxAbilityInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -2965,7 +2965,7 @@ ErrCode BundleMgrHost::HandleGetSandboxAbilityInfo(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleGetSandboxExtAbilityInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (!want) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -2990,7 +2990,7 @@ ErrCode BundleMgrHost::HandleGetSandboxExtAbilityInfos(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleGetSandboxHapModuleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
     if (abilityInfo == nullptr) {
         APP_LOGE("ReadParcelable<abilityInfo> failed");
@@ -3013,7 +3013,7 @@ ErrCode BundleMgrHost::HandleGetSandboxHapModuleInfo(MessageParcel &data, Messag
 
 ErrCode BundleMgrHost::HandleGetQuickFixManagerProxy(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IQuickFixManager> quickFixManagerProxy = GetQuickFixManagerProxy();
     if (quickFixManagerProxy == nullptr) {
         APP_LOGE("quickFixManagerProxy is nullptr");
@@ -3103,7 +3103,7 @@ int32_t BundleMgrHost::AllocatAshmemNum()
 
 ErrCode BundleMgrHost::HandleQueryAbilityInfoWithCallback(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -3129,7 +3129,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfoWithCallback(MessageParcel &data, M
 
 ErrCode BundleMgrHost::HandleSilentInstall(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -3147,7 +3147,7 @@ ErrCode BundleMgrHost::HandleSilentInstall(MessageParcel &data, MessageParcel &r
 
 ErrCode BundleMgrHost::HandleUpgradeAtomicService(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("read parcelable want failed");
@@ -3160,7 +3160,7 @@ ErrCode BundleMgrHost::HandleUpgradeAtomicService(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
@@ -3180,7 +3180,7 @@ ErrCode BundleMgrHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &
 
 ErrCode BundleMgrHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t userId = data.ReadInt32();
     std::vector<int64_t> bundleStats;
     bool ret = GetAllBundleStats(userId, bundleStats);
@@ -3197,7 +3197,7 @@ ErrCode BundleMgrHost::HandleGetAllBundleStats(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleGetMediaData(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string abilityName = data.ReadString();
     std::string moduleName = data.ReadString();
@@ -3243,7 +3243,7 @@ ErrCode BundleMgrHost::HandleGetMediaData(MessageParcel &data, MessageParcel &re
 ErrCode BundleMgrHost::HandleSetDebugMode(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGI("start to process HandleSetDebugMode message");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     bool enable = data.ReadBool();
     auto ret = SetDebugMode(enable);
     if (ret != ERR_OK) {
@@ -3258,7 +3258,7 @@ ErrCode BundleMgrHost::HandleSetDebugMode(MessageParcel &data, MessageParcel &re
 
 ErrCode BundleMgrHost::HandleGetOverlayManagerProxy(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IOverlayManager> overlayManagerProxy = GetOverlayManagerProxy();
     if (overlayManagerProxy == nullptr) {
         APP_LOGE("overlayManagerProxy is nullptr");
@@ -3275,7 +3275,7 @@ ErrCode BundleMgrHost::HandleGetOverlayManagerProxy(MessageParcel &data, Message
 ErrCode BundleMgrHost::HandleProcessPreload(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGD("start to process HandleProcessPreload message");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -3291,7 +3291,7 @@ ErrCode BundleMgrHost::HandleProcessPreload(MessageParcel &data, MessageParcel &
 
 ErrCode BundleMgrHost::HandleGetAppProvisionInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     AppProvisionInfo appProvisionInfo;
@@ -3309,7 +3309,7 @@ ErrCode BundleMgrHost::HandleGetAppProvisionInfo(MessageParcel &data, MessagePar
 
 ErrCode BundleMgrHost::HandleGetProvisionMetadata(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     APP_LOGD("start to get provision metadata, bundleName is %{public}s, userId is %{public}d",
@@ -3335,7 +3335,7 @@ ErrCode BundleMgrHost::HandleGetProvisionMetadata(MessageParcel &data, MessagePa
 ErrCode BundleMgrHost::HandleGetBaseSharedBundleInfos(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGD("start to process HandleGetBaseSharedBundleInfos message");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     GetDependentBundleInfoFlag flag = static_cast<GetDependentBundleInfoFlag>(data.ReadUint32());
 
@@ -3357,7 +3357,7 @@ ErrCode BundleMgrHost::HandleGetBaseSharedBundleInfos(MessageParcel &data, Messa
 
 ErrCode BundleMgrHost::HandleGetAllSharedBundleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::vector<SharedBundleInfo> infos;
     ErrCode ret = GetAllSharedBundleInfo(infos);
     if (!reply.WriteInt32(ret)) {
@@ -3373,7 +3373,7 @@ ErrCode BundleMgrHost::HandleGetAllSharedBundleInfo(MessageParcel &data, Message
 
 ErrCode BundleMgrHost::HandleGetSharedBundleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     std::vector<SharedBundleInfo> infos;
@@ -3391,7 +3391,7 @@ ErrCode BundleMgrHost::HandleGetSharedBundleInfo(MessageParcel &data, MessagePar
 
 ErrCode BundleMgrHost::HandleGetSharedBundleInfoBySelf(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     SharedBundleInfo shareBundleInfo;
     ErrCode ret = GetSharedBundleInfoBySelf(bundleName, shareBundleInfo);
@@ -3408,7 +3408,7 @@ ErrCode BundleMgrHost::HandleGetSharedBundleInfoBySelf(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleGetSharedDependencies(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     std::vector<Dependency> dependencies;
@@ -3426,7 +3426,7 @@ ErrCode BundleMgrHost::HandleGetSharedDependencies(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleGetProxyDataInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     int32_t userId = data.ReadInt32();
@@ -3445,7 +3445,7 @@ ErrCode BundleMgrHost::HandleGetProxyDataInfos(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleGetAllProxyDataInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::vector<ProxyData> proxyDatas;
     int32_t userId = data.ReadInt32();
     ErrCode ret = GetAllProxyDataInfos(proxyDatas, userId);
@@ -3462,7 +3462,7 @@ ErrCode BundleMgrHost::HandleGetAllProxyDataInfos(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleGetSpecifiedDistributionType(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string specifiedDistributedType;
     ErrCode ret = GetSpecifiedDistributionType(bundleName, specifiedDistributedType);
@@ -3479,7 +3479,7 @@ ErrCode BundleMgrHost::HandleGetSpecifiedDistributionType(MessageParcel &data, M
 
 ErrCode BundleMgrHost::HandleBatchGetSpecifiedDistributionType(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t bundleNameCount = data.ReadInt32();
     if (bundleNameCount <= 0 || bundleNameCount > MAX_BATCH_QUERY_BUNDLE_SIZE) {
         APP_LOGE("bundleName count is error");
@@ -3505,7 +3505,7 @@ ErrCode BundleMgrHost::HandleBatchGetSpecifiedDistributionType(MessageParcel &da
 
 ErrCode BundleMgrHost::HandleGetAdditionalInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string additionalInfo;
     ErrCode ret = GetAdditionalInfo(bundleName, additionalInfo);
@@ -3522,7 +3522,7 @@ ErrCode BundleMgrHost::HandleGetAdditionalInfo(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleBatchGetAdditionalInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t bundleNameCount = data.ReadInt32();
     if (bundleNameCount <= 0 || bundleNameCount > MAX_BATCH_QUERY_BUNDLE_SIZE) {
         APP_LOGE("bundleName count is incorrect");
@@ -3548,7 +3548,7 @@ ErrCode BundleMgrHost::HandleBatchGetAdditionalInfo(MessageParcel &data, Message
 
 ErrCode BundleMgrHost::HandleGetAdditionalInfoForAllUser(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string additionalInfo;
     ErrCode ret = GetAdditionalInfoForAllUser(bundleName, additionalInfo);
@@ -3565,7 +3565,7 @@ ErrCode BundleMgrHost::HandleGetAdditionalInfoForAllUser(MessageParcel &data, Me
 
 ErrCode BundleMgrHost::HandleSetExtNameOrMIMEToApp(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     std::string abilityName = data.ReadString();
@@ -3581,7 +3581,7 @@ ErrCode BundleMgrHost::HandleSetExtNameOrMIMEToApp(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleDelExtNameOrMIMEToApp(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     std::string abilityName = data.ReadString();
@@ -3597,7 +3597,7 @@ ErrCode BundleMgrHost::HandleDelExtNameOrMIMEToApp(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleQueryDataGroupInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
 
@@ -3616,7 +3616,7 @@ ErrCode BundleMgrHost::HandleQueryDataGroupInfos(MessageParcel &data, MessagePar
 
 ErrCode BundleMgrHost::HandleGetPreferenceDirByGroupId(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string dataGroupId = data.ReadString();
     std::string dir;
     bool ret = GetGroupDir(dataGroupId, dir);
@@ -3636,7 +3636,7 @@ ErrCode BundleMgrHost::HandleGetPreferenceDirByGroupId(MessageParcel &data, Mess
 ErrCode BundleMgrHost::HandleQueryAppGalleryBundleName(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGD("QueryAppGalleryBundleName in bundle mgr hoxt start");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName;
     bool ret = QueryAppGalleryBundleName(bundleName);
     if (!reply.WriteBool(ret)) {
@@ -3680,7 +3680,7 @@ ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName(MessageParce
 
 ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosOnlyWithTypeName(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string extensionTypeName = data.ReadString();
     uint32_t flags = data.ReadUint32();
     int32_t userId = data.ReadInt32();
@@ -3700,7 +3700,7 @@ ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosOnlyWithTypeName(MessageP
 
 ErrCode BundleMgrHost::HandleResetAOTCompileStatus(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     int32_t triggerMode = data.ReadInt32();
@@ -3717,7 +3717,7 @@ ErrCode BundleMgrHost::HandleResetAOTCompileStatus(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleGetJsonProfile(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     ProfileType profileType = static_cast<ProfileType>(data.ReadInt32());
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
@@ -3737,7 +3737,7 @@ ErrCode BundleMgrHost::HandleGetJsonProfile(MessageParcel &data, MessageParcel &
 
 ErrCode BundleMgrHost::HandleGetBundleResourceProxy(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IBundleResource> bundleResourceProxy = GetBundleResourceProxy();
     if (bundleResourceProxy == nullptr) {
         APP_LOGE("bundleResourceProxy is nullptr");
@@ -3753,7 +3753,7 @@ ErrCode BundleMgrHost::HandleGetBundleResourceProxy(MessageParcel &data, Message
 
 ErrCode BundleMgrHost::HandleGetRecoverableApplicationInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::vector<RecoverableApplicationInfo> infos;
     ErrCode ret = GetRecoverableApplicationInfo(infos);
     if (!reply.WriteInt32(ret)) {
@@ -3769,7 +3769,7 @@ ErrCode BundleMgrHost::HandleGetRecoverableApplicationInfo(MessageParcel &data, 
 
 ErrCode BundleMgrHost::HandleGetUninstalledBundleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string name = data.ReadString();
     if (name.empty()) {
         APP_LOGE("bundleName is empty");
@@ -3791,7 +3791,7 @@ ErrCode BundleMgrHost::HandleGetUninstalledBundleInfo(MessageParcel &data, Messa
 
 ErrCode BundleMgrHost::HandleSetAdditionalInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string additionalInfo = data.ReadString();
     ErrCode ret = SetAdditionalInfo(bundleName, additionalInfo);
@@ -3804,7 +3804,7 @@ ErrCode BundleMgrHost::HandleSetAdditionalInfo(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleMigrateData(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("HandleMigrateData called");
     std::vector<std::string> sourcePaths;
     if (!data.ReadStringVector(&sourcePaths)) {
@@ -3823,7 +3823,7 @@ ErrCode BundleMgrHost::HandleMigrateData(MessageParcel &data, MessageParcel &rep
 
 ErrCode BundleMgrHost::HandleCreateBundleDataDir(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("CreateBundleDataDir called");
     int32_t userId = data.ReadInt32();
     ErrCode ret = CreateBundleDataDir(userId);
@@ -3836,7 +3836,7 @@ ErrCode BundleMgrHost::HandleCreateBundleDataDir(MessageParcel &data, MessagePar
 
 ErrCode BundleMgrHost::HandleCreateBundleDataDirWithEl(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("CreateBundleDataDirWithEl called");
     int32_t userId = data.ReadInt32();
     DataDirEl dirEl = static_cast<DataDirEl>(data.ReadUint8());
@@ -4011,7 +4011,7 @@ ErrCode BundleMgrHost::ReadParcelInfoIntelligent(MessageParcel &data, T &parcelI
 
 ErrCode BundleMgrHost::HandleCanOpenLink(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string link = data.ReadString();
     bool canOpen = false;
     ErrCode ret = CanOpenLink(link, canOpen);
@@ -4028,7 +4028,7 @@ ErrCode BundleMgrHost::HandleCanOpenLink(MessageParcel &data, MessageParcel &rep
 
 ErrCode BundleMgrHost::HandleGetOdid(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string odid;
     auto ret = GetOdid(odid);
     if (!reply.WriteInt32(ret)) {
@@ -4045,7 +4045,7 @@ ErrCode BundleMgrHost::HandleGetOdid(MessageParcel &data, MessageParcel &reply)
 
 ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("Called");
     std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
     ErrCode ret = GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
@@ -4075,7 +4075,7 @@ ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &d
 
 ErrCode BundleMgrHost::HandleGetAllBundleInfoByDeveloperId(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string developerId = data.ReadString();
     int32_t userId = data.ReadInt32();
     std::vector<BundleInfo> infos;
@@ -4095,7 +4095,7 @@ ErrCode BundleMgrHost::HandleGetAllBundleInfoByDeveloperId(MessageParcel &data, 
 
 ErrCode BundleMgrHost::HandleGetDeveloperIds(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string appDistributionType = data.ReadString();
     int32_t userId = data.ReadInt32();
     std::vector<std::string> developerIdList;
@@ -4115,7 +4115,7 @@ ErrCode BundleMgrHost::HandleGetDeveloperIds(MessageParcel &data, MessageParcel 
 
 ErrCode BundleMgrHost::HandleSwitchUninstallState(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     bool state = data.ReadBool();
     bool isNeedSendNotify = data.ReadBool();
@@ -4129,7 +4129,7 @@ ErrCode BundleMgrHost::HandleSwitchUninstallState(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleQueryAbilityInfoByContinueType(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string continueType = data.ReadString();
     int32_t userId = data.ReadInt32();
@@ -4148,7 +4148,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfoByContinueType(MessageParcel &data,
 
 ErrCode BundleMgrHost::HandleQueryCloneAbilityInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     std::unique_ptr<ElementName> elementNamePtr(data.ReadParcelable<ElementName>());
     if (!elementNamePtr) {
@@ -4175,7 +4175,7 @@ ErrCode BundleMgrHost::HandleQueryCloneAbilityInfo(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleGetCloneBundleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t flags = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
@@ -4196,7 +4196,7 @@ ErrCode BundleMgrHost::HandleGetCloneBundleInfo(MessageParcel &data, MessageParc
 
 ErrCode BundleMgrHost::HandleGetCloneBundleInfoExt(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     uint32_t flags = data.ReadUint32();
     int32_t appIndex = data.ReadInt32();
@@ -4217,7 +4217,7 @@ ErrCode BundleMgrHost::HandleGetCloneBundleInfoExt(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleGetCloneAppIndexes(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
 
@@ -4236,7 +4236,7 @@ ErrCode BundleMgrHost::HandleGetCloneAppIndexes(MessageParcel &data, MessageParc
 
 ErrCode BundleMgrHost::HandleGetLaunchWant(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     Want want;
     ErrCode ret = GetLaunchWant(want);
     if (!reply.WriteInt32(ret)) {
@@ -4293,7 +4293,7 @@ ErrCode BundleMgrHost::HandleGetSignatureInfoByBundleName(MessageParcel &data, M
 
 ErrCode BundleMgrHost::HandleGetSignatureInfoByUid(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t uid = data.ReadInt32();
     SignatureInfo info;
     ErrCode ret = GetSignatureInfoByUid(uid, info);
@@ -4323,7 +4323,7 @@ ErrCode BundleMgrHost::HandleUpdateAppEncryptedStatus(MessageParcel &data, Messa
 
 ErrCode BundleMgrHost::HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     ShortcutInfo shortcutInfo;
     auto ret = ReadParcelInfoIntelligent(data, shortcutInfo);
     if (ret != ERR_OK) {
@@ -4341,7 +4341,7 @@ ErrCode BundleMgrHost::HandleAddDesktopShortcutInfo(MessageParcel &data, Message
 
 ErrCode BundleMgrHost::HandleDeleteDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     ShortcutInfo shortcutInfo;
     auto ret = ReadParcelInfoIntelligent(data, shortcutInfo);
     if (ret != ERR_OK) {
@@ -4359,7 +4359,7 @@ ErrCode BundleMgrHost::HandleDeleteDesktopShortcutInfo(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleGetAllDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t userId = data.ReadInt32();
     std::vector<ShortcutInfo> infos;
     auto ret = GetAllDesktopShortcutInfo(userId, infos);
@@ -4376,7 +4376,7 @@ ErrCode BundleMgrHost::HandleGetAllDesktopShortcutInfo(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string odid;
     auto ret = GetOdidByBundleName(bundleName, odid);
@@ -4394,7 +4394,7 @@ ErrCode BundleMgrHost::HandleGetOdidByBundleName(MessageParcel &data, MessagePar
 
 ErrCode BundleMgrHost::HandleGetBundleInfosForContinuation(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int flags = data.ReadInt32();
     int userId = data.ReadInt32();
 
@@ -4416,7 +4416,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosForContinuation(MessageParcel &data, 
 
 ErrCode BundleMgrHost::HandleGetContinueBundleNames(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string continueBundleName = data.ReadString();
     int userId = data.ReadInt32();
 
@@ -4436,7 +4436,7 @@ ErrCode BundleMgrHost::HandleGetContinueBundleNames(MessageParcel &data, Message
 
 ErrCode BundleMgrHost::HandleIsBundleInstalled(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     int32_t apppIndex = data.ReadInt32();
@@ -4455,7 +4455,7 @@ ErrCode BundleMgrHost::HandleIsBundleInstalled(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleGetCompatibleDeviceTypeNative(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string deviceType;
     auto ret = GetCompatibleDeviceTypeNative(deviceType);
     if (!reply.WriteInt32(ret)) {
@@ -4471,7 +4471,7 @@ ErrCode BundleMgrHost::HandleGetCompatibleDeviceTypeNative(MessageParcel &data, 
 
 ErrCode BundleMgrHost::HandleGetCompatibleDeviceType(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string deviceType;
     auto ret = GetCompatibleDeviceType(bundleName, deviceType);
@@ -4488,7 +4488,7 @@ ErrCode BundleMgrHost::HandleGetCompatibleDeviceType(MessageParcel &data, Messag
 
 ErrCode BundleMgrHost::HandleGetBundleNameByAppId(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string appId = data.ReadString();
     std::string bundleName;
     auto ret = GetBundleNameByAppId(appId, bundleName);
@@ -4505,7 +4505,7 @@ ErrCode BundleMgrHost::HandleGetBundleNameByAppId(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t appIndex = data.ReadInt32();
     std::string dataDir;
@@ -4523,7 +4523,7 @@ ErrCode BundleMgrHost::HandleGetDirByBundleNameAndAppIndex(MessageParcel &data, 
 
 ErrCode BundleMgrHost::HandleGetAllBundleCacheStat(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
@@ -4544,7 +4544,7 @@ ErrCode BundleMgrHost::HandleGetAllBundleCacheStat(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleCleanAllBundleCache(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
@@ -4565,7 +4565,7 @@ ErrCode BundleMgrHost::HandleCleanAllBundleCache(MessageParcel &data, MessagePar
 
 ErrCode BundleMgrHost::HandleGetAllPluginInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string hostBundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     std::vector<PluginBundleInfo> pluginBundleInfos;
@@ -4585,7 +4585,7 @@ ErrCode BundleMgrHost::HandleGetAllPluginInfo(MessageParcel &data, MessageParcel
 
 ErrCode BundleMgrHost::HandleGetPluginInfosForSelf(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::vector<PluginBundleInfo> pluginBundleInfos;
     auto ret = GetPluginInfosForSelf(pluginBundleInfos);
     if (!reply.WriteInt32(ret)) {
@@ -4603,7 +4603,7 @@ ErrCode BundleMgrHost::HandleGetPluginInfosForSelf(MessageParcel &data, MessageP
 
 ErrCode BundleMgrHost::HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t userId = data.ReadInt32();
     std::vector<BundleDir> bundleDirs;
     auto ret = GetAllBundleDirs(userId, bundleDirs);
@@ -4622,7 +4622,7 @@ ErrCode BundleMgrHost::HandleGetAllBundleDirs(MessageParcel &data, MessageParcel
 
 ErrCode BundleMgrHost::HandleRegisterPluginEventCallback(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read IRemoteObject failed");
@@ -4643,7 +4643,7 @@ ErrCode BundleMgrHost::HandleRegisterPluginEventCallback(MessageParcel &data, Me
 
 ErrCode BundleMgrHost::HandleUnregisterPluginEventCallback(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read IRemoteObject failed");
@@ -4664,7 +4664,7 @@ ErrCode BundleMgrHost::HandleUnregisterPluginEventCallback(MessageParcel &data, 
 
 ErrCode BundleMgrHost::HandleSetAppDistributionTypes(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t typesCount = data.ReadInt32();
     if (typesCount <= 0 || typesCount > MAX_LIMIT_SIZE) {
         APP_LOGE("typesCount is error");
@@ -4715,7 +4715,7 @@ ErrCode BundleMgrHost::WriteParcelableIntoAshmem(MessageParcel &tempParcel, Mess
 
 ErrCode BundleMgrHost::HandleGetPluginAbilityInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     AbilityInfo info;
     std::string hostBundleName = data.ReadString();
     std::string pluginBundleName = data.ReadString();
@@ -4740,7 +4740,7 @@ ErrCode BundleMgrHost::HandleGetPluginAbilityInfo(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleGetPluginHapModuleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     HapModuleInfo info;
     std::string hostBundleName = data.ReadString();
     std::string pluginBundleName = data.ReadString();
@@ -4763,7 +4763,7 @@ ErrCode BundleMgrHost::HandleGetPluginHapModuleInfo(MessageParcel &data, Message
 
 ErrCode BundleMgrHost::HandleGetSandboxDataDir(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t appIndex = data.ReadInt32();
     std::string sandboxDataDir;
@@ -4783,7 +4783,7 @@ ErrCode BundleMgrHost::HandleGetSandboxDataDir(MessageParcel &data, MessageParce
 
 ErrCode BundleMgrHost::HandleSetShortcutVisibleForSelf(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string shortcutId = data.ReadString();
     bool visible = data.ReadBool();
 
@@ -4798,7 +4798,7 @@ ErrCode BundleMgrHost::HandleSetShortcutVisibleForSelf(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleGetAllShortcutInfoForSelf(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::vector<ShortcutInfo> infos;
     auto ret = GetAllShortcutInfoForSelf(infos);
     if (!reply.WriteInt32(ret)) {
@@ -4814,7 +4814,7 @@ ErrCode BundleMgrHost::HandleGetAllShortcutInfoForSelf(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleGreatOrEqualTargetAPIVersion(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t platformVersion = data.ReadInt32();
     int32_t minorVersion = data.ReadInt32();
     int32_t patchVersion = data.ReadInt32();

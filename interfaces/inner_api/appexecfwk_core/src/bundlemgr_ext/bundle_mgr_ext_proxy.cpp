@@ -36,7 +36,7 @@ BundleMgrExtProxy::~BundleMgrExtProxy()
 
 ErrCode BundleMgrExtProxy::GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_EXT, "begin to GetBundleNamesForUidExt of %{public}d", uid);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {

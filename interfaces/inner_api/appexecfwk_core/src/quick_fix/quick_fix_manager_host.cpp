@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -68,7 +68,7 @@ int QuickFixManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
 ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessageParcel& reply)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to HandleDeployQuickFix");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::vector<std::string> bundleFilePaths;
     if (!data.ReadStringVector(&bundleFilePaths)) {
         LOG_E(BMS_TAG_DEFAULT, "read bundleFilePaths failed");
@@ -95,7 +95,7 @@ ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessagePa
 ErrCode QuickFixManagerHost::HandleSwitchQuickFix(MessageParcel& data, MessageParcel& reply)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to HandleSwitchQuickFix");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     bool enable = data.ReadBool();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
@@ -116,7 +116,7 @@ ErrCode QuickFixManagerHost::HandleSwitchQuickFix(MessageParcel& data, MessagePa
 ErrCode QuickFixManagerHost::HandleDeleteQuickFix(MessageParcel& data, MessageParcel& reply)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to HandleDeleteQuickFix");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
@@ -136,7 +136,7 @@ ErrCode QuickFixManagerHost::HandleDeleteQuickFix(MessageParcel& data, MessagePa
 ErrCode QuickFixManagerHost::HandleCreateFd(MessageParcel& data, MessageParcel& reply)
 {
     LOG_D(BMS_TAG_DEFAULT, "begin to HandleCreateFd");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string fileName = data.ReadString();
     int32_t fd = -1;
     std::string path;

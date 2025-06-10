@@ -49,7 +49,7 @@ ErrCode ExtendResourceManagerProxy::AddExtResource(
     const std::string &bundleName, const std::vector<std::string> &filePaths)
 {
     APP_LOGD("begin to AddExtResource");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("fail to AddExtResource due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -85,7 +85,7 @@ ErrCode ExtendResourceManagerProxy::RemoveExtResource(
     const std::string &bundleName, const std::vector<std::string> &moduleNames)
 {
     APP_LOGD("begin to RemoveExtResource");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("fail to RemoveExtResource due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -121,7 +121,7 @@ ErrCode ExtendResourceManagerProxy::GetExtResource(
     const std::string &bundleName, std::vector<std::string> &moduleNames)
 {
     APP_LOGD("begin to GetExtResource");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("fail to GetExtResource due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -164,7 +164,7 @@ ErrCode ExtendResourceManagerProxy::EnableDynamicIcon(
     const std::string &bundleName, const std::string &moduleName, const int32_t userId, const int32_t appIndex)
 {
     APP_LOGD("begin to EnableDynamicIcon");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("fail to EnableDynamicIcon due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -213,7 +213,7 @@ ErrCode ExtendResourceManagerProxy::DisableDynamicIcon(const std::string &bundle
     const int32_t userId, const int32_t appIndex)
 {
     APP_LOGD("begin to DisableDynamicIcon");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("fail to DisableDynamicIcon due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -255,7 +255,7 @@ ErrCode ExtendResourceManagerProxy::GetDynamicIcon(
     const std::string &bundleName, const int32_t userId, const int32_t appIndex, std::string &moduleName)
 {
     APP_LOGD("begin to GetDynamicIcon");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("fail to GetDynamicIcon due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -398,7 +398,7 @@ ErrCode ExtendResourceManagerProxy::GetAllDynamicIconInfo(
     const int32_t userId, std::vector<DynamicIconInfo> &dynamicInfos)
 {
     APP_LOGD("begin to GetAllDynamicIconInfo");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetAllDynamicIconInfo due to WriteInterfaceToken failed");
@@ -416,7 +416,7 @@ ErrCode ExtendResourceManagerProxy::GetDynamicIconInfo(const std::string &bundle
     std::vector<DynamicIconInfo> &dynamicInfos)
 {
     APP_LOGD("begin to GetDynamicIconInfo");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("bundleName empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;

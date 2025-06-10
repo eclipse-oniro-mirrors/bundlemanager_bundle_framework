@@ -436,7 +436,7 @@ bool BundleResourceManager::GetAllResourceName(std::vector<std::string> &keyName
 bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo, int32_t appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
     if (bundleResourceRdb_->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo, appIndex)) {

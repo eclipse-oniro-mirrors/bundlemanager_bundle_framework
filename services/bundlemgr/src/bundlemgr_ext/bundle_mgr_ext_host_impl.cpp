@@ -34,7 +34,7 @@ BundleMgrExtHostImpl::~BundleMgrExtHostImpl()
 
 ErrCode BundleMgrExtHostImpl::GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_EXT, "start uid:%{public}d", uid);
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;

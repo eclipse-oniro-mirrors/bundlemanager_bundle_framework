@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,7 +38,7 @@ DefaultAppProxy::~DefaultAppProxy()
 ErrCode DefaultAppProxy::IsDefaultApplication(const std::string& type, bool& isDefaultApp)
 {
     LOG_D(BMS_TAG_DEFAULT, "begin to call IsDefaultApplication");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -65,7 +65,7 @@ ErrCode DefaultAppProxy::IsDefaultApplication(const std::string& type, bool& isD
 ErrCode DefaultAppProxy::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
 {
     LOG_D(BMS_TAG_DEFAULT, "begin to GetDefaultApplication");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (type.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "type is empty");
@@ -91,7 +91,7 @@ ErrCode DefaultAppProxy::GetDefaultApplication(int32_t userId, const std::string
 ErrCode DefaultAppProxy::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
 {
     LOG_D(BMS_TAG_DEFAULT, "begin to SetDefaultApplication");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -123,7 +123,7 @@ ErrCode DefaultAppProxy::SetDefaultApplication(int32_t userId, const std::string
 ErrCode DefaultAppProxy::ResetDefaultApplication(int32_t userId, const std::string& type)
 {
     LOG_D(BMS_TAG_DEFAULT, "begin to ResetDefaultApplication");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (type.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "type is empty");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -308,7 +308,7 @@ void LauncherService::ConvertAbilityToLauncherAbility(const AbilityInfo &ability
 ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundleName, const int32_t userId,
     std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("GetLauncherAbilityByBundleName called");
     if (bundleName.empty()) {
         APP_LOGE("no bundleName %{public}s found", bundleName.c_str());
@@ -342,7 +342,7 @@ ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundl
 ErrCode LauncherService::GetLauncherAbilityInfoSync(const std::string &bundleName, const int32_t userId,
     std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("GetLauncherAbilityInfoSync called");
     if (bundleName.empty()) {
         APP_LOGE("no bundleName %{public}s found", bundleName.c_str());

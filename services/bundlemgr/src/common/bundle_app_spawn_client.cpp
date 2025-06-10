@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -125,7 +125,7 @@ bool BundleAppSpawnClient::VerifyMsg(const AppSpawnRemoveSandboxDirMsg &removeSa
 
 int32_t BundleAppSpawnClient::RemoveSandboxDir(const AppSpawnRemoveSandboxDirMsg &removeSandboxDirMsg)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_INSTALLER, "call RemoveSandboxDir start");
     if (!VerifyMsg(removeSandboxDirMsg)) {
         LOG_E(BMS_TAG_INSTALLER, "invalid msg");

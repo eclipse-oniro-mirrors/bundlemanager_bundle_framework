@@ -53,7 +53,7 @@ BundleCloneInstaller::~BundleCloneInstaller()
 ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     const int32_t userId, int32_t &appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("InstallCloneApp %{public}s begin", bundleName.c_str());
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
@@ -85,7 +85,7 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
 ErrCode BundleCloneInstaller::UninstallCloneApp(
     const std::string &bundleName, const int32_t userId, const int32_t appIndex, bool sync)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("UninstallCloneApp %{public}s _ %{public}d begin", bundleName.c_str(), appIndex);
 
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
@@ -358,7 +358,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
 void BundleCloneInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
     int32_t appIndex, const InnerBundleInfo& innerBundleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("call UninstallDebugAppSandbox start");
     bool isDebugApp = innerBundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     bool isDeveloperMode = OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false);

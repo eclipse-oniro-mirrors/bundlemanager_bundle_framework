@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,7 +43,7 @@ VerifyManagerProxy::~VerifyManagerProxy()
 ErrCode VerifyManagerProxy::Verify(const std::vector<std::string> &abcPaths)
 {
     APP_LOGI("begin to call Verify");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (abcPaths.empty()) {
         APP_LOGE("Verify failed due to params error");
         return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
@@ -89,7 +89,7 @@ ErrCode VerifyManagerProxy::RemoveFiles(const std::vector<std::string> &abcPaths
 ErrCode VerifyManagerProxy::DeleteAbc(const std::string &path)
 {
     APP_LOGI("begin to call DeleteAbc");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (path.empty()) {
         APP_LOGE("DeleteAbc failed due to params error");
         return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
