@@ -168,4 +168,16 @@ HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExt_0100, Function | SmallTest
     ErrCode ret = bmsExtensionDataMgr.GetBundleNamesForUidExt(uid, bundleNames);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 }
+
+/**
+ * @tc.number: IsMCFlagSet_0001
+ * @tc.name: IsMCFlagSet_0001
+ * @tc.desc: test IsMCFlagSet
+ */
+HWTEST_F(BmsBundleMgrExtTest, IsMCFlagSet_0001, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool ret = bmsExtensionDataMgr.IsMCFlagSet();
+    EXPECT_EQ(ret, false);
+}
 } // OHOS

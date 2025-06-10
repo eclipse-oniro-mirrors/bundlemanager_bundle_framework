@@ -149,18 +149,18 @@ ErrCode ANIUnzipWithFilterAndWriters(const PlatformFile& srcFile, FilePath& dest
     APP_LOGI("destDir=%{private}s", destDir.Value().c_str());
     ZipReader reader;
     if (!reader.OpenFromPlatformFile(srcFile)) {
-        APP_LOGI("Failed to open srcFile");
+        APP_LOGE("Failed to open srcFile");
         return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
     }
     while (reader.HasMore()) {
         if (!reader.OpenCurrentEntryInZip()) {
-            APP_LOGI("Failed to open the current file in zip");
+            APP_LOGE("Failed to open the current file in zip");
             return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         const FilePath& constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
         FilePath entryPath = constEntryPath;
         if (reader.CurrentEntryInfo()->IsUnsafe()) {
-            APP_LOGI("Found an unsafe file in zip");
+            APP_LOGE("Found an unsafe file in zip");
             return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         if (!unzipParam.filterCB(entryPath)) {
@@ -168,7 +168,7 @@ ErrCode ANIUnzipWithFilterAndWriters(const PlatformFile& srcFile, FilePath& dest
                 APP_LOGI("Skipped file");
             }
             if (!reader.AdvanceToNextEntry()) {
-                APP_LOGI("Failed to advance to the next file");
+                APP_LOGE("Failed to advance to the next file");
                 return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
             }
             continue;
@@ -176,7 +176,7 @@ ErrCode ANIUnzipWithFilterAndWriters(const PlatformFile& srcFile, FilePath& dest
 
         if (reader.CurrentEntryInfo()->IsDirectory()) {
             if (!directoryCreator(destDir, entryPath)) {
-                APP_LOGI("directory_creator(%{private}s) Failed", entryPath.Value().c_str());
+                APP_LOGE("directory_creator(%{private}s) Failed", entryPath.Value().c_str());
                 return ERR_ZLIB_DEST_FILE_DISABLED;
             }
         } else {
@@ -186,13 +186,13 @@ ErrCode ANIUnzipWithFilterAndWriters(const PlatformFile& srcFile, FilePath& dest
                 return ERR_ZLIB_DEST_FILE_DISABLED;
             }
             if (!reader.ExtractCurrentEntry(writer.get(), std::numeric_limits<uint64_t>::max())) {
-                APP_LOGI("Failed to extract");
+                APP_LOGE("Failed to extract");
                 return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
             }
         }
 
         if (!reader.AdvanceToNextEntry()) {
-            APP_LOGI("Failed to advance to the next file");
+            APP_LOGE("Failed to advance to the next file");
             return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
     }
@@ -206,13 +206,17 @@ ErrCode ANIUnzipWithFilterAndWritersParallel(const FilePath& srcFile, FilePath& 
     FilePath src = srcFile;
 
     if (!reader.Open(src)) {
-        APP_LOGI("Failed to open srcFile");
+        APP_LOGE("Failed to open srcFile");
         return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
     }
     ErrCode ret = ERR_OK;
     for (int32_t i = 0; i < reader.num_entries(); i++) {
         if (!reader.OpenCurrentEntryInZip()) {
-            APP_LOGI("Failed to open the current file in zip");
+            APP_LOGE("Failed to open the current file in zip");
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+        }
+        if (reader.CurrentEntryInfo() == nullptr) {
+            APP_LOGE("CurrentEntryInfo is null");
             return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         const FilePath& constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
@@ -233,7 +237,7 @@ ErrCode ANIUnzipWithFilterAndWritersParallel(const FilePath& srcFile, FilePath& 
                 int resourceId = sched_getcpu();
                 unzFile zipFile = reader.GetZipHandler(resourceId);
                 if (!reader.GotoEntry(zipFile, position)) {
-                    APP_LOGI("Failed to go to entry");
+                    APP_LOGE("Failed to go to entry");
                     ret = ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
                     return;
                 }
@@ -241,7 +245,7 @@ ErrCode ANIUnzipWithFilterAndWritersParallel(const FilePath& srcFile, FilePath& 
                 if (unzipParam.filterCB(entryPath)) {
                     if (isDirectory) {
                         if (!directoryCreator(destDir, entryPath)) {
-                            APP_LOGI("directory_creator(%{private}s) Failed", entryPath.Value().c_str());
+                            APP_LOGE("directory_creator(%{private}s) Failed", entryPath.Value().c_str());
                             reader.ReleaseZipHandler(resourceId);
                             ret = ERR_ZLIB_DEST_FILE_DISABLED;
                             return;
@@ -255,7 +259,7 @@ ErrCode ANIUnzipWithFilterAndWritersParallel(const FilePath& srcFile, FilePath& 
                             return;
                         }
                         if (!reader.ExtractEntry(writer.get(), zipFile, std::numeric_limits<uint64_t>::max())) {
-                            APP_LOGI("Failed to extract");
+                            APP_LOGE("Failed to extract");
                             reader.ReleaseZipHandler(resourceId);
                             ret = ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
                             return;
@@ -268,7 +272,7 @@ ErrCode ANIUnzipWithFilterAndWritersParallel(const FilePath& srcFile, FilePath& 
             },
             {}, {});
         if (!reader.AdvanceToNextEntry()) {
-            APP_LOGI("Failed to advance to the next file");
+            APP_LOGE("Failed to advance to the next file");
             return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
     }
@@ -281,7 +285,7 @@ ErrCode ANIUnzipWithFilterCallback(
 {
     FilePath src = srcFile;
     if (!FilePathCheckValid(src.Value())) {
-        APP_LOGI("FilePathCheckValid returnValue is false");
+        APP_LOGE("FilePathCheckValid returnValue is false");
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
 
@@ -290,7 +294,7 @@ ErrCode ANIUnzipWithFilterCallback(
     APP_LOGI("srcFile=%{private}s, destFile=%{private}s", src.Value().c_str(), dest.Value().c_str());
 
     if (!FilePath::PathIsValid(srcFile)) {
-        APP_LOGI("PathIsValid return value is false");
+        APP_LOGE("PathIsValid return value is false");
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
 
@@ -321,20 +325,20 @@ ErrCode ANIDecompressFileImpl(const std::string& inFile, const std::string& outF
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
     if ((srcFileDir.Value().size() == 0) || LIBZIP::FilePath::HasRelativePathBaseOnAPIVersion(inFile)) {
-        APP_LOGI("srcFile doesn't Exist");
+        APP_LOGE("srcFile doesn't Exist");
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
     if (!LIBZIP::FilePath::PathIsValid(srcFileDir)) {
-        APP_LOGI("srcFile invalid");
+        APP_LOGE("srcFile invalid");
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
     if (LIBZIP::FilePath::DirectoryExists(destDir)) {
         if (!LIBZIP::FilePath::PathIsWriteable(destDir)) {
-            APP_LOGI("FilePath::PathIsWriteable(destDir) fail");
+            APP_LOGE("FilePath::PathIsWriteable(destDir) fail");
             return ERR_ZLIB_DEST_FILE_DISABLED;
         }
     } else {
-        APP_LOGI("destDir isn't path");
+        APP_LOGE("destDir isn't path");
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 
@@ -404,10 +408,10 @@ ErrCode ANIZipWithFilterCallback(
     }
 
     if (!FilePath::PathIsValid(srcDir)) {
-        APP_LOGI("srcDir isn't Exist");
+        APP_LOGE("srcDir isn't Exist");
         return ERR_ZLIB_SRC_FILE_DISABLED;
     } else if (!FilePath::PathIsReadable(srcDir)) {
-        APP_LOGI("srcDir not readable");
+        APP_LOGE("srcDir not readable");
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
 

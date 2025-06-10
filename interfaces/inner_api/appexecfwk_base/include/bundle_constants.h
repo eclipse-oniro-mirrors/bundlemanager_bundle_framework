@@ -71,7 +71,7 @@ modulename max is 128
 constexpr int16_t MAX_CACHE_DIR_SIZE = 774;
 
 // permissions
-constexpr const char* PERMISSION_U1_ENABLED = "U1Enabled";
+constexpr const char* PERMISSION_U1_ENABLED = "ohos.permission.SUPPORT_INSTALL_ON_U1";
 constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_CLONE_BUNDLE = "ohos.permission.UNINSTALL_CLONE_BUNDLE";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO = "ohos.permission.GET_BUNDLE_INFO";

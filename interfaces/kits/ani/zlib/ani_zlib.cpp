@@ -94,11 +94,24 @@ extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
     APP_LOGI("ANI_Constructor zlib called");
-    ani_env* env;
+    if (vm == nullptr) {
+        APP_LOGE("vm is null");
+        return ANI_ERROR;
+    }
+    if (result == nullptr) {
+        APP_LOGE("result is null");
+        return ANI_ERROR;
+    }
+
+    ani_env* env = nullptr;
     ani_status status = vm->GetEnv(ANI_VERSION_1, &env);
     if (status != ANI_OK) {
         APP_LOGE("Unsupported ANI_VERSION_1: %{public}d", status);
         return status;
+    }
+    if (env == nullptr) {
+        APP_LOGE("env is null");
+        return ANI_ERROR;
     }
 
     Namespace zlibNS = Builder::BuildNamespace(NS_NAME_ZLIB);
