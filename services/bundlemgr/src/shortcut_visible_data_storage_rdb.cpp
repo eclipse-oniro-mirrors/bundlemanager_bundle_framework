@@ -136,8 +136,8 @@ ErrCode ShortcutVisibleDataStorageRdb::GetShortcutVisibleStatus(const int32_t us
     NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_VISIBLE_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
     absRdbPredicates.EqualTo(SHORTCUT_ID, shortcutId);
-    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
-    absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
+    absRdbPredicates.EqualTo(USER_ID, userId);
+    absRdbPredicates.EqualTo(APP_INDEX, appIndex);
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet is null, bundleName: %{public}s", bundleName.c_str());
