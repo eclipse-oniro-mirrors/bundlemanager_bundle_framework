@@ -62,6 +62,7 @@ private:
     static void InnerSendAppControlRule(const EventInfo& eventInfo);
     static void InnerSendDbErrorEvent(const EventInfo& eventInfo);
     static void InnerSendDataPartitionUsageEvent(const EventInfo& eventInfo);
+    static void InnerSendDefaultAppEvent(const EventInfo& eventInfo);
 
     template<typename... Types>
     static void InnerEventWrite(const std::string &eventName,

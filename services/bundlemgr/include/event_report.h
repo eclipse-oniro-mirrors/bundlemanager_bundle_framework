@@ -52,7 +52,8 @@ enum class BMSEventType : uint8_t {
     BMS_DISK_SPACE,
     APP_CONTROL_RULE,
     DB_ERROR,
-    DATA_PARTITION_USAGE_EVENT
+    DATA_PARTITION_USAGE_EVENT,
+    DEFAULT_APP,
 };
 
 enum class BundleEventType : uint8_t {
@@ -110,6 +111,11 @@ enum class DB_OPERATION_TYPE : uint8_t {
     QUERY = 5,
     DELETE = 6,
     REBUILD = 7,
+};
+
+enum class DefaultAppActionType : uint8_t {
+    SET = 1,
+    RESET = 2,
 };
 
 struct EventInfo {
@@ -187,6 +193,9 @@ struct EventInfo {
     bool isIntercepted = false;
     std::vector<uint64_t> fileSize;
     std::vector<uint64_t> partitionSize;
+    
+    std::string want;
+    std::string utd;
 
     void Reset()
     {
@@ -237,6 +246,8 @@ struct EventInfo {
         dbName.clear();
         errorCode = 0;
         rebuildType = 0;
+        want.clear();
+        utd.clear();
     }
 };
 
@@ -361,6 +372,17 @@ public:
      * @brief rport the usage event of data partition.
      */
     static void ReportDataPartitionUsageEvent();
+    
+    /**
+     * @brief Send info when set or reset default app.
+     * @param actionType set default app method type.
+     * @param userId Indicates the userId.
+     * @param callingName Indicates method caller
+     * @param want Indicates the want
+     * @param utd Indicates the utd
+     */
+    static void SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const std::string& callingName,
+        const std::string& want, const std::string& utd);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -27,6 +27,8 @@ public:
     virtual ErrCode GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) override;
     virtual ErrCode SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) override;
     virtual ErrCode ResetDefaultApplication(int32_t userId, const std::string& type) override;
+private:
+    std::string GetCallerName();
 };
 }
 }

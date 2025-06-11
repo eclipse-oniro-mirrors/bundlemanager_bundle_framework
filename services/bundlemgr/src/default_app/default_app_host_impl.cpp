@@ -17,6 +17,7 @@
 
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "event_report.h"
 #include "hitrace_meter.h"
 #include "ipc_skeleton.h"
 
@@ -48,7 +49,11 @@ ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::str
     if (isEmpty) {
         LOG_D(BMS_TAG_DEFAULT, "ElementName is empty");
         Element element;
-        return DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
+        ErrCode result = DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
+        if (result == ERR_OK) {
+            EventReport::SendDefaultAppEvent(DefaultAppActionType::SET, userId, GetCallerName(), want.ToString(), type);
+        }
+        return result;
     }
     // case2 : ElementName is valid ability or valid extension.
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -66,12 +71,37 @@ ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::str
         LOG_E(BMS_TAG_DEFAULT, "GetElement failed");
         return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
-    return DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
+    ErrCode result = DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
+    if (result == ERR_OK) {
+        EventReport::SendDefaultAppEvent(DefaultAppActionType::SET, userId, GetCallerName(), want.ToString(), type);
+    }
+    return result;
 }
 
 ErrCode DefaultAppHostImpl::ResetDefaultApplication(int32_t userId, const std::string& type)
 {
-    return DefaultAppMgr::GetInstance().ResetDefaultApplication(userId, type);
+    ErrCode result = DefaultAppMgr::GetInstance().ResetDefaultApplication(userId, type);
+    if (result == ERR_OK) {
+        EventReport::SendDefaultAppEvent(
+            DefaultAppActionType::RESET, userId, GetCallerName(), Constants::EMPTY_STRING, type);
+    }
+    return result;
+}
+
+std::string DefaultAppHostImpl::GetCallerName()
+{
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return std::to_string(uid);
+    }
+    std::string callerName;
+    auto ret = dataMgr->GetNameForUid(uid, callerName);
+    if (ret != ERR_OK) {
+        callerName = std::to_string(uid);
+    }
+    return callerName;
 }
 }
 }
