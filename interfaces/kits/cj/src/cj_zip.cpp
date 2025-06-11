@@ -328,6 +328,126 @@ int32_t UnZip(const std::string &srcFile, const std::string &destFile, OPTIONS o
     ErrCode ret = UnzipWithFilterCallback(srcFileDir, destDir, options, unzipParam);
     return ret;
 }
+
+void GetZipsAllRelativeFilesInner(const ZipParams& params, const FilePath& iterPath,
+    std::list<FileAccessor::DirectoryContentEntry>& entries,
+    std::vector<std::pair<FilePath, FilePath>>& allRelativeFiles)
+{
+    FilterCallback filterCallback = params.GetFilterCallback();
+    for (auto iter = entries.begin(); iter != entries.end(); ++iter) {
+        if (iter != entries.begin() && ((!params.GetIncludeHiddenFiles() && IsHiddenFile(iter->path)) ||
+                                           (filterCallback && !filterCallback(iter->path)))) {
+            continue;
+        }
+        if (iter != entries.begin()) {
+            FilePath relativePath;
+            FilePath paramsSrcPath = iterPath;
+            if (paramsSrcPath.AppendRelativePath(iter->path, &relativePath)) {
+                allRelativeFiles.push_back(std::make_pair(relativePath, iter->path));
+            }
+        }
+        if (iter->isDirectory) {
+            bool isSuccess = false;
+            std::vector<FileAccessor::DirectoryContentEntry> subEntries = ListDirectoryContent(iter->path, isSuccess);
+            entries.insert(entries.end(), subEntries.begin(), subEntries.end());
+        }
+    }
+}
+
+void GetZipsAllRelativeFiles(const ZipParams& params, std::vector<std::pair<FilePath, FilePath>>& allRelativeFiles,
+    std::vector<FilePath>& srcFiles)
+{
+    std::list<FileAccessor::DirectoryContentEntry> entries;
+    for (auto iterPath = srcFiles.begin(); iterPath != srcFiles.end(); ++iterPath) {
+        FilePath paramPath = FilePathEndIsSeparator(*iterPath);
+        if (!EndsWith(paramPath.Value(), SEPARATOR)) {
+            allRelativeFiles.push_back(std::make_pair(paramPath.BaseName(), paramPath));
+            continue;
+        }
+        entries.clear();
+        entries.push_back(FileAccessor::DirectoryContentEntry(*iterPath, true));
+        GetZipsAllRelativeFilesInner(params, *iterPath, entries, allRelativeFiles);
+    }
+}
+
+bool Zips(const ZipParams& params, const OPTIONS& options)
+{
+    const std::vector<std::pair<FilePath, FilePath>>* filesToAdd = &params.GetFilesTozip();
+    std::vector<std::pair<FilePath, FilePath>> allRelativeFiles;
+    std::vector<FilePath> srcFiles = params.SrcDir();
+    if (filesToAdd->empty()) {
+        filesToAdd = &allRelativeFiles;
+        GetZipsAllRelativeFiles(params, allRelativeFiles, srcFiles);
+    }
+    std::unique_ptr<ZipWriter> zipWriter = nullptr;
+    if (params.DestFd() != kInvalidPlatformFile) {
+        zipWriter = std::make_unique<ZipWriter>(ZipWriter::InitZipFileWithFd(params.DestFd()));
+    } else {
+        zipWriter = std::make_unique<ZipWriter>(ZipWriter::InitZipFileWithFile(params.DestFile()));
+    }
+    if (zipWriter == nullptr) {
+        APP_LOGE("Init zipWriter failed");
+        return false;
+    }
+    return zipWriter->WriteEntries(*filesToAdd, options);
+}
+
+ErrCode ZipsWithFilterCallback(
+    const std::vector<FilePath>& srcFiles, const FilePath& destFile, const OPTIONS& options, FilterCallback filterCB)
+{
+    FilePath destPath = destFile;
+    if (!FilePath::DirectoryExists(destPath.DirName())) {
+        APP_LOGE("The destPath not exist");
+        return ERR_ZLIB_DEST_FILE_DISABLED;
+    }
+    if (!FilePath::PathIsWriteable(destPath.DirName())) {
+        APP_LOGE("The destPath not writeable");
+        return ERR_ZLIB_DEST_FILE_DISABLED;
+    }
+
+    for (auto iter = srcFiles.begin(); iter != srcFiles.end(); ++iter) {
+        if (!FilePath::PathIsValid(*iter)) {
+            APP_LOGI("srcDir isn't Exist");
+            return ERR_ZLIB_SRC_FILE_DISABLED;
+        } else {
+            if (!FilePath::PathIsReadable(*iter)) {
+                APP_LOGI("srcDir not readable");
+                return ERR_ZLIB_SRC_FILE_DISABLED;
+            }
+        }
+    }
+
+    ZipParams params(srcFiles, FilePath(destPath.CheckDestDirTail()));
+    params.SetFilterCallback(filterCB);
+    bool result = Zips(params, options);
+    if (result) {
+        return ERR_OK;
+    } else {
+        return ERR_ZLIB_DEST_FILE_DISABLED;
+    }
+}
+
+int32_t Zips(const std::vector<std::string>& srcFiles, const std::string& destPath, const OPTIONS& options)
+{
+    if (FilePath::HasRelativePathBaseOnAPIVersion(srcFiles)) {
+        return ERR_ZLIB_SRC_FILE_DISABLED;
+    }
+    std::vector<FilePath> srcFilesPath;
+    for (auto iter = srcFiles.begin(); iter != srcFiles.end(); ++iter) {
+        FilePath srcFile(*iter);
+        if (srcFile.Value().size() == 0) {
+            return ERR_ZLIB_SRC_FILE_DISABLED;
+        }
+        srcFilesPath.push_back(srcFile);
+    }
+    FilePath destFile(destPath);
+    if ((destFile.Value().size() == 0) || FilePath::HasRelativePathBaseOnAPIVersion(destPath)) {
+        return ERR_ZLIB_DEST_FILE_DISABLED;
+    }
+
+    int32_t code = ZipsWithFilterCallback(srcFilesPath, destFile, options, ExcludeHiddenFilesFilter);
+    return code;
+}
 }
 }
 }

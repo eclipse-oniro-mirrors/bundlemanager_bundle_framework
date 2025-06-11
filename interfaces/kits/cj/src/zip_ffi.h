@@ -30,16 +30,45 @@ struct RetOptions {
     int32_t strategy;
 };
 
-extern "C" {
-    FFI_EXPORT int32_t FfiBundleManagerCompressFile(const char* inFile, const char* outFile, RetOptions options);
-    FFI_EXPORT int32_t FfiBundleManagerDeCompressFileOptions(const char* inFile, const char* outFile,
-        RetOptions options);
-    FFI_EXPORT int32_t FfiBundleManagerDeCompressFile(const char* inFile, const char* outFile);
-}
+struct ZipCompressParam {
+    uint8_t* destBuf;
+    int64_t destBufLen;
+    uint8_t* srcBuf;
+    int64_t srcBufLen;
+    int32_t outStatus;
+    int64_t outDestLen;
+    int32_t level;
+};
 
+struct CZStream {
+    uint8_t* nextIn;
+    int32_t availableIn;
+    int64_t totalIn;
+    uint8_t* nextOut;
+    int32_t availableOut;
+    int64_t totalOut;
+    int32_t dataType;
+    int64_t adler;
+
+    bool hasNextIn;
+    bool hasAvailableIn;
+    bool hasTotalIn;
+    bool hasNextOut;
+    bool hasAvailableOut;
+    bool hasTotalOut;
+    bool hasDataType;
+    bool hasAdler;
+};
+
+struct DeflateInit2Param {
+    int32_t level;
+    int32_t method;
+    int32_t windowBits;
+    int32_t memLevel;
+    int32_t strategy;
+};
 
 } // LIBZIP
 } // AppExecFwk
 } // OHOS
 #endif
-

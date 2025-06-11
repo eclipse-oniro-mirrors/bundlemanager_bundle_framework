@@ -16,14 +16,20 @@
 #ifndef OHOS_CJ_ZIP_H
 #define OHOS_CJ_ZIP_H
 
+#include <string>
+#include <vector>
+
+#include "zip_utils.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 
 int32_t Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS &options);
 int32_t UnZip(const std::string &srcFile, const std::string &destFile, OPTIONS options);
+int32_t Zips(const std::vector<std::string>& srcFiles, const std::string& destPath, const OPTIONS& options);
 
-} // BundleManager
-} // CJSystemapi
+} // namespace LIBZIP
+} // namespace AppExecFwk
 } // OHOS
 #endif
