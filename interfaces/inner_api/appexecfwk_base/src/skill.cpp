@@ -438,7 +438,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // pathRegex match
         std::string pathRegexUri(skillUriString);
         pathRegexUri.append(skillUri.pathRegex);
-        std::string modifiedPathRegex = "^" + pathRegexUri = "$";
+        std::string modifiedPathRegex = "^" + pathRegexUri + "$";
         const char* pattern = modifiedPathRegex.c_str();
         regex_t regex;
         if (regcomp(&regex, pattern, REG_EXTENDED | REG_NOSUB) != 0) {
