@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -18,7 +18,6 @@ module_output_path = "bundle_framework/benchmark/bundle_framework"
 
 ohos_benchmarktest("BenchmarkTestBundleMgrProxy") {
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/json/include" ]
 
   sources = [ "bundlemgr_proxy_test.cpp" ]
 
@@ -38,6 +37,7 @@ ohos_benchmarktest("BenchmarkTestBundleMgrProxy") {
     "ability_base:want",
     "c_utils:utils",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "samgr:samgr_proxy",
   ]
 

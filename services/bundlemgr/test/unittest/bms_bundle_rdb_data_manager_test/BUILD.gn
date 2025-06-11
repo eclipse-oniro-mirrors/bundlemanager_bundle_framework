@@ -26,7 +26,6 @@ ohos_unittest("BmsBundleRdbDataManagerTest") {
   }
   module_out_path = module_output_path
   include_dirs = [
-    "//third_party/jsoncpp/include",
     "${common_path}/utils/include",
     "${services_path}/bundlemgr/include/rdb/",
     "${services_path}/bundlemgr/include",
@@ -59,6 +58,7 @@ ohos_unittest("BmsBundleRdbDataManagerTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "relational_store:native_rdb",
   ]
 }

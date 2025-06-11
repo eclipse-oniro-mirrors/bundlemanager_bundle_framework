@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -25,7 +25,7 @@ ohos_unittest("BmsBundleDataMgrTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -213,7 +213,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -399,7 +399,7 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]

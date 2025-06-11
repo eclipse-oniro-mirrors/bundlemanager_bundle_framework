@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -22,7 +22,7 @@ ohos_fuzztest("BaseBundleInstallerCheckSysCapFuzzTest") {
       "../../../fuzztest/fuzztest_others/basebundleinstallerchecksyscap_fuzzer"
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources += bundle_install_sources
 
@@ -54,6 +54,7 @@ ohos_fuzztest("BaseBundleInstallerCheckSysCapFuzzTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
