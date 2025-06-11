@@ -14537,6 +14537,41 @@ HWTEST_F(BmsBundleKitServiceTest, GetAbilityInfoByName_1000, Function | SmallTes
 }
 
 /**
+ * @tc.number: GetAbilityInfoByName_2000
+ * @tc.name: GetAbilityInfoByName_2000
+ * @tc.desc: 1.Test GetAbilityInfoByName
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAbilityInfoByName_2000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    AbilityInfo info;
+    info.name = "abilityName1";
+    pluginBundleInfo.abilityInfos.emplace("abilityName1", info);   
+    const std::string moduleName = "";
+    const std::string abilityName = "abilityName1";
+    bool result = pluginBundleInfo.GetAbilityInfoByName(abilityName, moduleName, info);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: GetAbilityInfoByName_3000
+ * @tc.name: GetAbilityInfoByName_3000
+ * @tc.desc: 1.Test GetAbilityInfoByName
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAbilityInfoByName_3000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    AbilityInfo info;
+    info.name = "abilityName1";
+    info.moduleName = "moduleName1";
+    pluginBundleInfo.abilityInfos.emplace("abilityName1", info);   
+    const std::string moduleName = "moduleName1";
+    const std::string abilityName = "abilityName1";
+    bool result = pluginBundleInfo.GetAbilityInfoByName(abilityName, moduleName, info);
+    EXPECT_TRUE(result);
+}
+
+/**
  * @tc.number: GetHapModuleInfo
  * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
  * @tc.desc: 1.Test Marshalling and Unmarshalling
@@ -14548,6 +14583,42 @@ HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_1000, Function | SmallTest | 
     const std::string moduleName = "moduleName";
     bool result = pluginBundleInfo.GetHapModuleInfo(moduleName, hapInfo);
     EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: GetHapModuleInfo_2000
+ * @tc.name: GetHapModuleInfo_2000
+ * @tc.desc: 1.Test GetHapModuleInfo_2000
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_2000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    PluginModuleInfo pluginModuleInfo;
+    pluginModuleInfo.moduleName = "moduleName";
+    pluginBundleInfo.pluginModuleInfos.emplace_back(pluginModuleInfo);
+    HapModuleInfo hapInfo;
+    bool result = pluginBundleInfo.GetHapModuleInfo("moduleName", hapInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: GetHapModuleInfo_3000
+ * @tc.name: GetHapModuleInfo_3000
+ * @tc.desc: 1.Test GetHapModuleInfo_3000
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_3000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    PluginModuleInfo pluginModuleInfo;
+    pluginModuleInfo.moduleName = "moduleName";
+    pluginBundleInfo.pluginModuleInfos.emplace_back(pluginModuleInfo);
+    AbilityInfo info;
+    info.name = "abilityName";
+    info.moduleName = "moduleName";
+    pluginBundleInfo.abilityInfos.emplace("abilityName.moduleName.", info);  
+    HapModuleInfo hapInfo;
+    bool result = pluginBundleInfo.GetHapModuleInfo("moduleName", hapInfo);
+    EXPECT_TRUE(result);
 }
 
 /**
