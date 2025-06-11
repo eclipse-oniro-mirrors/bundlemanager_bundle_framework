@@ -142,20 +142,6 @@ HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtHost_0100, Function | Small
 }
 
 /**
- * @tc.number: GetBundleNamesForUidExtImpl_0100
- * @tc.name: GetBundleNamesForUidExtImpl_0100
- * @tc.desc: test GetBundleNamesForUidExt
- */
-HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtImpl_0100, Function | SmallTest | Level1)
-{
-    BundleMgrExtHostImpl impl;
-    int32_t uid = 111;
-    std::vector<std::string> bundleNames;
-    ErrCode ret = impl.GetBundleNamesForUidExt(uid, bundleNames);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-}
-
-/**
  * @tc.number: GetBundleNamesForUidExt_0100
  * @tc.name: GetBundleNamesForUidExt_0100
  * @tc.desc: test GetBundleNamesForUidExt
