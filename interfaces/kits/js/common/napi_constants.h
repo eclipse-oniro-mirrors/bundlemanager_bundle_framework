@@ -18,6 +18,18 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const std::unordered_map<std::string, std::string> TYPE_MAPPING = {
+    {"Web Browser", "BROWSER"},
+    {"Image Gallery", "IMAGE"},
+    {"Audio Player", "AUDIO"},
+    {"Video Player", "VIDEO"},
+    {"PDF Viewer", "PDF"},
+    {"Word Viewer", "WORD"},
+    {"Excel Viewer", "EXCEL"},
+    {"PPT Viewer", "PPT"},
+    {"Email", "EMAIL"}
+};
+
 constexpr size_t ARGS_SIZE_ZERO = 0;
 constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;
@@ -132,6 +144,16 @@ constexpr const char* UNINSTALL_DISPOSED_RULE_TYPE = "UninstallDisposedRule";
 constexpr const char* SET_UNINSTALL_DISPOSED_RULE = "SetUninstallDisposedRule";
 constexpr const char* DELETE_UNINSTALL_DISPOSED_RULE = "DeleteUninstallDisposedRule";
 constexpr const char* GET_UNINSTALL_DISPOSED_RULE = "GetUninstallDisposedRule";
+constexpr const char* IS_DEFAULT_APPLICATION = "IsDefaultApplication";
+constexpr const char* IS_DEFAULT_APPLICATION_SYNC = "IsDefaultApplicationSync";
+constexpr const char* GET_DEFAULT_APPLICATION = "GetDefaultApplication";
+constexpr const char* GET_DEFAULT_APPLICATION_SYNC = "GetDefaultApplicationSync";
+constexpr const char* SET_DEFAULT_APPLICATION = "SetDefaultApplication";
+constexpr const char* SET_DEFAULT_APPLICATION_SYNC = "SetDefaultApplicationSync";
+constexpr const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
+constexpr const char* RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
+constexpr const char* TYPE_CHECK = "type";
+constexpr const char* WANT_CHECK = "want";
 }
 }
 }

@@ -35,6 +35,8 @@ group("ani_bms_packages") {
     "bundle_manager:skill_etc",
     "bundle_monitor:ani_bundle_monitor",
     "bundle_monitor:bundle_monitor_etc",
+    "default_app_manager:ani_default_app_manager",
+    "default_app_manager:default_app_manager_etc",
     "freeInstall:ani_freeInstall",
     "freeInstall:bundle_pack_info_etc",
     "freeInstall:dispatch_info_etc",
