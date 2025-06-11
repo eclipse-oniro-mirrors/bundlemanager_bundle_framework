@@ -18,6 +18,7 @@ config("bms_ani_common_config") {
   include_dirs = [
     "./",
     "${kits_path}/js/common",
+    "${common_path}/log/include",
   ]
 }
 
