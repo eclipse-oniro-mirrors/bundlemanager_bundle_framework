@@ -154,6 +154,15 @@ constexpr const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
 constexpr const char* RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
 constexpr const char* TYPE_CHECK = "type";
 constexpr const char* WANT_CHECK = "want";
+constexpr const char* GET_LAUNCHER_ABILITY_INFO = "GetLauncherAbilityInfo";
+constexpr const char* GET_LAUNCHER_ABILITY_INFO_SYNC = "GetLauncherAbilityInfoSync";
+constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo";
+constexpr const char* GET_SHORTCUT_INFO = "GetShortcutInfo";
+constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
+constexpr const char* USER_ID = "userId";
+constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
+constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
+constexpr const char* START_SHORTCUT = "StartShortcut";
 }
 }
 }

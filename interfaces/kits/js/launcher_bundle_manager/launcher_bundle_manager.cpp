@@ -32,21 +32,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    constexpr const char* GET_LAUNCHER_ABILITY_INFO = "GetLauncherAbilityInfo";
-    constexpr const char* GET_LAUNCHER_ABILITY_INFO_SYNC = "GetLauncherAbilityInfoSync";
-    constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo";
-    constexpr const char* GET_SHORTCUT_INFO = "GetShortcutInfo";
-    constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
-    constexpr const char* USER_ID = "userId";
-    constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
-    constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
-    constexpr const char* START_SHORTCUT = "StartShortcut";
-
-    const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
-        {ERR_OK, ERR_OK},
-        {ERR_PERMISSION_DENIED, ERR_BUNDLE_MANAGER_PERMISSION_DENIED},
-        {ERR_NOT_SYSTEM_APP, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED}
-    };
+const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
+    {ERR_OK, ERR_OK},
+    {ERR_PERMISSION_DENIED, ERR_BUNDLE_MANAGER_PERMISSION_DENIED},
+    {ERR_NOT_SYSTEM_APP, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED}
+};
 }
 static OHOS::sptr<OHOS::AppExecFwk::LauncherService> GetLauncherService()
 {

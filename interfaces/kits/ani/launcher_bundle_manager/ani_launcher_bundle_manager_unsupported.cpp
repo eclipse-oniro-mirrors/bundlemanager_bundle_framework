@@ -29,28 +29,29 @@ constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo
 
 static void StartShortcutSync(ani_env *env, ani_object aniShortcutInfo, ani_object aniStartOptions)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, START_SHORTCUT, "");
     return nullptr;
 }
 
 static ani_object GetShortcutInfoSync(ani_env *env, ani_string aniBundleName, ani_double aniUserId)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_SHORTCUT_INFO_SYNC, "");
     return nullptr;
 }
 
-static ani_object GetLauncherAbilityInfoSync(ani_env *env, ani_string aniBundleName, ani_double aniUserId)
+static ani_object GetLauncherAbilityInfo(ani_env *env,
+    ani_string aniBundleName, ani_double aniUserId, ani_boolean isSync)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_LAUNCHER_ABILITY_INFO_SYNC, "");
     return nullptr;
 }
 
 static ani_object GetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ALL_LAUNCHER_ABILITY_INFO, "");
     return nullptr;
 }
@@ -81,18 +82,12 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     }
 
     std::array methods = {
-        ani_native_function {
-            "StartShortcutSync", nullptr, reinterpret_cast<void*>(StartShortcutSync)
-        },
-        ani_native_function {
-            "GetShortcutInfoSync", nullptr, reinterpret_cast<void*>(GetShortcutInfoSync)
-        },
-        ani_native_function {
-            "GetLauncherAbilityInfoSync", nullptr, reinterpret_cast<void*>(GetLauncherAbilityInfoSync)
-        },
-        ani_native_function {
-            "GetAllLauncherAbilityInfo", nullptr, reinterpret_cast<void*>(GetAllLauncherAbilityInfo)
-        },
+        ani_native_function { "StartShortcutSync", nullptr, reinterpret_cast<void*>(StartShortcutSync) },
+        ani_native_function { "GetShortcutInfoSync", nullptr, reinterpret_cast<void*>(GetShortcutInfoSync) },
+        ani_native_function { "GetLauncherAbilityInfoNative", nullptr,
+            reinterpret_cast<void*>(GetLauncherAbilityInfo) },
+        ani_native_function { "GetAllLauncherAbilityInfo", nullptr,
+            reinterpret_cast<void*>(GetAllLauncherAbilityInfo) },
     };
 
     if (env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size()) != ANI_OK) {
