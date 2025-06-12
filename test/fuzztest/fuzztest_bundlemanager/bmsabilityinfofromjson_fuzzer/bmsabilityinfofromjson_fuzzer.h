@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef TEST_FUZZTEST_BMS_AbilityInfoFromJson_FUZZER_H
-#define TEST_FUZZTEST_BMS_AbilityInfoFromJson_FUZZER_H
+#ifndef TEST_FUZZTEST_BMS_ABILITY_INFO_FROM_JSON_FUZZER_H
+#define TEST_FUZZTEST_BMS_ABILITY_INFO_FROM_JSON_FUZZER_H
 
 #define FUZZ_PROJECT_NAME "bmsabilityinfofromjson_fuzzer"
 

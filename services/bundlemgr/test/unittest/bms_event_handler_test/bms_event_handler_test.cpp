@@ -1058,7 +1058,7 @@ HWTEST_F(BmsEventHandlerTest, OTAInstallSystemHsp_0100, Function | SmallTest | L
     filePaths.push_back(BUNDLE_PATH);
     auto ret = handler->OTAInstallSystemHsp(filePaths);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_NO_BUNDLE_SIGNATURE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_NO_BUNDLE_SIGNATURE);
     #else
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
     #endif

@@ -30,12 +30,11 @@ namespace OHOS {
 namespace {
 const char NAME[] = "name";
 }
-    bool fuzzabilityinfromjson(const uint8_t* data, size_t size)
+    bool FuzzAbilityInFromJson(const uint8_t* data, size_t size)
     {
         nlohmann::json infoJson;
         FuzzedDataProvider fdp(data, size);
-        std::string name;
-        name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+        std::string name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         infoJson[NAME] = name;
         AbilityInfo abilityInfo = infoJson;
         abilityInfo.name.empty();
@@ -47,6 +46,6 @@ const char NAME[] = "name";
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
-    OHOS::fuzzabilityinfromjson(data, size);
+    OHOS::FuzzAbilityInFromJson(data, size);
     return 0;
 }
