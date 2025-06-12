@@ -39,13 +39,13 @@ ohos_systemtest("BmsSearchSystemTest") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
-    "//third_party/googletest:gtest_main",
   ]
 
   defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
 
   external_deps = [
     "ability_base:want",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "json:nlohmann_json_static",

@@ -51,10 +51,10 @@ ohos_unittest("BmsBundleRdbDataManagerTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_permission_test:copy_ohos_test",
     "${core_path}:appexecfwk_core",
     "${services_path}/bundlemgr:bundle_parser",
-    "//third_party/googletest:gmock_main",
   ]
 
   external_deps = [
+    "googletest:gmock_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",

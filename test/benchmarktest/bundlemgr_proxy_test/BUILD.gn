@@ -30,11 +30,11 @@ ohos_benchmarktest("BenchmarkTestBundleMgrProxy") {
     "${base_path}:appexecfwk_base",
     "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
-    "//third_party/benchmark:benchmark",
   ]
 
   external_deps = [
     "ability_base:want",
+    "benchmark:benchmark",
     "c_utils:utils",
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",

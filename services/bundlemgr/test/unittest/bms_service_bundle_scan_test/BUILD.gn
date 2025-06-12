@@ -48,10 +48,7 @@ ohos_unittest("BmsServiceBundleScanTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [
-    "${core_path}:appexecfwk_core",
-    "//third_party/jsoncpp:jsoncpp",
-  ]
+  deps = [ "${core_path}:appexecfwk_core" ]
   deps += bundle_install_deps
 
   external_deps = [

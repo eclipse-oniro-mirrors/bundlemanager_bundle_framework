@@ -234,11 +234,11 @@ ohos_unittest("BmsBundleMgrHostUnitTest") {
   deps = [
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
-    "//third_party/googletest:gtest_main",
   ]
 
   external_deps = [
     "c_utils:utils",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",

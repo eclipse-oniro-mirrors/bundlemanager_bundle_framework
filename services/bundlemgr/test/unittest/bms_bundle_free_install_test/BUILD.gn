@@ -65,11 +65,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = [
-    "${core_path}:appexecfwk_core",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${core_path}:appexecfwk_core" ]
   deps += bundle_install_deps
 
   external_deps = [
@@ -87,6 +83,8 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     "device_usage_statistics:usagestatsinner",
     "display_manager:displaymgr",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
@@ -252,8 +250,6 @@ ohos_unittest("BmsBundleFreeInstallTest") {
   deps = [
     "${base_path}:appexecfwk_base",
     "${core_path}:appexecfwk_core",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
   deps += bundle_install_deps
   external_deps = [
@@ -271,6 +267,8 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     "device_usage_statistics:usagestatsinner",
     "display_manager:displaymgr",
     "eventhandler:libeventhandler",
+    "googletest:gmock_main",
+    "googletest:gtest_main",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
