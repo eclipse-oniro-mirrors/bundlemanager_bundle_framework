@@ -165,6 +165,11 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
 
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
     std::lock_guard<std::mutex> cloneGuard(gCloneInstallerMutex);
     // 1. check whether original application installed or not
     InnerBundleInfo info;
@@ -321,10 +326,6 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     if (!AbilityManagerHelper::UninstallApplicationProcesses(bundleName, uid_, false, appIndex)) {
         APP_LOGE("fail to kill running application");
     }
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
-        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        APP_LOGE("delete AT failed clone");
-    }
     if (dataMgr_->RemoveCloneBundle(bundleName, userId, appIndex)) {
         APP_LOGE("RemoveCloneBundle failed");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
@@ -333,6 +334,11 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         APP_LOGW("RemoveCloneDataDir failed");
     }
     RemoveEl5Dir(userInfo, uid_, userId, appIndex);
+
+    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        APP_LOGE("delete AT failed clone");
+    }
     // process icon and label
     {
         InnerBundleInfo info;
