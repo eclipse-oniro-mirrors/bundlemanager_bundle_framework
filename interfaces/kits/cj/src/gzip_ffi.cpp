@@ -92,7 +92,7 @@ int64_t CjGZipEntity::Write(uint8_t* buf, int64_t len, int32_t* errCode)
 {
     int64_t writeLen = gzwrite(gzs, buf, static_cast<unsigned int>(len));
     if (writeLen <= 0) {
-        APP_LOGE("gzwrite return failed, code: %{public}lld", writeLen);
+        APP_LOGE("gzwrite return failed, code: %{public}d", static_cast<int32_t>(writeLen));
         *errCode = ERR_ZLIB_INTERNAL_STRUCT_ERROR;
     }
     return writeLen;
@@ -102,7 +102,7 @@ int64_t CjGZipEntity::Read(uint8_t* buf, int64_t len, int32_t* errCode)
 {
     int64_t readLen = gzread(gzs, reinterpret_cast<void*>(buf), static_cast<unsigned int>(len));
     if (readLen < 0) {
-        APP_LOGE("gzread return failed, code: %{public}lld", readLen);
+        APP_LOGE("gzread return failed, code: %{public}d", static_cast<int32_t>(readLen));
         *errCode = ERR_ZLIB_INTERNAL_STRUCT_ERROR;
     }
     return readLen;
@@ -112,7 +112,7 @@ int32_t CjGZipEntity::Puts(const char* cstr, int32_t* errCode)
 {
     int64_t putLen = gzputs(gzs, cstr);
     if (putLen < 0) {
-        APP_LOGE("gzputs return failed, code: %{public}lld", putLen);
+        APP_LOGE("gzputs return failed, code: %{public}d", static_cast<int32_t>(putLen));
         *errCode = ERR_ZLIB_INTERNAL_STRUCT_ERROR;
     }
     return putLen;
