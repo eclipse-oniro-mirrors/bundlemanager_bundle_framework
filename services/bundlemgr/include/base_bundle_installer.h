@@ -853,6 +853,7 @@ private:
     bool IsBundleCrossAppSharedConfig(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode ProcessDynamicIconFileWhenUpdate(const InnerBundleInfo &oldInfo, const std::string &oldPath,
         const std::string &newPath);
+    void ProcessUpdateShortcut();
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

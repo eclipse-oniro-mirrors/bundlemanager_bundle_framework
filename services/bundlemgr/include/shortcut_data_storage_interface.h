@@ -32,6 +32,8 @@ public:
     virtual bool DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex) = 0;
     virtual bool GetAllTableDataToJson(nlohmann::json &jsonResult) = 0;
     virtual bool UpdateAllShortcuts(nlohmann::json &jsonResult) = 0;
+    virtual bool UpdateDesktopShortcutInfo(const std::string &bundleName,
+        const std::vector<ShortcutInfo> &shortcutInfos) = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

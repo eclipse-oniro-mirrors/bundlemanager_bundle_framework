@@ -6330,4 +6330,62 @@ HWTEST_F(BmsDataMgrTest, GenerateUuid_0001, TestSize.Level1)
     EXPECT_EQ(uuid5.size(), 36);
     EXPECT_NE(uuid3, uuid5);
 }
+
+/**
+ * @tc.number: UpdateDesktopShortcutInfo_0001
+ * @tc.name: UpdateDesktopShortcutInfo
+ * @tc.desc: test UpdateDesktopShortcutInfo
+ */
+HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    std::vector<ShortcutInfo> vecShortcutInfo;
+    vecShortcutInfo.push_back(shortcutInfo);
+
+    auto ret = shortcutDataStorageRdb->UpdateDesktopShortcutInfo(BUNDLE_NAME, vecShortcutInfo);
+    EXPECT_TRUE(ret);
+
+    bool isIdIllegal = false;
+    ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    EXPECT_TRUE(ret);
+
+    ret = shortcutDataStorageRdb->UpdateDesktopShortcutInfo(shortcutInfo.bundleName, vecShortcutInfo);
+    EXPECT_TRUE(ret);
+
+    vecShortcutInfo.clear();
+    shortcutInfo.id = "test2";
+    vecShortcutInfo.push_back(shortcutInfo);
+    ret = shortcutDataStorageRdb->UpdateDesktopShortcutInfo(shortcutInfo.bundleName, vecShortcutInfo);
+    EXPECT_TRUE(ret);
+
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo.bundleName);
+    EXPECT_TRUE(ret);
+
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    ret = shortcutDataStorageRdb->UpdateDesktopShortcutInfo(shortcutInfo.bundleName, vecShortcutInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UpdateDesktopShortcutInfo_0002
+ * @tc.name: UpdateDesktopShortcutInfo
+ * @tc.desc: test UpdateDesktopShortcutInfo
+ */
+HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.UpdateDesktopShortcutInfo(BUNDLE_NAME);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    bundleDataMgr.GetAllDesktopShortcutInfo(USERID, shortcutInfos);
+    EXPECT_EQ(shortcutInfos.size(), 0);
+
+    InnerBundleInfo info;
+    bundleDataMgr.bundleInfos_.emplace(BUNDLE_NAME, info);
+    bundleDataMgr.UpdateDesktopShortcutInfo(BUNDLE_NAME);
+    bundleDataMgr.GetAllDesktopShortcutInfo(USERID, shortcutInfos);
+    EXPECT_EQ(shortcutInfos.size(), 0);
+}
 } // OHOS

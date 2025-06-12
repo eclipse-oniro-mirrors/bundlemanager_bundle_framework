@@ -999,6 +999,14 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     return result;
 }
 
+void BaseBundleInstaller::ProcessUpdateShortcut()
+{
+    if (!isAppExist_ || !InitDataMgr()) {
+        return;
+    }
+    dataMgr_->UpdateDesktopShortcutInfo(bundleName_);
+}
+
 ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const bool isOldSystemApp)
 {
     InnerBundleInfo newBundleInfo;
@@ -1483,6 +1491,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(oldInfo); });
     CreateDataGroupDirs(hapVerifyResults, oldInfo);
     groupDirGuard.Dismiss();
+    ProcessUpdateShortcut();
     ProcessAddResourceInfo(installParam, bundleName_, userId_);
     if (!ProcessExtProfile(installParam)) {
         LOG_W(BMS_TAG_INSTALLER, "ProcessExtProfile failed");

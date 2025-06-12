@@ -35,6 +35,7 @@ public:
     bool DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
     bool GetAllTableDataToJson(nlohmann::json &jsonResult);
     bool UpdateAllShortcuts(nlohmann::json &jsonResult);
+    bool UpdateDesktopShortcutInfo(const std::string &bundleName, const std::vector<ShortcutInfo> &shortcutInfos);
 
 private:
     bool ShortcutIdVerification(const ShortcutInfo &shortcutInfo, int32_t userId);

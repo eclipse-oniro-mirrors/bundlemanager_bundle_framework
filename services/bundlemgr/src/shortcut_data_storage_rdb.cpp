@@ -320,5 +320,62 @@ bool ShortcutDataStorageRdb::UpdateAllShortcuts(nlohmann::json &jsonResult)
     }
     return finalResult;
 }
+
+bool ShortcutDataStorageRdb::UpdateDesktopShortcutInfo(const std::string &bundleName,
+    const std::vector<ShortcutInfo> &shortcutInfos)
+{
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("absSharedResultSet is null.");
+        return false;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    int32_t count = 0;
+    if (absSharedResultSet->GetRowCount(count) != NativeRdb::E_OK) {
+        APP_LOGE("GetRowCount failed");
+        return false;
+    }
+    if (count == 0) {
+        APP_LOGD("%{public}s not need to update shortCut", bundleName.c_str());
+        return true;
+    }
+    APP_LOGI_NOFUNC("rdb UpdateDesktopShortcutInfo -n %{public}s", bundleName.c_str());
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        return false;
+    }
+    do {
+        std::string shortcutId;
+        if (absSharedResultSet->GetString(SHORTCUT_ID_INDEX, shortcutId) == NativeRdb::E_OK) {
+            APP_LOGE("GetString shortcutId failed");
+            continue;
+        }
+        absRdbPredicates.EqualTo(SHORTCUT_ID, shortcutId);
+        auto iter = std::find_if(shortcutInfos.begin(), shortcutInfos.end(),
+            [ &shortcutId ](const ShortcutInfo &info) {
+            return info.id == shortcutId;
+        });
+        if (iter == shortcutInfos.end()) {
+            APP_LOGW("shortcut %{public}s not exist", shortcutId.c_str());
+            continue;
+        }
+        NativeRdb::ValuesBucket bucket;
+        nlohmann::json jsonObject;
+        to_json(jsonObject, *iter);
+        std::string value = jsonObject.dump();
+        bucket.PutString(SHORTCUT_INFO, value);
+        if (!rdbDataManager_->UpdateData(bucket, absRdbPredicates)) {
+            APP_LOGE("%{public}s update shortcut failed", bundleName.c_str());
+        }
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

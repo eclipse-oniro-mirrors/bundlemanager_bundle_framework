@@ -11140,5 +11140,25 @@ void BundleDataMgr::CheckIfShortcutBundleExist(nlohmann::json &jsonResult)
         ++it;
     }
 }
+
+void BundleDataMgr::UpdateDesktopShortcutInfo(const std::string &bundleName)
+{
+    APP_LOGD("UpdateDesktopShortcutInfo begin");
+    std::vector<ShortcutInfo> shortcutInfos;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto iter = bundleInfos_.find(bundleName);
+        if (iter != bundleInfos_.end()) {
+            GetShortcutInfosByInnerBundleInfo(iter->second, shortcutInfos);
+        } else {
+            APP_LOGE("%{public}s not exist", bundleName.c_str());
+            return;
+        }
+    }
+    if (shortcutInfos.empty()) {
+        return;
+    }
+    shortcutStorage_->UpdateDesktopShortcutInfo(bundleName, shortcutInfos);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
