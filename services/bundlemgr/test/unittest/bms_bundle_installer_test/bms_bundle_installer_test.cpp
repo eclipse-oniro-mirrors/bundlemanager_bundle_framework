@@ -111,6 +111,7 @@ const std::string VERSION_UPDATE_BUNDLE_NAME = "com.example.versiontest";
 const std::string UNINSTALL_PREINSTALL_BUNDLE_NAME = "com.ohos.telephonydataability";
 const std::string GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 const std::string TEST_HSP_PATH = "/data/test/resource/bms/install_bundle/hsp_A.hsp";
+const std::string TEST_HSP_PATH2 = "/data/test/resource/bms/install_bundle/hsp_B.hsp";
 const std::string APP_SERVICES_CAPABILITIES1 = R"(
     {
         "ohos.permission.kernel.SUPPORT_PLUGIN":{
@@ -11004,6 +11005,138 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0059, Function | MediumTest | L
     installer.parsedBundles_["test_bundleName"] = innerBundleInfo;
     auto ret = installer.GetModuleNames();
     EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: PluginInstaller_0060
+ * @tc.name: test ParseFiles
+ * @tc.desc: 1.Test ParseFiles the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0060, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> pluginFilePaths{ TEST_HSP_PATH };
+    InstallPluginParam installPluginParam;
+    auto ret = installer.ParseFiles(pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW);
+
+    installer.parsedBundles_.begin()->second.SetApplicationBundleType(BundleType::APP_PLUGIN);
+    ret = installer.ParseFiles(pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PARSER_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0061
+ * @tc.name: test ParseFiles
+ * @tc.desc: 1.Test ParseFiles the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0061, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> pluginFilePaths{ TEST_HSP_PATH };
+    InstallPluginParam installPluginParam;
+    auto ret = installer.ParseFiles(pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW);
+
+    installer.parsedBundles_.begin()->second.SetApplicationBundleType(BundleType::APP_PLUGIN);
+    std::vector<std::string> pluginFilePaths2{ TEST_HSP_PATH2 };
+    ret = installer.ParseFiles(pluginFilePaths2, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW);
+}
+
+/**
+ * @tc.number: PluginInstaller_0062
+ * @tc.name: test ProcessNativeLibrary
+ * @tc.desc: 1.Test ProcessNativeLibrary the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0062, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.nativeLibraryPath_ = "data/app/el1/public/";
+    std::string bundlePath;
+    std::string moduleDir;
+    std::string moduleName = "entry";
+    std::string pluginBundleDir;
+    InnerBundleInfo newInfo;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.compressNativeLibs = false;
+    innerModuleInfo.nativeLibraryPath = "data/app/el1/public/";
+    newInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    auto ret = installer.ProcessNativeLibrary(bundlePath, moduleDir, moduleName, pluginBundleDir, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0063
+ * @tc.name: test ProcessNativeLibrary
+ * @tc.desc: 1.Test ProcessNativeLibrary the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0063, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.nativeLibraryPath_ = "data/app/el1/public/";
+    std::string bundlePath;
+    std::string moduleDir;
+    std::string moduleName = "entry";
+    std::string pluginBundleDir;
+    InnerBundleInfo newInfo;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.compressNativeLibs = true;
+    innerModuleInfo.nativeLibraryPath = "data/app/el1/public/";
+    innerModuleInfo.isLibIsolated = true;
+    newInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    auto ret = installer.ProcessNativeLibrary(bundlePath, moduleDir, moduleName, pluginBundleDir, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0064
+ * @tc.name: test ProcessPluginInstall
+ * @tc.desc: 1.Test ProcessPluginInstall the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0064, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo info;
+    installer.parsedBundles_.emplace("bundleName", info);
+    InnerBundleInfo hostBundleInfo;
+    auto ret = installer.ProcessPluginInstall(hostBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: PluginInstaller_0065
+ * @tc.name: test SaveHspToInstallDir
+ * @tc.desc: 1.Test SaveHspToInstallDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0065, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath = TEST_HSP_PATH2;
+    std::string pluginBundleDir = "/data/app/el1/bundle/public";
+    std::string moduleName = "moduleName";
+    InnerBundleInfo newInfo;
+    installer.signatureFileDir_ = "data/";
+    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PluginInstaller_0066
+ * @tc.name: test RemoveEmptyDirs
+ * @tc.desc: 1.Test RemoveEmptyDirs the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0066, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo info;
+    installer.parsedBundles_.emplace("bundlePath", info);
+    std::string pluginDir;
+    installer.RemoveEmptyDirs(pluginDir);
+    installer.RemoveDir(pluginDir);
+    EXPECT_EQ(pluginDir.empty(), true);
 }
 
 /**
