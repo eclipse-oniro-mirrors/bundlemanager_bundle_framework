@@ -32,8 +32,6 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo";
 constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
-constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
-constexpr const char* USER_ID = "userId";
 }
 static ErrCode InnerAddDesktopShortcutInfo(const OHOS::AppExecFwk::ShortcutInfo &shortcutInfo, int32_t userId)
 {
