@@ -2141,6 +2141,10 @@ ErrCode BaseBundleInstaller::ProcessRecover(
             bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_FORCE_UNINSTALLED_BUNDLE_NOT_ALLOW_RECOVER;
     }
+    if (AccountHelper::CheckOsAccountConstraintEnabled(userId, ServiceConstants::CONSTRAINT_APPS_INSTALL)) {
+        LOG_E(BMS_TAG_INSTALLER, "user %{public}d is not allowed to recover %{public}s", userId, bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
+    }
     ErrCode result = InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid);
     return result;
 }
