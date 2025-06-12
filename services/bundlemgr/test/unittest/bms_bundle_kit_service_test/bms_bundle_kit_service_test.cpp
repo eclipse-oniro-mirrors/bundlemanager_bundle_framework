@@ -50,6 +50,7 @@
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
+#include "parameter.h"
 #include "perf_profile.h"
 #include "process_cache_callback_host.h"
 #include "scope_guard.h"
@@ -275,6 +276,7 @@ constexpr const char* APP_LINKING = "applinking";
 const int32_t APP_INDEX = 1;
 const std::string CALLER_NAME_UT = "ut";
 const int32_t MAX_WAITING_TIME = 600;
+constexpr uint16_t UUID_LENGTH_MAX = 512;
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -10000,6 +10002,28 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0003, Function | S
     want.AddEntity("entity.system.home");
     want.SetElementName("", "bundlename", "abilityname", "moudlename");
     RpcIdResult rpcIdResult;
+    int32_t res = bundleMgr->ComparePcIdString(want, rpcIdResult);
+    EXPECT_EQ(res, ErrorCode::GET_DEVICE_PROFILE_FAILED);
+}
+
+/**
+ * @tc.number: GetBundleDistributedManager_0031
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test ComparePcIdString
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0031, Function | SmallTest | Level0)
+{
+    auto bundleMgr = GetBundleDistributedManager();
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    char deviceId[UUID_LENGTH_MAX] = { 0 };
+    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
+    want.SetElementName(std::string{ deviceId }, "bundlename", "abilityname", "moudlename");
+    RpcIdResult rpcIdResult;
+    rpcIdResult.abilityInfo.rpcId.emplace_back("RPC_ID");
     int32_t res = bundleMgr->ComparePcIdString(want, rpcIdResult);
     EXPECT_EQ(res, ErrorCode::GET_DEVICE_PROFILE_FAILED);
 }

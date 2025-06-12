@@ -999,6 +999,22 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_3000, Function | 
 }
 
 /**
+ * @tc.number: BundleDistributedManager_3100
+ * @tc.name: Test SendCallback
+ * @tc.desc: Verify the SendCallback.
+ */
+HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_3100, Function | MediumTest | Level1)
+{
+    BundleDistributedManager mgr;
+    QueryRpcIdParams param;
+    param.callback = new (std::nothrow) MockBundleManagerCallbackStub();
+    int32_t resultCode = 0;
+    mgr.SendCallback(resultCode, param);
+    EXPECT_TRUE(param.callback != nullptr);
+    sleep(1);
+}
+
+/**
  * @tc.number: BundleManagerCallbackStub_0500
  * @tc.name: Test OnRemoteRequest
  * @tc.desc: Verify the OnRemoteRequest return 0.
