@@ -336,8 +336,9 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
             }
         }
         if (info.GetOverlayType() == OVERLAY_INTERNAL_BUNDLE) {
-            info.SetOverlayModuleState(info.GetCurrentModulePackage(), OverlayState::OVERLAY_INVALID,
-                info.GetUserId());
+            int32_t overlayModuleState = OverlayState::OVERLAY_INVALID;
+            (void)info.GetOverlayModuleState(info.GetCurrentModulePackage(), info.GetUserId(), overlayModuleState);
+            info.SetOverlayModuleState(info.GetCurrentModulePackage(), overlayModuleState, info.GetUserId());
         }
         if (info.GetOverlayType() == NON_OVERLAY_TYPE) {
             // build overlay connection for external overlay
