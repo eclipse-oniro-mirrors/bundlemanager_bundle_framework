@@ -627,7 +627,7 @@ ErrCode AppControlManagerHostImpl::GetAbilityRunningControlRule(const std::strin
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        LOG_E(BMS_TAG_DEFAULT, "callingName is invalid, uid : %{public}d", uid);
+        LOG_E(BMS_TAG_DEFAULT, "uid:%{public}d is forbidden", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!appControlManager_) {

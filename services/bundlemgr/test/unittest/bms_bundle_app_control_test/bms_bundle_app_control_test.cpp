@@ -1640,6 +1640,28 @@ HWTEST_F(BmsBundleAppControlTest, GetAbilityRunningControlRule_0100, Function | 
     EXPECT_EQ(result, ERR_OK);
 }
 
+/**
+ * @tc.number: GetAbilityRunningControlRule_0200
+ * @tc.name: test running control rule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.GetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetAbilityRunningControlRule_0200, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    int32_t appIndex = 100;
+    int32_t userId = 100;
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    appControlManagerDb_->SetDisposedRule("testCaller", appId, disposedRule, appIndex, userId);
+    std::vector<DisposedRule> disposedRules;
+    ASSERT_NE(appControlManagerDb_, nullptr);
+    ErrCode result = appControlManagerDb_->GetAbilityRunningControlRule({ appId }, appIndex, userId, disposedRules);
+    EXPECT_EQ(result, ERR_OK);
+}
+
 
 /**
  * @tc.number: AppControlManagerHostImpl_5700
@@ -3000,6 +3022,7 @@ HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorEventSubscriber_0200, Functi
     want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
     ElementName element;
     element.SetBundleName("com.ohos.test");
+    want.SetParam(Constants::USER_ID, 100);
     EventFwk::CommonEventData eventData {want};
     EXPECT_NO_THROW(subscriber.OnReceiveEvent(eventData));
 }
@@ -3022,6 +3045,30 @@ HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorEventSubscriber_0300, Functi
     want.SetAction("ohos.action.test");
     ElementName element;
     element.SetBundleName("com.ohos.test");
+    want.SetParam(Constants::USER_ID, 100);
+    EventFwk::CommonEventData eventData {want};
+    EXPECT_NO_THROW(subscriber.OnReceiveEvent(eventData));
+}
+
+/**
+ * @tc.number: AppJumpInterceptorEventSubscriber_0400
+ * @tc.name: test AppJumpInterceptorEventSubscriber OnReceiveEvent
+ * @tc.desc: AppJumpInterceptorEventSubscriber OnReceiveEvent
+ */
+HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorEventSubscriber_0400, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb
+        = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(appJumpInterceptorManagerDb, nullptr);
+    auto res = appJumpInterceptorManagerDb->SubscribeCommonEvent();
+    EXPECT_TRUE(res);
+
+    AppJumpInterceptorEventSubscriber subscriber = AppJumpInterceptorEventSubscriber(appJumpInterceptorManagerDb);
+    AAFwk::Want want;
+    want.SetAction("ohos.action.test");
+    ElementName element;
+    element.SetBundleName("");
+    want.SetParam(Constants::USER_ID, 100);
     EventFwk::CommonEventData eventData {want};
     EXPECT_NO_THROW(subscriber.OnReceiveEvent(eventData));
 }
@@ -3234,5 +3281,29 @@ HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_3000, Function | MediumTest | 
     ErrCode res = appControlHost.OnRemoteRequest(
         static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_DISPOSED_RULES), data, reply, option);
     EXPECT_EQ(res, OBJECT_NULL);
+}
+
+/**
+ * @tc.number: DisposeRuleCacheOnlyForBms_1000
+ * @tc.name: test DisposeRuleCacheOnlyForBms
+ * @tc.desc: test cache
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, DisposeRuleCacheOnlyForBms_0100, Function | MediumTest | Level0)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    
+    std::string appId = "testappId_1";
+    appControlManager->SetDisposedRuleOnlyForBms(appId);
+    std::vector<DisposedRule> disposedRules;
+    bool ret = appControlManager->GetDisposedRuleOnlyForBms(appId, disposedRules);
+    EXPECT_TRUE(ret);
+    appControlManager->SetDisposedRuleOnlyForBms(appId);
+    appControlManager->DeleteDisposedRuleOnlyForBms(appId);
+    ret = appControlManager->GetDisposedRuleOnlyForBms(appId, disposedRules);
+    EXPECT_FALSE(ret);
 }
 } // OHOS
