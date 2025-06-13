@@ -43,6 +43,7 @@
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_state_storage.h"
 #include "bundle_status_callback_interface.h"
+#include "bundle_storage_stats.h"
 #include "common_event_data.h"
 #include "dynamic_icon_info.h"
 #include "ffrt.h"
@@ -826,6 +827,8 @@ public:
     bool GetBundleStats(const std::string &bundleName,
         const int32_t userId, std::vector<int64_t> &bundleStats,
         const int32_t appIndex = 0, const uint32_t statFlag = 0) const;
+    ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+        std::vector<BundleStorageStats> &bundleStats) const;
     void GetBundleModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNameList) const;
     bool GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const;
     bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
@@ -1364,6 +1367,7 @@ private:
     bool CheckUpdateTimeWithBmsParam(const int64_t updateTime) const;
     bool InnerProcessShortcutId(const int64_t updateTime, const std::string &hapPath,
         std::vector<ShortcutInfo> &shortcutInfos) const;
+    void GetPreBundleSize(const std::string &name, std::vector<BundleStorageStats> &bundleStats) const;
 
 private:
     bool initialUserFlag_ = false;

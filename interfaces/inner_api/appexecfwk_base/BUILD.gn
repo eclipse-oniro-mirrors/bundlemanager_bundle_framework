@@ -64,6 +64,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/bundle_resource/bundle_resource_info.cpp",
     "src/bundle_resource/bundle_system_state.cpp",
     "src/bundle_resource/launcher_ability_resource_info.cpp",
+    "src/bundle_storage_stats.cpp",
     "src/bundle_user_info.cpp",
     "src/clone/clone_param.cpp",
     "src/code_protect_bundle_info.cpp",

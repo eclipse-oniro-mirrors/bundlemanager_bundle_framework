@@ -145,6 +145,12 @@ ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int3
     return 0;
 }
 
+ErrCode InstalldClient::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    const std::unordered_map<std::string, int32_t> &uidMap, std::vector<BundleStorageStats> &bundleStats)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -396,6 +396,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS):
             errCode = this->HandleGetBundleStats(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_BUNDLE_STATS):
+            errCode = this->HandleBatchGetBundleStats(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_STATS):
             errCode = this->HandleGetAllBundleStats(data, reply);
@@ -3176,6 +3179,31 @@ ErrCode BundleMgrHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::vector<std::string> bundleNames;
+    if (data.ReadInt32() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("bundleNamesSize too large");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (!data.ReadStringVector(&bundleNames)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    std::vector<BundleStorageStats> bundleStats;
+    ErrCode ret = BatchGetBundleStats(bundleNames, userId, bundleStats);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteVectorToParcelIntelligent(bundleStats, reply)) {
+        APP_LOGE("write bundleStats failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ret;
 }
 
 ErrCode BundleMgrHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply)

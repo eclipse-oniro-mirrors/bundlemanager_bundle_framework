@@ -23,6 +23,7 @@
 
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
+#include "bundle_storage_stats.h"
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
 #include "ipc/create_dir_param.h"
@@ -214,6 +215,13 @@ public:
     virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
         std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex = 0,
         const uint32_t statFlag = 0, const std::vector<std::string> &moduleNameList = {})
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+        const std::unordered_map<std::string, int32_t> &uidMap,
+        std::vector<BundleStorageStats> &bundleStats)
     {
         return ERR_OK;
     }

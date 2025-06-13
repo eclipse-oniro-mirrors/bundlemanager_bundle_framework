@@ -3277,6 +3277,46 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     return true;
 }
 
+ErrCode BundleMgrProxy::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
+    std::vector<BundleStorageStats> &bundleStats)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to BatchGetBundleStats due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t size = static_cast<int32_t>(bundleNames.size());
+    if (!data.WriteInt32(size)) {
+        APP_LOGE("fail to BatchGetBundleStats due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteStringVector(bundleNames)) {
+        APP_LOGE("fail to BatchGetBundleStats due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to BatchGetBundleStats due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::BATCH_GET_BUNDLE_STATS, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("reply result false");
+        return ret;
+    }
+    ret = InnerGetVectorFromParcelIntelligent<BundleStorageStats>(reply, bundleStats);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to BatchGetBundleStats from server");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 bool BundleMgrProxy::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
 {
     APP_LOGI("GetAllBundleStats start");
