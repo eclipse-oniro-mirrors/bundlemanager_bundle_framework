@@ -2672,6 +2672,21 @@ HWTEST_F(BmsDataMgrTest, ExplicitQueryCloneAbilityInfo_0100, Function | SmallTes
 }
 
 /**
+ * @tc.number:ExplicitQueryCloneAbilityInfo_0200
+ * @tc.name: test ExplicitQueryCloneAbilityInfo
+ * @tc.desc: 1.explicitly query cloning capability information
+ */
+HWTEST_F(BmsDataMgrTest, ExplicitQueryCloneAbilityInfo_0200, Function | SmallTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(USERID);
+    ElementName element;
+    AbilityInfo abilityInfo;
+    auto ret = bundleDataMgr.ExplicitQueryCloneAbilityInfoV9(element,  0, USERID, 0, abilityInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
  * @tc.number:GetCloneBundleInfo_0100
  * @tc.name: test GetCloneBundleInfo
  * @tc.desc: 1.get clone bundle information
@@ -2763,6 +2778,37 @@ HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0002, Function | MediumTest | Le
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
     ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: AddDesktopShortcutInfo_0003
+ * @tc.name: AddDesktopShortcutInfo
+ * @tc.desc: test AddDesktopShortcutInfo
+ */
+HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = 10;
+    ShortcutInfo shortcutInfo;
+    auto ret1 = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    userId = Constants::ANY_USERID;
+    auto ret2 = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_NE(ret2, ERR_OK);
+}
+
+/**
+ * @tc.number: AddDesktopShortcutInfo_0004
+ * @tc.name: AddDesktopShortcutInfo
+ * @tc.desc: test AddDesktopShortcutInfo
+ */
+HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0004, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    bundleDataMgr.AddUserId(USERID);
+    auto ret1 = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_NE(ret1, ERR_OK);
 }
 
 /**
@@ -2960,6 +3006,23 @@ HWTEST_F(BmsDataMgrTest, GetSignatureInfoByBundleName_0001, Function | MediumTes
     SignatureInfo signatureInfo;
     auto ret = bundleDataMgr.GetSignatureInfoByBundleName(bundleName, signatureInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetSignatureInfoByBundleName_0002
+ * @tc.name: GetSignatureInfoByBundleName
+ * @tc.desc: test GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetSignatureInfoByBundleName_0002, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    SignatureInfo signatureInfo;
+    auto ret = dataMgr->GetSignatureInfoByBundleName(BUNDLE_NAME, signatureInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
 }
 
 /**
@@ -3752,6 +3815,20 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryCurAbilityInfosV9_0001, Function | SmallTe
     int32_t appIndex = 10;
     auto ret = bundleDataMgr.ImplicitQueryCurAbilityInfosV9(want, flags, userId, abilityInfos, appIndex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: ImplicitQueryCurCloneExtensionAbilityInfosV9_0001
+ * @tc.name: ImplicitQueryCurCloneExtensionAbilityInfosV9
+ * @tc.desc: test ImplicitQueryCurCloneExtensionAbilityInfosV9
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryCurCloneExtensionAbilityInfosV9_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    std::vector<ExtensionAbilityInfo> abilityInfos;
+    auto ret = bundleDataMgr.ImplicitQueryCurCloneExtensionAbilityInfosV9(want, 0, USERID, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -4734,6 +4811,31 @@ HWTEST_F(BmsDataMgrTest, GetAllBundleDirs_0001, TestSize.Level1)
 }
 
 /**
+ * @tc.number: GreatOrEqualTargetAPIVersion_0001
+ * @tc.name: GreatOrEqualTargetAPIVersion
+ * @tc.desc: test GreatOrEqualTargetAPIVersion
+ */
+HWTEST_F(BmsDataMgrTest, GreatOrEqualTargetAPIVersion_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bool ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(ServiceConstants::API_VERSION_MAX + 1, 0, 0);
+    EXPECT_FALSE(ret);
+    ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(0, 0, 0);
+    EXPECT_FALSE(ret);
+    ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(ServiceConstants::API_VERSION_MAX,
+        ServiceConstants::API_VERSION_MAX + 1, 0);
+    EXPECT_FALSE(ret);
+    ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(ServiceConstants::API_VERSION_MAX, -1, 0);
+    EXPECT_FALSE(ret);
+    ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(ServiceConstants::API_VERSION_MAX,
+            ServiceConstants::API_VERSION_MAX, ServiceConstants::API_VERSION_MAX + 1);
+    EXPECT_FALSE(ret);
+    ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(ServiceConstants::API_VERSION_MAX,
+        ServiceConstants::API_VERSION_MAX, -1);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: IsObtainAbilityInfo_0001
  * @tc.name: IsObtainAbilityInfo
  * @tc.desc: test BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo)
@@ -4746,6 +4848,78 @@ HWTEST_F(BmsDataMgrTest, IsObtainAbilityInfo_0001, TestSize.Level1)
     AbilityInfo abilityInfo;
     auto ret = bundleDataMgr.IsObtainAbilityInfo(want, userId, abilityInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsObtainAbilityInfo_0002
+ * @tc.name: IsObtainAbilityInfo
+ * @tc.desc: test BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, IsObtainAbilityInfo_0002, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    want.SetElement(element);
+    AbilityInfo abilityInfo;
+    auto ret = bundleDataMgr.IsObtainAbilityInfo(want, USERID, abilityInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsObtainAbilityInfo_0003
+ * @tc.name: IsObtainAbilityInfo
+ * @tc.desc: test BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, IsObtainAbilityInfo_0003, TestSize.Level1)
+{
+    InnerBundleInfo info;
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    Want want;
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    want.SetElement(element);
+    AbilityInfo abilityInfo;
+    bool ret = dataMgr->IsObtainAbilityInfo(want, USERID, abilityInfo);
+    EXPECT_TRUE(ret);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: IsObtainAbilityInfo_0004
+ * @tc.name: IsObtainAbilityInfo
+ * @tc.desc: test BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, IsObtainAbilityInfo_0004, TestSize.Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.needAppDetail = true;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+    Want want;
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    element.SetAbilityName(ABILITY_NAME);
+    want.SetElement(element);
+    AbilityInfo abilityInfo;
+    auto ret3 = dataMgr->IsObtainAbilityInfo(want, USERID, abilityInfo);
+    EXPECT_FALSE(ret3);
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
 
 /**
@@ -5167,6 +5341,26 @@ HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0003, TestSize.Level1)
     userId = Constants::ANY_USERID;
     ret = bundleDataMgr.GetAllDesktopShortcutInfo(userId, shortcutInfos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllDesktopShortcutInfo_0004
+ * @tc.name: GetAllDesktopShortcutInfo
+ * @tc.desc: test ErrCode GetAllDesktopShortcutInfo
+ */
+HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0004, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(USERID);
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    bool isIdIllegal = false;
+    shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto ret = bundleDataMgr.GetAllDesktopShortcutInfo(USERID, shortcutInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
 }
 
 /**
