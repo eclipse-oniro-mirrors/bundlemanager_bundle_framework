@@ -45,7 +45,7 @@ public:
     {}
     void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
     void OnCleanAllBundleCacheFinished(int32_t result) override;
-    uint64_t GetCacheStat();
+    uint64_t GetCacheStat() override;
     int32_t GetDelRet();
 private:
     std::shared_ptr<std::promise<uint64_t>> cacheStat_;
@@ -1336,6 +1336,28 @@ HWTEST_F(BmsBundleMgrProxyTest, GreatOrEqualTargetAPIVersion_0100, Function | Me
     int32_t patchVersion = 3;
     auto ret = bundleMgrProxy.GreatOrEqualTargetAPIVersion(platformVersion, minorVersion, patchVersion);
     EXPECT_NE(ret, true);
+}
+
+/**
+ * @tc.number: ProcessCacheCallbackHost_0100
+ * @tc.name: test the ProcessCacheCallbackHost
+ * @tc.desc: 1. test ProcessCacheCallbackHost
+ */
+HWTEST_F(BmsBundleMgrProxyTest, ProcessCacheCallbackHost_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    sptr<ProcessCacheCallbackHost> getCache = new (std::nothrow) ProcessCacheCallbackHost();
+    EXPECT_NE(getCache, nullptr);
+
+    // test no finish, wait timeout
+    uint64_t cacheSize = getCache->GetCacheStat();
+    EXPECT_EQ(cacheSize, 0);
+
+    // test finish
+    getCache->OnGetAllBundleCacheFinished(1);
+    cacheSize = getCache->GetCacheStat();
+    EXPECT_EQ(cacheSize, 1);
 }
 }
 }

@@ -37,6 +37,11 @@ public:
      * @param succeeded Indicates the result of the delete cache files progress.
      */
     virtual void OnCleanAllBundleCacheFinished(int32_t resulted) override;
+    
+    /**
+     * @brief get all bundle cache stat.
+     */
+    virtual uint64_t GetCacheStat() override;
 
 private:
     static inline BrokerDelegator<ProcessCacheCallbackProxy> delegator_;

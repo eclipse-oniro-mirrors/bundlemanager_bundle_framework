@@ -15,6 +15,7 @@
 
 #include "bundle_mgr_proxy.h"
 
+#include <cinttypes>
 #include <numeric>
 #include <set>
 #include <unistd.h>
@@ -40,6 +41,7 @@
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_proxy.h"
 #endif
+#include "process_cache_callback_host.h"
 #include "securec.h"
 
 namespace OHOS {
@@ -48,6 +50,15 @@ namespace {
 constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 constexpr int64_t GET_BUNDLE_FOR_SELF_CACHE_TIME = 1000; // 1000ms
+
+enum class AllBundleCacheSizeState : uint8_t {
+    GET_START = 0,
+    GET_END = 1,
+};
+std::shared_mutex g_cacheCallbackMutex;
+std::vector<sptr<IProcessCacheCallback>> g_bundleCacheCallBackList;
+std::shared_mutex g_cacheCallstateMutex;
+AllBundleCacheSizeState g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_END;
 
 bool GetData(void *&buffer, size_t size, const void *data)
 {
@@ -5840,29 +5851,73 @@ ErrCode BundleMgrProxy::GetDirByBundleNameAndAppIndex(const std::string &bundleN
 ErrCode BundleMgrProxy::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)
 {
     APP_LOGI("GetAllBundleCacheStat start");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (processCacheCallback == nullptr) {
         APP_LOGE("fail to CleanBundleCacheFiles due to params error");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
+    ErrCode ret = ERR_OK;
+    std::unique_lock<std::shared_mutex> stateLock1(g_cacheCallstateMutex);
+    if (g_getAllBundleCacheSizeState == AllBundleCacheSizeState::GET_END) {
+        // set state GET_START
+        g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_START;
+        stateLock1.unlock();
+        APP_LOGI("start first time");
+        uint64_t cacheSize = 0;
+        ret = GetAllBundleCacheStatExec(processCacheCallback);
+        if (ret == ERR_OK) {
+            cacheSize = processCacheCallback->GetCacheStat();
+            APP_LOGD("exec first time end, size: %{public}" PRIu64, cacheSize);
+        }
+        std::unique_lock<std::shared_mutex> callBackListLock(g_cacheCallbackMutex);
+        if (!g_bundleCacheCallBackList.empty()) {
+            int count = 0;
+            // finish current callback
+            processCacheCallback->OnGetAllBundleCacheFinished(cacheSize);
+            // finish other callback
+            for (const auto& callback : g_bundleCacheCallBackList) {
+                count++;
+                callback->OnGetAllBundleCacheFinished(cacheSize);
+                APP_LOGD("exec count: %{public}d callback end", count);
+            }
+            g_bundleCacheCallBackList.clear();
+        }
+        callBackListLock.unlock();
+
+        std::unique_lock<std::shared_mutex> stateLock2(g_cacheCallstateMutex);
+        g_getAllBundleCacheSizeState = AllBundleCacheSizeState::GET_END;
+        stateLock2.unlock();
+    } else {
+        stateLock1.unlock();
+        std::unique_lock<std::shared_mutex> callBackListLock2(g_cacheCallbackMutex);
+        g_bundleCacheCallBackList.emplace_back(processCacheCallback);
+        callBackListLock2.unlock();
+        APP_LOGD("add new callback");
+    }
+    return ret;
+}
+ 
+ErrCode BundleMgrProxy::GetAllBundleCacheStatExec(const sptr<IProcessCacheCallback> processCacheCallback)
+{
+    APP_LOGI("start");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("failed to GetAllBundleCacheStat due to write MessageParcel fail");
+        APP_LOGE("failed to due to write MessageParcel fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteRemoteObject(processCacheCallback->AsObject())) {
-        APP_LOGE("fail to GetAllBundleCacheStat, for write parcel failed");
+        APP_LOGE("failed for write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
+ 
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ALL_BUNDLE_CACHE, data, reply)) {
-        APP_LOGE("fail to GetAllBundleCacheStat from server");
+        APP_LOGE("fail to from server");
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     ErrCode res = reply.ReadInt32();
     if (res != ERR_OK) {
-        APP_LOGE("fail to GetAllBundleCacheStat from reply: %{public}d", res);
+        APP_LOGE("fail to from reply: %{public}d", res);
         return res;
     }
     return ERR_OK;

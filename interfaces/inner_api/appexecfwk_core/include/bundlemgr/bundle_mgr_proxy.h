@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_PROXY_H
 
 #include <string>
+#include <shared_mutex>
 #include <vector>
 
 #include "bundle_event_callback_interface.h"
@@ -940,6 +941,8 @@ public:
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
 
     virtual ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback) override;
+
+    ErrCode GetAllBundleCacheStatExec(const sptr<IProcessCacheCallback> processCacheCallback);
 
     virtual ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback) override;
 

@@ -42,6 +42,7 @@
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_proxy.h"
 #endif
+#include "process_cache_callback_host.h"
 #include "securec.h"
 
 using namespace testing::ext;
@@ -49,6 +50,62 @@ using OHOS::AAFwk::Want;
 
 namespace OHOS {
 namespace AppExecFwk {
+const int32_t MAX_WAITING_TIME = 600;
+class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
+public:
+    ProcessCacheCallbackImpl() : cacheStat_(std::make_shared<std::promise<uint64_t>>()),
+        cleanResult_(std::make_shared<std::promise<int32_t>>()) {}
+    ~ProcessCacheCallbackImpl() override
+    {}
+    void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
+    void OnCleanAllBundleCacheFinished(int32_t result) override;
+    uint64_t GetCacheStat() override;
+    int32_t GetDelRet();
+private:
+    std::shared_ptr<std::promise<uint64_t>> cacheStat_;
+    std::shared_ptr<std::promise<int32_t>> cleanResult_;
+    DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
+};
+
+void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
+{
+    if (cacheStat_ != nullptr) {
+        cacheStat_->set_value(cacheStat);
+    }
+}
+
+void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(int32_t result)
+{
+    if (cleanResult_ != nullptr) {
+        cleanResult_->set_value(result);
+    }
+}
+
+uint64_t ProcessCacheCallbackImpl::GetCacheStat()
+{
+    if (cacheStat_ != nullptr) {
+        auto future = cacheStat_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return 0;
+        }
+        return future.get();
+    }
+    return 0;
+};
+
+int32_t ProcessCacheCallbackImpl::GetDelRet()
+{
+    if (cleanResult_ != nullptr) {
+        auto future = cleanResult_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return -1;
+        }
+        return future.get();
+    }
+    return -1;
+};
 
 class BundleMgrProxyTest : public testing::Test {
 public:

@@ -682,7 +682,7 @@ void GetAllBundleCacheSizeComplete(napi_env env, napi_status status, void *data)
 
 napi_value GetAllBundleCacheSize(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("begin to GetAllBundleCacheSize");
+    APP_LOGI("begin to GetAllBundleCacheSize");
     GetAllBundleCacheCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetAllBundleCacheCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
@@ -693,7 +693,7 @@ napi_value GetAllBundleCacheSize(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<GetAllBundleCacheCallbackInfo>(
         env, asyncCallbackInfo, GET_ALL_BUNDLE_CACHE_SIZE, GetAllBundleCacheSizeExec, GetAllBundleCacheSizeComplete);
     callbackPtr.release();
-    APP_LOGD("call GetAllBundleCacheSize done");
+    APP_LOGI("call GetAllBundleCacheSize done");
     return promise;
 }
 

@@ -387,7 +387,7 @@ public:
     {}
     void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
     void OnCleanAllBundleCacheFinished(int32_t result) override;
-    uint64_t GetCacheStat();
+    uint64_t GetCacheStat() override;
     int32_t GetDelRet();
 private:
     std::shared_ptr<std::promise<uint64_t>> cacheStat_;

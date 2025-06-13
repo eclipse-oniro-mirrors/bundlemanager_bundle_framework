@@ -35,6 +35,11 @@ public:
      * @param succeeded Indicates the result of progress.
      */
     virtual void OnCleanAllBundleCacheFinished(int32_t resulted) = 0;
+
+    /**
+     * @brief get all bundle cache stat.
+     */
+    virtual uint64_t GetCacheStat() = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
