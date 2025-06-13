@@ -21,6 +21,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr int32_t INVALID_APP_INDEX = 0;
 constexpr size_t INDEX_BUNDLE_NAME = 0;
 constexpr size_t INDEX_MODULE_NAMES = 1;
 constexpr size_t INDEX_CLONE_APP_INDEX = 2;
@@ -30,10 +31,14 @@ std::vector<std::string> BundleCacheMgr::GetBundleCachePath(const std::string &b
     const int32_t userId, const int32_t appIndex, const std::vector<std::string> &moduleNameList)
 {
     std::string bundleNameDir = bundleName;
+    std::vector<std::string> cachePaths;
+    if (appIndex < INVALID_APP_INDEX) {
+        return cachePaths;
+    }
     if (appIndex > 0) {
         bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
     }
-    std::vector<std::string> cachePaths;
+    
     std::string elBase;
     for (const auto &el : ServiceConstants::FULL_BUNDLE_EL) {
         elBase = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el + ServiceConstants::PATH_SEPARATOR +
@@ -93,6 +98,7 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
     APP_LOGI("start");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
+        APP_LOGE("GetAllBundleCacheStat dataMgr is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
@@ -112,6 +118,7 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
         };
         std::thread(getAllBundleCache).detach();
     }
+    APP_LOGI("GetAllBundleCacheStat succeed");
     return ERR_OK;
 }
 

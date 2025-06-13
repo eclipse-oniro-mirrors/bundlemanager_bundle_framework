@@ -57,6 +57,8 @@
 #include "want.h"
 #include "uninstall_bundle_info.h"
 #include "installd/installd_permission_mgr.h"
+#include "bundle_cache_mgr.h"
+#include "process_cache_callback_host.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -170,7 +172,64 @@ const std::string BUNDLE_NAME_FOR_TEST = "com.example.example_test";
 const std::string BUNDLE_NAME_FOR_TEST_U1ENABLE = "com.example.u1Enable_test";
 const int32_t TEST_U100 = 100;
 const int32_t TEST_U1 = 1;
+const int32_t MAX_WAITING_TIME = 600;
 }  // namespace
+
+class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
+public:
+    ProcessCacheCallbackImpl() : cacheStat_(std::make_shared<std::promise<uint64_t>>()),
+        cleanResult_(std::make_shared<std::promise<int32_t>>()) {}
+    ~ProcessCacheCallbackImpl() override
+    {}
+    void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
+    void OnCleanAllBundleCacheFinished(int32_t result) override;
+    uint64_t GetCacheStat();
+    int32_t GetDelRet();
+private:
+    std::shared_ptr<std::promise<uint64_t>> cacheStat_;
+    std::shared_ptr<std::promise<int32_t>> cleanResult_;
+    DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
+};
+
+void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
+{
+    if (cacheStat_ != nullptr) {
+        cacheStat_->set_value(cacheStat);
+    }
+}
+
+void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(int32_t result)
+{
+    if (cleanResult_ != nullptr) {
+        cleanResult_->set_value(result);
+    }
+}
+
+uint64_t ProcessCacheCallbackImpl::GetCacheStat()
+{
+    if (cacheStat_ != nullptr) {
+        auto future = cacheStat_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return 0;
+        }
+        return future.get();
+    }
+    return 0;
+};
+
+int32_t ProcessCacheCallbackImpl::GetDelRet()
+{
+    if (cleanResult_ != nullptr) {
+        auto future = cleanResult_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return -1;
+        }
+        return future.get();
+    }
+    return -1;
+};
 
 class BmsBundleInstallerTest : public testing::Test {
 public:
@@ -11852,5 +11911,31 @@ HWTEST_F(BmsBundleInstallerTest, ProcessExtProfile_0300, Function | MediumTest |
     bool res = installer.ProcessExtProfile(installParam);
     EXPECT_FALSE(res);
     UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetAllBundleCacheStat_0010
+ * @tc.name: test GetAllBundleCacheStat
+ * @tc.desc: 1.Test the GetAllBundleCacheStat of BundleCacheMgr
+*/
+HWTEST_F(BmsBundleInstallerTest, GetAllBundleCacheStat_0010, Function | SmallTest | Level0)
+{
+    BundleCacheMgr bundleCacheMgr;
+    sptr<ProcessCacheCallbackImpl> getCache = new (std::nothrow) ProcessCacheCallbackImpl();
+    auto ret = bundleCacheMgr.GetAllBundleCacheStat(getCache);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_0010
+ * @tc.name: test CleanAllBundleCache
+ * @tc.desc: 1.Test the CleanAllBundleCache of BundleCacheMgr
+*/
+HWTEST_F(BmsBundleInstallerTest, CleanAllBundleCache_0010, Function | SmallTest | Level0)
+{
+    BundleCacheMgr bundleCacheMgr;
+    sptr<ProcessCacheCallbackImpl> cleanCache = new (std::nothrow) ProcessCacheCallbackImpl();
+    auto ret = bundleCacheMgr.CleanAllBundleCache(cleanCache);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS
