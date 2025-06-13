@@ -46,7 +46,6 @@ BundleAdditionalInfo *BundleAdditionalInfo::Unmarshalling(Parcel &parcel)
         delete info;
         info = nullptr;
     }
-    APP_LOGW("read from parcel success");
     return info;
 }
 }
