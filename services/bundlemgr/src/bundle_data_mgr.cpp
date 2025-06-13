@@ -401,7 +401,6 @@ bool BundleDataMgr::AddNewModuleInfo(const InnerBundleInfo &newInfo, InnerBundle
     oldInfo.SetProvisionId(newInfo.GetProvisionId());
     oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
     oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
-    oldInfo.SetCertificate(newInfo.GetCertificate());
     oldInfo.AddOldAppId(newInfo.GetAppId());
     oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
     oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
@@ -726,7 +725,6 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleI
     oldInfo.AddOldAppId(newInfo.GetAppId());
     oldInfo.SetProvisionId(newInfo.GetProvisionId());
     oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
-    oldInfo.SetCertificate(newInfo.GetCertificate());
     oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
     oldInfo.UpdateAppDetailAbilityAttrs();
     oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
@@ -2893,6 +2891,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId, appIndex);
     PostProcessAnyUserFlags(flags, responseUserId, originalUserId, bundleInfo, innerBundleInfo);
 
+    ProcessCertificate(bundleInfo, bundleName, flags);
     ProcessBundleMenu(bundleInfo, flags, true);
     ProcessBundleRouterMap(bundleInfo, flags);
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
@@ -2930,6 +2929,7 @@ ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInf
     }
     int32_t userId = uid / Constants::BASE_USER_RANGE;
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, userId, appIndex);
+    ProcessCertificate(bundleInfo, innerBundleInfo.GetBundleName(), flags);
     ProcessBundleMenu(bundleInfo, flags, true);
     ProcessBundleRouterMap(bundleInfo, flags);
     LOG_D(BMS_TAG_QUERY, "get bundleInfoForSelf %{public}s successfully in user %{public}d",
@@ -3000,6 +3000,21 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
         }
     }
     RouterMapHelper::MergeRouter(bundleInfo);
+}
+
+void BundleDataMgr::ProcessCertificate(BundleInfo& bundleInfo, const std::string &bundleName, int32_t flags) const
+{
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
+        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
+        AppProvisionInfo appProvisionInfo;
+        if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->
+            GetAppProvisionInfo(bundleName, appProvisionInfo)) {
+            APP_LOGW("bundleName:%{public}s GetAppProvisionInfo failed", bundleName.c_str());
+            return;
+        }
+        bundleInfo.signatureInfo.certificate = appProvisionInfo.certificate;
+    }
 }
 
 bool BundleDataMgr::DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName)
@@ -9971,7 +9986,13 @@ ErrCode BundleDataMgr::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &s
     signatureInfo.appId = innerBundleInfo.GetBaseBundleInfo().appId;
     signatureInfo.fingerprint = innerBundleInfo.GetBaseApplicationInfo().fingerprint;
     signatureInfo.appIdentifier = innerBundleInfo.GetAppIdentifier();
-    signatureInfo.certificate = innerBundleInfo.GetCertificate();
+    AppProvisionInfo appProvisionInfo;
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->
+        GetAppProvisionInfo(innerBundleInfo.GetBundleName(), appProvisionInfo)) {
+        APP_LOGW("bundleName:%{public}s GetAppProvisionInfo failed", innerBundleInfo.GetBundleName().c_str());
+    } else {
+        signatureInfo.certificate = appProvisionInfo.certificate;
+    }
     return ERR_OK;
 }
 
