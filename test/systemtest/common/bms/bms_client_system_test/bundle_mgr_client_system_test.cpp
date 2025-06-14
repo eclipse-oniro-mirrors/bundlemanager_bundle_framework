@@ -2202,7 +2202,7 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_006, TestSize.Level1)
     BundleMgrClientImpl impl;
     sptr<IBundleMgr> proxy = GetBundleMgrProxy();
     impl.bundleMgr_ = proxy;
-    impl.Connect();
+    impl.ConnectInstaller();
     EXPECT_NE(impl.bundleInstaller_, nullptr);
     std::string bundleName = "";
     int32_t dlpType = 0;
@@ -2231,7 +2231,7 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_007, TestSize.Level1)
     BundleMgrClientImpl impl;
     sptr<IBundleMgr> proxy = GetBundleMgrProxy();
     impl.bundleMgr_ = proxy;
-    impl.Connect();
+    impl.ConnectInstaller();
     OHOS::AAFwk::Want want;
     AbilityInfo abilityInfo;
     int32_t flags = 0;

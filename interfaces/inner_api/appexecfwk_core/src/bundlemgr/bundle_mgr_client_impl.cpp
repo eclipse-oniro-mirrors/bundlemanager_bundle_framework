@@ -467,7 +467,7 @@ ErrCode BundleMgrClientImpl::InstallSandboxApp(const std::string &bundleName, in
         APP_LOGE("InstallSandboxApp bundleName is empty");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
-    ErrCode result = Connect();
+    ErrCode result = ConnectInstaller();
     if (result != ERR_OK) {
         APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
@@ -488,7 +488,7 @@ ErrCode BundleMgrClientImpl::UninstallSandboxApp(const std::string &bundleName, 
         APP_LOGE("UninstallSandboxApp params are invalid");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
-    ErrCode result = Connect();
+    ErrCode result = ConnectInstaller();
     if (result != ERR_OK) {
         APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
@@ -650,6 +650,37 @@ ErrCode BundleMgrClientImpl::Connect()
         deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
         bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
     }
+    APP_LOGD("connect end");
+    return ERR_OK;
+}
+
+ErrCode BundleMgrClientImpl::ConnectInstaller()
+{
+    APP_LOGD("ConnectInstaller begin");
+    std::unique_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        sptr<ISystemAbilityManager> systemAbilityManager =
+            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (systemAbilityManager == nullptr) {
+            APP_LOGE("failed to get system ability manager");
+            return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
+        }
+
+        sptr<IRemoteObject> remoteObject_ = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+        if (remoteObject_ == nullptr || (bundleMgr_ = iface_cast<IBundleMgr>(remoteObject_)) == nullptr) {
+            APP_LOGE_NOFUNC("get bms sa failed");
+            return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
+        }
+        std::weak_ptr<BundleMgrClientImpl> weakPtr = shared_from_this();
+        auto deathCallback = [weakPtr](const wptr<IRemoteObject>& object) {
+            auto sharedPtr = weakPtr.lock();
+            if (sharedPtr != nullptr) {
+                sharedPtr->OnDeath();
+            }
+        };
+        deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
+        bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
+    }
 
     if (bundleInstaller_ == nullptr) {
         bundleInstaller_ = bundleMgr_->GetBundleInstaller();
@@ -658,7 +689,7 @@ ErrCode BundleMgrClientImpl::Connect()
             return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
         }
     }
-    APP_LOGD("connect end");
+    APP_LOGD("ConnectInstaller end");
     return ERR_OK;
 }
 

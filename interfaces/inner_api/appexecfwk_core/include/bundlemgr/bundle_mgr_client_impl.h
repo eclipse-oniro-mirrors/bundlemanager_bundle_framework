@@ -72,6 +72,7 @@ public:
 
 private:
     ErrCode Connect();
+    ErrCode ConnectInstaller();
     void OnDeath();
     bool ConvertResourcePath(const std::string &bundleName, std::string &resPath, bool isCompressed) const;
     bool GetResProfileByMetadata(const std::vector<Metadata> &metadata, const std::string &metadataName,
