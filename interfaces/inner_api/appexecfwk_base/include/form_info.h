@@ -71,6 +71,8 @@ struct FormInfo : public Parcelable {
     std::vector<uint32_t> formPreviewImages;
     FormFunInteractionParams funInteractionParams;
     FormSceneAnimationParams sceneAnimationParams;
+    bool resizable = false;
+    std::string groupId;
 
     FormInfo() = default;
     explicit FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo);

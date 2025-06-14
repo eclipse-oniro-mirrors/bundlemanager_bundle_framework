@@ -170,6 +170,8 @@ struct ExtensionFormProfileInfo {
     std::vector<std::string> previewImages {};
     FormFunInteractionParams funInteractionParams;
     FormSceneAnimationParams sceneAnimationParams;
+    bool resizable = false;
+    std::string groupId;
 };
 
 struct ExtensionFormProfileInfoStruct {
@@ -462,6 +464,18 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::RESIZABLE,
+        extensionFormProfileInfo.resizable,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::GROUP_ID,
+        extensionFormProfileInfo.groupId,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -512,7 +526,7 @@ void supportFormDimension(std::set<int32_t> &supportDimensionSet, const Extensio
             APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
-
+                
         int32_t dimensionItem = DIMENSION_MAP_VALUE[i];
         #ifndef FORM_DIMENSION_2_3
             if (dimensionItem == DIMENSION_2_3) {
@@ -534,7 +548,7 @@ void supportFormDimension(std::set<int32_t> &supportDimensionSet, const Extensio
                 continue;
             }
         #endif
-        
+
         supportDimensionSet.emplace(dimensionItem);
     }
 }
@@ -655,6 +669,8 @@ void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormI
     info.sceneAnimationParams.abilityName = form.sceneAnimationParams.abilityName;
     info.sceneAnimationParams.isAlwaysActive = form.sceneAnimationParams.isAlwaysActive;
     info.sceneAnimationParams.disabledDesktopBehaviors = form.sceneAnimationParams.disabledDesktopBehaviors;
+    info.resizable = form.resizable;
+    info.groupId = form.groupId;
 }
 
 bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
