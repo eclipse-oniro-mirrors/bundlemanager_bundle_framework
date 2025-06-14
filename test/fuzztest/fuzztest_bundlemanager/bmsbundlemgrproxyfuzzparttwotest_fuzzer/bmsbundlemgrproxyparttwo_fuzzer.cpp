@@ -42,7 +42,7 @@ namespace OHOS {
         std::vector<Want> wants;
         wants.push_back(want);
         int32_t flags = fdp.ConsumeIntegral<int32_t>();
-        int32_t userId = fdp.ConsumeIntegral<int32_t>();
+        int32_t userId = GenerateRandomUser(fdp);
         std::vector<BundleInfo> bundleInfos;
         bundleMgrProxy.BatchGetBundleInfo(wants, flags, bundleInfos, userId);
         std::vector<std::string> bundleNames = GenerateStringArray(fdp);
@@ -56,7 +56,7 @@ namespace OHOS {
         bundleMgrProxy.GetBundleInfos(flags, bundleInfos, userId);
         bundleMgrProxy.GetBundleInfosV9(flags, bundleInfos, userId);
         int uid = bundleMgrProxy.GetUidByBundleName(bundleName, userId);
-        int32_t appIndex = fdp.ConsumeIntegral<int32_t>();
+        int32_t appIndex = 0;
         bundleMgrProxy.GetUidByBundleName(bundleName, userId, appIndex);
         bundleMgrProxy.GetUidByDebugBundleName(bundleName, userId);
         std::string appId = bundleMgrProxy.GetAppIdByBundleName(bundleName, userId);

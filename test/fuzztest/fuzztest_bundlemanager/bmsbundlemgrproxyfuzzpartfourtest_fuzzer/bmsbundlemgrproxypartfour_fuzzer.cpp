@@ -36,7 +36,7 @@ namespace OHOS {
         std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         std::string moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         std::string abilityName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-        int32_t userId = fdp.ConsumeIntegral<int32_t>();
+        int32_t userId = GenerateRandomUser(fdp);
         int32_t appIndex = fdp.ConsumeIntegral<int32_t>();
         int32_t flags = fdp.ConsumeIntegral<int32_t>();
         int32_t triggerMode = fdp.ConsumeIntegral<int32_t>();
