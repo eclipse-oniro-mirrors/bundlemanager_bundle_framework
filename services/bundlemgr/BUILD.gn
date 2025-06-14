@@ -428,7 +428,7 @@ ohos_shared_library("libbms") {
     external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-  
+
   if (current_cpu == "arm64") {
     defines += [ "USE_EXTENSION_DATA" ]
   }

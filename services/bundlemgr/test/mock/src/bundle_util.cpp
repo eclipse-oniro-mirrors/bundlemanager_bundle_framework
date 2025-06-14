@@ -280,25 +280,6 @@ void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
 {
 }
 
-std::string BundleUtil::GetHexHash(const std::string &s)
-{
-    return "";
-}
-
-void BundleUtil::RecursiveHash(std::string& s)
-{
-}
-
-std::string BundleUtil::GenerateUuid()
-{
-    return "";
-}
-
-std::string BundleUtil::GenerateUuidByKey(const std::string &key)
-{
-    return "";
-}
-
 std::vector<uint8_t> BundleUtil::GenerateRandomNumbers(uint8_t size, uint8_t lRange, uint8_t rRange)
 {
     std::vector<uint8_t> rangeV;
@@ -608,25 +589,6 @@ void BundleUtil::RestoreHaps(const std::string &sourcePath, const std::string &b
 
 void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
 {
-}
-
-std::string BundleUtil::GetHexHash(const std::string &s)
-{
-    return "";
-}
-
-void BundleUtil::RecursiveHash(std::string& s)
-{
-}
-
-std::string BundleUtil::GenerateUuid()
-{
-    return "";
-}
-
-std::string BundleUtil::GenerateUuidByKey(const std::string &key)
-{
-    return "";
 }
 
 std::vector<uint8_t> BundleUtil::GenerateRandomNumbers(uint8_t size, uint8_t lRange, uint8_t rRange)
