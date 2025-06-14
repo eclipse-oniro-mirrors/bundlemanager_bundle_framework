@@ -3114,6 +3114,7 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
         return false;
     }
     int32_t abilityInfoSize = reply.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(reply, abilityInfoSize, &abilityInfos);
     for (int32_t i = 0; i < abilityInfoSize; i++) {
         std::unique_ptr<AbilityInfo> abilityInfoPtr(reply.ReadParcelable<AbilityInfo>());
         if (abilityInfoPtr == nullptr) {
@@ -3123,6 +3124,7 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
         abilityInfos.emplace_back(*abilityInfoPtr);
     }
     int32_t extensionInfoSize = reply.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(reply, extensionInfoSize, &extensionInfos);
     for (int32_t i = 0; i < extensionInfoSize; i++) {
         std::unique_ptr<ExtensionAbilityInfo> extensionInfoPtr(reply.ReadParcelable<ExtensionAbilityInfo>());
         if (extensionInfoPtr == nullptr) {
