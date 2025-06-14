@@ -885,13 +885,13 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<uint32_t>>(jsonObject,
-            jsonObjectEnd,
-            JSON_KEY_PREVIEW_IMAGES,
-            formInfo.formPreviewImages,
-            JsonType::ARRAY,
-            false,
-            parseResult,
-            ArrayType::NUMBER);
+        jsonObjectEnd,
+        JSON_KEY_PREVIEW_IMAGES,
+        formInfo.formPreviewImages,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::NUMBER);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         JSON_KEY_ENABLE_BLUR_BACKGROUND,

@@ -526,7 +526,7 @@ void supportFormDimension(std::set<int32_t> &supportDimensionSet, const Extensio
             APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
-                
+
         int32_t dimensionItem = DIMENSION_MAP_VALUE[i];
         #ifndef FORM_DIMENSION_2_3
             if (dimensionItem == DIMENSION_2_3) {
@@ -548,7 +548,7 @@ void supportFormDimension(std::set<int32_t> &supportDimensionSet, const Extensio
                 continue;
             }
         #endif
-
+        
         supportDimensionSet.emplace(dimensionItem);
     }
 }
