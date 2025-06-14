@@ -1363,6 +1363,8 @@ private:
     std::string TryGetRawDataByExtractor(const std::string &hapPath, const std::string &profileName,
         const AbilityInfo &abilityInfo) const;
     void RestoreUidAndGidFromUninstallInfo();
+    std::string GenerateUuid() const;
+    std::string GenerateUuidByKey(const std::string &key) const;
     ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
     bool CheckUpdateTimeWithBmsParam(const int64_t updateTime) const;
     bool InnerProcessShortcutId(const int64_t updateTime, const std::string &hapPath,

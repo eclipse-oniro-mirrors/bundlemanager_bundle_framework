@@ -6296,4 +6296,38 @@ HWTEST_F(BmsDataMgrTest, ProcessCertificate_0002, TestSize.Level1)
     dataMgr->ProcessCertificate(bundleInfo, BUNDLE_NAME, flags);
     EXPECT_TRUE(bundleInfo.signatureInfo.certificate.empty());
 }
+
+/**
+ * @tc.number: GenerateUuid_0001
+ * @tc.name: GenerateUuid
+ * @tc.desc: test GenerateUuid
+ */
+HWTEST_F(BmsDataMgrTest, GenerateUuid_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string uuid1 = dataMgr->GenerateUuid();
+    EXPECT_EQ(uuid1.size(), 36);
+
+    std::string uuid2 = dataMgr->GenerateUuid();
+    EXPECT_EQ(uuid2.size(), 36);
+
+    EXPECT_NE(uuid1, uuid2);
+
+    std::string key1 = "test";
+    std::string uuid3 = dataMgr->GenerateUuidByKey(key1);
+    EXPECT_EQ(uuid3.size(), 36);
+
+    std::string key2 = "test";
+    std::string uuid4 = dataMgr->GenerateUuidByKey(key2);
+    EXPECT_EQ(uuid4.size(), 36);
+
+    EXPECT_EQ(uuid3, uuid4);
+
+    std::string key3 = "test3";
+    std::string uuid5 = dataMgr->GenerateUuidByKey(key3);
+    EXPECT_EQ(uuid5.size(), 36);
+    EXPECT_NE(uuid3, uuid5);
+}
 } // OHOS
