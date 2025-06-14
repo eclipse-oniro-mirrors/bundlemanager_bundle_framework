@@ -26,10 +26,11 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 namespace {
 const char NAME[] = "name";
+constexpr size_t SIZE_TWO = 2;
 }
-    bool fuzzabilityinfromjson(const uint8_t* data, size_t size)
+    bool FuzzAbilityInFromJson(const uint8_t* data, size_t size)
     {
-        if ((size < 2) || (size % 2 != 0)) {
+        if ((size < SIZE_TWO) || (size % SIZE_TWO != 0)) {
             return false;
         }
         nlohmann::json infoJson;
@@ -44,6 +45,6 @@ const char NAME[] = "name";
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
-    OHOS::fuzzabilityinfromjson(data, size);
+    OHOS::FuzzAbilityInFromJson(data, size);
     return 0;
 }
