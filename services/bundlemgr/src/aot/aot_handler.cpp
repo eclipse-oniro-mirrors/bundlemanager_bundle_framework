@@ -169,6 +169,14 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, con
     AOTArgs aotArgs;
     aotArgs.bundleName = info.GetBundleName();
     aotArgs.moduleName = moduleName;
+    if (compileMode == ServiceConstants::COMPILE_PARTIAL) {
+        aotArgs.arkProfilePath = FindArkProfilePath(aotArgs.bundleName, aotArgs.moduleName);
+        if (aotArgs.arkProfilePath.empty()) {
+            APP_LOGD("compile mode is partial, but ap not exist, no need to AOT");
+            return std::nullopt;
+        }
+    }
+    aotArgs.compileMode = compileMode;
     aotArgs.hapPath = info.GetModuleHapPath(aotArgs.moduleName);
     aotArgs.coreLibPath = Constants::EMPTY_STRING;
     aotArgs.outputPath = ServiceConstants::ARK_CACHE_PATH + aotArgs.bundleName + ServiceConstants::PATH_SEPARATOR
@@ -214,19 +222,6 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, con
         APP_LOGE("codeLanguage empty");
         return std::nullopt;
     }
-    std::string tmpCompileMode = compileMode;
-    if (aotArgs.codeLanguage == Constants::CODE_LANGUAGE_1_2 ||
-        aotArgs.codeLanguage == Constants::CODE_LANGUAGE_HYBRID) {
-        tmpCompileMode = "full";
-    }
-    if (tmpCompileMode == ServiceConstants::COMPILE_PARTIAL) {
-        aotArgs.arkProfilePath = FindArkProfilePath(aotArgs.bundleName, aotArgs.moduleName);
-        if (aotArgs.arkProfilePath.empty()) {
-            APP_LOGD("compile mode is partial, but ap not exist, no need to AOT");
-            return std::nullopt;
-        }
-    }
-    aotArgs.compileMode = tmpCompileMode;
     APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());
     return aotArgs;
 }
