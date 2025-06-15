@@ -4020,13 +4020,13 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
     }
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        for (auto bundleName = bundleNameList.begin(); bundleName != bundleNameList.end();) {       
+        for (auto bundleName = bundleNameList.begin(); bundleName != bundleNameList.end();) {
             const auto infoItem = bundleInfos_.find(*bundleName);
             InnerBundleUserInfo userInfo;
             if (infoItem == bundleInfos_.end() ||
                 !infoItem->second.GetInnerBundleUserInfo(infoItem->second.GetResponseUserId(userId), userInfo)) {
                 BundleStorageStats stats;
-                stats.bundleName = *bundleName;  
+                stats.bundleName = *bundleName;
                 bundleName = bundleNameList.erase(bundleName);
                 stats.errCode = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
                 bundleStatsList.push_back(stats);
@@ -11065,7 +11065,6 @@ std::string BundleDataMgr::GenerateUuidByKey(const std::string &key) const
     char deviceId[UUID_LENGTH_MAX] = { 0 };
     auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
     std::string deviceUdid;
-    std::string deviceStr;
     if (ret != 0) {
         APP_LOGW("GetDevUdid failed");
     } else {
