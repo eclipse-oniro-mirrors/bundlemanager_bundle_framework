@@ -78,9 +78,15 @@ void BundleCommonEventMgr::Init()
         { NotifyType::BUNDLE_CACHE_CLEARED, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CACHE_CLEARED },
         { NotifyType::OVERLAY_INSTALL, OVERLAY_ADD_ACTION},
         { NotifyType::OVERLAY_UPDATE, OVERLAY_CHANGED_ACTION},
-        { NotifyType::DISPOSED_RULE_ADDED, DISPOSED_RULE_ADDED},
-        { NotifyType::DISPOSED_RULE_DELETED, DISPOSED_RULE_DELETED},
         { NotifyType::START_INSTALL, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_INSTALLATION_STARTED },
+    };
+    eventSet_ = {
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED,
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED,
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED,
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CACHE_CLEARED,
+        OVERLAY_ADD_ACTION,
+        OVERLAY_CHANGED_ACTION,
     };
 }
 
@@ -135,14 +141,37 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     }
 
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId)) {
-        APP_LOGE("PublishCommonEventAsUser failed, userId:%{public}d", publishUserId);
-    }
+    (void)PublishCommonEvent(installResult.bundleName, want.GetAction(), publishUserId, commonData);
     (void)ProcessBundleChangedEventForOtherUsers(dataMgr, installResult.bundleName,
         want.GetAction(), publishUserId, commonData);
     IPCSkeleton::SetCallingIdentity(identity);
 }
 
+bool BundleCommonEventMgr::PublishCommonEvent(
+    const std::string &bundleName,
+    const std::string &action,
+    const int32_t publishUserId,
+    const EventFwk::CommonEventData &commonData)
+{
+    if (eventSet_.find(action) != eventSet_.end()) {
+        EventFwk::CommonEventPublishInfo publishInfo;
+        std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
+        publishInfo.SetSubscriberPermissions(permissionVec);
+        publishInfo.SetBundleName(bundleName);
+        publishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
+        publishInfo.SetValidationRule(EventFwk::ValidationRule::OR);
+        if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishInfo, publishUserId)) {
+            APP_LOGE("PublishCommonEventAsUser failed, userId:%{public}d", publishUserId);
+            return false;
+        }
+    } else {
+        if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId)) {
+            APP_LOGE("PublishCommonEventAsUser failed, userId:%{public}d", publishUserId);
+            return false;
+        }
+    }
+    return true;
+}
 bool BundleCommonEventMgr::ProcessBundleChangedEventForOtherUsers(
     const std::shared_ptr<BundleDataMgr> &dataMgr,
     const std::string &bundleName,

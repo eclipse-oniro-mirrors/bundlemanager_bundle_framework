@@ -3628,6 +3628,24 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessBundleChangedEventForOtherUsers_0200, Func
 }
 
 /**
+ * @tc.number: PublishCommonEvent_0100
+ * @tc.name: test PublishCommonEvent
+ * @tc.desc: 1.PublishCommonEvent
+ */
+HWTEST_F(BmsBundleDataMgrTest, PublishCommonEvent_0100, Function | MediumTest | Level1)
+{
+    EventFwk::CommonEventData commonData;
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    bool ret = commonEventMgr->PublishCommonEvent("notExist",
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, USERID, commonData);
+    EXPECT_FALSE(ret);
+ 
+    ret = commonEventMgr->PublishCommonEvent("notExist",
+        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_INSTALLATION_STARTED, USERID, commonData);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: GetStringById_0100
  * @tc.name: test GetStringById
  * @tc.desc: test GetStringById
