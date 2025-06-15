@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +13,10 @@
  * limitations under the License.
  */
 
+#include <cstdio>
+#include <fstream>
 #include <gtest/gtest.h>
+#include <sys/stat.h>
 
 #define private public
 #define protected public
@@ -48,10 +51,12 @@ const std::string DIFF_FILE_PATH = "diffFilePath";
 const std::string NEW_SO_PATH = "newSoPath";
 const std::string SOURCE_DIR = "sourceDir";
 const std::string DESTINATION_DIR = "destinationDir";
+const std::string TMP_DIR = "/data/app/el1/bundle/public/bms-test/";
 const int32_t USERID = 100;
 const int32_t UID = 1000;
 const int32_t GID = 1000;
 const std::string EMPTY_STRING = "";
+constexpr uint32_t INSTALLS_UID = 3060;
 }  // namespace
 
 class BmsInstalldClientTest : public testing::Test {
@@ -498,9 +503,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveBundleDataDir_0300, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveModuleDataDir_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveModuleDataDir_0100 start";
-    std::string ModuleName = EMPTY_STRING;
-    int userid = USERID;
-    ErrCode result = installClient_->RemoveModuleDataDir(ModuleName, userid);
+    ErrCode result = installClient_->RemoveModuleDataDir(EMPTY_STRING, USERID);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveModuleDataDir_0100 end";
 }
@@ -513,9 +516,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveModuleDataDir_0100, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveModuleDataDir_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveModuleDataDir_0200 start";
-    std::string ModuleName = MODULE_NAME;
     int userid = -1;
-    ErrCode result = installClient_->RemoveModuleDataDir(ModuleName, userid);
+    ErrCode result = installClient_->RemoveModuleDataDir(MODULE_NAME, userid);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveModuleDataDir_0200 end";
 }
@@ -528,10 +530,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveModuleDataDir_0200, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveModuleDataDir_0300, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveModuleDataDir_0300 start";
-    std::string ModuleName = MODULE_NAME;
-    int userid = USERID;
-    ErrCode result = installClient_->RemoveModuleDataDir(ModuleName, userid);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::RemoveModuleDataDir, ModuleName, userid));
+    ErrCode result = installClient_->RemoveModuleDataDir(MODULE_NAME, USERID);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::RemoveModuleDataDir, MODULE_NAME, USERID));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveModuleDataDir_0300 end";
 }
 
@@ -1743,6 +1743,124 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalld_LoadInstalls0001, TestSize.Level0)
     ASSERT_NE(installClient_, nullptr);
     auto result = installClient_->LoadInstalls();
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ClearDir_0100
+ * @tc.name: ClearDir_0100
+ * @tc.desc: ClearDir success testcase
+ */
+HWTEST_F(BmsInstalldClientTest, ClearDir_0100, TestSize.Level0)
+{
+    uid_t uid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+
+    (void)InstalldClient::GetInstance()->RemoveDir(TMP_DIR);
+    // create dir
+    int32_t ret = mkdir(TMP_DIR.c_str(), 0777);
+    EXPECT_EQ(ret, 0);
+    // create file
+    std::string tmpFile = TMP_DIR + "test.txt";
+    std::ofstream ofs(tmpFile);
+    if (ofs.is_open()) {
+        ofs << "test" << std::endl;
+        ofs.close();
+    } else {
+        EXPECT_TRUE(false);
+    }
+    // expect file exist
+    struct stat st;
+    ret = stat(tmpFile.c_str(), &st);
+    EXPECT_EQ(ret, 0);
+    // clear dir
+    ErrCode clearRet = InstalldClient::GetInstance()->ClearDir(TMP_DIR);
+    EXPECT_EQ(clearRet, 0);
+
+    // expect file not exist
+    ret = stat(tmpFile.c_str(), &st);
+    EXPECT_NE(ret, 0);
+    // expect dir exist
+    bool isDirExist = stat(TMP_DIR.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+    EXPECT_TRUE(isDirExist);
+
+    (void)InstalldClient::GetInstance()->RemoveDir(TMP_DIR);
+    setuid(uid);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ClearDir_0200
+ * @tc.name: ClearDir_0200
+ * @tc.desc: ClearDir failed testcase, permission denied
+ */
+HWTEST_F(BmsInstalldClientTest, ClearDir_0200, TestSize.Level0)
+{
+    ErrCode ret = InstalldClient::GetInstance()->ClearDir(TMP_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ClearDir_0300
+ * @tc.name: ClearDir_0300
+ * @tc.desc: ClearDir failed testcase, empty dir
+ */
+HWTEST_F(BmsInstalldClientTest, ClearDir_0300, TestSize.Level0)
+{
+    uid_t uid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+
+    std::string emptyDir;
+    ErrCode ret = InstalldClient::GetInstance()->ClearDir(emptyDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    setuid(uid);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ClearDir_0400
+ * @tc.name: ClearDir_0400
+ * @tc.desc: ClearDir failed testcase, not exit dir
+ */
+HWTEST_F(BmsInstalldClientTest, ClearDir_0400, TestSize.Level0)
+{
+    uid_t uid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+
+    std::string notExistDir = "/bms/not/exist/dir";
+    ErrCode ret = InstalldClient::GetInstance()->ClearDir(notExistDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+
+    setuid(uid);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ClearDir_0500
+ * @tc.name: ClearDir_0500
+ * @tc.desc: ClearDir failed testcase, not dir
+ */
+HWTEST_F(BmsInstalldClientTest, ClearDir_0500, TestSize.Level0)
+{
+    uid_t uid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+
+    // create file
+    std::string tmpFile = "/data/app/el1/bundle/public/bms-test-file.txt";
+    std::ofstream ofs(tmpFile);
+    if (ofs.is_open()) {
+        ofs << "test" << std::endl;
+        ofs.close();
+    } else {
+        EXPECT_TRUE(false);
+    }
+    // expect file exist
+    struct stat st;
+    int32_t ret = stat(tmpFile.c_str(), &st);
+    EXPECT_EQ(ret, 0);
+    // clear dir
+    ErrCode clearRet = InstalldClient::GetInstance()->ClearDir(tmpFile);
+    EXPECT_EQ(clearRet, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+
+    (void)std::remove(tmpFile.c_str());
+    setuid(uid);
 }
 
 /**

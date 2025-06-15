@@ -2490,5 +2490,22 @@ ErrCode InstalldHostImpl::DeleteEl5DataGroupDirs(const std::vector<std::string> 
     }
     return result;
 }
+
+ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (dir.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "empty dir");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::ClearDir(dir)) {
+        LOG_E(BMS_TAG_INSTALLD, "ClearDir failed");
+        return ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

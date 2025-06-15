@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -5094,6 +5094,29 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0002, Function 
     int32_t state = 1;
     info.SetOverlayModuleState(moduleName, state);
     EXPECT_EQ(info.innerBundleUserInfos_.size(), 1);
+}
+
+/**
+ * @tc.number: GetModuleCodeLanguage_0001
+ * @tc.name: test GetModuleCodeLanguage
+ * @tc.desc: 1. test GetModuleCodeLanguage of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetModuleCodeLanguage_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    for (int32_t i = 0; i < INFO_COUNT; ++i) {
+        InnerModuleInfo innerModuleInfo;
+        innerModuleInfo.codeLanguage = i % 3 == 0 ? Constants::CODE_LANGUAGE_1_2 : Constants::CODE_LANGUAGE_1_1;
+        innerBundleInfo.innerModuleInfos_.insert(std::make_pair(std::to_string(i), innerModuleInfo));
+    }
+
+    std::string result = innerBundleInfo.GetModuleCodeLanguage(std::to_string(INFO_COUNT));
+    EXPECT_EQ(result, Constants::EMPTY_STRING);
+    for (int32_t i = 0; i < INFO_COUNT; ++i) {
+        result = innerBundleInfo.GetModuleCodeLanguage(std::to_string(i));
+        EXPECT_EQ(result, i % 3 == 0 ? Constants::CODE_LANGUAGE_1_2 : Constants::CODE_LANGUAGE_1_1);
+    }
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -67,6 +67,7 @@ private:
         InnerBundleInfo &info, std::string &compileResult) const;
     void ClearArkCacheDir() const;
     void ResetAOTFlags() const;
+    void HandleIdleWithSingleSysComp(const std::string &abcPath) const;
     void HandleIdleWithSingleHap(
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
     bool CheckDeviceState() const;
@@ -89,6 +90,9 @@ private:
     void HandleArkPathsChange() const;
     void DelDeprecatedArkPaths() const;
     void CreateArkProfilePaths() const;
+    std::vector<std::string> GetSysCompList() const;
+    void IdleForSysComp() const;
+    void IdleForHap(const std::string &compileMode) const;
 private:
     std::atomic<bool> OTACompileDeadline_ { false };
     mutable std::mutex executeMutex_;

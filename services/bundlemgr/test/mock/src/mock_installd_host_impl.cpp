@@ -353,5 +353,10 @@ ErrCode InstalldHostImpl::DeleteDataGroupDirs(const std::vector<std::string> &uu
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

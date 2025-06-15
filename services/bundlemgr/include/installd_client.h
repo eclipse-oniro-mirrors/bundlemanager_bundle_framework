@@ -261,6 +261,8 @@ public:
 
     ErrCode LoadInstalls();
 
+    ErrCode ClearDir(const std::string &dir);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

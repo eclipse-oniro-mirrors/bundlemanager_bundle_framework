@@ -551,5 +551,10 @@ ErrCode InstalldClient::LoadInstalls()
 {
     return CallService(&IInstalld::LoadInstalls);
 }
+
+ErrCode InstalldClient::ClearDir(const std::string &dir)
+{
+    return CallService(&IInstalld::ClearDir, dir);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

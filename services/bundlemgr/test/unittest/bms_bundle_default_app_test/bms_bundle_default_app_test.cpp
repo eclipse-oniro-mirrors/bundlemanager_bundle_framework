@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1777,7 +1777,7 @@ HWTEST_F(BmsBundleDefaultAppTest, AOT_EXECUTOR_0100, Function | SmallTest | Leve
     std::string hapPath = "/data/test.hap";
     uint32_t offset = 0;
     uint32_t length = 0;
-    ret = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, offset, length);
+    ret = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, Constants::CODE_LANGUAGE_1_1, offset, length);
     EXPECT_EQ(ret, false);
 
     AOTArgs completeArgs;

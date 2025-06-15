@@ -317,6 +317,8 @@ public:
      */
     static void RmvDeleteDfx(const std::string &path);
 
+    static bool ClearDir(const std::string &dir);
+
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
