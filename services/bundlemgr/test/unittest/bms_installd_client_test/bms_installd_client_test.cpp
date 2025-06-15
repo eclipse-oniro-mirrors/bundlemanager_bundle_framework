@@ -1861,6 +1861,9 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0500, TestSize.Level0)
 
     (void)std::remove(tmpFile.c_str());
     setuid(uid);
+}
+
+/**
  * @tc.number: BmsInstalldClientTest_BatchGetBundleStats_0100
  * @tc.name: BatchGetBundleStats
  * @tc.desc: Test whether BatchGetBundleStats is called normally.
