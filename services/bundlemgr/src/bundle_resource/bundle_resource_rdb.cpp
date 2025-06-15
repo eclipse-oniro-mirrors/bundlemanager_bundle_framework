@@ -251,10 +251,6 @@ bool BundleResourceRdb::GetResourceNameByBundleName(
         std::string key;
         auto ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_NAME, key);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString name failed, ret: %{public}d");
-        if (key.find(BundleResourceConstants::EXTENSION_ABILITY_SEPARATOR) != std::string::npos) {
-            APP_LOGD("key:%{public}s contains extension ability, skip it", key.c_str());
-            continue;
-        }
         keyName.emplace_back(key);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     APP_LOGI_NOFUNC("end");

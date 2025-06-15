@@ -29,6 +29,7 @@
 #include "app_log_tag_wrapper.h"
 #include "appexecfwk_core_constants.h"
 #include "appexecfwk_errors.h"
+#include "bundle_additional_info.h"
 #include "bundle_constants.h"
 #include "bundle_distribution_type.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
@@ -3113,6 +3114,7 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
         return false;
     }
     int32_t abilityInfoSize = reply.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(reply, abilityInfoSize, &abilityInfos);
     for (int32_t i = 0; i < abilityInfoSize; i++) {
         std::unique_ptr<AbilityInfo> abilityInfoPtr(reply.ReadParcelable<AbilityInfo>());
         if (abilityInfoPtr == nullptr) {
@@ -3122,6 +3124,7 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
         abilityInfos.emplace_back(*abilityInfoPtr);
     }
     int32_t extensionInfoSize = reply.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(reply, extensionInfoSize, &extensionInfos);
     for (int32_t i = 0; i < extensionInfoSize; i++) {
         std::unique_ptr<ExtensionAbilityInfo> extensionInfoPtr(reply.ReadParcelable<ExtensionAbilityInfo>());
         if (extensionInfoPtr == nullptr) {
@@ -3274,6 +3277,46 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     }
     APP_LOGI("end %{public}s", bundleName.c_str());
     return true;
+}
+
+ErrCode BundleMgrProxy::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
+    std::vector<BundleStorageStats> &bundleStats)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to BatchGetBundleStats due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t size = static_cast<int32_t>(bundleNames.size());
+    if (!data.WriteInt32(size)) {
+        APP_LOGE("fail to BatchGetBundleStats due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteStringVector(bundleNames)) {
+        APP_LOGE("fail to BatchGetBundleStats due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to BatchGetBundleStats due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::BATCH_GET_BUNDLE_STATS, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("reply result false");
+        return ret;
+    }
+    ret = InnerGetVectorFromParcelIntelligent<BundleStorageStats>(reply, bundleStats);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to BatchGetBundleStats from server");
+        return ret;
+    }
+    return ERR_OK;
 }
 
 bool BundleMgrProxy::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
@@ -4076,6 +4119,37 @@ ErrCode BundleMgrProxy::GetAdditionalInfo(const std::string &bundleName,
         additionalInfo = reply.ReadString();
     }
     return ret;
+}
+
+ErrCode BundleMgrProxy::BatchGetAdditionalInfo(const std::vector<std::string> &bundleNames,
+    std::vector<BundleAdditionalInfo> &additionalInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to batch get bundle additional infos, bundle name count=%{public}u",
+        static_cast<unsigned int>(bundleNames.size()));
+    if (bundleNames.empty()) {
+        APP_LOGE("fail to batchGetAdditionalInfo due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to batchGetAdditionalInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t bundleNameCount = static_cast<int32_t>(bundleNames.size());
+    if (!data.WriteInt32(bundleNameCount)) {
+        APP_LOGE("fail to batchGetAdditionalInfo due to write bundle name count fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (int32_t i = 0; i < bundleNameCount; i++) {
+        if (!data.WriteString(bundleNames[i])) {
+            APP_LOGE("write bundleName %{public}d failed", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::BATCH_GET_ADDITIONAL_INFO,
+        data, additionalInfos);
 }
 
 ErrCode BundleMgrProxy::GetAdditionalInfoForAllUser(const std::string &bundleName,

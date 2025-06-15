@@ -50,6 +50,7 @@
 #include "mock_clean_cache.h"
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
+#include "parameter.h"
 #include "perf_profile.h"
 #include "process_cache_callback_host.h"
 #include "scope_guard.h"
@@ -275,6 +276,7 @@ constexpr const char* APP_LINKING = "applinking";
 const int32_t APP_INDEX = 1;
 const std::string CALLER_NAME_UT = "ut";
 const int32_t MAX_WAITING_TIME = 600;
+constexpr uint16_t UUID_LENGTH_MAX = 512;
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -10005,6 +10007,28 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0003, Function | S
 }
 
 /**
+ * @tc.number: GetBundleDistributedManager_0031
+ * @tc.name: test GetBundleDistributedManager
+ * @tc.require: issueI5MZ8V
+ * @tc.desc: 1. system running normally
+ *           2. test ComparePcIdString
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0031, Function | SmallTest | Level0)
+{
+    auto bundleMgr = GetBundleDistributedManager();
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    char deviceId[UUID_LENGTH_MAX] = { 0 };
+    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
+    want.SetElementName(std::string{ deviceId }, "bundlename", "abilityname", "moudlename");
+    RpcIdResult rpcIdResult;
+    rpcIdResult.abilityInfo.rpcId.emplace_back("RPC_ID");
+    int32_t res = bundleMgr->ComparePcIdString(want, rpcIdResult);
+    EXPECT_EQ(res, ErrorCode::GET_DEVICE_PROFILE_FAILED);
+}
+
+/**
  * @tc.number: GetBundleDistributedManager_0001
  * @tc.name: test GetBundleDistributedManager
  * @tc.require: issueI5MZ8V
@@ -14537,6 +14561,41 @@ HWTEST_F(BmsBundleKitServiceTest, GetAbilityInfoByName_1000, Function | SmallTes
 }
 
 /**
+ * @tc.number: GetAbilityInfoByName_2000
+ * @tc.name: GetAbilityInfoByName_2000
+ * @tc.desc: 1.Test GetAbilityInfoByName
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAbilityInfoByName_2000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    AbilityInfo info;
+    info.name = "abilityName1";
+    pluginBundleInfo.abilityInfos.emplace("abilityName1", info);   
+    const std::string moduleName = "";
+    const std::string abilityName = "abilityName1";
+    bool result = pluginBundleInfo.GetAbilityInfoByName(abilityName, moduleName, info);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: GetAbilityInfoByName_3000
+ * @tc.name: GetAbilityInfoByName_3000
+ * @tc.desc: 1.Test GetAbilityInfoByName
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAbilityInfoByName_3000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    AbilityInfo info;
+    info.name = "abilityName1";
+    info.moduleName = "moduleName1";
+    pluginBundleInfo.abilityInfos.emplace("abilityName1", info);   
+    const std::string moduleName = "moduleName1";
+    const std::string abilityName = "abilityName1";
+    bool result = pluginBundleInfo.GetAbilityInfoByName(abilityName, moduleName, info);
+    EXPECT_TRUE(result);
+}
+
+/**
  * @tc.number: GetHapModuleInfo
  * @tc.name: PluginBundleInfo Marshalling and Unmarshalling
  * @tc.desc: 1.Test Marshalling and Unmarshalling
@@ -14548,6 +14607,42 @@ HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_1000, Function | SmallTest | 
     const std::string moduleName = "moduleName";
     bool result = pluginBundleInfo.GetHapModuleInfo(moduleName, hapInfo);
     EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: GetHapModuleInfo_2000
+ * @tc.name: GetHapModuleInfo_2000
+ * @tc.desc: 1.Test GetHapModuleInfo_2000
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_2000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    PluginModuleInfo pluginModuleInfo;
+    pluginModuleInfo.moduleName = "moduleName";
+    pluginBundleInfo.pluginModuleInfos.emplace_back(pluginModuleInfo);
+    HapModuleInfo hapInfo;
+    bool result = pluginBundleInfo.GetHapModuleInfo("moduleName", hapInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: GetHapModuleInfo_3000
+ * @tc.name: GetHapModuleInfo_3000
+ * @tc.desc: 1.Test GetHapModuleInfo_3000
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_3000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    PluginModuleInfo pluginModuleInfo;
+    pluginModuleInfo.moduleName = "moduleName";
+    pluginBundleInfo.pluginModuleInfos.emplace_back(pluginModuleInfo);
+    AbilityInfo info;
+    info.name = "abilityName";
+    info.moduleName = "moduleName";
+    pluginBundleInfo.abilityInfos.emplace("abilityName.moduleName.", info);  
+    HapModuleInfo hapInfo;
+    bool result = pluginBundleInfo.GetHapModuleInfo("moduleName", hapInfo);
+    EXPECT_TRUE(result);
 }
 
 /**

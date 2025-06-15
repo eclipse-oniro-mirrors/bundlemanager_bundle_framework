@@ -67,8 +67,10 @@ ohos_shared_library("cj_bundle_manager_ffi") {
       "src/bundle_manager.cpp",
       "src/bundle_manager_convert.cpp",
       "src/bundle_manager_ffi.cpp",
+      "src/checksum_ffi.cpp",
       "src/cj_zip.cpp",
       "src/default_app.cpp",
+      "src/gzip_ffi.cpp",
       "src/zip_ffi.cpp",
     ]
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -218,6 +218,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GREAT_OR_EQUAL_API_TARGET_VERSION  = 192,
     BATCH_GET_SPECIFIED_DISTRIBUTED_TYPE = 193,
     GET_APPIDENTIFIER_AND_APPINDEX = 194,
+    BATCH_GET_ADDITIONAL_INFO = 195,
+    BATCH_GET_BUNDLE_STATS = 196,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -249,6 +251,7 @@ enum class AppControlManagerInterfaceCode : uint8_t {
     SET_UNINSTALL_DISPOSED_RULE = 24,
     GET_UNINSTALL_DISPOSED_RULE = 25,
     DELETE_UNINSTALL_DISPOSED_RULE = 26,
+    SET_DISPOSED_RULES = 27,
 };
 
 /* SAID: 401-96 Interface No.96 subservice also provides the following interfaces */

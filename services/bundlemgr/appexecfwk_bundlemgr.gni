@@ -162,6 +162,7 @@ bundle_install_deps = [
 bundle_install_external_deps = [
   "appspawn:appspawn_client",
   "ffrt:libffrt",
+  "hitrace:libhitracechain",
   "os_account:libaccountkits",
   "storage_service:storage_manager_acl",
   "zlib:shared_libz",
@@ -200,6 +201,7 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/bundle_multiuser_installer.cpp",
   "${services_path}/bundlemgr/src/clone/bundle_clone_installer.cpp",
   "${services_path}/bundlemgr/src/common/bundle_app_spawn_client.cpp",
+  "${services_path}/bundlemgr/src/common/bundle_hitrace_chain.cpp",
   "${services_path}/bundlemgr/src/common/serial_queue.cpp",
   "${services_path}/bundlemgr/src/common/single_delayed_task_mgr.cpp",
   "${services_path}/bundlemgr/src/el5_filekey_callback.cpp",

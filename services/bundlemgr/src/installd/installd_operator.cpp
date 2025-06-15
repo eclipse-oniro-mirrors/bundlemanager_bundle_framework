@@ -2410,7 +2410,7 @@ int32_t InstalldOperator::MigrateData(const std::vector<std::string> &sourcePath
     auto result = MigrateDataCheckPrmissions(realSourcePaths, destPath, info);
     if (result != RESULT_OK) {
         LOG_E(BMS_TAG_INSTALLD, "migrate data check permissions failed, result:%{public}d", result);
-        if (realSourcePaths.empty() || result != ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED) {
+        if (realSourcePaths.empty() || result != ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED) {
             return result;
         }
     }
@@ -2432,11 +2432,11 @@ int32_t InstalldOperator::InnerMigrateData(
     struct stat buf = {};
     if (stat(sourcePaths.c_str(), &buf) != 0) {
         LOG_E(BMS_TAG_INSTALLD, "fail to stat errno:%{public}d", errno);
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED;
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED;
     }
     if (access(sourcePaths.c_str(), R_OK) != 0) {
         LOG_E(BMS_TAG_INSTALLD, "source path[%{public}s] access failed", sourcePaths.c_str());
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED;
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED;
     }
     auto result = RESULT_OK;
     std::string targetPath = destinationPath;
@@ -2473,7 +2473,7 @@ int32_t InstalldOperator::MigrateDataCopyFile(
     std::ifstream in(sourceFile);
     if (!in.is_open()) {
         LOG_E(BMS_TAG_INSTALLD, "Copy file failed due to open sourceFile failed errno:%{public}d", errno);
-        return errno == PERMISSION_DENIED ? ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED
+        return errno == PERMISSION_DENIED ? ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED
                                           : ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
     }
     std::ofstream out(destinationFile);
@@ -2481,7 +2481,7 @@ int32_t InstalldOperator::MigrateDataCopyFile(
         LOG_E(BMS_TAG_INSTALLD, "Copy file failed due to open destinationFile[%{public}s] failed errno:%{public}d",
             destinationFile.c_str(), errno);
         in.close();
-        return errno == PERMISSION_DENIED ? ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED
+        return errno == PERMISSION_DENIED ? ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED
                                           : ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
     }
     out << in.rdbuf();
@@ -2508,7 +2508,7 @@ int32_t InstalldOperator::MigrateDataCopyDir(
     DIR *dir = opendir(sourcePath.c_str());
     if (dir == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "fail to opendir:%{private}s, errno:%{public}d", sourcePath.c_str(), errno);
-        return errno == PERMISSION_DENIED ? ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED
+        return errno == PERMISSION_DENIED ? ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED
                                           : ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
     }
 
@@ -2547,7 +2547,7 @@ int32_t InstalldOperator::MigrateDataCheckPrmissions(
         if (access(path.c_str(), R_OK) != 0) {
             LOG_E(BMS_TAG_INSTALLD, "source path[%{public}s] access failed", path.c_str());
             unablePath.push_back(path);
-            result = ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED;
+            result = ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED;
         }
     };
     std::for_each(realSourcePaths.begin(), realSourcePaths.end(), noReadPermission);
@@ -2564,7 +2564,7 @@ int32_t InstalldOperator::MigrateDataCheckPrmissions(
     // check write permissions
     if (access(destPath.c_str(), W_OK) != 0) {
         LOG_E(BMS_TAG_INSTALLD, "dest path[%{public}s] access failed", destPath.c_str());
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED;
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED;
     }
     if (!IsExistDir(destPath)) {
         LOG_E(BMS_TAG_INSTALLD, "dest path[%{public}s] not a directory", destPath.c_str());
@@ -2573,7 +2573,7 @@ int32_t InstalldOperator::MigrateDataCheckPrmissions(
     struct stat destPathStat = {};
     if (stat(destPath.c_str(), &destPathStat) != 0) {
         LOG_E(BMS_TAG_INSTALLD, "fail to get dest path stat stat errno:%{public}d", errno);
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED;
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED;
     }
     info.uid = static_cast<int32_t>(destPathStat.st_uid);
     info.gid = static_cast<int32_t>(destPathStat.st_gid);

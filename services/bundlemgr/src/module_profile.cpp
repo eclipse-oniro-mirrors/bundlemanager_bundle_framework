@@ -331,6 +331,8 @@ struct Module {
     std::string packageName;
     std::string crossAppSharedConfig;
     std::string appStartup;
+    std::string formExtensionModule;
+    std::string formWidgetModule;
     std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
     std::string abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
 };
@@ -1650,6 +1652,18 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.appStartup,
         false,
         g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_FORM_EXTENSION_MODULE,
+        module.formExtensionModule,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_FORM_WIDGET_MODULE,
+        module.formWidgetModule,
+        false,
+        g_parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_HAS_INTENT,
@@ -2227,6 +2241,9 @@ bool ToApplicationInfo(
     applicationInfo.appEnvironments = app.appEnvironments;
     if (moduleJson.module.type == Profile::MODULE_TYPE_ENTRY) {
         applicationInfo.assetAccessGroups = app.assetAccessGroups;
+    }
+    if (applicationInfo.bundleType == BundleType::APP &&
+        moduleJson.module.type == Profile::MODULE_TYPE_ENTRY) {
         applicationInfo.appPreloadPhase = ToAppPreloadPhase(app.appPreloadPhase);
     }
     // bundleType is app && moduleType is entry or feature
@@ -2590,6 +2607,8 @@ bool ToInnerModuleInfo(
     innerModuleInfo.packageName = moduleJson.module.packageName;
     innerModuleInfo.crossAppSharedConfig = moduleJson.module.crossAppSharedConfig;
     innerModuleInfo.appStartup = moduleJson.module.appStartup;
+    innerModuleInfo.formExtensionModule = moduleJson.module.formExtensionModule;
+    innerModuleInfo.formWidgetModule = moduleJson.module.formWidgetModule;
     innerModuleInfo.codeLanguage = moduleJson.module.codeLanguage;
     innerModuleInfo.abilityStageCodeLanguage = moduleJson.module.abilityStageCodeLanguage;
     innerModuleInfo.debug = moduleJson.app.debug;

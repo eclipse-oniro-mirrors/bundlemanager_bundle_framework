@@ -143,4 +143,20 @@ HWTEST_F(BmsAccountConstraintTest, CheckOsAccountConstraintEnabled_0003, Functio
     auto ret = installer.ProcessBundleInstall("com.example.helloworld", 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT);
 }
+
+/**
+ * @tc.number: CheckOsAccountConstraintEnabled_0004
+ * @tc.name: test ProcessRecover
+ * @tc.desc: 1.Test ProcessRecover
+*/
+HWTEST_F(BmsAccountConstraintTest, CheckOsAccountConstraintEnabled_0004, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName = "com.example.helloworld";
+    InstallParam installParam;
+    installParam.userId = 100;
+    int32_t uid = 0;
+    auto ret = installer.ProcessRecover(bundleName, installParam, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT);
+}
 } // OHOS

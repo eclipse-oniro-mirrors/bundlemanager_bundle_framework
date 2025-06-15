@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -21,7 +21,6 @@ config("private_config") {
     "${inner_api_path}/appexecfwk_base/include",
     "${bundle_framework_path}/libs/test/mockpermission/permission",
     "${services_path}/bundlemgr/test/mock/include",
-    "//third_party/json/include",
   ]
 }
 
@@ -35,7 +34,7 @@ ohos_unittest("BmsBundleCloneAppBundleLogicTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -77,6 +76,7 @@ ohos_unittest("BmsBundleCloneAppBundleLogicTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -221,6 +221,7 @@ ohos_unittest("BmsBundleCloneAppDataStructTest") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
   ]
   defines = []
   if (ability_runtime_enable) {
@@ -250,7 +251,7 @@ ohos_unittest("BmsBundleCloneAppIpcTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -301,6 +302,7 @@ ohos_unittest("BmsBundleCloneAppIpcTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",

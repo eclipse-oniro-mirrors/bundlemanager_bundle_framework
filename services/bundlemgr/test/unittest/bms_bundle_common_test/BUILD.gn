@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -24,11 +24,7 @@ ohos_unittest("BmsBundleCommonTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//third_party/json/include",
-    "${services_path}/bundlemgr/include/common",
-  ]
+  include_dirs = [ "${services_path}/bundlemgr/include/common" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -84,6 +80,8 @@ ohos_unittest("BmsBundleCommonTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "json:nlohmann_json_static",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -188,9 +186,56 @@ ohos_unittest("BmsBundleCommonTest") {
   }
 }
 
+ohos_unittest("BmsBundleTaskHitraceChainTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  use_exceptions = true
+  module_out_path = module_output_path
+  include_dirs = [ "${services_path}/bundlemgr/include/common" ]
+  sources = []
+  sources += [
+    "task_hitrace_chain_test.cpp",
+    "${services_path}/bundlemgr/src/common/bundle_hitrace_chain.cpp"
+  ]
+  external_deps = []
+  external_deps += bundle_install_external_deps
+  external_deps += [
+    "bounds_checking_function:libsec_shared",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("BmsBundleHitraceChainTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  use_exceptions = true
+  module_out_path = module_output_path
+  include_dirs = [ "${services_path}/bundlemgr/include/common" ]
+  sources = []
+  sources += [
+    "hitrace_chain_test.cpp",
+    "${services_path}/bundlemgr/src/common/bundle_hitrace_chain.cpp"
+  ]
+  external_deps = []
+  external_deps += bundle_install_external_deps
+  external_deps += [
+    "bounds_checking_function:libsec_shared",
+    "hilog:libhilog",
+  ]
+}
 group("unittest") {
   testonly = true
   if (ability_runtime_enable) {
-    deps = [ ":BmsBundleCommonTest" ]
+    deps = [
+      ":BmsBundleHitraceChainTest",
+      ":BmsBundleTaskHitraceChainTest",
+      ":BmsBundleCommonTest",
+    ]
   }
 }

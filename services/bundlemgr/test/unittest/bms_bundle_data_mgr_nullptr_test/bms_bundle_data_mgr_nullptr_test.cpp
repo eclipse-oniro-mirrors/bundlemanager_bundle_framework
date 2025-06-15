@@ -214,10 +214,22 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCacheMgr_0001, Function | MediumTest
 {
     BundleCacheMgr bundleCacheMgr;
     int32_t userId = 0;
-    int32_t appIndex = 1;
+    int32_t appIndex = -1;
     std::string bundleName = "xxx";
     std::vector<std::string> moduleNameList;
     auto pathVec = bundleCacheMgr.GetBundleCachePath(bundleName, userId, appIndex, moduleNameList);
+    EXPECT_EQ(pathVec.empty(), true);
+
+    appIndex = 0;
+    pathVec = bundleCacheMgr.GetBundleCachePath(bundleName, userId, appIndex, moduleNameList);
+    EXPECT_EQ(pathVec.empty(), false);
+
+    appIndex = 1;
+    pathVec = bundleCacheMgr.GetBundleCachePath(bundleName, userId, appIndex, moduleNameList);
+    EXPECT_EQ(pathVec.empty(), false);
+
+    moduleNameList.emplace_back("module1");
+    pathVec = bundleCacheMgr.GetBundleCachePath(bundleName, userId, appIndex, moduleNameList);
     EXPECT_EQ(pathVec.empty(), false);
 }
 
@@ -235,7 +247,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCacheMgr_0002, Function | MediumTest
 }
 
 /**
- * @tc.number: BundleCacheMgr_0002
+ * @tc.number: BundleCacheMgr_0003
  * @tc.name: test CleanAllBundleCache
  * @tc.desc: 1.Test CleanAllBundleCache the BundleCacheMgr
 */
@@ -245,6 +257,71 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCacheMgr_0003, Function | MediumTest
     sptr<IProcessCacheCallback> processCacheCallback;
     auto ret = bundleCacheMgr.CleanAllBundleCache(processCacheCallback);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleCacheMgr_0004
+ * @tc.name: test GetBundleCacheSize
+ * @tc.desc: 1.Test GetBundleCacheSize the BundleCacheMgr
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCacheMgr_0004, Function | MediumTest | Level1)
+{
+    BundleCacheMgr bundleCacheMgr;
+    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
+    std::vector<std::string> moduleNameList;
+    for (int index = 0; index < 200; ++index) {
+        moduleNameList.emplace_back("module" + std::to_string(index));
+    }
+    std::vector<int32_t> allAppIndexes = {0, 1, 2};
+    validBundles.emplace_back(std::make_tuple("bundle1", moduleNameList, allAppIndexes));
+    int32_t userId = 100;
+    uint64_t cacheStat = 0;
+    bundleCacheMgr.GetBundleCacheSize(validBundles, userId, cacheStat);
+    EXPECT_EQ(cacheStat, 0);
+}
+
+/**
+ * @tc.number: BundleCacheMgr_0005
+ * @tc.name: test CleanBundleCloneCache
+ * @tc.desc: 1.Test CleanBundleCloneCache the BundleCacheMgr
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCacheMgr_0005, Function | MediumTest | Level1)
+{
+    BundleCacheMgr bundleCacheMgr;
+    std::string bundleName;
+    int32_t userId = 100;
+    int32_t appCloneIndex = 0;
+    std::vector<std::string> moduleNames;
+    ErrCode ret = bundleCacheMgr.CleanBundleCloneCache(bundleName, userId, appCloneIndex, moduleNames);
+    EXPECT_NE(ret, ERR_OK);
+
+    bundleName = "budnle1";
+    setuid(Constants::FOUNDATION_UID);
+    ret = bundleCacheMgr.CleanBundleCloneCache(bundleName, userId, appCloneIndex, moduleNames);
+    EXPECT_EQ(ret, ERR_OK);
+    setuid(Constants::ROOT_UID);
+}
+
+/**
+ * @tc.number: BundleCacheMgr_0006
+ * @tc.name: test CleanBundleCache
+ * @tc.desc: 1.Test CleanBundleCache the BundleCacheMgr
+*/
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCacheMgr_0006, Function | MediumTest | Level1)
+{
+    BundleCacheMgr bundleCacheMgr;
+    std::string bundleName;
+    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
+    std::vector<std::string> moduleNameList;
+    for (int index = 0; index < 200; ++index) {
+        moduleNameList.emplace_back("module" + std::to_string(index));
+    }
+    std::vector<int32_t> allAppIndexes = {0};
+    validBundles.emplace_back(std::make_tuple(bundleName, moduleNameList, allAppIndexes));
+    int32_t userId = 100;
+    
+    ErrCode ret = bundleCacheMgr.CleanBundleCache(validBundles, userId);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**

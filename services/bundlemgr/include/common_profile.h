@@ -403,6 +403,8 @@ constexpr const char* MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 constexpr const char* MODULE_EXTRACT_NATIVE_LIBS = "extractNativeLibs";
 constexpr const char* MODULE_QUERY_SCHEMES = "querySchemes";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
+constexpr const char* MODULE_FORM_EXTENSION_MODULE = "formExtensionModule";
+constexpr const char* MODULE_FORM_WIDGET_MODULE = "formWidgetModule";
 constexpr const char* MODULE_HAS_INTENT = "hasInsightIntent";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";

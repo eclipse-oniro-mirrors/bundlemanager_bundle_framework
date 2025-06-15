@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include "appexecfwk_errors.h"
 #include "application_info.h"
 #include "app_provision_info.h"
+#include "bundle_additional_info.h"
 #include "bundle_constants.h"
 #include "bundle_dir.h"
 #include "bundle_distribution_type.h"
@@ -28,6 +29,7 @@
 #include "bundle_pack_info.h"
 #include "bundle_installer_interface.h"
 #include "bundle_status_callback_interface.h"
+#include "bundle_storage_stats.h"
 #include "bundle_user_mgr_interface.h"
 #include "bundle_mgr_ext_interface.h"
 #include "clean_cache_callback_interface.h"
@@ -1317,6 +1319,12 @@ public:
         return false;
     }
 
+    virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
+        std::vector<BundleStorageStats> &bundleStats)
+    {
+        return ERR_OK;
+    }
+
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
     {
         return false;
@@ -1459,6 +1467,12 @@ public:
     }
 
     virtual ErrCode GetAdditionalInfo(const std::string &bundleName, std::string &additionalInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode BatchGetAdditionalInfo(const std::vector<std::string> &bundleNames,
+        std::vector<BundleAdditionalInfo> &additionalInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

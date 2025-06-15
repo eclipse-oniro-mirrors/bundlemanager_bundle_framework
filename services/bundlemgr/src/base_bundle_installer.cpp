@@ -1166,14 +1166,14 @@ ErrCode BaseBundleInstaller::CheckU1Enable(const InnerBundleInfo &info,
     if (u1Enable && isU1) {
         if (isAppExist_ && !onlyInstallInU1) {
             LOG_E(BMS_TAG_INSTALLER, "%{public}s existed in other users, but not u1", bundleName.c_str());
-            return ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS;
+            return ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS;
         }
     } else {
         // u1Enable is false and userid is not u1
         if (isAppExist_ && onlyInstallInU1) {
             LOG_E(BMS_TAG_INSTALLER, "%{public}s existed in u1, but u1Enable is false and userId is not u1",
                 bundleName.c_str());
-            return ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON;
+            return ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS;
         }
     }
     return ERR_OK;
@@ -2140,6 +2140,10 @@ ErrCode BaseBundleInstaller::ProcessRecover(
         LOG_E(BMS_TAG_INSTALLER, "Bundle(%{public}s) was force uninstalled before, not allow recover",
             bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_FORCE_UNINSTALLED_BUNDLE_NOT_ALLOW_RECOVER;
+    }
+    if (AccountHelper::CheckOsAccountConstraintEnabled(userId, ServiceConstants::CONSTRAINT_APPS_INSTALL)) {
+        LOG_E(BMS_TAG_INSTALLER, "user %{public}d is not allowed to recover %{public}s", userId, bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
     }
     ErrCode result = InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid);
     return result;
@@ -7487,7 +7491,51 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     for (const auto &item : newInfos) {
         RemoveTempPathOnlyUsedForSo(item.second);
     }
+    // process dynamic icon file
+    result = ProcessDynamicIconFileWhenUpdate(oldInfo, oldAppCodePath, realAppCodePath);
+    if (result != ERR_OK) {
+        APP_LOGE("copy extend resource to install path failed %{public}d", result);
+    }
     LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s processBundleCodePath end", bundleName.c_str());
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ProcessDynamicIconFileWhenUpdate(
+    const InnerBundleInfo &oldInfo,
+    const std::string &oldPath,
+    const std::string &newPath)
+{
+    auto extendResourceInfos = oldInfo.GetExtendResourceInfos();
+    if (extendResourceInfos.empty()) {
+        return ERR_OK;
+    }
+    APP_LOGI("-n %{public}s has dynamic icon, process start", oldInfo.GetBundleName().c_str());
+    std::string oldExtendResourcePath = oldPath + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::EXT_RESOURCE_FILE_PATH;
+    bool isExtResource = false;
+    InstalldClient::GetInstance()->IsExistDir(oldExtendResourcePath, isExtResource);
+    if (!isExtResource) {
+        APP_LOGW("-n %{public}s old ext_resource path not exist", oldInfo.GetBundleName().c_str());
+        return ERR_OK;
+    }
+    std::string newExtendResourcePath = newPath + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::EXT_RESOURCE_FILE_PATH;
+    auto result = InstalldClient::GetInstance()->CreateBundleDir(newExtendResourcePath);
+    if (result != ERR_OK) {
+        APP_LOGE("-n %{public}s create ext_resource failed", oldInfo.GetBundleName().c_str());
+        return result;
+    }
+    for (const auto &extendResource : extendResourceInfos) {
+        std::string fileName = ServiceConstants::PATH_SEPARATOR +extendResource.second.moduleName +
+            ServiceConstants::HSP_FILE_SUFFIX;
+        result = InstalldClient::GetInstance()->CopyFile(oldExtendResourcePath + fileName,
+            newExtendResourcePath + fileName);
+        if (result != ERR_OK) {
+            APP_LOGE("-n %{public}s copy ext_resource failed", oldInfo.GetBundleName().c_str());
+            return result;
+        }
+    }
+    APP_LOGI("-n %{public}s has dynamic icon, process end", oldInfo.GetBundleName().c_str());
     return ERR_OK;
 }
 
@@ -7510,7 +7558,7 @@ void BaseBundleInstaller::ProcessOldCodePath(
         std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
     result = InstalldClient::GetInstance()->RemoveDir(oldAppCodePath);
     if (result != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "remove bundle %{publicl}s old code path error is %{public}d",
+        LOG_W(BMS_TAG_INSTALLER, "remove bundle %{public}s old code path error is %{public}d",
             bundleName.c_str(), result);
     }
     result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);

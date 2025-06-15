@@ -24,11 +24,7 @@ ohos_unittest("BmsBundleAppControlTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//third_party/json/include",
-    "${services_path}/bundlemgr/include/app_control",
-  ]
+  include_dirs = [ "${services_path}/bundlemgr/include/app_control" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -87,6 +83,8 @@ ohos_unittest("BmsBundleAppControlTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "json:nlohmann_json_static",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -199,11 +197,7 @@ ohos_unittest("BmsBundleMockAppControlTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "//third_party/json/include",
-    "${services_path}/bundlemgr/include/app_control",
-  ]
+  include_dirs = [ "${services_path}/bundlemgr/include/app_control" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -255,6 +249,8 @@ ohos_unittest("BmsBundleMockAppControlTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "json:nlohmann_json_static",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",

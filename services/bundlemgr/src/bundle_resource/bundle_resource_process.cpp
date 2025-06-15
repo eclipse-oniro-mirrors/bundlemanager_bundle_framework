@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -215,9 +215,6 @@ bool BundleResourceProcess::GetDynamicIcon(
     const InnerBundleInfo &innerBundleInfo, const int32_t userId, ResourceInfo &resourceInfo)
 {
     std::string curDynamicIconModule = innerBundleInfo.GetCurDynamicIconModule(userId, resourceInfo.appIndex_);
-    if (curDynamicIconModule.empty() && (resourceInfo.appIndex_ == Constants::DEFAULT_APP_INDEX)) {
-        curDynamicIconModule = innerBundleInfo.GetCurDynamicIconModule();
-    }
     if (curDynamicIconModule.empty()) {
         APP_LOGD("-n %{public}s no curDynamicIconModule, %{public}d", innerBundleInfo.GetBundleName().c_str(),
             resourceInfo.appIndex_);

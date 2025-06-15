@@ -44,6 +44,7 @@
 #include "hitrace_meter.h"
 #include "inner_bundle_clone_common.h"
 #include "installd_client.h"
+#include "interfaces/hap_verify.h"
 #include "ipc_skeleton.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
@@ -56,6 +57,7 @@
 #include "bundle_overlay_data_manager.h"
 #endif
 #include "bundle_extractor.h"
+#include "parameter.h"
 #include "scope_guard.h"
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
 #include "type_descriptor.h"
@@ -79,6 +81,7 @@ constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
 constexpr int8_t DATA_GROUP_INDEX_START = 1;
 constexpr int8_t UUID_LENGTH = 36;
 constexpr int8_t PROFILE_PREFIX_LENGTH = 9;
+constexpr uint16_t UUID_LENGTH_MAX = 512;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 // freeInstall action
 constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
@@ -336,8 +339,9 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
             }
         }
         if (info.GetOverlayType() == OVERLAY_INTERNAL_BUNDLE) {
-            info.SetOverlayModuleState(info.GetCurrentModulePackage(), OverlayState::OVERLAY_INVALID,
-                info.GetUserId());
+            int32_t overlayModuleState = OverlayState::OVERLAY_INVALID;
+            (void)info.GetOverlayModuleState(info.GetCurrentModulePackage(), info.GetUserId(), overlayModuleState);
+            info.SetOverlayModuleState(info.GetCurrentModulePackage(), overlayModuleState, info.GetUserId());
         }
         if (info.GetOverlayType() == NON_OVERLAY_TYPE) {
             // build overlay connection for external overlay
@@ -400,7 +404,6 @@ bool BundleDataMgr::AddNewModuleInfo(const InnerBundleInfo &newInfo, InnerBundle
     oldInfo.SetProvisionId(newInfo.GetProvisionId());
     oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
     oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
-    oldInfo.SetCertificate(newInfo.GetCertificate());
     oldInfo.AddOldAppId(newInfo.GetAppId());
     oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
     oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
@@ -725,7 +728,6 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleI
     oldInfo.AddOldAppId(newInfo.GetAppId());
     oldInfo.SetProvisionId(newInfo.GetProvisionId());
     oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
-    oldInfo.SetCertificate(newInfo.GetCertificate());
     oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
     oldInfo.UpdateAppDetailAbilityAttrs();
     oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
@@ -2892,6 +2894,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId, appIndex);
     PostProcessAnyUserFlags(flags, responseUserId, originalUserId, bundleInfo, innerBundleInfo);
 
+    ProcessCertificate(bundleInfo, bundleName, flags);
     ProcessBundleMenu(bundleInfo, flags, true);
     ProcessBundleRouterMap(bundleInfo, flags);
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
@@ -2929,6 +2932,7 @@ ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInf
     }
     int32_t userId = uid / Constants::BASE_USER_RANGE;
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, userId, appIndex);
+    ProcessCertificate(bundleInfo, innerBundleInfo.GetBundleName(), flags);
     ProcessBundleMenu(bundleInfo, flags, true);
     ProcessBundleRouterMap(bundleInfo, flags);
     LOG_D(BMS_TAG_QUERY, "get bundleInfoForSelf %{public}s successfully in user %{public}d",
@@ -2999,6 +3003,21 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
         }
     }
     RouterMapHelper::MergeRouter(bundleInfo);
+}
+
+void BundleDataMgr::ProcessCertificate(BundleInfo& bundleInfo, const std::string &bundleName, int32_t flags) const
+{
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
+        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
+        AppProvisionInfo appProvisionInfo;
+        if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->
+            GetAppProvisionInfo(bundleName, appProvisionInfo)) {
+            APP_LOGW("bundleName:%{public}s GetAppProvisionInfo failed", bundleName.c_str());
+            return;
+        }
+        bundleInfo.signatureInfo.certificate = appProvisionInfo.certificate;
+    }
 }
 
 bool BundleDataMgr::DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName)
@@ -3986,6 +4005,77 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     }
 
     return true;
+}
+
+ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
+    std::vector<BundleStorageStats> &bundleStats) const
+{
+    int32_t uid = -1;
+    std::unordered_map<std::string, int32_t> uidMap;
+    std::vector<std::string> bundleNameList = bundleNames;
+    std::vector<BundleStorageStats> bundleStatsList;
+    if (!HasUserId(userId)) {
+        APP_LOGE("userId %{public}d not exist.", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (auto bundleName = bundleNameList.begin(); bundleName != bundleNameList.end();) {       
+            const auto infoItem = bundleInfos_.find(*bundleName);
+            InnerBundleUserInfo userInfo;
+            if (infoItem == bundleInfos_.end() ||
+                !infoItem->second.GetInnerBundleUserInfo(infoItem->second.GetResponseUserId(userId), userInfo)) {
+                BundleStorageStats stats;
+                stats.bundleName = *bundleName;  
+                bundleName = bundleNameList.erase(bundleName);
+                stats.errCode = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+                bundleStatsList.push_back(stats);
+                continue;
+            }
+            uidMap.emplace(*bundleName, userInfo.uid);
+            ++bundleName;
+        }
+    }
+    ErrCode ret = InstalldClient::GetInstance()->BatchGetBundleStats(
+        bundleNameList, userId, uidMap, bundleStats);
+    if (ret != ERR_OK) {
+        APP_LOGE("getStats failed");
+        return ret;
+    }
+    if (!bundleStatsList.empty()) {
+        bundleStats.insert(bundleStats.end(), bundleStatsList.begin(), bundleStatsList.end());
+    }
+    for (const auto &name : bundleNameList) {
+        GetPreBundleSize(name, bundleStats);
+    }
+    return ERR_OK;
+}
+
+void BundleDataMgr::GetPreBundleSize(const std::string &name, std::vector<BundleStorageStats> &bundleStats) const
+{
+    auto statsIter = std::find_if(bundleStats.begin(), bundleStats.end(),
+        [&name](const BundleStorageStats &stats) { return stats.bundleName == name; });
+    if (statsIter == bundleStats.end()) {
+        return;
+    }
+    std::string hapPath;
+    bool getPreBundleSize = false;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        const auto infoItem = bundleInfos_.find(name);
+        if (infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+            for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+                if (innerModuleInfo.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
+                    continue;
+                }
+                hapPath = innerModuleInfo.second.hapPath;
+                getPreBundleSize = true;
+            }
+        }
+    }
+    if (getPreBundleSize) {
+        statsIter->bundleStats[0] += BundleUtil::GetFileSize(hapPath);
+    }
 }
 
 void BundleDataMgr::GetBundleModuleNames(const std::string &bundleName,
@@ -8253,7 +8343,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
     dataGroupInfo.uid = uid;
     dataGroupInfo.gid = uid;
 
-    std::string str = BundleUtil::GenerateUuidByKey(dataGroupInfo.dataGroupId);
+    std::string str = GenerateUuidByKey(dataGroupInfo.dataGroupId);
     dataGroupInfo.uuid = str;
     uniqueIdSet.insert(uniqueId);
 }
@@ -9199,7 +9289,7 @@ void BundleDataMgr::GenerateOdid(const std::string &developerId, std::string &od
             return;
         }
     }
-    odid = BundleUtil::GenerateUuid();
+    odid = GenerateUuid();
     APP_LOGI_NOFUNC("developerId:%{public}s not existed generate odid %{private}s",
         developerId.c_str(), odid.c_str());
 }
@@ -9970,7 +10060,13 @@ ErrCode BundleDataMgr::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &s
     signatureInfo.appId = innerBundleInfo.GetBaseBundleInfo().appId;
     signatureInfo.fingerprint = innerBundleInfo.GetBaseApplicationInfo().fingerprint;
     signatureInfo.appIdentifier = innerBundleInfo.GetAppIdentifier();
-    signatureInfo.certificate = innerBundleInfo.GetCertificate();
+    AppProvisionInfo appProvisionInfo;
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->
+        GetAppProvisionInfo(innerBundleInfo.GetBundleName(), appProvisionInfo)) {
+        APP_LOGW("bundleName:%{public}s GetAppProvisionInfo failed", innerBundleInfo.GetBundleName().c_str());
+    } else {
+        signatureInfo.certificate = appProvisionInfo.certificate;
+    }
     return ERR_OK;
 }
 
@@ -10939,6 +11035,45 @@ bool BundleDataMgr::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, 
         return minorVersion < bundleInfo.targetMinorApiVersion;
     }
     return patchVersion <= bundleInfo.targetPatchApiVersion;
+}
+
+std::string BundleDataMgr::GenerateUuid() const
+{
+    auto currentTime = std::chrono::system_clock::now();
+    auto timestampNanoseconds =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
+
+    // convert nanosecond timestamps to string
+    std::string timeStr = std::to_string(timestampNanoseconds);
+
+    char deviceId[UUID_LENGTH_MAX] = { 0 };
+    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
+    std::string deviceUdid;
+    if (ret != 0) {
+        APP_LOGW("GetDevUdid failed");
+    } else {
+        deviceUdid = std::string{ deviceId };
+    }
+
+    std::string message = timeStr + deviceUdid;
+    std::string uuid = OHOS::Security::Verify::GenerateUuidByKey(message);
+    return uuid;
+}
+
+std::string BundleDataMgr::GenerateUuidByKey(const std::string &key) const
+{
+    char deviceId[UUID_LENGTH_MAX] = { 0 };
+    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
+    std::string deviceUdid;
+    std::string deviceStr;
+    if (ret != 0) {
+        APP_LOGW("GetDevUdid failed");
+    } else {
+        deviceUdid = std::string{ deviceId };
+    }
+
+    std::string message = key + deviceUdid;
+    return OHOS::Security::Verify::GenerateUuidByKey(message);
 }
 
 void BundleDataMgr::CheckIfShortcutBundleExist(nlohmann::json &jsonResult)

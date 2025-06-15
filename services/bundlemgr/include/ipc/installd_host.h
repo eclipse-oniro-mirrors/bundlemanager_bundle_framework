@@ -147,6 +147,8 @@ private:
      */
     bool HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleBatchGetBundleStats(MessageParcel &data, MessageParcel &reply);
+
     bool HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply);
 
     /**

@@ -92,6 +92,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_STATS):
             result = this->HandleGetBundleStats(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::BATCH_GET_BUNDLE_STATS):
+            result = this->HandleBatchGetBundleStats(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_ALL_BUNDLE_STATS):
             result = this->HandleGetAllBundleStats(data, reply);
             break;
@@ -534,6 +537,45 @@ bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &repl
     if (!reply.WriteInt64Vector(bundleStats)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetBundleStats write failed");
         return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t size = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, data, size);
+    if (size > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "size too large");
+        return false;
+    }
+    std::vector<std::string> bundleNames;
+    bundleNames.reserve(size);
+    for (int32_t i = 0; i < size; i++) {
+        std::string bundleName = Str16ToStr8(data.ReadString16());
+        bundleNames.emplace_back(bundleName);
+    }
+    int32_t userId = data.ReadInt32();
+    std::unordered_map<std::string, int32_t> uidMap;
+    int32_t uidMapSize = data.ReadInt32();
+    for (int32_t i = 0; i < uidMapSize; ++i) {
+        std::string bundleName = Str16ToStr8(data.ReadString16());
+        int32_t uids = data.ReadInt32();
+        uidMap.emplace(bundleName, uids);
+    }
+    std::vector<BundleStorageStats> bundleStats;
+    ErrCode result = BatchGetBundleStats(bundleNames, userId, uidMap, bundleStats);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    int32_t statsSize = static_cast<int32_t>(bundleStats.size());
+    if (!reply.WriteInt32(statsSize)) {
+        LOG_E(BMS_TAG_INSTALLD, "Write bundleStats size failed");
+        return false;
+    }
+    for (const auto &stat : bundleStats) {
+        if (!reply.WriteParcelable(&stat)) {
+            LOG_E(BMS_TAG_INSTALLD, "Write BundleStats failed");
+            return false;
+        }
     }
     return true;
 }

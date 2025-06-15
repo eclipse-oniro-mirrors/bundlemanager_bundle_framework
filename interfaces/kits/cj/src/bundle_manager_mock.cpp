@@ -26,4 +26,5 @@ FFI_EXPORT int32_t FfiBundleManagerCompressFile = 0;
 FFI_EXPORT int32_t FfiBundleManagerDeCompressFileOptions = 0;
 FFI_EXPORT int32_t FfiBundleManagerDeCompressFile = 0;
 FFI_EXPORT int32_t FfiBundleManagerCanOpenLink = 0;
+FFI_EXPORT int32_t FfiOHOSGetAPITargetVersion = 0;
 }

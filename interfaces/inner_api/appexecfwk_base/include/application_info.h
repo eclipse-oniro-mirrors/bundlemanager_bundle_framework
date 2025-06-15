@@ -350,6 +350,9 @@ struct ApplicationInfo : public Parcelable {
     AppQuickFix appQuickFix;
     AppPreloadPhase appPreloadPhase = AppPreloadPhase::DEFAULT;
 
+    // forceRotate only for broker
+    bool isForceRotate = false;
+
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

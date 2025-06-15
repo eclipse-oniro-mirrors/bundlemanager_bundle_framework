@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef TEST_FUZZTEST_BMS_AbilityInfoUnMarShalling_FUZZER_H
-#define TEST_FUZZTEST_BMS_AbilityInfoUnMarShalling_FUZZER_H
+#ifndef TEST_FUZZTEST_BMS_ABILITY_INFO_UN_MAR_SHALLING_FUZZER_H
+#define TEST_FUZZTEST_BMS_ABILITY_INFO_UN_MAR_SHALLING_FUZZER_H
 
 #define FUZZ_PROJECT_NAME "bmsabilityinfounmarshalling_fuzzer"
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -551,6 +551,43 @@ ErrCode AppControlManagerHostImpl::GetDisposedRule(const std::string &appId, Dis
     return ret;
 }
 
+ErrCode AppControlManagerHostImpl::SetDisposedRules(
+    std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId)
+{
+    LOG_I(BMS_TAG_DEFAULT, "host begin to SetDisposedRules");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
+        LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    bool isEdm = uid == AppControlConstants::EDM_UID ? true : false;
+    for (auto &disposedRuleConfiguration : disposedRuleConfigurations) {
+        disposedRuleConfiguration.disposedRule.isEdm = isEdm;
+        auto ret = appControlManager_->SetDisposedRule(callerName, disposedRuleConfiguration.appId,
+            disposedRuleConfiguration.disposedRule, disposedRuleConfiguration.appIndex, userId);
+        SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::ADD_RULE,
+            callerName, userId, disposedRuleConfiguration.appIndex, { disposedRuleConfiguration.appId },
+            disposedRuleConfiguration.disposedRule.ToString());
+
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_DEFAULT, "host SetDisposedRules error:%{public}d", ret);
+            return ret;
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
 {
     LOG_D(BMS_TAG_DEFAULT, "host begin to SetDisposedRule");
@@ -590,7 +627,7 @@ ErrCode AppControlManagerHostImpl::GetAbilityRunningControlRule(const std::strin
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        LOG_E(BMS_TAG_DEFAULT, "callingName is invalid, uid : %{public}d", uid);
+        LOG_E(BMS_TAG_DEFAULT, "uid:%{public}d is forbidden", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!appControlManager_) {

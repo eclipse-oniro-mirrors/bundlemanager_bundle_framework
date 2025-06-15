@@ -369,6 +369,46 @@ ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32
     return ret;
 }
 
+ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    const std::unordered_map<std::string, int32_t> &uidMap, std::vector<BundleStorageStats> &bundleStats)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    int32_t namesSize = static_cast<int32_t>(bundleNames.size());
+    INSTALLD_PARCEL_WRITE(data, Int32, namesSize);
+    for (const std::string &bundleName : bundleNames) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    }
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    int32_t uidMapSize = static_cast<int32_t>(uidMap.size());
+    INSTALLD_PARCEL_WRITE(data, Int32, uidMapSize);
+    for (const auto &[bundleName, uids] : uidMap) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+        data.WriteInt32(uids);
+    }
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::BATCH_GET_BUNDLE_STATS, data, reply, option);
+    if (ret == ERR_OK) {
+        int32_t statsSize = reply.ReadInt32();
+        if (statsSize <= 0) {
+            APP_LOGW("statsSize failed");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+        bundleStats.clear();
+        for (int32_t i = 0; i < statsSize; i++) {
+            std::unique_ptr<BundleStorageStats> stat(reply.ReadParcelable<BundleStorageStats>());
+            if (stat == nullptr) {
+                LOG_E(BMS_TAG_INSTALLD, "BatchGetBundleStats failed: read BundleStorageStats fail");
+                return ERR_APPEXECFWK_NULL_PTR;
+            }
+            bundleStats.emplace_back(*stat);
+        }
+        return ERR_OK;
+    }
+    return ret;
+}
+
 ErrCode InstalldProxy::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {

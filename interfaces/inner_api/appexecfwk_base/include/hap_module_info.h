@@ -166,6 +166,8 @@ struct HapModuleInfo : public Parcelable {
     std::string abilitySrcEntryDelegator;
     std::string abilityStageSrcEntryDelegator;
     std::string appStartup;
+    std::string formExtensionModule;
+    std::string formWidgetModule;
     std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
     std::string abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
 

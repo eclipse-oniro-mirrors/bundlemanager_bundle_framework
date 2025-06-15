@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include "aot/aot_handler.h"
 #include "bms_extension_client.h"
 #include "bms_extension_data_mgr.h"
+#include "bundle_hitrace_chain.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -1691,6 +1692,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
     int32_t userId, int32_t appIndex)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("CleanBundleCacheFiles", HITRACE_FLAG_INCLUDE_ASYNC);
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
@@ -1764,8 +1766,9 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     std::vector<std::string> moduleNameList;
     dataMgr->GetBundleModuleNames(bundleName, moduleNameList);
     rootDir = BundleCacheMgr().GetBundleCachePath(bundleName, userId, appIndex, moduleNameList);
-
-    auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, appIndex, this]() {
+    auto traceId = HiviewDFX::HiTraceChain::GetId();
+    auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, appIndex, traceId, this]() {
+        BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         std::vector<std::string> caches = rootDir;
         std::string shaderCachePath;
         shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
@@ -2344,6 +2347,7 @@ ErrCode BundleMgrHostImpl::IsCloneApplicationEnabled(const std::string &bundleNa
 
 ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("SetApplicationEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
     std::string caller = GetCallerName();
     APP_LOGW_NOFUNC("SetApplicationEnabled %{public}s %{public}d %{public}d caller:%{public}s",
         bundleName.c_str(), isEnable, userId, caller.c_str());
@@ -2405,6 +2409,7 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
 ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
     const std::string &bundleName, int32_t appIndex, bool isEnable, int32_t userId)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("SetCloneApplicationEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
     std::string caller = GetCallerName();
     APP_LOGW_NOFUNC("SetCloneApplicationEnabled param %{public}s %{public}d %{public}d %{public}d caller:%{public}s",
         bundleName.c_str(), appIndex, isEnable, userId, caller.c_str());
@@ -2489,6 +2494,7 @@ ErrCode BundleMgrHostImpl::IsCloneAbilityEnabled(const AbilityInfo &abilityInfo,
 
 ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("SetAbilityEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
     std::string caller = GetCallerName();
     APP_LOGW_NOFUNC("SetAbilityEnabled %{public}s %{public}d %{public}d caller:%{public}s",
         abilityInfo.name.c_str(), isEnabled, userId, caller.c_str());
@@ -2548,6 +2554,7 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
 ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo,
     int32_t appIndex, bool isEnabled, int32_t userId)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("SetCloneAbilityEnabled", HITRACE_FLAG_INCLUDE_ASYNC);
     std::string caller = GetCallerName();
     APP_LOGW_NOFUNC("SetCloneAbilityEnabled %{public}s %{public}d %{public}d %{public}d caller:%{public}s",
         abilityInfo.name.c_str(), appIndex, isEnabled, userId, caller.c_str());
@@ -3350,9 +3357,20 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
 bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t userId,
     std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+    bool permissionVerify = [bundleName]() {
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            return true;
+        }
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+            BundlePermissionMgr::IsSystemApp()) {
+            return true;
+        }
+        if (BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+            return true;
+        }
+        return false;
+    }();
+    if (!permissionVerify) {
         APP_LOGE("verify permission failed");
         return false;
     }
@@ -3377,8 +3395,38 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
     return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex, statFlag);
 }
 
+ErrCode BundleMgrHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
+    std::vector<BundleStorageStats> &bundleStats)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
+        Constants::PERMISSION_GET_BUNDLE_INFO})) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    std::set<std::string> uniqueSet(bundleNames.begin(), bundleNames.end());
+    std::vector<std::string> finalBundleNames(uniqueSet.begin(), uniqueSet.end());
+    if (finalBundleNames.size() == 0) {
+        APP_LOGE("bundleNames empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->BatchGetBundleStats(finalBundleNames, userId, bundleStats);
+}
+
 bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
 {
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO})) {
         APP_LOGE("verify permission failed");
@@ -3670,9 +3718,20 @@ ErrCode BundleMgrHostImpl::GetAppProvisionInfo(const std::string &bundleName, in
 ErrCode BundleMgrHostImpl::GetProvisionMetadata(const std::string &bundleName, int32_t userId,
     std::vector<Metadata> &provisionMetadatas)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
-        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+    bool permissionVerify = [bundleName]() {
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            return true;
+        }
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+            BundlePermissionMgr::IsSystemApp()) {
+            return true;
+        }
+        if (BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+            return true;
+        }
+        return false;
+    }();
+    if (!permissionVerify) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -3917,6 +3976,39 @@ ErrCode BundleMgrHostImpl::GetAdditionalInfo(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->GetAdditionalInfo(bundleName, additionalInfo);
+}
+
+ErrCode BundleMgrHostImpl::BatchGetAdditionalInfo(const std::vector<std::string> &bundleNames,
+    std::vector<BundleAdditionalInfo> &additionalInfos)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    
+    for (const std::string &bundleName : bundleNames) {
+        AppExecFwk::BundleAdditionalInfo additionalInfo;
+        if (bundleName.empty()) {
+            additionalInfo.errCode = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+            additionalInfos.emplace_back(additionalInfo);
+            continue;
+        }
+        ErrCode ret = dataMgr->GetAdditionalInfo(bundleName, additionalInfo.additionalInfo);
+        additionalInfo.bundleName = bundleName;
+        additionalInfo.errCode = ret;
+        additionalInfos.emplace_back(additionalInfo);
+    }
+
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHostImpl::GetAdditionalInfoForAllUser(const std::string &bundleName,

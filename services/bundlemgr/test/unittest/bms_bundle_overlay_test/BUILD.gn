@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2023-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -24,7 +24,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -81,6 +81,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "ipc:ipc_single",
+    "jsoncpp:jsoncpp",
     "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -172,7 +173,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
 ohos_unittest("BmsBundleOverlayInfoTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/json/include" ]
+  include_dirs = []
   sources = [
     "${base_path}/src/overlay/overlay_bundle_info.cpp",
     "${base_path}/src/overlay/overlay_module_info.cpp",
@@ -201,6 +202,7 @@ ohos_unittest("BmsBundleOverlayInfoTest") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
   ]
 
   external_deps += [
@@ -246,10 +248,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "${services_path}/bundlemgr/test/mock/include/parameter",
-  ]
+  include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
   sources = [
     "${core_path}/src/overlay/overlay_manager_host.cpp",
     "${core_path}/src/overlay/overlay_manager_proxy.cpp",
@@ -310,6 +309,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -411,10 +411,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "${services_path}/bundlemgr/test/mock/include/parameter",
-  ]
+  include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -466,6 +463,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "ipc:ipc_single",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -564,10 +562,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "${services_path}/bundlemgr/test/mock/include/parameter",
-  ]
+  include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -620,6 +615,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -718,10 +714,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "${services_path}/bundlemgr/test/mock/include/parameter",
-  ]
+  include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -775,6 +768,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "ipc:ipc_single",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",

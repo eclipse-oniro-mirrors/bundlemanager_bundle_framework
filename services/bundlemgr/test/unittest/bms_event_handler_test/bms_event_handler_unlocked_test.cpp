@@ -25,6 +25,7 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "common_event_subscriber.h"
+#include "el5_filekey_callback.h"
 #include "scope_guard.h"
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
@@ -36,6 +37,10 @@ using namespace OHOS::Security;
 using OHOS::DelayedSingleton;
 
 namespace OHOS {
+namespace AppExecFwk {
+    void SetTestReturnValue(const std::vector<int32_t> &list);
+}
+
 class BmsEventHandlerUnLockedTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -286,5 +291,71 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0700, Function
     EXPECT_FALSE(isExist);
     (void)InstalldClient::GetInstance()->RemoveDir(bundleLogDir1);
     dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CheckEl5Dir_0001
+ * @tc.name: test CheckEl5Dir
+ * @tc.desc: test CheckEl5Dir
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, CheckEl5Dir_0001, Function | SmallTest | Level0)
+{
+    El5FilekeyCallback callback;
+    Security::AccessToken::AppKeyInfo info;
+    info.userId = -1;
+    InnerBundleInfo bundleInfo;
+    SetTestReturnValue({1, 1});
+    callback.CheckEl5Dir(info, bundleInfo, "com.test.test");
+    EXPECT_EQ(info.userId, -1);
+    SetTestReturnValue({0, 0});
+    callback.CheckEl5Dir(info, bundleInfo, "com.test.test");
+    EXPECT_EQ(info.userId, -1);
+    SetTestReturnValue({0, 1, 0, 1});
+    callback.CheckEl5Dir(info, bundleInfo, "com.test.test");
+    EXPECT_EQ(info.userId, -1);
+    SetTestReturnValue({0, 1, 0, 0, 1});
+    callback.CheckEl5Dir(info, bundleInfo, "com.test.test");
+    EXPECT_EQ(info.userId, -1);
+    SetTestReturnValue({0, 1, 0, 0, 0, 1});
+    callback.CheckEl5Dir(info, bundleInfo, "com.test.test");
+    EXPECT_EQ(info.userId, -1);
+    SetTestReturnValue({0, 1, 0, 0, 0, 0, 1});
+    callback.CheckEl5Dir(info, bundleInfo, "com.test.test");
+    EXPECT_EQ(info.userId, -1);
+    SetTestReturnValue({0, 1, 0, 0, 0, 0, 0, 1});
+    callback.CheckEl5Dir(info, bundleInfo, "com.test.test");
+    EXPECT_EQ(info.userId, -1);
+}
+
+/**
+ * @tc.number: ProcessGroupEl5Dir_0001
+ * @tc.name: test ProcessGroupEl5Dir
+ * @tc.desc: test ProcessGroupEl5Dir
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, ProcessGroupEl5Dir_0001, Function | SmallTest | Level0)
+{
+    El5FilekeyCallback callback;
+    Security::AccessToken::AppKeyInfo info;
+    info.type = Security::AccessToken::AppKeyType::APP;
+    callback.ProcessGroupEl5Dir(info);
+    EXPECT_EQ(info.type, Security::AccessToken::AppKeyType::APP);
+
+    info.type = Security::AccessToken::AppKeyType::GROUPID;
+    info.uid = 1;
+    info.groupID = "123";
+    callback.ProcessGroupEl5Dir(info);
+    EXPECT_EQ(info.type, Security::AccessToken::AppKeyType::GROUPID);
+    SetTestReturnValue({1, 1});
+    callback.ProcessGroupEl5Dir(info);
+    EXPECT_EQ(info.type, Security::AccessToken::AppKeyType::GROUPID);
+    SetTestReturnValue({0, 0});
+    callback.ProcessGroupEl5Dir(info);
+    EXPECT_EQ(info.type, Security::AccessToken::AppKeyType::GROUPID);
+    SetTestReturnValue({0, 1, 1});
+    callback.ProcessGroupEl5Dir(info);
+    EXPECT_EQ(info.type, Security::AccessToken::AppKeyType::GROUPID);
+    SetTestReturnValue({0, 1, 0, 1});
+    callback.ProcessGroupEl5Dir(info);
+    EXPECT_EQ(info.type, Security::AccessToken::AppKeyType::GROUPID);
 }
 } // OHOS

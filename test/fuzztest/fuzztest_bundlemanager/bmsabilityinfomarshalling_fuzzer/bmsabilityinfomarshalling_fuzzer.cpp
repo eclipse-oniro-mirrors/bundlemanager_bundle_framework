@@ -24,7 +24,7 @@
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-    bool fuzzabilityinfomarshalling(const uint8_t* data, size_t size)
+    bool FuzzAbilityInfoMarshalling(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
         AbilityInfo abilityInfo;
@@ -42,6 +42,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
-    OHOS::fuzzabilityinfomarshalling(data, size);
+    OHOS::FuzzAbilityInfoMarshalling(data, size);
     return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -617,6 +617,82 @@ bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
     return true;
 }
 
+bool ParseDisposedRuleConfiguration(napi_env env, napi_value nDisposedRuleConfiguration,
+    DisposedRuleConfiguration &disposedRuleConfiguration)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, nDisposedRuleConfiguration, &valueType), false);
+    if (valueType != napi_object) {
+        APP_LOGE("parse not object");
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, nDisposedRuleConfiguration, "appId", &prop);
+    std::string appId;
+    if (!CommonFunc::ParseString(env, prop, appId)) {
+        APP_LOGE("appId invalid");
+        return false;
+    }
+    if (appId.empty()) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPID, SET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, businessError);
+        return false;
+    }
+    disposedRuleConfiguration.appId = appId;
+    napi_get_named_property(env, nDisposedRuleConfiguration, "appIndex", &prop);
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    if (!CommonFunc::ParseInt(env, prop, appIndex)||
+        appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPINDEX, SET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, businessError);
+        return false;
+    }
+    disposedRuleConfiguration.appIndex = appIndex;
+
+    napi_get_named_property(env, nDisposedRuleConfiguration, "disposedRule", &prop);
+    DisposedRule disposedRule;
+    if (!ParseDiposedRule(env, prop, disposedRule)) {
+        APP_LOGE("disposedRule invalid!");
+        return false;
+    }
+    disposedRuleConfiguration.disposedRule = disposedRule;
+    return true;
+}
+
+bool ParseDisposedRuleConfigurationArray(napi_env env, napi_value nDisposedRuleConfigurations,
+    std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations)
+{
+    bool isArray = false;
+    NAPI_CALL_BASE(env, napi_is_array(env, nDisposedRuleConfigurations, &isArray), false);
+    if (!isArray) {
+        APP_LOGE("nDisposedRuleConfigurations not array type");
+        return false;
+    }
+    uint32_t arrayLength = 0;
+    NAPI_CALL_BASE(env, napi_get_array_length(env, nDisposedRuleConfigurations, &arrayLength), false);
+    APP_LOGD("length=%{public}ud", arrayLength);
+    for (uint32_t j = 0; j < arrayLength; j++) {
+        napi_value value = nullptr;
+        NAPI_CALL_BASE(env, napi_get_element(env, nDisposedRuleConfigurations, j, &value), false);
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL_BASE(env, napi_typeof(env, value, &valueType), false);
+        if (valueType != napi_object) {
+            APP_LOGE("disposedRuleConfiguration bot objext");
+            disposedRuleConfigurations.clear();
+            return false;
+        }
+        DisposedRuleConfiguration disposedRuleConfiguration;
+        if (!ParseDisposedRuleConfiguration(env, value, disposedRuleConfiguration)) {
+            APP_LOGE("disposedRuleConfiguration invalid");
+            return false;
+        }
+        disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+    }
+    return true;
+}
+
 static napi_value InnerGetDisposedRule(napi_env env, std::string &appId, int32_t appIndex)
 {
     if (appId.empty()) {
@@ -753,6 +829,43 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
     }
     APP_LOGE("parameter is invalid");
     BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+    return nRet;
+}
+
+napi_value SetDisposedRules(napi_env env, napi_callback_info info)
+{
+    NapiArg args(env, info);
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("Napi func init failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nRet;
+    }
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    if (!ParseDisposedRuleConfigurationArray(env, args[ARGS_POS_ZERO], disposedRuleConfigurations)) {
+        APP_LOGE("disposedRuleConfigurations invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
+        return nRet;
+    }
+    auto appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("AppControlProxy is null");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            GET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, error);
+        return nullptr;
+    }
+    int32_t userId = OHOS::IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode ret = appControlProxy->SetDisposedRules(disposedRuleConfigurations, userId);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetDisposedRules failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
     return nRet;
 }
 

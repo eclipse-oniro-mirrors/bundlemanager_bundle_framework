@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@
 #include "app_log_tag_wrapper.h"
 #include "bundle_clone_installer.h"
 #include "bundle_framework_core_ipc_interface_code.h"
+#include "bundle_hitrace_chain.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
@@ -132,6 +133,7 @@ int BundleInstallerHost::OnRemoteRequest(
 
 void BundleInstallerHost::HandleInstallMessage(MessageParcel &data)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Install", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle install message");
     std::string bundlePath = Str16ToStr8(data.ReadString16());
     std::unique_ptr<InstallParam> installParam(data.ReadParcelable<InstallParam>());
@@ -152,6 +154,7 @@ void BundleInstallerHost::HandleInstallMessage(MessageParcel &data)
 
 void BundleInstallerHost::HandleRecoverMessage(MessageParcel &data)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Recover", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle install message by bundleName");
     std::string bundleName = Str16ToStr8(data.ReadString16());
     std::unique_ptr<InstallParam> installParam(data.ReadParcelable<InstallParam>());
@@ -173,6 +176,7 @@ void BundleInstallerHost::HandleRecoverMessage(MessageParcel &data)
 
 void BundleInstallerHost::HandleInstallMultipleHapsMessage(MessageParcel &data)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Install", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle install multiple haps message");
     int32_t size = data.ReadInt32();
     if (size > ServiceConstants::MAX_HAP_NUMBER) {
@@ -205,6 +209,7 @@ void BundleInstallerHost::HandleInstallMultipleHapsMessage(MessageParcel &data)
 
 void BundleInstallerHost::HandleUninstallMessage(MessageParcel &data)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Uninstall", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle uninstall message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
     std::unique_ptr<InstallParam> installParam(data.ReadParcelable<InstallParam>());
@@ -225,6 +230,7 @@ void BundleInstallerHost::HandleUninstallMessage(MessageParcel &data)
 
 void BundleInstallerHost::HandleUninstallModuleMessage(MessageParcel &data)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Uninstall", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle uninstall module message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
     std::string modulePackage = Str16ToStr8(data.ReadString16());
@@ -245,6 +251,7 @@ void BundleInstallerHost::HandleUninstallModuleMessage(MessageParcel &data)
 
 void BundleInstallerHost::HandleUninstallByUninstallParam(MessageParcel &data)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Uninstall", HITRACE_FLAG_INCLUDE_ASYNC);
     std::unique_ptr<UninstallParam> uninstallParam(data.ReadParcelable<UninstallParam>());
     if (uninstallParam == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "ReadParcelable<UninstallParam failed");
@@ -261,6 +268,7 @@ void BundleInstallerHost::HandleUninstallByUninstallParam(MessageParcel &data)
 
 void BundleInstallerHost::HandleInstallSandboxApp(MessageParcel &data, MessageParcel &reply)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("InstallSandboxApp", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle install sandbox app message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t dplType = data.ReadInt32();
@@ -278,6 +286,7 @@ void BundleInstallerHost::HandleInstallSandboxApp(MessageParcel &data, MessagePa
 
 void BundleInstallerHost::HandleUninstallSandboxApp(MessageParcel &data, MessageParcel &reply)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("UninstallSandbox", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle install sandbox app message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t appIndex = data.ReadInt32();
@@ -392,6 +401,7 @@ void BundleInstallerHost::HandleDestoryBundleStreamInstaller(MessageParcel &data
 
 void BundleInstallerHost::HandleUninstallAndRecoverMessage(MessageParcel &data)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("UninstallAndRecover", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle UninstallAndRecover message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
     std::unique_ptr<InstallParam> installParam(data.ReadParcelable<InstallParam>());
@@ -965,6 +975,7 @@ ErrCode BundleInstallerHost::InstallCloneApp(const std::string &bundleName, int3
 
 void BundleInstallerHost::HandleInstallCloneApp(MessageParcel &data, MessageParcel &reply)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Install", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle install clone app message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
@@ -1015,6 +1026,7 @@ ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, in
 
 void BundleInstallerHost::HandleUninstallCloneApp(MessageParcel &data, MessageParcel &reply)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("UninstallCloneApp", HITRACE_FLAG_INCLUDE_ASYNC);
     LOG_D(BMS_TAG_INSTALLER, "handle uninstall clone app message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
