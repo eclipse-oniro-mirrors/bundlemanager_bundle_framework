@@ -2054,7 +2054,7 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleNamesForUidExt_0100, Function | Small
     ErrCode ret = bmsExtensionDataMgr.GetBundleNamesForUidExt(uid, bundleNames);
 
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
     #else
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
