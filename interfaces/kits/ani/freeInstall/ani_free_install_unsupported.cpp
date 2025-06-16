@@ -28,32 +28,32 @@ namespace {
 constexpr const char* NS_NAME_FREEINSTALL = "@ohos.bundle.freeInstall.freeInstall";
 } // namespace
 
-static void SetHapModuleUpgradeFlagNative(
-    ani_env* env, ani_string aniBundleName, ani_string aniModuleName, ani_enum_item aniUpgradeFlag)
+static void AniSetHapModuleUpgradeFlag(ani_env* env,
+    ani_string aniBundleName, ani_string aniModuleName, ani_enum_item aniUpgradeFlag)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
     BusinessErrorAni::ThrowCommonError(
         env, ERROR_SYSTEM_ABILITY_NOT_FOUND, RESOURCE_NAME_OF_SET_HAP_MODULE_UPGRADE_FLAG, "");
 }
 
-static bool IsHapModuleRemovableNative(ani_env* env, ani_string aniBundleName, ani_string aniModuleName)
+static bool AniIsHapModuleRemovable(ani_env* env, ani_string aniBundleName, ani_string aniModuleName)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
     BusinessErrorAni::ThrowCommonError(
         env, ERROR_SYSTEM_ABILITY_NOT_FOUND, RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE, "");
     return false;
 }
 
-static ani_object GetBundlePackInfoNative(ani_env* env, ani_string aniBundleName, ani_enum_item aniBundlePackFlag)
+static ani_object AniGetBundlePackInfo(ani_env* env, ani_string aniBundleName, ani_enum_item aniBundlePackFlag)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, RESOURCE_NAME_OF_GET_BUNDLE_PACK_INFO, "");
     return nullptr;
 }
 
-static ani_object GetDispatchInfoNative(ani_env* env)
+static ani_object AniGetDispatchInfo(ani_env* env)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, RESOURCE_NAME_OF_GET_DISPATCH_INFO, "");
     return nullptr;
 }
@@ -61,25 +61,24 @@ static ani_object GetDispatchInfoNative(ani_env* env)
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
-    APP_LOGI("ANI_Constructor called");
+    APP_LOGI("ANI_Constructor freeInstall called");
     ani_env* env;
     ani_status status = vm->GetEnv(ANI_VERSION_1, &env);
     RETURN_ANI_STATUS_IF_NOT_OK(status, "Unsupported ANI_VERSION_1");
 
-    arkts::ani_signature::Namespace freeInstallNS = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_FREEINSTALL);
+    arkts::ani_signature::Namespace nsName = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_FREEINSTALL);
     ani_namespace kitNs = nullptr;
-    status = env->FindNamespace(freeInstallNS.Descriptor().c_str(), &kitNs);
+    status = env->FindNamespace(nsName.Descriptor().c_str(), &kitNs);
     if (status != ANI_OK) {
         APP_LOGE("FindNamespace: %{public}s fail with %{public}d", NS_NAME_FREEINSTALL, status);
         return status;
     }
     std::array methods = {
-        ani_native_function {
-            "SetHapModuleUpgradeFlagNative", nullptr, reinterpret_cast<void*>(SetHapModuleUpgradeFlagNative) },
-        ani_native_function {
-            "IsHapModuleRemovableNative", nullptr, reinterpret_cast<void*>(IsHapModuleRemovableNative) },
-        ani_native_function { "GetBundlePackInfoNative", nullptr, reinterpret_cast<void*>(GetBundlePackInfoNative) },
-        ani_native_function { "GetDispatchInfoNative", nullptr, reinterpret_cast<void*>(GetDispatchInfoNative) },
+        ani_native_function { "setHapModuleUpgradeFlagNative", nullptr,
+            reinterpret_cast<void*>(AniSetHapModuleUpgradeFlag) },
+        ani_native_function { "isHapModuleRemovableNative", nullptr, reinterpret_cast<void*>(AniIsHapModuleRemovable) },
+        ani_native_function { "getBundlePackInfoNative", nullptr, reinterpret_cast<void*>(AniGetBundlePackInfo) },
+        ani_native_function { "getDispatchInfoNative", nullptr, reinterpret_cast<void*>(AniGetDispatchInfo) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

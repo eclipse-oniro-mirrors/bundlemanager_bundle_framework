@@ -17,6 +17,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
 #include "business_error_ani.h"
+#include "common_fun_ani.h"
 #include "napi_constants.h"
 
 namespace OHOS {
@@ -25,30 +26,40 @@ namespace {
 constexpr const char* NS_NAME_DEFAULTAPPMANAGER = "@ohos.bundle.defaultAppManager.defaultAppManager";
 } // namespace
 
-static ani_boolean IsDefaultApplicationSync(ani_env *env, ani_string aniType)
+static ani_boolean AniIsDefaultApplication(ani_env *env, ani_string aniType, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
-    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, IS_DEFAULT_APPLICATION, "");
+    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        isSync ? IS_DEFAULT_APPLICATION_SYNC : IS_DEFAULT_APPLICATION, "");
     return false;
 }
 
-static ani_object GetDefaultApplicationSync(ani_env *env, ani_string aniType, ani_double aniUserId)
+static ani_object AniGetDefaultApplication(ani_env *env,
+    ani_string aniType, ani_double aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
-    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_DEFAULT_APPLICATION, "");
+    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        isSync ? GET_DEFAULT_APPLICATION_SYNC : GET_DEFAULT_APPLICATION, "");
     return nullptr;
 }
 
-static void SetDefaultApplicationSync(ani_env *env, ani_string aniType, ani_object aniElementName, ani_double aniUserId)
+static void AniSetDefaultApplication(ani_env *env,
+    ani_string aniType, ani_object aniElementName, ani_double aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
-    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_DEFAULT_APPLICATION, "");
+    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        isSync ? SET_DEFAULT_APPLICATION_SYNC : SET_DEFAULT_APPLICATION, "");
 }
 
-static void ResetDefaultApplicationSync(ani_env *env, ani_string aniType, ani_double aniUserId)
+static void AniResetDefaultApplication(ani_env *env, ani_string aniType, ani_double aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
-    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, RESET_DEFAULT_APPLICATION, "");
+    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        isSync ? RESET_DEFAULT_APPLICATION_SYNC : RESET_DEFAULT_APPLICATION, "");
 }
 
 extern "C" {
@@ -69,13 +80,13 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     }
 
     std::array methods = {
-        ani_native_function { "isDefaultApplicationSync", nullptr, reinterpret_cast<void*>(IsDefaultApplicationSync) },
-        ani_native_function { "getDefaultApplicationSyncNative", nullptr,
-            reinterpret_cast<void*>(GetDefaultApplicationSync) },
-        ani_native_function { "setDefaultApplicationSyncNative", nullptr,
-            reinterpret_cast<void*>(SetDefaultApplicationSync) },
-        ani_native_function { "resetDefaultApplicationSyncNative", nullptr,
-            reinterpret_cast<void*>(ResetDefaultApplicationSync) }
+        ani_native_function { "isDefaultApplicationNative", nullptr, reinterpret_cast<void*>(AniIsDefaultApplication) },
+        ani_native_function { "getDefaultApplicationNative", nullptr,
+            reinterpret_cast<void*>(AniGetDefaultApplication) },
+        ani_native_function { "setDefaultApplicationNative", nullptr,
+            reinterpret_cast<void*>(AniSetDefaultApplication) },
+        ani_native_function { "resetDefaultApplicationNative", nullptr,
+            reinterpret_cast<void*>(AniResetDefaultApplication) }
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

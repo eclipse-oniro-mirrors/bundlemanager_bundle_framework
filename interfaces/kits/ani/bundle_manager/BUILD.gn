@@ -60,6 +60,7 @@ ohos_shared_library("ani_bundle_manager") {
     "ipc:ipc_core",
     "napi:ace_napi",
     "runtime_core:ani",
+    "runtime_core:ani_helpers",
     "samgr:samgr_proxy",
   ]
 

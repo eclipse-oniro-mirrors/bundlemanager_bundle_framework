@@ -20,11 +20,13 @@ namespace shortcutManager {
 
   loadLibrary("anishortcutmanager.z");
 
-  export native function AddDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): void;
+  export native function addDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;
+  export native function deleteDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;
+  export native function getAllDesktopShortcutInfoNative(userId: number): Array<ShortcutInfo>;
 
   function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
     let p:Promise<void> = new Promise<void>((resolve:(v:PromiseLike<void>) =>void, reject: (error: Error) => void):void=> {
-      let cb = ():NullishType=>{shortcutManager.AddDesktopShortcutInfo(shortcutInfo, userId);return undefined;}
+      let cb = ():NullishType=>{shortcutManager.addDesktopShortcutInfoNative(shortcutInfo, userId);return undefined;}
       let p1 = taskpool.execute(cb);
       p1.then(():void =>  {
         resolve(Promise.resolve());
@@ -35,12 +37,10 @@ namespace shortcutManager {
     });
     return p;
   }
-
-  export native function DeleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): void;
 
   function deleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
     let p:Promise<void> = new Promise<void>((resolve:(v:PromiseLike<void>) =>void, reject: (error: Error) => void):void=> {
-      let cb = ():NullishType=>{shortcutManager.DeleteDesktopShortcutInfo(shortcutInfo, userId);return undefined;}
+      let cb = ():NullishType=>{shortcutManager.deleteDesktopShortcutInfoNative(shortcutInfo, userId);return undefined;}
       let p1 = taskpool.execute(cb);
       p1.then(():void =>  {
         resolve(Promise.resolve());
@@ -52,11 +52,9 @@ namespace shortcutManager {
     return p;
   }
 
-  export native function GetAllDesktopShortcutInfo(userId: number): Array<ShortcutInfo>;
-
   function getAllDesktopShortcutInfo(userId: number): Promise<Array<ShortcutInfo>> {
     let p = new Promise<Array<ShortcutInfo>>((resolve: (arrShortcutInfo: Array<ShortcutInfo>) => void, reject: (error: Error)=>void) => {
-      let cb = ():(Array<ShortcutInfo>)=>{return shortcutManager.GetAllDesktopShortcutInfo(userId);};
+      let cb = ():(Array<ShortcutInfo>)=>{return shortcutManager.getAllDesktopShortcutInfoNative(userId);};
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
         let resultShortcutInfo: Array<ShortcutInfo> = e as Array<ShortcutInfo>;

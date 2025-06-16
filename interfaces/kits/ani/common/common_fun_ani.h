@@ -35,13 +35,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 using Want = OHOS::AAFwk::Want;
-namespace CommonFunAniNS {
-constexpr const char* TYPE_ARRAY = "array";
-constexpr const char* TYPE_INT = "int";
-constexpr const char* TYPE_NUMBER = "number";
-constexpr const char* TYPE_STRING = "string";
-constexpr const char* TYPE_FUNCTION = "function";
-} // namespace CommonFunAniNS
 
 #define RETURN_IF_NULL(ptr)          \
     do {                             \
@@ -97,6 +90,7 @@ public:
         return value ? ANI_TRUE : ANI_FALSE;
     }
     static std::string AniStrToString(ani_env* env, ani_string aniStr);
+    static bool ParseString(ani_env* env, ani_string aniStr, std::string& result);
     static inline bool StringToAniStr(ani_env* env, const std::string& str, ani_string& aniStr)
     {
         ani_status status = env->String_NewUTF8(str.c_str(), str.size(), &aniStr);

@@ -16,6 +16,8 @@ import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
 ohos_shared_library("ani_zlib") {
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
     boundary_sanitize = true
     cfi = true
@@ -47,6 +49,16 @@ ohos_shared_library("ani_zlib") {
     "${kits_path}/js/zip/src/zip_writer.cpp",
     "${kits_path}/js/zip/src/zip.cpp",
     "ani_zlib.cpp",
+  ]
+
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
   ]
 
   deps = [

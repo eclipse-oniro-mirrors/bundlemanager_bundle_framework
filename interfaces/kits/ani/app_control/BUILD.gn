@@ -41,7 +41,7 @@ ohos_shared_library("ani_app_control") {
   if (bundle_framework_bundle_resource) {
     sources = [ "ani_app_control.cpp" ]
   } else {
-    sources = [ "ani_app_control_unsupport.cpp" ]
+    sources = [ "ani_app_control_unsupported.cpp" ]
   }
 
   deps = [

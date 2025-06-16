@@ -28,12 +28,13 @@ namespace {
 constexpr const char* NS_NAME_OVERLAY = "@ohos.bundle.overlay.overlay";
 } // namespace
 
-static void SetOverlayEnabled(ani_env *env, ani_string aniModuleName, ani_boolean aniIsEnabled)
+static void AniSetOverlayEnabled(ani_env *env, ani_string aniModuleName, ani_boolean aniIsEnabled)
 {
-    std::string moduleName = CommonFunAni::AniStrToString(env, aniModuleName);
-    if (moduleName.empty()) {
-        APP_LOGE("MoudleName is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, CommonFunAniNS::TYPE_STRING);
+    APP_LOGD("ani SetOverlayEnabled called");
+    std::string moduleName;
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName) || moduleName.empty()) {
+        APP_LOGE("moduleName %{public}s invalid", moduleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return;
     }
     bool isEnabled = CommonFunAni::AniBooleanToBool(aniIsEnabled);
@@ -48,26 +49,27 @@ static void SetOverlayEnabled(ani_env *env, ani_string aniModuleName, ani_boolea
 
     ErrCode ret = overlayMgrProxy->SetOverlayEnabledForSelf(moduleName, isEnabled);
     if (ret != ERR_OK) {
-        APP_LOGE("SetOverlayEnabled failed ret: %{public}d", ret);
+        APP_LOGE("SetOverlayEnabledForSelf failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             SET_OVERLAY_ENABLED, Constants::PERMISSION_CHANGE_OVERLAY_ENABLED_STATE);
         return;
     }
 }
 
-static void SetOverlayEnabledByBundleName(ani_env *env,
+static void AniSetOverlayEnabledByBundleName(ani_env *env,
     ani_string aniBundleName, ani_string aniModuleName, ani_boolean aniIsEnabled)
 {
-    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
-    if (bundleName.empty()) {
-        APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
+    APP_LOGD("ani SetOverlayEnabledByBundleName called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName) || bundleName.empty()) {
+        APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return;
     }
-    std::string moduleName = CommonFunAni::AniStrToString(env, aniModuleName);
-    if (moduleName.empty()) {
-        APP_LOGE("MoudleName is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, CommonFunAniNS::TYPE_STRING);
+    std::string moduleName;
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName) || moduleName.empty()) {
+        APP_LOGE("moduleName %{public}s invalid", moduleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return;
     }
     bool isEnabled = CommonFunAni::AniBooleanToBool(aniIsEnabled);
@@ -82,19 +84,20 @@ static void SetOverlayEnabledByBundleName(ani_env *env,
 
     ErrCode ret = overlayMgrProxy->SetOverlayEnabled(bundleName, moduleName, isEnabled);
     if (ret != ERR_OK) {
-        APP_LOGE("SetOverlayEnabledByBundleName failed ret: %{public}d", ret);
+        APP_LOGE("SetOverlayEnabled failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             SET_OVERLAY_ENABLED_BY_BUNDLE_NAME, Constants::PERMISSION_CHANGE_OVERLAY_ENABLED_STATE);
         return;
     }
 }
 
-static ani_object GetOverlayModuleInfo(ani_env *env, ani_string aniModuleName)
+static ani_object AniGetOverlayModuleInfo(ani_env *env, ani_string aniModuleName)
 {
-    std::string moduleName = CommonFunAni::AniStrToString(env, aniModuleName);
-    if (moduleName.empty()) {
-        APP_LOGE("MoudleName is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, CommonFunAniNS::TYPE_STRING);
+    APP_LOGD("ani GetOverlayModuleInfo called");
+    std::string moduleName;
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName) || moduleName.empty()) {
+        APP_LOGE("moduleName %{public}s invalid", moduleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return nullptr;
     }
 
@@ -119,13 +122,13 @@ static ani_object GetOverlayModuleInfo(ani_env *env, ani_string aniModuleName)
     return CommonFunAni::ConvertOverlayModuleInfo(env, overlayModuleInfo);
 }
 
-static ani_object GetTargetOverlayModuleInfos(ani_env *env, ani_string aniTargetModuleName)
+static ani_object AniGetTargetOverlayModuleInfos(ani_env *env, ani_string aniTargetModuleName)
 {
-    std::string targetModuleName = CommonFunAni::AniStrToString(env, aniTargetModuleName);
-    if (targetModuleName.empty()) {
-        APP_LOGE("TargetModuleName is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR,
-            TARGET_MODULE_NAME, CommonFunAniNS::TYPE_STRING);
+    APP_LOGD("ani GetTargetOverlayModuleInfos called");
+    std::string targetModuleName;
+    if (!CommonFunAni::ParseString(env, aniTargetModuleName, targetModuleName) || targetModuleName.empty()) {
+        APP_LOGE("targetModuleName %{public}s invalid", targetModuleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TARGET_MODULE_NAME, TYPE_STRING);
         return nullptr;
     }
 
@@ -141,7 +144,7 @@ static ani_object GetTargetOverlayModuleInfos(ani_env *env, ani_string aniTarget
 
     ErrCode ret = overlayMgrProxy->GetTargetOverlayModuleInfo(targetModuleName, overlayModuleInfos);
     if (ret != ERR_OK) {
-        APP_LOGE("GetTargetOverlayModuleInfos failed ret: %{public}d", ret);
+        APP_LOGE("GetTargetOverlayModuleInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             GET_TARGET_OVERLAY_MODULE_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
@@ -156,16 +159,17 @@ static ani_object GetTargetOverlayModuleInfos(ani_env *env, ani_string aniTarget
     return overlayModuleInfosObject;
 }
 
-static ani_object GetOverlayModuleInfoByBundleName(ani_env *env, ani_string aniBundleName, ani_string aniModuleName)
+static ani_object AniGetOverlayModuleInfoByBundleName(ani_env *env, ani_string aniBundleName, ani_string aniModuleName)
 {
-    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
-    if (bundleName.empty()) {
-        APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
+    APP_LOGD("ani GetOverlayModuleInfoByBundleName called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName) || bundleName.empty()) {
+        APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    std::string moduleName = CommonFunAni::AniStrToString(env, aniModuleName);
-    if (moduleName.empty()) {
+    std::string moduleName;
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName)) {
         APP_LOGI("MoudleName undefined, default query for all module OverlayModuleInfo");
     }
 
@@ -196,18 +200,18 @@ static ani_object GetOverlayModuleInfoByBundleName(ani_env *env, ani_string aniB
     return overlayModuleInfosObject;
 }
 
-static ani_object GetTargetOverlayModuleInfosByBundleName(ani_env *env,
+static ani_object AniGetTargetOverlayModuleInfosByBundleName(ani_env *env,
     ani_string aniTargetBundleName, ani_string aniModuleName)
 {
-    std::string targetBundleName = CommonFunAni::AniStrToString(env, aniTargetBundleName);
-    if (targetBundleName.empty()) {
-        APP_LOGE("TargetBundleName is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR,
-            TARGET_BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
+    APP_LOGD("ani GetTargetOverlayModuleInfosByBundleName called");
+    std::string targetBundleName;
+    if (!CommonFunAni::ParseString(env, aniTargetBundleName, targetBundleName) || targetBundleName.empty()) {
+        APP_LOGE("targetBundleName %{public}s invalid", targetBundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TARGET_BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    std::string moduleName = CommonFunAni::AniStrToString(env, aniModuleName);
-    if (moduleName.empty()) {
+    std::string moduleName;
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName)) {
         APP_LOGI("MoudleName undefined, default query for all module OverlayModuleInfo");
     }
 
@@ -223,7 +227,7 @@ static ani_object GetTargetOverlayModuleInfosByBundleName(ani_env *env,
 
     ErrCode ret = overlayMgrProxy->GetOverlayModuleInfoForTarget(targetBundleName, moduleName, overlayModuleInfos);
     if (ret != ERR_OK) {
-        APP_LOGE("GetTargetOverlayModuleInfosByBundleName failed ret: %{public}d", ret);
+        APP_LOGE("GetOverlayModuleInfoForTarget failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
@@ -246,9 +250,9 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     ani_status status = vm->GetEnv(ANI_VERSION_1, &env);
     RETURN_ANI_STATUS_IF_NOT_OK(status, "Unsupported ANI_VERSION_1");
 
-    arkts::ani_signature::Namespace freeInstallNS = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_OVERLAY);
+    arkts::ani_signature::Namespace nsName = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_OVERLAY);
     ani_namespace kitNs = nullptr;
-    status = env->FindNamespace(freeInstallNS.Descriptor().c_str(), &kitNs);
+    status = env->FindNamespace(nsName.Descriptor().c_str(), &kitNs);
     if (status != ANI_OK) {
         APP_LOGE("FindNamespace: %{public}s fail with %{public}d", NS_NAME_OVERLAY, status);
         return status;
@@ -256,17 +260,17 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 
     std::array methods = {
         ani_native_function { "setOverlayEnabledNative", nullptr,
-            reinterpret_cast<void*>(SetOverlayEnabled) },
+            reinterpret_cast<void*>(AniSetOverlayEnabled) },
         ani_native_function { "setOverlayEnabledByBundleNameNative", nullptr,
-            reinterpret_cast<void*>(SetOverlayEnabledByBundleName) },
+            reinterpret_cast<void*>(AniSetOverlayEnabledByBundleName) },
         ani_native_function { "getOverlayModuleInfoNative", nullptr,
-            reinterpret_cast<void*>(GetOverlayModuleInfo) },
+            reinterpret_cast<void*>(AniGetOverlayModuleInfo) },
         ani_native_function { "getTargetOverlayModuleInfosNative", nullptr,
-            reinterpret_cast<void*>(GetTargetOverlayModuleInfos) },
+            reinterpret_cast<void*>(AniGetTargetOverlayModuleInfos) },
         ani_native_function { "getOverlayModuleInfoByBundleNameNative", nullptr,
-            reinterpret_cast<void*>(GetOverlayModuleInfoByBundleName) },
+            reinterpret_cast<void*>(AniGetOverlayModuleInfoByBundleName) },
         ani_native_function { "getTargetOverlayModuleInfosByBundleNameNative", nullptr,
-            reinterpret_cast<void*>(GetTargetOverlayModuleInfosByBundleName) }
+            reinterpret_cast<void*>(AniGetTargetOverlayModuleInfosByBundleName) }
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
