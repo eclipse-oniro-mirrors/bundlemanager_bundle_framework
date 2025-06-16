@@ -45,6 +45,7 @@ namespace {
     constexpr const char* PARSE_REASON_MESSAGE = "parse ReasonMessage failed";
     constexpr const char* START_SHORTCUT = "StartShortcut";
     constexpr const char* START_SHORTCUT_WITH_REASON = "StartShortcutWithReason";
+    constexpr const char* APP_INDEX = "appIndex";
     const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 
     const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
@@ -386,6 +387,66 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
     }
     std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
     ErrCode ret = CommonFunc::ConvertErrCode(launcherService->GetShortcutInfoV9(bundleName, shortcutInfos, userId));
+    if (ret != SUCCESS) {
+        APP_LOGE("failed, ret %{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_SHORTCUT_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nShortcutInfos = nullptr;
+    NAPI_CALL(env, napi_create_array(env, &nShortcutInfos));
+    CommonFunc::ConvertShortCutInfos(env, shortcutInfos, nShortcutInfos);
+    APP_LOGI_NOFUNC("call GetShortcutInfoSync done");
+    return nShortcutInfos;
+}
+
+bool ParseGetShortcutInfoAppIndex(napi_env env, napi_value args, int32_t &appIndex)
+{
+    if (!CommonFunc::ParseInt(env, args, appIndex)) {
+        APP_LOGE("parse appIndex failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
+        return false;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("appIndex: %{public}d not in valid range", appIndex);
+        BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
+        return false;
+    }
+    return true;
+}
+
+napi_value GetShortcutInfoByAppIndex(napi_env env, napi_callback_info info)
+{
+    APP_LOGI_NOFUNC("napi GetShortcutInfoByAppIndex called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+        return nullptr;
+    }
+
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
+    if (!ParseGetShortcutInfoAppIndex(env, args[ARGS_POS_ONE], appIndex)) {
+        return nullptr;
+    }
+
+    auto launcherService = GetLauncherService();
+    if (launcherService == nullptr) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_SHORTCUT_INFO_SYNC,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
+    ErrCode ret = CommonFunc::ConvertErrCode(launcherService->
+        GetShortcutInfoByAppIndex(bundleName, appIndex, shortcutInfos));
     if (ret != SUCCESS) {
         APP_LOGE("failed, ret %{public}d", ret);
         napi_value businessError = BusinessError::CreateCommonError(

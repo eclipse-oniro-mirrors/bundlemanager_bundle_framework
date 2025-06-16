@@ -1916,4 +1916,19 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetAppIdentifierAndAppIndex_0001, Functio
     auto testRet = bundleMgrHostImpl_->GetAppIdentifierAndAppIndex(ACCESS_TOKEN_ID, appIdentifier, appIndex);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: GetShortcutInfoByAppIndex_0001
+ * @tc.name: test GetShortcutInfoByAppIndex
+ * @tc.desc: test GetShortcutInfoByAppIndex
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetShortcutInfoByAppIndex_0001, Function | SmallTest | Level1)
+{
+    std::string bundleName = BUNDLE_NAME;
+    auto appIndex = APP_INDEX;
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto testRet = bundleMgrHostImpl_->GetShortcutInfoByAppIndex(bundleName, appIndex, shortcutInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(shortcutInfos.empty());
+}
 } // OHOS

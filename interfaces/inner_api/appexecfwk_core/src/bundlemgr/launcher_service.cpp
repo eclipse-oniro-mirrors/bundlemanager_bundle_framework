@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -423,6 +423,31 @@ ErrCode LauncherService::GetShortcutInfoV9(
         if (bundleName == shortcutInfo.bundleName) {
             shortcutInfos.emplace_back(shortcutInfo);
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode LauncherService::GetShortcutInfoByAppIndex(
+    const std::string &bundleName, const int32_t appIndex, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    std::vector<ShortcutInfo> infos;
+    ErrCode errCode = iBundleMgr->GetShortcutInfoByAppIndex(bundleName, appIndex, infos);
+    if (errCode != ERR_OK) {
+        APP_LOGE("GetShortcutInfoByAppIndex is failed");
+        return errCode;
+    }
+    if (infos.empty()) {
+        APP_LOGD("ShortcutInfo is not exist for this bundle");
+        return ERR_OK;
+    }
+
+    for (ShortcutInfo shortcutInfo : infos) {
+        shortcutInfos.emplace_back(shortcutInfo);
     }
     return ERR_OK;
 }

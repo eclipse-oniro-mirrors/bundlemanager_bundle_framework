@@ -5417,17 +5417,9 @@ bool BundleDataMgr::GetShortcutInfos(
     }
     GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
 
-    int32_t uid = IPCSkeleton::GetCallingUid();
-    int32_t appIndex = 0;
-    std::string name;
-    auto ret = GetBundleNameAndIndex(uid, name, appIndex);
-    if (ret != ERR_OK) {
-        APP_LOGD("get Index failed");
-    }
-
     // get shortcut visible status
     for (auto &info : shortcutInfos) {
-        shortcutVisibleStorage_->GetShortcutVisibleStatus(requestUserId, appIndex, info);
+        shortcutVisibleStorage_->GetShortcutVisibleStatus(requestUserId, Constants::MAIN_APP_INDEX, info);
     }
     return true;
 }
@@ -5611,19 +5603,39 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
     }
 
     GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
-
-    int32_t uid = IPCSkeleton::GetCallingUid();
-    int32_t appIndex = 0;
-    std::string name;
-    ret = GetBundleNameAndIndex(uid, name, appIndex);
-    if (ret != ERR_OK) {
-        APP_LOGD("get Index failed");
-        return ERR_OK;
-    }
-
     // get shortcut visible status
     for (auto &info : shortcutInfos) {
+        shortcutVisibleStorage_->GetShortcutVisibleStatus(requestUserId, Constants::MAIN_APP_INDEX, info);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,
+    std::vector<ShortcutInfo> &shortcutInfos) const
+{
+    if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+        APP_LOGE("name %{public}s invalid appIndex :%{public}d", bundleName.c_str(), appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    int32_t requestUserId = GetUserId();
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGW("input invalid userid, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), requestUserId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    InnerBundleInfo innerBundleInfo;
+    int32_t flag = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE);
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flag, innerBundleInfo, requestUserId, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGD("GetInnerBundleInfoWithFlagsV9 failed, bundleName:%{public}s, requestUserId:%{public}d",
+            bundleName.c_str(), requestUserId);
+        return ret;
+    }
+
+    GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
+    for (auto &info : shortcutInfos) {
         shortcutVisibleStorage_->GetShortcutVisibleStatus(requestUserId, appIndex, info);
+        info.appIndex = appIndex;
     }
     return ERR_OK;
 }

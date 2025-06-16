@@ -2752,6 +2752,33 @@ ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName,
         BundleMgrInterfaceCode::GET_SHORTCUT_INFO_V9, data, shortcutInfos);
 }
 
+ErrCode BundleMgrProxy::GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,
+    std::vector<ShortcutInfo> &shortcutInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetShortcutInfoByAppIndex due to params empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetShortcutInfoByAppIndex due to write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetShortcutInfoByAppIndex due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to GetShortcutInfoByAppIndex due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<ShortcutInfo>(
+        BundleMgrInterfaceCode::GET_SHORTCUT_INFO_BY_APPINDEX, data, shortcutInfos);
+}
+
 bool BundleMgrProxy::GetAllCommonEventInfo(const std::string &eventKey, std::vector<CommonEventInfo> &commonEventInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
