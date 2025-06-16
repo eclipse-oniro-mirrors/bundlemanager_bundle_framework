@@ -77,6 +77,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "backup", ExtensionAbilityType::BACKUP },
     { "distributed", ExtensionAbilityType::DISTRIBUTED },
     { "appService", ExtensionAbilityType::APP_SERVICE },
+    { "selection", ExtensionAbilityType::SELECTION },
     { "window", ExtensionAbilityType::WINDOW },
     { "enterpriseAdmin", ExtensionAbilityType::ENTERPRISE_ADMIN },
     { "fileAccess", ExtensionAbilityType::FILEACCESS_EXTENSION },
