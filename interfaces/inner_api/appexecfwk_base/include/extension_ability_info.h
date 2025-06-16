@@ -79,6 +79,7 @@ enum class ExtensionAbilityType {
     DISTRIBUTED = 28,
     APP_SERVICE = 29,
     LIVE_FORM = 30,
+    SELECTION = 31,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
