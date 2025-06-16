@@ -5475,6 +5475,13 @@ ErrCode BundleMgrHostImpl::SetAppDistributionTypes(std::set<AppDistributionTypeE
         APP_LOGE("bmsPara is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
+    if (value.empty()) {
+        if (!bmsPara->DeleteBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST)) {
+            APP_LOGE("DeleteBmsParam failed");
+            return ERR_BMS_PARAM_DELETE_PARAM_ERROR;
+        }
+        return ERR_OK;
+    }
     if (!bmsPara->SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, value)) {
         APP_LOGE("SaveBmsParam failed");
         return ERR_BMS_PARAM_SET_PARAM_ERROR;

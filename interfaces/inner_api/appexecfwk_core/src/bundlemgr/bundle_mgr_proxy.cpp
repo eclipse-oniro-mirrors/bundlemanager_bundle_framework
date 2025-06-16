@@ -5945,10 +5945,6 @@ ErrCode BundleMgrProxy::SetAppDistributionTypes(std::set<AppDistributionTypeEnum
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to set appDistributionTypes");
-    if (appDistributionTypeEnums.size() <= 0) {
-        LOG_E(BMS_TAG_QUERY, "fail to SetAppDistributionTypes due size not satisfied");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "fail to SetAppDistributionTypes due to write InterfaceToken fail");

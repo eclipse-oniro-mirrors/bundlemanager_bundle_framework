@@ -4694,7 +4694,7 @@ ErrCode BundleMgrHost::HandleSetAppDistributionTypes(MessageParcel &data, Messag
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t typesCount = data.ReadInt32();
-    if (typesCount <= 0 || typesCount > MAX_LIMIT_SIZE) {
+    if (typesCount < 0 || typesCount > MAX_LIMIT_SIZE) {
         APP_LOGE("typesCount is error");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
