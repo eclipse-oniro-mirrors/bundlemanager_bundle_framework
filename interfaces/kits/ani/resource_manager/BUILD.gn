@@ -16,11 +16,17 @@ import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
 ohos_shared_library("ani_bundle_res_manager") {
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
+
   include_dirs = [
     "${inner_api_path}/appexecfwk_core/include",
     "${kits_path}/ani/resource_manager",
@@ -49,6 +55,16 @@ ohos_shared_library("ani_bundle_res_manager") {
     "${kits_path}/js/common:bundle_napi_common",
   ]
 
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
   external_deps = [
     "ability_base:want",
     "c_utils:utils",
@@ -58,6 +74,7 @@ ohos_shared_library("ani_bundle_res_manager") {
     "ipc:ipc_core",
     "napi:ace_napi",
     "runtime_core:ani",
+    "runtime_core:ani_helpers",
     "samgr:samgr_proxy",
   ]
 

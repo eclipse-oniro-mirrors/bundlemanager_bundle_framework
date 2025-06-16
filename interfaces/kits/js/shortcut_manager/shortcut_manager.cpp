@@ -29,10 +29,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo";
-constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
-}
 static ErrCode InnerAddDesktopShortcutInfo(const OHOS::AppExecFwk::ShortcutInfo &shortcutInfo, int32_t userId)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();

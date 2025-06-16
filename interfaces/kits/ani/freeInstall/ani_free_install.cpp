@@ -32,29 +32,28 @@ namespace {
 constexpr const char* NS_NAME_FREEINSTALL = "@ohos.bundle.freeInstall.freeInstall";
 } // namespace
 
-static void SetHapModuleUpgradeFlagNative(
+static void AniSetHapModuleUpgradeFlag(
     ani_env* env, ani_string aniBundleName, ani_string aniModuleName, ani_enum_item aniUpgradeFlag)
 {
-    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
-    if (bundleName.empty()) {
-        APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
+    APP_LOGD("ani SetHapModuleUpgradeFlag called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return;
     }
 
-    std::string moduleName = CommonFunAni::AniStrToString(env, aniModuleName);
-    if (moduleName.empty()) {
-        APP_LOGE("moduleName is empty");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, Constants::MODULE_NAME, CommonFunAniNS::TYPE_STRING);
+    std::string moduleName;
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName)) {
+        APP_LOGE("parse moduleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return;
     }
 
     int32_t upgradeFlag = 0;
     if (!EnumUtils::EnumETSToNative(env, aniUpgradeFlag, upgradeFlag)) {
         APP_LOGE("parse upgradeFlag failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, UPGRADE_FLAG, CommonFunAniNS::TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, UPGRADE_FLAG, TYPE_NUMBER);
         return;
     }
 
@@ -76,21 +75,20 @@ static void SetHapModuleUpgradeFlagNative(
     }
 }
 
-static ani_boolean IsHapModuleRemovableNative(ani_env* env, ani_string aniBundleName, ani_string aniModuleName)
+static ani_boolean AniIsHapModuleRemovable(ani_env* env, ani_string aniBundleName, ani_string aniModuleName)
 {
-    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
-    if (bundleName.empty()) {
-        APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
+    APP_LOGD("ani IsHapModuleRemovable called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return false;
     }
 
-    std::string moduleName = CommonFunAni::AniStrToString(env, aniModuleName);
-    if (moduleName.empty()) {
-        APP_LOGE("moduleName is empty");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, Constants::MODULE_NAME, CommonFunAniNS::TYPE_STRING);
+    std::string moduleName;
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName)) {
+        APP_LOGE("parse moduleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return false;
     }
 
@@ -112,20 +110,20 @@ static ani_boolean IsHapModuleRemovableNative(ani_env* env, ani_string aniBundle
     return CommonFunAni::BoolToAniBoolean(isRemovable);
 }
 
-static ani_object GetBundlePackInfoNative(ani_env* env, ani_string aniBundleName, ani_enum_item aniBundlePackFlag)
+static ani_object AniGetBundlePackInfo(ani_env* env, ani_string aniBundleName, ani_enum_item aniBundlePackFlag)
 {
-    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
-    if (bundleName.empty()) {
-        APP_LOGE("BundleName is empty");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, CommonFunAniNS::TYPE_STRING);
+    APP_LOGD("ani GetBundlePackInfo called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
 
     BundlePackFlag bundlePackFlag = BundlePackFlag::GET_PACK_INFO_ALL;
     if (!EnumUtils::EnumETSToNative(env, aniBundlePackFlag, bundlePackFlag)) {
         APP_LOGE("parse upgradeFlag failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_PACK_FLAG, CommonFunAniNS::TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_PACK_FLAG, TYPE_NUMBER);
         return nullptr;
     }
 
@@ -140,14 +138,15 @@ static ani_object GetBundlePackInfoNative(ani_env* env, ani_string aniBundleName
     if (result != ERR_OK) {
         APP_LOGE("GetBundlePackInfo failed, bundleName is %{public}s", bundleName.c_str());
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(result),
-            RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            RESOURCE_NAME_OF_GET_BUNDLE_PACK_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
     return CommonFunAni::ConvertBundlePackInfo(env, bundlePackInfo);
 }
 
-static ani_object GetDispatchInfoNative(ani_env* env)
+static ani_object AniGetDispatchInfo(ani_env* env)
 {
+    APP_LOGD("ani GetDispatchInfo called");
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
@@ -174,25 +173,24 @@ static ani_object GetDispatchInfoNative(ani_env* env)
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
-    APP_LOGI("ANI_Constructor called");
+    APP_LOGI("ANI_Constructor freeInstall called");
     ani_env* env;
     ani_status status = vm->GetEnv(ANI_VERSION_1, &env);
     RETURN_ANI_STATUS_IF_NOT_OK(status, "Unsupported ANI_VERSION_1");
 
-    arkts::ani_signature::Namespace freeInstallNS = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_FREEINSTALL);
+    arkts::ani_signature::Namespace nsName = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_FREEINSTALL);
     ani_namespace kitNs = nullptr;
-    status = env->FindNamespace(freeInstallNS.Descriptor().c_str(), &kitNs);
+    status = env->FindNamespace(nsName.Descriptor().c_str(), &kitNs);
     if (status != ANI_OK) {
         APP_LOGE("FindNamespace: %{public}s fail with %{public}d", NS_NAME_FREEINSTALL, status);
         return status;
     }
     std::array methods = {
-        ani_native_function {
-            "SetHapModuleUpgradeFlagNative", nullptr, reinterpret_cast<void*>(SetHapModuleUpgradeFlagNative) },
-        ani_native_function {
-            "IsHapModuleRemovableNative", nullptr, reinterpret_cast<void*>(IsHapModuleRemovableNative) },
-        ani_native_function { "GetBundlePackInfoNative", nullptr, reinterpret_cast<void*>(GetBundlePackInfoNative) },
-        ani_native_function { "GetDispatchInfoNative", nullptr, reinterpret_cast<void*>(GetDispatchInfoNative) },
+        ani_native_function { "setHapModuleUpgradeFlagNative", nullptr,
+            reinterpret_cast<void*>(AniSetHapModuleUpgradeFlag) },
+        ani_native_function { "isHapModuleRemovableNative", nullptr, reinterpret_cast<void*>(AniIsHapModuleRemovable) },
+        ani_native_function { "getBundlePackInfoNative", nullptr, reinterpret_cast<void*>(AniGetBundlePackInfo) },
+        ani_native_function { "getDispatchInfoNative", nullptr, reinterpret_cast<void*>(AniGetDispatchInfo) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

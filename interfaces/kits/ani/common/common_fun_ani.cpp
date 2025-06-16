@@ -247,7 +247,8 @@ constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
 
 std::string CommonFunAni::AniStrToString(ani_env* env, ani_string aniStr)
 {
-    if (env == nullptr) {
+    if (env == nullptr || aniStr == nullptr) {
+        APP_LOGE("env or aniStr is null");
         return "";
     }
 
@@ -260,15 +261,39 @@ std::string CommonFunAni::AniStrToString(ani_env* env, ani_string aniStr)
 
     std::string buffer;
     buffer.resize(strSize + 1);
-    ani_size retSize;
+    ani_size retSize = 0;
     status = env->String_GetUTF8(aniStr, buffer.data(), buffer.size(), &retSize);
-    if (status != ANI_OK || retSize < 0) {
+    if (status != ANI_OK || retSize == 0) {
         APP_LOGE("String_GetUTF8SubString failed %{public}d", status);
         return "";
     }
 
     buffer.resize(retSize);
     return buffer;
+}
+
+bool CommonFunAni::ParseString(ani_env* env, ani_string aniStr, std::string& result)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(aniStr);
+
+    ani_size strSize = 0;
+    ani_status status = env->String_GetUTF8Size(aniStr, &strSize);
+    if (status != ANI_OK) {
+        APP_LOGE("String_GetUTF8Size failed %{public}d", status);
+        return false;
+    }
+
+    result.resize(strSize + 1);
+    ani_size retSize = 0;
+    status = env->String_GetUTF8(aniStr, result.data(), result.size(), &retSize);
+    if (status != ANI_OK) {
+        APP_LOGE("String_GetUTF8SubString failed %{public}d", status);
+        return false;
+    }
+
+    result.resize(retSize);
+    return true;
 }
 
 ani_class CommonFunAni::CreateClassByName(ani_env* env, const std::string& className)

@@ -33,42 +33,51 @@ constexpr const char* NS_NAME_DEFAULTAPPMANAGER = "@ohos.bundle.defaultAppManage
 
 static bool ParseType(ani_env *env, ani_string aniType, std::string& result)
 {
-    result = CommonFunAni::AniStrToString(env, aniType);
+    if (!CommonFunAni::ParseString(env, aniType, result)) {
+        APP_LOGE("parse type failed");
+        return false;
+    }
     if (TYPE_MAPPING.find(result) != TYPE_MAPPING.end()) {
         result = TYPE_MAPPING.at(result);
     }
     return true;
 }
 
-static ani_boolean IsDefaultApplicationSync(ani_env *env, ani_string aniType)
+static ani_boolean AniIsDefaultApplication(ani_env *env, ani_string aniType, ani_boolean aniIsSync)
 {
+    APP_LOGD("ani IsDefaultApplication called");
     std::string type;
     if (!ParseType(env, aniType, type)) {
         APP_LOGE("type invalid");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TYPE_CHECK, TYPE_STRING);
-        return CommonFunAni::BoolToAniBoolean(false);
+        return false;
     }
+    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
 
     auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         APP_LOGE("defaultAppProxy is null");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, IS_DEFAULT_APPLICATION, "");
-        return CommonFunAni::BoolToAniBoolean(false);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            isSync ? IS_DEFAULT_APPLICATION_SYNC : IS_DEFAULT_APPLICATION, "");
+        return false;
     }
 
     bool isDefaultApp = false;
     ErrCode ret = defaultAppProxy->IsDefaultApplication(type, isDefaultApp);
     if (ret != ERR_OK) {
         APP_LOGE("IsDefaultApplication failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), IS_DEFAULT_APPLICATION, "");
-        return CommonFunAni::BoolToAniBoolean(false);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            isSync ? IS_DEFAULT_APPLICATION_SYNC : IS_DEFAULT_APPLICATION, "");
+        return false;
     }
 
     return CommonFunAni::BoolToAniBoolean(isDefaultApp);
 }
 
-static ani_object GetDefaultApplicationSync(ani_env *env, ani_string aniType, ani_double aniUserId)
+static ani_object AniGetDefaultApplication(ani_env *env,
+    ani_string aniType, ani_double aniUserId, ani_boolean aniIsSync)
 {
+    APP_LOGD("ani GetDefaultApplication called");
     std::string type;
     if (!ParseType(env, aniType, type)) {
         APP_LOGE("type invalid");
@@ -77,18 +86,18 @@ static ani_object GetDefaultApplicationSync(ani_env *env, ani_string aniType, an
     }
     int32_t userId = EMPTY_USER_ID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
-        APP_LOGE("Cast userId failed");
-        return nullptr;
+        APP_LOGW("Parse userId failed, set this parameter to the caller userId");
     }
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
-        userId = callingUid / Constants::BASE_USER_RANGE;
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
+    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         APP_LOGE("defaultAppProxy is null");
         BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
-            GET_DEFAULT_APPLICATION, Constants::PERMISSION_GET_DEFAULT_APPLICATION);
+            isSync ? GET_DEFAULT_APPLICATION_SYNC : GET_DEFAULT_APPLICATION,
+            isSync ? "" : Constants::PERMISSION_GET_DEFAULT_APPLICATION);
         return nullptr;
     }
 
@@ -97,15 +106,18 @@ static ani_object GetDefaultApplicationSync(ani_env *env, ani_string aniType, an
     if (ret != ERR_OK) {
         APP_LOGE("GetDefaultApplication failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            GET_DEFAULT_APPLICATION, Constants::PERMISSION_GET_DEFAULT_APPLICATION);
+            isSync ? GET_DEFAULT_APPLICATION_SYNC : GET_DEFAULT_APPLICATION,
+            Constants::PERMISSION_GET_DEFAULT_APPLICATION);
         return nullptr;
     }
 
     return CommonFunAni::ConvertDefaultAppBundleInfo(env, bundleInfo);
 }
 
-static void SetDefaultApplicationSync(ani_env *env, ani_string aniType, ani_object aniElementName, ani_double aniUserId)
+static void AniSetDefaultApplication(ani_env *env,
+    ani_string aniType, ani_object aniElementName, ani_double aniUserId, ani_boolean aniIsSync)
 {
+    APP_LOGD("ani SetDefaultApplication called");
     std::string type;
     if (!ParseType(env, aniType, type)) {
         APP_LOGE("type invalid");
@@ -122,18 +134,18 @@ static void SetDefaultApplicationSync(ani_env *env, ani_string aniType, ani_obje
     want.SetElement(elementName);
     int32_t userId = EMPTY_USER_ID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
-        APP_LOGE("Cast userId failed");
-        return;
+        APP_LOGW("Parse userId failed, set this parameter to the caller userId");
     }
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
-        userId = callingUid / Constants::BASE_USER_RANGE;
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
+    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         APP_LOGE("defaultAppProxy is null");
         BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
-            SET_DEFAULT_APPLICATION, Constants::PERMISSION_SET_DEFAULT_APPLICATION);
+            isSync ? SET_DEFAULT_APPLICATION_SYNC : SET_DEFAULT_APPLICATION,
+            isSync ? "" : Constants::PERMISSION_SET_DEFAULT_APPLICATION);
         return;
     }
 
@@ -141,12 +153,14 @@ static void SetDefaultApplicationSync(ani_env *env, ani_string aniType, ani_obje
     if (ret != ERR_OK) {
         APP_LOGE("SetDefaultApplication failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            SET_DEFAULT_APPLICATION, Constants::PERMISSION_SET_DEFAULT_APPLICATION);
+            isSync ? SET_DEFAULT_APPLICATION_SYNC : SET_DEFAULT_APPLICATION,
+            Constants::PERMISSION_SET_DEFAULT_APPLICATION);
     }
 }
 
-static void ResetDefaultApplicationSync(ani_env *env, ani_string aniType, ani_double aniUserId)
+static void AniResetDefaultApplication(ani_env *env, ani_string aniType, ani_double aniUserId, ani_boolean aniIsSync)
 {
+    APP_LOGD("ani ResetDefaultApplication called");
     std::string type;
     if (!ParseType(env, aniType, type)) {
         APP_LOGE("type invalid");
@@ -155,18 +169,18 @@ static void ResetDefaultApplicationSync(ani_env *env, ani_string aniType, ani_do
     }
     int32_t userId = EMPTY_USER_ID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
-        APP_LOGE("Cast userId failed");
-        return;
+        APP_LOGW("Parse userId failed, set this parameter to the caller userId");
     }
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
-        userId = callingUid / Constants::BASE_USER_RANGE;
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
+    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         APP_LOGE("defaultAppProxy is null");
         BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
-            RESET_DEFAULT_APPLICATION, Constants::PERMISSION_SET_DEFAULT_APPLICATION);
+            isSync ? RESET_DEFAULT_APPLICATION_SYNC : RESET_DEFAULT_APPLICATION,
+            isSync ? "" : Constants::PERMISSION_SET_DEFAULT_APPLICATION);
         return;
     }
 
@@ -174,7 +188,8 @@ static void ResetDefaultApplicationSync(ani_env *env, ani_string aniType, ani_do
     if (ret != ERR_OK) {
         APP_LOGE("ResetDefaultApplication failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            RESET_DEFAULT_APPLICATION, Constants::PERMISSION_SET_DEFAULT_APPLICATION);
+            isSync ? RESET_DEFAULT_APPLICATION_SYNC : RESET_DEFAULT_APPLICATION,
+            Constants::PERMISSION_SET_DEFAULT_APPLICATION);
     }
 }
 
@@ -195,13 +210,13 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     }
 
     std::array methods = {
-        ani_native_function { "isDefaultApplicationSync", nullptr, reinterpret_cast<void*>(IsDefaultApplicationSync) },
-        ani_native_function { "getDefaultApplicationSyncNative", nullptr,
-            reinterpret_cast<void*>(GetDefaultApplicationSync) },
-        ani_native_function { "setDefaultApplicationSyncNative", nullptr,
-            reinterpret_cast<void*>(SetDefaultApplicationSync) },
-        ani_native_function { "resetDefaultApplicationSyncNative", nullptr,
-            reinterpret_cast<void*>(ResetDefaultApplicationSync) }
+        ani_native_function { "isDefaultApplicationNative", nullptr, reinterpret_cast<void*>(AniIsDefaultApplication) },
+        ani_native_function { "getDefaultApplicationNative", nullptr,
+            reinterpret_cast<void*>(AniGetDefaultApplication) },
+        ani_native_function { "setDefaultApplicationNative", nullptr,
+            reinterpret_cast<void*>(AniSetDefaultApplication) },
+        ani_native_function { "resetDefaultApplicationNative", nullptr,
+            reinterpret_cast<void*>(AniResetDefaultApplication) }
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

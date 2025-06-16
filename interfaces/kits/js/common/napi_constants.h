@@ -48,6 +48,9 @@ constexpr size_t CALLBACK_PARAM_SIZE = 2;
 
 constexpr int32_t GET_REMOTE_ABILITY_INFO_MAX_SIZE = 10;
 
+constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
+constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
+
 constexpr const char* TYPE_NUMBER = "number";
 constexpr const char* TYPE_STRING = "string";
 constexpr const char* TYPE_OBJECT = "object";
@@ -163,6 +166,45 @@ constexpr const char* USER_ID = "userId";
 constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
 constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
 constexpr const char* START_SHORTCUT = "StartShortcut";
+constexpr const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
+constexpr const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC = "GetBundleInstallerSync";
+constexpr const char* RESOURCE_NAME_OF_INSTALL = "Install";
+constexpr const char* RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
+constexpr const char* RESOURCE_NAME_OF_RECOVER = "Recover";
+constexpr const char* RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
+constexpr const char* RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER = "UninstallAndRecover";
+constexpr const char* INSTALL_PERMISSION =
+    "ohos.permission.INSTALL_BUNDLE or "
+    "ohos.permission.INSTALL_ENTERPRISE_BUNDLE or "
+    "ohos.permission.INSTALL_ENTERPRISE_MDM_BUNDLE or "
+    "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE or "
+    "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE";
+constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.UNINSTALL_BUNDLE";
+constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
+constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
+constexpr const char* PARAMETERS = "parameters";
+constexpr const char* CORRESPONDING_TYPE = "corresponding type";
+constexpr const char* FILE_PATH = "filePath";
+constexpr const char* ADD_EXT_RESOURCE = "AddExtResource";
+constexpr const char* REMOVE_EXT_RESOURCE = "RemoveExtResource";
+constexpr const char* HAPS_FILE_NEEDED =
+    "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
+constexpr const char* CREATE_APP_CLONE = "CreateAppClone";
+constexpr const char* DESTROY_APP_CLONE = "destroyAppClone";
+constexpr const char* INSTALL_PREEXISTING_APP = "installPreexistingApp";
+constexpr const char* INSTALL_PLUGIN = "InstallPlugin";
+constexpr const char* UNINSTALL_PLUGIN = "UninstallPlugin";
+constexpr const char* PLUGIN_BUNDLE_NAME = "pluginBundleName";
+constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo";
+constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
+constexpr const char* DELETE_DESKTOP_SHORTCUT_INFO = "DeleteDesktopShortcutInfo";
+constexpr const char* QUERY_ABILITY_INFOS = "QueryAbilityInfos";
+constexpr const char* GET_ABILITY_LABEL_SYNC = "GetAbilityLabelSync";
+constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
+constexpr const char* GET_BUNDLE_NAME_BY_UID_SYNC = "GetBundleNameByUidSync";
+constexpr const char* QUERY_EXTENSION_INFOS = "QueryExtensionInfos";
+constexpr const char* SET_ABILITY_ENABLED = "SetAbilityEnabled";
+constexpr const char* SET_APPLICATION_ENABLED = "SetApplicationEnabled";
 }
 }
 }

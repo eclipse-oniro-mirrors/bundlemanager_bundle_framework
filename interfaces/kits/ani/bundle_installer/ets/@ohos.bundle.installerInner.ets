@@ -81,7 +81,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   native installNative(hapFilePaths: Array<string>, installParam: installer.InstallParam): void;
   native uninstallNative(bundleName: string, installParam: installer.InstallParam): void;
   native recoverNative(bundleName: string, installParam: installer.InstallParam): void;
-  native uninstallByOwnParam(uninstallParam: installer.UninstallParam): void;
+  native uninstallByOwnParamNative(uninstallParam: installer.UninstallParam): void;
   native updateBundleForSelfNative(hapFilePaths: Array<string>, installParam: installer.InstallParam): void;
   native uninstallUpdatesNative(bundleName: string, installParam: installer.InstallParam): void;
   native addExtResourceNative(bundleName: string, filePaths: Array<string>): void;
@@ -225,7 +225,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
 
   uninstall(uninstallParam: installer.UninstallParam): Promise<void> {
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
-      let execFun = ():NullishType=>{ this.uninstallByOwnParam(uninstallParam); }
+      let execFun = ():NullishType=>{ this.uninstallByOwnParamNative(uninstallParam); }
       let p1 = taskpool.execute(execFun);
       p1.then(():void =>  {
           resolve(undefined);
@@ -238,7 +238,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
 
   uninstall(uninstallParam: installer.UninstallParam, callback: AsyncCallback<void>): void {
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
-          let execFun = ():NullishType=>{ this.uninstallByOwnParam(uninstallParam); }
+          let execFun = ():NullishType=>{ this.uninstallByOwnParamNative(uninstallParam); }
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
               let r = new BusinessError();

@@ -39,85 +39,89 @@ export default namespace defaultAppManager {
     EMAIL = 'Email'
   }
 
-  export native function isDefaultApplicationSync(type: string): boolean;
-  export native function getDefaultApplicationSyncNative(type: string, userId: number): BundleInfo;
-  export native function setDefaultApplicationSyncNative(type: string, elementName: ElementName, userId: number): void;
-  export native function resetDefaultApplicationSyncNative(type: string, userId: number): void;
+  export native function isDefaultApplicationNative(type: string, isSync: boolean): boolean;
+  export native function getDefaultApplicationNative(type: string, userId: number, isSync: boolean): BundleInfo;
+  export native function setDefaultApplicationNative(type: string, elementName: ElementName, userId: number, isSync: boolean): void;
+  export native function resetDefaultApplicationNative(type: string, userId: number, isSync: boolean): void;
 
   function isDefaultApplication(type: string, callback: AsyncCallback<boolean>): void {
     let cb = (): boolean => {
-      return defaultAppManager.isDefaultApplicationSync(type);
+      return defaultAppManager.isDefaultApplicationNative(type, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let result: boolean = e as boolean;
       let br = new BusinessError();
       callback(br, result);
-    }, (err: BusinessError): void => {
-      callback(err, false);
+    }, (err: Error): void => {
+      callback(err as BusinessError, false);
     });
 
   }
 
   function isDefaultApplication(type: string): Promise<boolean> {
-    let p = new Promise<boolean>((resolve: (isDefaultApp: boolean) => void, reject: (error: BusinessError) => void) => {
+    let p = new Promise<boolean>((resolve: (isDefaultApp: boolean) => void, reject: (error: Error) => void) => {
       let cb = (): boolean => {
-        return defaultAppManager.isDefaultApplicationSync(type);
+        return defaultAppManager.isDefaultApplicationNative(type, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
         let result: boolean = e as boolean;
         resolve(result);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
     return p;
   }
 
+  function isDefaultApplicationSync(type: string): boolean {
+    return defaultAppManager.isDefaultApplicationNative(type, true);
+  }
+
   function getDefaultApplication(type: string, userId: number, callback: AsyncCallback<BundleInfo>): void {
     let cb = (): BundleInfo => {
-      return defaultAppManager.getDefaultApplicationSyncNative(type, userId);
+      return defaultAppManager.getDefaultApplicationNative(type, userId, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let result: BundleInfo = e as BundleInfo;
       let br: BusinessError = new BusinessError();
       callback(br, result);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let result: BundleInfo = new BundleInfoInner;
-      callback(err, result);
+      callback(err as BusinessError, result);
     });
   }
 
   function getDefaultApplication(type: string, callback: AsyncCallback<BundleInfo>): void {
     let cb = (): BundleInfo => {
-      return defaultAppManager.getDefaultApplicationSyncNative(type, -500);
+      return defaultAppManager.getDefaultApplicationNative(type, -500, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let result: BundleInfo = e as BundleInfo;
       let br: BusinessError = new BusinessError();
       callback(br, result);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let result: BundleInfo = new BundleInfoInner;
-      callback(err, result);
+      callback(err as BusinessError, result);
     });
   }
 
   function getDefaultApplication(type: string, userId?: number): Promise<BundleInfo> {
     let userIdInfo: number = userId ?? -500;
-    let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: BusinessError) => void) => {
+    let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Error) => void) => {
       let cb = (): BundleInfo => {
-        return defaultAppManager.getDefaultApplicationSyncNative(type, userIdInfo);
+        return defaultAppManager.getDefaultApplicationNative(type, userIdInfo, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
         let result: BundleInfo = e as BundleInfo;
         resolve(result);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
@@ -125,46 +129,46 @@ export default namespace defaultAppManager {
 
   function getDefaultApplicationSync(type: string, userId?: number): BundleInfo {
     let userIdInfo: number = userId ?? -500;
-    return defaultAppManager.getDefaultApplicationSyncNative(type, userIdInfo);
+    return defaultAppManager.getDefaultApplicationNative(type, userIdInfo, true);
   }
 
   function setDefaultApplication(type: string, elementName: ElementName, userId: number, callback: AsyncCallback<void>): void {
     let cb = (): void => {
-      return defaultAppManager.setDefaultApplicationSyncNative(type, elementName, userId);
+      return defaultAppManager.setDefaultApplicationNative(type, elementName, userId, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
       let br: BusinessError = new BusinessError();
       callback(br, undefined);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
   function setDefaultApplication(type: string, elementName: ElementName, callback: AsyncCallback<void>): void {
     let cb = (): void => {
-      return defaultAppManager.setDefaultApplicationSyncNative(type, elementName, -500);
+      return defaultAppManager.setDefaultApplicationNative(type, elementName, -500, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
       let br: BusinessError = new BusinessError();
       callback(br, undefined);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
   function setDefaultApplication(type: string, elementName: ElementName, userId?: number): Promise<void> {
     let userIdInfo: number = userId ?? -500;
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
       let cb = (): void => {
-        return defaultAppManager.setDefaultApplicationSyncNative(type, elementName, userIdInfo);
+        return defaultAppManager.setDefaultApplicationNative(type, elementName, userIdInfo, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -173,46 +177,46 @@ export default namespace defaultAppManager {
 
   function setDefaultApplicationSync(type: string, elementName: ElementName, userId?: number): void {
     let userIdInfo: number = userId ?? -500;
-    return defaultAppManager.setDefaultApplicationSyncNative(type, elementName, userIdInfo);
+    return defaultAppManager.setDefaultApplicationNative(type, elementName, userIdInfo, true);
   }
 
   function resetDefaultApplication(type: string, userId: number, callback: AsyncCallback<void>): void {
     let cb = (): void => {
-      return defaultAppManager.resetDefaultApplicationSyncNative(type, userId);
+      return defaultAppManager.resetDefaultApplicationNative(type, userId, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
       let br: BusinessError = new BusinessError();
       callback(br, undefined);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
   function resetDefaultApplication(type: string, callback: AsyncCallback<void>): void {
     let cb = (): void => {
-      return defaultAppManager.resetDefaultApplicationSyncNative(type, -500);
+      return defaultAppManager.resetDefaultApplicationNative(type, -500, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
       let br: BusinessError = new BusinessError();
       callback(br, undefined);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
   function resetDefaultApplication(type: string, userId?: number): Promise<void> {
     let userIdInfo: number = userId ?? -500;
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
       let cb = (): void => {
-        return defaultAppManager.resetDefaultApplicationSyncNative(type, userIdInfo);
+        return defaultAppManager.resetDefaultApplicationNative(type, userIdInfo, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -221,6 +225,6 @@ export default namespace defaultAppManager {
 
   function resetDefaultApplicationSync(type: string, userId?: number): void {
     let userIdInfo: number = userId ?? -500;
-    return defaultAppManager.resetDefaultApplicationSyncNative(type, userIdInfo);
+    return defaultAppManager.resetDefaultApplicationNative(type, userIdInfo, true);
   }
 }
