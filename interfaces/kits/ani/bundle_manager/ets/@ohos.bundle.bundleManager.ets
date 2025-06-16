@@ -18,9 +18,11 @@ import { AsyncCallback, BusinessError } from '@ohos.base';
 import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { AbilityInfo } from 'bundleManager.AbilityInfo';
 import { ExtensionAbilityInfo } from 'bundleManager.ExtensionAbilityInfo';
+import { PermissionDef } from 'bundleManager.PermissionDef';
 import Want from '@ohos.app.ability.Want';
 import { BundleInfoInner } from './bundleManager/BundleInfoInner';
 import { ApplicationInfoInner } from './bundleManager/ApplicationInfoInner';
+import { PermissionDefInner } from './bundleManager/PermissionDefInner';
 
 namespace bundleManager {
 
@@ -236,6 +238,21 @@ namespace bundleManager {
     return bundleManager.getBundleNameByUidNative(uid, true);
   }
 
+  export native function getBundleArchiveInfoNative(hapFilePath: string, bundleFlags: number, isSync: boolean): BundleInfo;
+
+  export native function getLaunchWant(): Want;
+
+  export native function getProfileByAbilityNative(moduleName: string,
+    abilityName: string, metadataName: string, isExtensionProfile: boolean, isSync: boolean): Array<string>;
+  
+  export native function getPermissionDefNative(permissionName: string, isSync: boolean): PermissionDef;
+
+  export native function cleanBundleCacheFilesNative(bundleName: string, appIndex: number): void;
+
+  export native function getAllBundleCacheSizeNative(): number;
+
+  export native function cleanAllBundleCacheNative(): void;
+
   function isApplicationEnabledSync(bundleName: string): boolean {
     return bundleManager.isApplicationEnabledNative(bundleName, 0, true);
   }
@@ -280,6 +297,25 @@ namespace bundleManager {
     userId?: number): Array<ExtensionAbilityInfo> {
     let userIdInfo: number = userId ?? -500;
     return bundleManager.queryExAbilityInfoSyncWithoutWantNative(extensionAbilityType, extensionAbilityFlags, userIdInfo);
+  }
+
+  function getBundleArchiveInfoSync(hapFilePath: string, bundleFlags: number): BundleInfo {
+    return bundleManager.getBundleArchiveInfoNative(hapFilePath, bundleFlags, true);
+  }
+
+  function getProfileByAbilitySync(moduleName: string, abilityName: string, metadataName?: string): Array<string> {
+    let metadataNameInfo: string = metadataName ?? "";
+    return bundleManager.getProfileByAbilityNative(moduleName, abilityName, metadataNameInfo, false, true);
+  }
+
+  function getProfileByExtensionAbilitySync(moduleName: string,
+    extensionAbilityName: string, metadataName?: string): Array<string> {
+    let metadataNameInfo: string = metadataName ?? "";
+    return bundleManager.getProfileByAbilityNative(moduleName, extensionAbilityName, metadataNameInfo, true, true);
+  }
+
+  function getPermissionDefSync(permissionName: string): PermissionDef {
+    return bundleManager.getPermissionDefNative(permissionName, true);
   }
 
   function getBundleInfoForSelf(bundleFlags: number, callback: AsyncCallback<BundleInfo, void>):void {
@@ -1011,6 +1047,221 @@ namespace bundleManager {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return bundleManager.enableDynamicIconNative(bundleName, moduleName);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getBundleArchiveInfo(hapFilePath: string, bundleFlags: number, callback: AsyncCallback<BundleInfo>): void {
+    let execFun = (): BundleInfo => {
+      return bundleManager.getBundleArchiveInfoNative(hapFilePath, bundleFlags, false);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let resultBundleInfo: BundleInfo = e as BundleInfo;
+      let r = new BusinessError();
+      callback(r, resultBundleInfo);
+    }, (err: Error): void => {
+      let resultBundleInfo = new BundleInfoInner();
+      callback(err as BusinessError, resultBundleInfo);
+    });
+  }
+
+  function getBundleArchiveInfo(hapFilePath: string, bundleFlags: number): Promise<BundleInfo> {
+    let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void,
+      reject: (error: Error) => void) => {
+      let execFun = (): BundleInfo => {
+        return bundleManager.getBundleArchiveInfoNative(hapFilePath, bundleFlags, false);
+      };
+      let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let resultBundleInfo: BundleInfo = e as BundleInfo;
+          resolve(resultBundleInfo);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+    }
+    );
+    return p;
+  }
+
+  function getProfileByAbility(moduleName: string, abilityName: string, metadataName?: string): Promise<Array<string>> {
+    let p = new Promise<Array<string>>((resolve: (profile: Array<string>)
+      => void, reject: (error: Error) => void) => {
+      let metadataNameInfo: string = metadataName ?? "";
+      let execFun = (): Array<string> => {
+        return bundleManager.getProfileByAbilityNative(moduleName, abilityName, metadataNameInfo, false, false);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let profile: Array<string> = e as Array<string>;
+        resolve(profile);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getProfileByAbility(moduleName: string,
+    abilityName: string, metadataName: string, callback: AsyncCallback<Array<string>>) {
+    let execFun = (): Array<string> => {
+      return bundleManager.getProfileByAbilityNative(moduleName, abilityName, metadataName, false, false);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let profile: Array<string> = e as Array<string>;
+      let r = new BusinessError();
+      callback(r, profile);
+    }, (err: Error): void => {
+      let profile = new Array<string>;
+      callback(err as BusinessError, profile);
+    });
+  }
+
+  function getProfileByExtensionAbility(moduleName: string,
+    extensionAbilityName: string, metadataName?: string): Promise<Array<string>> {
+    let p = new Promise<Array<string>>((resolve: (profile: Array<string>)
+      => void, reject: (error: Error) => void) => {
+      let metadataNameInfo: string = metadataName ?? "";
+      let execFun = (): Array<string> => {
+        return bundleManager.getProfileByAbilityNative(moduleName, extensionAbilityName, metadataNameInfo, true, false);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let profile: Array<string> = e as Array<string>;
+        resolve(profile);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getProfileByExtensionAbility(moduleName: string,
+    extensionAbilityName: string, metadataName: string, callback: AsyncCallback<Array<string>>): void {
+    let execFun = (): Array<string> => {
+      return bundleManager.getProfileByAbilityNative(moduleName, extensionAbilityName, metadataName, true, false);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let profile: Array<string> = e as Array<string>;
+      let r = new BusinessError();
+      callback(r, profile);
+    }, (err: Error): void => {
+      let profile = new Array<string>;
+      callback(err as BusinessError, profile);
+    });
+  }
+
+  function getPermissionDef(permissionName: string): Promise<PermissionDef> {
+    let p = new Promise<PermissionDef>((resolve: (profile: PermissionDef)
+      => void, reject: (error: Error) => void) => {
+      let execFun = (): PermissionDef => {
+        return bundleManager.getPermissionDefNative(permissionName, false);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let permissionDef: PermissionDef = e as PermissionDef;
+        resolve(permissionDef);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getPermissionDef(permissionName: string, callback: AsyncCallback<PermissionDef>): void {
+    let execFun = (): PermissionDef => {
+      return bundleManager.getPermissionDefNative(permissionName, false);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let permissionDef: PermissionDef = e as PermissionDef;
+      let r = new BusinessError();
+      callback(r, permissionDef);
+    }, (err: Error): void => {
+      let permissionDef = new PermissionDefInner();
+      callback(err as BusinessError, permissionDef);
+    });
+  }
+
+  function cleanBundleCacheFiles(bundleName: string, callback: AsyncCallback<void>): void {
+    let execFun = (): void => {
+      return bundleManager.cleanBundleCacheFilesNative(bundleName, 0);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then(() => {
+      let r = new BusinessError();
+      callback(r, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
+    });
+  }
+
+  function cleanBundleCacheFiles(bundleName: string): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Error) => void) : void => {
+      let execFun = (): void => {
+        return bundleManager.cleanBundleCacheFilesNative(bundleName, 0);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function cleanBundleCacheFiles(bundleName: string, appIndex: number): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Error) => void) : void => {
+      let execFun = (): void => {
+        return bundleManager.cleanBundleCacheFilesNative(bundleName, appIndex);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAllBundleCacheSize(): Promise<number> {
+    let p = new Promise<number>((resolve: (size: number) => void, reject: (error: Error) => void) => {
+      let execFun = (): number => {
+        return bundleManager.getAllBundleCacheSizeNative();
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let size: number = e as number;
+        resolve(size);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function cleanAllBundleCache(): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Error) => void) : void => {
+      let execFun = (): void => {
+        return bundleManager.cleanAllBundleCacheNative();
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {

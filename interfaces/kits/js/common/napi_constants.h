@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -65,6 +65,8 @@ constexpr const char* ABILITY_INFO = "abilityInfo";
 constexpr const char* LINK_FEATURE = "linkFeature";
 constexpr const char* EXTENSION_TYPE_NAME = "extensionTypeName";
 constexpr const char* EXTENSION_ABILITY_TYPE = "extensionAbilityType";
+constexpr const char* HAP_FILE_PATH = "hapFilePath";
+constexpr const char* PERMISSION_NAME = "permissionName";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 constexpr const char*  PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
     "BusinessError 401: Parameter error.Parameter extensionAbilityType is empty.";
@@ -74,6 +76,7 @@ constexpr const char* INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action, entities, uri, type, or linkFeature) non-empty.";
 constexpr const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
 constexpr const char* APP_CLONE_IDENTITY_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+constexpr const char* ERR_MSG_LAUNCH_WANT_INVALID = "The launch want is not found.";
 constexpr const char* IS_APPLICATION_ENABLED_SYNC = "IsApplicationEnabledSync";
 constexpr const char* GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
 constexpr const char* GET_BUNDLE_INFO_SYNC = "GetBundleInfoSync";
@@ -205,6 +208,15 @@ constexpr const char* GET_BUNDLE_NAME_BY_UID_SYNC = "GetBundleNameByUidSync";
 constexpr const char* QUERY_EXTENSION_INFOS = "QueryExtensionInfos";
 constexpr const char* SET_ABILITY_ENABLED = "SetAbilityEnabled";
 constexpr const char* SET_APPLICATION_ENABLED = "SetApplicationEnabled";
+constexpr const char* GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
+constexpr const char* GET_PERMISSION_DEF = "GetPermissionDef";
+constexpr const char* CLEAN_BUNDLE_CACHE_FILES = "cleanBundleCacheFiles";
+constexpr const char* GET_ALL_BUNDLE_CACHE_SIZE = "getAllBundleCacheSize";
+constexpr const char* CLEAN_ALL_BUNDLE_CACHE = "cleanAllBundleCache";
+constexpr const char* GET_BUNDLE_ARCHIVE_INFO_SYNC = "GetBundleArchiveInfoSync";
+constexpr const char* GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExtensionAbilitySync";
+constexpr const char* GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
+constexpr const char* GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
 }
 }
 }

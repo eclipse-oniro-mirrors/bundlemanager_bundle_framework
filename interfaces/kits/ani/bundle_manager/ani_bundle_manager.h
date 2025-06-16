@@ -49,7 +49,7 @@ struct ANIQuery {
     bool operator==(const ANIQuery& query) const
     {
         return bundleName_ == query.bundleName_ && interfaceType_ == query.interfaceType_ && flags_ == query.flags_ &&
-               userId_ == query.userId_;
+            userId_ == query.userId_;
     }
 };
 
@@ -57,7 +57,7 @@ struct ANIQueryHash {
     size_t operator()(const ANIQuery& query) const
     {
         return std::hash<std::string>()(query.bundleName_) ^ std::hash<std::string>()(query.interfaceType_) ^
-               std::hash<int32_t>()(query.flags_) ^ std::hash<int32_t>()(query.userId_);
+            std::hash<int32_t>()(query.flags_) ^ std::hash<int32_t>()(query.userId_);
     }
 };
 

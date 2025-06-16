@@ -32,6 +32,7 @@ group("ani_bms_packages") {
     "bundle_manager:extension_ability_info_etc",
     "bundle_manager:hap_module_info_etc",
     "bundle_manager:metadata_etc",
+    "bundle_manager:permission_def_etc",
     "bundle_manager:skill_etc",
     "bundle_monitor:ani_bundle_monitor",
     "bundle_monitor:bundle_monitor_etc",

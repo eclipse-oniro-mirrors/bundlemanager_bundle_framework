@@ -19,6 +19,7 @@
 #include "bundle_errors.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "clean_cache_callback.h"
 #include "common_func.h"
 
 namespace OHOS {
@@ -32,6 +33,16 @@ public:
     static ErrCode InnerSetAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable, int32_t appIndex);
     static ErrCode InnerSetApplicationEnabled(const std::string &bundleName, bool &isEnable, int32_t appIndex);
     static ErrCode InnerEnableDynamicIcon(const std::string &bundleName, const std::string &moduleName);
+    static ErrCode InnerGetBundleArchiveInfo(std::string& hapFilePath, int32_t flags, BundleInfo& bundleInfo);
+    static ErrCode GetAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
+        const std::string& moduleName, AbilityInfo& targetAbilityInfo);
+    static ErrCode GetExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
+        const std::string& moduleName, ExtensionAbilityInfo& targetExtensionInfo);
+    static ErrCode CommonInnerGetProfile(const std::string& moduleName, const std::string& abilityName,
+        const std::string& metadataName, bool isExtensionProfile, std::vector<std::string>& profileVec);
+    static ErrCode InnerGetPermissionDef(const std::string& permissionName, PermissionDef& permissionDef);
+    static ErrCode InnerCleanBundleCacheCallback(
+        const std::string &bundleName, int32_t appIndex, const OHOS::sptr<CleanCacheCallback> cleanCacheCallback);
 };
 } // AppExecFwk
 } // OHOS
