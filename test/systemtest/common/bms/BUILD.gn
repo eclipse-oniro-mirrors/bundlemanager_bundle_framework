@@ -36,7 +36,6 @@ ohos_static_library("bms_install_sst_source") {
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
     "${inner_api_path}/appexecfwk_core/src/bundlemgr/bundle_installer_proxy.cpp",
     "${inner_api_path}/appexecfwk_core/src/bundlemgr/bundle_mgr_proxy.cpp",
-    "${inner_api_path}/appexecfwk_core/src/bundlemgr/status_receiver_proxy.cpp",
   ]
 
   public_configs = [ ":bms_system_test_config" ]
