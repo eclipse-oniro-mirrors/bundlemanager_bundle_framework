@@ -4746,8 +4746,7 @@ void BMSEventHandler::CleanTempDir() const
         }
     }
 
-    UpdateAppDataMgr::DeleteUninstallTmpDirs(Constants::DEFAULT_USERID);
-    UpdateAppDataMgr::DeleteUninstallTmpDirs(Constants::U1);
+    UpdateAppDataMgr::DeleteUninstallTmpDirs(std::set<int32_t>{Constants::DEFAULT_USERID, Constants::U1});
 }
 
 void BMSEventHandler::CheckBundleProvisionInfo()

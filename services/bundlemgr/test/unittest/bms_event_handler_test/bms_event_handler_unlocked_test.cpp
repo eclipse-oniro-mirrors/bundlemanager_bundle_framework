@@ -294,6 +294,21 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0700, Function
 }
 
 /**
+ * @tc.number: UserUnlockedEventSubscriber_0800
+ * @tc.name: GetBundleDataDirs and DeleteUninstallTmpDirs
+ * @tc.desc: test GetBundleDataDirs and DeleteUninstallTmpDirs
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0800, Function | SmallTest | Level0)
+{
+    UpdateAppDataMgr updateAppDataMgr;
+    std::vector<std::string> dirs = updateAppDataMgr.GetBundleDataDirs(100);
+    updateAppDataMgr.DeleteUninstallTmpDirs({});
+    updateAppDataMgr.DeleteUninstallTmpDirs({100});
+    updateAppDataMgr.DeleteUninstallTmpDirs({0, 1});
+    EXPECT_EQ(dirs.size(), ServiceConstants::BUNDLE_EL.size() * 2);
+}
+
+/**
  * @tc.number: CheckEl5Dir_0001
  * @tc.name: test CheckEl5Dir
  * @tc.desc: test CheckEl5Dir

@@ -71,7 +71,7 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
             userId_ = userId;
             std::thread updateDataDirThread(UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel, userId);
             updateDataDirThread.detach();
-            std::thread(UpdateAppDataMgr::DeleteUninstallTmpDirs, userId).detach();
+            std::thread(UpdateAppDataMgr::DeleteUninstallTmpDirs, std::set<int32_t>{userId}).detach();
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
             DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
 #endif
@@ -86,7 +86,7 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
             userId_ = userId;
             std::thread updateDataDirThread(UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel, userId);
             updateDataDirThread.detach();
-            std::thread(UpdateAppDataMgr::DeleteUninstallTmpDirs, userId).detach();
+            std::thread(UpdateAppDataMgr::DeleteUninstallTmpDirs, std::set<int32_t>{userId}).detach();
         }
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
         APP_LOGI("RemoveUnreservedSandbox call ClearUnreservedSandbox");
@@ -190,13 +190,14 @@ bool UpdateAppDataMgr::CreateEl5Dir(const CreateDirParam &createDirParam)
     return true;
 }
 
-void UpdateAppDataMgr::DeleteUninstallTmpDirs(const int32_t userId)
+void UpdateAppDataMgr::DeleteUninstallTmpDirs(const std::set<int32_t>& userIds)
 {
-    std::vector<std::string> dirs = GetBundleDataDirs(userId);
-    if (dirs.empty()) {
-        LOG_I(BMS_TAG_DEFAULT, "dirs empty");
-        return;
+    std::vector<std::string> dirs;
+    for (const int32_t &userId : userIds) {
+        std::vector<std::string> tmpDirs = GetBundleDataDirs(userId);
+        dirs.insert(dirs.end(), tmpDirs.begin(), tmpDirs.end());
     }
+    dirs.emplace_back(Constants::BUNDLE_CODE_DIR);
     ErrCode ret = InstalldClient::GetInstance()->DeleteUninstallTmpDirs(dirs);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "delete tmp dirs failed:%{public}d", ret);
