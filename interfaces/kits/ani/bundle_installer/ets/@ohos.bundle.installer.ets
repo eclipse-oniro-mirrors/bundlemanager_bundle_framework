@@ -23,9 +23,11 @@ import { AsyncCallback, BusinessError } from '@ohos.base';
 namespace installer {
   loadLibrary("ani_bundle_installer.z");
 
+  export native function getBundleInstallerNative(isSync: boolean): BundleInstaller;
+
   function getBundleInstaller(callback: AsyncCallback<BundleInstaller>): void {
     let execFun = (): BundleInstaller => {
-      return installer.getBundleInstallerSync();
+      return installer.getBundleInstallerNative(false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -39,7 +41,7 @@ namespace installer {
   function getBundleInstaller(): Promise<BundleInstaller> {
     let p = new Promise<BundleInstaller>((resolve: (bundleInstaller: BundleInstaller) => void, reject: (error: Error) => void) => {
       let execFun = (): BundleInstaller => {
-        return installer.getBundleInstallerSync();
+        return installer.getBundleInstallerNative(false);
       };
       let p1 = taskpool.execute(execFun);
         p1.then((e: NullishType) => {
@@ -53,7 +55,9 @@ namespace installer {
     return p;
   }
 
-  export native function getBundleInstallerSync(): BundleInstaller;
+  function getBundleInstallerSync(): BundleInstaller {
+    return installer.getBundleInstallerNative(true);
+  }
 
   interface BundleInstaller {
    

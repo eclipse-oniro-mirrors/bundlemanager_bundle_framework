@@ -21,10 +21,10 @@ import StartOptions from '@ohos.app.ability.StartOptions';
 export default namespace launcherBundleManager {
   loadLibrary("ani_launcher_bundle_manager.z");
 
-  export native function StartShortcutSync(shortcutInfo: ShortcutInfo, options: StartOptions): void;
-  export native function GetShortcutInfoSync(bundleName: string, userId: number): Array<ShortcutInfo>;
-  export native function GetLauncherAbilityInfoNative(bundleName: string, userId: number, isSync: boolean): Array<LauncherAbilityInfo>;
-  export native function GetAllLauncherAbilityInfo(userId: number): Array<LauncherAbilityInfo>;
+  export native function startShortcutNative(shortcutInfo: ShortcutInfo, options: StartOptions): void;
+  export native function getShortcutInfoNative(bundleName: string, userId: number, isSync: boolean): Array<ShortcutInfo>;
+  export native function getLauncherAbilityInfoNative(bundleName: string, userId: number, isSync: boolean): Array<LauncherAbilityInfo>;
+  export native function getAllLauncherAbilityInfoNative(userId: number): Array<LauncherAbilityInfo>;
 
   function startShortcut(shortcutInfo: ShortcutInfo, options?: StartOptions): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void): void => {
@@ -33,7 +33,7 @@ export default namespace launcherBundleManager {
         startOptions = options;
       }
       let cb = (): NullishType => {
-        launcherBundleManager.StartShortcutSync(shortcutInfo, startOptions);
+        launcherBundleManager.startShortcutNative(shortcutInfo, startOptions);
       }
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
@@ -46,16 +46,16 @@ export default namespace launcherBundleManager {
   }
 
   function getShortcutInfoSync(bundleName: string): Array<ShortcutInfo> {
-    return launcherBundleManager.GetShortcutInfoSync(bundleName, -500);
+    return launcherBundleManager.getShortcutInfoNative(bundleName, -500, true);
   }
 
   function getShortcutInfoSync(bundleName: string, userId: number): Array<ShortcutInfo> {
-    return launcherBundleManager.GetShortcutInfoSync(bundleName, userId);
+    return launcherBundleManager.getShortcutInfoNative(bundleName, userId, true);
   }
 
   function getShortcutInfo(bundleName: string, callback: AsyncCallback<Array<ShortcutInfo>>): void {
     let cb = (): (Array<ShortcutInfo>) => {
-      return launcherBundleManager.GetShortcutInfoSync(bundleName, -500);
+      return launcherBundleManager.getShortcutInfoNative(bundleName, -500, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -71,7 +71,7 @@ export default namespace launcherBundleManager {
   function getShortcutInfo(bundleName: string): Promise<Array<ShortcutInfo>> {
     let p = new Promise<Array<ShortcutInfo>>((resolve: (arrShortcutInfo: Array<ShortcutInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<ShortcutInfo>) => {
-        return launcherBundleManager.GetShortcutInfoSync(bundleName, -500);
+        return launcherBundleManager.getShortcutInfoNative(bundleName, -500, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
@@ -86,7 +86,7 @@ export default namespace launcherBundleManager {
 
   function getLauncherAbilityInfo(bundleName: string, userId: number, callback: AsyncCallback<Array<LauncherAbilityInfo>, void>): void {
     let cb = (): (Array<LauncherAbilityInfo>) => {
-      return launcherBundleManager.GetLauncherAbilityInfoNative(bundleName, userId, false);
+      return launcherBundleManager.getLauncherAbilityInfoNative(bundleName, userId, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -102,7 +102,7 @@ export default namespace launcherBundleManager {
   function getLauncherAbilityInfo(bundleName: string, userId: number): Promise<Array<LauncherAbilityInfo>> {
     let p = new Promise<Array<LauncherAbilityInfo>>((resolve: (arrLauncherAbilityInfo: Array<LauncherAbilityInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<LauncherAbilityInfo>) => {
-        return launcherBundleManager.GetLauncherAbilityInfoNative(bundleName, userId, false);
+        return launcherBundleManager.getLauncherAbilityInfoNative(bundleName, userId, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
@@ -116,12 +116,12 @@ export default namespace launcherBundleManager {
   }
 
   function getLauncherAbilityInfoSync(bundleName: string, userId: number): Array<LauncherAbilityInfo> {
-    return launcherBundleManager.GetLauncherAbilityInfoNative(bundleName, userId, true);
+    return launcherBundleManager.getLauncherAbilityInfoNative(bundleName, userId, true);
   }
 
   function getAllLauncherAbilityInfo(userId: number, callback: AsyncCallback<Array<LauncherAbilityInfo>, void>): void {
     let cb = (): (Array<LauncherAbilityInfo>) => {
-      return launcherBundleManager.GetAllLauncherAbilityInfo(userId);
+      return launcherBundleManager.getAllLauncherAbilityInfoNative(userId);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -137,7 +137,7 @@ export default namespace launcherBundleManager {
   function getAllLauncherAbilityInfo(userId: number): Promise<Array<LauncherAbilityInfo>>{
     let p = new Promise<Array<LauncherAbilityInfo>>((resolve: (arrLauncherAbilityInfo: Array<LauncherAbilityInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<LauncherAbilityInfo>) => {
-        return launcherBundleManager.GetAllLauncherAbilityInfo(userId);
+        return launcherBundleManager.getAllLauncherAbilityInfoNative(userId);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {

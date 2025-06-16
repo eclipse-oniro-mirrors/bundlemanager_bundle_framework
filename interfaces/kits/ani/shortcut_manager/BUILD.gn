@@ -15,7 +15,9 @@ import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
-ohos_shared_library("anishortcutmanager") {
+ohos_shared_library("ani_shortcut_manager") {
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
     boundary_sanitize = true
     cfi = true
@@ -45,6 +47,16 @@ ohos_shared_library("anishortcutmanager") {
     "${kits_path}/js/common:bundle_napi_common",
   ]
 
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
   external_deps = [
     "ability_base:want",
     "c_utils:utils",
@@ -54,6 +66,7 @@ ohos_shared_library("anishortcutmanager") {
     "ipc:ipc_core",
     "napi:ace_napi",
     "runtime_core:ani",
+    "runtime_core:ani_helpers",
     "samgr:samgr_proxy",
   ]
 

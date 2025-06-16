@@ -20,6 +20,7 @@
 #include "business_error_ani.h"
 #include "common_fun_ani.h"
 #include "common_func.h"
+#include "napi_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -58,10 +59,10 @@ static void RegisterBundleChangedEvent(ani_env* env, ani_string aniEventType, an
 {
     APP_LOGD("RegisterBundleChangedEvent entry");
 
-    std::string eventType = CommonFunAni::AniStrToString(env, aniEventType);
-    if (eventType.empty()) {
-        APP_LOGE("type is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TYPE, CommonFunAniNS::TYPE_STRING);
+    std::string eventType;
+    if (!CommonFunAni::ParseString(env, aniEventType, eventType)) {
+        APP_LOGE("parse eventType failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TYPE, TYPE_STRING);
         return;
     }
 
@@ -73,7 +74,7 @@ static void RegisterBundleChangedEvent(ani_env* env, ani_string aniEventType, an
     }
     if (isCallbackEmpty) {
         APP_LOGE("callback is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, CommonFunAniNS::TYPE_FUNCTION);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, TYPE_FUNCTION);
         return;
     }
 
@@ -114,10 +115,10 @@ static void UnregisterBundleChangedEvent(ani_env* env, ani_string aniEventType, 
 {
     APP_LOGD("UnregisterBundleChangedEvent entry");
 
-    std::string eventType = CommonFunAni::AniStrToString(env, aniEventType);
-    if (eventType.empty()) {
-        APP_LOGE("type is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TYPE, CommonFunAniNS::TYPE_STRING);
+    std::string eventType;
+    if (!CommonFunAni::ParseString(env, aniEventType, eventType)) {
+        APP_LOGE("parse eventType failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TYPE, TYPE_STRING);
         return;
     }
 

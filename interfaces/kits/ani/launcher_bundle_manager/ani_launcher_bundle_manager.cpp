@@ -34,9 +34,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int32_t EMPTY_USER_ID = -500;
-constexpr int32_t ANI_CONSTRUCTOR_FIND_NAMESPACE_ERR = 2;
-constexpr int32_t ANI_CONSTRUCTOR_BIND_NATIVE_FUNC_ERR = 3;
-constexpr int32_t ANI_CONSTRUCTOR_ENV_ERR = 9;
+constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
+constexpr const char* NS_NAME_LAUNCHERMANAGER = "@ohos.bundle.launcherBundleManager.launcherBundleManager";
 
 const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
     { ERR_OK, ERR_OK },
@@ -45,11 +44,12 @@ const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
 };
 } // namespace
 
-static void StartShortcutSync(ani_env *env, ani_object aniShortcutInfo, ani_object aniStartOptions)
+static void AniStartShortcut(ani_env *env, ani_object aniShortcutInfo, ani_object aniStartOptions)
 {
+    APP_LOGD("ani StartShortcut called");
     ShortcutInfo shortcutInfo;
     if (!CommonFunAni::ParseShortcutInfo(env, aniShortcutInfo, shortcutInfo)) {
-        APP_LOGE("ParseShortcutInfo error");
+        APP_LOGE("parse shortcutInfo failed");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
         return;
     }
@@ -91,54 +91,56 @@ static void StartShortcutSync(ani_env *env, ani_object aniShortcutInfo, ani_obje
     }
 }
 
-static ani_object GetShortcutInfoSync(ani_env *env, ani_string aniBundleName, ani_double aniUserId)
+static ani_object AniGetShortcutInfo(ani_env *env,
+    ani_string aniBundleName, ani_double aniUserId, ani_boolean aniIsSync)
 {
-    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
-    if (bundleName.empty()) {
-        APP_LOGE("BundleName is empty");
+    APP_LOGD("ani GetShortcutInfo called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("parse bundleName failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    int32_t userId = 0;
+    int32_t userId = EMPTY_USER_ID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
-        APP_LOGE("try cast userId failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-        return nullptr;
+        APP_LOGW("try cast userId falied");
     }
     if (userId == EMPTY_USER_ID) {
-        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+        userId = Constants::UNSPECIFIED_USERID;
     }
+    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     auto launcherService = JSLauncherService::GetLauncherService();
     if (launcherService == nullptr) {
         APP_LOGE("launcherService is nullptr");
         BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
-            GET_SHORTCUT_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            isSync ? GET_SHORTCUT_INFO_SYNC : GET_SHORTCUT_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
+
     std::vector<ShortcutInfo> shortcutInfos;
-    ErrCode result = launcherService->GetShortcutInfoV9(bundleName, shortcutInfos, userId);
-    ErrCode ret = CommonFunc::ConvertErrCode(result);
+    ErrCode ret = launcherService->GetShortcutInfoV9(bundleName, shortcutInfos, userId);
     if (ret != ERR_OK) {
         APP_LOGE("GetShortcutInfoV9 failed, ret %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(
-            env, ret, GET_SHORTCUT_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            isSync ? GET_SHORTCUT_INFO_SYNC : GET_SHORTCUT_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
-    ani_object arrayShortcutInfos =
+    ani_object shortcutInfosObject =
         CommonFunAni::ConvertAniArray(env, shortcutInfos, CommonFunAni::ConvertShortcutInfo);
-    if (arrayShortcutInfos == nullptr) {
-        APP_LOGE("ConvertAniArray failed");
+    if (shortcutInfosObject == nullptr) {
+        APP_LOGE("nullptr shortcutInfosObject");
         return nullptr;
     }
-    return arrayShortcutInfos;
+    return shortcutInfosObject;
 }
 
-static ani_object GetLauncherAbilityInfo(ani_env *env,
+static ani_object AniGetLauncherAbilityInfo(ani_env *env,
     ani_string aniBundleName, ani_double aniUserId, ani_boolean aniIsSync)
 {
-    std::string bundleName = CommonFunAni::AniStrToString(env, aniBundleName);
-    if (bundleName.empty()) {
-        APP_LOGE("BundleName is empty");
+    APP_LOGD("ani GetLauncherAbilityInfo called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("parse bundleName failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
@@ -154,7 +156,8 @@ static ani_object GetLauncherAbilityInfo(ani_env *env,
     if (launcherService == nullptr) {
         APP_LOGE("launcherService is nullptr");
         BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
-            GET_LAUNCHER_ABILITY_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            isSync ? GET_LAUNCHER_ABILITY_INFO_SYNC : GET_LAUNCHER_ABILITY_INFO,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
 
@@ -169,7 +172,7 @@ static ani_object GetLauncherAbilityInfo(ani_env *env,
         APP_LOGE("GetLauncherAbilityInfo failed ret:%{public}d, bundleName:%{public}s, userId:%{public}d",
             ret, bundleName.c_str(), userId);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            isSync? GET_LAUNCHER_ABILITY_INFO_SYNC : GET_LAUNCHER_ABILITY_INFO,
+            isSync ? GET_LAUNCHER_ABILITY_INFO_SYNC : GET_LAUNCHER_ABILITY_INFO,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -183,8 +186,9 @@ static ani_object GetLauncherAbilityInfo(ani_env *env,
     return launcherAbilityInfosObject;
 }
 
-static ani_object GetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
+static ani_object AniGetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
 {
+    APP_LOGD("ani GetAllLauncherAbilityInfo called");
     int32_t userId = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("try cast userId failed");
@@ -195,8 +199,7 @@ static ani_object GetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
     auto launcherService = JSLauncherService::GetLauncherService();
     if (launcherService == nullptr) {
         APP_LOGE("launcherService is nullptr");
-        BusinessErrorAni::ThrowCommonError(
-            env, CommonFunc::ConvertErrCode(ERROR_BUNDLE_SERVICE_EXCEPTION),
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
             GET_ALL_LAUNCHER_ABILITY_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -205,8 +208,7 @@ static ani_object GetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
     ErrCode ret = launcherService->GetAllLauncherAbility(userId, launcherAbilityInfos);
     if (ret != ERR_OK) {
         APP_LOGE("GetAllLauncherAbility failed ret:%{public}d,userId:%{public}d", ret, userId);
-        BusinessErrorAni::ThrowCommonError(
-            env, CommonFunc::ConvertErrCode(ret),
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             GET_ALL_LAUNCHER_ABILITY_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -223,44 +225,38 @@ static ani_object GetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
-    APP_LOGI("ANI_Constructor called");
+    APP_LOGI("ANI_Constructor launcherBundleManager called");
     ani_env* env;
-    if (vm == nullptr) {
-        APP_LOGE("ANI_Constructor vm is nullptr");
-        return static_cast<ani_status>(ANI_CONSTRUCTOR_ENV_ERR);
-    }
-    if (vm->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
-        APP_LOGE("Unsupported ANI_VERSION_1");
-        return static_cast<ani_status>(ANI_CONSTRUCTOR_ENV_ERR);
-    }
-    if (env == nullptr) {
-        APP_LOGE("ANI_Constructor env is nullptr");
-        return static_cast<ani_status>(ANI_CONSTRUCTOR_ENV_ERR);
-    }
-    auto nsName = arkts::ani_signature::Builder::BuildNamespace(
-        {"@ohos", "bundle", "launcherBundleManager", "launcherBundleManager"});
-    ani_namespace kitNs;
-    if (env->FindNamespace(nsName.Descriptor().c_str(), &kitNs) != ANI_OK) {
-        APP_LOGE("Not found nameSpace name: %{public}s", nsName.Descriptor().c_str());
-        return static_cast<ani_status>(ANI_CONSTRUCTOR_FIND_NAMESPACE_ERR);
+    ani_status status = vm->GetEnv(ANI_VERSION_1, &env);
+    RETURN_ANI_STATUS_IF_NOT_OK(status, "Unsupported ANI_VERSION_1");
+
+    arkts::ani_signature::Namespace nsName = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_LAUNCHERMANAGER);
+    ani_namespace kitNs = nullptr;
+    status = env->FindNamespace(nsName.Descriptor().c_str(), &kitNs);
+    if (status != ANI_OK) {
+        APP_LOGE("FindNamespace: %{public}s fail with %{public}d", NS_NAME_LAUNCHERMANAGER, status);
+        return status;
     }
 
     std::array methods = {
-        ani_native_function { "StartShortcutSync", nullptr, reinterpret_cast<void*>(StartShortcutSync) },
-        ani_native_function { "GetShortcutInfoSync", nullptr, reinterpret_cast<void*>(GetShortcutInfoSync) },
-        ani_native_function { "GetLauncherAbilityInfoNative", nullptr,
-            reinterpret_cast<void*>(GetLauncherAbilityInfo) },
-        ani_native_function { "GetAllLauncherAbilityInfo", nullptr,
-            reinterpret_cast<void*>(GetAllLauncherAbilityInfo) },
+        ani_native_function { "startShortcutNative", nullptr, reinterpret_cast<void*>(AniStartShortcut) },
+        ani_native_function { "getShortcutInfoNative", nullptr, reinterpret_cast<void*>(AniGetShortcutInfo) },
+        ani_native_function { "getLauncherAbilityInfoNative", nullptr,
+            reinterpret_cast<void*>(AniGetLauncherAbilityInfo) },
+        ani_native_function { "getAllLauncherAbilityInfoNative", nullptr,
+            reinterpret_cast<void*>(AniGetAllLauncherAbilityInfo) },
     };
 
-    if (env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size()) != ANI_OK) {
-        APP_LOGE("Cannot bind native methods to %{public}s", nsName.Descriptor().c_str());
-        return static_cast<ani_status>(ANI_CONSTRUCTOR_BIND_NATIVE_FUNC_ERR);
-    };
+    status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
+    if (status != ANI_OK) {
+        APP_LOGE("Namespace_BindNativeFunctions: %{public}s fail with %{public}d", NS_NAME_LAUNCHERMANAGER, status);
+        return status;
+    }
 
     *result = ANI_VERSION_1;
+
     APP_LOGI("ANI_Constructor finished");
+
     return ANI_OK;
 }
 } // extern "C"

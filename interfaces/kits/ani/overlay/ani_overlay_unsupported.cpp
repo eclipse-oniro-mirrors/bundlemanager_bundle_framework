@@ -17,6 +17,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
 #include "business_error_ani.h"
+#include "common_fun_ani.h"
 #include "napi_constants.h"
 
 namespace OHOS {
@@ -25,46 +26,46 @@ namespace {
 constexpr const char* NS_NAME_OVERLAY = "@ohos.bundle.overlay.overlay";
 } // namespace
 
-static void SetOverlayEnabled(ani_env *env, ani_string aniModuleName, ani_boolean aniIsEnabled)
+static void AniSetOverlayEnabled(ani_env *env, ani_string aniModuleName, ani_boolean aniIsEnabled)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_OVERLAY_ENABLED, "");
     return;
 }
 
-static void SetOverlayEnabledByBundleName(ani_env *env,
+static void AniSetOverlayEnabledByBundleName(ani_env *env,
     ani_string aniBundleName, ani_string aniModuleName, ani_boolean aniIsEnabled)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_OVERLAY_ENABLED_BY_BUNDLE_NAME, "");
     return;
 }
 
-static ani_object GetOverlayModuleInfo(ani_env *env, ani_string aniModuleName)
+static ani_object AniGetOverlayModuleInfo(ani_env *env, ani_string aniModuleName)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_OVERLAY_MODULE_INFO, "");
     return nullptr;
 }
 
-static ani_object GetTargetOverlayModuleInfos(ani_env *env, ani_string aniTargetModuleName)
+static ani_object AniGetTargetOverlayModuleInfos(ani_env *env, ani_string aniTargetModuleName)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_TARGET_OVERLAY_MODULE_INFOS, "");
     return nullptr;
 }
 
-static ani_object GetOverlayModuleInfoByBundleName(ani_env *env, ani_string aniBundleName, ani_string aniModuleName)
+static ani_object AniGetOverlayModuleInfoByBundleName(ani_env *env, ani_string aniBundleName, ani_string aniModuleName)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME, "");
     return nullptr;
 }
 
-static ani_object GetTargetOverlayModuleInfosByBundleName(ani_env *env,
+static ani_object AniGetTargetOverlayModuleInfosByBundleName(ani_env *env,
     ani_string aniTargetBundleName, ani_string aniModuleName)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Overlay not supported");
     BusinessErrorAni::ThrowCommonError(
         env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME, "");
     return nullptr;
@@ -78,9 +79,9 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     ani_status status = vm->GetEnv(ANI_VERSION_1, &env);
     RETURN_ANI_STATUS_IF_NOT_OK(status, "Unsupported ANI_VERSION_1");
 
-    arkts::ani_signature::Namespace freeInstallNS = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_OVERLAY);
+    arkts::ani_signature::Namespace nsName = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_OVERLAY);
     ani_namespace kitNs = nullptr;
-    status = env->FindNamespace(freeInstallNS.Descriptor().c_str(), &kitNs);
+    status = env->FindNamespace(nsName.Descriptor().c_str(), &kitNs);
     if (status != ANI_OK) {
         APP_LOGE("FindNamespace: %{public}s fail with %{public}d", NS_NAME_OVERLAY, status);
         return status;
@@ -88,17 +89,17 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 
     std::array methods = {
         ani_native_function { "setOverlayEnabledNative", nullptr,
-            reinterpret_cast<void*>(SetOverlayEnabled) },
+            reinterpret_cast<void*>(AniSetOverlayEnabled) },
         ani_native_function { "setOverlayEnabledByBundleNameNative", nullptr,
-            reinterpret_cast<void*>(SetOverlayEnabledByBundleName) },
+            reinterpret_cast<void*>(AniSetOverlayEnabledByBundleName) },
         ani_native_function { "getOverlayModuleInfoNative", nullptr,
-            reinterpret_cast<void*>(GetOverlayModuleInfo) },
+            reinterpret_cast<void*>(AniGetOverlayModuleInfo) },
         ani_native_function { "getTargetOverlayModuleInfosNative", nullptr,
-            reinterpret_cast<void*>(GetTargetOverlayModuleInfos) },
+            reinterpret_cast<void*>(AniGetTargetOverlayModuleInfos) },
         ani_native_function { "getOverlayModuleInfoByBundleNameNative", nullptr,
-            reinterpret_cast<void*>(GetOverlayModuleInfoByBundleName) },
+            reinterpret_cast<void*>(AniGetOverlayModuleInfoByBundleName) },
         ani_native_function { "getTargetOverlayModuleInfosByBundleNameNative", nullptr,
-            reinterpret_cast<void*>(GetTargetOverlayModuleInfosByBundleName) }
+            reinterpret_cast<void*>(AniGetTargetOverlayModuleInfosByBundleName) }
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
