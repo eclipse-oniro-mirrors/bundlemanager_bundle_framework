@@ -39,7 +39,15 @@ constexpr uint32_t CODE_MAX_FOUR = 4;
 constexpr uint32_t CODE_MAX_FIVE = 5;
 constexpr uint32_t ORIENTATION_MAX = 14;
 constexpr uint32_t EXTENSION_ABILITY_MAX = 25;
-
+const std::vector<int32_t> USERS {
+    Constants::ANY_USERID,
+    Constants::ALL_USERID,
+    Constants::UNSPECIFIED_USERID,
+    Constants::INVALID_USERID,
+    Constants::U1,
+    Constants::DEFAULT_USERID,
+    Constants::START_USERID
+};
 
 std::vector<std::string> GenerateStringArray(FuzzedDataProvider& fdp, size_t arraySizeMax = ARRAY_MAX_LENGTH,
     size_t stringSize = STRING_MAX_LENGTH)
@@ -565,6 +573,16 @@ void GenerateFormInfo(FuzzedDataProvider& fdp, FormInfo &formInfo)
     formInfo.scheduledUpdateTime = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.multiScheduledUpdateTime = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.src = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+}
+
+int32_t GenerateRandomUser(FuzzedDataProvider& fdp)
+{
+    uint8_t size = USERS.size();
+    uint8_t index = fdp.ConsumeIntegralInRange<uint8_t>(0, size);
+    if (index > 0 && index <= size) {
+        return USERS[index - 1];
+    }
+    return Constants::DEFAULT_USERID;
 }
 }  // namespace BMSFuzzTestUtil
 }  // namespace AppExecFwk
