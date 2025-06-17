@@ -60,13 +60,15 @@ constexpr const char* TYPE_ARRAY = "array";
 constexpr const char* FLAGS = "flags";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* ABILITY_FLAGS = "abilityFlags";
-constexpr const char* APPLICATION_FLAGS = "applicationFlags";
+constexpr const char* APP_FLAGS = "appFlags";
 constexpr const char* ABILITY_INFO = "abilityInfo";
 constexpr const char* LINK_FEATURE = "linkFeature";
 constexpr const char* EXTENSION_TYPE_NAME = "extensionTypeName";
 constexpr const char* EXTENSION_ABILITY_TYPE = "extensionAbilityType";
 constexpr const char* HAP_FILE_PATH = "hapFilePath";
 constexpr const char* PERMISSION_NAME = "permissionName";
+constexpr const char* DEVELOPER_ID = "developerId";
+constexpr const char* LINK = "link";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 constexpr const char*  PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
     "BusinessError 401: Parameter error.Parameter extensionAbilityType is empty.";
@@ -105,6 +107,11 @@ constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUN
 constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
     "ohos.permission.GET_INSTALLED_BUNDLE_LIST and ohos.permission.GET_BUNDLE_RESOURCES";
 constexpr const char* PARSE_START_OPTIONS = "parse StartOptions failed";
+constexpr const char*  PARAM_BUNDLENAME_EMPTY_ERROR =
+    "BusinessError 401: Parameter error. parameter bundleName is empty";
+constexpr const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
+constexpr const char*  PARAM_DEVELOPER_ID_EMPTY_ERROR =
+    "BusinessError 401: Parameter error. parameter developerId is empty";
 constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
@@ -213,10 +220,18 @@ constexpr const char* GET_PERMISSION_DEF = "GetPermissionDef";
 constexpr const char* CLEAN_BUNDLE_CACHE_FILES = "cleanBundleCacheFiles";
 constexpr const char* GET_ALL_BUNDLE_CACHE_SIZE = "getAllBundleCacheSize";
 constexpr const char* CLEAN_ALL_BUNDLE_CACHE = "cleanAllBundleCache";
+constexpr const char* GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
+constexpr const char* CAN_OPEN_LINK = "CanOpenLink";
+constexpr const char* GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
+constexpr const char* GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
+constexpr const char* SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
+constexpr const char* GET_SIGNATURE_INFO_SYNC = "GetSignatureInfoSync";
+constexpr const char* GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";
 constexpr const char* GET_BUNDLE_ARCHIVE_INFO_SYNC = "GetBundleArchiveInfoSync";
 constexpr const char* GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExtensionAbilitySync";
 constexpr const char* GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
 constexpr const char* GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
+constexpr const char* GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
 }
 }
 }

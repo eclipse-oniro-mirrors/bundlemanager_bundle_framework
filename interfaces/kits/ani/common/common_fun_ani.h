@@ -157,6 +157,10 @@ public:
 
     static ani_object ConvertAppCloneIdentity(ani_env* env, const std::string& bundleName, const int32_t appIndex);
     static ani_object ConvertPermissionDef(ani_env* env, const PermissionDef& permissionDef);
+    static ani_object ConvertAppProvisionInfo(ani_env* env, const AppProvisionInfo& appProvisionInfo);
+    static ani_object ConvertValidity(ani_env* env, const Validity& validity);
+    static ani_object ConvertPreinstalledApplicationInfo(
+        ani_env* env, const PreinstalledApplicationInfo& reinstalledApplicationInfo);
 
     static ani_object ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo);
     static ani_object ConvertLauncherAbilityResourceInfo(ani_env* env,

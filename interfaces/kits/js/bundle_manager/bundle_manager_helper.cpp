@@ -286,5 +286,70 @@ ErrCode BundleManagerHelper::InnerCleanBundleCacheCallback(
     }
     return CommonFunc::ConvertErrCode(result);
 }
+
+ErrCode BundleManagerHelper::InnerGetAppProvisionInfo(
+    const std::string& bundleName, int32_t userId, AppProvisionInfo& appProvisionInfo)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo);
+    APP_LOGI("GetAppProvisionInfo ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetAllPreinstalledApplicationInfos(
+    std::vector<PreinstalledApplicationInfo>& preinstalledApplicationInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("IBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    APP_LOGI("GetAllPreinstalledApplicationInfos ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetAllAppCloneBundleInfo(
+    const std::string& bundleName, int32_t bundleFlags, int32_t userId, std::vector<BundleInfo>& bundleInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    BundleInfo bundleInfoMain;
+    ErrCode ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, 0, bundleInfoMain, userId);
+    APP_LOGD("GetMainBundleInfo appIndex = 0, ret=%{public}d", ret);
+    if (ret == ERR_OK) {
+        bundleInfos.emplace_back(bundleInfoMain);
+    }
+    if (ret != ERR_OK && ret != ERR_BUNDLE_MANAGER_APPLICATION_DISABLED && ret != ERR_BUNDLE_MANAGER_BUNDLE_DISABLED) {
+        return CommonFunc::ConvertErrCode(ret);
+    }
+    // handle clone apps
+    std::vector<int32_t> appIndexes;
+    ErrCode getCloneIndexesRet = iBundleMgr->GetCloneAppIndexes(bundleName, appIndexes, userId);
+    if (getCloneIndexesRet != ERR_OK) {
+        if (ret == ERR_OK) {
+            return SUCCESS;
+        }
+        return CommonFunc::ConvertErrCode(ret);
+    }
+    for (int32_t appIndex : appIndexes) {
+        BundleInfo bundleInfo;
+        ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, appIndex, bundleInfo, userId);
+        if (ret == ERR_OK) {
+            bundleInfos.emplace_back(bundleInfo);
+        }
+    }
+    if (bundleInfos.empty()) {
+        return ERROR_BUNDLE_IS_DISABLED;
+    }
+    return SUCCESS;
+}
 } // AppExecFwk
 } // OHOS

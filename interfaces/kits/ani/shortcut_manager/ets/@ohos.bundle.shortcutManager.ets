@@ -18,7 +18,7 @@ import { BusinessError } from '@ohos.base';
 
 namespace shortcutManager {
 
-  loadLibrary("anishortcutmanager.z");
+  loadLibrary("ani_shortcut_manager.z");
 
   export native function addDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;
   export native function deleteDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;
