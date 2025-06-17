@@ -16,11 +16,13 @@
 #include "bundle_manager_helper.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_errors.h"
 #include "business_error.h"
 #include "common_func.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -118,6 +120,171 @@ ErrCode BundleManagerHelper::InnerEnableDynamicIcon(
     }
 
     return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetBundleArchiveInfo(std::string& hapFilePath, int32_t flags, BundleInfo& bundleInfo)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetBundleArchiveInfoV9(hapFilePath, flags, bundleInfo);
+    APP_LOGI("GetBundleArchiveInfoV9 ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::GetAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
+    const std::string& moduleName, AbilityInfo& targetAbilityInfo)
+{
+    bool ifExists = false;
+    for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
+        for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
+            if (abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName) {
+                if (!abilityInfo.enabled) {
+                    APP_LOGI("ability disabled");
+                    return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
+                }
+                ifExists = true;
+                targetAbilityInfo = abilityInfo;
+                break;
+            }
+        }
+        if (ifExists) {
+            break;
+        }
+    }
+    if (!ifExists) {
+        APP_LOGE("ability not exist");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleManagerHelper::GetExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
+    const std::string& moduleName, ExtensionAbilityInfo& targetExtensionInfo)
+{
+    bool ifExists = false;
+    for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
+        for (const auto& extensionInfo : hapModuleInfo.extensionInfos) {
+            if (extensionInfo.name == abilityName && extensionInfo.moduleName == moduleName) {
+                ifExists = true;
+                targetExtensionInfo = extensionInfo;
+                break;
+            }
+            if (!extensionInfo.enabled) {
+                APP_LOGI("extension disabled");
+                return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
+            }
+        }
+        if (ifExists) {
+            break;
+        }
+    }
+    if (!ifExists) {
+        APP_LOGE("ability not exist");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleManagerHelper::CommonInnerGetProfile(const std::string& moduleName, const std::string& abilityName,
+    const std::string& metadataName, bool isExtensionProfile, std::vector<std::string>& profileVec)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    if (abilityName.empty()) {
+        APP_LOGE("InnerGetProfile failed due to empty abilityName");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+
+    if (moduleName.empty()) {
+        APP_LOGE("InnerGetProfile failed due to empty moduleName");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
+                    static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
+                    static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ErrCode result;
+    BundleMgrClient client;
+    BundleInfo bundleInfo;
+    if (!isExtensionProfile) {
+        auto getAbilityFlag = baseFlag + static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
+        result = iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("GetBundleInfoForSelf failed");
+            return result;
+        }
+        AbilityInfo targetAbilityInfo;
+        result = GetAbilityFromBundleInfo(bundleInfo, abilityName, moduleName, targetAbilityInfo);
+        if (result != ERR_OK) {
+            return result;
+        }
+        if (!client.GetProfileFromAbility(targetAbilityInfo, metadataName, profileVec)) {
+            APP_LOGE("GetProfileFromExtension failed");
+            return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+        }
+        return ERR_OK;
+    } else {
+        auto getExtensionFlag =
+            baseFlag + static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
+        result = iBundleMgr->GetBundleInfoForSelf(getExtensionFlag, bundleInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("GetBundleInfoForSelf failed");
+            return result;
+        }
+
+        ExtensionAbilityInfo targetExtensionInfo;
+        result = GetExtensionFromBundleInfo(bundleInfo, abilityName, moduleName, targetExtensionInfo);
+        if (result != ERR_OK) {
+            return result;
+        }
+        if (!client.GetProfileFromExtension(targetExtensionInfo, metadataName, profileVec)) {
+            APP_LOGE("GetProfileFromExtension failed");
+            return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+        }
+        return ERR_OK;
+    }
+
+    APP_LOGE("InnerGetProfile failed due to type is invalid");
+    return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+}
+
+ErrCode BundleManagerHelper::InnerGetPermissionDef(const std::string& permissionName, PermissionDef& permissionDef)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetPermissionDef(permissionName, permissionDef);
+    APP_LOGI("GetPermissionDef ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerCleanBundleCacheCallback(
+    const std::string &bundleName, int32_t appIndex, const OHOS::sptr<CleanCacheCallback> cleanCacheCallback)
+{
+    if (cleanCacheCallback == nullptr) {
+        APP_LOGE("callback nullptr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId, appIndex);
+    if (result != ERR_OK) {
+        APP_LOGE("call error, bundleName is %{public}s, userId is %{public}d, appIndex is %{public}d",
+            bundleName.c_str(), userId, appIndex);
+    }
+    return CommonFunc::ConvertErrCode(result);
 }
 } // AppExecFwk
 } // OHOS

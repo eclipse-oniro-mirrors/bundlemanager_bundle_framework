@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,7 +49,6 @@ constexpr const char* PROFILE_TYPE = "profileType";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* VERIFY_ABC = "VerifyAbc";
 constexpr const char* DELETE_ABC = "DeleteAbc";
-constexpr const char* ERR_MSG_LAUNCH_WANT_INVALID = "The launch want is not found.";
 constexpr const char* ADDITIONAL_INFO = "additionalInfo";
 constexpr const char* LINK = "link";
 constexpr const char* DEVELOPER_ID = "developerId";
@@ -61,11 +60,6 @@ constexpr const char* STATE = "state";
 constexpr const char* SOURCE_PATHS = "sourcePaths";
 constexpr const char* DESTINATION_PATHS = "destinationPath";
 constexpr const char* HOST_BUNDLE_NAME = "hostBundleName";
-const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
-const std::string GET_ALL_BUNDLE_CACHE_SIZE = "getAllBundleCacheSize";
-const std::string CLEAN_ALL_BUNDLE_CACHE = "cleanAllBundleCache";
-const std::string GET_PERMISSION_DEF = "GetPermissionDef";
-const std::string PERMISSION_NAME = "permissionName";
 const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
 const std::string GET_ALL_SHARED_BUNDLE_INFO = "GetAllSharedBundleInfo";
 const std::string GET_SHARED_BUNDLE_INFO = "GetSharedBundleInfo";
@@ -148,18 +142,6 @@ void RegisterClearCacheListener()
     (void)EventFwk::CommonEventManager::SubscribeCommonEvent(g_clearCacheListener);
 }
 
-static ErrCode InnerGetBundleArchiveInfo(std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = iBundleMgr->GetBundleArchiveInfoV9(hapFilePath, flags, bundleInfo);
-    APP_LOGD("GetBundleArchiveInfoV9 ErrCode : %{public}d", ret);
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void GetBundleArchiveInfoExec(napi_env env, void *data)
 {
     GetBundleArchiveInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetBundleArchiveInfoCallbackInfo *>(data);
@@ -167,7 +149,7 @@ void GetBundleArchiveInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerGetBundleArchiveInfo(
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetBundleArchiveInfo(
         asyncCallbackInfo->hapFilePath, asyncCallbackInfo->flags, asyncCallbackInfo->bundleInfo);
 }
 
@@ -2221,27 +2203,6 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerCleanBundleCacheCallback(
-    const std::string &bundleName, int32_t appIndex, const OHOS::sptr<CleanCacheCallback> cleanCacheCallback)
-{
-    if (cleanCacheCallback == nullptr) {
-        APP_LOGE("callback nullptr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId, appIndex);
-    if (result != ERR_OK) {
-        APP_LOGE("call error, bundleName is %{public}s, userId is %{public}d, appIndex is %{public}d",
-            bundleName.c_str(), userId, appIndex);
-    }
-    return CommonFunc::ConvertErrCode(result);
-}
-
 void CleanBundleCacheFilesExec(napi_env env, void *data)
 {
     CleanBundleCacheCallbackInfo* asyncCallbackInfo = reinterpret_cast<CleanBundleCacheCallbackInfo*>(data);
@@ -2252,7 +2213,7 @@ void CleanBundleCacheFilesExec(napi_env env, void *data)
     if (asyncCallbackInfo->cleanCacheCallback == nullptr) {
         asyncCallbackInfo->cleanCacheCallback = new (std::nothrow) CleanCacheCallback();
     }
-    asyncCallbackInfo->err = InnerCleanBundleCacheCallback(
+    asyncCallbackInfo->err = BundleManagerHelper::InnerCleanBundleCacheCallback(
         asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex, asyncCallbackInfo->cleanCacheCallback);
     if ((asyncCallbackInfo->err == NO_ERROR) && (asyncCallbackInfo->cleanCacheCallback != nullptr)) {
         // wait for OnCleanCacheFinished
@@ -2278,7 +2239,7 @@ void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            "CleanBundleCacheFiles", Constants::PERMISSION_REMOVECACHEFILE);
+            CLEAN_BUNDLE_CACHE_FILES, Constants::PERMISSION_REMOVECACHEFILE);
     }
     CommonFunc::NapiReturnDeferred<CleanBundleCacheCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
@@ -2934,128 +2895,10 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode GetAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
-    const std::string& moduleName, AbilityInfo& targetAbilityInfo)
-{
-    bool ifExists = false;
-    for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
-        for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
-            if (abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName) {
-                if (!abilityInfo.enabled) {
-                    APP_LOGI("ability disabled");
-                    return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
-                }
-                ifExists = true;
-                targetAbilityInfo = abilityInfo;
-                break;
-            }
-        }
-        if (ifExists) {
-            break;
-        }
-    }
-    if (!ifExists) {
-        APP_LOGE("ability not exist");
-        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-    }
-    return ERR_OK;
-}
-
-ErrCode GetExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
-    const std::string& moduleName, ExtensionAbilityInfo& targetExtensionInfo)
-{
-    bool ifExists = false;
-    for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
-        for (const auto& extensionInfo : hapModuleInfo.extensionInfos) {
-            if (extensionInfo.name == abilityName && extensionInfo.moduleName == moduleName) {
-                ifExists = true;
-                targetExtensionInfo = extensionInfo;
-                break;
-            }
-            if (!extensionInfo.enabled) {
-                APP_LOGI("extension disabled");
-                return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
-            }
-        }
-        if (ifExists) {
-            break;
-        }
-    }
-    if (!ifExists) {
-        APP_LOGE("ability not exist");
-        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-    }
-    return ERR_OK;
-}
-
 static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
 {
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    if (info.abilityName.empty()) {
-        APP_LOGE("InnerGetProfile failed due to empty abilityName");
-        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-    }
-
-    if (info.moduleName.empty()) {
-        APP_LOGE("InnerGetProfile failed due to empty moduleName");
-        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
-    }
-    auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
-           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
-           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
-    ErrCode result;
-    BundleMgrClient client;
-    BundleInfo bundleInfo;
-    if (info.type == AbilityProfileType::ABILITY_PROFILE) {
-        auto getAbilityFlag = baseFlag +
-            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
-        result = iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo);
-        if (result != ERR_OK) {
-            APP_LOGE("GetBundleInfoForSelf failed");
-            return result;
-        }
-        AbilityInfo targetAbilityInfo;
-        result = GetAbilityFromBundleInfo(
-            bundleInfo, info.abilityName, info.moduleName, targetAbilityInfo);
-        if (result != ERR_OK) {
-            return result;
-        }
-        if (!client.GetProfileFromAbility(targetAbilityInfo, info.metadataName, info.profileVec)) {
-            APP_LOGE("GetProfileFromExtension failed");
-            return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
-        }
-        return ERR_OK;
-    }
-
-    if (info.type == AbilityProfileType::EXTENSION_PROFILE) {
-        auto getExtensionFlag = baseFlag +
-            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
-        result = iBundleMgr->GetBundleInfoForSelf(getExtensionFlag, bundleInfo);
-        if (result != ERR_OK) {
-            APP_LOGE("GetBundleInfoForSelf failed");
-            return result;
-        }
-
-        ExtensionAbilityInfo targetExtensionInfo;
-        result = GetExtensionFromBundleInfo(
-            bundleInfo, info.abilityName, info.moduleName, targetExtensionInfo);
-        if (result != ERR_OK) {
-            return result;
-        }
-        if (!client.GetProfileFromExtension(targetExtensionInfo, info.metadataName, info.profileVec)) {
-            APP_LOGE("GetProfileFromExtension failed");
-            return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
-        }
-        return ERR_OK;
-    }
-
-    APP_LOGE("InnerGetProfile failed due to type is invalid");
-    return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    return BundleManagerHelper::CommonInnerGetProfile(info.moduleName, info.abilityName, info.metadataName,
+        info.type == AbilityProfileType::EXTENSION_PROFILE, info.profileVec);
 }
 
 void GetProfileExec(napi_env env, void *data)
@@ -3533,17 +3376,6 @@ void CreateAppDistributionTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "NONE", nNone));
 }
 
-static ErrCode InnerGetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = iBundleMgr->GetPermissionDef(permissionName, permissionDef);
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void GetPermissionDefExec(napi_env env, void *data)
 {
     AsyncPermissionDefineCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncPermissionDefineCallbackInfo *>(data);
@@ -3552,7 +3384,7 @@ void GetPermissionDefExec(napi_env env, void *data)
         return;
     }
     if (asyncCallbackInfo->err == NO_ERROR) {
-        asyncCallbackInfo->err = InnerGetPermissionDef(asyncCallbackInfo->permissionName,
+        asyncCallbackInfo->err = BundleManagerHelper::InnerGetPermissionDef(asyncCallbackInfo->permissionName,
             asyncCallbackInfo->permissionDef);
     }
 }

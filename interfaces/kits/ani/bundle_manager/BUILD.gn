@@ -16,6 +16,8 @@ import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
 ohos_shared_library("ani_bundle_manager") {
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
     boundary_sanitize = true
     cfi = true
@@ -32,7 +34,6 @@ ohos_shared_library("ani_bundle_manager") {
     "${kits_path}/js/common",
   ]
   sources = [
-    "${kits_path}/js/bundle_manager/bundle_manager_helper.cpp",
     "ani_bundle_manager.cpp",
   ]
 
@@ -46,7 +47,18 @@ ohos_shared_library("ani_bundle_manager") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${kits_path}/ani/common:bms_ani_common",
+    "${kits_path}/js/bundle_manager:bundle_manager_common",
     "${kits_path}/js/common:bundle_napi_common",
+  ]
+
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
   ]
 
   external_deps = [
@@ -212,6 +224,24 @@ ohos_prebuilt_etc("skill_etc") {
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
   deps = [ ":skill" ]
+}
+
+generate_static_abc("permission_def") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/PermissionDef.ets",
+    "./ets/bundleManager/PermissionDefInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/permission_def.abc"
+}
+
+ohos_prebuilt_etc("permission_def_etc") {
+  source = "$target_out_dir/permission_def.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":permission_def" ]
 }
 
 ohos_copy("copy_bundleManager_ets") {

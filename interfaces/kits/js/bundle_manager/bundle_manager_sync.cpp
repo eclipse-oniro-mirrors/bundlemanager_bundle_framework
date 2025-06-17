@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,17 +33,11 @@ namespace OHOS {
 namespace AppExecFwk {
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* IS_ENABLE = "isEnable";
-constexpr const char* HAP_FILE_PATH = "hapFilePath";
 constexpr const char* UID = "uid";
 constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
-const char* GET_BUNDLE_ARCHIVE_INFO_SYNC = "GetBundleArchiveInfoSync";
-const char* GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExtensionAbilitySync";
-const char* GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
-const char* GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
 const char* GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
 const char* GET_SIGNATURE_INFO_SYNC = "GetSignatureInfoSync";
 const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
-const char* PERMISSION_NAME = "permissionName";
 bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
 {
     napi_valuetype valueType;

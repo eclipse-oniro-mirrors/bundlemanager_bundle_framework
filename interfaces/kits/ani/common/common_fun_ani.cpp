@@ -36,6 +36,7 @@ constexpr const char* CLASSNAME_PERMISSION = "LbundleManager/BundleInfoInner/Req
 constexpr const char* CLASSNAME_USEDSCENE = "LbundleManager/BundleInfoInner/UsedSceneInner;";
 constexpr const char* CLASSNAME_SIGNATUREINFO = "LbundleManager/BundleInfoInner/SignatureInfoInner;";
 constexpr const char* CLASSNAME_APPCLONEIDENTITY = "LbundleManager/BundleInfoInner/AppCloneIdentityInner;";
+constexpr const char* CLASSNAME_PERMISSIONDEF = "LbundleManager/PermissionDefInner/PermissionDefInner;";
 constexpr const char* CLASSNAME_METADATA = "LbundleManager/MetadataInner/MetadataInner;";
 constexpr const char* CLASSNAME_RESOURCE = "Lglobal/resourceInner/ResourceInner;";
 constexpr const char* CLASSNAME_ROUTERITEM = "LbundleManager/HapModuleInfoInner/RouterItemInner;";
@@ -240,6 +241,8 @@ constexpr const char* PROPERTYNAME_DISPOSEDTYPE = "disposedType";
 constexpr const char* PROPERTYNAME_CONTROLTYPE = "controlType";
 constexpr const char* PROPERTYNAME_ELEMENTLIST = "elementList";
 constexpr const char* PROPERTYNAME_UNINSTALLCOMPONENTTYPE = "uninstallComponentType";
+constexpr const char* PROPERTYNAME_PERMISSIONNAME = "permissionName";
+constexpr const char* PROPERTYNAME_GRANTMODE = "grantMode";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
@@ -364,8 +367,8 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TARGETVERSION, bundleInfo.targetVersion));
 
     // appInfo: ApplicationInfo
-    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) ==
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) {
+    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) ==
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) {
         ani_object aObject = ConvertApplicationInfo(env, bundleInfo.applicationInfo);
         RETURN_NULL_IF_NULL(aObject);
         RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINFO, aObject));
@@ -390,8 +393,9 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PERMISSIONGRANTSTATES, aPermissionGrantStates));
 
     // signatureInfo: SignatureInfo
-    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) ==
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) ==
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
         ani_object aniSignatureInfoObj = ConvertSignatureInfo(env, bundleInfo.signatureInfo);
         RETURN_NULL_IF_NULL(aniSignatureInfoObj);
         RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SIGNATUREINFO, aniSignatureInfoObj));
@@ -1632,6 +1636,34 @@ ani_object CommonFunAni::ConvertAppCloneIdentity(ani_env* env, const std::string
 
     // appIndex: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, appIndex));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertPermissionDef(ani_env* env, const PermissionDef& permissionDef)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_PERMISSIONDEF);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // permissionName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, permissionDef.permissionName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PERMISSIONNAME, string));
+
+    // grantMode: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_GRANTMODE, permissionDef.grantMode));
+
+    // labelId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, permissionDef.labelId));
+
+    // descriptionId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, permissionDef.descriptionId));
 
     return object;
 }
