@@ -986,7 +986,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_DEVICE_ID, applicationInfo.deviceId},
         {APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED, applicationInfo.distributedNotificationEnabled},
         {APPLICATION_INSTALLED_FOR_ALL_USER, applicationInfo.installedForAllUser},
-        {APPLICATION_IS_FORCE_ROTATE, applicationInfo.isForceRotate}
+        {APPLICATION_IS_FORCE_ROTATE, applicationInfo.isForceRotate},
         {APPLICATION_ALLOW_ENABLE_NOTIFICATION, applicationInfo.allowEnableNotification},
         {APPLICATION_ALLOW_ARK_TS_LARGE_HEAP, applicationInfo.allowArkTsLargeHeap},
         {APPLICATION_ENTITY_TYPE, applicationInfo.entityType},
@@ -1139,6 +1139,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.distributedNotificationEnabled, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_INSTALLED_FOR_ALL_USER,
         applicationInfo.installedForAllUser, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_IS_FORCE_ROTATE,
+        applicationInfo.isForceRotate, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ENABLE_NOTIFICATION,
         applicationInfo.allowEnableNotification, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ARK_TS_LARGE_HEAP,
@@ -1277,8 +1279,6 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.startMode, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<AppPreloadPhase>(jsonObject, jsonObjectEnd, APPLICATION_APP_PRELOAD_PHASE,
         applicationInfo.appPreloadPhase, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_IS_FORCE_ROTATE,
-        applicationInfo.isForceRotate, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }
