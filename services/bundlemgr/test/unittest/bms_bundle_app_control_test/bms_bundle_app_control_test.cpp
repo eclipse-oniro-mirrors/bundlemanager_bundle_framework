@@ -3166,12 +3166,16 @@ HWTEST_F(BmsBundleAppControlTest, PrintDisposedRuleInfo_0100, Function | SmallTe
     ASSERT_NE(impl, nullptr);
     auto appControlManager = impl->appControlManager_;
     ASSERT_NE(appControlManager, nullptr);
+
+    std::string appId = "com.test.appcontrol";
+    std::string atomicServiceId = "com.atomicservice.appcontrol";
     DisposedRule rule;
     rule.callerName = "com.xxx.xx";
     rule.setTime = 11111111;
     std::vector<DisposedRule> disposedRules;
     disposedRules.emplace_back(rule);
-    EXPECT_NO_THROW(appControlManager->PrintDisposedRuleInfo(disposedRules));
+    EXPECT_NO_THROW(appControlManager->PrintDisposedRuleInfo(disposedRules, appId));
+    EXPECT_NO_THROW(appControlManager->PrintDisposedRuleInfo(disposedRules, atomicServiceId));
 }
 
 /**
