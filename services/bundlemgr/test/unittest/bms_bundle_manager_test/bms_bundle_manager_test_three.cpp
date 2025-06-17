@@ -2011,4 +2011,19 @@ HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_4900, Function | MediumTest | 
     ErrCode retCode = hostImpl->SetAppDistributionTypes(appDistributionTypeEnums);
     EXPECT_EQ(retCode, ERR_OK);
 }
+
+/**
+ * @tc.number: SetAppDistributionTypes_0001
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test SetAppDistributionTypes
+ */
+HWTEST_F(BmsBundleManagerTest3, SetAppDistributionTypes_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::set<AppDistributionTypeEnum> appDistributionTypeEnums{};
+    ErrCode retCode = hostImpl->SetAppDistributionTypes(appDistributionTypeEnums);
+    
+    retCode = hostImpl->SetAppDistributionTypes(appDistributionTypeEnums);
+    EXPECT_EQ(retCode, ERR_OK);
+}
 } // OHOS

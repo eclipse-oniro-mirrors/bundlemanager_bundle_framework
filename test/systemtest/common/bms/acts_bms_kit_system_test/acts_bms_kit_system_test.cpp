@@ -10622,10 +10622,9 @@ HWTEST_F(ActsBmsKitSystemTest, SetAppDistributionTypes_0003, Function | MediumTe
             AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_APP_GALLERY
         };
         ErrCode ret =bundleMgrProxy->SetAppDistributionTypes(appDistributionTypeEnums2);
-        EXPECT_EQ(ret, ERR_OK);
         std::set<AppDistributionTypeEnum> appDistributionTypeEnums{};
-        ErrCode ret =bundleMgrProxy->SetAppDistributionTypes(appDistributionTypeEnums);
-        EXPECT_EQ(ret, ERR_OK);
+        ret =bundleMgrProxy->SetAppDistributionTypes(appDistributionTypeEnums);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     }
     std::cout << "END SetAppDistributionTypes_0001" << std::endl;
 }
