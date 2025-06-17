@@ -227,6 +227,9 @@ struct ApplicationInfo : public Parcelable {
     bool distributedNotificationEnabled = true;
     bool installedForAllUser = false;
 
+    // forceRotate only for broker
+    bool isForceRotate = false;
+
     bool allowEnableNotification = false;
     bool allowArkTsLargeHeap = false;
     bool allowMultiProcess = false;
@@ -349,9 +352,6 @@ struct ApplicationInfo : public Parcelable {
     // quick fix info
     AppQuickFix appQuickFix;
     AppPreloadPhase appPreloadPhase = AppPreloadPhase::DEFAULT;
-
-    // forceRotate only for broker
-    bool isForceRotate = false;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
