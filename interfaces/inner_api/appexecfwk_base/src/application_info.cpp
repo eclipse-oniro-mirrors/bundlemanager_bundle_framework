@@ -72,6 +72,7 @@ const char* APPLICATION_DEBUG = "debug";
 const char* APPLICATION_DEVICE_ID = "deviceId";
 const char* APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED = "distributedNotificationEnabled";
 const char* APPLICATION_INSTALLED_FOR_ALL_USER = "installedForAllUser";
+const char* APPLICATION_IS_FORCE_ROTATE = "isForceRotate";
 const char* APPLICATION_ENTITY_TYPE = "entityType";
 const char* APPLICATION_PROCESS = "process";
 const char* APPLICATION_SUPPORTED_MODES = "supportedModes";
@@ -147,7 +148,6 @@ const char* APPLICATION_ASSET_ACCESS_GROUPS = "assetAccessGroups";
 const char* APPLICATION_HAS_PLUGIN = "hasPlugin";
 const char* APPLICATION_START_MODE = "startMode";
 const char* APPLICATION_APP_PRELOAD_PHASE = "appPreloadPhase";
-const char* APPLICATION_IS_FORCE_ROTATE = "isForceRotate";
 }
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
@@ -440,6 +440,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     deviceId = Str16ToStr8(parcel.ReadString16());
     distributedNotificationEnabled = parcel.ReadBool();
     installedForAllUser = parcel.ReadBool();
+    isForceRotate = parcel.ReadBool();
     allowEnableNotification = parcel.ReadBool();
     allowArkTsLargeHeap = parcel.ReadBool();
     entityType = Str16ToStr8(parcel.ReadString16());
@@ -609,7 +610,6 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     hasPlugin = parcel.ReadBool();
     startMode = static_cast<StartMode>(parcel.ReadUint8());
     appPreloadPhase = static_cast<AppPreloadPhase>(parcel.ReadUint8());
-    isForceRotate = parcel.ReadBool();
     return true;
 }
 
@@ -681,6 +681,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceId));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, distributedNotificationEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, installedForAllUser);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isForceRotate);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowEnableNotification);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowArkTsLargeHeap);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(entityType));
@@ -796,7 +797,6 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasPlugin);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(startMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(appPreloadPhase));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isForceRotate);
     return true;
 }
 
@@ -986,6 +986,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_DEVICE_ID, applicationInfo.deviceId},
         {APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED, applicationInfo.distributedNotificationEnabled},
         {APPLICATION_INSTALLED_FOR_ALL_USER, applicationInfo.installedForAllUser},
+        {APPLICATION_IS_FORCE_ROTATE, applicationInfo.isForceRotate}
         {APPLICATION_ALLOW_ENABLE_NOTIFICATION, applicationInfo.allowEnableNotification},
         {APPLICATION_ALLOW_ARK_TS_LARGE_HEAP, applicationInfo.allowArkTsLargeHeap},
         {APPLICATION_ENTITY_TYPE, applicationInfo.entityType},
@@ -1052,8 +1053,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_ASSET_ACCESS_GROUPS, applicationInfo.assetAccessGroups},
         {APPLICATION_HAS_PLUGIN, applicationInfo.hasPlugin},
         {APPLICATION_START_MODE, applicationInfo.startMode},
-        {APPLICATION_APP_PRELOAD_PHASE, applicationInfo.appPreloadPhase},
-        {APPLICATION_IS_FORCE_ROTATE, applicationInfo.isForceRotate}
+        {APPLICATION_APP_PRELOAD_PHASE, applicationInfo.appPreloadPhase}
     };
 }
 
