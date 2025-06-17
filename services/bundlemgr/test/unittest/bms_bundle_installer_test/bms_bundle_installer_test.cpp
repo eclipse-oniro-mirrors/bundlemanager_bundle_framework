@@ -11174,12 +11174,15 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0065, Function | MediumTest | L
 {
     PluginInstaller installer;
     std::string bundlePath = TEST_HSP_PATH2;
-    std::string pluginBundleDir = "/data/app/el1/bundle/public";
+    std::string pluginBundleDir = "/data";
     std::string moduleName = "moduleName";
     InnerBundleInfo newInfo;
     installer.signatureFileDir_ = "data/";
     auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
     EXPECT_NE(ret, ERR_OK);
+    std::string hspPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + moduleName +
+        ServiceConstants::HSP_FILE_SUFFIX;
+    installer.RemoveDir(hspPath);
 }
 
 /**

@@ -3068,14 +3068,18 @@ std::string BundleMgrHostImpl::GetAppIdByBundleName(const std::string &bundleNam
         APP_LOGE("DataMgr is nullptr");
         return Constants::EMPTY_STRING;
     }
-    BundleInfo bundleInfo;
-    bool ret = dataMgr->GetBundleInfo(bundleName, GET_BUNDLE_DEFAULT, bundleInfo, userId);
-    if (!ret) {
-        APP_LOGE("get bundleInfo failed");
+    int32_t requestUserId = dataMgr->GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid user %{public}d", userId);
         return Constants::EMPTY_STRING;
     }
-    APP_LOGD("appId is %{private}s", bundleInfo.appId.c_str());
-    return bundleInfo.appId;
+    std::string appId;
+    if (dataMgr->GetAppIdByBundleName(bundleName, appId) != ERR_OK) {
+        APP_LOGE("GetAppIdByBundleName failed");
+        return Constants::EMPTY_STRING;
+    }
+    APP_LOGD("appId is %{private}s", appId.c_str());
+    return appId;
 }
 
 std::string BundleMgrHostImpl::GetAppType(const std::string &bundleName)
@@ -3091,13 +3095,11 @@ std::string BundleMgrHostImpl::GetAppType(const std::string &bundleName)
         APP_LOGE("DataMgr is nullptr");
         return Constants::EMPTY_STRING;
     }
-    BundleInfo bundleInfo;
-    bool ret = dataMgr->GetBundleInfo(bundleName, GET_BUNDLE_DEFAULT, bundleInfo, Constants::UNSPECIFIED_USERID);
-    if (!ret) {
-        APP_LOGE("get bundleInfo failed");
+    bool isSystemApp;
+    if (dataMgr->IsSystemApp(bundleName, isSystemApp) != ERR_OK) {
+        APP_LOGE("IsSystemApp failed");
         return Constants::EMPTY_STRING;
     }
-    bool isSystemApp = bundleInfo.applicationInfo.isSystemApp;
     std::string appType = isSystemApp ? SYSTEM_APP : THIRD_PARTY_APP;
     APP_LOGD("appType is %{public}s", appType.c_str());
     return appType;

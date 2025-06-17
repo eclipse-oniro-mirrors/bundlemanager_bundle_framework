@@ -2629,13 +2629,13 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0100, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         std::string appType = bundleMgrProxy->GetAppType(appName);
-        EXPECT_EQ(appType, EMPTY_STRING);
+        EXPECT_EQ(appType, "system");
         resvec.clear();
         Uninstall(appName, resvec);
         std::string uninstallResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
-        if (std::strcmp(appType.c_str(), "") != 0) {
+        if (std::strcmp(appType.c_str(), "system") != 0) {
             APP_LOGI("GetAppType_0100 failed - cycle count: %{public}d", i);
             break;
         }
@@ -2666,9 +2666,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0200, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         std::string appType = bundleMgrProxy->GetAppType(SYSTEM_SETTINGS_BUNDLE_NAME);
-        EXPECT_EQ(appType, EMPTY_STRING);
+        EXPECT_EQ(appType, "system");
 
-        if (std::strcmp(appType.c_str(), "") != 0) {
+        if (std::strcmp(appType.c_str(), "system") != 0) {
             APP_LOGI("GetAppType_0200 failed - cycle count: %{public}d", i);
             break;
         }

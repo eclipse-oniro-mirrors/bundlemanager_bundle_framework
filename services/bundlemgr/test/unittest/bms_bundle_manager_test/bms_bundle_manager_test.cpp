@@ -2935,6 +2935,45 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5100, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_5200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetAppIdByBundleName
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string ret = hostImpl->GetAppIdByBundleName("", USERID);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+
+    ret = hostImpl->GetAppIdByBundleName(BUNDLE_NAME, -1);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+
+    auto dataMgr = GetBundleDataMgr();
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
+    ret = hostImpl->GetAppIdByBundleName(BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_5300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetAppType
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5300, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string ret = hostImpl->GetAppType("");
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+
+    auto dataMgr = GetBundleDataMgr();
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
+    ret = hostImpl->GetAppType(BUNDLE_NAME);
+    EXPECT_EQ(ret, "third-party");
+}
+
+/**
  * @tc.number: GetAbilityInfos_0100
  * @tc.name: test GetAbilityInfos
  * @tc.desc: 1.get ability not exist
