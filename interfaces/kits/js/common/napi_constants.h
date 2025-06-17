@@ -84,6 +84,7 @@ constexpr const char* RESOURCE_FLAGS = "resourceFlags";
 constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
 constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
     "ohos.permission.GET_INSTALLED_BUNDLE_LIST and ohos.permission.GET_BUNDLE_RESOURCES";
+constexpr const char* PARSE_START_OPTIONS = "parse StartOptions failed";
 constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
@@ -108,6 +109,15 @@ constexpr const char* GET_OVERLAY_MODULE_INFO = "GetOverlayModuleInfo";
 constexpr const char* GET_TARGET_OVERLAY_MODULE_INFOS = "GetTargetOverlayModuleInfos";
 constexpr const char* GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME = "GetOverlayModuleInfoByBundleName";
 constexpr const char* GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME = "GetTargetOverlayModuleInfosByBundleName";
+constexpr const char* GET_LAUNCHER_ABILITY_INFO = "GetLauncherAbilityInfo";
+constexpr const char* GET_LAUNCHER_ABILITY_INFO_SYNC = "GetLauncherAbilityInfoSync";
+constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo";
+constexpr const char* GET_SHORTCUT_INFO = "GetShortcutInfo";
+constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
+constexpr const char* USER_ID = "userId";
+constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
+constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
+constexpr const char* START_SHORTCUT = "StartShortcut";
 }
 }
 }

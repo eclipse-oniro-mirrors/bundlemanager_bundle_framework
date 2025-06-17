@@ -44,7 +44,6 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* IS_ENABLE = "isEnable";
-constexpr const char* USER_ID = "userId";
 constexpr const char* APP_FLAGS = "appFlags";
 constexpr const char* PROFILE_TYPE = "profileType";
 constexpr const char* STRING_TYPE = "napi_string";

@@ -60,7 +60,6 @@ constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* FUNCTION_TYPE = "napi_function";
 constexpr const char* CALLBACK = "callback";
 // property name
-const char* USER_ID = "userId";
 const char* INSTALL_FLAG = "installFlag";
 const char* IS_KEEP_DATA = "isKeepData";
 const char* CROWD_TEST_DEADLINE = "crowdtestDeadline";
