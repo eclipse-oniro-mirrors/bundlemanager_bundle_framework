@@ -22,23 +22,23 @@
 #include "common_fun_ani.h"
 #include "common_func.h"
 #include "ipc_skeleton.h"
+#include "napi_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
-constexpr const char* DELETE_DESKTOP_SHORTCUT_INFO = "DeleteDesktopShortcutInfo";
-constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo";
-constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortcutInfo";
+constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
+constexpr const char* NS_NAME_SHORTCUTMANAGER = "@ohos.bundle.shortcutManager.shortcutManager";
 }
 
-static void AddDesktopShortcutInfo(ani_env* env, ani_object info, ani_double aniUserId)
+static void AniAddDesktopShortcutInfo(ani_env* env, ani_object info, ani_double aniUserId)
 {
+    APP_LOGD("ani AddDesktopShortcutInfo called");
     int32_t userId = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
         BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
+            env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return;
     }
     
@@ -64,13 +64,14 @@ static void AddDesktopShortcutInfo(ani_env* env, ani_object info, ani_double ani
     }
 }
 
-static void DeleteDesktopShortcutInfo(ani_env* env, ani_object info, ani_double aniUserId)
+static void AniDeleteDesktopShortcutInfo(ani_env* env, ani_object info, ani_double aniUserId)
 {
+    APP_LOGD("ani DeleteDesktopShortcutInfo called");
     int32_t userId = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
         BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
+            env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return;
     }
 
@@ -97,13 +98,14 @@ static void DeleteDesktopShortcutInfo(ani_env* env, ani_object info, ani_double 
     }
 }
 
-static ani_ref GetAllDesktopShortcutInfo(ani_env* env, ani_double aniUserId)
+static ani_ref AniGetAllDesktopShortcutInfo(ani_env* env, ani_double aniUserId)
 {
+    APP_LOGD("ani GetAllDesktopShortcutInfo called");
     int32_t userId = 0;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
         BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, CommonFunAniNS::TYPE_NUMBER);
+            env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return nullptr;
     }
 
@@ -133,32 +135,33 @@ static ani_ref GetAllDesktopShortcutInfo(ani_env* env, ani_double aniUserId)
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
-    APP_LOGI("ANI_Constructor called");
+    APP_LOGI("ANI_Constructor shortcutManager called");
     ani_env* env;
-    ani_status res = vm->GetEnv(ANI_VERSION_1, &env);
-    RETURN_ANI_STATUS_IF_NOT_OK(res, "Unsupported ANI_VERSION_1");
+    ani_status status = vm->GetEnv(ANI_VERSION_1, &env);
+    RETURN_ANI_STATUS_IF_NOT_OK(status, "Unsupported ANI_VERSION_1");
 
-    auto nsName = arkts::ani_signature::Builder::BuildNamespace(
-        {"@ohos", "bundle", "shortcutManager", "shortcutManager"});
-    ani_namespace kitNs;
-    res = env->FindNamespace(nsName.Descriptor().c_str(), &kitNs);
-    RETURN_ANI_STATUS_IF_NOT_OK(
-        res, "Not found nameSpace L@ohos/bundle/shortcutManager/shortcutManager;");
+    arkts::ani_signature::Namespace nsName = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_SHORTCUTMANAGER);
+    ani_namespace kitNs = nullptr;
+    status = env->FindNamespace(nsName.Descriptor().c_str(), &kitNs);
+    if (status != ANI_OK) {
+        APP_LOGE("FindNamespace: %{public}s fail with %{public}d", NS_NAME_SHORTCUTMANAGER, status);
+        return status;
+    }
 
     std::array methods = {
-        ani_native_function {
-            "AddDesktopShortcutInfo", nullptr, reinterpret_cast<void*>(AddDesktopShortcutInfo)
-        },
-        ani_native_function {
-            "DeleteDesktopShortcutInfo", nullptr, reinterpret_cast<void*>(DeleteDesktopShortcutInfo)
-        },
-        ani_native_function {
-            "GetAllDesktopShortcutInfo", nullptr, reinterpret_cast<void*>(GetAllDesktopShortcutInfo)
-        },
+        ani_native_function { "addDesktopShortcutInfoNative", nullptr,
+            reinterpret_cast<void*>(AniAddDesktopShortcutInfo) },
+        ani_native_function { "deleteDesktopShortcutInfoNative", nullptr,
+            reinterpret_cast<void*>(AniDeleteDesktopShortcutInfo) },
+        ani_native_function { "getAllDesktopShortcutInfoNative", nullptr,
+            reinterpret_cast<void*>(AniGetAllDesktopShortcutInfo) },
     };
 
-    res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
-    RETURN_ANI_STATUS_IF_NOT_OK(res, "Cannot bind native methods");
+    status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
+    if (status != ANI_OK) {
+        APP_LOGE("Namespace_BindNativeFunctions: %{public}s fail with %{public}d", NS_NAME_SHORTCUTMANAGER, status);
+        return status;
+    }
 
     *result = ANI_VERSION_1;
 

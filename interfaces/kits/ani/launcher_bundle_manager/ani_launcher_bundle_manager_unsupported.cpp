@@ -16,70 +16,64 @@
 #include <ani_signature_builder.h>
 #include "bundle_errors.h"
 #include "business_error_ani.h"
+#include "common_fun_ani.h"
 #include "common_func.h"
+#include "napi_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace  {
-constexpr const char* START_SHORTCUT = "StartShortcut";
-constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
+namespace {
+constexpr const char* NS_NAME_LAUNCHERMANAGER = "@ohos.bundle.launcherBundleManager.launcherBundleManager";
 }
 
-static void StartShortcutSync(ani_env *env, ani_object aniShortcutInfo, ani_object aniStartOptions)
+static void AniStartShortcut(ani_env *env, ani_object aniShortcutInfo, ani_object aniStartOptions)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, START_SHORTCUT, "");
-    return nullptr;
+    return;
 }
 
-static ani_object GetShortcutInfoSync(ani_env *env, ani_string aniBundleName, ani_double aniUserId)
+static ani_object AniGetShortcutInfo(ani_env *env,
+    ani_string aniBundleName, ani_double aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
-    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_SHORTCUT_INFO_SYNC, "");
+    bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        isSync ? GET_SHORTCUT_INFO_SYNC : GET_SHORTCUT_INFO, "");
     return nullptr;
 }
 
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
-    APP_LOGI("ANI_Constructor called");
+    APP_LOGI("ANI_Constructor launcherBundleManager called");
     ani_env* env;
-    if (vm == nullptr) {
-        APP_LOGE("ANI_Constructor vm is nullptr");
-        return static_cast<ani_status>(ANI_CONSTRUCTOR_ENV_ERR);
-    }
-    if (vm->GetEnv(ANI_VERSION_1, &env) != ANI_OK) {
-        APP_LOGE("Unsupported ANI_VERSION_1");
-        return static_cast<ani_status>(ANI_CONSTRUCTOR_ENV_ERR);
-    }
-    if (env == nullptr) {
-        APP_LOGE("ANI_Constructor env is nullptr");
-        return static_cast<ani_status>(ANI_CONSTRUCTOR_ENV_ERR);
-    }
-    auto nsName = arkts::ani_signature::Builder::BuildNamespace(
-        {"@ohos", "bundle", "launcherBundleManager", "launcherBundleManager"});
-    ani_namespace kitNs;
-    if (env->FindNamespace(nsName.Descriptor().c_str(), &kitNs) != ANI_OK) {
-        APP_LOGE("Not found nameSpace name: %{public}s", nsName.Descriptor().c_str());
-        return static_cast<ani_status>(ANI_CONSTRUCTOR_FIND_NAMESPACE_ERR);
+    ani_status status = vm->GetEnv(ANI_VERSION_1, &env);
+    RETURN_ANI_STATUS_IF_NOT_OK(status, "Unsupported ANI_VERSION_1");
+
+    arkts::ani_signature::Namespace nsName = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_LAUNCHERMANAGER);
+    ani_namespace kitNs = nullptr;
+    status = env->FindNamespace(nsName.Descriptor().c_str(), &kitNs);
+    if (status != ANI_OK) {
+        APP_LOGE("FindNamespace: %{public}s fail with %{public}d", NS_NAME_LAUNCHERMANAGER, status);
+        return status;
     }
 
     std::array methods = {
-        ani_native_function {
-            "StartShortcutSync", nullptr, reinterpret_cast<void*>(StartShortcutSync)
-        },
-        ani_native_function {
-            "GetShortcutInfoSync", nullptr, reinterpret_cast<void*>(GetShortcutInfoSync)
-        },
+        ani_native_function { "startShortcutNative", nullptr, reinterpret_cast<void*>(AniStartShortcut) },
+        ani_native_function { "getShortcutInfoNative", nullptr, reinterpret_cast<void*>(AniGetShortcutInfo) },
     };
 
-    if (env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size()) != ANI_OK) {
-        APP_LOGE("Cannot bind native methods to %{public}s", nsName.Descriptor().c_str());
-        return static_cast<ani_status>(ANI_CONSTRUCTOR_BIND_NATIVE_FUNC_ERR);
-    };
+    status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
+    if (status != ANI_OK) {
+        APP_LOGE("Namespace_BindNativeFunctions: %{public}s fail with %{public}d", NS_NAME_LAUNCHERMANAGER, status);
+        return status;
+    }
 
     *result = ANI_VERSION_1;
+
     APP_LOGI("ANI_Constructor finished");
+
     return ANI_OK;
 }
 } // extern "C"

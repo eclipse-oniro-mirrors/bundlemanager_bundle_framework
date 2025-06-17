@@ -59,15 +59,11 @@ constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* FUNCTION_TYPE = "napi_function";
 constexpr const char* CALLBACK = "callback";
 // property name
-const char* USER_ID = "userId";
 const char* INSTALL_FLAG = "installFlag";
 const char* IS_KEEP_DATA = "isKeepData";
 const char* CROWD_TEST_DEADLINE = "crowdtestDeadline";
-const char* MODULE_NAME = "moduleName";
 const char* HASH_VALUE = "hashValue";
 const char* HASH_PARAMS = "hashParams";
-const char* BUNDLE_NAME = "bundleName";
-const char* APP_INDEX = "appIndex";
 const char* FILE_PATH = "filePath";
 const char* ADD_EXT_RESOURCE = "AddExtResource";
 const char* REMOVE_EXT_RESOURCE = "RemoveExtResource";

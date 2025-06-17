@@ -15,7 +15,7 @@ import("//build/config/components/ets_frontend/ets2abc_config.gni")
 import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
-ohos_shared_library("anishortcutmanager") {
+ohos_shared_library("ani_shortcut_manager") {
   branch_protector_ret = "pac_ret"
 
   sanitize = {

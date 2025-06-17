@@ -24,6 +24,8 @@ export default namespace bundleResourceManager {
 
   loadLibrary("ani_bundle_res_manager.z");
 
+  const INVALID_INT: number = -500;
+
   enum ResourceFlag {
     GET_RESOURCE_INFO_ALL = 0x00000001,
     GET_RESOURCE_INFO_WITH_LABEL = 0x00000002,
@@ -33,12 +35,18 @@ export default namespace bundleResourceManager {
     GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY = 0x00000020
   }
 
-  function getBundleResourceInfo(bundleName: string, resourceFlags?: number, appIndex?: number): BundleResourceInfo
+  export native function getBundleResourceInfoNative(bundleName: string, resourceFlags: number, appIndex: number): BundleResourceInfo;
+
+  function getBundleResourceInfo(bundleName: string, resourceFlags?: number): BundleResourceInfo
   {
-    let resFlag = resourceFlags ?? -500;
-    let appIdx = appIndex ?? -500;
-    return bundleResourceManager.getBundleResourceInfoNative(bundleName, resFlag, appIdx);
+    let resFlag = resourceFlags ?? INVALID_INT;
+    return bundleResourceManager.getBundleResourceInfoNative(bundleName, resFlag, INVALID_INT);
   }
 
-  export native function getBundleResourceInfoNative(bundleName: string, resourceFlags: number, appIndex: number): BundleResourceInfo;
+  function getBundleResourceInfo(bundleName: string, resourceFlags?: number, appIndex?: number): BundleResourceInfo
+  {
+    let resFlag = resourceFlags ?? INVALID_INT;
+    let appIdx = appIndex ?? INVALID_INT;
+    return bundleResourceManager.getBundleResourceInfoNative(bundleName, resFlag, appIdx);
+  }
 }

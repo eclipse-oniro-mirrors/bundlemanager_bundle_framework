@@ -65,8 +65,8 @@ export default namespace zlib {
     p1.then(() => {
       let r = new BusinessError();
       callback(r, undefined);
-    }).catch((err: BusinessError): void => {
-      callback(err, undefined);
+    }).catch((err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -78,8 +78,8 @@ export default namespace zlib {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
@@ -95,8 +95,8 @@ export default namespace zlib {
     p1.then(() => {
       let r = new BusinessError();
       callback(r, undefined);
-    }).catch((err: BusinessError): void => {
-      callback(err, undefined);
+    }).catch((err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -108,8 +108,8 @@ export default namespace zlib {
     p1.then(() => {
       let r = new BusinessError();
       callback(r, undefined);
-    }).catch((err: BusinessError): void => {
-      callback(err, undefined);
+    }).catch((err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -122,8 +122,8 @@ export default namespace zlib {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;

@@ -45,8 +45,6 @@ const char* RESOURCE_NAME_OF_GET_BUNDLE_PACK_INFO = "getBundlePackInfo";
 const char* RESOURCE_NAME_OF_GET_DISPATCH_INFO = "getDispatchInfo";
 const char* DISPATCH_INFO_VERSION = "1";
 const char* DISPATCH_INFO_DISPATCH_API = "1.0";
-const char* BUNDLE_NAME = "bundleName";
-const char* MODULE_NAME = "moduleName";
 const char* UPGRADE_FLAG = "upgradeFlag";
 const char* BUNDLE_PACK_FLAG = "bundlePackFlag";
 }
