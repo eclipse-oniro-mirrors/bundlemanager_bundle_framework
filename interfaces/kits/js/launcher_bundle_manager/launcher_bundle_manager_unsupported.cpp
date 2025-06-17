@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -65,6 +65,15 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
         "GetShortcutInfoSync");
+    napi_throw(env, error);
+    return nullptr;
+}
+
+napi_value GetShortcutInfoByAppIndex(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "GetShortcutInfoByAppIndex");
     napi_throw(env, error);
     return nullptr;
 }

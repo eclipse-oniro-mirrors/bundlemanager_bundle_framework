@@ -2742,6 +2742,26 @@ ErrCode BundleMgrHostImpl::GetShortcutInfoV9(const std::string &bundleName,
     return dataMgr->GetShortcutInfoV9(bundleName, userId, shortcutInfos);
 }
 
+ErrCode BundleMgrHostImpl::GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,
+    std::vector<ShortcutInfo> &shortcutInfos)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetShortcutInfoByAppIndex(bundleName, appIndex, shortcutInfos);
+}
+
 bool BundleMgrHostImpl::GetAllCommonEventInfo(const std::string &eventKey,
     std::vector<CommonEventInfo> &commonEventInfos)
 {

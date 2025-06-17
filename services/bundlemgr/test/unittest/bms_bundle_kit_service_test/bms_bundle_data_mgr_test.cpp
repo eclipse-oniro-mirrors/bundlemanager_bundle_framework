@@ -2837,6 +2837,40 @@ HWTEST_F(BmsBundleDataMgrTest, GetShortcutInfoV9_0100, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: GetShortcutInfoByAppIndex_0100
+ * @tc.name: test GetShortcutInfoByAppIndex
+ * @tc.desc: 1.system run normally
+ *           2.check GetShortcutInfoByAppIndex failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetShortcutInfoByAppIndex_0100, Function | SmallTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    int32_t appIndex = 0;
+    ErrCode res = GetBundleDataMgr()->GetShortcutInfoByAppIndex("", appIndex, shortcutInfos);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_TRUE(shortcutInfos.empty());
+    GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
+
+/**
+ * @tc.number: GetShortcutInfoByAppIndex_0200
+ * @tc.name: test GetShortcutInfoByAppIndex
+ * @tc.desc: 1.system run normally
+ *           2.check GetShortcutInfoByAppIndex failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetShortcutInfoByAppIndex_0200, Function | SmallTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    int32_t appIndex = 100;
+    ErrCode res = GetBundleDataMgr()->GetShortcutInfoByAppIndex("", appIndex, shortcutInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    EXPECT_TRUE(shortcutInfos.empty());
+    GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
+
+/**
  * @tc.number: GetAllCommonEventInfo_0100
  * @tc.name: test GetAllCommonEventInfo
  * @tc.desc: 1.system run normally

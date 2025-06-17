@@ -34,6 +34,7 @@ static napi_value LauncherBundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllLauncherAbilityInfo", GetAllLauncherAbilityInfo),
         DECLARE_NAPI_FUNCTION("getShortcutInfo", GetShortcutInfo),
         DECLARE_NAPI_FUNCTION("getShortcutInfoSync", GetShortcutInfoSync),
+        DECLARE_NAPI_FUNCTION("getShortcutInfoByAppIndex", GetShortcutInfoByAppIndex),
         DECLARE_NAPI_FUNCTION("startShortcut", StartShortcut),
         DECLARE_NAPI_FUNCTION("startShortcutWithReason", StartShortcutWithReason),
     };

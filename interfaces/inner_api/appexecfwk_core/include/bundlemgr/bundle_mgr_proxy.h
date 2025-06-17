@@ -764,6 +764,18 @@ public:
      */
     virtual ErrCode GetShortcutInfoV9(const std::string &bundleName,
         std::vector<ShortcutInfo> &shortcutInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    /**
+     * @brief Obtains the ShortcutInfo objects provided by a specified application on the device.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param shortcutInfos List of ShortcutInfo objects if obtained.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param userId Indicates the user id.
+     * @return Returns err code of result.
+     */
+    virtual ErrCode GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,
+        std::vector<ShortcutInfo> &shortcutInfos) override;
+
     /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.

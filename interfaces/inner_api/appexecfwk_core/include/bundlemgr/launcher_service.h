@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -109,6 +109,17 @@ public:
      */
     ErrCode GetShortcutInfoV9(const std::string &bundleName,
         std::vector<ShortcutInfo> &shortcutInfos, int32_t userId = Constants::UNSPECIFIED_USERID);
+
+    /**
+     * @brief Obtains information about the shortcuts of the application by appIndex.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param ShortcutInfo List of ShortcutInfo objects if obtained.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param userId Indicates the user ID.
+     * @return Returns err code of result.
+     */
+    ErrCode GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,
+        std::vector<ShortcutInfo> &shortcutInfos);
 
 private:
     void InitWant(Want &want, const std::string &bundleName);

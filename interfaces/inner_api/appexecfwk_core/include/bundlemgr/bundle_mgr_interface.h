@@ -1046,6 +1046,13 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetShortcutInfoByAppIndex(const std::string &bundleName, const int32_t appIndex,
+        std::vector<ShortcutInfo> &shortcutInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    
     /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
