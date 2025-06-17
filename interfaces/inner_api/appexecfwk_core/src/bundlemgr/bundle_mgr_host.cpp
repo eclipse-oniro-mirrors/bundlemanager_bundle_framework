@@ -2225,7 +2225,7 @@ ErrCode BundleMgrHost::HandleGetBundleInstaller(MessageParcel &data, MessageParc
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     sptr<IBundleInstaller> installer = GetBundleInstaller();
     if (installer == nullptr) {
-        APP_LOGE("bundle installer is nullptr");
+        APP_LOGE("installer is nullptr");
         return ERR_APPEXECFWK_INSTALL_HOST_INSTALLER_FAILED;
     }
 

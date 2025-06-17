@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -654,7 +654,7 @@ ErrCode BundleMgrClientImpl::Connect()
     if (bundleInstaller_ == nullptr) {
         bundleInstaller_ = bundleMgr_->GetBundleInstaller();
         if ((bundleInstaller_ == nullptr) || (bundleInstaller_->AsObject() == nullptr)) {
-            APP_LOGE("failed to get bundle installer proxy");
+            APP_LOGE("get installer failed");
             return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
         }
     }
