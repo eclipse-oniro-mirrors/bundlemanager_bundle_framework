@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,7 @@ static napi_value LauncherBundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getShortcutInfo", GetShortcutInfo),
         DECLARE_NAPI_FUNCTION("getShortcutInfoSync", GetShortcutInfoSync),
         DECLARE_NAPI_FUNCTION("startShortcut", StartShortcut),
+        DECLARE_NAPI_FUNCTION("startShortcutWithReason", StartShortcutWithReason),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

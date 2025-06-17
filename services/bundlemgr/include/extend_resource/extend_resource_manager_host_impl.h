@@ -96,6 +96,7 @@ private:
         const int32_t userId, const int32_t appIndex);
     bool IsNeedUpdateBundleResourceInfo(const std::string &bundleName, const int32_t userId);
     bool CheckAcrossUserPermission(const int32_t userId);
+    bool CheckWhetherDynamicIconNeedProcess(const std::string &bundleName, const int32_t userId);
 
     std::atomic<uint32_t> id_ = 0;
 };

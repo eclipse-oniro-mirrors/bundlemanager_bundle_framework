@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -107,6 +107,7 @@ group("unittest") {
       "unittest/bms_install_exception_mgr_test:unittest",
       "unittest/bms_installd_client_test:unittest",
       "unittest/bms_installd_host_test:unittest",
+      "unittest/bms_on_demand_install_test:unittest",
       "unittest/bms_patch_parser_test:unittest",
       "unittest/bms_rdb_data_manager_test:unittest",
       "unittest/bms_service_bundle_scan_test:unittest",

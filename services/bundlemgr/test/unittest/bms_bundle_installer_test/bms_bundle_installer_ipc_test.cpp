@@ -31,6 +31,7 @@ namespace OHOS {
 namespace {
 const std::string HSPNAME = "hspName";
 const char* DATA = "data";
+const char* FILE_NAME = "manifest.json";
 size_t DATA_SIZE = 4;
 const std::string OVER_MAX_NAME_SIZE(260, 'x');
 constexpr int32_t TEST_INSTALLER_ID = 1024;
@@ -515,6 +516,24 @@ HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_1300, Function | Sm
     ASSERT_FALSE(proxy == nullptr);
     int32_t fd = -1;
     auto id = proxy->CreatePgoFileStream(HSPNAME, HSPNAME);
+    EXPECT_EQ(id, fd);
+}
+
+/**
+ * @tc.number: CreateSharedBundleStream_1400
+ * @tc.name: test GetInstallerId function of BundleStreamInstallerProxy
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateExtProfileFileStream
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_1400, Function | SmallTest | Level0)
+{
+    auto proxy = GetStreamInstallerProxy();
+    ASSERT_FALSE(proxy == nullptr);
+    int32_t fd = -1;
+    auto id = proxy->CreateExtProfileFileStream("");
+    EXPECT_EQ(id, fd);
+
+    id = proxy->CreateExtProfileFileStream(FILE_NAME);
     EXPECT_EQ(id, fd);
 }
 

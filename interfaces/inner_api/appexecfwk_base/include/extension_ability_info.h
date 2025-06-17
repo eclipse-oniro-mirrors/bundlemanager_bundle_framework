@@ -79,6 +79,7 @@ enum class ExtensionAbilityType {
     DISTRIBUTED = 28,
     APP_SERVICE = 29,
     LIVE_FORM = 30,
+    SELECTION = 31,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
@@ -182,6 +183,7 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::string hapPath;
     std::string process;
     std::string customProcess;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
     std::vector<std::string> permissions;
     std::vector<std::string> appIdentifierAllowList;
     std::vector<Metadata> metadata;

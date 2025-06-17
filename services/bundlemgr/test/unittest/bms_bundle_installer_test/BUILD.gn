@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -25,7 +25,7 @@ ohos_unittest("BmsBundleInstallerTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -107,6 +107,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -247,7 +248,7 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -315,6 +316,7 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -444,7 +446,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -528,6 +530,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -649,7 +652,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -700,6 +703,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -820,10 +824,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "../../mock/include/parameter",
-  ]
+  include_dirs = [ "../../mock/include/parameter" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -863,6 +864,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -976,10 +978,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "../../mock/include/parameter",
-  ]
+  include_dirs = [ "../../mock/include/parameter" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -1020,6 +1019,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -1132,10 +1132,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "${services_path}/bundlemgr/test/mock/include/parameter",
-  ]
+  include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -1181,6 +1178,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -1295,10 +1293,7 @@ ohos_unittest("BmsBundleInstallDriverTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "${services_path}/bundlemgr/test/mock/include/parameter",
-  ]
+  include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -1376,6 +1371,7 @@ ohos_unittest("BmsBundleInstallDriverTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -1498,7 +1494,7 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -1555,6 +1551,7 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -1684,7 +1681,7 @@ ohos_unittest("BmsBundleInstallerPermissionTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources += sandbox_app
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
@@ -1760,6 +1757,7 @@ ohos_unittest("BmsBundleInstallerPermissionTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",

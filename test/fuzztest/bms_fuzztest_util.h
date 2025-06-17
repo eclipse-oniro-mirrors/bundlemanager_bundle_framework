@@ -39,7 +39,15 @@ constexpr uint32_t CODE_MAX_FOUR = 4;
 constexpr uint32_t CODE_MAX_FIVE = 5;
 constexpr uint32_t ORIENTATION_MAX = 14;
 constexpr uint32_t EXTENSION_ABILITY_MAX = 25;
-
+const std::vector<int32_t> USERS {
+    Constants::ANY_USERID,
+    Constants::ALL_USERID,
+    Constants::UNSPECIFIED_USERID,
+    Constants::INVALID_USERID,
+    Constants::U1,
+    Constants::DEFAULT_USERID,
+    Constants::START_USERID
+};
 
 std::vector<std::string> GenerateStringArray(FuzzedDataProvider& fdp, size_t arraySizeMax = ARRAY_MAX_LENGTH,
     size_t stringSize = STRING_MAX_LENGTH)
@@ -448,16 +456,19 @@ void GenerateCompatibleAbilityInfo(FuzzedDataProvider& fdp, CompatibleAbilityInf
     // deprecated: remove this field in new package format.
     compatibleAbilityInfo.type = static_cast<AbilityType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_FIVE));
     compatibleAbilityInfo.subType = static_cast<AbilitySubType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_ONE));
-    compatibleAbilityInfo.orientation = static_cast<DisplayOrientation>(fdp.ConsumeIntegralInRange<uint8_t>(0, ORIENTATION_MAX));
+    compatibleAbilityInfo.orientation =
+        static_cast<DisplayOrientation>(fdp.ConsumeIntegralInRange<uint8_t>(0, ORIENTATION_MAX));
     compatibleAbilityInfo.launchMode = static_cast<LaunchMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_TWO));
     // deprecated: ability code class simple name, use 'className' instead.
     compatibleAbilityInfo.package = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     compatibleAbilityInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     compatibleAbilityInfo.label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH); // display name on screen.
     compatibleAbilityInfo.description = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    compatibleAbilityInfo.iconPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH); // used as icon data (base64) for WEB Ability.
+    compatibleAbilityInfo.iconPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    // used as icon data (base64) for WEB Ability.
     compatibleAbilityInfo.uri = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH); // uri of ability.
-    compatibleAbilityInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH); // indicates the name of the .hap package to which the capability belongs.
+    compatibleAbilityInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    // indicates the name of the .hap package to which the capability belongs.
     compatibleAbilityInfo.process = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     compatibleAbilityInfo.targetAbility = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     compatibleAbilityInfo.appName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
@@ -550,7 +561,8 @@ void GenerateFormInfo(FuzzedDataProvider& fdp, FormInfo &formInfo)
     formInfo.bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.originalBundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.relatedBundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    formInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);  // the "module.distro.moduleName" in config.json
+    formInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    // the "module.distro.moduleName" in config.json
     formInfo.abilityName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.displayName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
@@ -561,6 +573,16 @@ void GenerateFormInfo(FuzzedDataProvider& fdp, FormInfo &formInfo)
     formInfo.scheduledUpdateTime = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.multiScheduledUpdateTime = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.src = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+}
+
+int32_t GenerateRandomUser(FuzzedDataProvider& fdp)
+{
+    uint8_t size = USERS.size();
+    uint8_t index = fdp.ConsumeIntegralInRange<uint8_t>(0, size);
+    if (index > 0 && index <= size) {
+        return USERS[index - 1];
+    }
+    return Constants::DEFAULT_USERID;
 }
 }  // namespace BMSFuzzTestUtil
 }  // namespace AppExecFwk

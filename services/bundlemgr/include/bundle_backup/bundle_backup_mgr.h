@@ -18,15 +18,15 @@
 
 #include "iremote_stub.h"
 #include "nlohmann/json.hpp"
+#include "singleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 
-class BundleBackupMgr {
+class BundleBackupMgr : public DelayedSingleton<BundleBackupMgr> {
 public:
     BundleBackupMgr();
     ~BundleBackupMgr();
-    static BundleBackupMgr& GetInstance();
     
     ErrCode OnBackup(MessageParcel& data, MessageParcel& reply);
     ErrCode OnRestore(MessageParcel& data, MessageParcel& reply);

@@ -125,6 +125,7 @@ constexpr const char* MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
 constexpr const char* DATA_GROUP_INFOS = "dataGroupInfos";
 constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
 constexpr const char* MODULE_IS_ENCRYPTED = "isEncrypted";
+constexpr const char* MODULE_RESIZEABLE = "resizeable";
 constexpr const char* MODULE_ROUTER_MAP = "routerMap";
 constexpr const char* EXT_RESOURCE_MODULE_NAME = "moduleName";
 constexpr const char* EXT_RESOURCE_ICON_ID = "iconId";
@@ -148,9 +149,12 @@ constexpr const char* MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
 constexpr const char* MODULE_TSAN_ENABLED = "tsanEnabled";
 constexpr const char* MODULE_PACKAGE_NAME = "packageName";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
+constexpr const char* MODULE_FORM_EXTENSION_MODULE = "formExtensionModule";
+constexpr const char* MODULE_FORM_WIDGET_MODULE = "formWidgetModule";
 constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
 constexpr const char* MODULE_UBSAN_ENABLED = "ubsanEnabled";
 constexpr const char* MODULE_DEBUG = "debug";
+constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr const char* MODULE_BOOL_SET = "boolSet";
@@ -266,6 +270,7 @@ void InnerBundleInfo::GetInternalDependentHspInfo(
         hspInfo.bundleName = baseApplicationInfo_->bundleName;
         hspInfo.moduleName = item->second.moduleName;
         hspInfo.hapPath = item->second.hapPath;
+        hspInfo.codeLanguage = item->second.codeLanguage;
         hspInfoVector.emplace_back(hspInfo);
     }
 }
@@ -387,6 +392,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_METADATA, info.metaData},
         {MODULE_COLOR_MODE, info.colorMode},
         {MODULE_DISTRO, info.distro},
+        {Constants::CODE_LANGUAGE, info.codeLanguage},
+        {Constants::ABILITY_STAGE_CODE_LANGUAGE, info.abilityStageCodeLanguage},
         {MODULE_DESCRIPTION, info.description},
         {MODULE_DESCRIPTION_ID, info.descriptionId},
         {MODULE_ICON, info.icon},
@@ -429,6 +436,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_TARGET_PRIORITY, info.targetPriority},
         {MODULE_OVERLAY_MODULE_INFO, info.overlayModuleInfo},
         {MODULE_PRELOADS, info.preloads},
+        {MODULE_RESIZEABLE, info.resizeable},
         {MODULE_BUNDLE_TYPE, info.bundleType},
         {MODULE_VERSION_CODE, info.versionCode},
         {MODULE_VERSION_NAME, info.versionName},
@@ -448,6 +456,9 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_TSAN_ENABLED, info.tsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
         {MODULE_APP_STARTUP, info.appStartup},
+        {MODULE_FORM_EXTENSION_MODULE, info.formExtensionModule},
+        {MODULE_FORM_WIDGET_MODULE, info.formWidgetModule},
+        {MODULE_CROS_APP_SHARED_CONFIG, info.crossAppSharedConfig},
         {MODULE_ABILITY_SRC_ENTRY_DELEGATOR, info.abilitySrcEntryDelegator},
         {MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR, info.abilityStageSrcEntryDelegator},
         {MODULE_HWASAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
@@ -586,6 +597,18 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::CODE_LANGUAGE,
+        info.codeLanguage,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::ABILITY_STAGE_CODE_LANGUAGE,
+        info.abilityStageCodeLanguage,
+        false,
+        parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_DESCRIPTION,
@@ -872,6 +895,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::STRING);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_RESIZEABLE,
+        info.resizeable,
+        false,
+        parseResult);
     GetValueIfFindKey<BundleType>(jsonObject,
         jsonObjectEnd,
         MODULE_BUNDLE_TYPE,
@@ -998,6 +1027,24 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_APP_STARTUP,
         info.appStartup,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_FORM_EXTENSION_MODULE,
+        info.formExtensionModule,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_FORM_WIDGET_MODULE,
+        info.formWidgetModule,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_CROS_APP_SHARED_CONFIG,
+        info.crossAppSharedConfig,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
@@ -1556,6 +1603,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.deviceTypes = it->second.deviceTypes;
     hapInfo.deviceFeatures = it->second.deviceFeatures;
     hapInfo.appStartup = it->second.appStartup;
+    hapInfo.formExtensionModule = it->second.formExtensionModule;
+    hapInfo.formWidgetModule = it->second.formWidgetModule;
     hapInfo.hasIntent = BundleUtil::GetBitValue(it->second.boolSet, InnerModuleInfoBoolFlag::HAS_INTENT);
     std::string moduleType = it->second.distro.moduleType;
     if (moduleType == Profile::MODULE_TYPE_ENTRY) {
@@ -1598,6 +1647,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         PreloadItem preload(item);
         hapInfo.preloads.emplace_back(preload);
     }
+    hapInfo.resizeable = it->second.resizeable;
     for (const auto &item : it->second.proxyDatas) {
         ProxyData proxyData(item);
         hapInfo.proxyDatas.emplace_back(proxyData);
@@ -1611,8 +1661,11 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.routerMap = it->second.routerMap;
     hapInfo.appEnvironments = it->second.appEnvironments;
     hapInfo.packageName = it->second.packageName;
+    hapInfo.crossAppSharedConfig = it->second.crossAppSharedConfig;
     hapInfo.abilitySrcEntryDelegator = it->second.abilitySrcEntryDelegator;
     hapInfo.abilityStageSrcEntryDelegator = it->second.abilityStageSrcEntryDelegator;
+    hapInfo.codeLanguage = it->second.codeLanguage;
+    hapInfo.abilityStageCodeLanguage = it->second.abilityStageCodeLanguage;
     return hapInfo;
 }
 
@@ -2275,6 +2328,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
     appInfo = *baseApplicationInfo_;
+    appInfo.codeLanguage = GetApplicationCodeLanguage();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return;
     }
@@ -2336,6 +2390,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
+    appInfo.codeLanguage = GetApplicationCodeLanguage();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -2497,6 +2552,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo)
     bundleInfo = *baseBundleInfo_;
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, Constants::ALL_USERID);
     bundleInfo.applicationInfo = *baseApplicationInfo_;
+    bundleInfo.applicationInfo.codeLanguage = GetApplicationCodeLanguage();
     return true;
 }
 
@@ -3470,6 +3526,16 @@ const std::string InnerBundleInfo::GetCurModuleName() const
     return Constants::EMPTY_STRING;
 }
 
+bool InnerBundleInfo::IsBundleCrossAppSharedConfig() const
+{
+    for (const auto &info : innerModuleInfos_) {
+        if (!info.second.crossAppSharedConfig.empty()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool InnerBundleInfo::IsBundleRemovable() const
 {
     if (IsPreInstallApp()) {
@@ -4155,6 +4221,7 @@ ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
     }
     bundleInfo = *baseBundleInfo_;
     bundleInfo.applicationInfo = *baseApplicationInfo_;
+    bundleInfo.applicationInfo.codeLanguage = GetApplicationCodeLanguage();
     for (const auto &info : innerModuleInfos_) {
         if (info.second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
             auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, Constants::ALL_USERID);
@@ -4902,18 +4969,25 @@ void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &application
         ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
         return;
     }
-    AbilityInfo mainAbilityInfo;
-    GetMainAbilityInfo(mainAbilityInfo);
-    if ((mainAbilityInfo.labelId != 0) && (mainAbilityInfo.iconId != 0)) {
-        applicationInfo.labelId = mainAbilityInfo.labelId ;
-        applicationInfo.labelResource.id = mainAbilityInfo.labelId;
-        applicationInfo.labelResource.moduleName = mainAbilityInfo.moduleName;
-        applicationInfo.labelResource.bundleName = mainAbilityInfo.bundleName;
+    for (const auto& item : innerModuleInfos_) {
+        const std::string& key = item.second.entryAbilityKey;
+        if (!key.empty() && (baseAbilityInfos_.count(key) != 0)) {
+            const AbilityInfo &mainAbilityInfo = baseAbilityInfos_.at(key);
+            if ((mainAbilityInfo.labelId != 0) && (mainAbilityInfo.iconId != 0)) {
+                applicationInfo.labelId = mainAbilityInfo.labelId ;
+                applicationInfo.labelResource.id = mainAbilityInfo.labelId;
+                applicationInfo.labelResource.moduleName = mainAbilityInfo.moduleName;
+                applicationInfo.labelResource.bundleName = mainAbilityInfo.bundleName;
 
-        applicationInfo.iconId = mainAbilityInfo.iconId ;
-        applicationInfo.iconResource.id = mainAbilityInfo.iconId;
-        applicationInfo.iconResource.moduleName = mainAbilityInfo.moduleName;
-        applicationInfo.iconResource.bundleName = mainAbilityInfo.bundleName;
+                applicationInfo.iconId = mainAbilityInfo.iconId ;
+                applicationInfo.iconResource.id = mainAbilityInfo.iconId;
+                applicationInfo.iconResource.moduleName = mainAbilityInfo.moduleName;
+                applicationInfo.iconResource.bundleName = mainAbilityInfo.bundleName;
+            }
+            if (item.second.isEntry) {
+                return;
+            }
+        }
     }
 }
 
@@ -4968,6 +5042,7 @@ bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
         baseApplicationInfo_->nativeLibraryPath;
     pluginBundleInfo.abilityInfos.insert(baseAbilityInfos_.begin(), baseAbilityInfos_.end());
     pluginBundleInfo.appInfo = *baseApplicationInfo_;
+    pluginBundleInfo.appInfo.codeLanguage = GetApplicationCodeLanguage();
     for (const auto &info : innerModuleInfos_) {
         PluginModuleInfo pluginModuleInfo;
         pluginModuleInfo.moduleName = info.second.name;
@@ -5170,6 +5245,49 @@ void InnerBundleInfo::GetAllDynamicIconInfo(const int32_t userId, std::vector<Dy
             }
         }
     }
+}
+
+bool InnerBundleInfo::SetInnerModuleAtomicResizeable(const std::string &moduleName, bool resizeable)
+{
+    if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+        APP_LOGE("innerBundleInfo does not contain the module");
+        return false;
+    }
+    innerModuleInfos_.at(moduleName).resizeable = resizeable;
+    return true;
+}
+
+std::string InnerBundleInfo::GetApplicationCodeLanguage() const
+{
+    size_t language1_1_cnt = 0;
+    size_t language1_2_cnt = 0;
+    for (const auto& [moduleName, innerModuleInfo] : innerModuleInfos_) {
+        if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_1) {
+            language1_1_cnt++;
+        }
+        if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_2) {
+            language1_2_cnt++;
+        }
+    }
+
+    size_t moduleSize = innerModuleInfos_.size();
+    if (language1_1_cnt == moduleSize) {
+        return Constants::CODE_LANGUAGE_1_1;
+    }
+    if (language1_2_cnt == moduleSize) {
+        return Constants::CODE_LANGUAGE_1_2;
+    }
+    return Constants::CODE_LANGUAGE_HYBRID;
+}
+
+std::string InnerBundleInfo::GetModuleCodeLanguage(const std::string &moduleName) const
+{
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGW_NOFUNC("moduleName %{public}s not exist", moduleName.c_str());
+        return Constants::EMPTY_STRING;
+    }
+    return item->second.codeLanguage;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const int16_t MAX_VECTOR_NUM = 1000;
+constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
+}
 AppControlProxy::AppControlProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IAppControlMgr>(object)
 {
     LOG_D(BMS_TAG_DEFAULT, "create AppControlProxy");
@@ -497,6 +501,42 @@ ErrCode AppControlProxy::SetDisposedRule(
     return ERR_OK;
 }
 
+ErrCode AppControlProxy::SetDisposedRules(
+    std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId)
+{
+    LOG_D(BMS_TAG_DEFAULT, "begin to call SetDisposedRules");
+    if (disposedRuleConfigurations.empty() || disposedRuleConfigurations.size() > MAX_VECTOR_NUM) {
+        LOG_E(BMS_TAG_DEFAULT, "SetDisposedRules failed due to params error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = WriteVectorToParcel(disposedRuleConfigurations, data);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "write DisposedRuleConfiguration failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ret = SendRequest(AppControlManagerInterfaceCode::SET_DISPOSED_RULES, data, reply);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlProxy::GetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
 {
     LOG_D(BMS_TAG_DEFAULT, "proxy begin to GetDisposedRule");
@@ -867,6 +907,40 @@ ErrCode AppControlProxy::DeleteUninstallDisposedRule(const std::string &appIdent
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
         return ret;
+    }
+    return ERR_OK;
+}
+
+template<typename T>
+ErrCode AppControlProxy::WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply)
+{
+    MessageParcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
+    if (!tempParcel.WriteInt32(static_cast<int32_t>(parcelVector.size()))) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    for (auto &parcel : parcelVector) {
+        if (!tempParcel.WriteParcelable(&parcel)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    size_t dataSize = tempParcel.GetDataSize();
+    if (!reply.WriteUint32(dataSize)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (dataSize > MAX_IPC_ALLOWED_CAPACITY) {
+        APP_LOGE("datasize is too large");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+        APP_LOGE("write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

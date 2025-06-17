@@ -83,6 +83,8 @@ constexpr const char* EXTENSION_CONFIG_NAME = "ams_extension_config";
 constexpr const char* EXTENSION_TYPE_NAME = "extension_type_name";
 constexpr const char* EXTENSION_SERVICE_NEED_CREATE_SANDBOX = "need_create_sandbox";
 constexpr const char* SHELL_ENTRY_TXT = "g:2000:rwx";
+constexpr int32_t APP_DATA_SIZE_INDEX = 0;
+constexpr int32_t BUNDLE_DATA_SIZE_INDEX = 1;
 constexpr uint64_t VECTOR_SIZE_MAX = 200;
 constexpr int32_t INSTALLS_UID = 3060;
 enum class DirType : uint8_t {
@@ -1326,6 +1328,45 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    const std::unordered_map<std::string, int32_t> &uidMap,
+    std::vector<BundleStorageStats> &bundleStats)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (bundleNames.size() == 0) {
+        LOG_E(BMS_TAG_INSTALLD, "bundleNames is empty impl");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (bundleNames.size() != uidMap.size()) {
+        LOG_E(BMS_TAG_INSTALLD, "bundleNames and bundleModulesListMap size not equal impl");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    for (auto &name : bundleNames) {
+        BundleStorageStats stats;
+        stats.bundleName = name;
+        stats.bundleStats = {0, 0, 0, 0, 0};
+        std::vector<std::string> bundlePath;
+        bundlePath.push_back(
+            std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + stats.bundleName);
+        int64_t appDataSize = 0;
+        int64_t bundleDataSize = 0;
+        appDataSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
+        auto uid = uidMap.find(name);
+        if (uid != uidMap.end()) {
+            bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid->second);
+        }
+        // index 0 : bundle data size
+        stats.bundleStats[APP_DATA_SIZE_INDEX] = appDataSize;
+        // index 1 : local bundle data size
+        stats.bundleStats[BUNDLE_DATA_SIZE_INDEX] = bundleDataSize;
+        bundleStats.emplace_back(stats);
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
@@ -2481,6 +2522,23 @@ ErrCode InstalldHostImpl::DeleteEl5DataGroupDirs(const std::vector<std::string> 
         }
     }
     return result;
+}
+
+ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (dir.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "empty dir");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::ClearDir(dir)) {
+        LOG_E(BMS_TAG_INSTALLD, "ClearDir failed");
+        return ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

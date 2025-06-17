@@ -607,6 +607,132 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0900, Function | MediumTest 
 }
 
 /**
+ * @tc.number: GetBundleInfoPermissionTest_0010
+ * @tc.name: test GetBundleStats
+ * @tc.desc: test GetBundleStats with only PERMISSION_GET_BUNDLE_INFO
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, GetBundleInfoPermissionTest_0010, Function | MediumTest | Level1)
+{
+    GTEST_LOG_(INFO) << "START GetBundleInfoPermissionTest_0010";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string message;
+    Install(bundleFilePath, InstallFlag::NORMAL, message);
+    EXPECT_EQ(message, "Success") << "install fail!";
+
+    uint64_t tokenId = GetSelfTokenID();
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+
+    ApplicationInfo info;
+    bool result = bundleMgrProxy->GetApplicationInfo(bundleName, 0, 100, info);
+    EXPECT_TRUE(result) << "GetApplicationInfo failed";
+    SetSelfTokenID(info.accessTokenIdEx);
+    std::vector<int64_t> bundleStats;
+    EXPECT_TRUE(bundleMgrProxy->GetBundleStats(bundleName, 100, bundleStats));
+
+    SetSelfTokenID(tokenId);
+    Uninstall(bundleName, message);
+    EXPECT_EQ(message, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: GetBundleInfoPermissionTest_0020
+ * @tc.name: test GetBundleStats
+ * @tc.desc: test GetBundleStats with only IsBundleSelfCalling
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, GetBundleInfoPermissionTest_0020, Function | MediumTest | Level1)
+{
+    GTEST_LOG_(INFO) << "START GetBundleInfoPermissionTest_0020";
+    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "2";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
+    std::string message;
+    Install(bundleFilePath, InstallFlag::NORMAL, message);
+    EXPECT_EQ(message, "Success") << "install fail!";
+
+    uint64_t tokenId = GetSelfTokenID();
+    int32_t uid = getuid();
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+
+    ApplicationInfo info;
+    bool result = bundleMgrProxy->GetApplicationInfo(bundleName, 0, 100, info);
+    EXPECT_TRUE(result) << "GetApplicationInfo failed";
+    SetSelfTokenID(info.accessTokenIdEx);
+    setuid(info.uid);
+    std::vector<int64_t> bundleStats;
+    EXPECT_TRUE(bundleMgrProxy->GetBundleStats(bundleName, 100, bundleStats));
+
+    setuid(uid);
+    SetSelfTokenID(tokenId);
+    Uninstall(bundleName, message);
+    EXPECT_EQ(message, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: GetBundleInfoPermissionTest_0030
+ * @tc.name: test GetProvisionMetadata
+ * @tc.desc: test GetProvisionMetadata with only PERMISSION_GET_BUNDLE_INFO
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, GetBundleInfoPermissionTest_0030, Function | MediumTest | Level1)
+{
+    GTEST_LOG_(INFO) << "START GetBundleInfoPermissionTest_0030";
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string message;
+    Install(bundleFilePath, InstallFlag::NORMAL, message);
+    EXPECT_EQ(message, "Success") << "install fail!";
+
+    uint64_t tokenId = GetSelfTokenID();
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+
+    ApplicationInfo info;
+    bool result = bundleMgrProxy->GetApplicationInfo(bundleName, 0, 100, info);
+    EXPECT_TRUE(result) << "GetApplicationInfo failed";
+    SetSelfTokenID(info.accessTokenIdEx);
+    std::vector<Metadata> provisionMetadatas;
+    EXPECT_TRUE(bundleMgrProxy->GetProvisionMetadata(bundleName, 100, provisionMetadatas));
+
+    SetSelfTokenID(tokenId);
+    Uninstall(bundleName, message);
+    EXPECT_EQ(message, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: GetBundleInfoPermissionTest_0040
+ * @tc.name: test GetProvisionMetadata
+ * @tc.desc: test GetProvisionMetadata with only IsBundleSelfCalling
+ */
+HWTEST_F(BmsLauncherServiceSystemTest, GetBundleInfoPermissionTest_0040, Function | MediumTest | Level1)
+{
+    GTEST_LOG_(INFO) << "START GetBundleInfoPermissionTest_0040";
+    std::string bundleName = THIRD_BASE_BUNDLE_NAME + "2";
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
+    std::string message;
+    Install(bundleFilePath, InstallFlag::NORMAL, message);
+    EXPECT_EQ(message, "Success") << "install fail!";
+
+    uint64_t tokenId = GetSelfTokenID();
+    int32_t uid = getuid();
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+
+    ApplicationInfo info;
+    bool result = bundleMgrProxy->GetApplicationInfo(bundleName, 0, 100, info);
+    EXPECT_TRUE(result) << "GetApplicationInfo failed";
+    SetSelfTokenID(info.accessTokenIdEx);
+    setuid(info.uid);
+    std::vector<Metadata> provisionMetadatas;
+    EXPECT_TRUE(bundleMgrProxy->GetProvisionMetadata(bundleName, 100, provisionMetadatas));
+
+    setuid(uid);
+    SetSelfTokenID(tokenId);
+    Uninstall(bundleName, message);
+    EXPECT_EQ(message, "Success") << "uninstall fail!";
+}
+
+/**
  * @tc.number: BMS_GetAbilityList_0100
  * @tc.name: test GetAbilityList by LauncherService
  * @tc.desc: 1.install a normal hap

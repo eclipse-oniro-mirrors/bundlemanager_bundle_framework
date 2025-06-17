@@ -57,7 +57,7 @@ enum OTAFlag : uint32_t {
     CHECK_INSTALL_SOURCE = 0x00004000,
     DELETE_DEPRECATED_ARK_PATHS = 0x00008000,
     CHECK_EXTENSION_ABILITY = 0x00010000,
-    PROCESS_DYNAMIC_CION = 0x00020000,
+    PROCESS_DYNAMIC_ICON = 0x00020000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -688,7 +688,7 @@ private:
         std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ConvertToOnDemandInstallBundleInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         PreInstallBundleInfo &preInstallBundleInfo);
-    void SavePreloadAppUninstallInfo(const std::string &bundleName,
+    void SavePreloadAppUninstallInfo(const PreInstallBundleInfo &info,
         std::vector<std::string> &preloadBundleNames);
     void SaveUninstalledPreloadAppToFile(const std::vector<std::string> &preloadBundleNames);
     void CreateUninstalledPreloadDir();

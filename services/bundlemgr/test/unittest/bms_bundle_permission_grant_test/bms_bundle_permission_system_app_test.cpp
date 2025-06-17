@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,6 +51,7 @@ const std::string DEFAULT_APP_VIDEO = "VIDEO";
 const int32_t USERID = 100;
 const int32_t FLAGS = 0;
 const int32_t UID = 0;
+const int32_t APP_INDEX = 0;
 const int32_t WAIT_TIME = 5; // init mocked bms
 }  // namespace
 
@@ -929,6 +930,15 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5800
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 
     res = impl->DeleteDisposedStatus(APPID, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    disposedRuleConfiguration.appId = APPID;
+    disposedRuleConfiguration.appIndex = APP_INDEX;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+
+    res = impl->SetDisposedRules(disposedRuleConfigurations, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2935,6 +2935,45 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5100, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_5200
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetAppIdByBundleName
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string ret = hostImpl->GetAppIdByBundleName("", USERID);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+
+    ret = hostImpl->GetAppIdByBundleName(BUNDLE_NAME, -1);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+
+    auto dataMgr = GetBundleDataMgr();
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
+    ret = hostImpl->GetAppIdByBundleName(BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_5300
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetAppType
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5300, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string ret = hostImpl->GetAppType("");
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+
+    auto dataMgr = GetBundleDataMgr();
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
+    ret = hostImpl->GetAppType(BUNDLE_NAME);
+    EXPECT_EQ(ret, "third-party");
+}
+
+/**
  * @tc.number: GetAbilityInfos_0100
  * @tc.name: test GetAbilityInfos
  * @tc.desc: 1.get ability not exist
@@ -3095,14 +3134,26 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrService_0100, Function | MediumTest | Le
     #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(ret, 0);
     #else
-    EXPECT_EQ(ret, -1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_GET_DATA_ERROR);
     #endif
     extension = "restore";
     ret = DelayedSingleton<BundleMgrService>::GetInstance()->OnExtension(extension, data, reply);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, 0);
-    #else
-    EXPECT_EQ(ret, -1);
-    #endif
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: ReportDataPartitionUsageEvent_0100
+ * @tc.name: test ReportDataPartitionUsageEvent
+ * @tc.desc: 1.test ReportDataPartitionUsageEvent
+ */
+HWTEST_F(BmsBundleManagerTest, ReportDataPartitionUsageEvent_0100, Function | MediumTest | Level1)
+{
+    EventReport::ReportDataPartitionUsageEvent();
+    std::string path1 = "/data";
+    auto ret = BundleFileUtil::IsReportDataPartitionUsageEvent(path1);
+    EXPECT_FALSE(ret);
+    std::string path2 = "dataErrorTest";
+    ret = BundleFileUtil::IsReportDataPartitionUsageEvent(path2);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

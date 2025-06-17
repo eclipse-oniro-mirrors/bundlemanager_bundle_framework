@@ -83,6 +83,7 @@ struct InnerModuleInfo {
     bool tsanEnabled = false;
     bool needDelete = false;
     bool debug = false;
+    bool resizeable = false;
     uint8_t boolSet = 0;
     uint32_t innerModuleInfoFlag = 0;
     uint32_t labelId = 0;
@@ -126,8 +127,13 @@ struct InnerModuleInfo {
     std::string routerMap;
     std::string packageName;
     std::string appStartup;
+    std::string formExtensionModule;
+    std::string formWidgetModule;
+    std::string crossAppSharedConfig;
     std::string abilitySrcEntryDelegator;
     std::string abilityStageSrcEntryDelegator;
+    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
     Distro distro;
     // all user's value of isRemovable
     // key:userId
@@ -964,6 +970,7 @@ public:
     }
 
     const std::string GetCurModuleName() const;
+    bool IsBundleCrossAppSharedConfig() const;
 
     std::vector<DefinePermission> GetDefinePermissions() const
     {
@@ -1573,6 +1580,14 @@ public:
      * @return
      */
     void DeleteModuleRemovableInfo(InnerModuleInfo &info, const std::string &stringUserId);
+
+    /**
+     * @brief Set atomic service resizeable.
+     * @param moduleName Indicates the moduleName.
+     * @param resizeable Indicates the atomic service resizeable.
+     * @return Return set atomic service resizeable result.
+     */
+    bool SetInnerModuleAtomicResizeable(const std::string &moduleName, bool resizeable);
 
     void SetEntryInstallationFree(bool installationFree)
     {
@@ -2304,6 +2319,7 @@ public:
         const InnerModuleInfo &moduleInfo) const;
     void CheckSoEncryption(const CheckEncryptionParam &checkEncryptionParam, const std::string &requestPackage,
         const InnerModuleInfo &moduleInfo) const;
+    std::string GetModuleCodeLanguage(const std::string &moduleName) const;
 
     void SetMultiAppMode(MultiAppModeData multiAppMode)
     {
@@ -2322,6 +2338,7 @@ public:
     bool UpdatePluginBundleInfo(const PluginBundleInfo &pluginBundleInfo);
     bool RemovePluginFromUserInfo(const std::string &pluginBundleName, const int32_t userId);
     void GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos) const;
+    std::string GetApplicationCodeLanguage() const;
 
 private:
     bool IsExistLauncherAbility() const;

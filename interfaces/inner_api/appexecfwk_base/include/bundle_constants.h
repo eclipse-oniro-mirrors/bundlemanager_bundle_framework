@@ -71,7 +71,7 @@ modulename max is 128
 constexpr int16_t MAX_CACHE_DIR_SIZE = 774;
 
 // permissions
-constexpr const char* PERMISSION_U1_ENABLED = "U1Enabled";
+constexpr const char* PERMISSION_U1_ENABLED = "ohos.permission.SUPPORT_INSTALL_ON_U1";
 constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_CLONE_BUNDLE = "ohos.permission.UNINSTALL_CLONE_BUNDLE";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO = "ohos.permission.GET_BUNDLE_INFO";
@@ -183,6 +183,12 @@ constexpr const char* VERIFY_UNINSTALL_RULE_VALUE = "true";
 
 constexpr const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
 constexpr const char* APP_DISTRIBUTION_TYPE_WHITE_LIST = "appDistributionTypeWhiteList";
+
+constexpr const char* CODE_LANGUAGE = "codeLanguage";
+constexpr const char* ABILITY_STAGE_CODE_LANGUAGE = "abilityStageCodeLanguage";
+constexpr const char* CODE_LANGUAGE_1_1 = "1.1";
+constexpr const char* CODE_LANGUAGE_1_2 = "1.2";
+constexpr const char* CODE_LANGUAGE_HYBRID = "hybrid";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

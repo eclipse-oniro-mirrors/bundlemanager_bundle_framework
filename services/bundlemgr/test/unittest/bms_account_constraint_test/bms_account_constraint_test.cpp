@@ -42,6 +42,7 @@ using OHOS::Parcel;
 
 namespace OHOS {
 namespace {
+const int32_t WAIT_TIME = 5;
 constexpr int32_t USER_ID = 100;
 }  // namespace
 
@@ -70,6 +71,7 @@ BmsAccountConstraintTest::~BmsAccountConstraintTest()
 void BmsAccountConstraintTest::SetUpTestCase()
 {
     bundleMgrService_->OnStart();
+    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
 }
 
@@ -139,6 +141,22 @@ HWTEST_F(BmsAccountConstraintTest, CheckOsAccountConstraintEnabled_0003, Functio
     info.AddInnerBundleUserInfo(userInfo);
     installer.dataMgr_->bundleInfos_.emplace("com.example.helloworld", info);
     auto ret = installer.ProcessBundleInstall("com.example.helloworld", 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT);
+}
+
+/**
+ * @tc.number: CheckOsAccountConstraintEnabled_0004
+ * @tc.name: test ProcessRecover
+ * @tc.desc: 1.Test ProcessRecover
+*/
+HWTEST_F(BmsAccountConstraintTest, CheckOsAccountConstraintEnabled_0004, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName = "com.example.helloworld";
+    InstallParam installParam;
+    installParam.userId = 100;
+    int32_t uid = 0;
+    auto ret = installer.ProcessRecover(bundleName, installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT);
 }
 } // OHOS

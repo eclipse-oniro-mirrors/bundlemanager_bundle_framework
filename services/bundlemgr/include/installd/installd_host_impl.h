@@ -149,6 +149,10 @@ public:
         const int32_t appIndex = 0, const uint32_t statFlag = 0,
         const std::vector<std::string> &moduleNameList = {}) override;
 
+    virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+        const std::unordered_map<std::string, int32_t> &uidMap,
+        std::vector<BundleStorageStats> &bundleStats) override;
+
     virtual ErrCode GetAllBundleStats(const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;
     /**
@@ -260,6 +264,8 @@ public:
         const std::vector<std::string> &sourcePaths, const std::string &destinationPath) override;
 
     virtual ErrCode DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId) override;
+
+    virtual ErrCode ClearDir(const std::string &dir) override;
 
 private:
     static std::string GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid);

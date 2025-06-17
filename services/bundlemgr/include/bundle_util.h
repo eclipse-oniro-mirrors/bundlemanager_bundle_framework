@@ -35,6 +35,7 @@ enum class DirType : uint8_t {
     ABC_FILE_DIR = 3,
     PGO_FILE_DIR = 4,
     EXT_RESOURCE_FILE_DIR = 5,
+    EXT_PROFILE_DIR = 6,
     UNKNOWN
 };
 
@@ -235,13 +236,9 @@ public:
     static void RestoreAppInstallHaps();
     static void RestoreHaps(const std::string &sourcePath, const std::string &bundleName, const std::string &userId);
     static void DeleteTempDirs(const std::vector<std::string> &tempDirs);
-    static std::string GenerateUuid();
-    static std::string GetHexHash(const std::string &s);
-    static void RecursiveHash(std::string& s);
     static std::string ExtractGroupIdByDevelopId(const std::string &developerId);
     static std::string ToString(const std::vector<std::string> &vector);
     static std::string GetNoDisablingConfigPath();
-    static std::string GenerateUuidByKey(const std::string &key);
     static uint32_t ExtractNumberFromString(nlohmann::json &jsonObject, const std::string &key);
     static std::vector<uint8_t> GenerateRandomNumbers(uint8_t size, uint8_t lRange, uint8_t rRange);
     static bool IsSandBoxPath(const std::string &path);

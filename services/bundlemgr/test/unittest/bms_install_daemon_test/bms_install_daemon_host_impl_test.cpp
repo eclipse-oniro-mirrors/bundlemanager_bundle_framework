@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1321,5 +1321,22 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7600, Function | Sma
     int64_t statSize = 0;
     ErrCode res = installdProxy->GetDiskUsageFromPath(path, statSize);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_7700
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling BatchGetBundleStats of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7700, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    const std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
+    std::vector<BundleStorageStats> bundleStats;
+    const std::unordered_map<std::string, int32_t> uidMap = {{"com.example.bundlekit.test", 10000}};
+    auto ret = hostImpl->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -94,6 +94,7 @@ constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
 const std::string PDF_MIME_TYPE = "application/pdf";
 const std::string PDF_UTD = "com.adobe.pdf";
 const std::string PDF_SUFFIX = ".pdf";
+const std::string TEST_CALLER_NAME = "0";
 
 const nlohmann::json DEFAULT_CONFIG = R"(
 [{
@@ -1776,7 +1777,7 @@ HWTEST_F(BmsBundleDefaultAppTest, AOT_EXECUTOR_0100, Function | SmallTest | Leve
     std::string hapPath = "/data/test.hap";
     uint32_t offset = 0;
     uint32_t length = 0;
-    ret = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, offset, length);
+    ret = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, Constants::CODE_LANGUAGE_1_1, offset, length);
     EXPECT_EQ(ret, false);
 
     AOTArgs completeArgs;
@@ -2373,5 +2374,47 @@ HWTEST_F(BmsBundleDefaultAppTest, GetBrokerBundleInfo_0200, Function | SmallTest
     BundleInfo bundleInfo;
     bool ret = defaultAppMgr.GetBrokerBundleInfo(element, bundleInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SendEventTest_0100
+ * @tc.name: SendEventTest
+ * @tc.desc: SendEventTest of DefaultApp
+ */
+HWTEST_F(BmsBundleDefaultAppTest, SendEventTest_0100, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, ABILITY_WORD_ERROR, MODULE_NAME);
+    want.SetElement(elementName);
+    std::string type = ".txt";
+
+    EXPECT_NO_THROW(EventReport::SendDefaultAppEvent(
+        DefaultAppActionType::SET, USER_ID, "testSet", want.ToString(), type));
+    EXPECT_NO_THROW(EventReport::SendDefaultAppEvent(
+        DefaultAppActionType::RESET, USER_ID, "testReset", Constants::EMPTY_STRING, type));
+}
+
+/**
+ * @tc.number: CallerNameTest_0100
+ * @tc.name: CallerNameTest
+ * @tc.desc: CallerNameTest
+ */
+HWTEST_F(BmsBundleDefaultAppTest, CallerNameTest_0100, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    std::string callerName = impl.GetCallerName();
+    EXPECT_EQ(callerName, TEST_CALLER_NAME);
+
+    InstallBundle(BUNDLE_PATH);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    int32_t uid = dataMgr->GetUidByBundleName(BUNDLE_NAME, USER_ID, Constants::MAIN_APP_INDEX);
+    setuid(uid);
+    callerName = impl.GetCallerName();
+    setuid(0);
+    UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(callerName, BUNDLE_NAME);
 }
 } // OHOS

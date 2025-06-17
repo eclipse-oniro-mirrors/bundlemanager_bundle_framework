@@ -147,6 +147,8 @@ private:
      */
     bool HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleBatchGetBundleStats(MessageParcel &data, MessageParcel &reply);
+
     bool HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply);
 
     /**
@@ -240,6 +242,8 @@ private:
     bool HandleDeleteDataGroupDirs(MessageParcel &data, MessageParcel &reply);
 
     bool HandleLoadInstalls(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleClearDir(MessageParcel &data, MessageParcel &reply);
 
     void AddCloseInstalldTask();
 

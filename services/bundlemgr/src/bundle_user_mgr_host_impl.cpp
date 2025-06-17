@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@
 #include "aot_handler.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
+#include "bundle_hitrace_chain.h"
 #include "bundle_mgr_service.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
@@ -141,9 +142,10 @@ bool BundleUserMgrHostImpl::SkipThirdPreloadAppInstallation(const int32_t userId
 ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList,
     const std::optional<std::vector<std::string>> &allowList)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("CreateNewUser", HITRACE_FLAG_INCLUDE_ASYNC);
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendCpuSceneEvent(ACCESSTOKEN_PROCESS_NAME, 1 << 1); // second scene
-    APP_LOGI("CreateNewUser user(%{public}d) start", userId);
+    APP_LOGW("CreateNewUser user(%{public}d) start", userId);
     BmsExtensionDataMgr bmsExtensionDataMgr;
     bool needToSkipPreBundleInstall = bmsExtensionDataMgr.IsNeedToSkipPreBundleInstall();
     if (needToSkipPreBundleInstall) {
@@ -166,7 +168,7 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
     } else {
         EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     }
-    APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
+    APP_LOGW("CreateNewUser end userId: (%{public}d)", userId);
     return ERR_OK;
 }
 
@@ -193,7 +195,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBu
     }
 
     if (dataMgr->HasUserId(userId)) {
-        APP_LOGW("Has create user %{public}d", userId);
+        APP_LOGE("Has create user %{public}d", userId);
         ErrCode ret = InnerRemoveUser(userId, false); // no need lock
         if (ret != ERR_OK) {
             APP_LOGW("remove user %{public}d failed, error %{public}d", userId, ret);
@@ -394,6 +396,7 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 
 ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("RemoveUser", HITRACE_FLAG_INCLUDE_ASYNC);
     return InnerRemoveUser(userId, true);
 }
 
@@ -522,6 +525,8 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
         installParam.isPreInstallApp = info.isPreInstallApp;
         installParam.installFlag = InstallFlag::NORMAL;
         installParam.isRemoveUser = true;
+        // if user is 100, no need to kill process
+        installParam.SetKillProcess(userId != Constants::START_USERID);
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.name, false));
         if (userReceiverImpl == nullptr) {

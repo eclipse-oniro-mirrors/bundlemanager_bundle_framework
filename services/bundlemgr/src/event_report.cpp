@@ -15,8 +15,10 @@
 
 #include "event_report.h"
 
+#include <set>
 #include "app_log_wrapper.h"
 #include "bundle_util.h"
+#include "bundle_file_util.h"
 #ifdef HISYSEVENT_ENABLE
 #include "inner_event_report.h"
 #endif
@@ -43,6 +45,15 @@ const BMSEventType BUNDLE_SYS_EVENT_MAP_VALUE[] = {
     BMSEventType::BUNDLE_UPDATE, BMSEventType::PRE_BUNDLE_RECOVER,
     BMSEventType::APPLY_QUICK_FIX,
 };
+const std::set<int32_t> INTERCEPTED_ERROR_CODE_SET = {
+    ERR_APPEXECFWK_INSTALL_SELF_UPDATE_NOT_MDM,
+    ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL,
+    ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED,
+    ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED,
+    ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED,
+    ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED
+};
+constexpr const char* PARTITION_NAME = "/data";
 }
 
 void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const EventInfo& eventInfo)
@@ -56,7 +67,8 @@ void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const E
                 break;
             }
         }
-        SendSystemEvent(bmsEventType, eventInfo);
+        EventInfo info = ProcessIsIntercepted(eventInfo);
+        SendSystemEvent(bmsEventType, info);
         return;
     }
 
@@ -69,6 +81,16 @@ void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const E
     }
 
     SendSystemEvent(bmsEventType, eventInfo);
+}
+
+EventInfo EventReport::ProcessIsIntercepted(const EventInfo &eventInfo)
+{
+    if (INTERCEPTED_ERROR_CODE_SET.find(eventInfo.errCode) != INTERCEPTED_ERROR_CODE_SET.end()) {
+        EventInfo info = eventInfo;
+        info.isIntercepted = true;
+        return info;
+    }
+    return eventInfo;
 }
 
 void EventReport::SendScanSysEvent(BMSEventType bMSEventType)
@@ -208,6 +230,28 @@ void EventReport::SendDbErrorEvent(const std::string &dbName, int32_t operationT
     eventInfo.operationType = operationType;
     eventInfo.errorCode = errorCode;
     EventReport::SendSystemEvent(BMSEventType::DB_ERROR, eventInfo);
+}
+
+void EventReport::ReportDataPartitionUsageEvent()
+{
+    if (!BundleFileUtil::IsReportDataPartitionUsageEvent(PARTITION_NAME)) {
+        APP_LOGD("data partitioning threshold has not been reached.");
+        return;
+    }
+    EventInfo eventInfo;
+    EventReport::SendSystemEvent(BMSEventType::DATA_PARTITION_USAGE_EVENT, eventInfo);
+}
+
+void EventReport::SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const std::string& callingName,
+    const std::string& want, const std::string& utd)
+{
+    EventInfo eventInfo;
+    eventInfo.actionType = static_cast<int32_t>(actionType);
+    eventInfo.userId = userId;
+    eventInfo.callingName = callingName;
+    eventInfo.want = want;
+    eventInfo.utd = utd;
+    EventReport::SendSystemEvent(BMSEventType::DEFAULT_APP, eventInfo);
 }
 
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)

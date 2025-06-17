@@ -126,6 +126,12 @@ ErrCode InstalldHostImpl::GetBundleStats(
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    const std::unordered_map<std::string, int32_t> &uidMap, std::vector<BundleStorageStats> &bundleStats)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
@@ -349,6 +355,11 @@ ErrCode InstalldHostImpl::CreateDataGroupDirs(const std::vector<CreateDirParam> 
 }
 
 ErrCode InstalldHostImpl::DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
 {
     return ERR_OK;
 }

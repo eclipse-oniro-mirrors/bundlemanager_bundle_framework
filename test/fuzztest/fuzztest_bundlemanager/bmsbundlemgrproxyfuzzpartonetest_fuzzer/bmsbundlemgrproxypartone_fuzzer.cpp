@@ -44,7 +44,7 @@ namespace OHOS {
         bundleMgrProxy.ClearBundleStatusCallback(bundleStatusCallback);
 
         DumpFlag dumpFlag = static_cast<DumpFlag>(fdp.ConsumeIntegralInRange<uint8_t>(1, 4));
-        int32_t userId = fdp.ConsumeIntegral<int32_t>();
+        int32_t userId = GenerateRandomUser(fdp);
         std::string result = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         bundleMgrProxy.DumpInfos(dumpFlag, bundleName, userId, result);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include <nlohmann/json.hpp>
 
 #include "ability_manager_helper.h"
+#include "access_token.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_backup_mgr.h"
@@ -73,6 +74,8 @@ constexpr const char* WANT_PARAM_SUMMARY = "summary";
 constexpr const char* SUMMARY_TOTAL_COUNT = "totalCount";
 const int32_t ICON_ID = 2222;
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
+const uint32_t ACCESS_TOKEN_ID = 1765341;
+const std::string TOKEN_BUNDLE = "tokenBundle";
 }  // namespace
 
 class BmsDataMgrTest : public testing::Test {
@@ -2669,6 +2672,21 @@ HWTEST_F(BmsDataMgrTest, ExplicitQueryCloneAbilityInfo_0100, Function | SmallTes
 }
 
 /**
+ * @tc.number:ExplicitQueryCloneAbilityInfo_0200
+ * @tc.name: test ExplicitQueryCloneAbilityInfo
+ * @tc.desc: 1.explicitly query cloning capability information
+ */
+HWTEST_F(BmsDataMgrTest, ExplicitQueryCloneAbilityInfo_0200, Function | SmallTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(USERID);
+    ElementName element;
+    AbilityInfo abilityInfo;
+    auto ret = bundleDataMgr.ExplicitQueryCloneAbilityInfoV9(element,  0, USERID, 0, abilityInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
  * @tc.number:GetCloneBundleInfo_0100
  * @tc.name: test GetCloneBundleInfo
  * @tc.desc: 1.get clone bundle information
@@ -2760,6 +2778,37 @@ HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0002, Function | MediumTest | Le
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
     ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: AddDesktopShortcutInfo_0003
+ * @tc.name: AddDesktopShortcutInfo
+ * @tc.desc: test AddDesktopShortcutInfo
+ */
+HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = 10;
+    ShortcutInfo shortcutInfo;
+    auto ret1 = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    userId = Constants::ANY_USERID;
+    auto ret2 = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_NE(ret2, ERR_OK);
+}
+
+/**
+ * @tc.number: AddDesktopShortcutInfo_0004
+ * @tc.name: AddDesktopShortcutInfo
+ * @tc.desc: test AddDesktopShortcutInfo
+ */
+HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0004, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    bundleDataMgr.AddUserId(USERID);
+    auto ret1 = bundleDataMgr.AddDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_NE(ret1, ERR_OK);
 }
 
 /**
@@ -2960,6 +3009,23 @@ HWTEST_F(BmsDataMgrTest, GetSignatureInfoByBundleName_0001, Function | MediumTes
 }
 
 /**
+ * @tc.number: GetSignatureInfoByBundleName_0002
+ * @tc.name: GetSignatureInfoByBundleName
+ * @tc.desc: test GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo)
+ */
+HWTEST_F(BmsDataMgrTest, GetSignatureInfoByBundleName_0002, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    SignatureInfo signatureInfo;
+    auto ret = dataMgr->GetSignatureInfoByBundleName(BUNDLE_NAME, signatureInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: GetOdidByBundleName_0001
  * @tc.name: GetOdidByBundleName
  * @tc.desc: test GetOdidByBundleName(const std::string &bundleName, std::string &odid)
@@ -2971,6 +3037,38 @@ HWTEST_F(BmsDataMgrTest, GetOdidByBundleName_0001, Function | MediumTest | Level
     std::string odid = "odid";
     auto ret = bundleDataMgr.GetOdidByBundleName(bundleName, odid);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAppIdentifierAndAppIndex_0001
+ * @tc.name: GetAppIdentifierAndAppIndex
+ * @tc.desc: test GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+    std::string &appIdentifier, int32_t &appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, GetAppIdentifierAndAppIndex_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string appIdentifier;
+    int32_t appIndex;
+    auto ret = bundleDataMgr.GetAppIdentifierAndAppIndex(ACCESS_TOKEN_ID, appIdentifier, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAppIdentifierAndAppIndex_0002
+ * @tc.name: GetAppIdentifierAndAppIndex
+ * @tc.desc: test GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+    std::string &appIdentifier, int32_t &appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, GetAppIdentifierAndAppIndex_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    std::string appIdentifier;
+    int32_t appIndex;
+    bundleDataMgr.bundleInfos_.emplace(TOKEN_BUNDLE, innerBundleInfo);
+    auto ret = bundleDataMgr.GetAppIdentifierAndAppIndex(ACCESS_TOKEN_ID, appIdentifier, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -3043,7 +3141,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0001, Function | MediumTest | Level1)
     std::string bundleName;
     int32_t userId = 999;
     auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(res, false);
 
     std::vector<std::string> bundleList;
     bool result =  dataMgr_->GetAllAppAndAtomicServiceInUser(userId, bundleList);
@@ -3061,7 +3159,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0002, Function | MediumTest | Level1)
     int32_t userId = 100;
     dataMgr_->AddUserId(userId);
     auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    EXPECT_EQ(res, false);
 
     std::vector<std::string> bundleList;
     bool result =  dataMgr_->GetAllAppAndAtomicServiceInUser(userId, bundleList);
@@ -3079,7 +3177,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0003, Function | MediumTest | Level1)
     int32_t userId = 100;
     dataMgr_->AddUserId(userId);
     auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(res, false);
 }
 
 /**
@@ -3101,7 +3199,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0004, Function | MediumTest | Level1)
     EXPECT_FALSE(result);
 
     auto res = dataMgr_->HasAppOrAtomicServiceInUser("test.bundle", userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(res, false);
 }
 
 /**
@@ -3123,7 +3221,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0005, Function | MediumTest | Level1)
     EXPECT_FALSE(result);
 
     auto res = dataMgr_->HasAppOrAtomicServiceInUser("test.bundle", userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(res, false);
 }
 
 /**
@@ -3151,7 +3249,7 @@ HWTEST_F(BmsDataMgrTest, GetLabel_0006, Function | MediumTest | Level1)
     EXPECT_FALSE(bundleList.empty());
 
     auto res = dataMgr_->HasAppOrAtomicServiceInUser(bundleName, userId);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, true);
 }
 
 /**
@@ -3717,6 +3815,20 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryCurAbilityInfosV9_0001, Function | SmallTe
     int32_t appIndex = 10;
     auto ret = bundleDataMgr.ImplicitQueryCurAbilityInfosV9(want, flags, userId, abilityInfos, appIndex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: ImplicitQueryCurCloneExtensionAbilityInfosV9_0001
+ * @tc.name: ImplicitQueryCurCloneExtensionAbilityInfosV9
+ * @tc.desc: test ImplicitQueryCurCloneExtensionAbilityInfosV9
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryCurCloneExtensionAbilityInfosV9_0001, Function | SmallTest | Level0)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    std::vector<ExtensionAbilityInfo> abilityInfos;
+    auto ret = bundleDataMgr.ImplicitQueryCurCloneExtensionAbilityInfosV9(want, 0, USERID, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
@@ -4699,6 +4811,31 @@ HWTEST_F(BmsDataMgrTest, GetAllBundleDirs_0001, TestSize.Level1)
 }
 
 /**
+ * @tc.number: GreatOrEqualTargetAPIVersion_0001
+ * @tc.name: GreatOrEqualTargetAPIVersion
+ * @tc.desc: test GreatOrEqualTargetAPIVersion
+ */
+HWTEST_F(BmsDataMgrTest, GreatOrEqualTargetAPIVersion_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bool ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(ServiceConstants::API_VERSION_MAX + 1, 0, 0);
+    EXPECT_FALSE(ret);
+    ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(0, 0, 0);
+    EXPECT_FALSE(ret);
+    ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(ServiceConstants::API_VERSION_MAX,
+        ServiceConstants::API_VERSION_MAX + 1, 0);
+    EXPECT_FALSE(ret);
+    ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(ServiceConstants::API_VERSION_MAX, -1, 0);
+    EXPECT_FALSE(ret);
+    ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(ServiceConstants::API_VERSION_MAX,
+            ServiceConstants::API_VERSION_MAX, ServiceConstants::API_VERSION_MAX + 1);
+    EXPECT_FALSE(ret);
+    ret = bundleDataMgr.GreatOrEqualTargetAPIVersion(ServiceConstants::API_VERSION_MAX,
+        ServiceConstants::API_VERSION_MAX, -1);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: IsObtainAbilityInfo_0001
  * @tc.name: IsObtainAbilityInfo
  * @tc.desc: test BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo)
@@ -4711,6 +4848,78 @@ HWTEST_F(BmsDataMgrTest, IsObtainAbilityInfo_0001, TestSize.Level1)
     AbilityInfo abilityInfo;
     auto ret = bundleDataMgr.IsObtainAbilityInfo(want, userId, abilityInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsObtainAbilityInfo_0002
+ * @tc.name: IsObtainAbilityInfo
+ * @tc.desc: test BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, IsObtainAbilityInfo_0002, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    want.SetElement(element);
+    AbilityInfo abilityInfo;
+    auto ret = bundleDataMgr.IsObtainAbilityInfo(want, USERID, abilityInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsObtainAbilityInfo_0003
+ * @tc.name: IsObtainAbilityInfo
+ * @tc.desc: test BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, IsObtainAbilityInfo_0003, TestSize.Level1)
+{
+    InnerBundleInfo info;
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    Want want;
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    want.SetElement(element);
+    AbilityInfo abilityInfo;
+    bool ret = dataMgr->IsObtainAbilityInfo(want, USERID, abilityInfo);
+    EXPECT_TRUE(ret);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: IsObtainAbilityInfo_0004
+ * @tc.name: IsObtainAbilityInfo
+ * @tc.desc: test BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo)
+ */
+HWTEST_F(BmsDataMgrTest, IsObtainAbilityInfo_0004, TestSize.Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    bundleInfo.applicationInfo.name = APP_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.needAppDetail = true;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+    Want want;
+    ElementName element;
+    element.SetBundleName(BUNDLE_NAME);
+    element.SetAbilityName(ABILITY_NAME);
+    want.SetElement(element);
+    AbilityInfo abilityInfo;
+    auto ret3 = dataMgr->IsObtainAbilityInfo(want, USERID, abilityInfo);
+    EXPECT_FALSE(ret3);
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
 
 /**
@@ -5132,6 +5341,26 @@ HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0003, TestSize.Level1)
     userId = Constants::ANY_USERID;
     ret = bundleDataMgr.GetAllDesktopShortcutInfo(userId, shortcutInfos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllDesktopShortcutInfo_0004
+ * @tc.name: GetAllDesktopShortcutInfo
+ * @tc.desc: test ErrCode GetAllDesktopShortcutInfo
+ */
+HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0004, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(USERID);
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    bool isIdIllegal = false;
+    shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto ret = bundleDataMgr.GetAllDesktopShortcutInfo(USERID, shortcutInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
 }
 
 /**
@@ -5618,7 +5847,9 @@ HWTEST_F(BmsDataMgrTest, OnExtension_0020, Function | MediumTest | Level1)
     nlohmann::json backupJson;
     NativeRdb::AbsRdbPredicates absRdbPredicates("shortcut_info");
     shortcutDataStorageRdb->rdbDataManager_->DeleteData(absRdbPredicates);
-    auto ret = BundleBackupService::GetInstance().OnBackup(backupJson);
+    std::shared_ptr<BundleBackupService> bundleBackupService = DelayedSingleton<BundleBackupService>::GetInstance();
+    ASSERT_NE(bundleBackupService, nullptr);
+    auto ret = bundleBackupService->OnBackup(backupJson);
     EXPECT_EQ(ret, ERR_APPEXECFWK_DB_GET_DATA_ERROR);
     EXPECT_EQ(shortcutDataStorageRdb->GetAllTableDataToJson(backupJson), false);
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
@@ -5634,9 +5865,11 @@ HWTEST_F(BmsDataMgrTest, OnExtension_0030, Function | MediumTest | Level1)
 {
     std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
     ASSERT_NE(shortcutDataStorageRdb, nullptr);
-    BundleBackupService::GetInstance().dataMgr_ = std::make_shared<BundleDataMgr>();
+    std::shared_ptr<BundleBackupService> bundleBackupService = DelayedSingleton<BundleBackupService>::GetInstance();
+    ASSERT_NE(bundleBackupService, nullptr);
+    bundleBackupService->dataMgr_ = std::make_shared<BundleDataMgr>();
     nlohmann::json backupJson;
-    auto ret = BundleBackupService::GetInstance().OnRestore(backupJson);
+    auto ret = bundleBackupService->OnRestore(backupJson);
     EXPECT_EQ(ret, ERR_APPEXECFWK_DB_UPDATE_ERROR);
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
     backupJson = nlohmann::json::array();
@@ -5659,7 +5892,9 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0100, Function | MediumTest | Level1)
 
     MessageParcel data;
     MessageParcel reply;
-    auto ret = BundleBackupMgr::GetInstance().OnBackup(data, reply);
+    std::shared_ptr<BundleBackupMgr> bundleBackupMgr = DelayedSingleton<BundleBackupMgr>::GetInstance();
+    ASSERT_NE(bundleBackupMgr, nullptr);
+    auto ret = bundleBackupMgr->OnBackup(data, reply);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_GE(reply.ReadFileDescriptor(), 0);
 
@@ -5677,7 +5912,9 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0200, Function | MediumTest | Level1)
     MessageParcel data;
     MessageParcel reply;
     data.WriteFileDescriptor(-1);
-    auto ret = BundleBackupMgr::GetInstance().OnRestore(data, reply);
+    std::shared_ptr<BundleBackupMgr> bundleBackupMgr = DelayedSingleton<BundleBackupMgr>::GetInstance();
+    ASSERT_NE(bundleBackupMgr, nullptr);
+    auto ret = bundleBackupMgr->OnRestore(data, reply);
     EXPECT_EQ(ret, ERR_APPEXECFWK_BACKUP_INVALID_PARAMETER);
 }
 
@@ -5695,16 +5932,20 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0300, Function | MediumTest | Level1)
     bool isIdIllegal = false;
     shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
 
-    BundleBackupService::GetInstance().dataMgr_ = std::make_shared<BundleDataMgr>();
+    std::shared_ptr<BundleBackupService> bundleBackupService = DelayedSingleton<BundleBackupService>::GetInstance();
+    ASSERT_NE(bundleBackupService, nullptr);
+    bundleBackupService->dataMgr_ = std::make_shared<BundleDataMgr>();
     const char* BACKUP_FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/backup_config.conf";
     MessageParcel data;
     MessageParcel reply;
-    FILE* filePtr = fopen(BACKUP_FILE_PATH, "re");
+    FILE* filePtr = fopen(BACKUP_FILE_PATH, "r");
     EXPECT_NE(filePtr, nullptr);
     int32_t fd = fileno(filePtr);
     data.WriteFileDescriptor(fd);
-    auto ret = BundleBackupMgr::GetInstance().OnRestore(data, reply);
-    (void)close(fd);
+    std::shared_ptr<BundleBackupMgr> bundleBackupMgr = DelayedSingleton<BundleBackupMgr>::GetInstance();
+    ASSERT_NE(bundleBackupMgr, nullptr);
+    auto ret = bundleBackupMgr->OnRestore(data, reply);
+    (void)fclose(filePtr);
     EXPECT_EQ(ret, ERR_OK);
     bool result = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_TRUE(result);
@@ -5997,7 +6238,7 @@ HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0130, Function | MediumTest 
     backupJson.push_back({{"APP_INDEX", 0}, {"USER_ID", 100}});
     bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
-    
+
     backupJson.clear();
     backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"USER_ID", 100}});
     bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
@@ -6022,5 +6263,71 @@ HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0130, Function | MediumTest 
     backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", "userId"}});
     bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
+}
+
+/**
+ * @tc.number: ProcessCertificate_0001
+ * @tc.name: ProcessCertificate
+ * @tc.desc: test ProcessCertificate(BundleInfo& bundleInfo, const std::string &bundleName, int32_t flags)
+ */
+HWTEST_F(BmsDataMgrTest, ProcessCertificate_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO);
+    dataMgr->ProcessCertificate(bundleInfo, BUNDLE_NAME, flags);
+    EXPECT_TRUE(bundleInfo.signatureInfo.certificate.empty());
+}
+
+/**
+ * @tc.number: ProcessCertificate_0002
+ * @tc.name: ProcessCertificate
+ * @tc.desc: test ProcessCertificate(BundleInfo& bundleInfo, const std::string &bundleName, int32_t flags)
+ */
+HWTEST_F(BmsDataMgrTest, ProcessCertificate_0002, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    BundleInfo bundleInfo;
+    int32_t flags = 0;
+    dataMgr->ProcessCertificate(bundleInfo, BUNDLE_NAME, flags);
+    EXPECT_TRUE(bundleInfo.signatureInfo.certificate.empty());
+}
+
+/**
+ * @tc.number: GenerateUuid_0001
+ * @tc.name: GenerateUuid
+ * @tc.desc: test GenerateUuid
+ */
+HWTEST_F(BmsDataMgrTest, GenerateUuid_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string uuid1 = dataMgr->GenerateUuid();
+    EXPECT_EQ(uuid1.size(), 36);
+
+    std::string uuid2 = dataMgr->GenerateUuid();
+    EXPECT_EQ(uuid2.size(), 36);
+
+    EXPECT_NE(uuid1, uuid2);
+
+    std::string key1 = "test";
+    std::string uuid3 = dataMgr->GenerateUuidByKey(key1);
+    EXPECT_EQ(uuid3.size(), 36);
+
+    std::string key2 = "test";
+    std::string uuid4 = dataMgr->GenerateUuidByKey(key2);
+    EXPECT_EQ(uuid4.size(), 36);
+
+    EXPECT_EQ(uuid3, uuid4);
+
+    std::string key3 = "test3";
+    std::string uuid5 = dataMgr->GenerateUuidByKey(key3);
+    EXPECT_EQ(uuid5.size(), 36);
+    EXPECT_NE(uuid3, uuid5);
 }
 } // OHOS

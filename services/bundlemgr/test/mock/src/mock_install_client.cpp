@@ -17,6 +17,15 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+int32_t retIndex = 0;
+std::vector<int32_t> retList = {};
+
+void SetTestReturnValue(const std::vector<int32_t> &list)
+{
+    retList = list;
+    retIndex = 0;
+}
+
 ErrCode InstalldClient::CreateBundleDir(const std::string &bundleDir)
 {
     return 0;
@@ -136,6 +145,12 @@ ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int3
     return 0;
 }
 
+ErrCode InstalldClient::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    const std::unordered_map<std::string, int32_t> &uidMap, std::vector<BundleStorageStats> &bundleStats)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
     std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
@@ -150,6 +165,9 @@ ErrCode InstalldClient::LoadInstalls()
 ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
     bool isPreInstallApp, bool debug)
 {
+    if (retIndex >= 0 && retIndex < static_cast<int32_t>(retList.size())) {
+        return retList[retIndex++];
+    }
     return 0;
 }
 
@@ -192,6 +210,9 @@ ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &
 
 ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
 {
+    if (retIndex >= 0 && retIndex < static_cast<int32_t>(retList.size())) {
+        return retList[retIndex++];
+    }
     return 0;
 }
 
@@ -214,6 +235,13 @@ ErrCode InstalldClient::ApplyDiffPatch(
 
 ErrCode InstalldClient::IsExistDir(const std::string &dir, bool &isExist)
 {
+    if (retIndex >= 0 && retIndex < static_cast<int32_t>(retList.size())) {
+        ErrCode ret = retList[retIndex++];
+        if (retIndex >= 0 && retIndex < static_cast<int32_t>(retList.size())) {
+            isExist = retList[retIndex++];
+        }
+        return ret;
+    }
     return 0;
 }
 
@@ -298,6 +326,9 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
 
 ErrCode InstalldClient::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
+    if (retIndex >= 0 && retIndex < static_cast<int32_t>(retList.size())) {
+        return retList[retIndex++];
+    }
     return ERR_OK;
 }
 
@@ -353,6 +384,11 @@ ErrCode InstalldClient::CreateDataGroupDirs(const std::vector<CreateDirParam> &p
 }
 
 ErrCode InstalldClient::DeleteDataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::ClearDir(const std::string &dir)
 {
     return ERR_OK;
 }

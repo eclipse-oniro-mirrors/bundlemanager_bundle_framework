@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 
 #include "accesstoken_kit.h"
 #include "app_log_wrapper.h"
+#include "bundle_additional_info.h"
 #include "bundle_constants.h"
 #include "bundle_distribution_type.h"
 #include "bundle_event_callback_host.h"
@@ -1444,6 +1445,42 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0025, Function | MediumTest | Lev
 }
 
 /**
+ * @tc.number: GetBundleInfoV9_0026
+ * @tc.name: test query bundle information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.get BundleInfo successfully
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0026, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInfoV9_0026" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    auto getInfoResult = bundleMgrProxy->GetBundleInfoV9(appName,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE), bundleInfo, USERID);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    EXPECT_EQ(bundleInfo.name, appName);
+    EXPECT_FALSE(bundleInfo.hapModuleInfos.empty());
+    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].formExtensionModule.empty());
+    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].formWidgetModule.empty());
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetBundleInfoV9_0026" << std::endl;
+}
+
+/**
  * @tc.number: GetBundleInfos_0100
  * @tc.name: test query bundleinfos
  * @tc.desc: 1.under '/data/test/bms_bundle',there exist three bundles
@@ -2592,13 +2629,13 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0100, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         std::string appType = bundleMgrProxy->GetAppType(appName);
-        EXPECT_EQ(appType, EMPTY_STRING);
+        EXPECT_EQ(appType, "system");
         resvec.clear();
         Uninstall(appName, resvec);
         std::string uninstallResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
-        if (std::strcmp(appType.c_str(), "") != 0) {
+        if (std::strcmp(appType.c_str(), "system") != 0) {
             APP_LOGI("GetAppType_0100 failed - cycle count: %{public}d", i);
             break;
         }
@@ -2629,9 +2666,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0200, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         std::string appType = bundleMgrProxy->GetAppType(SYSTEM_SETTINGS_BUNDLE_NAME);
-        EXPECT_EQ(appType, EMPTY_STRING);
+        EXPECT_EQ(appType, "system");
 
-        if (std::strcmp(appType.c_str(), "") != 0) {
+        if (std::strcmp(appType.c_str(), "system") != 0) {
             APP_LOGI("GetAppType_0200 failed - cycle count: %{public}d", i);
             break;
         }
@@ -8668,6 +8705,15 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0003, Function | SmallTest | Le
         EXPECT_EQ(ERR_OK, specifiedDistributionTypes[0].errCode);
     }
 
+    std::vector<BundleAdditionalInfo> additionalInfos;
+    ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(additionalInfos.empty());
+    if (!additionalInfos.empty()) {
+        EXPECT_EQ(installParam.additionalInfo, additionalInfos[0].additionalInfo);
+        EXPECT_EQ(ERR_OK, additionalInfos[0].errCode);
+    }
+
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -8717,6 +8763,78 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0004, Function | SmallTest | Le
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: BatchGetAdditionalInfo_0001
+ * @tc.name: test BatchGetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back(BASE_BUNDLE_NAME);
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<BundleAdditionalInfo> additionalInfos;
+    ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+    EXPECT_FALSE(additionalInfos.empty());
+    if (!additionalInfos.empty()) {
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(additionalInfos[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
+}
+
+/**
+ * @tc.number: BatchGetAdditionalInfo_0002
+ * @tc.name: test BatchGetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0002, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<BundleAdditionalInfo> additionalInfos;
+    ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BatchGetAdditionalInfo_0003
+ * @tc.name: test BatchGetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0003, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames(1001, "BASE_BUNDLE_NAME");
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<BundleAdditionalInfo> additionalInfos;
+    ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: BatchGetAdditionalInfo_0004
+ * @tc.name: test BatchGetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetAdditionalInfo_0004, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back("");
+    bundleNames.push_back("BASE_BUNDLE_NAME");
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<BundleAdditionalInfo> additionalInfos;
+    ErrCode ret = bundleMgrProxy->BatchGetAdditionalInfo(bundleNames, additionalInfos);
+    EXPECT_FALSE(additionalInfos.empty());
+    if (!additionalInfos.empty()) {
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(additionalInfos[0].bundleName, "");
+        EXPECT_EQ(additionalInfos[1].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
 }
 
 /**
@@ -9926,7 +10044,7 @@ HWTEST_F(ActsBmsKitSystemTest, MigrateData_0003, Function | MediumTest | Level1)
         // 3. The tester entered the password incorrectly (8521782)
         std::array<int, 3> probability = { ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED,
             ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_TIME_OUT,
-            ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED };
+            ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED };
 
         auto ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
         bool isExist = std::find(probability.begin(), probability.end(), ret) != probability.end();

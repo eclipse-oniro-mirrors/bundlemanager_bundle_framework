@@ -31,17 +31,15 @@ BundleBackupMgr::BundleBackupMgr() {}
 
 BundleBackupMgr::~BundleBackupMgr() {}
 
-BundleBackupMgr& BundleBackupMgr::GetInstance()
-{
-    static BundleBackupMgr bundleCloneManager;
-    return bundleCloneManager;
-}
-
 ErrCode BundleBackupMgr::OnBackup(MessageParcel& data, MessageParcel& reply)
 {
     nlohmann::json backupJson = nlohmann::json::array();
-    auto service = BundleBackupService::GetInstance();
-    auto ret = service.OnBackup(backupJson);
+    std::shared_ptr<BundleBackupService> service = DelayedSingleton<BundleBackupService>::GetInstance();
+    if (service == nullptr) {
+        APP_LOGE("Get BundleBackupService failed");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    auto ret = service->OnBackup(backupJson);
     if (ret != ERR_OK) {
         return ret;
     }
@@ -51,15 +49,14 @@ ErrCode BundleBackupMgr::OnBackup(MessageParcel& data, MessageParcel& reply)
         return ret;
     }
 
-    FILE* filePtr = fopen(BACKUP_FILE_PATH, "re");
-    if (filePtr == nullptr) {
+    int32_t fd = open(BACKUP_FILE_PATH, O_RDONLY);
+    if (fd < 0) {
         APP_LOGE("Open backup file failed");
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
-    int32_t fd = fileno(filePtr);
     if (!reply.WriteFileDescriptor(fd)) {
         APP_LOGE("Write file descriptor failed");
-        fclose(filePtr);
+        close(fd);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -88,8 +85,12 @@ ErrCode BundleBackupMgr::OnRestore(MessageParcel& data, MessageParcel& reply)
         APP_LOGE("Invalid JSON structure");
         return ERR_APPEXECFWK_BACKUP_INVALID_JSON_STRUCTURE;
     }
-    auto service = BundleBackupService::GetInstance();
-    ret = service.OnRestore(json);
+    std::shared_ptr<BundleBackupService> service = DelayedSingleton<BundleBackupService>::GetInstance();
+    if (service == nullptr) {
+        APP_LOGE("Get BundleBackupService failed");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    ret = service->OnRestore(json);
     if (ret != ERR_OK) {
         return ret;
     }
@@ -107,6 +108,7 @@ ErrCode BundleBackupMgr::SaveToFile(const std::string& config)
     int32_t ret = static_cast<int32_t>(fwrite(config.c_str(), 1, config.length(), fp));
     if (ret != (int32_t)config.length()) {
         APP_LOGE("Save config file: %{public}s, fwrite %{public}d failed", BACKUP_FILE_PATH, ret);
+        (void)fclose(fp);
         return ERR_APPEXECFWK_BACKUP_FILE_IO_ERROR;
     }
     (void)fflush(fp);

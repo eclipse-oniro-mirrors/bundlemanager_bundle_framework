@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -232,6 +232,15 @@ public:
      * @return Returns ERR_OK if execute success; returns errCode otherwise.
      */
     virtual ErrCode GetNameAndIndexForUid(const int uid, std::string &bundleName, int32_t &appIndex) override;
+    /**
+     * @brief Obtains the appIdentifier and appIndex with the given access tokenId.
+     * @param accessTokenId Indicates the access tokenId of the application.
+     * @param appIdentifier Indicates the app identifier of the application.
+     * @param appIndex Indicates the app index of the application.
+     * @return Returns ERR_OK if execute success; returns errCode otherwise.
+     */
+    virtual ErrCode GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
+        std::string &appIdentifier, int32_t &appIndex) override;
     /**
      * @brief Obtains the formal name associated with the given UID.
      * @param uids Indicates the uid list.
@@ -893,6 +902,9 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats, int32_t appIndex = 0, uint32_t statFlag = 0) override;
 
+    virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
+        std::vector<BundleStorageStats> &bundleStats) override;
+
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
 
     virtual ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback) override;
@@ -951,6 +963,8 @@ public:
         std::vector<BundleDistributionType> &specifiedDistributionTypes) override;
     virtual ErrCode GetAdditionalInfo(const std::string &bundleName,
         std::string &additionalInfo) override;
+    virtual ErrCode BatchGetAdditionalInfo(const std::vector<std::string> &bundleNames,
+        std::vector<BundleAdditionalInfo> &additionalInfos) override;
     virtual ErrCode GetAdditionalInfoForAllUser(const std::string &bundleName,
         std::string &additionalInfo) override;
     virtual ErrCode SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
@@ -1069,7 +1083,8 @@ public:
 
     virtual ErrCode UpdateAppEncryptedStatus(const std::string &bundleName,
         bool isExisted, int32_t appIndex = 0) override;
-    virtual bool GreatOrEqualTargetAPIVersion(int32_t platformVersion, int32_t minorVersion, int32_t patchVersion) override;
+    virtual bool GreatOrEqualTargetAPIVersion(int32_t platformVersion,
+        int32_t minorVersion, int32_t patchVersion) override;
 
     /**
      * @brief Obtains continuable BundleInfo of all bundles available in the system.

@@ -849,6 +849,10 @@ private:
     ErrCode RecoverOnDemandInstallBundle(const std::string &bundleName,
         const InstallParam &installParam, int32_t &uid);
     void PrintStartWindowIconId(const InnerBundleInfo &info);
+    bool ProcessExtProfile(const InstallParam &installParam);
+    bool IsBundleCrossAppSharedConfig(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    ErrCode ProcessDynamicIconFileWhenUpdate(const InnerBundleInfo &oldInfo, const std::string &oldPath,
+        const std::string &newPath);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;
@@ -868,6 +872,7 @@ private:
     bool needSetDisposeRule_ = false;
     bool needDeleteAppTempPath_ = false;
     bool isBundleExist_ = false;
+    bool isBundleCrossAppSharedConfig_ = false;
     InstallerState state_ = InstallerState::INSTALL_START;
     uint32_t versionCode_ = 0;
     uint32_t accessTokenId_ = 0;

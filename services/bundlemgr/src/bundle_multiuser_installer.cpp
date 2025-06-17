@@ -67,6 +67,7 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
         .accessTokenId = accessTokenId_,
         .uid = uid_,
         .appIndex = 0,
+        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
         .bundleName = bundleName
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
@@ -102,6 +103,7 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         APP_LOGE("the bundle is not installed");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    isBundleCrossAppSharedConfig_ = info.IsBundleCrossAppSharedConfig();
 
     // 2. obtain userId
     if (!dataMgr_->HasUserId(userId)) {
@@ -223,7 +225,7 @@ ErrCode BundleMultiUserInstaller::CreateDataDir(InnerBundleInfo &info,
     if (result != ERR_OK) {
         // if user is not activated, access el2-el4 may return ok but dir cannot be created
         if (AccountHelper::IsOsAccountVerified(userId)) {
-            APP_LOGE("fail to create data dir, error is %{public}d", result);
+            APP_LOGE("create dir fail, error is %{public}d", result);
             return result;
         } else {
             APP_LOGW("user %{public}d is not activated", userId);
@@ -294,6 +296,7 @@ void BundleMultiUserInstaller::ResetInstallProperties()
 {
     uid_ = 0;
     accessTokenId_ = 0;
+    isBundleCrossAppSharedConfig_ = false;
 }
 
 bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,

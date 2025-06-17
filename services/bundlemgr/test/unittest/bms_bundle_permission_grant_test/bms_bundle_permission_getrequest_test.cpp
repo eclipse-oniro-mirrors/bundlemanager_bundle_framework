@@ -20,6 +20,7 @@
 #include <string>
 
 #include "bundle_info.h"
+#include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 
@@ -124,5 +125,153 @@ HWTEST_F(BmsBundlePermissionGetRequestTest, BmsBundlePermissionGetRequestTest_05
     uint32_t tokenId = 1;
     res = BundlePermissionMgr::GetRequestPermissionStates(bundleInfo, tokenId, ERR_DEVICE_ID);
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0001
+ * @tc.name: BundleMgrHostImpl_0001
+ * @tc.desc: test DumpInfos
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    DumpFlag flag = DumpFlag::DUMP_DEBUG_BUNDLE_LIST;
+    std::string bundleName;
+    int32_t userId = 100;
+    std::string result;
+    bool ret = localBundleMgrHostImpl->DumpInfos(flag, bundleName, userId, result);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0002
+ * @tc.name: BundleMgrHostImpl_0002
+ * @tc.desc: test DumpInfos
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0002, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    DumpFlag flag = DumpFlag::DUMP_BUNDLE_LABEL;
+    std::string bundleName;
+    int32_t userId = 100;
+    std::string result;
+    bool ret = localBundleMgrHostImpl->DumpInfos(flag, bundleName, userId, result);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0003
+ * @tc.name: BundleMgrHostImpl_0003
+ * @tc.desc: test DumpInfos
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0003, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    DumpFlag flag = DumpFlag::DUMP_LABEL_LIST;
+    std::string bundleName;
+    int32_t userId = 9999;
+    std::string result;
+    bool ret = localBundleMgrHostImpl->DumpInfos(flag, bundleName, userId, result);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0004
+ * @tc.name: BundleMgrHostImpl_0004
+ * @tc.desc: test DumpInfos
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0004, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    DumpFlag flag = static_cast<DumpFlag>(9999);
+    std::string bundleName;
+    int32_t userId = 9999;
+    std::string result;
+    bool ret = localBundleMgrHostImpl->DumpInfos(flag, bundleName, userId, result);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0005
+ * @tc.name: BundleMgrHostImpl_0005
+ * @tc.desc: test DumpDebugBundleInfoNames
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0005, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    int32_t userId = Constants::ALL_USERID;
+    std::string result;
+    bool ret = localBundleMgrHostImpl->DumpDebugBundleInfoNames(userId, result);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0006
+ * @tc.name: BundleMgrHostImpl_0006
+ * @tc.desc: test DumpDebugBundleInfoNames
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0006, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    int32_t userId = 100;
+    std::string result;
+    bool ret = localBundleMgrHostImpl->DumpDebugBundleInfoNames(userId, result);
+
+    userId = 9999;
+    ret = localBundleMgrHostImpl->DumpDebugBundleInfoNames(userId, result);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0007
+ * @tc.name: BundleMgrHostImpl_0007
+ * @tc.desc: test GetBundleStats
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0007, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string bundleName;
+    int32_t userId = 100;
+    std::vector<int64_t> bundleStats;
+    bool ret = localBundleMgrHostImpl->GetBundleStats(bundleName, userId, bundleStats);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0008
+ * @tc.name: BundleMgrHostImpl_0008
+ * @tc.desc: test GetBundleStats
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0008, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    int32_t userId = 100;
+    std::vector<int64_t> bundleStats;
+    bool ret = localBundleMgrHostImpl->GetAllBundleStats(userId, bundleStats);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0009
+ * @tc.name: BundleMgrHostImpl_0009
+ * @tc.desc: test GetBundleStats
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0009, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string bundleName;
+    int32_t userId = 100;
+    std::vector<Metadata> provisionMetadatas;
+    bool ret = localBundleMgrHostImpl->GetProvisionMetadata(bundleName, userId, provisionMetadatas);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

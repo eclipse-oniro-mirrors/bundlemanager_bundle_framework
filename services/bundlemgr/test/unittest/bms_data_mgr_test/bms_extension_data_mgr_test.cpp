@@ -2028,4 +2028,52 @@ HWTEST_F(BmsExtensionDataMgrTest, RegisterPreInstallWithCard_001, Function | Sma
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
 }
+
+/**
+ * @tc.number: IsMCFlagSet_0100
+ * @tc.name: IsMCFlagSet_0100
+ * @tc.desc: test IsMCFlagSet
+ */
+HWTEST_F(BmsExtensionDataMgrTest, IsMCFlagSet_0100, Function | SmallTest | Level1)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    bool ret = bundleMgrExtTest.IsMCFlagSet();
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetBundleNamesForUidExt_0100
+ * @tc.name: GetBundleNamesForUidExt_0100
+ * @tc.desc: test GetBundleNamesForUidExt
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetBundleNamesForUidExt_0100, Function | SmallTest | Level1)
+{
+    int32_t uid = 111;
+    std::vector<std::string> bundleNames;
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode ret = bmsExtensionDataMgr.GetBundleNamesForUidExt(uid, bundleNames);
+
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    #else
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
+}
+
+/**
+ * @tc.number: IsMCFlagSet_0001
+ * @tc.name: IsMCFlagSet_0001
+ * @tc.desc: test IsMCFlagSet
+ */
+HWTEST_F(BmsExtensionDataMgrTest, IsMCFlagSet_0001, Function | SmallTest | Level1)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool ret = bmsExtensionDataMgr.IsMCFlagSet();
+
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, true);
+    #else
+    EXPECT_EQ(ret, false);
+    #endif
+}
 } // OHOS

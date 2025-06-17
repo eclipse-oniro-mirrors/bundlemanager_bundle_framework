@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -51,7 +51,9 @@ enum class BMSEventType : uint8_t {
     FREE_INSTALL_EVENT,
     BMS_DISK_SPACE,
     APP_CONTROL_RULE,
-    DB_ERROR
+    DB_ERROR,
+    DATA_PARTITION_USAGE_EVENT,
+    DEFAULT_APP,
 };
 
 enum class BundleEventType : uint8_t {
@@ -109,6 +111,11 @@ enum class DB_OPERATION_TYPE : uint8_t {
     QUERY = 5,
     DELETE = 6,
     REBUILD = 7,
+};
+
+enum class DefaultAppActionType : uint8_t {
+    SET = 1,
+    RESET = 2,
 };
 
 struct EventInfo {
@@ -183,6 +190,12 @@ struct EventInfo {
     std::vector<std::string> hashValue;
     std::vector<std::string> totalBundleNames;
     std::vector<std::string> appIds;
+    bool isIntercepted = false;
+    std::vector<uint64_t> fileSize;
+    std::vector<uint64_t> partitionSize;
+    
+    std::string want;
+    std::string utd;
 
     void Reset()
     {
@@ -205,6 +218,8 @@ struct EventInfo {
         callingAppId.clear();
         callingBundleName.clear();
         filePath.clear();
+        fileSize.clear();
+        partitionSize.clear();
         hashValue.clear();
         fingerprint.clear();
         hideDesktopIcon = false;
@@ -231,6 +246,8 @@ struct EventInfo {
         dbName.clear();
         errorCode = 0;
         rebuildType = 0;
+        want.clear();
+        utd.clear();
     }
 };
 
@@ -344,6 +361,28 @@ public:
      * @param rebuildType DB rebuild type.
      */
     static void SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode);
+
+    /**
+     * @brief process is intercepted.
+     * @param eventInfo event info.
+     */
+    static EventInfo ProcessIsIntercepted(const EventInfo &eventInfo);
+
+    /**
+     * @brief rport the usage event of data partition.
+     */
+    static void ReportDataPartitionUsageEvent();
+    
+    /**
+     * @brief Send info when set or reset default app.
+     * @param actionType set default app method type.
+     * @param userId Indicates the userId.
+     * @param callingName Indicates method caller
+     * @param want Indicates the want
+     * @param utd Indicates the utd
+     */
+    static void SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const std::string& callingName,
+        const std::string& want, const std::string& utd);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

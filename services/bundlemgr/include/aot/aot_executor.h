@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,10 +44,13 @@ private:
 
     std::string DecToHex(uint32_t decimal) const;
     bool CheckArgs(const AOTArgs &aotArgs) const;
-    bool GetAbcFileInfo(const std::string &hapPath, uint32_t &offset, uint32_t &length) const;
+    std::string GetAbcRelativePath(const std::string &codeLanguage) const;
+    bool GetAbcFileInfo(const std::string &hapPath, const std::string &codeLanguage,
+        uint32_t &offset, uint32_t &length) const;
     ErrCode PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) const;
     nlohmann::json GetSubjectInfo(const AOTArgs &aotArgs) const;
-    void MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap);
+    void MapSysCompArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap);
+    void MapHapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap);
     ErrCode EnforceCodeSign(const std::string &anFileName, const std::vector<uint8_t> &signData) const;
     ErrCode StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_t> &signData);
     void InitState(const AOTArgs &aotArgs);

@@ -147,6 +147,7 @@ const char* APPLICATION_ASSET_ACCESS_GROUPS = "assetAccessGroups";
 const char* APPLICATION_HAS_PLUGIN = "hasPlugin";
 const char* APPLICATION_START_MODE = "startMode";
 const char* APPLICATION_APP_PRELOAD_PHASE = "appPreloadPhase";
+const char* APPLICATION_IS_FORCE_ROTATE = "isForceRotate";
 }
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
@@ -599,6 +600,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     installSource = Str16ToStr8(parcel.ReadString16());
 
     configuration = Str16ToStr8(parcel.ReadString16());
+    codeLanguage = parcel.ReadString();
     cloudFileSyncEnabled = parcel.ReadBool();
     applicationFlags = parcel.ReadInt32();
     ubsanEnabled = parcel.ReadBool();
@@ -607,6 +609,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     hasPlugin = parcel.ReadBool();
     startMode = static_cast<StartMode>(parcel.ReadUint8());
     appPreloadPhase = static_cast<AppPreloadPhase>(parcel.ReadUint8());
+    isForceRotate = parcel.ReadBool();
     return true;
 }
 
@@ -784,6 +787,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(installSource));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(configuration));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, cloudFileSyncEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, applicationFlags);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, ubsanEnabled);
@@ -792,6 +796,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasPlugin);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(startMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(appPreloadPhase));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isForceRotate);
     return true;
 }
 
@@ -1039,6 +1044,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_APP_INDEX, applicationInfo.appIndex},
         {APPLICATION_INSTALL_SOURCE, applicationInfo.installSource},
         {APPLICATION_CONFIGURATION, applicationInfo.configuration},
+        {Constants::CODE_LANGUAGE, applicationInfo.codeLanguage},
         {APPLICATION_CLOUD_FILE_SYNC_ENABLED, applicationInfo.cloudFileSyncEnabled},
         {APPLICATION_APPLICATION_FLAGS, applicationInfo.applicationFlags},
         {APPLICATION_UBSAN_ENABLED, applicationInfo.ubsanEnabled},
@@ -1046,7 +1052,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_ASSET_ACCESS_GROUPS, applicationInfo.assetAccessGroups},
         {APPLICATION_HAS_PLUGIN, applicationInfo.hasPlugin},
         {APPLICATION_START_MODE, applicationInfo.startMode},
-        {APPLICATION_APP_PRELOAD_PHASE, applicationInfo.appPreloadPhase}
+        {APPLICATION_APP_PRELOAD_PHASE, applicationInfo.appPreloadPhase},
+        {APPLICATION_IS_FORCE_ROTATE, applicationInfo.isForceRotate}
     };
 }
 
@@ -1252,6 +1259,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.hwasanEnabled, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CONFIGURATION,
         applicationInfo.configuration, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, Constants::CODE_LANGUAGE,
+        applicationInfo.codeLanguage, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_FILE_SYNC_ENABLED,
         applicationInfo.cloudFileSyncEnabled, false, parseResult);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_APPLICATION_FLAGS,
@@ -1268,6 +1277,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.startMode, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<AppPreloadPhase>(jsonObject, jsonObjectEnd, APPLICATION_APP_PRELOAD_PHASE,
         applicationInfo.appPreloadPhase, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_IS_FORCE_ROTATE,
+        applicationInfo.isForceRotate, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }

@@ -360,7 +360,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
     UpdateOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE);
     UpdateOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS);
-    UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION);
+    UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_ICON);
     (void)SaveBmsSystemTimeForShortcut();
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
     (void)SaveUpdatePermissionsFlag();
@@ -3126,7 +3126,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
                 std::string moduleName;
                 DeletePreInfoInDb(bundleName, moduleName, true);
                 if (hasBundleInstalled) {
-                    SavePreloadAppUninstallInfo(bundleName, preloadBundleNames);
+                    SavePreloadAppUninstallInfo(loadIter.second, preloadBundleNames);
                 }
             }
 
@@ -3164,7 +3164,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
     LOG_I(BMS_TAG_DEFAULT, "Reboot scan and OTA uninstall success");
 }
 
-void BMSEventHandler::SavePreloadAppUninstallInfo(const std::string &bundleName,
+void BMSEventHandler::SavePreloadAppUninstallInfo(const PreInstallBundleInfo &info,
     std::vector<std::string> &preloadBundleNames)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -3172,8 +3172,18 @@ void BMSEventHandler::SavePreloadAppUninstallInfo(const std::string &bundleName,
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
     }
+    std::string bundleName = info.GetBundleName();
+    std::vector<std::string> bundlePaths = info.GetBundlePaths();
+    if (bundlePaths.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "-n %{public}s bundle path is empty.", bundleName.c_str());
+        return;
+    }
+    bool isPreloadApp = std::all_of(bundlePaths.begin(), bundlePaths.end(),
+        [] (const std::string &path) {
+            return path.find(ServiceConstants::PRELOAD_APP_DIR) == 0;
+        });
     bool isBundleExist = dataMgr->IsBundleExist(bundleName);
-    if (!isBundleExist) {
+    if (isPreloadApp && !isBundleExist) {
         preloadBundleNames.emplace_back(bundleName);
     }
 }
@@ -4349,6 +4359,7 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, 
     eventInfo.versionCode = bundleInfo.versionCode;
     eventInfo.errCode = errorCode;
     eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
+    eventInfo.callingUid = IPCSkeleton::GetCallingUid();
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
 }
 
@@ -4773,7 +4784,7 @@ bool BMSEventHandler::SaveBmsSystemTimeForShortcut()
 void BMSEventHandler::InnerProcessAllDynamicIconInfoWhenOta()
 {
     bool checkDynamicIcon = false;
-    CheckOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION, checkDynamicIcon);
+    CheckOtaFlag(OTAFlag::PROCESS_DYNAMIC_ICON, checkDynamicIcon);
     if (checkDynamicIcon) {
         LOG_I(BMS_TAG_DEFAULT, "Not need to process dynamic due to has checked");
         return;
@@ -4785,7 +4796,7 @@ void BMSEventHandler::InnerProcessAllDynamicIconInfoWhenOta()
         return;
     }
     dataMgr->ProcessDynamicIconForOta();
-    UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_CION);
+    UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_ICON);
 }
 
 void BMSEventHandler::InnerProcessBootCheckOnDemandBundle()

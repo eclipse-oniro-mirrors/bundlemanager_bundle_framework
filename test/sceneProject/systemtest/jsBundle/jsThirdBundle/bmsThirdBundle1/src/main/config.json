@@ -144,6 +144,11 @@
                 "labelId": 16777216,
                 "shortcutId": "id.third1"
             }
+        ],
+        "reqPermissions": [
+            {
+                "name": "ohos.permission.GET_BUNDLE_INFO"
+            }
         ]
     }
 }

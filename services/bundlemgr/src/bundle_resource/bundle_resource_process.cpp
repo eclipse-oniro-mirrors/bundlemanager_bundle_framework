@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,12 +17,21 @@
 
 #include "account_helper.h"
 #include "bundle_mgr_service.h"
+#include "bundle_parser.h"
 #include "bundle_resource_parser.h"
+#include "json_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* INNER_UNDER_LINE = "_";
+constexpr const char* SYSTEM_THEME_PATH = "/data/service/el1/public/themes/";
+constexpr const char* THEME_ICONS_A = "/a/app/icons/";
+constexpr const char* THEME_ICONS_B = "/b/app/icons/";
+constexpr const char* THEME_ICONS_A_FLAG = "/a/app/flag";
+constexpr const char* THEME_DESCRIPTION_FILE = "description.json";
+constexpr const char* THEME_KEY_ORIGIN = "origin";
+constexpr const char* THEME_KEY_THEME_TYPE_ONLINE = "online";
 }
 
 bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBundleInfo,
@@ -206,12 +215,17 @@ bool BundleResourceProcess::GetDynamicIcon(
     const InnerBundleInfo &innerBundleInfo, const int32_t userId, ResourceInfo &resourceInfo)
 {
     std::string curDynamicIconModule = innerBundleInfo.GetCurDynamicIconModule(userId, resourceInfo.appIndex_);
-    if (curDynamicIconModule.empty() && (resourceInfo.appIndex_ == Constants::DEFAULT_APP_INDEX)) {
-        curDynamicIconModule = innerBundleInfo.GetCurDynamicIconModule();
-    }
     if (curDynamicIconModule.empty()) {
         APP_LOGD("-n %{public}s no curDynamicIconModule, %{public}d", innerBundleInfo.GetBundleName().c_str(),
             resourceInfo.appIndex_);
+        return false;
+    }
+    // need check theme
+    bool isOnlineTheme = false;
+    if (BundleResourceProcess::CheckThemeType(innerBundleInfo.GetBundleName(), userId, isOnlineTheme) &&
+        isOnlineTheme) {
+        APP_LOGW("-n %{public}s -u %{public}d exist dynamic icon, but online theme first",
+            innerBundleInfo.GetBundleName().c_str(), resourceInfo.appIndex_);
         return false;
     }
     std::map<std::string, ExtendResourceInfo> extResourceInfos = innerBundleInfo.GetExtendResourceInfos();
@@ -599,6 +613,46 @@ bool BundleResourceProcess::GetExtendResourceInfo(const std::string &bundleName,
     return true;
 }
 
+bool BundleResourceProcess::CheckThemeType(
+    const std::string &bundleName, const int32_t userId, bool &isOnlineTheme)
+{
+    if (BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG)) {
+        // flag exist in "/data/service/el1/public/themes/<userId>/a/app/flag"
+        if (BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + bundleName)) {
+            isOnlineTheme = IsOnlineTheme(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A +
+                THEME_DESCRIPTION_FILE);
+            return true;
+        }
+        APP_LOGW("-n %{public}s -u %{public}d does not exist in theme a", bundleName.c_str(), userId);
+        return false;
+    }
+    // flag exist in "/data/service/el1/public/themes/<userId>/b/app/flag"
+    if (BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + bundleName)) {
+        isOnlineTheme = IsOnlineTheme(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B +
+            THEME_DESCRIPTION_FILE);
+        return true;
+    }
+    APP_LOGW("-n %{public}s -u %{public}d does not exist in theme b", bundleName.c_str(), userId);
+    return false;
+}
 
+bool BundleResourceProcess::IsOnlineTheme(const std::string &themePath)
+{
+    // read description.json
+    nlohmann::json jsonBuf;
+    if (!BundleParser::ReadFileIntoJson(themePath, jsonBuf)) {
+        APP_LOGW("themePath %{public}s read failed, errno %{public}d", themePath.c_str(), errno);
+        return false;
+    }
+    int32_t parseResult = ERR_OK;
+    std::string themeType;
+    const auto &jsonObjectEnd = jsonBuf.end();
+    BMSJsonUtil::GetStrValueIfFindKey(jsonBuf, jsonObjectEnd, THEME_KEY_ORIGIN, themeType, false, parseResult);
+    if (themeType == THEME_KEY_THEME_TYPE_ONLINE) {
+        APP_LOGI("online theme first");
+        return true;
+    }
+    return false;
+}
 } // AppExecFwk
 } // OHOS

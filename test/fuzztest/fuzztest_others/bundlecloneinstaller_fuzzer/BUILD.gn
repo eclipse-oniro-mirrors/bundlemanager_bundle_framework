@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -23,7 +23,7 @@ module_output_path = fuzz_test_path
 ohos_fuzztest("BundlecloneinstallerFuzzTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = []
   fuzz_config_file =
       "../../../fuzztest/fuzztest_others/bundlecloneinstaller_fuzzer"
 
@@ -60,6 +60,7 @@ ohos_fuzztest("BundlecloneinstallerFuzzTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "jsoncpp:jsoncpp",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",

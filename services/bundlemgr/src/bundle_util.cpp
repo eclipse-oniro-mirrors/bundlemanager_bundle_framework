@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,12 +44,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
-constexpr char UUID_SEPARATOR = '-';
-constexpr size_t ORIGIN_STRING_LENGTH = 32;
-const std::vector<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
 constexpr int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
 constexpr int8_t SPACE_NEED_DOUBLE = 2;
-constexpr uint16_t UUID_LENGTH_MAX = 512;
 static std::string g_deviceUdid;
 // hmdfs and sharefs config
 constexpr const char* BUNDLE_ID_FILE = "appid";
@@ -434,6 +430,8 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
         tempDir += pathseparator + ABC_FILE_PATH;
     } else if (type == DirType::EXT_RESOURCE_FILE_DIR) {
         tempDir += pathseparator + ServiceConstants::EXT_RESOURCE_FILE_PATH;
+    } else if (type == DirType::EXT_PROFILE_DIR) {
+        tempDir += pathseparator + ServiceConstants::EXT_PROFILE;
     } else {
         return "";
     }
@@ -1055,84 +1053,6 @@ void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
         APP_LOGD("the temp hap dir %{public}s needs to be deleted", tempDir.c_str());
         BundleUtil::DeleteDir(tempDir);
     }
-}
-
-std::string BundleUtil::GetHexHash(const std::string &s)
-{
-    std::hash<std::string> hasher;
-    size_t hash = hasher(s);
-
-    std::stringstream ss;
-    ss << std::hex << hash;
-
-    std::string hash_str = ss.str();
-    return hash_str;
-}
-
-void BundleUtil::RecursiveHash(std::string& s)
-{
-    if (s.size() >= ORIGIN_STRING_LENGTH) {
-        s = s.substr(s.size() - ORIGIN_STRING_LENGTH);
-        return;
-    }
-    std::string hash = GetHexHash(s);
-    s += hash;
-    RecursiveHash(s);
-}
-
-std::string BundleUtil::GenerateUuid()
-{
-    std::lock_guard<std::mutex> lock(g_mutex);
-    auto currentTime = std::chrono::system_clock::now();
-    auto timestampNanoseconds =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
-
-    // convert nanosecond timestamps to string
-    std::string s = std::to_string(timestampNanoseconds);
-    std::string timeStr = GetHexHash(s);
-
-    char deviceId[UUID_LENGTH_MAX] = { 0 };
-    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
-    std::string deviceUdid;
-    std::string deviceStr;
-    if (ret != 0) {
-        APP_LOGW("GetDevUdid failed");
-    } else {
-        deviceUdid = std::string{ deviceId };
-        deviceStr = GetHexHash(deviceUdid);
-    }
-
-    std::string uuid = timeStr + deviceStr;
-    RecursiveHash(uuid);
-
-    for (int32_t index : SEPARATOR_POSITIONS) {
-        uuid.insert(index, 1, UUID_SEPARATOR);
-    }
-    return uuid;
-}
-
-std::string BundleUtil::GenerateUuidByKey(const std::string &key)
-{
-    std::string keyHash = GetHexHash(key);
-
-    char deviceId[UUID_LENGTH_MAX] = { 0 };
-    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
-    std::string deviceUdid;
-    std::string deviceStr;
-    if (ret != 0) {
-        APP_LOGW("GetDevUdid failed");
-    } else {
-        deviceUdid = std::string{ deviceId };
-        deviceStr = GetHexHash(deviceUdid);
-    }
-
-    std::string uuid = keyHash + deviceStr;
-    RecursiveHash(uuid);
-
-    for (int32_t index : SEPARATOR_POSITIONS) {
-        uuid.insert(index, 1, UUID_SEPARATOR);
-    }
-    return uuid;
 }
 
 std::vector<uint8_t> BundleUtil::GenerateRandomNumbers(uint8_t size, uint8_t lRange, uint8_t rRange)

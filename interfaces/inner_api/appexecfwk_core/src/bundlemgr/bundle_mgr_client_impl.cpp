@@ -64,6 +64,10 @@ ErrCode BundleMgrClientImpl::GetNameForUid(const int uid, std::string &name)
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->GetNameForUid(uid, name);
 }
 
@@ -79,6 +83,10 @@ bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const Bun
     }
 
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->GetBundleInfo(bundleName, flag, bundleInfo, userId);
 }
 
@@ -92,6 +100,10 @@ ErrCode BundleMgrClientImpl::GetBundlePackInfo(
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->GetBundlePackInfo(bundleName, flag, bundlePackInfo, userId);
 }
 
@@ -104,6 +116,10 @@ ErrCode BundleMgrClientImpl::CreateBundleDataDir(int32_t userId)
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->CreateBundleDataDir(userId);
 }
 
@@ -116,6 +132,10 @@ ErrCode BundleMgrClientImpl::CreateBundleDataDirWithEl(int32_t userId, DataDirEl
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->CreateBundleDataDirWithEl(userId, dirEl);
 }
 
@@ -132,6 +152,10 @@ bool BundleMgrClientImpl::GetHapModuleInfo(const std::string &bundleName, const 
     info.bundleName = bundleName;
     info.package = hapName;
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->GetHapModuleInfo(info, hapModuleInfo);
 }
 
@@ -450,6 +474,10 @@ ErrCode BundleMgrClientImpl::InstallSandboxApp(const std::string &bundleName, in
     }
 
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleInstaller_ == nullptr) {
+        APP_LOGE("bundleInstaller_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleInstaller_->InstallSandboxApp(bundleName, dlpType, userId, appIndex);
 }
 
@@ -467,6 +495,10 @@ ErrCode BundleMgrClientImpl::UninstallSandboxApp(const std::string &bundleName, 
     }
 
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleInstaller_ == nullptr) {
+        APP_LOGE("bundleInstaller_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleInstaller_->UninstallSandboxApp(bundleName, appIndex, userId);
 }
 
@@ -485,6 +517,10 @@ ErrCode BundleMgrClientImpl::GetSandboxBundleInfo(
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->GetSandboxBundleInfo(bundleName, appIndex, userId, info);
 }
 
@@ -503,6 +539,10 @@ ErrCode BundleMgrClientImpl::GetSandboxAbilityInfo(const Want &want, int32_t app
     }
 
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->GetSandboxAbilityInfo(want, appIndex, flags, userId, abilityInfo);
 }
 
@@ -521,6 +561,10 @@ ErrCode BundleMgrClientImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t
     }
 
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->GetSandboxExtAbilityInfos(want, appIndex, flags, userId, extensionInfos);
 }
 
@@ -539,6 +583,10 @@ ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityI
     }
 
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
 }
 
@@ -552,6 +600,10 @@ ErrCode BundleMgrClientImpl::GetDirByBundleNameAndAppIndex(const std::string &bu
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
 }
 
@@ -564,6 +616,10 @@ ErrCode BundleMgrClientImpl::GetAllBundleDirs(int32_t userId, std::vector<Bundle
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     std::shared_lock<std::shared_mutex> lock(mutex_);
+    if (bundleMgr_ == nullptr) {
+        APP_LOGE("bundleMgr_ nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     return bundleMgr_->GetAllBundleDirs(userId, bundleDirs);
 }
 

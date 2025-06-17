@@ -157,10 +157,15 @@ private:
     ErrCode WritePgoFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path,
         const std::string &moduleName);
 
+    ErrCode WriteExtProfileFileToStream(sptr<IBundleStreamInstaller> streamInstaller, const std::string &path);
+
     ErrCode CopySignatureFileToService(sptr<IBundleStreamInstaller> &streamInstaller,
         const InstallParam &installParam);
 
     ErrCode CopyPgoFileToService(sptr<IBundleStreamInstaller> &streamInstaller,
+        const InstallParam &installParam);
+    
+    ErrCode CopyExtProfileFileToService(sptr<IBundleStreamInstaller> streamInstaller,
         const InstallParam &installParam);
 
     ErrCode GetFileNameByFilePath(const std::string &filePath, std::string &fileName);

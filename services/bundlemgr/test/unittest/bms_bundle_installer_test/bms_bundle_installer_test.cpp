@@ -59,6 +59,8 @@
 #include "want.h"
 #include "uninstall_bundle_info.h"
 #include "installd/installd_permission_mgr.h"
+#include "bundle_cache_mgr.h"
+#include "process_cache_callback_host.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -113,6 +115,7 @@ const std::string VERSION_UPDATE_BUNDLE_NAME = "com.example.versiontest";
 const std::string UNINSTALL_PREINSTALL_BUNDLE_NAME = "com.ohos.telephonydataability";
 const std::string GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 const std::string TEST_HSP_PATH = "/data/test/resource/bms/install_bundle/hsp_A.hsp";
+const std::string TEST_HSP_PATH2 = "/data/test/resource/bms/install_bundle/hsp_B.hsp";
 const std::string APP_SERVICES_CAPABILITIES1 = R"(
     {
         "ohos.permission.kernel.SUPPORT_PLUGIN":{
@@ -160,11 +163,77 @@ const int32_t TEST_APP_INDEX2 = 2;
 const std::string BUNDLE_CODE_PATH_DIR_REAL = "/data/app/el1/bundle/public/com.example.example_test";
 const std::string BUNDLE_CODE_PATH_DIR_NEW = "/data/app/el1/bundle/public/+new-com.example.example_test";
 const std::string BUNDLE_CODE_PATH_DIR_OLD = "/data/app/el1/bundle/public/+old-com.example.example_test";
+const std::string BUNDLE_CODE_PATH_DIR_OLD_EXT_DIR =
+    "/data/app/el1/bundle/public/+old-com.example.example_test/ext_resource";
+const std::string BUNDLE_CODE_PATH_DIR_OLD_EXT_FILE =
+    "/data/app/el1/bundle/public/+old-com.example.example_test/ext_resource/moduleName.hsp";
+const std::string BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR =
+    "/data/app/el1/bundle/public/com.example.example_test/ext_resource";
+const std::string BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE =
+    "/data/app/el1/bundle/public/com.example.example_test/ext_resource/moduleName.hsp";
+const std::string MODULE_NAME_EXT = "moduleName";
 const std::string BUNDLE_NAME_FOR_TEST = "com.example.example_test";
 const std::string BUNDLE_NAME_FOR_TEST_U1ENABLE = "com.example.u1Enable_test";
 const int32_t TEST_U100 = 100;
 const int32_t TEST_U1 = 1;
+const int32_t MAX_WAITING_TIME = 600;
 }  // namespace
+
+class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
+public:
+    ProcessCacheCallbackImpl() : cacheStat_(std::make_shared<std::promise<uint64_t>>()),
+        cleanResult_(std::make_shared<std::promise<int32_t>>()) {}
+    ~ProcessCacheCallbackImpl() override
+    {}
+    void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
+    void OnCleanAllBundleCacheFinished(int32_t result) override;
+    uint64_t GetCacheStat();
+    int32_t GetDelRet();
+private:
+    std::shared_ptr<std::promise<uint64_t>> cacheStat_;
+    std::shared_ptr<std::promise<int32_t>> cleanResult_;
+    DISALLOW_COPY_AND_MOVE(ProcessCacheCallbackImpl);
+};
+
+void ProcessCacheCallbackImpl::OnGetAllBundleCacheFinished(uint64_t cacheStat)
+{
+    if (cacheStat_ != nullptr) {
+        cacheStat_->set_value(cacheStat);
+    }
+}
+
+void ProcessCacheCallbackImpl::OnCleanAllBundleCacheFinished(int32_t result)
+{
+    if (cleanResult_ != nullptr) {
+        cleanResult_->set_value(result);
+    }
+}
+
+uint64_t ProcessCacheCallbackImpl::GetCacheStat()
+{
+    if (cacheStat_ != nullptr) {
+        auto future = cacheStat_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return 0;
+        }
+        return future.get();
+    }
+    return 0;
+};
+
+int32_t ProcessCacheCallbackImpl::GetDelRet()
+{
+    if (cleanResult_ != nullptr) {
+        auto future = cleanResult_->get_future();
+        std::chrono::milliseconds span(MAX_WAITING_TIME);
+        if (future.wait_for(span) == std::future_status::timeout) {
+            return -1;
+        }
+        return future.get();
+    }
+    return -1;
+};
 
 class BmsBundleInstallerTest : public testing::Test {
 public:
@@ -6981,6 +7050,27 @@ HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0020, Function | SmallTes
 }
 
 /**
+ * @tc.number: SendBundleSystemEvent_0030
+ * @tc.name: test SendBundleSystemEvent
+ * @tc.desc: 1.SendBundleSystemEvent
+ */
+HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0030, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isPatch = true;
+    BaseBundleInstaller installer;
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::INSTALL, installParam, InstallScene::NORMAL,
+        ERR_APPEXECFWK_INSTALL_SELF_UPDATE_NOT_MDM);
+
+    installParam.isPatch = false;
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::INSTALL, installParam, InstallScene::NORMAL,
+        ERR_APPEXECFWK_INSTALL_FAILED_BAD_DIGEST);
+    ASSERT_FALSE(installer.sysEventInfo_.isIntercepted);
+}
+
+/**
  * @tc.number: CreateSharedBundleTempDir_0100
  * @tc.name: test CreateSharedBundleTempDir
  * @tc.desc: 1.test CreateSharedBundleTempDir of BundleUtil
@@ -7819,6 +7909,34 @@ HWTEST_F(BmsBundleInstallerTest, BundleStreamInstallerHostImpl_0200, Function | 
     std::string moduleName = "moduleName";
     std::string fileName = "test.file";
     int32_t ret = installer.CreateSignatureFileStream(moduleName, fileName);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0100
+ * @tc.name: test CreateExtProfileFileStream
+ * @tc.desc: 1.Test CreateExtProfileFileStream the BundleStreamInstallerHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleStreamInstallerHostImpl_0300, Function | MediumTest | Level1)
+{
+    BundleStreamInstallerHostImpl installer(0, 0);
+
+    std::string fileName;
+    int32_t ret = installer.CreateExtProfileFileStream(fileName);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0200
+ * @tc.name: test CreateExtProfileFileStream
+ * @tc.desc: 1.Test CreateExtProfileFileStream the BundleStreamInstallerHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleStreamInstallerHostImpl_0400, Function | MediumTest | Level1)
+{
+    BundleStreamInstallerHostImpl installer(0, 0);
+
+    std::string fileName = "test.file";
+    int32_t ret = installer.CreateExtProfileFileStream(fileName);
     EXPECT_EQ(ret, -1);
 }
 
@@ -9861,6 +9979,178 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9600, Function | MediumTest
 }
 
 /**
+* @tc.number: ProcessDynamicIconFileWhenUpdate_0010
+* @tc.name: test ProcessDynamicIconFileWhenUpdate
+* @tc.desc: 1.Test ProcessDynamicIconFileWhenUpdate
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0010, Function | MediumTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    BaseBundleInstaller installer;
+    // extendResourceInfo not exist
+    ErrCode ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, "", "");
+    EXPECT_EQ(ret, ERR_OK);
+
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = MODULE_NAME_EXT;
+    oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    // ext file path not exist
+    ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, "", "");
+    EXPECT_EQ(ret, ERR_OK);
+
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_OLD_EXT_DIR);
+    EXPECT_TRUE(ans);
+    // ext file path exist
+    ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_CODE_PATH_DIR_OLD, BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_TRUE(ans);
+}
+
+/**
+* @tc.number: ProcessDynamicIconFileWhenUpdate_0020
+* @tc.name: test ProcessDynamicIconFileWhenUpdate
+* @tc.desc: 1.Test ProcessDynamicIconFileWhenUpdate
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0020, Function | MediumTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = MODULE_NAME_EXT;
+    oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_OLD_EXT_DIR);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_TRUE(ans);
+
+    // ext file path exist
+    BaseBundleInstaller installer;
+    auto ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_CODE_PATH_DIR_OLD, BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    auto exist = access(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_TRUE(ans);
+}
+
+/**
+* @tc.number: ProcessDynamicIconFileWhenUpdate_0030
+* @tc.name: test ProcessDynamicIconFileWhenUpdate
+* @tc.desc: 1.Test ProcessDynamicIconFileWhenUpdate
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0030, Function | MediumTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = MODULE_NAME_EXT;
+    oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_OLD_EXT_DIR);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_TRUE(ans);
+
+    std::ofstream file;
+    file.open(BUNDLE_CODE_PATH_DIR_OLD_EXT_FILE, ios::out);
+    file << "" << endl;
+    file.close();
+
+    // ext file path exist
+    BaseBundleInstaller installer;
+    auto ret = installer.ProcessDynamicIconFileWhenUpdate(oldInfo, BUNDLE_CODE_PATH_DIR_OLD, BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_EQ(ret, ERR_OK);
+    auto exist = access(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+    exist = access(BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    EXPECT_TRUE(ans);
+}
+
+/**
+* @tc.number: ProcessDynamicIconFileWhenUpdate_0040
+* @tc.name: test ProcessBundleCodePath
+* @tc.desc: 1.Test ProcessBundleCodePath
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0040, Function | MediumTest | Level1)
+{
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo oldInfo;
+    BaseBundleInstaller installer;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = MODULE_NAME_EXT;
+    oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+    EXPECT_TRUE(ans);
+
+    std::ofstream file;
+    file.open(BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE, ios::out);
+    file << "" << endl;
+    file.close();
+
+    auto ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto exist = access(BUNDLE_CODE_PATH_DIR_REAL.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    exist = access(BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+}
+
+/**
+* @tc.number: ProcessDynamicIconFileWhenUpdate_0050
+* @tc.name: test ProcessBundleCodePath
+* @tc.desc: 1.Test ProcessBundleCodePath
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessDynamicIconFileWhenUpdate_0050, Function | MediumTest | Level1)
+{
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo oldInfo;
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = MODULE_NAME_EXT;
+    oldInfo.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    bool ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_REAL_EXT_DIR);
+    EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+    EXPECT_TRUE(ans);
+
+    BaseBundleInstaller installer;
+    auto ret = installer.ProcessBundleCodePath(newInfos, oldInfo, BUNDLE_NAME_FOR_TEST, true, true);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto exist = access(BUNDLE_CODE_PATH_DIR_REAL.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    exist = access(BUNDLE_CODE_PATH_DIR_NEW.c_str(), F_OK);
+    EXPECT_NE(exist, 0);
+
+    exist = access(BUNDLE_CODE_PATH_DIR_OLD.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_REAL);
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_OLD);
+    OHOS::ForceRemoveDirectory(BUNDLE_CODE_PATH_DIR_NEW);
+}
+
+/**
  * @tc.number: PluginInstaller_0001
  * @tc.name: test InstallPlugin
  * @tc.desc: 1.Test InstallPlugin the PluginInstaller
@@ -10859,6 +11149,141 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0059, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: PluginInstaller_0060
+ * @tc.name: test ParseFiles
+ * @tc.desc: 1.Test ParseFiles the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0060, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> pluginFilePaths{ TEST_HSP_PATH };
+    InstallPluginParam installPluginParam;
+    auto ret = installer.ParseFiles(pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW);
+
+    installer.parsedBundles_.begin()->second.SetApplicationBundleType(BundleType::APP_PLUGIN);
+    ret = installer.ParseFiles(pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_PARSER_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0061
+ * @tc.name: test ParseFiles
+ * @tc.desc: 1.Test ParseFiles the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0061, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> pluginFilePaths{ TEST_HSP_PATH };
+    InstallPluginParam installPluginParam;
+    auto ret = installer.ParseFiles(pluginFilePaths, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW);
+
+    installer.parsedBundles_.begin()->second.SetApplicationBundleType(BundleType::APP_PLUGIN);
+    std::vector<std::string> pluginFilePaths2{ TEST_HSP_PATH2 };
+    ret = installer.ParseFiles(pluginFilePaths2, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_INSTALL_NOT_ALLOW);
+}
+
+/**
+ * @tc.number: PluginInstaller_0062
+ * @tc.name: test ProcessNativeLibrary
+ * @tc.desc: 1.Test ProcessNativeLibrary the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0062, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.nativeLibraryPath_ = "data/app/el1/public/";
+    std::string bundlePath;
+    std::string moduleDir;
+    std::string moduleName = "entry";
+    std::string pluginBundleDir;
+    InnerBundleInfo newInfo;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.compressNativeLibs = false;
+    innerModuleInfo.nativeLibraryPath = "data/app/el1/public/";
+    newInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    auto ret = installer.ProcessNativeLibrary(bundlePath, moduleDir, moduleName, pluginBundleDir, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0063
+ * @tc.name: test ProcessNativeLibrary
+ * @tc.desc: 1.Test ProcessNativeLibrary the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0063, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    installer.nativeLibraryPath_ = "data/app/el1/public/";
+    std::string bundlePath;
+    std::string moduleDir;
+    std::string moduleName = "entry";
+    std::string pluginBundleDir;
+    InnerBundleInfo newInfo;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.compressNativeLibs = true;
+    innerModuleInfo.nativeLibraryPath = "data/app/el1/public/";
+    innerModuleInfo.isLibIsolated = true;
+    newInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    auto ret = installer.ProcessNativeLibrary(bundlePath, moduleDir, moduleName, pluginBundleDir, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: PluginInstaller_0064
+ * @tc.name: test ProcessPluginInstall
+ * @tc.desc: 1.Test ProcessPluginInstall the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0064, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo info;
+    installer.parsedBundles_.emplace("bundleName", info);
+    InnerBundleInfo hostBundleInfo;
+    auto ret = installer.ProcessPluginInstall(hostBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: PluginInstaller_0065
+ * @tc.name: test SaveHspToInstallDir
+ * @tc.desc: 1.Test SaveHspToInstallDir the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0065, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string bundlePath = TEST_HSP_PATH2;
+    std::string pluginBundleDir = "/data";
+    std::string moduleName = "moduleName";
+    InnerBundleInfo newInfo;
+    installer.signatureFileDir_ = "data/";
+    auto ret = installer.SaveHspToInstallDir(bundlePath, pluginBundleDir, moduleName, newInfo);
+    EXPECT_NE(ret, ERR_OK);
+    std::string hspPath = pluginBundleDir + ServiceConstants::PATH_SEPARATOR + moduleName +
+        ServiceConstants::HSP_FILE_SUFFIX;
+    installer.RemoveDir(hspPath);
+}
+
+/**
+ * @tc.number: PluginInstaller_0066
+ * @tc.name: test RemoveEmptyDirs
+ * @tc.desc: 1.Test RemoveEmptyDirs the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0066, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    InnerBundleInfo info;
+    installer.parsedBundles_.emplace("bundlePath", info);
+    std::string pluginDir;
+    installer.RemoveEmptyDirs(pluginDir);
+    installer.RemoveDir(pluginDir);
+    EXPECT_EQ(pluginDir.empty(), true);
+}
+
+/**
  * @tc.number: CreateBundleDataDirWithVector_0100
  * @tc.name: test CreateBundleDataDir
  * @tc.desc: test CreateBundleDataDir of InstalldHostImpl
@@ -11149,7 +11574,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9900, Function | SmallTest 
     // set isAppExist_ true
     installer.isAppExist_ = true;
     auto ret = installer.CheckU1Enable(info, TEST_U1);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS);
 
     // set isAppExist_ false
     installer.isAppExist_ = false;
@@ -11187,7 +11612,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1001, Function | SmallTest 
     // set isAppExist_ true
     installer.isAppExist_ = true;
     auto ret = installer.CheckU1Enable(info, TEST_U1);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS);
 
     // set isAppExist_ false
     installer.isAppExist_ = false;
@@ -11228,7 +11653,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1002, Function | SmallTest 
     // set isAppExist_ true
     installer.isAppExist_ = true;
     auto ret = installer.CheckU1Enable(info, TEST_U1);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS);
 
     // set isAppExist_ false
     installer.isAppExist_ = false;
@@ -11261,7 +11686,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1003, Function | SmallTest 
     // set isAppExist_ true
     installer.isAppExist_ = true;
     auto ret = installer.CheckU1Enable(info, TEST_U1);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS);
 
     // set isAppExist_ false
     installer.isAppExist_ = false;
@@ -11291,7 +11716,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1004, Function | SmallTest 
     // set isAppExist_ true
     installer.isAppExist_ = true;
     auto ret = installer.CheckU1Enable(info, TEST_U100);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS);
     // set isAppExist_ false
     installer.isAppExist_ = false;
     ret = installer.CheckU1Enable(info, TEST_U100);
@@ -11603,5 +12028,79 @@ HWTEST_F(BmsBundleInstallerTest, ProcessAddResourceInfo_0010, Function | SmallTe
     EXPECT_FALSE(res);
     res = BundleResourceHelper::DeleteResourceInfo(testBudnleName, -1);
     EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: ProcessExtProfile_0010
+ * @tc.name: test ProcessExtProfile
+ * @tc.desc: 1.Test the ProcessExtProfile of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessExtProfile_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    InstallParam installParam;
+    bool res = installer.ProcessExtProfile(installParam);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: ProcessExtProfile_0200
+ * @tc.name: test ProcessExtProfile
+ * @tc.desc: 1.Test ProcessExtProfile the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessExtProfile_0200, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "manifest.json";
+    bool res = installer.ProcessExtProfile(installParam);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: ProcessExtProfile_0300
+ * @tc.name: test ProcessExtProfile
+ * @tc.desc: 1.Test ProcessExtProfile the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessExtProfile_0300, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_BACKUP_NAME;
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "manifest.json";
+    bool res = installer.ProcessExtProfile(installParam);
+    EXPECT_FALSE(res);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetAllBundleCacheStat_0010
+ * @tc.name: test GetAllBundleCacheStat
+ * @tc.desc: 1.Test the GetAllBundleCacheStat of BundleCacheMgr
+*/
+HWTEST_F(BmsBundleInstallerTest, GetAllBundleCacheStat_0010, Function | SmallTest | Level0)
+{
+    BundleCacheMgr bundleCacheMgr;
+    sptr<ProcessCacheCallbackImpl> getCache = new (std::nothrow) ProcessCacheCallbackImpl();
+    auto ret = bundleCacheMgr.GetAllBundleCacheStat(getCache);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CleanAllBundleCache_0010
+ * @tc.name: test CleanAllBundleCache
+ * @tc.desc: 1.Test the CleanAllBundleCache of BundleCacheMgr
+*/
+HWTEST_F(BmsBundleInstallerTest, CleanAllBundleCache_0010, Function | SmallTest | Level0)
+{
+    BundleCacheMgr bundleCacheMgr;
+    sptr<ProcessCacheCallbackImpl> cleanCache = new (std::nothrow) ProcessCacheCallbackImpl();
+    auto ret = bundleCacheMgr.CleanAllBundleCache(cleanCache);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS

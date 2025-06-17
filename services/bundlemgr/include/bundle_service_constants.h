@@ -253,6 +253,10 @@ constexpr const char* DATA_PRELOAD_APP = "/data/preload/app/";
 //ota update permissions for not updated application, only updated once
 constexpr const char* UPDATE_PERMISSIONS_FLAG = "updatePermissionsFlag";
 constexpr const char* UPDATE_PERMISSIONS_FLAG_UPDATED = "updated";
+
+constexpr const char* EXT_PROFILE = "ext_profile";
+constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
+constexpr const char* MANIFEST_JSON = "manifest.json";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

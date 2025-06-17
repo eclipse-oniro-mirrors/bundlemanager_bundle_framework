@@ -45,6 +45,7 @@ struct FormWindow {
 struct FormFunInteractionParams {
     std::string abilityName;
     std::string targetBundleName;
+    std::string subBundleName;
     int32_t keepStateDuration = 10000;
 };
 

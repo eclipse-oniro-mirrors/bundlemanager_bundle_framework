@@ -911,7 +911,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2200, Function | MediumTest | Level1)
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
     std::string result = bundleMgrProxy->GetAppType(appName);
-    EXPECT_EQ(result, "");
+    EXPECT_EQ(result, "system");
     TearDownTestCase();
     std::cout << "END BMS_Search_2200" << std::endl;
 }

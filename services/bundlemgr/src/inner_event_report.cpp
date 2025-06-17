@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,6 +48,7 @@ constexpr const char* QUERY_OF_CONTINUE_TYPE = "QUERY_OF_CONTINUE_TYPE";
 constexpr const char* BMS_DISK_SPACE = "BMS_DISK_SPACE";
 constexpr const char* APP_CONTROL_RULE = "APP_CONTROL_RULE";
 constexpr const char* DB_ERROR = "DB_ERROR";
+constexpr const char* DEFAULT_APP = "DEFAULT_APP";
 
 // event params
 const char* EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -86,6 +87,15 @@ const char* EVENT_PARAM_ACTION_TYPE = "ACTION_TYPE";
 const char* EVENT_PARAM_RULE = "ACTION_RULE";
 const char* EVENT_PARAM_APP_INDEX = "APP_INDEX";
 const char* EVENT_PARAM_IS_PATCH = "IS_PATCH";
+const char* EVENT_PARAM_IS_INTERCEPTED = "IS_INTERCEPTED";
+const char* FILE_OR_FOLDER_PATH = "FILE_OR_FOLDER_PATH";
+const char* FILE_OR_FOLDER_SIZE = "FILE_OR_FOLDER_SIZE";
+const char* COMPONENT_NAME_KEY = "COMPONENT_NAME";
+const char* PARTITION_NAME_KEY = "PARTITION_NAME";
+const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
+const char* USER_DATA_SIZE = "USER_DATA_SIZE";
+const char* EVENT_PARAM_WANT = "WANT";
+const char* EVENT_PARAM_UTD = "UTD";
 
 const char* FREE_INSTALL_TYPE = "FreeInstall";
 const char* PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -123,6 +133,8 @@ const char* OPERATION_TYPE = "operationType";
 const char* DB_NAME = "dbName";
 const char* ERROR_CODE = "errorCode";
 const char* REBUILD_TYPE = "rebuildType";
+const char* COMPONENT_NAME = "hisevent";
+const char* PARTITION_NAME = "/data";
 
 const InstallScene INSTALL_SCENE_STR_MAP_KEY[] = {
     InstallScene::NORMAL,
@@ -291,9 +303,17 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
             [](const EventInfo& eventInfo) {
                 InnerSendAppControlRule(eventInfo);
             } },
+        { BMSEventType::DATA_PARTITION_USAGE_EVENT,
+            [](const EventInfo& eventInfo) {
+                InnerSendDataPartitionUsageEvent(eventInfo);
+            } },
         { BMSEventType::DB_ERROR,
             [](const EventInfo& eventInfo) {
                 InnerSendDbErrorEvent(eventInfo);
+            } },
+        { BMSEventType::DEFAULT_APP,
+            [](const EventInfo& eventInfo) {
+                InnerSendDefaultAppEvent(eventInfo);
             } },
     };
 
@@ -324,7 +344,10 @@ void InnerEventReport::InnerSendBundleInstallExceptionEvent(const EventInfo& eve
         EVENT_PARAM_SCENE, std::to_string(eventInfo.callingUid),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
-        EVENT_PARAM_IS_PATCH, eventInfo.isPatch);
+        EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
 }
 
 void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& eventInfo)
@@ -344,7 +367,10 @@ void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& e
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, std::to_string(eventInfo.callingUid),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
-        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
 }
 
 void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& eventInfo)
@@ -359,7 +385,10 @@ void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& even
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, std::to_string(eventInfo.callingUid),
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
-        EVENT_PARAM_IS_PATCH, eventInfo.isPatch);
+        EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
 }
 
 void InnerEventReport::InnerSendPreBundleRecoverExceptionEvent(const EventInfo& eventInfo)
@@ -373,7 +402,10 @@ void InnerEventReport::InnerSendPreBundleRecoverExceptionEvent(const EventInfo& 
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_INSTALL_TYPE, PRE_BUNDLE_INSTALL_TYPE,
-        EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
 }
 
 void InnerEventReport::InnerSendBundleStateChangeExceptionEvent(const EventInfo& eventInfo)
@@ -661,6 +693,35 @@ void InnerEventReport::InnerSendDbErrorEvent(const EventInfo& eventInfo)
         DB_NAME, eventInfo.dbName,
         OPERATION_TYPE, eventInfo.operationType,
         ERROR_CODE, eventInfo.errorCode);
+}
+
+void InnerEventReport::InnerSendDataPartitionUsageEvent(const EventInfo& eventInfo)
+{
+    HiSysEventWrite(
+#ifdef USE_EXTENSION_DATA
+        OHOS::HiviewDFX::HiSysEvent::Domain::FILEMANAGEMENT,
+#else
+        OHOS::HiviewDFX::HiSysEvent::Domain::BUNDLEMANAGER_UE,
+#endif
+        USER_DATA_SIZE,
+        HiviewDFX::HiSysEvent::EventType::STATISTIC,
+        COMPONENT_NAME_KEY, COMPONENT_NAME,
+        PARTITION_NAME_KEY, PARTITION_NAME,
+        REMAIN_PARTITION_SIZE_KEY, eventInfo.partitionSize,
+        FILE_OR_FOLDER_PATH, eventInfo.filePath,
+        FILE_OR_FOLDER_SIZE, eventInfo.fileSize);
+}
+
+void InnerEventReport::InnerSendDefaultAppEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        DEFAULT_APP,
+        HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_CALLING_NAME, eventInfo.callingName,
+        EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
+        EVENT_PARAM_WANT, eventInfo.want,
+        EVENT_PARAM_UTD, eventInfo.utd);
 }
 
 template<typename... Types>

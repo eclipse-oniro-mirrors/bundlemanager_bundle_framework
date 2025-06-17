@@ -55,6 +55,8 @@ const std::string BUNDLETYPE = "bundleType";
 const std::string BUNDLE_TYPE_APP = "app";
 const std::string PROFILE_KEY_LABEL_ID = "labelId";
 const std::string PROFILE_KEY_LABEL = "label";
+const std::string ATOMIC_SERVICE = "atomicService";
+const std::string RESIZEABLE = "resizeable";
 const std::string BUNDLE_MODULE_PROFILE_KEY_DISTRO = "distro";
 const std::string BUNDLE_MODULE_PROFILE_KEY_MODULE_TYPE = "moduleType";
 const std::string MODULE_TYPE_SHARED = "shared";
@@ -161,6 +163,7 @@ const nlohmann::json CONFIG_JSON = R"(
                         "funInteractionParams": {
                             "abilityName": "GameLoaderExtensionAbility",
                             "targetBundleName": "Game",
+                            "subBundleName": "subGame",
                             "keepStateDuration": 10000
                         },
                         "sceneAnimationParams": {
@@ -611,7 +614,8 @@ const nlohmann::json MODULE_JSON = R"(
             "type": "unknowtype",
             "virtualMachine": "ark0.0.0.3",
             "atomicService":{
-                "preloads":[]
+                "preloads":[],
+                "resizeable": true
             }
         }
     }
@@ -1235,6 +1239,58 @@ const nlohmann::json MODULE_JSON_12 = R"(
         "packageName": "entry"
         }
     }
+)"_json;
+
+const nlohmann::json MODULE_JSON_13 = R"(
+{
+    "app": {
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0",
+        "bundleType": "atomicService",
+        "appPreloadPhase": "processCreated"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": [
+            "default"
+        ],
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "name": "entry",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark0.0.0.3",
+        "compressNativeLibs": false,
+        "extractNativeLibs": true
+    }
+}
 )"_json;
 }  // namespace
 
@@ -3487,6 +3543,75 @@ HWTEST_F(BmsBundleParserTest, TestParse_7000, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.name: TestParse_7100
+ * @tc.desc: 1. system running normally
+ *           2. test ParserAtomicConfig
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7100, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson[MODULE][ATOMIC_SERVICE][RESIZEABLE] = "true";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_7200
+ * @tc.desc: 1. system running normally
+ *           2. test ParserAtomicConfig
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    EXPECT_NE(hapModule, std::nullopt);
+    EXPECT_TRUE(hapModule->resizeable);
+}
+
+/**
+ * @tc.name: TestParse_7300
+ * @tc.desc: 1. system running normally
+ *           2. test ParserAtomicConfig
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7300, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON;
+    profileJson[MODULE][ATOMIC_SERVICE] = "{\"array1\", \"array2\"}";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR) << profileFileBuffer.str();
+}
+
+/**
  * @tc.number: BundleParser_0100
  * @tc.name: Test ReadFileIntoJson
  * @tc.desc: test the interface of BundleParser
@@ -4092,6 +4217,30 @@ HWTEST_F(BmsBundleParserTest, ParseAppPreloadPhase_0200, Function | SmallTest | 
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_11;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
+    EXPECT_EQ(applicationInfo.appPreloadPhase, AppExecFwk::AppPreloadPhase::DEFAULT);
+}
+
+/**
+ * @tc.number: ParseAppPreloadPhase_0300
+ * @tc.name: parse appPreloadPhase by config appPreloadPhase type
+ * @tc.desc: 1. system running normally
+ *           2. test parsing success when bundle type is not app
+ */
+HWTEST_F(BmsBundleParserTest, ParseAppPreloadPhase_0300, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_13;
     profileFileBuffer << profileJson.dump();
 
     BundleExtractor bundleExtractor("");

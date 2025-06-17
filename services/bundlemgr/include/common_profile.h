@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -376,6 +376,7 @@ constexpr const char* MODULE_PROCESS = "process";
 constexpr const char* MODULE_MAIN_ELEMENT = "mainElement";
 constexpr const char* MODULE_DEVICE_TYPES = "deviceTypes";
 constexpr const char* MODULE_DEVICE_FEATURES = "deviceFeatures";
+constexpr const char* MODULE_CROS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr const char* MODULE_HNP_PACKAGE = "hnpPackages";
@@ -402,6 +403,8 @@ constexpr const char* MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 constexpr const char* MODULE_EXTRACT_NATIVE_LIBS = "extractNativeLibs";
 constexpr const char* MODULE_QUERY_SCHEMES = "querySchemes";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
+constexpr const char* MODULE_FORM_EXTENSION_MODULE = "formExtensionModule";
+constexpr const char* MODULE_FORM_WIDGET_MODULE = "formWidgetModule";
 constexpr const char* MODULE_HAS_INTENT = "hasInsightIntent";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
@@ -515,6 +518,8 @@ constexpr const char* APP_ATOMIC_SERVICE_MAIN = "main";
 constexpr const char* MODULE_ATOMIC_SERVICE_PRELOADS = "preloads";
 // module atomicService preloads
 constexpr const char* PRELOADS_MODULE_NAME = "moduleName";
+// module atomicService resizeable
+constexpr const char* MODULE_ATOMIC_SERVICE_RESIZEABLE = "resizeable";
 
 // bundleType
 constexpr const char* BUNDLE_TYPE_APP = "app";

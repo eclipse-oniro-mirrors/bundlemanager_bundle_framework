@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "bundle_stream_installer_host_impl.h"
 
+#include "bundle_hitrace_chain.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "ipc_skeleton.h"
@@ -74,6 +75,16 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam,
         APP_LOGE("tempPgoFileDir_ is empty");
         return false;
     }
+
+    auto iter = installParam.parameters.find(ServiceConstants::ENTERPRISE_MANIFEST);
+    if ((iter != installParam.parameters.end()) && !(iter->second.empty())) {
+        installParam_.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "";
+        tempExtProfileDir_ = BundleUtil::CreateInstallTempDir(installerId_, DirType::EXT_PROFILE_DIR);
+        if (tempExtProfileDir_.empty()) {
+            APP_LOGW("tempExtProfileDir_ is empty");
+        }
+    }
+    
     return true;
 }
 
@@ -89,6 +100,7 @@ void BundleStreamInstallerHostImpl::UnInit()
     }
     BundleUtil::DeleteDir(tempSignatureFileDir_);
     BundleUtil::DeleteDir(tempPgoFileDir_);
+    BundleUtil::DeleteDir(tempExtProfileDir_);
 }
 
 int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
@@ -303,8 +315,53 @@ int32_t BundleStreamInstallerHostImpl::CreatePgoFileStream(const std::string &mo
     return fd;
 }
 
+int32_t BundleStreamInstallerHostImpl::CreateExtProfileFileStream(const std::string &fileName)
+{
+    if (fileName.empty()) {
+        APP_LOGE("CreateExtProfileFileStream param is invalid");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
+        APP_LOGE("CreateExtProfileFileStream permission denied");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != installedUid_) {
+        APP_LOGE("calling uid is inconsistent");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+
+    if (!BundleUtil::CheckFileType(fileName, ServiceConstants::JSON_SUFFIX)) {
+        APP_LOGE("file is not json");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+
+    // to prevent the sig copied to relevant path
+    if (fileName.find(ILLEGAL_PATH_FIELD) != std::string::npos) {
+        APP_LOGE("CreateStream failed due to invalid fileName");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+    std::string filePath = tempExtProfileDir_ + fileName;
+    int32_t fd = BundleUtil::CreateFileDescriptor(filePath, 0);
+    if (fd < 0) {
+        APP_LOGE("stream installer create file descriptor failed");
+    } else {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        streamFdVec_.emplace_back(fd);
+        installParam_.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = filePath;
+    }
+    return fd;
+}
+
 bool BundleStreamInstallerHostImpl::Install()
 {
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Install", HITRACE_FLAG_INCLUDE_ASYNC);
     if (receiver_ == nullptr) {
         APP_LOGE("receiver_ is nullptr");
         return false;

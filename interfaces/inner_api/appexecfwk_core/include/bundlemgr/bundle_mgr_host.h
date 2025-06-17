@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -182,6 +182,13 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetNameAndIndexForUid(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the GetAppIdentifierAndAppIndex function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetAppIdentifierAndAppIndex(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetSimpleAppInfoForUid function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -700,6 +707,8 @@ private:
 
     ErrCode HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleBatchGetBundleStats(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllBundleCacheStat(MessageParcel &data, MessageParcel &reply);
@@ -765,6 +774,8 @@ private:
     ErrCode HandleBatchGetSpecifiedDistributionType(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleBatchGetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAdditionalInfoForAllUser(MessageParcel &data, MessageParcel &reply);
 

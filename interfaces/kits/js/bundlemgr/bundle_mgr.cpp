@@ -4891,7 +4891,8 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_DEBUG_NOT_SAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_BUNDLE_EXISTED_IN_U1_AND_OTHER_USERS):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_U1_ENABLE_NOT_SUPPORT_APP_SERVICE_AND_SHARED_BUNDLE):
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID);
             installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
             break;

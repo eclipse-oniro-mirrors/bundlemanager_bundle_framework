@@ -31,7 +31,7 @@ BundleExtractor::BundleExtractor(const std::string &source, bool parallel) : Bas
 
 BundleExtractor::~BundleExtractor()
 {
-    APP_LOGD("BundleExtractor is destroyed");
+    APP_LOGD("destroyed");
 }
 
 bool BundleExtractor::ExtractProfile(std::ostream &dest) const

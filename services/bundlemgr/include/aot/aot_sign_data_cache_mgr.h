@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,8 +35,10 @@ class AOTSignDataCacheMgr final {
 public:
     static AOTSignDataCacheMgr& GetInstance();
     void RegisterScreenUnlockListener();
-    void AddPendSignData(const AOTArgs &aotArgs, const uint32_t versionCode,
-        const std::vector<uint8_t> &pendSignData, const ErrCode ret);
+    void AddSignDataForSysComp(const std::string &anFileName, const std::vector<uint8_t> &signData,
+        const ErrCode ret);
+    void AddSignDataForHap(const AOTArgs &aotArgs, const uint32_t versionCode,
+        const std::vector<uint8_t> &signData, const ErrCode ret);
 private:
     AOTSignDataCacheMgr() = default;
     ~AOTSignDataCacheMgr() = default;
@@ -45,7 +47,9 @@ private:
     bool RegisterScreenUnlockEvent();
     void UnregisterScreenUnlockEvent();
     void HandleUnlockEvent();
-    ErrCode ExecutePendSign();
+    bool EnforceCodeSign();
+    bool EnforceCodeSignForSysComp();
+    bool EnforceCodeSignForHap();
     class UnlockEventSubscriber : public OHOS::EventFwk::CommonEventSubscriber {
     public:
         UnlockEventSubscriber(const OHOS::EventFwk::CommonEventSubscribeInfo &info) : CommonEventSubscriber(info) {}
@@ -53,14 +57,18 @@ private:
         void OnReceiveEvent(const OHOS::EventFwk::CommonEventData &event) override;
     };
 private:
-    struct PendingData {
-        uint32_t versionCode {0};
+    struct HapSignData {
+        uint32_t versionCode = 0;
+        std::string bundleName;
+        std::string moduleName;
         std::vector<uint8_t> signData;
     };
     std::atomic<bool> isLocked_ { true };
     mutable std::mutex mutex_;
     std::shared_ptr<UnlockEventSubscriber> unlockEventSubscriber_;
-    std::unordered_map<std::string, std::unordered_map<std::string, PendingData>> pendingSignData_;
+    std::vector<HapSignData> hapSignDataVector_;
+    // key: anFileName, value: signData
+    std::unordered_map<std::string, std::vector<uint8_t>> sysCompSignDataMap_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

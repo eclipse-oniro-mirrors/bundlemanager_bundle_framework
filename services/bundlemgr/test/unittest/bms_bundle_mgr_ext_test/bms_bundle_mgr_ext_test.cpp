@@ -140,32 +140,4 @@ HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtHost_0100, Function | Small
     ret = host.OnRemoteRequest(999, data, reply, option);
     EXPECT_NE(ret, 0);
 }
-
-/**
- * @tc.number: GetBundleNamesForUidExtImpl_0100
- * @tc.name: GetBundleNamesForUidExtImpl_0100
- * @tc.desc: test GetBundleNamesForUidExt
- */
-HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtImpl_0100, Function | SmallTest | Level1)
-{
-    BundleMgrExtHostImpl impl;
-    int32_t uid = 111;
-    std::vector<std::string> bundleNames;
-    ErrCode ret = impl.GetBundleNamesForUidExt(uid, bundleNames);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-}
-
-/**
- * @tc.number: GetBundleNamesForUidExt_0100
- * @tc.name: GetBundleNamesForUidExt_0100
- * @tc.desc: test GetBundleNamesForUidExt
- */
-HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExt_0100, Function | SmallTest | Level1)
-{
-    int32_t uid = 111;
-    std::vector<std::string> bundleNames;
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    ErrCode ret = bmsExtensionDataMgr.GetBundleNamesForUidExt(uid, bundleNames);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-}
 } // OHOS

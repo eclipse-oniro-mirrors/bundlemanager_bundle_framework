@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -27,6 +27,9 @@ BUNDLE_INSTALL_EXCEPTION:
   SCENE: {type: STRING, desc: boot reboot or createUser}
   ERROR_CODE: {type: INT32, desc: error code}
   APP_INDEX: {type: INT32, desc: app index}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
 
 BUNDLE_UNINSTALL_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle uninstall}
@@ -38,6 +41,9 @@ BUNDLE_UNINSTALL_EXCEPTION:
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
   ERROR_CODE: {type: INT32, desc: error code}
   APP_INDEX: {type: INT32, desc: app index}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
 
 BUNDLE_UPDATE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle update}
@@ -48,6 +54,9 @@ BUNDLE_UPDATE_EXCEPTION:
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
   ERROR_CODE: {type: INT32, desc: error code}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
 
 PRE_BUNDLE_RECOVER_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when prebundle recover}
@@ -58,6 +67,9 @@ PRE_BUNDLE_RECOVER_EXCEPTION:
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: only prebundle}
   ERROR_CODE: {type: INT32, desc: error code}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
 
 BUNDLE_STATE_CHANGE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when state change}
@@ -169,6 +181,8 @@ BUNDLE_STATE_CHANGE:
   ABILITY_NAME: {type: STRING, desc: abilityName}
   TYPE: {type: STRING, desc: application or ability}
   STATE: {type: STRING, desc: isEnable}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  APP_INDEX: {type: INT32, desc: app index}
 
 BUNDLE_CLEAN_CACHE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle clean cache}
@@ -274,3 +288,19 @@ APP_CONTROL_RULE:
   ACTION_TYPE: {type: INT32, desc: action type}
   RULE: {type: STRING, desc: rule}
   APP_INDEX: {type: INT32, desc: app index}
+
+USER_DATA_SIZE:
+   __BASE: {type: STATISTIC, level: MINOR , desc: data partition management}
+   COMPONENT_NAME: {type: STRING, desc: name of component}
+   PARTITION_NAME: {type: STRING, desc: name of partition}
+   REMAIN_PARTITION_SIZE: {type: UINT64, desc: Remaining size of the partition}
+   FILE_OR_FOLDER_PATH: {type: STRING, arrsize: 100, desc: File or folder path}
+   FILE_OR_FOLDER_SIZE: {type: UINT64, arrsize: 100, desc: File or folder size}
+
+DEFAULT_APP:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: default application}
+  ACTION_TYPE: {type: INT32, desc: action type}
+  USERID: {type: INT32, desc: current userId}
+  CALLING_NAME: {type: STRING, desc: calling name}
+  WANT: {type: STRING, desc: want}
+  UTD: {type: STRING, desc: utd}

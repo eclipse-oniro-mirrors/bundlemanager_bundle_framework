@@ -3262,9 +3262,7 @@ HWTEST_F(BmsBundleDataMgrTest3, GetAllUninstallBundleInfo_0200, Function | Small
     bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, USERID);
     std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
     auto ret = bundleDataMgr->GetAllUninstallBundleInfo(uninstallBundleInfos);
-    if (!ret) {
-        EXPECT_TRUE(uninstallBundleInfos.empty());
-    }
+    EXPECT_EQ(ret, !uninstallBundleInfos.empty());
 }
 
 /**
