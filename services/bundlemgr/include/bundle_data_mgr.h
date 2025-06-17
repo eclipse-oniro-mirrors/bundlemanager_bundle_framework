@@ -1305,6 +1305,8 @@ private:
     void RestoreUidAndGidFromUninstallInfo();
     ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
     bool InnerProcessShortcutId(const std::string &hapPath, std::vector<ShortcutInfo> &shortcutInfos) const;
+    std::string GenerateUuid() const;
+    std::string GenerateUuidByKey(const std::string &key) const;
 
 private:
     bool initialUserFlag_ = false;

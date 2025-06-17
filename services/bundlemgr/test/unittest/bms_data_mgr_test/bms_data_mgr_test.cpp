@@ -182,7 +182,7 @@ std::vector<Skill> BmsDataMgrTest::CreateSkillsForMatchShareTest()
     uriMedia.scheme = "file";
     uriMedia.utd = "general.media";
     uriMedia.maxFileSupported = 9;
-    skill.uris.push_back(uriMedia); 
+    skill.uris.push_back(uriMedia);
 
     skills.push_back(skill);
 
@@ -2002,7 +2002,7 @@ HWTEST_F(BmsDataMgrTest, MatchShare_0200, Function | SmallTest | Level1)
 
     std::map<std::string, int32_t> utds2 = {{"general.png", 3}};
     EXPECT_EQ(MatchShare(utds2, skills), true);
-    
+
     std::map<std::string, int32_t> utds3 = {{"general.png", 4}};
     EXPECT_EQ(MatchShare(utds3, skills), false);
 
@@ -2053,7 +2053,7 @@ HWTEST_F(BmsDataMgrTest, MatchShare_0200, Function | SmallTest | Level1)
 
     std::map<std::string, int32_t> utds19 = {{"general.png", 2}, {"general.image", 1}, {"general.media", 7}};
     EXPECT_EQ(MatchShare(utds19, skills), false);
-    
+
     std::map<std::string, int32_t> utds20 = {{"general.png", 3}, {"general.image", 3}, {"general.media", 3}};
     EXPECT_EQ(MatchShare(utds20, skills), true);
 
@@ -3137,5 +3137,39 @@ HWTEST_F(BmsDataMgrTest, CreateAppInstallDir_0001, Function | MediumTest | Level
     EXPECT_EQ(BundleUtil::IsExistDir(path), true);
     std::string appClonePath = path + ServiceConstants::GALLERY_CLONE_PATH;
     EXPECT_EQ(BundleUtil::IsExistDir(appClonePath), true);
+}
+
+/**
+ * @tc.number: GenerateUuid_0001
+ * @tc.name: GenerateUuid
+ * @tc.desc: test GenerateUuid
+ */
+HWTEST_F(BmsDataMgrTest, GenerateUuid_0001, TestSize.Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string uuid1 = dataMgr->GenerateUuid();
+    EXPECT_EQ(uuid1.size(), 36);
+
+    std::string uuid2 = dataMgr->GenerateUuid();
+    EXPECT_EQ(uuid2.size(), 36);
+
+    EXPECT_NE(uuid1, uuid2);
+
+    std::string key1 = "test";
+    std::string uuid3 = dataMgr->GenerateUuidByKey(key1);
+    EXPECT_EQ(uuid3.size(), 36);
+
+    std::string key2 = "test";
+    std::string uuid4 = dataMgr->GenerateUuidByKey(key2);
+    EXPECT_EQ(uuid4.size(), 36);
+
+    EXPECT_EQ(uuid3, uuid4);
+
+    std::string key3 = "test3";
+    std::string uuid5 = dataMgr->GenerateUuidByKey(key3);
+    EXPECT_EQ(uuid5.size(), 36);
+    EXPECT_NE(uuid3, uuid5);
 }
 } // OHOS

@@ -41,6 +41,7 @@
 #include "hitrace_meter.h"
 #include "inner_bundle_clone_common.h"
 #include "installd_client.h"
+#include "interfaces/hap_verify.h"
 #include "ipc_skeleton.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
@@ -53,6 +54,7 @@
 #include "bundle_overlay_data_manager.h"
 #endif
 #include "bundle_extractor.h"
+#include "parameter.h"
 #include "scope_guard.h"
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
 #include "type_descriptor.h"
@@ -76,6 +78,7 @@ constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
 constexpr int8_t DATA_GROUP_INDEX_START = 1;
 constexpr int8_t UUID_LENGTH = 36;
 constexpr int8_t PROFILE_PREFIX_LENGTH = 9;
+constexpr uint16_t UUID_LENGTH_MAX = 512;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 // freeInstall action
 constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
@@ -3764,7 +3767,7 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
         }
         if (BundleUserMgrHostImpl::SkipThirdPreloadAppInstallation(userId, preInstallBundleInfo)) {
             continue;
-        }        
+        }
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         auto infoItem = bundleInfos_.find(preInstallBundleInfo.GetBundleName());
         if (infoItem == bundleInfos_.end()) {
@@ -8075,7 +8078,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
     dataGroupInfo.uid = uid;
     dataGroupInfo.gid = uid;
 
-    std::string str = BundleUtil::GenerateUuidByKey(dataGroupInfo.dataGroupId);
+    std::string str = GenerateUuidByKey(dataGroupInfo.dataGroupId);
     dataGroupInfo.uuid = str;
     uniqueIdSet.insert(uniqueId);
 }
@@ -8978,7 +8981,7 @@ void BundleDataMgr::GenerateOdid(const std::string &developerId, std::string &od
             return;
         }
     }
-    odid = BundleUtil::GenerateUuid();
+    odid = GenerateUuid();
     APP_LOGI_NOFUNC("developerId:%{public}s not existed generate odid %{private}s",
         developerId.c_str(), odid.c_str());
 }
@@ -10261,6 +10264,46 @@ bool BundleDataMgr::GetPluginBundleInfo(const std::string &hostBundleName, const
         return innerBundleUserInfo.GetPluginBundleInfo(pluginBundleName, pluginBundleInfo);
     }
     return false;
+}
+
+std::string BundleDataMgr::GenerateUuid() const
+{
+    auto currentTime = std::chrono::system_clock::now();
+    auto timestampNanoseconds =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
+
+    // convert nanosecond timestamps to string
+    std::string timeStr = std::to_string(timestampNanoseconds);
+
+    char deviceId[UUID_LENGTH_MAX] = { 0 };
+    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
+    std::string deviceUdid;
+    if (ret != 0) {
+        APP_LOGW("GetDevUdid failed");
+    } else {
+        deviceUdid = std::string{ deviceId };
+    }
+
+    std::string message = timeStr + deviceUdid;
+    std::string uuid = OHOS::Security::Verify::GenerateUuidByKey(message);
+    return uuid;
+}
+
+std::string BundleDataMgr::GenerateUuidByKey(const std::string &key) const
+{
+    char deviceId[UUID_LENGTH_MAX] = { 0 };
+    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
+    std::string deviceUdid;
+    std::string deviceStr;
+
+    if (ret != 0) {
+        APP_LOGW("GetDevUdid failed");
+    } else {
+        deviceUdid = std::string{ deviceId };
+    }
+
+    std::string message = key + deviceUdid;
+    return OHOS::Security::Verify::GenerateUuidByKey(message);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
