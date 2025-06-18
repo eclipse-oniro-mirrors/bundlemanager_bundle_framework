@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (c) 2021 Huawei Device Co., Ltd.
+<!-- Copyright (c) 2021-2025 Huawei Device Co., Ltd.
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -61,6 +61,7 @@ Note:If the text contains special characters, please escape them according to th
         </policylist>
         <filefilterlist>
             <filefilter name="defaultFilter" desc="Files not to check">
+                <filteritem type="filename" name="init" desc="fuzz corpus init file"/>
                 <filteritem type="filename" name="*.ha|*.hap|*.rpk" desc="valid and invalid bundle files for tests"/>
                 <filteritem type="filepath" name="figures/.*" desc="Self-developed image"/>
                 <filteritem type="filepath" name="test/sceneProject/.*.png" desc="Tdd-developed image"/>

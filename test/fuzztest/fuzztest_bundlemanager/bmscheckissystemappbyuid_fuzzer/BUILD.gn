@@ -30,6 +30,7 @@ ohos_fuzztest("BMSCheckIsSystemAppByUidFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
+  include_dirs = [ "${test_path}/fuzztest" ]
   sources = [ "bmscheckissystemappbyuid_fuzzer.cpp" ]
 
   deps = [

@@ -21,10 +21,9 @@
 
 #include "bmsaddappjumpcontrolrule_fuzzer.h"
 #include "securec.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
-
 namespace {
 void GetRandomAppJumpControlRule(FuzzedDataProvider& fdp, AppJumpControlRule& appJumpControlRule)
 {
@@ -51,7 +50,7 @@ namespace OHOS {
             controlRules.emplace_back(appJumpControlRule);
         }
 
-        int32_t userId = fdp.ConsumeIntegral<int32_t>();
+        int32_t userId = BMSFuzzTestUtil::GenerateRandomUser(fdp);
         appControl.AddAppJumpControlRule(controlRules, userId);
         return true;
     }

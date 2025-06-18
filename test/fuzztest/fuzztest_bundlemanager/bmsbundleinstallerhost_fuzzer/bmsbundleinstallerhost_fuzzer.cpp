@@ -25,7 +25,7 @@
 #include "bundle_mgr_service.h"
 #include "message_parcel.h"
 #include "securec.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
@@ -51,7 +51,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         bundleInstallerHost->OnRemoteRequest(code, datas, reply, option);
     }
 #endif
-    int32_t userId = fdp.ConsumeIntegral<int32_t>();
+    int32_t userId = BMSFuzzTestUtil::GenerateRandomUser(fdp);
     int32_t appIndex = fdp.ConsumeIntegral<int32_t>();
     int32_t dplType = fdp.ConsumeIntegral<int32_t>();
     int32_t streamInstallerId = fdp.ConsumeIntegral<int32_t>();

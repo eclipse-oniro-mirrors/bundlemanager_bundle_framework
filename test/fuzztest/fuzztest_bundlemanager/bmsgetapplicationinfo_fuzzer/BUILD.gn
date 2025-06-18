@@ -30,6 +30,7 @@ ohos_fuzztest("BMSGetApplicationInfoFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
+  include_dirs = [ "${test_path}/fuzztest" ]
   sources = [ "bmsgetapplicationinfo_fuzzer.cpp" ]
 
   deps = [

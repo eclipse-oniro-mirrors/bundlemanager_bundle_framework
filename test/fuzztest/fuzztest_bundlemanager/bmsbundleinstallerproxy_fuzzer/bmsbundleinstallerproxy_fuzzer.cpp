@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,7 @@
 #include "bundle_installer_proxy.h"
 
 #include "bmsbundleinstallerproxy_fuzzer.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
@@ -47,7 +47,7 @@ namespace OHOS {
         std::string modulePackage = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         bundleinstallerProxy.Uninstall(bundleFilePath, modulePackage, installParam, statusReceiver);
         int32_t dlpType = fdp.ConsumeIntegral<int32_t>();
-        int32_t userId = fdp.ConsumeIntegral<int32_t>();
+        int32_t userId = BMSFuzzTestUtil::GenerateRandomUser(fdp);
         int32_t appIndex = fdp.ConsumeIntegral<int32_t>();
         bundleinstallerProxy.InstallSandboxApp(bundleName, dlpType, userId, appIndex);
         bundleinstallerProxy.UninstallSandboxApp(bundleName, appIndex, userId);

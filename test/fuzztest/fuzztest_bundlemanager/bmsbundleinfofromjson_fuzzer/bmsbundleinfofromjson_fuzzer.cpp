@@ -20,7 +20,7 @@
 #include "bundle_info.h"
 #include "json_serializer.h"
 #include "nlohmann/json.hpp"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 #include "bmsbundleinfofromjson_fuzzer.h"
 

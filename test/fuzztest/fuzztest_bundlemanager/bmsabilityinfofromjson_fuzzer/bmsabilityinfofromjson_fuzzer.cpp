@@ -22,7 +22,7 @@
 #include "nlohmann/json.hpp"
 
 #include "bmsabilityinfofromjson_fuzzer.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;

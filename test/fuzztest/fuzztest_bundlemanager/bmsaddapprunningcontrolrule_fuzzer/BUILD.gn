@@ -30,6 +30,7 @@ ohos_fuzztest("BMSAddAppRunningControlRuleFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
+  include_dirs = [ "${test_path}/fuzztest" ]
   sources = [ "bmsaddapprunningcontrolrule_fuzzer.cpp" ]
 
   deps = [

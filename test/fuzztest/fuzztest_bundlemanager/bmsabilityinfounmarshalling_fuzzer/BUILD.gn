@@ -30,6 +30,7 @@ ohos_fuzztest("BMSAbilityInfoUnmarshallingFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
+  include_dirs = [ "${test_path}/fuzztest" ]
   sources = [ "bmsabilityinfounmarshalling_fuzzer.cpp" ]
 
   deps = [

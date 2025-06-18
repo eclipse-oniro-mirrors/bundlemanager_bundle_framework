@@ -22,7 +22,7 @@
 
 #include "app_control_host.h"
 #include "securec.h"
- #include "../../bms_fuzztest_util.h"
+ #include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {

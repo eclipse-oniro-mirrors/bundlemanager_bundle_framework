@@ -31,6 +31,7 @@ namespace AppExecFwk {
 namespace BMSFuzzTestUtil {
 constexpr size_t STRING_MAX_LENGTH = 128;
 constexpr size_t ARRAY_MAX_LENGTH = 128;
+constexpr int32_t MINUS_ONE = -1;
 constexpr uint32_t CODE_MIN_ONE = 1;
 constexpr uint32_t CODE_MAX_ONE = 1;
 constexpr uint32_t CODE_MAX_TWO = 2;
@@ -578,11 +579,70 @@ void GenerateFormInfo(FuzzedDataProvider& fdp, FormInfo &formInfo)
 int32_t GenerateRandomUser(FuzzedDataProvider& fdp)
 {
     uint8_t size = USERS.size();
-    uint8_t index = fdp.ConsumeIntegralInRange<uint8_t>(0, size);
-    if (index > 0 && index <= size) {
-        return USERS[index - 1];
+    if (size == 0) {
+        return Constants::START_USERID; // No users available, return 100
     }
-    return Constants::DEFAULT_USERID;
+    uint8_t index = fdp.ConsumeIntegralInRange<uint8_t>(0, size) % size; // 0 to size-1
+    return USERS[index];
+}
+
+void GenerateHapModuleInfo(FuzzedDataProvider& fdp, HapModuleInfo &hapModuleInfo)
+{
+    hapModuleInfo.compressNativeLibs = fdp.ConsumeBool();
+    hapModuleInfo.isLibIsolated = fdp.ConsumeBool();
+    hapModuleInfo.deliveryWithInstall = fdp.ConsumeBool();
+    hapModuleInfo.installationFree = fdp.ConsumeBool();
+    hapModuleInfo.isModuleJson = fdp.ConsumeBool();
+    hapModuleInfo.isStageBasedModel = fdp.ConsumeBool();
+    hapModuleInfo.hasIntent = fdp.ConsumeBool();
+    hapModuleInfo.resizeable = fdp.ConsumeBool();
+    hapModuleInfo.descriptionId = fdp.ConsumeIntegral<uint32_t>();
+    hapModuleInfo.iconId = fdp.ConsumeIntegral<uint32_t>();
+    hapModuleInfo.labelId = fdp.ConsumeIntegral<uint32_t>();
+    hapModuleInfo.upgradeFlag = fdp.ConsumeIntegral<int32_t>();
+    hapModuleInfo.supportedModes = fdp.ConsumeIntegral<int>();
+    hapModuleInfo.colorMode =
+        static_cast<ModuleColorMode>(fdp.ConsumeIntegralInRange<int8_t>(MINUS_ONE, CODE_MAX_ONE));
+    hapModuleInfo.moduleType = static_cast<ModuleType>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_THREE));
+    hapModuleInfo.compileMode = fdp.ConsumeBool() ? CompileMode::ES_MODULE : CompileMode::JS_BUNDLE;
+    hapModuleInfo.aotCompileStatus =
+        static_cast<AOTCompileStatus>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_FOUR));
+    hapModuleInfo.isolationMode = static_cast<IsolationMode>(fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX_THREE));
+    hapModuleInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);        // module.name in config.json
+    hapModuleInfo.package = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.description = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.iconPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.backgroundImg = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.mainAbility = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.srcPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.hashValue = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.hapPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.nativeLibraryPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.cpuAbi = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    // new version fields
+    hapModuleInfo.bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.mainElementName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.pages = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.systemTheme = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.process = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.resourcePath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.srcEntrance = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.uiSyntax = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.virtualMachine = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.moduleSourceDir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.buildHash = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.fileContextMenu = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.routerMap = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.packageName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.abilitySrcEntryDelegator = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.abilityStageSrcEntryDelegator = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.appStartup = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    hapModuleInfo.nativeLibraryFileNames = GenerateStringArray(fdp);
+    hapModuleInfo.reqCapabilities = GenerateStringArray(fdp);
+    hapModuleInfo.deviceTypes = GenerateStringArray(fdp);
+    hapModuleInfo.deviceFeatures = GenerateStringArray(fdp);
 }
 }  // namespace BMSFuzzTestUtil
 }  // namespace AppExecFwk

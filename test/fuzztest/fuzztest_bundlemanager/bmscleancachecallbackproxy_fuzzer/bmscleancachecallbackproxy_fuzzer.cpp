@@ -20,7 +20,7 @@
 #include "clean_cache_callback_proxy.h"
 
 #include "bmscleancachecallbackproxy_fuzzer.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;

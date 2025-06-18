@@ -20,7 +20,7 @@
 #include "bundle_mgr_proxy.h"
 
 #include "bmsgetbundleinfo_fuzzer.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
@@ -33,7 +33,7 @@ namespace OHOS {
         std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         BundleFlag flag = static_cast<BundleFlag>(fdp.ConsumeIntegral<int32_t>());
         int32_t flags = fdp.ConsumeIntegral<int32_t>();
-        int32_t userId = fdp.ConsumeIntegral<int32_t>();
+        int32_t userId = BMSFuzzTestUtil::GenerateRandomUser(fdp);
         BundleInfo bundleInfo;
         bundleMgrProxy.GetBundleInfo(bundleName, flag, bundleInfo, userId);
         bundleMgrProxy.GetBundleInfo(bundleName, flags, bundleInfo, userId);

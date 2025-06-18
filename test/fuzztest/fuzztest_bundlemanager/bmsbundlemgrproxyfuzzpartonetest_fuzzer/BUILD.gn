@@ -30,6 +30,7 @@ ohos_fuzztest("BMSBundleMgrProxyFuzzPartOneTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
+  include_dirs = [ "${test_path}/fuzztest" ]
   sources = [ "bmsbundlemgrproxypartone_fuzzer.cpp" ]
 
   deps = [
