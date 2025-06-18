@@ -62,6 +62,7 @@ ohos_unittest("BmsOnDemandInstallTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = bundle_install_deps
+  deps += [ "${core_path}:appexecfwk_core" ]
 
   external_deps = [
     "ability_base:want",
