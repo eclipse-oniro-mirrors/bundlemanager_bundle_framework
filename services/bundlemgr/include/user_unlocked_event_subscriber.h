@@ -46,7 +46,7 @@ public:
     static void ProcessExtensionDir(const BundleInfo &bundleInfo, std::vector<std::string> &dirs);
     static void CreateSharefilesSubDataDirs(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
     static void ProcessNewBackupDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
-    static void DeleteUninstallTmpDirs(const int32_t userId);
+    static void DeleteUninstallTmpDirs(const std::set<int32_t>& userIds);
 private:
     static void CheckPathAttribute(const std::string &path, const BundleInfo &bundleInfo, bool &isExist);
     static void CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId);
