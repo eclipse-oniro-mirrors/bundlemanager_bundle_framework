@@ -177,102 +177,114 @@ namespace bundleManager {
     FLAG_PREINSTALLED_APP_UPDATE = 0x00000040,
   }
 
-  export native function getBundleInfoForSelfSync(bundleFlags: number): BundleInfo;
+  export native function getBundleInfoForSelfNative(bundleFlags: number, isSync: boolean): BundleInfo;
 
-  export native function getBundleInfoSync(bundleName: string, bundleFlags: number, userId: number) : BundleInfo;
+  export native function getBundleInfoNative(bundleName: string, bundleFlags: number, userId: number, isSync: boolean) : BundleInfo;
 
-  export native function getApplicationInfoSync(bundleName: string, applicationFlags: number, userId: number): ApplicationInfo;
+  export native function getApplicationInfoNative(bundleName: string, applicationFlags: number, userId: number, isSync: boolean): ApplicationInfo;
 
-  export native function getAllBundleInfoSync(bundleFlags: number, userId: number): Array<BundleInfo>;
+  export native function getAllBundleInfoNative(bundleFlags: number, userId: number): Array<BundleInfo>;
 
-  export native function getAllApplicationInfoSync(appFlags: number, userId: number): Array<ApplicationInfo>;
+  export native function getAllApplicationInfoNative(appFlags: number, userId: number): Array<ApplicationInfo>;
 
-  export native function isApplicationEnabledSyncInner(bundleName: string, appIndex: number): boolean;
+  export native function isApplicationEnabledNative(bundleName: string, appIndex: number, isSync: boolean): boolean;
 
-  export native function queryAbilityInfoSyncInner(want: Want, abilityFlags: number, userId: number): Array<AbilityInfo>;
+  export native function queryAbilityInfoSyncNative(want: Want, abilityFlags: number, userId: number, isSync: boolean): Array<AbilityInfo>;
 
-  export native function getAppCloneIdentitySync(uid: number): AppCloneIdentity;
+  export native function getAppCloneIdentityNative(uid: number): AppCloneIdentity;
 
-  export native function getAbilityLabelSync(bundleName: string, moduleName: string, abilityName: string): string;
+  export native function getAbilityLabelNative(bundleName: string, moduleName: string, abilityName: string, isSync: boolean): string;
 
-  export native function getLaunchWantForBundleSyncInner(bundleName: string, userId: number): Want;
+  export native function getLaunchWantForBundleNative(bundleName: string, userId: number, isSync: boolean): Want;
 
-  export native function getAppCloneBundleInfoInner(bundleName: string, appIndex: number,
+  export native function getAppCloneBundleInfoNative(bundleName: string, appIndex: number,
     bundleFlags: number, userId: number): BundleInfo;
 
   export native function getSpecifiedDistributionType(bundleName: string): string;
 
-  export native function getBundleNameByUidSync(uid: number): string;
+  export native function getBundleNameByUidNative(uid: number, isSync: boolean): string;
 
-  export native function isAbilityEnabledSyncInner(info: AbilityInfo, appIndex: number): boolean;
+  export native function isAbilityEnabledNative(info: AbilityInfo, appIndex: number, isSync: boolean): boolean;
 
-  export native function setAbilityEnabledSyncInner(info: AbilityInfo, isEnabled: boolean, appIndex: number): void;
+  export native function setAbilityEnabledNative(info: AbilityInfo, isEnabled: boolean, appIndex: number, isSync: boolean): void;
 
-  export native function setApplicationEnabledSyncInner(bundleName: string, isEnabled: boolean, appIndex: number): void;
+  export native function setApplicationEnabledNative(bundleName: string, isEnabled: boolean, appIndex: number, isSync: boolean): void;
 
-  export native function getDynamicIconInner(bundleName: string): string;
+  export native function getDynamicIconNative(bundleName: string): string;
 
-  export native function queryAbilityInfoWithWants(wants: Array<Want>, abilityFlags: number,
+  export native function queryAbilityInfoWithWantsNative(wants: Array<Want>, abilityFlags: number,
     userId: number): Array<AbilityInfo>;
 
-  export native function queryExtensionAbilityInfoInner(want: Want, extensionAbilityType: ExtensionAbilityType,
+  export native function queryExtensionAbilityInfoNative(want: Want, extensionAbilityType: ExtensionAbilityType,
     extensionAbilityTypeName: string, extensionAbilityFlags: number,
-    userId: number, isExtensionTypeName: boolean): Array<ExtensionAbilityInfo>;
+    userId: number, isExtensionTypeName: boolean, isSync: boolean): Array<ExtensionAbilityInfo>;
 
-  export native function queryExAbilityInfoSyncWithoutWant(extensionAbilityType: string, extensionAbilityFlags: number,
+  export native function queryExAbilityInfoSyncWithoutWantNative(extensionAbilityType: string, extensionAbilityFlags: number,
     userId: number): Array<ExtensionAbilityInfo>;
 
-  export native function enableDynamicIconSync(bundleName: string, moduleName: string): void;
+  export native function enableDynamicIconNative(bundleName: string, moduleName: string): void;
+
+  function getBundleInfoForSelfSync(bundleFlags: number): BundleInfo {
+    return bundleManager.getBundleInfoForSelfNative(bundleFlags, true);
+  }
+
+  function getAbilityLabelSync(bundleName: string, moduleName: string, abilityName: string): string {
+    return bundleManager.getAbilityLabelNative(bundleName, moduleName, abilityName, true);
+  }
+
+  function getBundleNameByUidSync(uid: number): string {
+    return bundleManager.getBundleNameByUidNative(uid, true);
+  }
 
   function isApplicationEnabledSync(bundleName: string): boolean {
-    return bundleManager.isApplicationEnabledSyncInner(bundleName, 0);
+    return bundleManager.isApplicationEnabledNative(bundleName, 0, true);
   }
 
   function queryAbilityInfoSync(want: Want, abilityFlags: number, userId?: number): Array<AbilityInfo> {
     let userIdInfo: number = userId ?? -500;
-    return bundleManager.queryAbilityInfoSyncInner(want, abilityFlags, userIdInfo);
+    return bundleManager.queryAbilityInfoSyncNative(want, abilityFlags, userIdInfo, true);
   }
 
   function getLaunchWantForBundleSync(bundleName: string, userId?: number): Want {
     let userIdInfo: number = userId ?? -500;
-    return bundleManager.getLaunchWantForBundleSyncInner(bundleName, userIdInfo);
+    return bundleManager.getLaunchWantForBundleNative(bundleName, userIdInfo, true);
   }
 
   function isAbilityEnabledSync(info: AbilityInfo): boolean {
-    return bundleManager.isAbilityEnabledSyncInner(info, 0);
+    return bundleManager.isAbilityEnabledNative(info, 0, true);
   }
 
   function setAbilityEnabledSync(info: AbilityInfo, isEnabled: boolean): void {
-    return bundleManager.setAbilityEnabledSyncInner(info, isEnabled, 0);
+    return bundleManager.setAbilityEnabledNative(info, isEnabled, 0, true);
   }
 
   function setApplicationEnabledSync(bundleName: string, isEnabled: boolean): void {
-    return bundleManager.setApplicationEnabledSyncInner(bundleName, isEnabled, 0);
+    return bundleManager.setApplicationEnabledNative(bundleName, isEnabled, 0, true);
   }
 
   function queryExtensionAbilityInfoSync(want: Want, extensionAbilityType: ExtensionAbilityType,
     extensionAbilityFlags: number, userId?: number): Array<ExtensionAbilityInfo> {
     let userIdInfo: number = userId ?? -500;
-    return bundleManager.queryExtensionAbilityInfoInner(
-      want, extensionAbilityType, "", extensionAbilityFlags, userIdInfo, false);
+    return bundleManager.queryExtensionAbilityInfoNative(
+      want, extensionAbilityType, "", extensionAbilityFlags, userIdInfo, false, true);
   }
 
   function queryExtensionAbilityInfoSync(want: Want, extensionAbilityType: string, extensionAbilityFlags: number,
     userId?: number): Array<ExtensionAbilityInfo> {
     let userIdInfo: number = userId ?? -500;
-    return bundleManager.queryExtensionAbilityInfoInner(
-      want, ExtensionAbilityType.UNSPECIFIED, extensionAbilityType, extensionAbilityFlags, userIdInfo, true);
+    return bundleManager.queryExtensionAbilityInfoNative(
+      want, ExtensionAbilityType.UNSPECIFIED, extensionAbilityType, extensionAbilityFlags, userIdInfo, true, true);
   }
 
   function queryExtensionAbilityInfoSync(extensionAbilityType: string, extensionAbilityFlags: number,
     userId?: number): Array<ExtensionAbilityInfo> {
     let userIdInfo: number = userId ?? -500;
-    return bundleManager.queryExAbilityInfoSyncWithoutWant(extensionAbilityType, extensionAbilityFlags, userIdInfo);
+    return bundleManager.queryExAbilityInfoSyncWithoutWantNative(extensionAbilityType, extensionAbilityFlags, userIdInfo);
   }
 
   function getBundleInfoForSelf(bundleFlags: number, callback: AsyncCallback<BundleInfo, void>):void {
     let execFun = (): BundleInfo => {
-      return bundleManager.getBundleInfoForSelfSync(bundleFlags);
+      return bundleManager.getBundleInfoForSelfNative(bundleFlags, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -288,7 +300,7 @@ namespace bundleManager {
   function getBundleInfoForSelf(bundleFlags: number):Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): BundleInfo => {
-        return bundleManager.getBundleInfoForSelfSync(bundleFlags);
+        return bundleManager.getBundleInfoForSelfNative(bundleFlags, false);
       };
       let p1 = taskpool.execute(execFun);
         p1.then((e: NullishType) => {
@@ -302,15 +314,19 @@ namespace bundleManager {
     return p;
   }
 
+  function getBundleInfoSync(bundleName: string, bundleFlags: number, userId: number): BundleInfo {
+    return bundleManager.getBundleInfoNative(bundleName, bundleFlags, userId, true);
+  }
+
   function getBundleInfoSync(bundleName: string, bundleFlags: number): BundleInfo {
-    return bundleManager.getBundleInfoSync(bundleName, bundleFlags, -500);
+    return bundleManager.getBundleInfoNative(bundleName, bundleFlags, -500, true);
   }
 
   function getBundleInfo(bundleName: string, bundleFlags: number, userId?: number): Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: BusinessError) => void) => {
       let userIdInfo: number = userId ?? -500;
       let execFun = (): BundleInfo => {
-        return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userIdInfo);
+        return bundleManager.getBundleInfoNative(bundleName, bundleFlags, userIdInfo, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -324,9 +340,9 @@ namespace bundleManager {
     return p;
   }
 
-  function getBundleInfo(bundleName: string, bundleFlags: number, callback: AsyncCallback<BundleInfo, void>): void {
+  function getBundleInfo(bundleName: string, bundleFlags: number, callback: AsyncCallback<BundleInfo>): void {
     let execFun = (): BundleInfo => {
-      return bundleManager.getBundleInfoSync(bundleName, bundleFlags);
+      return bundleManager.getBundleInfoNative(bundleName, bundleFlags, -500, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -339,9 +355,9 @@ namespace bundleManager {
     });
   }
 
-  function getBundleInfo(bundleName: string, bundleFlags: number, userId: number, callback: AsyncCallback<BundleInfo, void>): void {
+  function getBundleInfo(bundleName: string, bundleFlags: number, userId: number, callback: AsyncCallback<BundleInfo>): void {
     let execFun = (): BundleInfo => {
-      return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userId);
+      return bundleManager.getBundleInfoNative(bundleName, bundleFlags, userId, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -355,7 +371,11 @@ namespace bundleManager {
   }
 
   function getApplicationInfoSync(bundleName: string, applicationFlags: number): ApplicationInfo {
-    return bundleManager.getApplicationInfoSync(bundleName, applicationFlags, -500);
+    return bundleManager.getApplicationInfoNative(bundleName, applicationFlags, -500, true);
+  }
+
+  function getApplicationInfoSync(bundleName: string, applicationFlags: number, userId: number): ApplicationInfo {
+    return bundleManager.getApplicationInfoNative(bundleName, applicationFlags, userId, true);
   }
 
   function getAllBundleInfo(bundleFlags: number, userId?: number): Promise<Array<BundleInfo>> {
@@ -363,7 +383,7 @@ namespace bundleManager {
       => void, reject: (error: BusinessError) => void) => {
       let userIdInfo: number = userId ?? -500;
       let execFun = (): Array<BundleInfo> => {
-        return bundleManager.getAllBundleInfoSync(bundleFlags, userIdInfo);
+        return bundleManager.getAllBundleInfoNative(bundleFlags, userIdInfo);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -379,7 +399,7 @@ namespace bundleManager {
 
   function getAllBundleInfo(bundleFlags: number, callback: AsyncCallback<Array<BundleInfo>>): void {
     let execFun = (): Array<BundleInfo> => {
-      return bundleManager.getAllBundleInfoSync(bundleFlags, -500);
+      return bundleManager.getAllBundleInfoNative(bundleFlags, -500);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -394,7 +414,7 @@ namespace bundleManager {
 
   function getAllBundleInfo(bundleFlags: number, userId: number, callback: AsyncCallback<Array<BundleInfo>>): void {
     let execFun = (): Array<BundleInfo> => {
-      return bundleManager.getAllBundleInfoSync(bundleFlags, userId);
+      return bundleManager.getAllBundleInfoNative(bundleFlags, userId);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -412,7 +432,7 @@ namespace bundleManager {
       => void, reject: (error: BusinessError) => void) => {
       let userIdInfo: number = userId ?? -500;
       let execFun = (): Array<ApplicationInfo> => {
-        return bundleManager.getAllApplicationInfoSync(appFlags, userIdInfo);
+        return bundleManager.getAllApplicationInfoNative(appFlags, userIdInfo);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -428,7 +448,7 @@ namespace bundleManager {
 
   function getAllApplicationInfo(appFlags: number, callback: AsyncCallback<Array<ApplicationInfo>>): void {
     let execFun = (): Array<ApplicationInfo> => {
-      return bundleManager.getAllApplicationInfoSync(appFlags, -500);
+      return bundleManager.getAllApplicationInfoNative(appFlags, -500);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -444,7 +464,7 @@ namespace bundleManager {
   function getAllApplicationInfo(appFlags: number, userId: number,
     callback: AsyncCallback<Array<ApplicationInfo>>): void {
     let execFun = (): Array<ApplicationInfo> => {
-      return bundleManager.getAllApplicationInfoSync(appFlags, userId);
+      return bundleManager.getAllApplicationInfoNative(appFlags, userId);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -460,7 +480,7 @@ namespace bundleManager {
   function isApplicationEnabled(bundleName: string, appIndex: number): Promise<boolean> {
     let p = new Promise<boolean>((resolve: (isEnabled: boolean) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): boolean => {
-        return bundleManager.isApplicationEnabledSyncInner(bundleName, appIndex);
+        return bundleManager.isApplicationEnabledNative(bundleName, appIndex, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -477,7 +497,7 @@ namespace bundleManager {
   function isApplicationEnabled(bundleName: string): Promise<boolean> {
     let p = new Promise<boolean>((resolve: (isEnabled: boolean) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): boolean => {
-        return bundleManager.isApplicationEnabledSyncInner(bundleName, 0);
+        return bundleManager.isApplicationEnabledNative(bundleName, 0, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -493,7 +513,7 @@ namespace bundleManager {
 
   function isApplicationEnabled(bundleName: string, callback: AsyncCallback<boolean>): void {
     let execFun = (): boolean => {
-      return bundleManager.isApplicationEnabledSyncInner(bundleName, 0);
+      return bundleManager.isApplicationEnabledNative(bundleName, 0, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -510,7 +530,7 @@ namespace bundleManager {
       => void, reject: (error: BusinessError) => void) => {
         let userIdInfo: number = userId ?? -500;
       let execFun = (): Array<AbilityInfo> => {
-        return bundleManager.queryAbilityInfoSyncInner(want, abilityFlags, userIdInfo);
+        return bundleManager.queryAbilityInfoSyncNative(want, abilityFlags, userIdInfo, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -526,7 +546,7 @@ namespace bundleManager {
 
   function queryAbilityInfo(want: Want, abilityFlags: number, callback: AsyncCallback<Array<AbilityInfo>>): void {
     let execFun = (): Array<AbilityInfo> => {
-      return bundleManager.queryAbilityInfoSyncInner(want, abilityFlags, -500);
+      return bundleManager.queryAbilityInfoSyncNative(want, abilityFlags, -500, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -542,7 +562,7 @@ namespace bundleManager {
   function queryAbilityInfo(want: Want,
     abilityFlags: number, userId: number, callback: AsyncCallback<Array<AbilityInfo>>): void {
     let execFun = (): Array<AbilityInfo> => {
-      return bundleManager.queryAbilityInfoSyncInner(want, abilityFlags, userId);
+      return bundleManager.queryAbilityInfoSyncNative(want, abilityFlags, userId, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -560,7 +580,7 @@ namespace bundleManager {
       resolve: (applicationInfo: ApplicationInfo) => void, reject: (error: BusinessError) => void) => {
       let userIdInfo: number = userId ?? -500;
       let execFun = (): ApplicationInfo => {
-        return bundleManager.getApplicationInfoSync(bundleName, appFlags, userIdInfo);
+        return bundleManager.getApplicationInfoNative(bundleName, appFlags, userIdInfo, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -576,7 +596,7 @@ namespace bundleManager {
 
   function getApplicationInfo(bundleName: string, appFlags: number, callback: AsyncCallback<ApplicationInfo>): void {
     let execFun = (): ApplicationInfo => {
-      return bundleManager.getApplicationInfoSync(bundleName, appFlags);
+      return bundleManager.getApplicationInfoNative(bundleName, appFlags, -500, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -592,7 +612,7 @@ namespace bundleManager {
   function getApplicationInfo(bundleName: string,
     appFlags: number, userId: number, callback: AsyncCallback<ApplicationInfo>): void {
     let execFun = (): ApplicationInfo => {
-      return bundleManager.getApplicationInfoSync(bundleName, appFlags, userId);
+      return bundleManager.getApplicationInfoNative(bundleName, appFlags, userId, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -609,7 +629,7 @@ namespace bundleManager {
     let p = new Promise<AppCloneIdentity>((
       resolve: (appCloneIdentity: AppCloneIdentity) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): AppCloneIdentity => {
-        return bundleManager.getAppCloneIdentitySync(uid);
+        return bundleManager.getAppCloneIdentityNative(uid);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -627,7 +647,7 @@ namespace bundleManager {
     let p = new Promise<string>((
       resolve: (label: string) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): string => {
-        return bundleManager.getAbilityLabelSync(bundleName, moduleName, abilityName);
+        return bundleManager.getAbilityLabelNative(bundleName, moduleName, abilityName, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -644,7 +664,7 @@ namespace bundleManager {
   function getAbilityLabel(
     bundleName: string, moduleName: string, abilityName: string, callback: AsyncCallback<string>): void {
     let execFun = (): string => {
-      return bundleManager.getAbilityLabelSync(bundleName, moduleName, abilityName);
+      return bundleManager.getAbilityLabelNative(bundleName, moduleName, abilityName, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -661,7 +681,7 @@ namespace bundleManager {
       resolve: (want: Want) => void, reject: (error: BusinessError) => void) => {
       let userIdInfo: number = userId ?? -500;
       let execFun = (): Want => {
-        return bundleManager.getLaunchWantForBundleSyncInner(bundleName, userIdInfo);
+        return bundleManager.getLaunchWantForBundleNative(bundleName, userIdInfo, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -677,7 +697,7 @@ namespace bundleManager {
 
   function getLaunchWantForBundle(bundleName: string, userId: number, callback: AsyncCallback<Want>): void {
     let execFun = (): Want => {
-      return bundleManager.getLaunchWantForBundleSyncInner(bundleName, userId);
+      return bundleManager.getLaunchWantForBundleNative(bundleName, userId, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -692,7 +712,7 @@ namespace bundleManager {
 
   function getLaunchWantForBundle(bundleName: string, callback: AsyncCallback<Want>): void {
     let execFun = (): Want => {
-      return bundleManager.getLaunchWantForBundleSyncInner(bundleName, -500);
+      return bundleManager.getLaunchWantForBundleNative(bundleName, -500, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -711,7 +731,7 @@ namespace bundleManager {
       reject: (error: BusinessError) => void) => {
       let userIdInfo: number = userId ?? -500;
       let execFun = (): BundleInfo => {
-        return bundleManager.getAppCloneBundleInfoInner(bundleName, appIndex, bundleFlags, userIdInfo);
+        return bundleManager.getAppCloneBundleInfoNative(bundleName, appIndex, bundleFlags, userIdInfo);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -727,7 +747,7 @@ namespace bundleManager {
 
   function getBundleNameByUid(uid: number, callback: AsyncCallback<string>): void {
     let execFun = (): string => {
-      return bundleManager.getBundleNameByUidSync(uid);
+      return bundleManager.getBundleNameByUidNative(uid, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -742,7 +762,7 @@ namespace bundleManager {
   function getBundleNameByUid(uid: number): Promise<string> {
     let p = new Promise<string>((resolve: (result: string) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): string => {
-        return bundleManager.getBundleNameByUidSync(uid);
+        return bundleManager.getBundleNameByUidNative(uid, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -759,8 +779,8 @@ namespace bundleManager {
   function queryExtensionAbilityInfo(want: Want, extensionAbilityType: ExtensionAbilityType,
     extensionAbilityFlags: number, callback: AsyncCallback<Array<ExtensionAbilityInfo>>): void {
     let execFun = (): Array<ExtensionAbilityInfo> => {
-      return bundleManager.queryExtensionAbilityInfoInner(
-        want, extensionAbilityType, "", extensionAbilityFlags, -500, false);
+      return bundleManager.queryExtensionAbilityInfoNative(
+        want, extensionAbilityType, "", extensionAbilityFlags, -500, false, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -776,8 +796,8 @@ namespace bundleManager {
   function queryExtensionAbilityInfo(want: Want, extensionAbilityType: ExtensionAbilityType,
     extensionAbilityFlags: number, userId: number, callback: AsyncCallback<Array<ExtensionAbilityInfo>>): void {
     let execFun = (): Array<ExtensionAbilityInfo> => {
-      return bundleManager.queryExtensionAbilityInfoInner(
-        want, extensionAbilityType, "", extensionAbilityFlags, userId, false);
+      return bundleManager.queryExtensionAbilityInfoNative(
+        want, extensionAbilityType, "", extensionAbilityFlags, userId, false, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -797,8 +817,8 @@ namespace bundleManager {
       reject: (error: BusinessError) => void) => {
       let userIdInfo: number = userId ?? -500;
       let execFun = (): Array<ExtensionAbilityInfo> => {
-        return bundleManager.queryExtensionAbilityInfoInner(
-          want, extensionAbilityType, "", extensionAbilityFlags, userIdInfo, false);
+        return bundleManager.queryExtensionAbilityInfoNative(
+          want, extensionAbilityType, "", extensionAbilityFlags, userIdInfo, false, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -815,7 +835,7 @@ namespace bundleManager {
   function isAbilityEnabled(info: AbilityInfo, appIndex: number): Promise<boolean> {
     let p = new Promise<boolean>((resolve: (isEnabled: boolean) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): boolean => {
-        return bundleManager.isAbilityEnabledSyncInner(info, appIndex);
+        return bundleManager.isAbilityEnabledNative(info, appIndex, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -832,7 +852,7 @@ namespace bundleManager {
   function isAbilityEnabled(info: AbilityInfo): Promise<boolean> {
     let p = new Promise<boolean>((resolve: (isEnabled: boolean) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): boolean => {
-        return bundleManager.isAbilityEnabledSyncInner(info, 0);
+        return bundleManager.isAbilityEnabledNative(info, 0, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -848,7 +868,7 @@ namespace bundleManager {
 
   function isAbilityEnabled(info: AbilityInfo, callback: AsyncCallback<boolean>): void {
     let execFun = (): boolean => {
-      return bundleManager.isAbilityEnabledSyncInner(info, 0);
+      return bundleManager.isAbilityEnabledNative(info, 0, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -863,7 +883,7 @@ namespace bundleManager {
   function setAbilityEnabled(info: AbilityInfo, appIndex: number, isEnabled: boolean): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
-        return bundleManager.setAbilityEnabledSyncInner(info, isEnabled, appIndex);
+        return bundleManager.setAbilityEnabledNative(info, isEnabled, appIndex, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -879,7 +899,7 @@ namespace bundleManager {
   function setAbilityEnabled(info: AbilityInfo, isEnabled: boolean): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
-        return bundleManager.setAbilityEnabledSyncInner(info, isEnabled, 0);
+        return bundleManager.setAbilityEnabledNative(info, isEnabled, 0, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -894,7 +914,7 @@ namespace bundleManager {
 
   function setAbilityEnabled(info: AbilityInfo, isEnabled: boolean, callback: AsyncCallback<void>): void {
     let execFun = (): void => {
-      return bundleManager.setAbilityEnabledSyncInner(info, isEnabled, 0);
+      return bundleManager.setAbilityEnabledNative(info, isEnabled, 0, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
@@ -908,7 +928,7 @@ namespace bundleManager {
   function setApplicationEnabled(bundleName: string, appIndex: number, isEnabled: boolean): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
-        return bundleManager.setApplicationEnabledSyncInner(bundleName, isEnabled, appIndex);
+        return bundleManager.setApplicationEnabledNative(bundleName, isEnabled, appIndex, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -924,7 +944,7 @@ namespace bundleManager {
   function setApplicationEnabled(bundleName: string, isEnabled: boolean): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
-        return bundleManager.setApplicationEnabledSyncInner(bundleName, isEnabled, 0);
+        return bundleManager.setApplicationEnabledNative(bundleName, isEnabled, 0, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -939,7 +959,7 @@ namespace bundleManager {
 
   function setApplicationEnabled(bundleName: string, isEnabled: boolean, callback: AsyncCallback<void>): void {
     let execFun = (): void => {
-      return bundleManager.setApplicationEnabledSyncInner(bundleName, isEnabled, 0);
+      return bundleManager.setApplicationEnabledNative(bundleName, isEnabled, 0, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
@@ -954,7 +974,7 @@ namespace bundleManager {
     let p = new Promise<string>((
       resolve: (icon: string) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): string => {
-        return bundleManager.getDynamicIconInner(bundleName);
+        return bundleManager.getDynamicIconNative(bundleName);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -973,7 +993,7 @@ namespace bundleManager {
       => void, reject: (error: BusinessError) => void) => {
         let userIdInfo: number = userId ?? -500;
       let execFun = (): Array<AbilityInfo> => {
-        return bundleManager.queryAbilityInfoWithWants(wants, abilityFlags, userIdInfo);
+        return bundleManager.queryAbilityInfoWithWantsNative(wants, abilityFlags, userIdInfo);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -990,7 +1010,7 @@ namespace bundleManager {
   function enableDynamicIcon(bundleName: string, moduleName: string): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
-        return bundleManager.enableDynamicIconSync(bundleName, moduleName);
+        return bundleManager.enableDynamicIconNative(bundleName, moduleName);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {

@@ -32,6 +32,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
+
 const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
     {ERR_OK, ERR_OK},
     {ERR_PERMISSION_DENIED, ERR_BUNDLE_MANAGER_PERMISSION_DENIED},

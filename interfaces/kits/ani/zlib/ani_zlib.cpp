@@ -19,6 +19,7 @@
 #include "common_fun_ani.h"
 #include "common_func.h"
 #include "enum_util.h"
+#include "napi_constants.h"
 #include "zip.h"
 #include "zlib.h"
 
@@ -218,16 +219,14 @@ static void CompressFile(ani_env* env, ani_string aniInFile, ani_string aniOutFi
     std::string inFile = CommonFunAni::AniStrToString(env, aniInFile);
     if (inFile.empty()) {
         APP_LOGE("inFile is empty.");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, CommonFunAniNS::TYPE_STRING);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, TYPE_STRING);
         return;
     }
 
     std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
     if (outFile.empty()) {
         APP_LOGE("outFile is empty.");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, CommonFunAniNS::TYPE_STRING);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, TYPE_STRING);
         return;
     }
 
@@ -257,16 +256,14 @@ static void CompressFiles(ani_env* env, ani_object aniInFiles, ani_string aniOut
     std::vector<std::string> inFiles;
     if (aniInFiles == nullptr || !CommonFunAni::ParseStrArray(env, aniInFiles, inFiles)) {
         APP_LOGE("inFiles parse failed.");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILES, CommonFunAniNS::TYPE_ARRAY);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILES, TYPE_ARRAY);
         return;
     }
 
     std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
     if (outFile.empty()) {
         APP_LOGE("outFile is empty.");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, CommonFunAniNS::TYPE_STRING);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, TYPE_STRING);
         return;
     }
 
@@ -296,16 +293,14 @@ static void DecompressFile(ani_env* env, ani_string aniInFile, ani_string aniOut
     std::string inFile = CommonFunAni::AniStrToString(env, aniInFile);
     if (inFile.empty()) {
         APP_LOGE("inFile is empty.");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, CommonFunAniNS::TYPE_STRING);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, TYPE_STRING);
         return;
     }
 
     std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
     if (outFile.empty()) {
         APP_LOGE("outFile is empty.");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, CommonFunAniNS::TYPE_STRING);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, TYPE_STRING);
         return;
     }
 
@@ -330,8 +325,7 @@ static ani_double GetOriginalSize(ani_env* env, ani_string aniCompressedFile)
     std::string compressedFile = CommonFunAni::AniStrToString(env, aniCompressedFile);
     if (compressedFile.empty()) {
         APP_LOGE("compressedFile is empty.");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, CommonFunAniNS::TYPE_STRING);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, TYPE_STRING);
         return 0;
     }
 
@@ -362,7 +356,7 @@ static ani_double Adler32(
 
     if (!CommonFunAni::TryCastDoubleTo(aniAdler, &adler)) {
         APP_LOGE("Cast aniAdler failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER, CommonFunAniNS::TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER, TYPE_NUMBER);
         return 0;
     }
 
@@ -399,21 +393,19 @@ static ani_double Adler32Combine(ani_env* env,
 
     if (!CommonFunAni::TryCastDoubleTo(aniAdler1, &adler1)) {
         APP_LOGE("Cast aniAdler1 failed");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER1, CommonFunAniNS::TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER1, TYPE_NUMBER);
         return 0;
     }
 
     if (!CommonFunAni::TryCastDoubleTo(aniAdler2, &adler2)) {
         APP_LOGE("Cast aniAdler2 failed");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER2, CommonFunAniNS::TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER2, TYPE_NUMBER);
         return 0;
     }
 
     if (!CommonFunAni::TryCastDoubleTo(aniLen2, &len2)) {
         APP_LOGE("Cast aniLen2 failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_LEN2, CommonFunAniNS::TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_LEN2, TYPE_NUMBER);
         return 0;
     }
 
@@ -430,7 +422,7 @@ static ani_double Crc32(ani_env* env, [[maybe_unused]] ani_object checksumObj, a
 
     if (!CommonFunAni::TryCastDoubleTo(aniCrc, &crc)) {
         APP_LOGE("Cast aniCrc failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC, CommonFunAniNS::TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC, TYPE_NUMBER);
         return 0;
     }
 
@@ -467,19 +459,19 @@ static ani_double Crc32Combine(ani_env* env,
 
     if (!CommonFunAni::TryCastDoubleTo(aniCrc1, &crc1)) {
         APP_LOGE("Cast aniCrc1 failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC1, CommonFunAniNS::TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC1, TYPE_NUMBER);
         return 0;
     }
 
     if (!CommonFunAni::TryCastDoubleTo(aniCrc2, &crc2)) {
         APP_LOGE("Cast aniCrc2 failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC2, CommonFunAniNS::TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC2, TYPE_NUMBER);
         return 0;
     }
 
     if (!CommonFunAni::TryCastDoubleTo(aniLen2, &len2)) {
         APP_LOGE("Cast aniLen2 failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_LEN2, CommonFunAniNS::TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_LEN2, TYPE_NUMBER);
         return 0;
     }
 
@@ -496,7 +488,7 @@ static ani_double Crc64(ani_env* env, [[maybe_unused]] ani_object checksumObj, a
 
     if (!CommonFunAni::TryCastDoubleTo(aniCrc, &crc)) {
         APP_LOGE("Cast aniCrc failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC, CommonFunAniNS::TYPE_NUMBER);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC, TYPE_NUMBER);
         return 0;
     }
 

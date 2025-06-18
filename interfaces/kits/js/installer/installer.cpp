@@ -37,26 +37,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 // resource name
-const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
-const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC = "GetBundleInstallerSync";
-const char* RESOURCE_NAME_OF_INSTALL = "Install";
-const char* RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
-const char* RESOURCE_NAME_OF_RECOVER = "Recover";
-const char* RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
-const char* RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER = "UninstallAndRecover";
 const char* EMPTY_STRING = "";
 // install message
-constexpr const char* INSTALL_PERMISSION =
-    "ohos.permission.INSTALL_BUNDLE or "
-    "ohos.permission.INSTALL_ENTERPRISE_BUNDLE or "
-    "ohos.permission.INSTALL_ENTERPRISE_MDM_BUNDLE or "
-    "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE or "
-    "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE";
-constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.UNINSTALL_BUNDLE";
-constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
-constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
-constexpr const char* PARAMETERS = "parameters";
-constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* FUNCTION_TYPE = "napi_function";
 constexpr const char* CALLBACK = "callback";
 // property name
@@ -65,9 +47,6 @@ const char* IS_KEEP_DATA = "isKeepData";
 const char* CROWD_TEST_DEADLINE = "crowdtestDeadline";
 const char* HASH_VALUE = "hashValue";
 const char* HASH_PARAMS = "hashParams";
-const char* FILE_PATH = "filePath";
-const char* ADD_EXT_RESOURCE = "AddExtResource";
-const char* REMOVE_EXT_RESOURCE = "RemoveExtResource";
 const char* VERSION_CODE = "versionCode";
 const char* SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
 const char* SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
@@ -78,19 +57,9 @@ const char* PGO_PARAM = "pgoParams";
 const char* PGO_FILE_PATH = "pgoFilePath";
 const char* KEY = "key";
 const char* VALUE = "value";
-const char* HAPS_FILE_NEEDED =
-    "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
-const char* CREATE_APP_CLONE = "CreateAppClone";
-const char* DESTROY_APP_CLONE = "destroyAppClone";
-const char* INSTALL_PREEXISTING_APP = "installPreexistingApp";
-const char* INSTALL_PLUGIN = "InstallPlugin";
-const char* UNINSTALL_PLUGIN = "UninstallPlugin";
-const char* PLUGIN_BUNDLE_NAME = "pluginBundleName";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
-constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
-constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
 constexpr int32_t ILLEGAL_APP_INDEX = -1;
 } // namespace
 napi_ref thread_local g_classBundleInstaller;
