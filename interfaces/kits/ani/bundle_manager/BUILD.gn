@@ -244,6 +244,24 @@ ohos_prebuilt_etc("permission_def_etc") {
   deps = [ ":permission_def" ]
 }
 
+generate_static_abc("app_provision_info") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/AppProvisionInfo.ets",
+    "./ets/bundleManager/AppProvisionInfoInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/app_provision_info.abc"
+}
+
+ohos_prebuilt_etc("app_provision_info_etc") {
+  source = "$target_out_dir/app_provision_info.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":app_provision_info" ]
+}
+
 ohos_copy("copy_bundleManager_ets") {
   sources = [
     "./ets/bundleManager/AbilityInfoInner.ets",

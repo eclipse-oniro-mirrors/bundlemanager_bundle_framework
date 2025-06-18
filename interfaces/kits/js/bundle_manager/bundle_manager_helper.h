@@ -43,6 +43,12 @@ public:
     static ErrCode InnerGetPermissionDef(const std::string& permissionName, PermissionDef& permissionDef);
     static ErrCode InnerCleanBundleCacheCallback(
         const std::string &bundleName, int32_t appIndex, const OHOS::sptr<CleanCacheCallback> cleanCacheCallback);
+    static ErrCode InnerGetAppProvisionInfo(
+        const std::string& bundleName, int32_t userId, AppProvisionInfo& appProvisionInfo);
+    static ErrCode InnerGetAllPreinstalledApplicationInfos(
+        std::vector<PreinstalledApplicationInfo>& preinstalledApplicationInfos);
+    static ErrCode InnerGetAllAppCloneBundleInfo(
+        const std::string& bundleName, int32_t bundleFlags, int32_t userId, std::vector<BundleInfo>& bundleInfos);
 };
 } // AppExecFwk
 } // OHOS

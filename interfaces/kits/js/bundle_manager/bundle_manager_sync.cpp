@@ -35,9 +35,6 @@ constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* IS_ENABLE = "isEnable";
 constexpr const char* UID = "uid";
 constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
-const char* GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
-const char* GET_SIGNATURE_INFO_SYNC = "GetSignatureInfoSync";
-const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
 bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
 {
     napi_valuetype valueType;

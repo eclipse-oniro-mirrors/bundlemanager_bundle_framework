@@ -13,16 +13,18 @@
  * limitations under the License.
  */
 
-import { BundleInfo, AppCloneIdentity } from 'bundleManager.BundleInfo';
+import { BundleInfo, AppCloneIdentity, SignatureInfo } from 'bundleManager.BundleInfo';
 import { AsyncCallback, BusinessError } from '@ohos.base';
-import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
+import { PreinstalledApplicationInfo, ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { AbilityInfo } from 'bundleManager.AbilityInfo';
 import { ExtensionAbilityInfo } from 'bundleManager.ExtensionAbilityInfo';
 import { PermissionDef } from 'bundleManager.PermissionDef';
+import { AppProvisionInfo } from 'bundleManager.AppProvisionInfo'
 import Want from '@ohos.app.ability.Want';
 import { BundleInfoInner } from './bundleManager/BundleInfoInner';
 import { ApplicationInfoInner } from './bundleManager/ApplicationInfoInner';
 import { PermissionDefInner } from './bundleManager/PermissionDefInner';
+import { AppProvisionInfoInner } from './bundleManager/AppProvisionInfoInner';
 
 namespace bundleManager {
 
@@ -253,6 +255,21 @@ namespace bundleManager {
 
   export native function cleanAllBundleCacheNative(): void;
 
+  export native function getAppProvisionInfoNative(bundleName: string, userId: number, isSync: boolean): AppProvisionInfo;
+
+  export native function canOpenLink(link: string): boolean;
+
+  export native function getAllPreinstalledApplicationInfoNative(): Array<PreinstalledApplicationInfo>;
+
+  export native function getAllBundleInfoByDeveloperId(developerId: string): Array<BundleInfo>;
+
+  export native function switchUninstallState(bundleName: string, state: boolean): void;
+
+  export native function getSignatureInfo(uid: number): SignatureInfo;
+
+  export native function getAllAppCloneBundleInfoNative(bundleName: string,
+    bundleFlags: number, userId: number): Array<BundleInfo>;
+  
   function isApplicationEnabledSync(bundleName: string): boolean {
     return bundleManager.isApplicationEnabledNative(bundleName, 0, true);
   }
@@ -316,6 +333,11 @@ namespace bundleManager {
 
   function getPermissionDefSync(permissionName: string): PermissionDef {
     return bundleManager.getPermissionDefNative(permissionName, true);
+  }
+  
+  function getAppProvisionInfoSync(bundleName: string, userId?: number): AppProvisionInfo {
+    let userIdInfo: number = userId ?? -500;
+    return bundleManager.getAppProvisionInfoNative(bundleName, userIdInfo, true);
   }
 
   function getBundleInfoForSelf(bundleFlags: number, callback: AsyncCallback<BundleInfo, void>):void {
@@ -1266,6 +1288,93 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+  
+  function getAppProvisionInfo(bundleName: string, userId?: number): Promise<AppProvisionInfo> {
+    let p = new Promise<AppProvisionInfo>((resolve: (appProvisionInfo: AppProvisionInfo)
+      => void, reject: (error: Error) => void) => {
+      let userIdInfo: number = userId ?? -500;
+      let execFun = (): AppProvisionInfo => {
+        return bundleManager.getAppProvisionInfoNative(bundleName, userIdInfo, false);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let appProvisionInfo: AppProvisionInfo = e as AppProvisionInfo;
+        resolve(appProvisionInfo);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAppProvisionInfo(bundleName: string, userId: number, callback: AsyncCallback<AppProvisionInfo>): void {
+    let execFun = (): AppProvisionInfo => {
+      return bundleManager.getAppProvisionInfoNative(bundleName, userId, false);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let appProvisionInfo: AppProvisionInfo = e as AppProvisionInfo;
+      let r = new BusinessError();
+      callback(r, appProvisionInfo);
+    }, (err: Error): void => {
+      let appProvisionInfo = new AppProvisionInfoInner;
+      callback(err as BusinessError, appProvisionInfo);
+    });
+  }
+
+  function getAppProvisionInfo(bundleName: string, callback: AsyncCallback<AppProvisionInfo>): void {
+    let execFun = (): AppProvisionInfo => {
+      return bundleManager.getAppProvisionInfoNative(bundleName, -500, false);
+    };
+    let p1 = taskpool.execute(execFun);
+    p1.then((e: NullishType) => {
+      let appProvisionInfo: AppProvisionInfo = e as AppProvisionInfo;
+      let r = new BusinessError();
+      callback(r, appProvisionInfo);
+    }, (err: Error): void => {
+      let appProvisionInfo = new AppProvisionInfoInner;
+      callback(err as BusinessError, appProvisionInfo);
+    });
+  }
+
+  function getAllPreinstalledApplicationInfo(): Promise<Array<PreinstalledApplicationInfo>> {
+    let p = new Promise<Array<PreinstalledApplicationInfo>>((resolve:
+      (applicationInfo: Array<PreinstalledApplicationInfo>) => void, reject: (error: Error) => void) => {
+      let execFun = (): Array<PreinstalledApplicationInfo> => {
+        return bundleManager.getAllPreinstalledApplicationInfoNative();
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let applicationInfo: Array<PreinstalledApplicationInfo> = e as Array<PreinstalledApplicationInfo>;
+        resolve(applicationInfo);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAllAppCloneBundleInfo(bundleName: string, bundleFlags:
+    number, userId?: number): Promise<Array<BundleInfo>> {
+    let p = new Promise<Array<BundleInfo>>((resolve: (bundleInfos: Array<BundleInfo>)
+      => void, reject: (error: Error) => void) => {
+      let userIdInfo: number = userId ?? -2;
+      let execFun = (): Array<BundleInfo> => {
+        return bundleManager.getAllAppCloneBundleInfoNative(bundleName, bundleFlags, userIdInfo);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
+        resolve(resultBundleInfos);
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

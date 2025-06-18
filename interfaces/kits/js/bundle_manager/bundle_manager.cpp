@@ -44,14 +44,11 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* IS_ENABLE = "isEnable";
-constexpr const char* APP_FLAGS = "appFlags";
 constexpr const char* PROFILE_TYPE = "profileType";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* VERIFY_ABC = "VerifyAbc";
 constexpr const char* DELETE_ABC = "DeleteAbc";
 constexpr const char* ADDITIONAL_INFO = "additionalInfo";
-constexpr const char* LINK = "link";
-constexpr const char* DEVELOPER_ID = "developerId";
 constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
 constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
 constexpr const char* ICON_ID = "iconId";
@@ -65,17 +62,11 @@ const std::string GET_ALL_SHARED_BUNDLE_INFO = "GetAllSharedBundleInfo";
 const std::string GET_SHARED_BUNDLE_INFO = "GetSharedBundleInfo";
 const std::string GET_EXT_RESOURCE = "GetExtResource";
 const std::string DISABLE_DYNAMIC_ICON = "DisableDynamicIcon";
-const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
 const std::string GET_JSON_PROFILE = "GetJsonProfile";
 const std::string GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
 const std::string RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
-const std::string CAN_OPEN_LINK = "CanOpenLink";
-const std::string GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
-const std::string GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
 const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
-const std::string SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
-const std::string GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";
 const std::string GET_ALL_PLUGIN_INFO = "GetAllPluginInfo";
 const std::string MIGRATE_DATA = "MigrateData";
 constexpr int32_t ENUM_ONE = 1;
@@ -4430,18 +4421,6 @@ void CreateProfileTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "INTENT_PROFILE", nIntentProfile));
 }
 
-ErrCode InnerGetAppProvisionInfo(
-    const std::string &bundleName, int32_t userId, AppProvisionInfo &appProvisionInfo)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = iBundleMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo);
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void GetAppProvisionInfoExec(napi_env env, void *data)
 {
     AppProvisionInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<AppProvisionInfoCallbackInfo *>(data);
@@ -4450,7 +4429,7 @@ void GetAppProvisionInfoExec(napi_env env, void *data)
         return;
     }
     if (asyncCallbackInfo->err == NO_ERROR) {
-        asyncCallbackInfo->err = InnerGetAppProvisionInfo(
+        asyncCallbackInfo->err = BundleManagerHelper::InnerGetAppProvisionInfo(
             asyncCallbackInfo->bundleName, asyncCallbackInfo->userId, asyncCallbackInfo->appProvisionInfo);
     }
 }
@@ -4989,18 +4968,6 @@ void GetAllPreinstalledApplicationInfosComplete(napi_env env, napi_status status
         env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
-static ErrCode InnerGetAllPreinstalledApplicationInfos(
-    std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("IBundleMgr is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = iBundleMgr->GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void GetAllPreinstalledApplicationInfosExec(napi_env env, void *data)
 {
     PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
@@ -5009,7 +4976,8 @@ void GetAllPreinstalledApplicationInfosExec(napi_env env, void *data)
         APP_LOGE("AsyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerGetAllPreinstalledApplicationInfos(asyncCallbackInfo->preinstalledApplicationInfos);
+    asyncCallbackInfo->err =
+        BundleManagerHelper::InnerGetAllPreinstalledApplicationInfos(asyncCallbackInfo->preinstalledApplicationInfos);
 }
 
 napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info info)
@@ -5275,46 +5243,6 @@ napi_value GetAppCloneBundleInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerGetAllAppCloneBundleInfo(const std::string &bundleName, int32_t bundleFlags,
-    int32_t userId, std::vector<BundleInfo> &bundleInfos)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    BundleInfo bundleInfoMain;
-    ErrCode ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, 0, bundleInfoMain, userId);
-    APP_LOGD("GetMainBundleInfo appIndex = 0, ret=%{public}d", ret);
-    if (ret == ERR_OK) {
-        bundleInfos.emplace_back(bundleInfoMain);
-    }
-    if (ret != ERR_OK && ret != ERR_BUNDLE_MANAGER_APPLICATION_DISABLED &&
-        ret != ERR_BUNDLE_MANAGER_BUNDLE_DISABLED) {
-        return CommonFunc::ConvertErrCode(ret);
-    }
-    // handle clone apps
-    std::vector<int32_t> appIndexes;
-    ErrCode getCloneIndexesRet = iBundleMgr->GetCloneAppIndexes(bundleName, appIndexes, userId);
-    if (getCloneIndexesRet != ERR_OK) {
-        if (ret == ERR_OK) {
-            return SUCCESS;
-        }
-        return CommonFunc::ConvertErrCode(ret);
-    }
-    for (int32_t appIndex : appIndexes) {
-        BundleInfo bundleInfo;
-        ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, appIndex, bundleInfo, userId);
-        if (ret == ERR_OK) {
-            bundleInfos.emplace_back(bundleInfo);
-        }
-    }
-    if (bundleInfos.empty()) {
-        return ERROR_BUNDLE_IS_DISABLED;
-    }
-    return SUCCESS;
-}
-
 void GetAllAppCloneBundleInfoExec(napi_env env, void *data)
 {
     CloneAppBundleInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<CloneAppBundleInfosCallbackInfo *>(data);
@@ -5326,9 +5254,8 @@ void GetAllAppCloneBundleInfoExec(napi_env env, void *data)
         asyncCallbackInfo->bundleName.c_str(),
         asyncCallbackInfo->bundleFlags,
         asyncCallbackInfo->userId);
-    asyncCallbackInfo->err =
-        InnerGetAllAppCloneBundleInfo(asyncCallbackInfo->bundleName, asyncCallbackInfo->bundleFlags,
-            asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfos);
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetAllAppCloneBundleInfo(asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->bundleFlags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfos);
 }
 
 static void CloneAppBundleInfos(
