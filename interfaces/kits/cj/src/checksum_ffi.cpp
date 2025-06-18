@@ -24,10 +24,10 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 struct CjCheckSumEntity {
-    int64_t Crc32(int64_t crc, uint8_t* buf, int64_t len);
+    uint64_t Crc32(uint64_t crc, uint8_t* buf, uint64_t len);
 };
 
-int64_t CjCheckSumEntity::Crc32(int64_t crc, uint8_t* buf, int64_t len)
+uint64_t CjCheckSumEntity::Crc32(uint64_t crc, uint8_t* buf, uint64_t len)
 {
     return crc32(static_cast<uLong>(crc), reinterpret_cast<Bytef*>(buf), static_cast<uInt>(len));
 }
@@ -43,8 +43,8 @@ FFI_EXPORT void FfiBundleManagerChecksumInstDestroy(void* ffiInst)
     delete static_cast<CjCheckSumEntity*>(ffiInst);
 }
 
-FFI_EXPORT int64_t FfiBundleManagerChecksumCrc32(
-    void* ffiInst, int64_t crc, uint8_t* buf, int64_t len, int32_t* errCode)
+FFI_EXPORT uint64_t FfiBundleManagerChecksumCrc32(
+    void* ffiInst, uint64_t crc, uint8_t* buf, uint64_t len, int32_t* errCode)
 {
     *errCode = 0;
     if (ffiInst == nullptr || buf == nullptr) {

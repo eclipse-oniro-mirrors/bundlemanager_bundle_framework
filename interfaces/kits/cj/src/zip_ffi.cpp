@@ -231,25 +231,25 @@ void CjZipEntity::InitialZStream(CZStream* cStrm)
         zs->next_in = reinterpret_cast<Bytef*>(cStrm->nextIn);
     }
     if (cStrm->hasAvailableIn) {
-        zs->avail_in = cStrm->availableIn;
+        zs->avail_in = static_cast<uInt>(cStrm->availableIn);
     }
     if (cStrm->hasTotalIn) {
-        zs->total_in = cStrm->totalIn;
+        zs->total_in = static_cast<uLong>(cStrm->totalIn);
     }
     if (cStrm->hasNextOut) {
         zs->next_out = reinterpret_cast<Bytef*>(cStrm->nextOut);
     }
     if (cStrm->hasAvailableOut) {
-        zs->avail_out = cStrm->availableOut;
+        zs->avail_out = static_cast<uInt>(cStrm->availableOut);
     }
     if (cStrm->hasTotalOut) {
-        zs->total_out = cStrm->totalOut;
+        zs->total_out = static_cast<uLong>(cStrm->totalOut);
     }
     if (cStrm->hasDataType) {
         zs->data_type = cStrm->dataType;
     }
     if (cStrm->hasAdler) {
-        zs->adler = cStrm->adler;
+        zs->adler = static_cast<uLong>(cStrm->adler);
     }
 }
 
@@ -258,30 +258,7 @@ void CjZipEntity::SetZStreamValue(CZStream* cStrm)
     if (!zs) {
         zs = std::make_unique<z_stream>();
     }
-    if (cStrm->hasNextIn) {
-        zs->next_in = cStrm->nextIn;
-    }
-    if (cStrm->hasAvailableIn) {
-        zs->avail_in = cStrm->availableIn;
-    }
-    if (cStrm->hasTotalIn) {
-        zs->total_in = cStrm->totalIn;
-    }
-    if (cStrm->hasNextOut) {
-        zs->next_out = cStrm->nextOut;
-    }
-    if (cStrm->hasAvailableOut) {
-        zs->avail_out = cStrm->availableOut;
-    }
-    if (cStrm->hasTotalOut) {
-        zs->total_out = cStrm->totalOut;
-    }
-    if (cStrm->hasDataType) {
-        zs->data_type = cStrm->dataType;
-    }
-    if (cStrm->hasAdler) {
-        zs->adler = cStrm->adler;
-    }
+    InitialZStream(cStrm);
 }
 
 ErrCode GetOriginalSize(PlatformFile zipFd, int64_t& originalSize)
