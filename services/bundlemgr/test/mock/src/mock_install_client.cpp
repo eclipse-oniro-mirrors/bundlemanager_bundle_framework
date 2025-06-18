@@ -171,6 +171,11 @@ ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bun
     return 0;
 }
 
+ErrCode InstalldClient::SetArkStartupCacheApl(const std::string &dir)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
 {
     return 0;

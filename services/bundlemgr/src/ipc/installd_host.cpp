@@ -233,6 +233,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::MIGRATE_DATA):
             result = HandleMigrateData(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CRETAE_SYSTEM_OPTIMIZE):
+            result = this->HandleSetArkStartupCacheApl(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::LOAD_INSTALLS):
             result = HandleLoadInstalls(data, reply);
             break;
@@ -611,6 +614,14 @@ bool InstalldHost::HandleSetDirApl(MessageParcel &data, MessageParcel &reply)
     bool isPreInstallApp = data.ReadBool();
     bool debug = data.ReadBool();
     ErrCode result = SetDirApl(dataDir, bundleName, apl, isPreInstallApp, debug);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleSetArkStartupCacheApl(MessageParcel &data, MessageParcel &reply)
+{
+    std::string dataDir = Str16ToStr8(data.ReadString16());
+    ErrCode result = SetArkStartupCacheApl(dataDir);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

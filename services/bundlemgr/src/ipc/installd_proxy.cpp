@@ -448,6 +448,17 @@ ErrCode InstalldProxy::SetDirApl(const std::string &dir, const std::string &bund
     return TransactInstalldCmd(InstalldInterfaceCode::SET_DIR_APL, data, reply, option);
 }
 
+ErrCode InstalldProxy::SetArkStartupCacheApl(const std::string &dir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::CRETAE_SYSTEM_OPTIMIZE, data, reply, option);
+}
+
 ErrCode InstalldProxy::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
 {
     MessageParcel data;

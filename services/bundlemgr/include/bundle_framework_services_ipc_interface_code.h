@@ -85,7 +85,8 @@ enum class InstalldInterfaceCode : uint32_t {
     MIGRATE_DATA = 57,
     LOAD_INSTALLS = 58,
     BATCH_GET_BUNDLE_STATS = 59,
-    CLEAR_DIR = 60
+    CLEAR_DIR = 60,
+    CRETAE_SYSTEM_OPTIMIZE = 61,
 };
 
 } // namespace AppExecFwk

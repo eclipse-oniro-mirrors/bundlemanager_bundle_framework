@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <fcntl.h>
+#include <fstream>
 #include <sys/stat.h>
 #include <sstream>
 
@@ -911,6 +912,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         if (res != ERR_OK) {
             LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean shader fail %{public}d", bundleName_.c_str(), res);
         }
+        // clean ark startup cache for bundle
+        CleanArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, bundleName_, userId_);
     }
 
     auto it = newInfos.begin();
@@ -1747,6 +1750,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (DeleteEl1ShaderCache(oldInfo, bundleName, userId_) != ERR_OK) {
         APP_LOGW("remove el1 shader cache dir failed for %{public}s", bundleName.c_str());
     }
+
+    // delete ark startup cache for bundle
+    DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, bundleName, userId_);
 
     if (isMultiUser) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
@@ -3215,6 +3221,20 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     if (userId_ == Constants::START_USERID) {
         CreateCloudShader(info.GetBundleName(), createDirParam.uid, createDirParam.gid);
     }
+    
+    // create ark startup cache
+    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
+        info.GetBundleName() + ServiceConstants::ARK_STARTUP_CACHE_DIR;
+    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(userId_));
+    ArkStartupCache ceateArk;
+    ceateArk.bundleName = info.GetBundleName();
+    ceateArk.bundleType = info.GetApplicationBundleType();
+    ceateArk.cacheDir = el1ArkStartupCachePath;
+    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
+    ceateArk.uid = createDirParam.uid;
+    ceateArk.gid = createDirParam.gid;
+    CreateArkStartupCache(ceateArk);
 
     // create asan log directory when asanEnabled is true
     // In update condition, delete asan log directory when asanEnabled is false if directory is exist
@@ -6626,6 +6646,62 @@ ErrCode BaseBundleInstaller::DeleteEl1ShaderCache(const InnerBundleInfo &oldInfo
     std::vector<int32_t> cloneAppIndexes = dataMgr_->GetCloneAppIndexesByInnerBundleInfo(oldInfo, userId);
     allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
     return DeleteBundleClonesShaderCache(allAppIndexes, bundleName, userId);
+}
+
+ErrCode BaseBundleInstaller::CreateArkStartupCache(const ArkStartupCache &createArk) const
+{
+    if (createArk.bundleType != BundleType::APP && createArk.bundleType != BundleType::ATOMIC_SERVICE) {
+        LOG_W(BMS_TAG_INSTALLER, "%{public}s is not app or atomic service, not allow create ark startup cache dir",
+            createArk.bundleName.c_str());
+        return ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_APP_OR_ATOMIC;
+    }
+
+    std::unordered_set<std::string> startupBundles =
+        BundleUtil::ParseAppStartupBundleNames(ServiceConstants::APP_STARTUP_CACHE_CONG);
+    if (startupBundles.find(createArk.bundleName) == startupBundles.end()) {
+        LOG_W(BMS_TAG_INSTALLER, "%{public}s is not in startupBundles", createArk.bundleName.c_str());
+        return ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST;
+    }
+    
+    bool isDirExist = false;
+    ErrCode result = InstalldClient::GetInstance()->Mkdir(createArk.cacheDir,
+        createArk.mode, createArk.uid, createArk.gid);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "-n: %{public}s, Mkdir %{public}s failed, error:%{public}d",
+            createArk.bundleName.c_str(), createArk.cacheDir.c_str(), errno);
+        return result;
+    }
+    return InstalldClient::GetInstance()->SetArkStartupCacheApl(createArk.cacheDir);
+}
+
+ErrCode BaseBundleInstaller::CleanArkStartupCache(const std::string &cacheDir,
+    const std::string &bundleName, int32_t userId) const
+{
+    std::string el1ArkStartupCachePath = cacheDir + bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
+    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(userId));
+    ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(el1ArkStartupCachePath);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "%{public}s clean ark startup cache fail, errno:%{public}d",
+            bundleName.c_str(), errno);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::DeleteArkStartupCache(const std::string &cacheDir,
+    const std::string &bundleName, int32_t userId) const
+{
+    std::string el1ArkStartupCachePath = cacheDir + bundleName;
+    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(userId));
+    ErrCode ret = InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "%{public}s clean ark startup cache fail, errno:%{public}d",
+            bundleName.c_str(), errno);
+        return ret;
+    }
+    return ERR_OK;
 }
 
 std::string BaseBundleInstaller::GetCheckResultMsg() const

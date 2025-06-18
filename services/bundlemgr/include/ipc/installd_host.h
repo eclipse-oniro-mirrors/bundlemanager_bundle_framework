@@ -160,6 +160,14 @@ private:
     bool HandleSetDirApl(MessageParcel &data, MessageParcel &reply);
 
     /**
+     * @brief Handles the set dir apl function called from a IInstalld proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleSetArkStartupCacheApl(MessageParcel &data, MessageParcel &reply);
+
+    /**
      * @brief Handles the all GetBundleCachePath function.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;

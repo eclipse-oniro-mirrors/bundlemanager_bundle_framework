@@ -167,6 +167,13 @@ public:
     virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         bool isPreInstallApp, bool debug) override;
 
+    /**
+     * @brief Set dir apl.
+     * @param dir Indicates the data dir.
+     * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
+     */
+    virtual ErrCode SetArkStartupCacheApl(const std::string &dir) override;
+
     std::string GetAppDataPath(const std::string &bundleName, const std::string &el,
         const int32_t userId, const int32_t appIndex);
 

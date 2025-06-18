@@ -696,6 +696,8 @@ private:
     void ProcessUpdatePermissions();
     bool IsPermissionsUpdated();
     bool SaveUpdatePermissionsFlag();
+    bool CleanAllBundleEl1ArkStartupCacheLocal();
+    bool ProcessCheckSystemOptimizeDir();
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
     // Used to notify bundle scan status

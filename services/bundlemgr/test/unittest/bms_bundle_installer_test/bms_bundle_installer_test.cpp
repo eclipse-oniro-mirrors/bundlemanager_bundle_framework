@@ -22,9 +22,11 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
+#include <filesystem> 
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <vector>
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_manager_host_impl.h"
@@ -153,6 +155,8 @@ const std::vector<std::string> BUNDLE_DATA_SUB_DIRS = {
     "/preferences",
     "/haps"
 };
+const std::string BUNDLE_ARK_STARTUP_CACHE1 = "/data/app/el1/100/system_optimize/com.test/ark_startup_cache";
+const std::string BUNDLE_ARK_STARTUP_CACHE2 = "/data/app/el1/100/system_optimize/com.test2/ark_startup_cache";
 const int32_t ADD_NEW_USERID = 200;
 const int32_t TEST_APP_INDEX1 = 1;
 const int32_t TEST_APP_INDEX2 = 2;
@@ -264,6 +268,12 @@ public:
     void ResetDataMgr();
     bool CheckShaderCachePathExist(const std::string &bundleName,
         const int32_t appIndex, const int32_t &userId) const;
+    void WriteToConfigFile(const std::string& filename, 
+        const std::vector<std::string>& newEntries) const;
+    ErrCode MkdirIfNotExist(const std::string &dir) const;
+    void GetExistedEntries(const std::string &filename, 
+        std::set<std::string> &existingEntries,
+        std::vector<std::string> &allLines) const;
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
@@ -634,6 +644,78 @@ bool BmsBundleInstallerTest::CheckShaderCachePathExist(const std::string &bundle
             newShaderCachePath.c_str(), errno);
     }
     return isExist;
+}
+
+void BmsBundleInstallerTest::GetExistedEntries(const std::string &filename, 
+    std::set<std::string> &existingEntries, std::vector<std::string> &allLines) const
+{
+    bool fileExists = std::filesystem::exists(filename);
+    std::ifstream inFile(filename);
+    if (inFile.is_open()) {
+        std::string line;
+        while (std::getline(inFile, line)) {
+            allLines.push_back(line);
+            if (line.empty() || line[0] == '#') {
+                continue;
+            }
+            size_t endPos = line.find_first_of(":# \t");
+            if (endPos == std::string::npos) {
+                endPos = line.length();
+            }
+            
+            std::string bundleName = line.substr(0, endPos);
+            if (!bundleName.empty()) {
+                existingEntries.insert(bundleName);
+            }
+        }
+        inFile.close();
+    }
+}
+
+void BmsBundleInstallerTest::WriteToConfigFile(const std::string &filename, 
+    const std::vector<std::string> &newEntries) const
+{
+    bool fileExists = std::filesystem::exists(filename);
+    std::set<std::string> existingBundleNames;
+    std::vector<std::string> allLines;
+    if (fileExists) {
+        GetExistedEntries(filename, existingBundleNames, allLines);
+    }
+    std::ofstream outFile(filename);
+    if (!outFile.is_open()) {
+        LOG_E(BMS_TAG_INSTALLD, "%{public}s can not open, errno: %{public}d",
+            filename.c_str(), errno);
+        return;
+    }
+    
+    for (const auto& line : allLines) {
+        outFile << line << "\n";
+    }
+    for (const auto& entry : newEntries) {
+        std::string bundleName;
+        size_t endPos = entry.find_first_of(":# \t");
+        if (endPos == std::string::npos) {
+            bundleName = entry;
+        } else {
+            bundleName = entry.substr(0, endPos);
+        }
+        if (existingBundleNames.find(bundleName) == existingBundleNames.end()) {
+            outFile << entry << "\n";
+            existingBundleNames.insert(bundleName);
+        }
+    }
+    outFile.close();
+}
+
+ErrCode BmsBundleInstallerTest::MkdirIfNotExist(const std::string &dir) const
+{
+    bool isDirExist = false;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExist);
+    if (result == ERR_OK && isDirExist) {
+        LOG_I(BMS_TAG_INSTALLD, "%{public}s already existed", dir.c_str());
+        return ERR_OK;
+    }
+    return InstalldClient::GetInstance()->CreateBundleDir(dir);
 }
 
 /**
@@ -11828,6 +11910,86 @@ HWTEST_F(BmsBundleInstallerTest, GetConfirmUserId_0002, Function | SmallTest | L
     infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
     auto res = installer.GetConfirmUserId(TEST_U100, infos);
     EXPECT_EQ(res, TEST_U1);
+}
+
+/**
+ * @tc.number: ParseAppStartupBundleNames_0100
+ * @tc.name: test ParseAppStartupBundleNames
+ * @tc.desc: 1.parse the conf file
+ */
+HWTEST_F(BmsBundleInstallerTest, ParseAppStartupBundleNames_0100, Function | SmallTest | Level0)
+{
+    std::string dir = "/data/test/bms_insatller_test";
+    BaseBundleInstaller installer;
+    auto ret2 = MkdirIfNotExist(dir);
+    EXPECT_EQ(ret2, ERR_OK);
+
+    BundleUtil bundleUtil;
+    std::string confPath = "/system/etc/ark/test.conf";
+    std::unordered_set<std::string> res = bundleUtil.ParseAppStartupBundleNames(confPath);
+    EXPECT_TRUE(res.empty());
+
+    std::vector<std::string> entries = {
+        "",
+        "#",
+        " # ",
+        "cn.cnr.cnrnetohos:aot # ",
+        "com.hmos.soundrecorder:aot # ",
+        "com.hmos.finddevice:aot # ",
+        "com.hmos.photos:aot # ",
+        "com.cmbchina.harmony # ",
+        "com.bankcomm.app.maidanba # ",
+        "com.gotokeep.hm.keep # Keep"
+    };
+
+    WriteToConfigFile(ServiceConstants::APP_STARTUP_CACHE_CONG, entries);
+    res = bundleUtil.ParseAppStartupBundleNames(ServiceConstants::APP_STARTUP_CACHE_CONG);
+    EXPECT_FALSE(res.empty());
+}
+
+/**
+ * @tc.number: CreateArkStartupCache_0010
+ * @tc.name: test CreateArkStartupCache
+ * @tc.desc: 1.Test the CreateArkStartupCache of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0010, Function | SmallTest | Level0)
+{
+    ArkStartupCache ceateArk;
+    ceateArk.bundleName = "";
+    ceateArk.bundleType = BundleType::SHARED;
+    ceateArk.cacheDir = "";
+    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
+    ceateArk.uid = 0;
+    ceateArk.gid = 0;
+    // test bundletype is not APP or ATOMIC
+    BaseBundleInstaller installer1;
+    ErrCode ret = installer1.CreateArkStartupCache(ceateArk);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_APP_OR_ATOMIC);
+}
+
+/**
+ * @tc.number: CreateArkStartupCache_0020
+ * @tc.name: test CreateArkStartupCache
+ * @tc.desc: 1.Test the CreateArkStartupCache of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0020, Function | SmallTest | Level0)
+{
+    ArkStartupCache ceateArk;
+    ceateArk.bundleName = "com.test";
+    ceateArk.bundleType = BundleType::APP;
+    ceateArk.cacheDir = "";
+    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
+    ceateArk.uid = 0;
+    ceateArk.gid = 0;
+
+    // test bundlename is not in white list, bundleType is APP or ATOMIC
+    BaseBundleInstaller installer2;
+    ErrCode ret = installer2.CreateArkStartupCache(ceateArk);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST);
+
+    ceateArk.bundleType = BundleType::ATOMIC_SERVICE;
+    ret = installer2.CreateArkStartupCache(ceateArk);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST);
 }
 
 /**

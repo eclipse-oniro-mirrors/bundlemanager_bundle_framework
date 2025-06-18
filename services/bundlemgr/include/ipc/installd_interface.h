@@ -245,6 +245,17 @@ public:
     {
         return ERR_OK;
     }
+
+        /**
+     * @brief Set dir apl.
+     * @param dir Indicates the data dir.
+     * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
+     */
+    virtual ErrCode SetArkStartupCacheApl(const std::string &dir)
+    {
+        return ERR_OK;
+    }
+
     /**
      * @brief Get all cache file path.
      * @param dir Indicates the data dir.

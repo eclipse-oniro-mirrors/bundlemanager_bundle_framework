@@ -52,6 +52,7 @@
 #include "installd/installd_permission_mgr.h"
 #include "parameters.h"
 #include "inner_bundle_clone_common.h"
+#include "policycoreutils.h"
 #include "storage_acl.h"
 
 namespace OHOS {
@@ -1167,11 +1168,11 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::CleanBundleDataDir start");
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        LOG_E(BMS_TAG_INSTALLD, "CleanBundleDataDir %{public}s failed for permission denied", dataDir.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (dataDir.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function CleanBundleDataDir with invalid param");
+        LOG_E(BMS_TAG_INSTALLD, "CleanBundleDataDir failed with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
@@ -1441,6 +1442,29 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
 #endif // WITH_SELINUX
 }
 
+ErrCode InstalldHostImpl::SetArkStartupCacheApl(const std::string &dir)
+{
+#ifdef WITH_SELINUX
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "Mkdir %{public}s failed for permission denied", dir.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (dir.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Mkdir failed for empty param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    int ret = Restorecon(dir.c_str());
+    if (ret != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Restorecon path: %{public}s failed, errcode:%{public}d",
+            dir.c_str(), ret);
+        return ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED;
+    }
+    return ret;
+#else
+    return ERR_OK;
+#endif // WITH_SELINUX
+}
+
 ErrCode InstalldHostImpl::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::GetBundleCachePath start");
@@ -1525,12 +1549,12 @@ ErrCode InstalldHostImpl::Mkdir(
     const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        LOG_E(BMS_TAG_INSTALLD, "Mkdir %{public}s failed for permission denied", dir.c_str());
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     LOG_D(BMS_TAG_INSTALLD, "Mkdir start %{public}s", dir.c_str());
     if (dir.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function Mkdir with invalid param");
+        LOG_E(BMS_TAG_INSTALLD, "Mkdir %{public}s failed for invalid param", dir.c_str());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
@@ -2286,6 +2310,15 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
                 LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d",
                     el1ShaderCachePath.c_str(), errno);
                 return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+            }
+            // remove ark_startup_cache/bundlename
+            std::string arkStartupCacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
+                bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
+            arkStartupCacheDir = arkStartupCacheDir.replace(arkStartupCacheDir.find("%"), 1,
+                std::to_string(userId));
+            if (!InstalldOperator::DeleteDir(arkStartupCacheDir)) {
+                LOG_W(BMS_TAG_INSTALLD, "remove dir %{public}s failed, errno:%{public}d",
+                    arkStartupCacheDir.c_str(), errno);
             }
         }
         if (el == ServiceConstants::BUNDLE_EL[1]) {
