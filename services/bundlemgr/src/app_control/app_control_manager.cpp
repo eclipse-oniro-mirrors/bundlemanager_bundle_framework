@@ -516,7 +516,7 @@ bool AppControlManager::CheckCanDispose(const std::string &appId, int32_t userId
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return false;
     }
     for (const auto &bundleName : noControllingList_) {
         BundleInfo bundleInfo;

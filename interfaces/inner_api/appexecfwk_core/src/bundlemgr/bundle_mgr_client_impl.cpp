@@ -85,7 +85,7 @@ bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const Bun
     std::shared_lock<std::shared_mutex> lock(mutex_);
     if (bundleMgr_ == nullptr) {
         APP_LOGE("bundleMgr_ nullptr");
-        return ERR_APPEXECFWK_NULL_PTR;
+        return false;
     }
     return bundleMgr_->GetBundleInfo(bundleName, flag, bundleInfo, userId);
 }
@@ -154,7 +154,7 @@ bool BundleMgrClientImpl::GetHapModuleInfo(const std::string &bundleName, const 
     std::shared_lock<std::shared_mutex> lock(mutex_);
     if (bundleMgr_ == nullptr) {
         APP_LOGE("bundleMgr_ nullptr");
-        return ERR_APPEXECFWK_NULL_PTR;
+        return false;
     }
     return bundleMgr_->GetHapModuleInfo(info, hapModuleInfo);
 }

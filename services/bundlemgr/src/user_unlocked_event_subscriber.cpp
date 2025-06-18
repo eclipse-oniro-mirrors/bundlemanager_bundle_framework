@@ -451,13 +451,10 @@ bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_
         APP_LOGD("path: %{private}s is exist", bundleCloudDir.c_str());
         return false;
     }
-    if (!InstalldClient::GetInstance()->Mkdir(bundleCloudDir, S_IRWXU | S_IRWXG | S_ISGID,
-        bundleInfo.uid, ServiceConstants::DFS_GID)) {
-        static std::once_flag cloudOnce;
-        std::call_once(cloudOnce, [bundleInfo]() {
-            APP_LOGW("CreateCloudDir failed for bundle %{private}s errno:%{public}d",
-                     bundleInfo.name.c_str(), errno);
-        });
+    if (InstalldClient::GetInstance()->Mkdir(bundleCloudDir, S_IRWXU | S_IRWXG | S_ISGID,
+        bundleInfo.uid, ServiceConstants::DFS_GID) != ERR_OK) {
+        APP_LOGW("CreateCloudDir failed for bundle %{private}s errno:%{public}d",
+            bundleInfo.name.c_str(), errno);
     }
     return true;
 }
