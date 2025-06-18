@@ -32,19 +32,34 @@ BundleMgrExtHostImpl::~BundleMgrExtHostImpl()
 {
 }
 
-ErrCode BundleMgrExtHostImpl::GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames)
+int32_t BundleMgrExtHostImpl::CallbackEnter(uint32_t code)
+{
+    BundleMemoryGuard::SetBundleMemoryGuard();
+    return ERR_NONE;
+}
+
+int32_t BundleMgrExtHostImpl::CallbackExit(uint32_t code, int32_t result)
+{
+    BundleMemoryGuard::ClearBundleMemoryGuard();
+    return ERR_NONE;
+}
+
+ErrCode BundleMgrExtHostImpl::GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames,
+    int32_t &funcResult)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_EXT, "start uid:%{public}d", uid);
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        return ERR_OK;
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode ret = bmsExtensionDataMgr.GetBundleNamesForUidExt(uid, bundleNames);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_EXT, "uid:%{public}d err:%{public}d", uid, ret);
     }
-    return ret;
+    funcResult = ret;
+    return ERR_OK;
 }
 } // AppExecFwk
 } // OHOS
