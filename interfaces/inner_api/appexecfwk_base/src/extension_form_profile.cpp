@@ -36,9 +36,6 @@ const int8_t DIMENSION_2_3 = 8;
 #ifndef FORM_DIMENSION_3_3
 const int8_t DIMENSION_3_3 = 9;
 #endif
-#ifndef FORM_DIMENSION_3_4
-const int8_t DIMENSION_3_4 = 10;
-#endif
 constexpr const char* FORM_COLOR_MODE_MAP_KEY[] = {
     "auto",
     "dark",
@@ -80,8 +77,7 @@ const int32_t DIMENSION_MAP_VALUE[] = {
     6,
     7,
     8,
-    9,
-    10
+    9
 };
 constexpr const char* SHAPE_MAP_KEY[] = {
     "rect",
@@ -524,13 +520,6 @@ void supportFormDimension(std::set<int32_t> &supportDimensionSet, const Extensio
         #ifndef FORM_DIMENSION_3_3
             if (dimensionItem == DIMENSION_3_3) {
                 APP_LOGW("dimension invalid in wearable Device form %{public}d", dimensionItem);
-                continue;
-            }
-        #endif
-
-        #ifndef FORM_DIMENSION_3_4
-            if (dimensionItem == DIMENSION_3_4) {
-                APP_LOGW("dimension invalid in TV Device form %{public}d", dimensionItem);
                 continue;
             }
         #endif
