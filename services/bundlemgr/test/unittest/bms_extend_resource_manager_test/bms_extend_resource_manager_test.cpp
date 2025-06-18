@@ -1712,7 +1712,7 @@ HWTEST_F(BmsExtendResourceManagerTest, EnableDynamicIcon_0020, Function | SmallT
 
     ExtendResourceManagerHostImpl impl;
     auto errCode = impl.EnableDynamicIcon(THEME_BUNDLE_NAME, THEME_BUNDLE_NAME, THEME_TEST_USERID, 0);
-    EXPECT_EQ(errCode, ERR_OK);
+    EXPECT_EQ(errCode, ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED_DUE_TO_EXISTING_CUSTOM_THEMES);
 
     errCode = impl.DisableDynamicIcon(THEME_BUNDLE_NAME, THEME_TEST_USERID, 0);
     EXPECT_EQ(errCode, ERR_OK);
