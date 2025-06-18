@@ -1339,4 +1339,23 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7700, Function | Sma
     auto ret = hostImpl->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: InstalldHostImplTest_7800
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling SetArkStartupCacheApl of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7800, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+ 
+    auto ret = hostImpl->SetArkStartupCacheApl(TEST_STRING);
+#ifdef WITH_SELINUX
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+#else
+    EXPECT_EQ(ret, ERR_OK);
+#endif
+}
 } // OHOS

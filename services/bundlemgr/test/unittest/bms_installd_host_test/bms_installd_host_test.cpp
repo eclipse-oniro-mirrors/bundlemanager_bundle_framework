@@ -815,4 +815,18 @@ HWTEST_F(BmsInstalldHostTest, HandleLoadInstalls_0100, Function | SmallTest | Le
     bool res = installdHost.HandleLoadInstalls(data, reply);
     EXPECT_TRUE(res);
 }
+
+/**
+ * @tc.number: HandleSetArkStartupCacheApl_0100
+ * @tc.name: test HandleSetArkStartupCacheApl
+ * @tc.desc: 1.HandleSetArkStartupCacheApl test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleSetArkStartupCacheApl_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleSetArkStartupCacheApl(data, reply);
+    EXPECT_TRUE(res);
+}
 } // OHOS

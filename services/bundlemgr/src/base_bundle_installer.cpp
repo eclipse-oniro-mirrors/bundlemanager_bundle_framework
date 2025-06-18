@@ -6680,13 +6680,7 @@ ErrCode BaseBundleInstaller::CleanArkStartupCache(const std::string &cacheDir,
     std::string el1ArkStartupCachePath = cacheDir + bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
     el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
         std::to_string(userId));
-    ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(el1ArkStartupCachePath);
-    if (ret != ERR_OK) {
-        LOG_W(BMS_TAG_DEFAULT, "%{public}s clean ark startup cache fail, errno:%{public}d",
-            bundleName.c_str(), errno);
-        return ret;
-    }
-    return ERR_OK;
+    return InstalldClient::GetInstance()->CleanBundleDataDir(el1ArkStartupCachePath);
 }
 
 ErrCode BaseBundleInstaller::DeleteArkStartupCache(const std::string &cacheDir,
@@ -6695,13 +6689,7 @@ ErrCode BaseBundleInstaller::DeleteArkStartupCache(const std::string &cacheDir,
     std::string el1ArkStartupCachePath = cacheDir + bundleName;
     el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
         std::to_string(userId));
-    ErrCode ret = InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);
-    if (ret != ERR_OK) {
-        LOG_W(BMS_TAG_DEFAULT, "%{public}s clean ark startup cache fail, errno:%{public}d",
-            bundleName.c_str(), errno);
-        return ret;
-    }
-    return ERR_OK;
+    return InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);
 }
 
 std::string BaseBundleInstaller::GetCheckResultMsg() const

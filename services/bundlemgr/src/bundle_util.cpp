@@ -1236,14 +1236,13 @@ std::unordered_set<std::string> BundleUtil::ParseAppStartupBundleNames(const std
     
     std::string line;
     while (std::getline(file, line)) {
-        // Remove leading and trailing whitespace
-        line.erase(0, line.find_first_not_of(" \t"));
-        line.erase(line.find_last_not_of(" \t") + 1);
-        
         // Skip empty lines and comments
         if (line.empty() || line[0] == '#') {
             continue;
         }
+        // Remove leading and trailing whitespace
+        line.erase(0, line.find_first_not_of(" \t"));
+        line.erase(line.find_last_not_of(" \t") + 1);
         
         // Find the end of bundle name (before' ' or '#')
         size_t endPos = line.find_first_of("# \t");

@@ -456,7 +456,7 @@ ErrCode InstalldProxy::SetArkStartupCacheApl(const std::string &dir)
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(InstalldInterfaceCode::CRETAE_SYSTEM_OPTIMIZE, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::SET_ARK_STARTUP_CACHE_DIR_APL, data, reply, option);
 }
 
 ErrCode InstalldProxy::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)

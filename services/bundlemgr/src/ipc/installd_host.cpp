@@ -233,7 +233,7 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::MIGRATE_DATA):
             result = HandleMigrateData(data, reply);
             break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::CRETAE_SYSTEM_OPTIMIZE):
+        case static_cast<uint32_t>(InstalldInterfaceCode::SET_ARK_STARTUP_CACHE_DIR_APL):
             result = this->HandleSetArkStartupCacheApl(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::LOAD_INSTALLS):

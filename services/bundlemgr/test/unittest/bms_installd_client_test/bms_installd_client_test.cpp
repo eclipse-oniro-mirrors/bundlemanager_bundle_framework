@@ -1904,5 +1904,19 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_BatchGetBundleStats_0300, 
     auto ret = installClient_->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_SetArkStartupCacheApl_0100
+ * @tc.name: SetArkStartupCacheApl
+ * @tc.desc: Test whether SetArkStartupCacheApl is called normally.(dir is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetArkStartupCacheApl_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0200 start";
+    std::string dir = EMPTY_STRING;
+    ErrCode result = installClient_->SetArkStartupCacheApl(dir);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0200 end";
+}
 } // namespace AppExecFwk
 } // namespace OHOS
