@@ -12,18 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MEMORY_GUARD
-#define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MEMORY_GUARD
 
-namespace OHOS {
-namespace AppExecFwk {
-class BundleMemoryGuard final {
-public:
-    BundleMemoryGuard();
-    ~BundleMemoryGuard();
-    static void SetBundleMemoryGuard();
-    static void ClearBundleMemoryGuard();
-};
-} // AppExecFwk
-} // OHOS
-#endif // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MEMORY_GUARD
+option_stub_hooks on;
+
+interface OHOS.AppExecFwk.IBundleMgrExt {
+    [ipccode 0] void GetBundleNamesForUidExt([in] int uid, [out] String[] bundleNames, [out] int funcResult);
+}

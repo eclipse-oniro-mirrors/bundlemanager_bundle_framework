@@ -16,14 +16,19 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_BUNDLE_MGR_EXT_HOST_IMPL_H
 #define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_BUNDLE_MGR_EXT_HOST_IMPL_H
 
-#include "bundle_mgr_ext_host.h"
+#include "bundle_mgr_ext_stub.h"
+#include "bundle_memory_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class BundleMgrExtHostImpl : public OHOS::AppExecFwk::BundleMgrExtHost {
+class BundleMgrExtHostImpl : public OHOS::AppExecFwk::BundleMgrExtStub {
 public:
     BundleMgrExtHostImpl();
     virtual ~BundleMgrExtHostImpl();
+
+    int32_t CallbackEnter(uint32_t code) override;
+
+    int32_t CallbackExit(uint32_t code, int32_t result) override;
 
     /**
      * @brief Obtains the bundleNames associated with the given UID.
@@ -31,7 +36,8 @@ public:
      * @param bundleNames Indicates the bundleNames.
      * @return Returns ERR_OK if execute success; returns errCode otherwise.
      */
-    virtual ErrCode GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames) override;
+    ErrCode GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames,
+        int32_t &funcResult) override;
 };
 }
 }

@@ -1820,8 +1820,10 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetBundleNamesForUidExt_0001, Function | 
     BundleMgrExtHostImpl impl;
     int32_t uid = 111;
     std::vector<std::string> bundleNames;
-    ErrCode ret = impl.GetBundleNamesForUidExt(uid, bundleNames);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    ErrCode ret = impl.GetBundleNamesForUidExt(uid, bundleNames, funcResult);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,7 @@
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_ext_proxy.h"
-#include "bundle_mgr_ext_host.h"
+#include "bundle_mgr_ext_stub.h"
 #include "bundle_mgr_ext_host_impl.h"
 #include "bundle_mgr_ext_register.h"
 #include "bms_extension_data_mgr.h"
@@ -63,6 +63,23 @@ void BmsBundleMgrExtTest::SetUp()
 
 void BmsBundleMgrExtTest::TearDown()
 {}
+
+class MockBundleMgrExtStub : public BundleMgrExtStub {
+public:
+    int32_t CallbackEnter(uint32_t code) override
+    {
+        return 0;
+    }
+    int32_t CallbackExit(uint32_t code, int32_t result) override
+    {
+        return 0;
+    }
+    ErrCode GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames,
+        int32_t &funcResult) override
+    {
+        return ERR_OK;
+    }
+};
 
 sptr<BundleMgrProxy> BmsBundleMgrExtTest::GetBundleMgrProxy()
 {
@@ -114,31 +131,28 @@ HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtProxy_0100, Function | Smal
 
     int32_t uid = 111;
     std::vector<std::string> bundleNames;
-    ErrCode ret = bundleMgrExtProxy->GetBundleNamesForUidExt(uid, bundleNames);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto ret = bundleMgrExtProxy->GetBundleNamesForUidExt(uid, bundleNames, funcResult);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     EXPECT_EQ(bundleNames.empty(), true);
 }
 
 /**
- * @tc.number: GetBundleNamesForUidExtHost_0100
- * @tc.name: GetBundleNamesForUidExtHost_0100
+ * @tc.number: GetBundleNamesForUidExtStub_0100
+ * @tc.name: GetBundleNamesForUidExtStub_0100
  * @tc.desc: test GetBundleNamesForUidExt
  */
-HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtHost_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtStub_0100, Function | SmallTest | Level1)
 {
-    BundleMgrExtHost host;
+    MockBundleMgrExtStub stub;
     MessageParcel data;
     data.WriteInt32(111);
     MessageParcel reply;
-    ErrCode ret = host.HandleGetBundleNamesForUidExt(data, reply);
-    EXPECT_EQ(ret, ERR_OK);
 
     MessageOption option(MessageOption::TF_SYNC);
-    ret = host.OnRemoteRequest(0, data, reply, option);
-    EXPECT_EQ(ret, 7);
-
-    ret = host.OnRemoteRequest(999, data, reply, option);
-    EXPECT_NE(ret, 0);
+    ErrCode ret = stub.OnRemoteRequest(0, data, reply, option);
+    EXPECT_EQ(ret, TRANSACTION_ERR);
 }
 
 /**
