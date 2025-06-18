@@ -295,7 +295,7 @@ void BMSEventHandler::AfterBmsStart()
 {
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart start");
     // need process install exception bundle
-    DelayedSingleton<InstallExceptionMgr>::GetInstance()->HandleAllBundleExceptionInfo();
+    HandleAllBundleExceptionInfo();
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     if (OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
         DelayedSingleton<QuickFixBootScanner>::GetInstance()->ProcessQuickFixBootUp();
@@ -4289,6 +4289,14 @@ bool BMSEventHandler::IsHspPathExist(const InnerBundleInfo &innerBundleInfo)
         }
     }
     return true;
+}
+
+void BMSEventHandler::HandleAllBundleExceptionInfo()
+{
+    auto checkCodePathTask = []() {
+        DelayedSingleton<InstallExceptionMgr>::GetInstance()->HandleAllBundleExceptionInfo();
+    };
+    std::thread(checkCodePathTask).detach();
 }
 
 void BMSEventHandler::CheckALLResourceInfo()
