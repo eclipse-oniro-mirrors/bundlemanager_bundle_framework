@@ -42,13 +42,13 @@ struct ZipCompressParam {
 
 struct CZStream {
     uint8_t* nextIn;
-    int32_t availableIn;
-    int64_t totalIn;
+    uint32_t availableIn;
+    uint64_t totalIn;
     uint8_t* nextOut;
-    int32_t availableOut;
-    int64_t totalOut;
+    uint32_t availableOut;
+    uint64_t totalOut;
     int32_t dataType;
-    int64_t adler;
+    uint64_t adler;
 
     bool hasNextIn;
     bool hasAvailableIn;
