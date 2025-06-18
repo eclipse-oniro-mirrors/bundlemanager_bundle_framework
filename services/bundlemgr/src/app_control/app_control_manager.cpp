@@ -498,7 +498,14 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
         PrintDisposedRuleInfo(disposedRules);
         return ERR_OK;
     }
-    ret = appControlManagerDb_->GetAbilityRunningControlRule({ appId, appIdentifier }, appIndex, userId, disposedRules);
+    std::vector<std::string> appIdList;
+    if (!appId.empty()) {
+        appIdList.emplace_back(appId);
+    }
+    if (!appIdentifier.empty()) {
+        appIdList.emplace_back(appIdentifier);
+    }
+    ret = appControlManagerDb_->GetAbilityRunningControlRule(appIdList, appIndex, userId, disposedRules);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "GetAbilityRunningControlRule from rdb failed");
         return ret;
