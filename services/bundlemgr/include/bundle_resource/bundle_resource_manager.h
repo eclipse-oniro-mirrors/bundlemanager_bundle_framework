@@ -166,6 +166,8 @@ private:
 
     void PrepareSysRes();
 
+    bool CheckAllAddResourceInfo(const int32_t userId);
+
     std::atomic_uint currentTaskNum_ = 0;
     std::mutex mutex_;
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;

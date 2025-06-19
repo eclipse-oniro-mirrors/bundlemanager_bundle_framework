@@ -5866,4 +5866,19 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0185, Function | SmallTest
     EXPECT_NE(ret, ERR_OK);
 #endif
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0230
+ * @tc.name: CheckAllAddResourceInfo
+ * @tc.desc: 1. test CheckAllAddResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0230, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        auto ret = manager->CheckAllAddResourceInfo(USERID);
+        EXPECT_FALSE(ret);
+    }
+}
 } // OHOS

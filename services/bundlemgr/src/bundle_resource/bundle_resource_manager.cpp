@@ -21,6 +21,7 @@
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
 #include "bundle_mgr_service.h"
+#include "directory_ex.h"
 #include "event_report.h"
 #include "hitrace_meter.h"
 #include "thread_pool.h"
@@ -279,19 +280,36 @@ void BundleResourceManager::InnerProcessResourceInfoBySystemThemeChanged(
     std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
     const int32_t userId)
 {
-    // judge whether the bundle theme exists
-    for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
-        if (!BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
-            !BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
-            iter = resourceInfosMap.erase(iter);
-        } else {
-            ++iter;
+    if (!CheckAllAddResourceInfo(userId)) {
+        // judge whether the bundle theme exists
+        for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
+            if (!BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
+                !BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
+                iter = resourceInfosMap.erase(iter);
+            } else {
+                ++iter;
+            }
         }
     }
     // process labelNeedParse_
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
         ProcessResourceInfoNoNeedToParseOtherIcon(iter->second);
     }
+}
+
+bool BundleResourceManager::CheckAllAddResourceInfo(const int32_t userId)
+{
+    if (BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG) &&
+        (!BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B) ||
+            OHOS::IsEmptyFolder(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B))) {
+        return true;
+    }
+    if (BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B_FLAG) &&
+        (!BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A) ||
+            OHOS::IsEmptyFolder(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A))) {
+        return true;
+    }
+    return false;
 }
 
 void BundleResourceManager::InnerProcessResourceInfoByUserIdChanged(
