@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -142,42 +142,60 @@ VerifyManagerHostImpl::~VerifyManagerHostImpl()
     APP_LOGI("destroy VerifyManagerHostImpl");
 }
 
-ErrCode VerifyManagerHostImpl::Verify(const std::vector<std::string> &abcPaths)
+int32_t VerifyManagerHostImpl::CallbackEnter(maybe unused)
+{
+    BundleMemoryGuard::SetBundleMemoryGuard();
+    return ERR_NONE;
+}
+
+int32_t VerifyManagerHostImpl::CallbackExit(maybe unused, int32_t result)
+{
+    BundleMemoryGuard::ClearBundleMemoryGuard();
+    return ERR_NONE;
+}
+
+ErrCode VerifyManagerHostImpl::Verify(const std::vector<std::string> &abcPaths, int32_t &funcResult)
 {
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_TWELVE)) {
         APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        funcResult = ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        return ERR_OK;
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
         APP_LOGE("verify permission failed");
-        return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
+        return ERR_OK;
     }
 
     std::string bundleName;
     int32_t userId = BundleUtil::GetUserIdByCallingUid();
     if (!GetCallingBundleName(bundleName) || bundleName.empty()) {
         APP_LOGE("GetCallingBundleName failed");
-        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
+        funcResult = ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
+        return ERR_OK;
     }
 
     auto &mtx = GetBundleMutex(bundleName);
     std::lock_guard lock {mtx};
     if (!CheckFileParam(abcPaths)) {
         APP_LOGE("CheckFile failed");
-        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
+        funcResult = ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
+        return ERR_OK;
     }
 
     if (!CopyFilesToTempDir(bundleName, userId, abcPaths)) {
         APP_LOGE("Copy failed");
         RemoveTempFiles(bundleName);
-        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
+        funcResult = ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
+        return ERR_OK;
     }
 
     ErrCode ret = InnerVerify(bundleName, abcPaths);
     RemoveTempFiles(bundleName);
-    return ret;
+    funcResult = ret;
+    return ERR_OK;
 }
 
 bool VerifyManagerHostImpl::GetCallingBundleName(std::string &bundleName)
@@ -486,14 +504,13 @@ void VerifyManagerHostImpl::Rollback(const std::vector<std::string> &paths)
     }
 }
 
-ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path)
+ErrCode VerifyManagerHostImpl::VerifyDeleteAbcPermission(const std::string &path)
 {
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_TWELVE)) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
         APP_LOGE("DeleteAbc failed due to permission denied");
         return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
@@ -506,16 +523,27 @@ ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path)
         APP_LOGE("DeleteAbc failed due to not abc file");
         return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path, int32_t &funcResult)
+{
+    funcResult = VerifyDeleteAbcPermission(path);
+    if (funcResult != ERR_OK) {
+        return ERR_OK;
+    }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("DeleteAbc failed due to dataMgr is null");
-        return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+        funcResult = ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+        return ERR_OK;
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     InnerBundleInfo innerBundleInfo;
     if (dataMgr->GetInnerBundleInfoByUid(callingUid, innerBundleInfo) != ERR_OK) {
         APP_LOGE("DeleteAbc failed due to get callingUid failed");
-        return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+        funcResult = ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+        return ERR_OK;
     }
 
     auto &mtx = GetBundleMutex(innerBundleInfo.GetBundleName());
@@ -529,18 +557,22 @@ ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path)
     if (result != ERR_OK) {
         APP_LOGE("DeleteAbc %{public}s failed due to call IsExistFile failed %{public}d",
             realPath.c_str(), result);
-        return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+        funcResult = ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+        return ERR_OK;
     }
     if (!isExist) {
         APP_LOGE("DeleteAbc failed due to path %{public}s is not exist", realPath.c_str());
-        return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+        funcResult = ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+        return ERR_OK;
     }
     result = InstalldClient::GetInstance()->RemoveDir(realPath);
     if (result != ERR_OK) {
         APP_LOGE("DeleteAbc failed due to remove path %{public}s failed %{public}d",
             realPath.c_str(), result);
-        return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+        funcResult = ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+        return ERR_OK;
     }
+    funcResult = ERR_OK;
     return ERR_OK;
 }
 

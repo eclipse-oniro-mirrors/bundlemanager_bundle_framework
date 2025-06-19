@@ -37,5 +37,22 @@ BundleMemoryGuard::~BundleMemoryGuard()
     APP_LOGD("flush cache, result: %{public}d", err);
 #endif
 }
+void BundleMemoryGuard::SetBundleMemoryGuard()
+{
+#ifdef CONFIG_USE_JEMALLOC_DFX_INTF
+    // 0 indicates success
+    int32_t thread_cache_ret = mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_DISABLE);
+    int32_t delay_free_ret = mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
+    APP_LOGD("disable tcache and delay free, result:%{public}d, %{public}d", thread_cache_ret, delay_free_ret);
+#endif
+}
+
+void BundleMemoryGuard::ClearBundleMemoryGuard()
+{
+#ifdef CONFIG_USE_JEMALLOC_DFX_INTF
+    int32_t flush_ret = mallopt(M_FLUSH_THREAD_CACHE, 0);
+    APP_LOGD("flush cache, result: %{public}d", flush_ret);
+#endif
+}
 } // AppExecFwk
 } // OHOS

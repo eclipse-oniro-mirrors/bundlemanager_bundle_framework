@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@
 #include "common_func.h"
 #include "hap_module_info.h"
 #include "plugin/plugin_bundle_info.h"
+#include "verify_manager_client.h"
 #ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 #include "image_source.h"
 #include "pixel_map_napi.h"
@@ -2482,15 +2483,9 @@ napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
 
 ErrCode InnerVerify(const std::vector<std::string> &abcPaths, bool flag)
 {
-    auto verifyManager = CommonFunc::GetVerifyManager();
-    if (verifyManager == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    ErrCode ret = verifyManager->Verify(abcPaths);
+    ErrCode ret = VerifyManagerClient::GetInstance().Verify(abcPaths);
     if (ret == ERR_OK && flag) {
-        verifyManager->RemoveFiles(abcPaths);
+        VerifyManagerClient::GetInstance().RemoveFiles(abcPaths);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -2937,17 +2932,14 @@ napi_value GetDynamicIcon(napi_env env, napi_callback_info info)
 
 ErrCode InnerDeleteAbc(const std::string &path)
 {
-    auto verifyManager = CommonFunc::GetVerifyManager();
-    if (verifyManager == nullptr) {
-        APP_LOGE("iBundleMgr is null");
+    ErrCode ret = AppExecFwk::VerifyManagerClient::GetInstance().DeleteAbc(path);
+    if (ret == ERR_APPEXECFWK_NULL_PTR) {
+        APP_LOGE("VerifyAbc failed due to iBundleMgr is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-
-    ErrCode ret = verifyManager->DeleteAbc(path);
     if (ret != ERR_OK) {
         APP_LOGE("DeleteAbc failed");
     }
-
     return CommonFunc::ConvertErrCode(ret);
 }
 

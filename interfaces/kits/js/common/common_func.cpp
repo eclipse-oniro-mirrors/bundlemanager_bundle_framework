@@ -491,16 +491,6 @@ sptr<IBundleInstaller> CommonFunc::GetBundleInstaller()
     return iBundleMgr->GetBundleInstaller();
 }
 
-sptr<IVerifyManager> CommonFunc::GetVerifyManager()
-{
-    auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return nullptr;
-    }
-    return iBundleMgr->GetVerifyManager();
-}
-
 sptr<IExtendResourceManager> CommonFunc::GetExtendResourceManager()
 {
     auto iBundleMgr = GetBundleMgr();
