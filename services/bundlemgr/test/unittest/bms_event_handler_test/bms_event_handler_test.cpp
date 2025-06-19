@@ -2833,4 +2833,103 @@ HWTEST_F(BmsEventHandlerTest, SaveUpdatePermissionsFlag_0100, Function | SmallTe
         }
     }
 }
+
+/**
+ * @tc.number: CheckSystemOptimizeShaderCache_0100
+ * @tc.name: CheckSystemOptimizeShaderCache
+ * @tc.desc: test CheckSystemOptimizeShaderCache
+ */
+HWTEST_F(BmsEventHandlerTest, CheckSystemOptimizeShaderCache_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    // test dataMgr_ is null
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    ErrCode ret = handler->CheckSystemOptimizeShaderCache();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    ret = handler->CleanSystemOptimizeShaderCache();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(TEST_U100);
+    dataMgr->AddUserId(TEST_U101);
+
+    std::string testBundleName = "com.CheckSystemOptimizeShaderCache_0100";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = testBundleName;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    // set innerBundleUserInfo
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.uid = TEST_UID;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    // set cloneinfo
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.userId = Constants::START_USERID;
+    cloneInfo.uid = 1001;
+    cloneInfo.appIndex = 1;
+    cloneInfo.accessTokenId = 20000;
+    ret = innerBundleInfo.AddCloneBundle(cloneInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    dataMgr->bundleInfos_.emplace(testBundleName, innerBundleInfo);
+
+    // test CheckSystemOptimizeShaderCache succeed
+    ret = handler->CheckSystemOptimizeShaderCache();
+    EXPECT_EQ(ret, ERR_OK);
+
+    // test CheckSystemOptimizeBundleShaderCache succeed
+    ret = handler->CleanSystemOptimizeShaderCache();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckSystemOptimizeShaderCache_0200
+ * @tc.name: CheckSystemOptimizeBundleShaderCache
+ * @tc.desc: test CheckSystemOptimizeBundleShaderCache
+ */
+HWTEST_F(BmsEventHandlerTest, CheckSystemOptimizeShaderCache_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::string bundleName = "com.CheckSystemOptimizeShaderCache_0200";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    int32_t uid = Constants::INVALID_UID;
+    ErrCode ret = handler->CheckSystemOptimizeBundleShaderCache(bundleName, appIndex, userId, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    appIndex = 0;
+    ret = handler->CheckSystemOptimizeBundleShaderCache(bundleName, appIndex, userId, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    uid = 1003;
+    ret = handler->CheckSystemOptimizeBundleShaderCache(bundleName, appIndex, userId, uid);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckSystemOptimizeShaderCache_0300
+ * @tc.name: CleanSystemOptimizeBundleShaderCache
+ * @tc.desc: test CleanSystemOptimizeBundleShaderCache
+ */
+HWTEST_F(BmsEventHandlerTest, CheckSystemOptimizeShaderCache_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::string bundleName = "com.CheckSystemOptimizeShaderCache_0300";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    ErrCode ret = handler->CleanSystemOptimizeBundleShaderCache(bundleName, appIndex, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    appIndex = 0;
+    ret = handler->CleanSystemOptimizeBundleShaderCache(bundleName, appIndex, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

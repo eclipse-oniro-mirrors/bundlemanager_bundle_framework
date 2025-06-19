@@ -6560,7 +6560,14 @@ ErrCode BaseBundleInstaller::CleanBundleClonesShaderCache(const std::vector<int3
         std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
         el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
         el1ShaderCachePath = el1ShaderCachePath + cloneBundleName;
-        ret = InstalldClient::GetInstance()->CleanBundleDataDir(el1ShaderCachePath);
+        InstalldClient::GetInstance()->CleanBundleDataDir(el1ShaderCachePath);
+
+        // clean shader cache in /system_optimize
+        std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH +
+            cloneBundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
+        systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
+            1, std::to_string(userId));
+        ret = InstalldClient::GetInstance()->CleanBundleDataDir(systemOptimizeShaderCache);
         if (ret != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "%{public}s clean shader cache fail %{public}d", bundleName.c_str(), ret);
             return ret;
@@ -6630,7 +6637,14 @@ ErrCode BaseBundleInstaller::DeleteBundleClonesShaderCache(const std::vector<int
         std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
         el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
         el1ShaderCachePath = el1ShaderCachePath + cloneBundleName;
-        ret = InstalldClient::GetInstance()->RemoveDir(el1ShaderCachePath);
+        InstalldClient::GetInstance()->RemoveDir(el1ShaderCachePath);
+
+        // Remove shader cache in /system_optimize
+        std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH +
+            cloneBundleName;
+        systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
+            1, std::to_string(userId));
+        ret = InstalldClient::GetInstance()->RemoveDir(systemOptimizeShaderCache);
         if (ret != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "%{public}s clean shader cache fail %{public}d", bundleName.c_str(), ret);
             return ret;

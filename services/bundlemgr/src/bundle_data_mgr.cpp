@@ -11087,6 +11087,31 @@ std::string BundleDataMgr::GenerateUuidByKey(const std::string &key) const
     return OHOS::Security::Verify::GenerateUuidByKey(message);
 }
 
+ErrCode BundleDataMgr::GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32_t userId,
+    std::unordered_map<std::string, std::vector<std::pair<int32_t, int32_t>>> &cloneInfos) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGW("bundleInfos_ data is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        std::string bundleName = item.second.GetBundleName();
+        if (bundleName.empty()) {
+            continue;
+        }
+        std::vector<int32_t> allAppIndexes = {0};
+        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, userId);
+        allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
+        for (int32_t appIndex: allAppIndexes) {
+            int32_t uid = info.GetUid(userId, appIndex);
+            cloneInfos[bundleName].push_back({appIndex, uid});
+        }
+    }
+    return ERR_OK;
+}
+
 void BundleDataMgr::CheckIfShortcutBundleExist(nlohmann::json &jsonResult)
 {
     if (!jsonResult.is_array()) {

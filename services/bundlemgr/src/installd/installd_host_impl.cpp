@@ -582,6 +582,16 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                         LOG_W(BMS_TAG_INSTALLER, "fail to Mkdir el1ShaderCachePath, errno: %{public}d", errno);
                 }
             }
+
+            // create shadercache in /system_optimize
+            std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH;
+            systemOptimizeShaderCachePath = systemOptimizeShaderCachePath.replace(
+                systemOptimizeShaderCachePath.find("%"),
+                1, std::to_string(userId));
+            systemOptimizeShaderCachePath = systemOptimizeShaderCachePath +
+                createDirParam.bundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
+            InstalldOperator::MkOwnerDir(systemOptimizeShaderCachePath, ServiceConstants::NEW_SHADRE_CACHE_MODE,
+                createDirParam.uid, ServiceConstants::NEW_SHADRE_CACHE_GID);
         }
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             for (const auto &dir : BUNDLE_DATA_DIR) {
@@ -2313,6 +2323,19 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
                     el1ShaderCachePath.c_str(), errno);
                 return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
             }
+            // remove shadercache in /system_optimize
+            std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH;
+            systemOptimizeShaderCachePath = systemOptimizeShaderCachePath.replace(
+                systemOptimizeShaderCachePath.find("%"),
+                1, std::to_string(userId));
+            systemOptimizeShaderCachePath = systemOptimizeShaderCachePath +
+                bundleName;
+            if (!InstalldOperator::DeleteDir(systemOptimizeShaderCachePath)) {
+                LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d",
+                    systemOptimizeShaderCachePath.c_str(), errno);
+                return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+            }
+
             // remove ark_startup_cache/bundlename
             std::string arkStartupCacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
                 bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
