@@ -26,6 +26,8 @@ export default namespace bundleResourceManager {
 
   loadLibrary("ani_bundle_res_manager.z");
 
+  const INVALID_INT: number = -500;
+
   enum ResourceFlag {
     GET_RESOURCE_INFO_ALL = 0x00000001,
     GET_RESOURCE_INFO_WITH_LABEL = 0x00000002,
@@ -41,27 +43,27 @@ export default namespace bundleResourceManager {
 
   function getBundleResourceInfo(bundleName: string, resourceFlags?: number): BundleResourceInfo
   {
-    let resFlag = resourceFlags ?? -500;
-    return bundleResourceManager.getBundleResourceInfoNative(bundleName, resFlag, -500);
+    let resFlag = resourceFlags ?? INVALID_INT;
+    return bundleResourceManager.getBundleResourceInfoNative(bundleName, resFlag, INVALID_INT);
   }
 
   function getBundleResourceInfo(bundleName: string, resourceFlags?: number, appIndex?: number): BundleResourceInfo
   {
-    let resFlag = resourceFlags ?? -500;
-    let appIdx = appIndex ?? -500;
+    let resFlag = resourceFlags ?? INVALID_INT;
+    let appIdx = appIndex ?? INVALID_INT;
     return bundleResourceManager.getBundleResourceInfoNative(bundleName, resFlag, appIdx);
   }
 
   function getLauncherAbilityResourceInfo(bundleName: string, resourceFlags?: number): Array<LauncherAbilityResourceInfo>
   {
-    let resFlag = resourceFlags ?? -500;
-    return bundleResourceManager.getLauncherAbilityResourceInfoNative(bundleName, resFlag, -500);
+    let resFlag = resourceFlags ?? INVALID_INT;
+    return bundleResourceManager.getLauncherAbilityResourceInfoNative(bundleName, resFlag, INVALID_INT);
   }
 
   function getLauncherAbilityResourceInfo(bundleName: string, resourceFlags?: number, appIndex?: number): Array<LauncherAbilityResourceInfo>
   {
-    let resFlag = resourceFlags ?? -500;
-    let appIdx = appIndex ?? -500;
+    let resFlag = resourceFlags ?? INVALID_INT;
+    let appIdx = appIndex ?? INVALID_INT;
     return bundleResourceManager.getLauncherAbilityResourceInfoNative(bundleName, resFlag, appIdx);
   }
 
