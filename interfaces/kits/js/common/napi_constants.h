@@ -40,6 +40,39 @@ constexpr const char* TYPE_OBJECT = "object";
 constexpr const char* TYPE_BOOLEAN = "boolean";
 constexpr const char* TYPE_FUNCTION = "function";
 constexpr const char* TYPE_ARRAY = "array";
+
+constexpr const char* UID = "uid";
+constexpr const char* USER_ID = "userId";
+constexpr const char* BUNDLE_NAME = "bundleName";
+constexpr const char* MODULE_NAME = "moduleName";
+constexpr const char* ABILITY_NAME = "abilityName";
+constexpr const char* APP_INDEX = "appIndex";
+
+constexpr const char* BUNDLE_FLAGS = "bundleFlags";
+constexpr const char* APP_FLAGS = "appFlags";
+constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
+constexpr const char* IS_APPLICATION_ENABLED_SYNC = "IsApplicationEnabledSync";
+constexpr const char* GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
+constexpr const char* GET_BUNDLE_INFO_SYNC = "GetBundleInfoSync";
+constexpr const char* GET_APPLICATION_INFO_SYNC = "GetApplicationInfoSync";
+constexpr const char* BUNDLE_PERMISSIONS =
+    "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+constexpr const char* GET_BUNDLE_INFO = "GetBundleInfo";
+constexpr const char* GET_APPLICATION_INFO = "GetApplicationInfo";
+
+constexpr const char* GET_SHORTCUT_INFO = "GetShortcutInfo";
+constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
+constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
+constexpr const char* PARSE_START_OPTIONS = "parse StartOptions failed";
+constexpr const char* START_SHORTCUT = "StartShortcut";
+
+constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
+constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
+constexpr const char* RESOURCE_FLAGS = "resourceFlags";
+
+constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
+constexpr const char* DELETE_DESKTOP_SHORTCUT_INFO = "DeleteDesktopShortcutInfo";
+constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo";
 }
 }
 }

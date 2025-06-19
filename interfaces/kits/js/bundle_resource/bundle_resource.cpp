@@ -34,22 +34,15 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* BUNDLE_NAME = "bundleName";
-constexpr const char* MODULE_NAME = "moduleName";
-constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* LABEL = "label";
 constexpr const char* ICON = "icon";
-constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* DRAWABLE_DESCRIPTOR = "drawableDescriptor";
-constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
 constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
     "ohos.permission.GET_INSTALLED_BUNDLE_LIST and ohos.permission.GET_BUNDLE_RESOURCES";
-constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
 constexpr const char* GET_EXTENSION_ABILITY_RESOURCE_INFO = "GetExtensionAbilityResourceInfo";
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
 constexpr const char* GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = "GetAllLauncherAbilityResourceInfo";
-constexpr const char* RESOURCE_FLAGS = "resourceFlags";
 constexpr const char* GET_RESOURCE_INFO_ALL = "GET_RESOURCE_INFO_ALL";
 constexpr const char* GET_RESOURCE_INFO_WITH_LABEL = "GET_RESOURCE_INFO_WITH_LABEL";
 constexpr const char* GET_RESOURCE_INFO_WITH_ICON = "GET_RESOURCE_INFO_WITH_ICON";

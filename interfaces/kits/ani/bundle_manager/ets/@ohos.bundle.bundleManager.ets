@@ -20,7 +20,9 @@ import { BundleInfoInner } from './bundleManager/BundleInfoInner';
 
 namespace bundleManager {
 
-  loadLibrary("anibundlemanager.z");
+  loadLibrary("ani_bundle_manager.z");
+
+  const EMPTY_USER_ID: number = -500;
 
   enum BundleFlag {
     GET_BUNDLE_INFO_DEFAULT = 0x00000000,
@@ -176,40 +178,41 @@ namespace bundleManager {
     FLAG_PREINSTALLED_APP_UPDATE = 0x00000040,
   }
 
-  export native function isApplicationEnabledSync(bundleName: string): boolean;
+  export native function getBundleInfoForSelfNative(bundleFlags: number, isSync: boolean): BundleInfo;
+  export native function getBundleInfoNative(bundleName: string, bundleFlags: number, userId: number, isSync: boolean) : BundleInfo;
+  export native function getApplicationInfoNative(bundleName: string, applicationFlags: number, userId: number, isSync: boolean): ApplicationInfo;
+  export native function isApplicationEnabledNative(bundleName: string, appIndex: number, isSync: boolean): boolean;
 
-  export native function getBundleInfoForSelfSync(bundleFlags: number): BundleInfo;
+  function getBundleInfoForSelfSync(bundleFlags: number): BundleInfo {
+    return bundleManager.getBundleInfoForSelfNative(bundleFlags, true);
+  }
 
-  export native function getBundleInfoSync(bundleName: string, bundleFlags: number, userId: number) : BundleInfo;
-
-  export native function getApplicationInfoSync(bundleName: string, applicationFlags: number, userId: number): ApplicationInfo;
-
-  function getBundleInfoForSelf(bundleFlags: number, callback: AsyncCallback<BundleInfo, void>):void {
+  function getBundleInfoForSelf(bundleFlags: number, callback: AsyncCallback<BundleInfo, void>): void {
     let execFun = (): BundleInfo => {
-      return bundleManager.getBundleInfoForSelfSync(bundleFlags);
+      return bundleManager.getBundleInfoForSelfNative(bundleFlags, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
       let r = new BusinessError();
       callback(r, resultBundleInfo);
-    }, (err: BusinessError): void => {
+    }, (err: Error): void => {
       let resultBundleInfo = new BundleInfoInner();
-      callback(err, resultBundleInfo);
+      callback(err as BusinessError, resultBundleInfo);
     });
   }
 
   function getBundleInfoForSelf(bundleFlags: number):Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): BundleInfo => {
-        return bundleManager.getBundleInfoForSelfSync(bundleFlags);
+        return bundleManager.getBundleInfoForSelfNative(bundleFlags, false);
       };
       let p1 = taskpool.execute(execFun);
         p1.then((e: NullishType) => {
           let resultBundleInfo: BundleInfo = e as BundleInfo;
           resolve(resultBundleInfo);
-        }, (err: BusinessError): void => {
-          reject(err);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
         });
     }
     );
@@ -217,21 +220,25 @@ namespace bundleManager {
   }
 
   function getBundleInfoSync(bundleName: string, bundleFlags: number): BundleInfo {
-    return bundleManager.getBundleInfoSync(bundleName, bundleFlags, -500);
+    return bundleManager.getBundleInfoNative(bundleName, bundleFlags, EMPTY_USER_ID, true);
+  }
+
+  function getBundleInfoSync(bundleName: string, bundleFlags: number, userId: number): BundleInfo {
+    return bundleManager.getBundleInfoNative(bundleName, bundleFlags, userId, true);
   }
 
   function getBundleInfo(bundleName: string, bundleFlags: number, userId?: number): Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: BusinessError) => void) => {
-      let userIdInfo: number = userId ?? -500;
+      let userIdInfo: number = userId ?? EMPTY_USER_ID;
       let execFun = (): BundleInfo => {
-        return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userIdInfo);
+        return bundleManager.getBundleInfoNative(bundleName, bundleFlags, userIdInfo, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
         let resultBundleInfo: BundleInfo = e as BundleInfo;
         resolve(resultBundleInfo);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -240,36 +247,44 @@ namespace bundleManager {
 
   function getBundleInfo(bundleName: string, bundleFlags: number, callback: AsyncCallback<BundleInfo, void>): void {
     let execFun = (): BundleInfo => {
-      return bundleManager.getBundleInfoSync(bundleName, bundleFlags);
+      return bundleManager.getBundleInfoNative(bundleName, bundleFlags, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
       let r = new BusinessError();
       callback(r, resultBundleInfo);
-    },(err: BusinessError): void => {
+    },(err: Error): void => {
       let resultBundleInfo = new BundleInfoInner();
-      callback(err, resultBundleInfo);
+      callback(err as BusinessError, resultBundleInfo);
     });
   }
 
   function getBundleInfo(bundleName: string, bundleFlags: number, userId: number, callback: AsyncCallback<BundleInfo, void>): void {
     let execFun = (): BundleInfo => {
-      return bundleManager.getBundleInfoSync(bundleName, bundleFlags, userId);
+      return bundleManager.getBundleInfoNative(bundleName, bundleFlags, userId, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
       let r = new BusinessError();
       callback(r, resultBundleInfo);
-    },(err: BusinessError): void => {
+    },(err: Error): void => {
       let resultBundleInfo = new BundleInfoInner();
-      callback(err, resultBundleInfo);
+      callback(err as BusinessError, resultBundleInfo);
     });
   }
 
   function getApplicationInfoSync(bundleName: string, applicationFlags: number): ApplicationInfo {
-    return bundleManager.getApplicationInfoSync(bundleName, applicationFlags, -500);
+    return bundleManager.getApplicationInfoNative(bundleName, applicationFlags, EMPTY_USER_ID, true);
+  }
+
+  function getApplicationInfoSync(bundleName: string, applicationFlags: number, userId: number): ApplicationInfo {
+    return bundleManager.getApplicationInfoNative(bundleName, applicationFlags, userId, true);
+  }
+
+  function isApplicationEnabledSync(bundleName: string): boolean {
+    return bundleManager.isApplicationEnabledNative(bundleName, 0, true);
   }
 }
 

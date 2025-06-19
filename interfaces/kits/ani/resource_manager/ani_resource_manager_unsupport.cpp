@@ -12,19 +12,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "app_log_wrapper.h"
 #include <ani_signature_builder.h>
+
+#include "app_log_wrapper.h"
 #include "bundle_errors.h"
 #include "business_error_ani.h"
+#include "common_fun_ani.h"
+#include "napi_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace  {
-    constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
+namespace {
+constexpr const char* NS_NAME_RESOURCEMANAGER = "@ohos.bundle.bundleResourceManager.bundleResourceManager";
 }
 
-static ani_object GetBundleResourceInfo(ani_env* env, ani_string aniBundleName,
-    ani_double resFlag, ani_double appIdx)
+static ani_object AniGetBundleResourceInfo(ani_env* env, ani_string aniBundleName,
+    ani_double aniResFlag, ani_double aniAppIndex)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_BUNDLE_RESOURCE_INFO, "");
@@ -34,28 +37,29 @@ static ani_object GetBundleResourceInfo(ani_env* env, ani_string aniBundleName,
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
-    APP_LOGI("ANI_Constructor resourceMgr called");
+    APP_LOGI("ANI_Constructor resourceManager called");
     ani_env* env;
-    ani_status res = vm->GetEnv(ANI_VERSION_1, &env);
-    RETURN_ANI_STATUS_IF_NOT_OK(res, "Unsupported ANI_VERSION_1");
+    ani_status status = vm->GetEnv(ANI_VERSION_1, &env);
+    RETURN_ANI_STATUS_IF_NOT_OK(status, "Unsupported ANI_VERSION_1");
 
-    auto nsName = arkts::ani_signature::Builder::BuildNamespace(
-        {"@ohos", "bundle", "bundleResourceManager", "bundleResourceManager"});
-    ani_namespace kitNs;
-    res = env->FindNamespace(nsName.Descriptor().c_str(), &kitNs);
-    RETURN_ANI_STATUS_IF_NOT_OK(
-        res, "Not found nameSpace L@ohos/bundle/bundleResourceManager/bundleResourceManager;");
+    arkts::ani_signature::Namespace nsName = arkts::ani_signature::Builder::BuildNamespace(NS_NAME_RESOURCEMANAGER);
+    ani_namespace kitNs = nullptr;
+    status = env->FindNamespace(nsName.Descriptor().c_str(), &kitNs);
+    if (status != ANI_OK) {
+        APP_LOGE("FindNamespace: %{public}s fail with %{public}d", NS_NAME_RESOURCEMANAGER, status);
+        return status;
+    }
 
     std::array methods = {
-        ani_native_function {
-            "getBundleResourceInfoNative",
-            nullptr,
-            reinterpret_cast<void*>(GetBundleResourceInfo)
-        }
+        ani_native_function { "getBundleResourceInfoNative", nullptr,
+            reinterpret_cast<void*>(AniGetBundleResourceInfo) },
     };
 
-    res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
-    RETURN_ANI_STATUS_IF_NOT_OK(res, "Cannot bind native methods");
+    status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
+    if (status != ANI_OK) {
+        APP_LOGE("Namespace_BindNativeFunctions: %{public}s fail with %{public}d", NS_NAME_RESOURCEMANAGER, status);
+        return status;
+    }
 
     *result = ANI_VERSION_1;
 

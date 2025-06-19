@@ -18,10 +18,13 @@ import { ShortcutInfo as _ShortcutInfo, ShortcutWant as _ShortcutWant, Parameter
 import StartOptions from '@ohos.app.ability.StartOptions';
 
 export default namespace launcherBundleManager {
+
   loadLibrary("ani_launcher_bundle_manager.z");
 
-  export native function StartShortcutSync(shortcutInfo: ShortcutInfo, options: StartOptions): void;
-  export native function GetShortcutInfoSync(bundleName: string, userId: number): Array<ShortcutInfo>;
+  const EMPTY_USER_ID: number = -500;
+
+  export native function startShortcutNative(shortcutInfo: ShortcutInfo, options: StartOptions): void;
+  export native function getShortcutInfoNative(bundleName: string, userId: number, isSync: boolean): Array<ShortcutInfo>;
 
   function startShortcut(shortcutInfo: ShortcutInfo, options?: StartOptions): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void): void => {
@@ -30,24 +33,24 @@ export default namespace launcherBundleManager {
         startOptions = options;
       }
       let cb = (): NullishType => {
-        launcherBundleManager.StartShortcutSync(shortcutInfo, startOptions);
+        launcherBundleManager.startShortcutNative(shortcutInfo, startOptions);
       }
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     });
     return p;
   }
 
   function getShortcutInfoSync(bundleName: string): Array<ShortcutInfo> {
-    return launcherBundleManager.GetShortcutInfoSync(bundleName, -500);
+    return launcherBundleManager.getShortcutInfoNative(bundleName, EMPTY_USER_ID, true);
   }
 
   function getShortcutInfoSync(bundleName: string, userId: number): Array<ShortcutInfo> {
-    return launcherBundleManager.GetShortcutInfoSync(bundleName, userId);
+    return launcherBundleManager.getShortcutInfoNative(bundleName, userId, true);
   }
 
   export type ShortcutInfo = _ShortcutInfo;

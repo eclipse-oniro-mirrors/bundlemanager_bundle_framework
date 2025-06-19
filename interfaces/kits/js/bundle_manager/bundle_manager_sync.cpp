@@ -31,23 +31,15 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-constexpr const char* MODULE_NAME = "moduleName";
-constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* ABILITY_INFO = "abilityInfo";
-constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* IS_ENABLE = "isEnable";
-constexpr const char* BUNDLE_NAME = "bundleName";
-constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* HAP_FILE_PATH = "hapFilePath";
 constexpr const char* SANDBOX_DATA_DIR = "sandboxDataDir";
-constexpr const char* UID = "uid";
 constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
 constexpr const char* FLAGS = "flags";
-constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 constexpr const char* EXTENSION_TYPE_NAME = "extensionTypeName";
 const char* SET_APPLICATION_ENABLED_SYNC = "SetApplicationEnabledSync";
 const char* SET_ABILITY_ENABLED_SYNC = "SetAbilityEnabledSync";
-const char* IS_APPLICATION_ENABLED_SYNC = "IsApplicationEnabledSync";
 const char* IS_ABILITY_ENABLED_SYNC = "IsAbilityEnabledSync";
 const char* GET_ABILITY_LABEL_SYNC = "GetAbilityLabelSync";
 const char* GET_LAUNCH_WANT_FOR_BUNDLE_SYNC = "GetLaunchWantForBundleSync";
@@ -61,7 +53,6 @@ const char* GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
 const char* GET_SIGNATURE_INFO_SYNC = "GetSignatureInfoSync";
 const char* GET_SANDBOX_DATA_DIR_SYNC = "GetSandboxDataDirSync";
 const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
-const char* BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const char* PERMISSION_NAME = "permissionName";
 const char* INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action entities uri type or linkFeature) non-empty.";
