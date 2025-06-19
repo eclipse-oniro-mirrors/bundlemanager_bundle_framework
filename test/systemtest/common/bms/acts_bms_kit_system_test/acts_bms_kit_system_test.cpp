@@ -10589,6 +10589,48 @@ HWTEST_F(ActsBmsKitSystemTest, SetAppDistributionTypes_0001, Function | MediumTe
 }
 
 /**
+ * @tc.number: SetAppDistributionTypes_0002
+ * @tc.name: test SetAppDistributionTypes interface
+ * @tc.desc: 1. call SetAppDistributionTypes
+ */
+HWTEST_F(ActsBmsKitSystemTest, SetAppDistributionTypes_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START SetAppDistributionTypes_0001" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        std::set<AppDistributionTypeEnum> appDistributionTypeEnums{};
+        ErrCode ret =bundleMgrProxy->SetAppDistributionTypes(appDistributionTypeEnums);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    }
+    std::cout << "END SetAppDistributionTypes_0001" << std::endl;
+}
+
+/**
+ * @tc.number: SetAppDistributionTypes_0003
+ * @tc.name: test SetAppDistributionTypes interface
+ * @tc.desc: 1. call SetAppDistributionTypes
+ */
+HWTEST_F(ActsBmsKitSystemTest, SetAppDistributionTypes_0003, Function | MediumTest | Level1)
+{
+    StartProcess();
+    std::cout << "START SetAppDistributionTypes_0001" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        std::set<AppDistributionTypeEnum> appDistributionTypeEnums2{
+            AppDistributionTypeEnum::APP_DISTRIBUTION_TYPE_APP_GALLERY
+        };
+        ErrCode ret =bundleMgrProxy->SetAppDistributionTypes(appDistributionTypeEnums2);
+        std::set<AppDistributionTypeEnum> appDistributionTypeEnums{};
+        ret =bundleMgrProxy->SetAppDistributionTypes(appDistributionTypeEnums);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    }
+    std::cout << "END SetAppDistributionTypes_0001" << std::endl;
+}
+
+
+/**
  * @tc.number: GetAllBundleDirs_0002
  * @tc.name: test GetAllBundleDirs interface
  * @tc.desc: 1. call GetAllBundleDirs

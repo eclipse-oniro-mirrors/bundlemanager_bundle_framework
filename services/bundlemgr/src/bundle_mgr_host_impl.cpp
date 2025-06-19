@@ -5484,6 +5484,19 @@ ErrCode BundleMgrHostImpl::SetAppDistributionTypes(std::set<AppDistributionTypeE
         APP_LOGE("Verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE("bmsPara is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    if (appDistributionTypeEnums.empty()) {
+        if (!bmsPara->DeleteBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST)) {
+            APP_LOGE("DeleteBmsParam failed");
+            return ERR_BMS_PARAM_DELETE_PARAM_ERROR;
+        }
+        APP_LOGI("delete bms param success");
+        return ERR_OK;
+    }
     std::string value = "";
     for (auto it = appDistributionTypeEnums.begin(); it != appDistributionTypeEnums.end(); ++it) {
         if (it == appDistributionTypeEnums.begin()) {
@@ -5491,11 +5504,6 @@ ErrCode BundleMgrHostImpl::SetAppDistributionTypes(std::set<AppDistributionTypeE
         } else {
             value += Constants::SUPPORT_APP_TYPES_SEPARATOR + std::to_string(static_cast<int>(*it));
         }
-    }
-    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
-    if (bmsPara == nullptr) {
-        APP_LOGE("bmsPara is nullptr");
-        return ERR_APPEXECFWK_NULL_PTR;
     }
     if (!bmsPara->SaveBmsParam(Constants::APP_DISTRIBUTION_TYPE_WHITE_LIST, value)) {
         APP_LOGE("SaveBmsParam failed");
