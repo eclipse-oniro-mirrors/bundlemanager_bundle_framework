@@ -20,7 +20,7 @@
 #include "bundle_stream_installer_proxy.h"
 
 #include "bmsbundlestreaminstallerproxy_fuzzer.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;

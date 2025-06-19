@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,7 +24,7 @@
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
@@ -55,7 +55,7 @@ namespace OHOS {
         }
         FuzzedDataProvider fdp(data, size);
         int32_t flags = fdp.ConsumeIntegral<int32_t>();
-        int32_t userId = fdp.ConsumeIntegral<int32_t>();
+        int32_t userId = BMSFuzzTestUtil::GenerateRandomUser(fdp);
         std::vector<ApplicationInfo> bundleInfos;
         bundleMgr->GetApplicationInfos(flags, userId, bundleInfos);
         return true;

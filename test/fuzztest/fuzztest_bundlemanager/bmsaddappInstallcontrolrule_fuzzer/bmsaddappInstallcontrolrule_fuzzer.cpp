@@ -20,9 +20,10 @@
 #include "app_control_proxy.h"
 
 #include "bmsaddappInstallcontrolrule_fuzzer.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
@@ -33,7 +34,7 @@ namespace OHOS {
         AppInstallControlRuleType controlRuleType =
             static_cast<AppInstallControlRuleType>(fdp.ConsumeIntegralInRange<int8_t>(0, 3));
         std::vector<std::string> appIds = BMSFuzzTestUtil::GenerateStringArray(fdp);
-        int32_t userId = fdp.ConsumeIntegral<int32_t>();
+        int32_t userId = BMSFuzzTestUtil::GenerateRandomUser(fdp);
         appControl.AddAppInstallControlRule(appIds, controlRuleType, userId);
         return true;
     }

@@ -59,6 +59,18 @@ group("bundlemanagerfuzztest") {
     "bmsgetbundlegids_fuzzer:BMSGetBundleGidsFuzzTest",
     "bmsgetbundlegidsbyuid_fuzzer:BMSGetBundleGidsByUidFuzzTest",
     "bmsgetbundleinfo_fuzzer:BMSGetBundleInfoFuzzTest",
+    "bmsgetbundleinfos_fuzzer:BMSGetBundleInfosFuzzTest",
+    "bmsgetbundleInfosbymetadata_fuzzer:BMSGetBundleInfosByMetaDataFuzzTest",
+    "bmsgetbundlepackinfo_fuzzer:BMSGetBundlePackInfoFuzzTest",
+    "bmsgetbundlesforuid_fuzzer:BMSGetBundlesForUidFuzzTest",
+    "bmsgetdefaultapplication_fuzzer:BMSGetDefaultApplicationFuzzTest",
+    "bmsgetdisposedstatus_fuzzer:BMSGetDisposedStatusFuzzTest",
+    "bmsgethapmoduleinfo_fuzzer:BMSGetHapModuleInfoFuzzTest",
+    "bmsgetlaunchwantforbundle_fuzzer:BMSGetLaunchWantForBundleFuzzTest",
+    "bmsgetnameforuid_fuzzer:BMSGetNameForUidFuzzTest",
+    "bmsgetpermissiondef_fuzzer:BMSGetPermissionDefFuzzTest",
+    "bmshapmoduleinfo_fuzzer:BMSHapModuleInfoFuzzTest",
+    "bmsinstallparam_fuzzer:BMSInstallParamFuzzTest",
     "bmsverifymanagerhost_fuzzer:BMSVerifyManagerHostFuzzTest"
   ]
 

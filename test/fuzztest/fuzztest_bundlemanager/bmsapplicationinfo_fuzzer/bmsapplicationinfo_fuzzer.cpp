@@ -21,7 +21,7 @@
 #include "parcel.h"
 
 #include "bmsapplicationinfo_fuzzer.h"
- #include "../../bms_fuzztest_util.h"
+ #include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {

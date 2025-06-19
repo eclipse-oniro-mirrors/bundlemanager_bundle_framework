@@ -21,7 +21,7 @@
 #include "bundle_mgr_proxy.h"
 
 #include "bmsbundlemgrproxyparttwo_fuzzer.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using Want = OHOS::AAFwk::Want;
 

@@ -30,6 +30,7 @@ ohos_fuzztest("BMSCleanBundleCacheFilesFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
+  include_dirs = [ "${test_path}/fuzztest" ]
   sources = [ "bmscleanbundlecachefiles_fuzzer.cpp" ]
 
   deps = [

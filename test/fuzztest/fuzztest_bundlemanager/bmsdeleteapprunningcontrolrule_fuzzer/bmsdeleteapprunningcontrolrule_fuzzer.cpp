@@ -20,7 +20,7 @@
 #include "app_control_proxy.h"
 
 #include "bmsdeleteapprunningcontrolrule_fuzzer.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
@@ -46,7 +46,7 @@ namespace OHOS {
             GetRandomAppRunningControlRule(fdp, rule);
             controlRule.emplace_back(rule);
         }
-        int32_t userId = fdp.ConsumeIntegral<int32_t>();
+        int32_t userId = BMSFuzzTestUtil::GenerateRandomUser(fdp);
 
         appControl.DeleteAppRunningControlRule(controlRule, userId);
         appControl.DeleteAppRunningControlRule(userId);

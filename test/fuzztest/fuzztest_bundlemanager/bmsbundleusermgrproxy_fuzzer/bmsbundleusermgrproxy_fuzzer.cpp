@@ -20,7 +20,7 @@
 #include "bundle_user_mgr_proxy.h"
 
 #include "bmsbundleusermgrproxy_fuzzer.h"
- #include "../../bms_fuzztest_util.h"
+ #include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
@@ -30,7 +30,7 @@ namespace OHOS {
         sptr<IRemoteObject> object;
         BundleUserMgrProxy userMgrProxy(object);
         FuzzedDataProvider fdp(data, size);
-        int32_t userId = fdp.ConsumeIntegral<int32_t>();
+        int32_t userId = BMSFuzzTestUtil::GenerateRandomUser(fdp);
         userMgrProxy.CreateNewUser(userId);
         userMgrProxy.RemoveUser(userId);
         return true;

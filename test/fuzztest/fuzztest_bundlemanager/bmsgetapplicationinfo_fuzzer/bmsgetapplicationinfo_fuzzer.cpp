@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,7 @@
 #include "bundle_mgr_proxy.h"
 
 #include "bmsgetapplicationinfo_fuzzer.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
@@ -33,7 +33,7 @@ namespace OHOS {
         std::string appName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         ApplicationFlag flag = static_cast<ApplicationFlag>(fdp.ConsumeIntegral<uint32_t>());
         int32_t flags = fdp.ConsumeIntegral<int32_t>();
-        int32_t userId = fdp.ConsumeIntegral<int32_t>();
+        int32_t userId = BMSFuzzTestUtil::GenerateRandomUser(fdp);
         ApplicationInfo appInfo;
         bundleMgrProxy.GetApplicationInfo(appName, flag, userId, appInfo);
         bundleMgrProxy.GetApplicationInfo(appName, flags, userId, appInfo);

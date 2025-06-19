@@ -29,6 +29,7 @@ ohos_fuzztest("BMSFormInfoFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
+  include_dirs = [ "${test_path}/fuzztest" ]
   sources = [ "bmsforminfo_fuzzer.cpp" ]
 
   deps = [

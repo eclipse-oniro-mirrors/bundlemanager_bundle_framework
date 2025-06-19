@@ -20,7 +20,7 @@
 #include "bundle_mgr_proxy.h"
 
 #include "bmsgetbundlegids_fuzzer.h"
-#include "../../bms_fuzztest_util.h"
+#include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
