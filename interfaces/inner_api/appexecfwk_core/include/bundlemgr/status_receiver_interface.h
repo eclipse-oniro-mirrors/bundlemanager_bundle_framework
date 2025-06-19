@@ -37,6 +37,11 @@ public:
      */
     virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) = 0;
 
+    virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg, const int32_t innerCode)
+    {
+        OnFinished(resultCode, resultMsg);
+    }
+
     virtual void SetStreamInstallId(uint32_t installerId) = 0;
 
     enum {

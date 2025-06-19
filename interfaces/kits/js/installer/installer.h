@@ -31,6 +31,7 @@ extern thread_local napi_ref g_classBundleInstaller;
 struct InstallResult {
     int32_t resultCode = 0;
     std::string resultMsg;
+    int32_t innerCode = 0;
 };
 
 enum class InstallOption {

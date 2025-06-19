@@ -48,7 +48,8 @@ int StatusReceiverHost::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
         case static_cast<uint32_t>(StatusReceiverInterfaceCode::ON_FINISHED): {
             int32_t resultCode = data.ReadInt32();
             std::string resultMsg = Str16ToStr8(data.ReadString16());
-            OnFinished(resultCode, resultMsg);
+            int32_t innerCode = data.ReadInt32();
+            OnFinished(resultCode, resultMsg, innerCode);
             break;
         }
         case static_cast<uint32_t>(StatusReceiverInterfaceCode::ON_STATUS_NOTIFY): {

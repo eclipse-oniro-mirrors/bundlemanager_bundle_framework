@@ -34,6 +34,10 @@ static void ThrowTooFewParametersError(napi_env env, int32_t err);
 static napi_value CreateCommonError(napi_env env, int32_t err,
     const std::string &functionName = "", const std::string &permissionName = "");
 
+static napi_value CreateInstallError(
+    napi_env env, int32_t err, int32_t innerCode,
+    const std::string &functionName, const std::string &permissionName);
+
 static napi_value CreateError(napi_env env, int32_t err, const std::string &msg);
 
 static void ThrowEnumError(napi_env env,
