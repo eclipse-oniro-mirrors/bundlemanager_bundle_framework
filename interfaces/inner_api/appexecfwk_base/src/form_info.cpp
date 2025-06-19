@@ -83,6 +83,8 @@ const char* JSON_KEY_DISABLED_DESKTOP_BEHAVIORS = "disabledDesktopBehaviors";
 const char* JSON_KEY_TARGET_BUNDLE_NAME = "targetBundleName";
 const char* JSON_KEY_SUB_BUNDLE_NAME = "subBundleName";
 const char* JSON_KEY_KEEP_STATE_DURATION = "keepStateDuration";
+const char* JSON_KEY_RESIZABLE = "resizable";
+const char* JSON_KEY_GROUP_ID = "groupId";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -161,6 +163,8 @@ void FormInfo::SetInfoByFormExt(const ExtensionFormInfo &formInfo)
     }
     enableBlurBackground = formInfo.enableBlurBackground;
     appFormVisibleNotify = formInfo.appFormVisibleNotify;
+    resizable = formInfo.resizable;
+    groupId = formInfo.groupId;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -286,6 +290,8 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     sceneAnimationParams.abilityName = Str16ToStr8(parcel.ReadString16());
     sceneAnimationParams.isAlwaysActive = parcel.ReadBool();
     sceneAnimationParams.disabledDesktopBehaviors = Str16ToStr8(parcel.ReadString16());
+    resizable = parcel.ReadBool();
+    groupId = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -389,6 +395,8 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.abilityName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, sceneAnimationParams.isAlwaysActive);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.disabledDesktopBehaviors));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, resizable);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(groupId));
     return true;
 }
 
@@ -478,7 +486,9 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_ENABLE_BLUR_BACKGROUND, formInfo.enableBlurBackground},
         {JSON_KEY_APP_FORM_VISIBLE_NOTIFY, formInfo.appFormVisibleNotify},
         {JSON_KEY_FUN_INTERACTION_PARAMS, formInfo.funInteractionParams},
-        {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams}
+        {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams},
+        {JSON_KEY_RESIZABLE, formInfo.resizable},
+        {JSON_KEY_GROUP_ID, formInfo.groupId}
     };
 }
 
@@ -910,6 +920,18 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_RESIZABLE,
+        formInfo.resizable,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_GROUP_ID,
+        formInfo.groupId,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formInfo jsonObject error : %{public}d", parseResult);
     }

@@ -4250,4 +4250,68 @@ HWTEST_F(BmsBundleParserTest, ParseAppPreloadPhase_0300, Function | SmallTest | 
     applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
     EXPECT_EQ(applicationInfo.appPreloadPhase, AppExecFwk::AppPreloadPhase::DEFAULT);
 }
+
+/**
+ * @tc.number: FormInfo_0300
+ * @tc.name: Test from_json
+ * @tc.desc: test the interface of FormInfo
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0300, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = "testName";
+    jsonObject["resizable"] = true;
+    FormInfo formInfo;
+    from_json(jsonObject, formInfo);
+    EXPECT_EQ(formInfo.name, "testName");
+    EXPECT_TRUE(formInfo.resizable);
+}
+
+/**
+ * @tc.number: FormInfo_0400
+ * @tc.name: Test to_json
+ * @tc.desc: test the interface of FormInfo
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0400, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    FormInfo formInfo;
+    formInfo.name = "testName";
+    formInfo.resizable = true;
+    to_json(jsonObject, formInfo);
+    EXPECT_TRUE(jsonObject["resizable"]);
+    EXPECT_EQ(jsonObject["name"], "testName");
+}
+
+/**
+ * @tc.number: FormInfo_0500
+ * @tc.name: Test from_json
+ * @tc.desc: test the interface of FormInfo
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0500, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = "testName";
+    jsonObject["groupId"] = "123";
+    FormInfo formInfo;
+    from_json(jsonObject, formInfo);
+    EXPECT_EQ(formInfo.name, "testName");
+    EXPECT_EQ(formInfo.groupId, "123");
+}
+
+/**
+ * @tc.number: FormInfo_0600
+ * @tc.name: Test to_json
+ * @tc.desc: test the interface of FormInfo
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0600, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    FormInfo formInfo;
+    formInfo.name = "testName";
+    formInfo.groupId = "123";
+    to_json(jsonObject, formInfo);
+    EXPECT_EQ(jsonObject["groupId"], "123");
+    EXPECT_EQ(jsonObject["name"], "testName");
+}
 } // OHOS

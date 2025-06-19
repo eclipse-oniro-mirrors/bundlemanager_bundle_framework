@@ -65,6 +65,8 @@ constexpr const char* DISABLED_DESKTOP_BEHAVIORS = "disabledDesktopBehaviors";
 constexpr const char* TARGET_BUNDLE_NAME = "targetBundleName";
 constexpr const char* SUB_BUNDLE_NAME = "subBundleName";
 constexpr const char* KEEP_STATE_DURATION = "keepStateDuration";
+constexpr const char* RESIZABLE = "resizable";
+constexpr const char* GROUP_ID = "groupId";
 }
 
 class ExtensionFormProfile {

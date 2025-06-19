@@ -48,6 +48,8 @@ struct ExtensionFormInfo {
     std::string src;
     std::string formConfigAbility;
     FormWindow window;
+    bool resizable = false;
+    std::string groupId;
 
     std::vector<int32_t> supportDimensions {};
     std::vector<int32_t> conditionUpdate {};
