@@ -41,6 +41,8 @@ namespace Convert {
     RetAbilityInfoV2 ConvertAbilityInfoV2(const AppExecFwk::AbilityInfo& cAbilityInfos);
     RetHapModuleInfoV2 ConvertHapModuleInfoV2(const AppExecFwk::HapModuleInfo& hapModuleInfo);
     RetBundleInfoV2 ConvertBundleInfoV2(const AppExecFwk::BundleInfo& cBundleInfo, int32_t flags);
+    char* MallocCString(const std::string& origin);
+    void FreeRetBundleInfoV2(RetBundleInfoV2& bundleInfo);
 } // Convert
  
 } // BundleManager

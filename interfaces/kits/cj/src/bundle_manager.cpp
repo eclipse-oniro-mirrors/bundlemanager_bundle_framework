@@ -12,19 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <vector>
-#include <shared_mutex>
-
 #include "bundle_manager.h"
+
+#include <shared_mutex>
+#include <vector>
+
+#include "ability_info.h"
 #include "app_log_wrapper.h"
+#include "bundle_error.h"
 #include "bundle_info.h"
+#include "bundle_manager_sync.h"
+#include "bundle_mgr_client.h"
 #include "bundle_mgr_proxy.h"
 #include "common_func.h"
-#include "bundle_error.h"
-#include "bundle_manager_sync.h"
 #include "extension_ability_info.h"
-#include "ability_info.h"
-#include "bundle_mgr_client.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace CJSystemapi {
@@ -232,6 +234,51 @@ bool BundleManagerImpl::InnerCanOpenLink(std::string link, int32_t& code)
         return canOpen;
     }
     return canOpen;
+}
+
+int32_t BundleManagerImpl::GetBundleInfo(
+    const std::string& bundleName, int32_t bundleFlags, int32_t userId, AppExecFwk::BundleInfo& bundleInfo)
+{
+    APP_LOGD("BundleManagerImpl::GetBundleInfo inter");
+    if (bundleName.size() == 0) {
+        return static_cast<int32_t>(ERROR_BUNDLE_NOT_EXIST);
+    }
+    if (userId == AppExecFwk::Constants::UNSPECIFIED_USERID) {
+        userId = IPCSkeleton::GetCallingUid() / AppExecFwk::Constants::BASE_USER_RANGE;
+    }
+    auto iBundleMgr = AppExecFwk::CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("BundleMgr is null");
+        return static_cast<int32_t>(ERROR_BUNDLE_SERVICE_EXCEPTION);
+    }
+    ErrCode ret = AppExecFwk::CommonFunc::ConvertErrCode(
+        iBundleMgr->GetBundleInfoV9(bundleName, bundleFlags, bundleInfo, userId));
+    if (ret != NO_ERROR) {
+        APP_LOGD("GetBundleInfoV9 failed -n %{public}s -f %{public}d -u %{public}d", bundleName.c_str(), bundleFlags,
+            userId);
+    }
+    return ret;
+}
+
+std::string BundleManagerImpl::GetBundleNameByUid(int32_t userId, int32_t* errcode)
+{
+    APP_LOGD("BundleManagerImpl::GetBundleNameByUid inter");
+    auto iBundleMgr = AppExecFwk::CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        *errcode = static_cast<int32_t>(ERROR_BUNDLE_SERVICE_EXCEPTION);
+        return "";
+    }
+    std::string bundleName;
+    ErrCode ret = AppExecFwk::CommonFunc::ConvertErrCode(iBundleMgr->GetNameForUid(userId, bundleName));
+    if (ret != ERR_OK) {
+        if (userId > AppExecFwk::Constants::BASE_APP_UID) {
+            APP_LOGE("failed uid: %{public}d bundleName: %{public}s", userId, bundleName.c_str());
+        }
+        APP_LOGE("GetNameForUid failed");
+        *errcode = ret;
+        return "";
+    }
+    return bundleName;
 }
 
 } // BundleManager

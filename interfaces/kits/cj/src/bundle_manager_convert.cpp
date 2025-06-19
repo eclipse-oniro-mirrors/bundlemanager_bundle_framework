@@ -77,12 +77,33 @@ CArrString ConvertArrString(std::vector<std::string> vecStr)
     return {retValue, vecStr.size()};
 }
 
+void FreeCArrString(CArrString& cArrString)
+{
+    if (cArrString.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < cArrString.size; i++) {
+        free(cArrString.head[i]);
+        cArrString.head[i] = nullptr;
+    }
+    free(cArrString.head);
+    cArrString.head = nullptr;
+    cArrString.size = 0;
+}
+
 RetUsedScene ConvertUsedScene(const AppExecFwk::RequestPermissionUsedScene& usedScence)
 {
     RetUsedScene uScene;
     uScene.abilities = ConvertArrString(usedScence.abilities);
     uScene.when = MallocCString(usedScence.when);
     return uScene;
+}
+
+void FreeRetUsedScene(RetUsedScene& uScene)
+{
+    FreeCArrString(uScene.abilities);
+    free(uScene.when);
+    uScene.when = nullptr;
 }
 
 RetMetadata ConvertMetadata(const AppExecFwk::Metadata& cData)
@@ -94,6 +115,16 @@ RetMetadata ConvertMetadata(const AppExecFwk::Metadata& cData)
     return data;
 }
 
+void FreeRetMetadata(RetMetadata& data)
+{
+    free(data.name);
+    data.name = nullptr;
+    free(data.value);
+    data.value = nullptr;
+    free(data.resource);
+    data.resource = nullptr;
+}
+
 CResource ConvertResource(const AppExecFwk::Resource& cRes)
 {
     CResource res;
@@ -101,6 +132,14 @@ CResource ConvertResource(const AppExecFwk::Resource& cRes)
     res.moduleName = MallocCString(cRes.moduleName);
     res.id = cRes.id;
     return res;
+}
+
+void FreeCResource(CResource& res)
+{
+    free(res.bundleName);
+    res.bundleName = nullptr;
+    free(res.moduleName);
+    res.moduleName = nullptr;
 }
 
 CArrMetadata ConvertArrMetadata(const std::vector<AppExecFwk::Metadata>& cData)
@@ -121,6 +160,19 @@ CArrMetadata ConvertArrMetadata(const std::vector<AppExecFwk::Metadata>& cData)
         }
     }
     return data;
+}
+
+void FreeCArrMetadata(CArrMetadata& data)
+{
+    if (data.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < data.size; i++) {
+        FreeRetMetadata(data.head[i]);
+    }
+    free(data.head);
+    data.head = nullptr;
+    data.size = 0;
 }
 
 CArrMoMeta ConvertArrMoMeta(const std::map<std::string, std::vector<AppExecFwk::Metadata>>& metadata)
@@ -145,6 +197,25 @@ CArrMoMeta ConvertArrMoMeta(const std::map<std::string, std::vector<AppExecFwk::
     return arrMdata;
 }
 
+void FreeModuleMetadata(ModuleMetadata& metadata)
+{
+    free(metadata.moduleName);
+    metadata.moduleName = nullptr;
+    FreeCArrMetadata(metadata.metadata);
+}
+
+void FreeCArrMoMeta(CArrMoMeta& arrMdata)
+{
+    if (arrMdata.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < arrMdata.size; i++) {
+        FreeModuleMetadata(arrMdata.head[i]);
+    }
+    free(arrMdata.head);
+    arrMdata.head = nullptr;
+    arrMdata.size = 0;
+}
 
 RetSkillUri ConvertSkillUri(const AppExecFwk::SkillUri& cUri)
 {
@@ -160,6 +231,28 @@ RetSkillUri ConvertSkillUri(const AppExecFwk::SkillUri& cUri)
     skillUri.maxFileSupported = cUri.maxFileSupported;
     skillUri.linkFeature = MallocCString(cUri.linkFeature);
     return skillUri;
+}
+
+void FreeRetSkillUri(RetSkillUri& skillUri)
+{
+    free(skillUri.scheme);
+    skillUri.scheme = nullptr;
+    free(skillUri.host);
+    skillUri.host = nullptr;
+    free(skillUri.port);
+    skillUri.port = nullptr;
+    free(skillUri.path);
+    skillUri.path = nullptr;
+    free(skillUri.pathStartWith);
+    skillUri.pathStartWith = nullptr;
+    free(skillUri.pathRegex);
+    skillUri.pathRegex = nullptr;
+    free(skillUri.type);
+    skillUri.type = nullptr;
+    free(skillUri.utd);
+    skillUri.utd = nullptr;
+    free(skillUri.linkFeature);
+    skillUri.linkFeature = nullptr;
 }
 
 RetCArrSkillUri ConvertArrSkillUris(const std::vector<AppExecFwk::SkillUri>& cUris)
@@ -184,6 +277,19 @@ RetCArrSkillUri ConvertArrSkillUris(const std::vector<AppExecFwk::SkillUri>& cUr
     return skillUris;
 }
 
+void FreeRetCArrSkillUri(RetCArrSkillUri& skillUris)
+{
+    if (skillUris.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < skillUris.size; i++) {
+        FreeRetSkillUri(skillUris.head[i]);
+    }
+    free(skillUris.head);
+    skillUris.head = nullptr;
+    skillUris.size = 0;
+}
+
 RetSkill ConvertSkill(const AppExecFwk::Skill& cSkill)
 {
     RetSkill skill;
@@ -192,6 +298,13 @@ RetSkill ConvertSkill(const AppExecFwk::Skill& cSkill)
     skill.uris = ConvertArrSkillUris(cSkill.uris);
     skill.domainVerify = cSkill.domainVerify;
     return skill;
+}
+
+void FreeRetSkill(RetSkill& skill)
+{
+    FreeCArrString(skill.actions);
+    FreeCArrString(skill.entities);
+    FreeRetCArrSkillUri(skill.uris);
 }
 
 RetCArrSkill ConvertSkills(const std::vector<AppExecFwk::Skill>& cSkills)
@@ -215,6 +328,19 @@ RetCArrSkill ConvertSkills(const std::vector<AppExecFwk::Skill>& cSkills)
     return skills;
 }
 
+void FreeRetCArrSkill(RetCArrSkill& skills)
+{
+    if (skills.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < skills.size; i++) {
+        FreeRetSkill(skills.head[i]);
+    }
+    free(skills.head);
+    skills.head = nullptr;
+    skills.size = 0;
+}
+
 RetReqPermissionDetail ConvertRequestPermission(const AppExecFwk::RequestPermission& requestPermission)
 {
     RetReqPermissionDetail reqPer;
@@ -224,6 +350,17 @@ RetReqPermissionDetail ConvertRequestPermission(const AppExecFwk::RequestPermiss
     reqPer.reasonId = requestPermission.reasonId;
     reqPer.usedScence = ConvertUsedScene(requestPermission.usedScene);
     return reqPer;
+}
+
+void FreeRetReqPermissionDetail(RetReqPermissionDetail& reqPer)
+{
+    free(reqPer.name);
+    reqPer.name = nullptr;
+    free(reqPer.moduleName);
+    reqPer.moduleName = nullptr;
+    free(reqPer.reason);
+    reqPer.reason = nullptr;
+    FreeRetUsedScene(reqPer.usedScence);
 }
 
 RetApplicationInfo ConvertApplicationInfo(const AppExecFwk::ApplicationInfo& cAppInfo)
@@ -310,6 +447,37 @@ RetApplicationInfoV2 ConvertApplicationInfoV2(const AppExecFwk::ApplicationInfo&
     return appInfo;
 }
 
+void FreeRetApplicationInfoV2(RetApplicationInfoV2& appInfo)
+{
+    free(appInfo.name);
+    appInfo.name = nullptr;
+    free(appInfo.description);
+    appInfo.description = nullptr;
+    free(appInfo.label);
+    appInfo.label = nullptr;
+    free(appInfo.icon);
+    appInfo.icon = nullptr;
+    free(appInfo.process);
+    appInfo.process = nullptr;
+    FreeCArrString(appInfo.permissions);
+    free(appInfo.codePath);
+    appInfo.codePath = nullptr;
+    FreeCArrMoMeta(appInfo.metadataArray);
+    FreeCResource(appInfo.iconResource);
+    FreeCResource(appInfo.labelResource);
+    FreeCResource(appInfo.descriptionResource);
+    free(appInfo.appDistributionType);
+    appInfo.appDistributionType = nullptr;
+    free(appInfo.appProvisionType);
+    appInfo.appProvisionType = nullptr;
+    free(appInfo.nativeLibraryPath);
+    appInfo.nativeLibraryPath = nullptr;
+    free(appInfo.installSource);
+    appInfo.installSource = nullptr;
+    free(appInfo.releaseType);
+    appInfo.releaseType = nullptr;
+}
+
 RetExtensionAbilityInfo ConvertExtensionAbilityInfo(const AppExecFwk::ExtensionAbilityInfo& extensionInfos)
 {
     RetExtensionAbilityInfo exInfo;
@@ -352,6 +520,26 @@ RetExtensionAbilityInfoV2 ConvertExtensionAbilityInfoV2(const AppExecFwk::Extens
     exInfo.skills = ConvertSkills(extensionInfos.skills);
     exInfo.appIndex = extensionInfos.appIndex;
     return exInfo;
+}
+
+void FreeRetExtensionAbilityInfoV2(RetExtensionAbilityInfoV2& exInfo)
+{
+    free(exInfo.bundleName);
+    exInfo.bundleName = nullptr;
+    free(exInfo.moduleName);
+    exInfo.moduleName = nullptr;
+    free(exInfo.name);
+    exInfo.name = nullptr;
+    FreeCArrString(exInfo.permissions);
+    FreeRetApplicationInfoV2(exInfo.applicationInfo);
+    FreeCArrMetadata(exInfo.metadata);
+    free(exInfo.readPermission);
+    exInfo.readPermission = nullptr;
+    free(exInfo.writePermission);
+    exInfo.writePermission = nullptr;
+    free(exInfo.extensionAbilityTypeName);
+    exInfo.extensionAbilityTypeName = nullptr;
+    FreeRetCArrSkill(exInfo.skills);
 }
 
 CArrRetExtensionAbilityInfo ConvertArrExtensionAbilityInfo(
@@ -398,6 +586,19 @@ CArrRetExtensionAbilityInfoV2 ConvertArrExtensionAbilityInfoV2(
     return exAbInfo;
 }
 
+void FreeCArrRetExtensionAbilityInfoV2(CArrRetExtensionAbilityInfoV2 exAbInfo)
+{
+    if (exAbInfo.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < exAbInfo.size; i++) {
+        FreeRetExtensionAbilityInfoV2(exAbInfo.head[i]);
+    }
+    free(exAbInfo.head);
+    exAbInfo.head = nullptr;
+    exAbInfo.size = 0;
+}
+
 RetSignatureInfo ConvertSignatureInfo(const AppExecFwk::SignatureInfo& cSignatureInfo)
 {
     RetSignatureInfo signatureInfo;
@@ -405,6 +606,16 @@ RetSignatureInfo ConvertSignatureInfo(const AppExecFwk::SignatureInfo& cSignatur
     signatureInfo.fingerprint = MallocCString(cSignatureInfo.fingerprint);
     signatureInfo.appIdentifier = MallocCString(cSignatureInfo.appIdentifier);
     return signatureInfo;
+}
+
+void FreeRetSignatureInfo(RetSignatureInfo& signatureInfo)
+{
+    free(signatureInfo.appId);
+    signatureInfo.appId = nullptr;
+    free(signatureInfo.fingerprint);
+    signatureInfo.fingerprint = nullptr;
+    free(signatureInfo.appIdentifier);
+    signatureInfo.appIdentifier = nullptr;
 }
 
 RetAbilityInfo ConvertAbilityInfo(const AppExecFwk::AbilityInfo& cAbilityInfos)
@@ -502,6 +713,31 @@ RetAbilityInfoV2 ConvertAbilityInfoV2(const AppExecFwk::AbilityInfo& cAbilityInf
     return abInfo;
 }
 
+void FreeRetAbilityInfoV2(RetAbilityInfoV2& abInfo)
+{
+    free(abInfo.bundleName);
+    abInfo.bundleName = nullptr;
+    free(abInfo.moduleName);
+    abInfo.moduleName = nullptr;
+    free(abInfo.name);
+    abInfo.name = nullptr;
+    free(abInfo.label);
+    abInfo.label = nullptr;
+    free(abInfo.description);
+    abInfo.description = nullptr;
+    free(abInfo.icon);
+    abInfo.icon = nullptr;
+    free(abInfo.process);
+    abInfo.process = nullptr;
+    FreeCArrString(abInfo.permissions);
+    FreeCArrString(abInfo.deviceTypes);
+    FreeRetApplicationInfoV2(abInfo.applicationInfo);
+    FreeCArrMetadata(abInfo.metadata);
+    free(abInfo.supportWindowModes.head);
+    abInfo.supportWindowModes.head = nullptr;
+    FreeRetCArrSkill(abInfo.skills);
+}
+
 CArrRetAbilityInfo ConvertArrAbilityInfo(const std::vector<AppExecFwk::AbilityInfo>& abilityInfos)
 {
     CArrRetAbilityInfo abInfo;
@@ -543,6 +779,19 @@ CArrRetAbilityInfoV2 ConvertArrAbilityInfoV2(const std::vector<AppExecFwk::Abili
     return abInfo;
 }
 
+void FreeCArrRetAbilityInfoV2(CArrRetAbilityInfoV2& abInfo)
+{
+    if (abInfo.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < abInfo.size; i++) {
+        FreeRetAbilityInfoV2(abInfo.head[i]);
+    }
+    free(abInfo.head);
+    abInfo.head = nullptr;
+    abInfo.size = 0;
+}
+
 CArrRetPreloadItem ConvertPreloadItem(const std::vector<AppExecFwk::PreloadItem>& preloads)
 {
     CArrRetPreloadItem pLoad;
@@ -561,6 +810,20 @@ CArrRetPreloadItem ConvertPreloadItem(const std::vector<AppExecFwk::PreloadItem>
         }
     }
     return pLoad;
+}
+
+void FreeCArrRetPreloadItem(CArrRetPreloadItem pLoad)
+{
+    if (pLoad.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < pLoad.size; i++) {
+        free(pLoad.head[i].moduleName);
+        pLoad.head[i].moduleName = nullptr;
+    }
+    free(pLoad.head);
+    pLoad.head = nullptr;
+    pLoad.size = 0;
 }
 
 CArrRetDependency ConvertDependency(const std::vector<AppExecFwk::Dependency>& dependencies)
@@ -583,6 +846,22 @@ CArrRetDependency ConvertDependency(const std::vector<AppExecFwk::Dependency>& d
         }
     }
     return dep;
+}
+
+void FreeCArrRetDependency(CArrRetDependency& dep)
+{
+    if (dep.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < dep.size; i++) {
+        free(dep.head[i].bundleName);
+        dep.head[i].bundleName = nullptr;
+        free(dep.head[i].moduleName);
+        dep.head[i].moduleName = nullptr;
+    }
+    free(dep.head);
+    dep.head = nullptr;
+    dep.size = 0;
 }
 
 CArrDataItem ConvertArrDataItem(const std::map<std::string, std::string>& data)
@@ -611,6 +890,22 @@ CArrDataItem ConvertArrDataItem(const std::map<std::string, std::string>& data)
     return dataItems;
 }
 
+void FreeCArrDataItem(CArrDataItem& dataItems)
+{
+    if (dataItems.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < dataItems.size; i++) {
+        free(dataItems.head[i].key);
+        dataItems.head[i].key = nullptr;
+        free(dataItems.head[i].value);
+        dataItems.head[i].value = nullptr;
+    }
+    free(dataItems.head);
+    dataItems.head = nullptr;
+    dataItems.size = 0;
+}
+
 CRouterItem ConvertRouterItem(const AppExecFwk::RouterItem& router)
 {
     CRouterItem routerItem;
@@ -620,6 +915,19 @@ CRouterItem ConvertRouterItem(const AppExecFwk::RouterItem& router)
     routerItem.data = ConvertArrDataItem(router.data);
     routerItem.customData = MallocCString(router.customData);
     return routerItem;
+}
+
+void FreeCRouterItem(CRouterItem& routerItem)
+{
+    free(routerItem.name);
+    routerItem.name = nullptr;
+    free(routerItem.pageSourceFile);
+    routerItem.pageSourceFile = nullptr;
+    free(routerItem.buildFunction);
+    routerItem.buildFunction = nullptr;
+    FreeCArrDataItem(routerItem.data);
+    free(routerItem.customData);
+    routerItem.customData = nullptr;
 }
 
 CArrRouterItem ConvertRouterMap(const std::vector<AppExecFwk::RouterItem>& routerArray)
@@ -644,6 +952,19 @@ CArrRouterItem ConvertRouterMap(const std::vector<AppExecFwk::RouterItem>& route
         return routerMap;
     }
     return routerMap;
+}
+
+void FreeCArrRouterItem(CArrRouterItem& routerMap)
+{
+    if (routerMap.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < routerMap.size; i++) {
+        FreeCRouterItem(routerMap.head[i]);
+    }
+    free(routerMap.head);
+    routerMap.head = nullptr;
+    routerMap.size = 0;
 }
 
 RetHapModuleInfo ConvertHapModuleInfo(const AppExecFwk::HapModuleInfo& hapModuleInfo)
@@ -737,6 +1058,35 @@ RetHapModuleInfoV2 ConvertHapModuleInfoV2(const AppExecFwk::HapModuleInfo& hapMo
     return hapInfo;
 }
 
+void FreeRetHapModuleInfoV2(RetHapModuleInfoV2& hapInfo)
+{
+    free(hapInfo.name);
+    hapInfo.name = nullptr;
+    free(hapInfo.icon);
+    hapInfo.icon = nullptr;
+    free(hapInfo.label);
+    hapInfo.label = nullptr;
+    free(hapInfo.description);
+    hapInfo.description = nullptr;
+    free(hapInfo.mainElementName);
+    hapInfo.mainElementName = nullptr;
+    FreeCArrRetAbilityInfoV2(hapInfo.abilitiesInfo);
+    FreeCArrRetExtensionAbilityInfoV2(hapInfo.extensionAbilitiesInfo);
+    FreeCArrMetadata(hapInfo.metadata);
+    FreeCArrString(hapInfo.deviceTypes);
+    free(hapInfo.hashValue);
+    hapInfo.hashValue = nullptr;
+    FreeCArrRetPreloadItem(hapInfo.preloads);
+    FreeCArrRetDependency(hapInfo.dependencies);
+    free(hapInfo.fileContextMenuConfig);
+    hapInfo.fileContextMenuConfig = nullptr;
+    FreeCArrRouterItem(hapInfo.routerMap);
+    free(hapInfo.codePath);
+    hapInfo.codePath = nullptr;
+    free(hapInfo.nativeLibraryPath);
+    hapInfo.nativeLibraryPath = nullptr;
+}
+
 extern "C" {
 #define EXPORT __attribute__((visibility("default")))
 EXPORT RetAbilityInfoV2 OHOS_ConvertAbilityInfoV2(void* param)
@@ -801,6 +1151,19 @@ CArrHapInfoV2 ConvertArrHapInfoV2(const std::vector<AppExecFwk::HapModuleInfo>& 
     return hapInfos;
 }
 
+void FreeCArrHapInfoV2(CArrHapInfoV2 hapInfos)
+{
+    if (hapInfos.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < hapInfos.size; i++) {
+        FreeRetHapModuleInfoV2(hapInfos.head[i]);
+    }
+    free(hapInfos.head);
+    hapInfos.head = nullptr;
+    hapInfos.size = 0;
+}
+
 CArrReqPerDetail ConvertArrReqPerDetail(const std::vector<AppExecFwk::RequestPermission>& reqPermissionDetails)
 {
     CArrReqPerDetail perDetail;
@@ -820,6 +1183,19 @@ CArrReqPerDetail ConvertArrReqPerDetail(const std::vector<AppExecFwk::RequestPer
         }
     }
     return perDetail;
+}
+
+void FreeCArrReqPerDetail(CArrReqPerDetail& perDetail)
+{
+    if (perDetail.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < perDetail.size; i++) {
+        FreeRetReqPermissionDetail(perDetail.head[i]);
+    }
+    free(perDetail.head);
+    perDetail.head = nullptr;
+    perDetail.size = 0;
 }
 
 RetSignatureInfo InitSignInfo()
@@ -992,6 +1368,23 @@ RetBundleInfoV2 ConvertBundleInfoV2(const AppExecFwk::BundleInfo& cBundleInfo, i
     bundleInfo.routerMap = ConvertRouterMap(cBundleInfo.routerArray);
     bundleInfo.appIndex = cBundleInfo.appIndex;
     return bundleInfo;
+}
+
+void FreeRetBundleInfoV2(RetBundleInfoV2& bundleInfo)
+{
+    free(bundleInfo.name);
+    bundleInfo.name = nullptr;
+    free(bundleInfo.vendor);
+    bundleInfo.vendor = nullptr;
+    free(bundleInfo.versionName);
+    bundleInfo.versionName = nullptr;
+    FreeRetApplicationInfoV2(bundleInfo.appInfo);
+    FreeCArrHapInfoV2(bundleInfo.hapInfo);
+    FreeCArrReqPerDetail(bundleInfo.perDetail);
+    free(bundleInfo.state.head);
+    bundleInfo.state.head = nullptr;
+    FreeRetSignatureInfo(bundleInfo.signInfo);
+    FreeCArrRouterItem(bundleInfo.routerMap);
 }
 
 } // Convert

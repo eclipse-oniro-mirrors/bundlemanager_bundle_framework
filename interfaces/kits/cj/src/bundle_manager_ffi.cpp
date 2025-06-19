@@ -13,16 +13,19 @@
  * limitations under the License.
  */
 
-#include "securec.h"
-#include "app_log_wrapper.h"
-#include "cj_common_ffi.h"
-#include "bundle_manager_utils.h"
-#include "bundle_manager.h"
-#include "bundle_info.h"
-#include "ipc_skeleton.h"
-#include "bundle_manager_convert.h"
 #include "bundle_manager_ffi.h"
+
 #include <shared_mutex>
+
+#include "app_log_wrapper.h"
+#include "bundle_error.h"
+#include "bundle_info.h"
+#include "bundle_manager.h"
+#include "bundle_manager_convert.h"
+#include "bundle_manager_utils.h"
+#include "cj_common_ffi.h"
+#include "ipc_skeleton.h"
+#include "securec.h"
 
 using namespace OHOS::CJSystemapi::BundleManager::Convert;
 using namespace OHOS::CJSystemapi::BundleManager;
@@ -160,6 +163,63 @@ extern "C" {
             AppExecFwk::BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
             AppExecFwk::BundleFlag::GET_BUNDLE_WITH_HASH_VALUE);
         return bundleInfo.targetVersion;
+    }
+
+    FFI_EXPORT RetBundleInfoV2 FfiOHOSGetBundleInfo(char* cBundleName, int32_t bundleFlags,
+        int32_t userId, int32_t* errcode)
+    {
+        APP_LOGD("BundleManager::FfiOHOSGetBundleInfo");
+        RetBundleInfoV2 ret = {};
+        if (errcode == nullptr) {
+            APP_LOGE("BundleManager::FfiOHOSGetBundleInfo errcode is nullptr");
+            return ret;
+        }
+        if (cBundleName == nullptr) {
+            APP_LOGE("BundleManager::FfiOHOSGetBundleInfo cBundleName is nullptr");
+            *errcode = static_cast<int32_t>(ERROR_PARAM_CHECK_ERROR);
+            return ret;
+        }
+        std::string bundleName = std::string(cBundleName);
+        AppExecFwk::BundleInfo bundleInfo;
+        *errcode = BundleManagerImpl::GetBundleInfo(bundleName, bundleFlags, userId, bundleInfo);
+        if (*errcode != SUCCESS_CODE) {
+            APP_LOGE("BundleManager::FfiOHOSGetBundleInfo failed");
+            return ret;
+        }
+        return ConvertBundleInfoV2(bundleInfo, bundleFlags);
+    }
+
+    FFI_EXPORT void FfiOHOSFreeRetBundleInfoV2(RetBundleInfoV2* bundleInfo)
+    {
+        APP_LOGD("BundleManager::FfiOHOSFreeRetBundleInfoV2");
+        if (bundleInfo == nullptr) {
+            return;
+        }
+        FreeRetBundleInfoV2(*bundleInfo);
+    }
+
+    FFI_EXPORT char* FfiOHOSGetBundleNameByUid(int32_t userId, int32_t* errcode)
+    {
+        APP_LOGD("BundleManager::FfiOHOSGetBundleNameByUid");
+        if (errcode == nullptr) {
+            return nullptr;
+        }
+        auto bundleName = BundleManagerImpl::GetBundleNameByUid(userId, errcode);
+        if (*errcode != SUCCESS_CODE) {
+            APP_LOGE("BundleManager::FfiOHOSGetBundleNameByUid failed");
+            return nullptr;
+        }
+        APP_LOGD("BundleManager::FfiOHOSGetBundleNameByUid success");
+        return Convert::MallocCString(bundleName);
+    }
+
+    FFI_EXPORT void FfiOHOSFreeCString(char* retCString)
+    {
+        APP_LOGD("BundleManager::FfiOHOSFreeCString");
+        if (retCString == nullptr) {
+            return;
+        }
+        free(retCString);
     }
 }
 
