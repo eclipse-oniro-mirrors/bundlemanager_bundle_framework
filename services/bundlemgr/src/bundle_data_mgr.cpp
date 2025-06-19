@@ -2120,6 +2120,7 @@ void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t fla
         BundleInfo cloneBundleInfo;
         ErrCode ret = info.GetBundleInfoV9(flags, cloneBundleInfo, userId, item.second.appIndex);
         if (ret == ERR_OK) {
+            ProcessCertificate(cloneBundleInfo, info.GetBundleName(), flags);
             ProcessBundleMenu(cloneBundleInfo, flags, true);
             ProcessBundleRouterMap(cloneBundleInfo, flags);
             bundleInfos.emplace_back(cloneBundleInfo);
@@ -3645,6 +3646,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
             continue;
         }
+        ProcessCertificate(bundleInfo, innerBundleInfo.GetBundleName(), flags);
         ProcessBundleMenu(bundleInfo, flags, true);
         ProcessBundleRouterMap(bundleInfo, flags);
         PostProcessAnyUserFlags(flags, responseUserId, requestUserId, bundleInfo, innerBundleInfo);
@@ -3690,6 +3692,7 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         }
         BundleInfo bundleInfo;
         info.GetBundleInfoV9(flags, bundleInfo, Constants::ALL_USERID);
+        ProcessCertificate(bundleInfo, info.GetBundleName(), flags);
         auto ret = ProcessBundleMenu(bundleInfo, flags, true);
         if (ret == ERR_OK) {
             bundleInfos.emplace_back(bundleInfo);
@@ -9796,6 +9799,7 @@ ErrCode BundleDataMgr::GetCloneBundleInfo(
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId, appIndex);
 
+    ProcessCertificate(bundleInfo, bundleName, flags);
     ProcessBundleMenu(bundleInfo, flags, true);
     ProcessBundleRouterMap(bundleInfo, flags);
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
