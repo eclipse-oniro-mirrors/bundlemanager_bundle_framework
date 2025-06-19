@@ -302,6 +302,7 @@ ErrCode UnzipWithFilterAndWritersParallel(const FilePath &srcFile, FilePath &des
         return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
     }
     ErrCode ret = ERR_OK;
+    std::vector<ffrt::dependence> handles;
     for (int32_t i = 0; i < reader.num_entries(); i++) {
         if (!reader.OpenCurrentEntryInZip()) {
             APP_LOGI("Failed to open the current file in zip");
@@ -317,7 +318,7 @@ ErrCode UnzipWithFilterAndWritersParallel(const FilePath &srcFile, FilePath &des
             return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         bool isDirectory = reader.CurrentEntryInfo()->IsDirectory();
-        ffrt::submit([&, position, isDirectory, constEntryPath] () {
+        ffrt::task_handle handle = ffrt::submit_h([&, position, isDirectory, constEntryPath] () {
             if (ret != ERR_OK) {
                 return;
             }
@@ -357,12 +358,13 @@ ErrCode UnzipWithFilterAndWritersParallel(const FilePath &srcFile, FilePath &des
             }
             reader.ReleaseZipHandler(resourceId);
             }, {}, {});
+        handles.push_back(std::move(handle));
         if (!reader.AdvanceToNextEntry()) {
             APP_LOGI("Failed to advance to the next file");
             return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
     }
-    ffrt::wait();
+    ffrt::wait(handles);
     return ERR_OK;
 }
 
