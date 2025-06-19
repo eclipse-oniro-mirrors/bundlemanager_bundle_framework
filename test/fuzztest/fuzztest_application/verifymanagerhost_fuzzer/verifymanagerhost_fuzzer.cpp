@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "verify_manager_host.h"
+#include "verify_manager_stub.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
@@ -33,18 +33,41 @@ uint32_t GetU32Data(const char* ptr)
 {
     return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
 }
+class MockVerifyManagerStub : public VerifyManagerStub {
+public:
+    int32_t CallbackEnter(uint32_t code) override
+    {
+        return 0;
+    }
+    
+    int32_t CallbackExit(uint32_t code, int32_t result) override
+    {
+        return 0;
+    }
+    
+    ErrCode Verify(const std::vector<std::string>& abcPaths, int32_t& funcResult) override
+    {
+        return ERR_OK;
+    }
+        
+    ErrCode DeleteAbc(const std::string& path, int32_t& funcResult) override
+    {
+        return ERR_OK;
+    }
+};
+
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
     MessageParcel datas;
-    std::u16string descriptor = VerifyManagerHost::GetDescriptor();
+    std::u16string descriptor = MockVerifyManagerStub::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
     datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    VerifyManagerHost verifyManagerHost;
-    verifyManagerHost.OnRemoteRequest(code, datas, reply, option);
+    MockVerifyManagerStub verifyManagerStub;
+    verifyManagerStub.OnRemoteRequest(code, datas, reply, option);
     return true;
 }
 }

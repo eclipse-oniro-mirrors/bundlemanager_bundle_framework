@@ -18,6 +18,7 @@
 
 #include "verify_manager_host_impl.h"
 
+#include "appexecfwk_errors.h"
 #include "verifymanagerhostimplverify_fuzzer.h"
 #include "securec.h"
 
@@ -28,8 +29,9 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         VerifyManagerHostImpl impl;
+        int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
         std::vector<std::string> abcPaths = { std::string(data, size) };
-        auto ret1 = impl.Verify(abcPaths);
+        auto ret1 = impl.Verify(abcPaths, funcResult);
         return true;
     }
 }

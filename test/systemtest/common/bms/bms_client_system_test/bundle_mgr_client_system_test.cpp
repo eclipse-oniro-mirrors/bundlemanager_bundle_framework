@@ -37,6 +37,7 @@
 #include "status_receiver_host.h"
 #include "system_ability_definition.h"
 #include "verify_manager_proxy.h"
+#include "verify_manager_client.h"
 
 using namespace testing::ext;
 
@@ -2434,12 +2435,16 @@ HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0100, TestSize.Level1)
 
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     VerifyManagerProxy verifyManagerProxy(remoteObject);
+
+    auto& verifyClient = AppExecFwk::VerifyManagerClient::GetInstance();
     std::vector<std::string> abcPaths;
-    ErrCode ret = verifyManagerProxy.Verify(abcPaths);
+    ErrCode ret = verifyClient.Verify(abcPaths);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+
     abcPaths.push_back(HAP_PATH);
-    ret = verifyManagerProxy.Verify(abcPaths);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_SEND_REQUEST_FAILED);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    ret = verifyManagerProxy.Verify(abcPaths, funcResult);
+    EXPECT_EQ(ret, OBJECT_NULL);
 }
 
 /**
@@ -2449,16 +2454,11 @@ HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0100, TestSize.Level1)
  */
 HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0200, TestSize.Level1)
 {
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    EXPECT_NE(systemAbilityManager, nullptr);
-
-    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    VerifyManagerProxy verifyManagerProxy(remoteObject);
+    auto& verifyManagerClient = VerifyManagerClient::GetInstance();
     std::vector<std::string> abcPaths;
     std::string abcPath = HAP_PATH;
     abcPaths.push_back(abcPath);
-    ErrCode ret = verifyManagerProxy.RemoveFiles(abcPaths);
+    ErrCode ret = verifyManagerClient.RemoveFiles(abcPaths);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
 }
 
@@ -2476,11 +2476,13 @@ HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0300, TestSize.Level1)
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     VerifyManagerProxy verifyManagerProxy(remoteObject);
 
-    ErrCode ret = verifyManagerProxy.DeleteAbc(EMPTY_STRING);
+    auto& verifyClient = AppExecFwk::VerifyManagerClient::GetInstance();
+    ErrCode ret = verifyClient.DeleteAbc(EMPTY_STRING);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR);
 
-    ret = verifyManagerProxy.DeleteAbc(HAP_PATH);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DELETE_ABC_SEND_REQUEST_FAILED);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    ret = verifyManagerProxy.DeleteAbc(HAP_PATH, funcResult);
+    EXPECT_EQ(ret, OBJECT_NULL);
 }
 
 /**

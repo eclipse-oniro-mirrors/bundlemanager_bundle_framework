@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -215,17 +215,22 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0400, Function | SmallTes
 HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0500, Function | SmallTest | Level1)
 {
     VerifyManagerHostImpl impl;
-    auto ret = impl.DeleteAbc(BUNDLE_NAME);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto ret = impl.DeleteAbc(BUNDLE_NAME, funcResult);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR);
 
-    ret = impl.DeleteAbc("test..abc");
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR);
+    ret = impl.DeleteAbc("test..abc", funcResult);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR);
 
-    ret = impl.DeleteAbc("test.txt");
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR);
+    ret = impl.DeleteAbc("test.txt", funcResult);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR);
 
-    ret = impl.DeleteAbc("test.abc");
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED);
+    ret = impl.DeleteAbc("test.abc", funcResult);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED);
 }
 
 /**
@@ -238,8 +243,10 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0600, Function | SmallTes
     VerifyManagerHostImpl impl;
     std::vector<std::string> abcPaths;
     abcPaths.push_back(INVALID_PATH);
-    auto ret1 = impl.Verify(abcPaths);
-    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto ret1 = impl.Verify(abcPaths, funcResult);
+    EXPECT_EQ(ret1, ERR_OK);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
 }
 
 /**
@@ -252,8 +259,10 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0700, Function | SmallTes
     VerifyManagerHostImpl impl;
     std::vector<std::string> abcPaths;
     abcPaths.push_back(INVALID_SUFFIX);
-    auto ret1 = impl.Verify(abcPaths);
-    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto ret1 = impl.Verify(abcPaths, funcResult);
+    EXPECT_EQ(ret1, ERR_OK);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
 }
 
 /**
@@ -266,8 +275,10 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0800, Function | SmallTes
     VerifyManagerHostImpl impl;
     std::vector<std::string> abcPaths;
     abcPaths.push_back(INVALID_SUFFIX);
-    auto ret1 = impl.Verify(abcPaths);
-    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto ret1 = impl.Verify(abcPaths, funcResult);
+    EXPECT_EQ(ret1, ERR_OK);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
 }
 
 /**

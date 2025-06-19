@@ -270,7 +270,10 @@ ohos_shared_library("libbms") {
     defines += [ "BUILD_VARIANT_USER" ]
   }
 
-  configs = [ ":bundlemgr_common_config" ]
+  configs = [
+    ":bundlemgr_common_config",
+    "${core_path}:bundlemgr_ipc_public_config",
+  ]
   cflags = [
     "-fvisibility=hidden",
     "-fdata-sections",
