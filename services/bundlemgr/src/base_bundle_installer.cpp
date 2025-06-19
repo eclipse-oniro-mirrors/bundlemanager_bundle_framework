@@ -2250,6 +2250,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             }
             UtdHandler::InstallUtdAsync(bundleName, userId_);
             GenerateNewUserDataGroupInfos(oldInfo);
+            isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
             // remove userid record in preInstallBundleInfo
             PreInstallBundleInfo preInstallBundleInfo;
             preInstallBundleInfo.SetBundleName(bundleName);
