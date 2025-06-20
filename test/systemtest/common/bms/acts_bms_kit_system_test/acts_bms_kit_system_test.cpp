@@ -14,6 +14,7 @@
  */
 #define private public
 
+#include <cinttypes>
 #include <fcntl.h>
 #include <fstream>
 #include <future>
@@ -182,7 +183,7 @@ public:
     {}
     void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
     void OnCleanAllBundleCacheFinished(int32_t result) override;
-    uint64_t GetCacheStat();
+    uint64_t GetCacheStat() override;
     int32_t GetDelRet();
 private:
     std::shared_ptr<std::promise<uint64_t>> cacheStat_;
@@ -229,6 +230,23 @@ int32_t ProcessCacheCallbackImpl::GetDelRet()
     }
     return -1;
 };
+
+class TestGetAllBundleCacheCallBack : public ProcessCacheCallbackHost {
+public:
+    uint64_t GetCacheStat() override;
+};
+    
+uint64_t TestGetAllBundleCacheCallBack::GetCacheStat()
+{
+    sleep(3);
+    if (getAllcomplete_) {
+        APP_LOGI("GetCacheStat cacheSize_: %{public}"  PRIu64, cacheSize_);
+        return cacheSize_;
+    }
+    cacheSize_ = getAllFuture_.get();
+    APP_LOGI("GetCacheStat getAllFuture_: %{public}"  PRIu64, cacheSize_);
+    return cacheSize_;
+}
 
 class CleanCacheCallBackImpl : public CleanCacheCallbackHost {
 public:
@@ -10734,6 +10752,47 @@ HWTEST_F(ActsBmsKitSystemTest, GetSandboxDataDir_0001, Function | MediumTest | L
     queryResult = bundleMgrProxy->GetSandboxDataDir(DEFAULT_APP_BUNDLE_NAME, 0, sandboxDataDir);
     EXPECT_EQ(queryResult, ERR_OK);
     std::cout << "END GetSandboxDataDir_0001" << std::endl;
+}
+
+/**
+ * @tc.number: GetAllBundleCacheStat_0002
+ * @tc.name: test GetAllBundleCacheStat interface
+ * @tc.desc: 1. call GetAllBundleCacheStat
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllBundleCacheStat_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+ 
+    ErrCode ret = ERR_OK;
+    sptr<TestGetAllBundleCacheCallBack> getCache1 = nullptr;
+    // test param is nullptr
+    ret = bundleMgrProxy->GetAllBundleCacheStat(getCache1);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+ 
+    // test one calling
+    getCache1 = new (std::nothrow) TestGetAllBundleCacheCallBack();
+    EXPECT_NE(getCache1, nullptr);
+    ret = bundleMgrProxy->GetAllBundleCacheStat(getCache1);
+    EXPECT_EQ(ret, ERR_OK);
+    sleep(5);
+ 
+    // test multi calling
+    sptr<TestGetAllBundleCacheCallBack> getCache2 = new (std::nothrow) TestGetAllBundleCacheCallBack();
+    EXPECT_NE(getCache2, nullptr);
+    sptr<TestGetAllBundleCacheCallBack> getCache3 = new (std::nothrow) TestGetAllBundleCacheCallBack();
+    EXPECT_NE(getCache2, nullptr);
+    sptr<TestGetAllBundleCacheCallBack> getCache4 = new (std::nothrow) TestGetAllBundleCacheCallBack();
+    EXPECT_NE(getCache2, nullptr);
+    
+    ret = bundleMgrProxy->GetAllBundleCacheStat(getCache2);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = bundleMgrProxy->GetAllBundleCacheStat(getCache3);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = bundleMgrProxy->GetAllBundleCacheStat(getCache4);
+    EXPECT_EQ(ret, ERR_OK);
+    std::cout << "END GetAllBundleCacheStat_0002" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

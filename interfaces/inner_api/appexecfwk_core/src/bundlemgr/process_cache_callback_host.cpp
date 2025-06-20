@@ -14,7 +14,7 @@
  */
 
 #include "process_cache_callback_host.h"
-
+#include <cinttypes>
 #include "app_log_wrapper.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
@@ -22,6 +22,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+const int32_t MAX_WAITING_TIME = 60;
+
 ProcessCacheCallbackHost::ProcessCacheCallbackHost()
 {
     APP_LOGI("process clean cache callback host instance");
@@ -69,12 +71,24 @@ void ProcessCacheCallbackHost::OnGetAllBundleCacheFinished(uint64_t cacheStat)
     }
     getAllcomplete_ = true;
     getAllPromise_.set_value(cacheStat);
+    cacheSize_ = cacheStat;
+    APP_LOGD("OnGetAllBundleCacheFinished, size: %{public}" PRIu64, cacheStat);
 }
 
 uint64_t ProcessCacheCallbackHost::GetCacheStat()
 {
-    return getAllFuture_.get();
-};
+    if (getAllcomplete_) {
+        return cacheSize_;
+    }
+    const auto timeout = std::chrono::seconds(MAX_WAITING_TIME);
+    // wait for ready
+    if (getAllFuture_.wait_for(timeout) == std::future_status::ready) {
+        cacheSize_ = getAllFuture_.get();
+        return cacheSize_;
+    } else {
+        return 0;
+    }
+}
 
 void ProcessCacheCallbackHost::OnCleanAllBundleCacheFinished(int32_t result)
 {

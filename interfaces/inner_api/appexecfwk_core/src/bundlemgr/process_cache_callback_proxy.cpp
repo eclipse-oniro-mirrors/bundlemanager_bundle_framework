@@ -89,5 +89,10 @@ void ProcessCacheCallbackProxy::OnCleanAllBundleCacheFinished(int32_t result)
         APP_LOGW("call OnCleanAllBundleCacheFinished fail, for transact failed, error code: %{public}d", ret);
     }
 }
+
+uint64_t ProcessCacheCallbackProxy::GetCacheStat()
+{
+    return 0;
+};
 }  // namespace AppExecFwk
 }  // namespace OHOS

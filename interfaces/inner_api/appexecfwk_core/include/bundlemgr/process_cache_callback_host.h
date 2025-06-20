@@ -33,10 +33,11 @@ public:
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     void OnGetAllBundleCacheFinished(uint64_t cacheStat) override;
-    uint64_t GetCacheStat();
+    uint64_t GetCacheStat() override;
     void OnCleanAllBundleCacheFinished(int32_t result) override;
     int32_t GetCleanRet();
 private:
+    uint64_t cacheSize_ = 0;
     std::mutex getAllMutex_;
     bool getAllcomplete_ = false;
     std::promise<uint64_t> getAllPromise_;
