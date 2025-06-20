@@ -353,6 +353,8 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let option = options ?? defaultParam;
       if (option instanceof installer.DestroyAppCloneParam) {
         defaultParam = new DestroyAppCloneParamInner(option);
+      } else if (typeof option === "number") {
+        defaultParam.userId = option;
       }
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
       let execFun = ():NullishType=>{

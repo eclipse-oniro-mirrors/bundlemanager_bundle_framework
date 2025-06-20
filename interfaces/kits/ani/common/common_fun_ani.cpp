@@ -2659,7 +2659,6 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
             (intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::REPLACE_EXISTING)) &&
             (intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::FREE_INSTALL))) {
             APP_LOGE("invalid installFlag param");
-            return false;
         }
         installParam.installFlag = static_cast<OHOS::AppExecFwk::InstallFlag>(intValue);
     } else {
