@@ -56,7 +56,6 @@ const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO
 const char* PERMISSION_NAME = "permissionName";
 const char* INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action entities uri type or linkFeature) non-empty.";
-const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
 const char* PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
     "BusinessError 401: Parameter error.Parameter extensionAbilityType is empty.";
 const char* LINK_FEATURE = "linkFeature";

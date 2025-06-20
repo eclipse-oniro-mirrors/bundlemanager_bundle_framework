@@ -31,7 +31,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
-const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 constexpr const char* SET_SHORTCUT_VISIBLE = "SetShortcutVisibleForSelf";
 constexpr const char* GET_ALL_SHORTCUT_INFO_FOR_SELF = "GetAllShortcutInfoForSelf";
 }

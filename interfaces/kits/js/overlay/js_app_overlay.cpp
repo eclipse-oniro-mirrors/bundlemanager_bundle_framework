@@ -31,7 +31,6 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 namespace {
-const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 const std::string TARGET_MODULE_NAME = "targetModuleName";
 const std::string TARGET_BUNDLE_NAME = "targetBundleName";
 const std::string IS_ENABLED = "isEnabled";

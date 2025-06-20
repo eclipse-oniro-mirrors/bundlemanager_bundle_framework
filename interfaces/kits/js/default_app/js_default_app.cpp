@@ -44,7 +44,6 @@ const char* SET_DEFAULT_APPLICATION = "SetDefaultApplication";
 const char* SET_DEFAULT_APPLICATION_SYNC = "SetDefaultApplicationSync";
 const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
 const char* RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
-const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
 const char* PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
 const char* TYPE_CHECK = "type";
 const char* WANT_CHECK = "want";
