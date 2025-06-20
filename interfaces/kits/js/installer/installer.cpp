@@ -1009,6 +1009,7 @@ void InstallExecuter(napi_env env, void *data)
         APP_LOGD("InnerInstall resultCode %{public}d", installResult.resultCode);
         installResult.resultMsg = callback->GetResultMsg();
         APP_LOGD("InnerInstall resultMsg %{public}s", installResult.resultMsg.c_str());
+        installResult.innerCode = callback->GetInnerCode();
         return;
     }
     APP_LOGE("install failed due to %{public}d", res);
@@ -1016,6 +1017,8 @@ void InstallExecuter(napi_env env, void *data)
     CreateProxyErrCode(proxyErrCodeMap);
     if (proxyErrCodeMap.find(res) != proxyErrCodeMap.end()) {
         installResult.resultCode = proxyErrCodeMap.at(res);
+        // append inner error code to TS interface result message
+        installResult.innerCode = res;
     } else {
         installResult.resultCode = IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
     }
@@ -1046,8 +1049,8 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
     if (callbackPtr->installResult.resultCode != SUCCESS) {
         switch (callbackPtr->option) {
             case InstallOption::INSTALL:
-                result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
-                    RESOURCE_NAME_OF_INSTALL, INSTALL_PERMISSION);
+                result[FIRST_PARAM] = BusinessError::CreateInstallError(env, callbackPtr->installResult.resultCode,
+                    callbackPtr->installResult.innerCode, RESOURCE_NAME_OF_INSTALL, INSTALL_PERMISSION);
                 break;
             case InstallOption::RECOVER:
                 result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,

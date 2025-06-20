@@ -813,6 +813,10 @@ void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string
         APP_LOGE("fail to call OnFinished, for write resultMsg_ failed");
         return;
     }
+    if (!data.WriteInt32(resultCode)) {
+        APP_LOGE("fail to call OnFinished, for write resultCode failed");
+        return;
+    }
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {

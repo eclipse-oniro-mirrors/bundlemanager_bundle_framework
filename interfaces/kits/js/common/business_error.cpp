@@ -342,6 +342,30 @@ napi_value BusinessError::CreateCommonError(
     return CreateError(env, err, errMessage);
 }
 
+napi_value BusinessError::CreateInstallError(
+    napi_env env, int32_t err, int32_t innerCode,
+    const std::string &functionName, const std::string &permissionName)
+{
+    std::string errMessage = ERR_MSG_BUSINESS_ERROR;
+    auto iter = errMessage.find("$");
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, std::to_string(err));
+    }
+    if (ERR_MSG_MAP.find(err) != ERR_MSG_MAP.end()) {
+        errMessage += ERR_MSG_MAP[err];
+    }
+    errMessage += "[" + std::to_string(innerCode) + "]";
+    iter = errMessage.find("$");
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, functionName);
+        iter = errMessage.find("$");
+        if (iter != std::string::npos) {
+            errMessage = errMessage.replace(iter, 1, permissionName);
+        }
+    }
+    return CreateError(env, err, errMessage);
+}
+
 void BusinessError::ThrowEnumError(napi_env env,
     const std::string &parameter, const std::string &type)
 {

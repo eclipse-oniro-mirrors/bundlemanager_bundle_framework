@@ -26,18 +26,21 @@ namespace AppExecFwk {
 class InstallerCallback : public OHOS::AppExecFwk::StatusReceiverHost {
 public:
     InstallerCallback() = default;
-    virtual ~InstallerCallback() override = default;
+    ~InstallerCallback() override = default;
 
-    virtual void OnStatusNotify(const int32_t progress) override;
-    virtual void OnFinished(const int32_t resultCode, [[maybe_unused]] const std::string &resultMsg) override;
+    void OnStatusNotify(const int32_t progress) override;
+    void OnFinished(const int32_t resultCode, [[maybe_unused]] const std::string &resultMsg) override;
+    void OnFinished(const int32_t resultCode, const std::string &resultMsg, const int32_t innerCode) override;
     int32_t GetResultCode();
     std::string GetResultMsg();
+    int32_t GetInnerCode();
 
 private:
     bool isSetValue_ = false;
     std::mutex setValueMutex_;
     std::promise<int32_t> resultCodeSignal_;
     std::promise<std::string> resultMsgSignal_;
+    std::promise<int32_t> innerCodeSignal_;
     DISALLOW_COPY_AND_MOVE(InstallerCallback);
 };
 }  // namespace AppExecFwk
