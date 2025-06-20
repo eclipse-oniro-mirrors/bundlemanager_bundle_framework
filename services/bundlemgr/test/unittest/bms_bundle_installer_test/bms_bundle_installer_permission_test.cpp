@@ -91,6 +91,11 @@ public:
     void ClearBundleInfo();
     void ClearDataMgr();
     void ResetDataMgr();
+    void WriteToConfigFile(const std::string& filename,
+        const std::vector<std::string>& newEntries) const;
+    void GetExistedEntries(const std::string &filename,
+        std::set<std::string> &existingEntries,
+        std::vector<std::string> &allLines) const;
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
@@ -327,6 +332,67 @@ void BmsBundleInstallerPermissionTest::ClearBundleInfo()
     // clear innerBundleInfo from data storage
     bool result = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
     EXPECT_TRUE(result) << "the bundle info in db clear fail: " << BUNDLE_NAME;
+}
+
+void BmsBundleInstallerPermissionTest::GetExistedEntries(const std::string &filename,
+    std::set<std::string> &existingEntries, std::vector<std::string> &allLines) const
+{
+    bool fileExists = std::filesystem::exists(filename);
+    std::ifstream inFile(filename);
+    if (inFile.is_open()) {
+        std::string line;
+        while (std::getline(inFile, line)) {
+            allLines.push_back(line);
+            if (line.empty() || line[0] == '#') {
+                continue;
+            }
+            size_t endPos = line.find_first_of(":# \t");
+            if (endPos == std::string::npos) {
+                endPos = line.length();
+            }
+            
+            std::string bundleName = line.substr(0, endPos);
+            if (!bundleName.empty()) {
+                existingEntries.insert(bundleName);
+            }
+        }
+        inFile.close();
+    }
+}
+
+void BmsBundleInstallerPermissionTest::WriteToConfigFile(const std::string &filename,
+    const std::vector<std::string> &newEntries) const
+{
+    bool fileExists = std::filesystem::exists(filename);
+    std::set<std::string> existingBundleNames;
+    std::vector<std::string> allLines;
+    if (fileExists) {
+        GetExistedEntries(filename, existingBundleNames, allLines);
+    }
+    std::ofstream outFile(filename);
+    if (!outFile.is_open()) {
+        LOG_E(BMS_TAG_INSTALLD, "%{public}s can not open, errno: %{public}d",
+            filename.c_str(), errno);
+        return;
+    }
+    
+    for (const auto& line : allLines) {
+        outFile << line << "\n";
+    }
+    for (const auto& entry : newEntries) {
+        std::string bundleName;
+        size_t endPos = entry.find_first_of(":# \t");
+        if (endPos == std::string::npos) {
+            bundleName = entry;
+        } else {
+            bundleName = entry.substr(0, endPos);
+        }
+        if (existingBundleNames.find(bundleName) == existingBundleNames.end()) {
+            outFile << entry << "\n";
+            existingBundleNames.insert(bundleName);
+        }
+    }
+    outFile.close();
 }
 
 /**
@@ -1045,5 +1111,72 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0002, Function | Sm
     std::string result;
     bool ret = localBundleMgrHostImpl->GetLabelByBundleName(bundleName, userId, result);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: CleanArkStartupCache_0010
+ * @tc.name: test CleanArkStartupCache
+ * @tc.desc: 1.Test the CleanArkStartupCache of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, CleanArkStartupCache_0010, Function | SmallTest | Level0)
+{
+    // test no FOUNDATION_UID
+    std::string cacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
+    std::string bundleName = "";
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.CleanArkStartupCache(cacheDir, bundleName, 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+ 
+/**
+ * @tc.number: DeleteArkStartupCache_0010
+ * @tc.name: test DeleteArkStartupCache
+ * @tc.desc: 1.Test the DeleteArkStartupCache of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, DeleteArkStartupCache_0010, Function | SmallTest | Level0)
+{
+    // test no FOUNDATION_UID
+    std::string cacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
+    std::string bundleName = "test1";
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.DeleteArkStartupCache(cacheDir, bundleName, 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+ 
+/**
+ * @tc.number: CreateArkStartupCache_0030
+ * @tc.name: test CreateArkStartupCache
+ * @tc.desc: 1.Test the CreateArkStartupCache of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, CreateArkStartupCache_0030, Function | SmallTest | Level0)
+{
+    ArkStartupCache ceateArk;
+    ceateArk.bundleName = "com.test";
+    ceateArk.bundleType = BundleType::APP;
+    ceateArk.cacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
+    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
+    ceateArk.uid = 0;
+    ceateArk.gid = 0;
+    std::vector<std::string> entries = {
+        "com.test # Keep"
+    };
+    WriteToConfigFile(ServiceConstants::APP_STARTUP_CACHE_CONG, entries);
+ 
+    // test bundlename in white list
+    BaseBundleInstaller installer3;
+    ErrCode ret = installer3.CreateArkStartupCache(ceateArk);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+ 
+/**
+ * @tc.number: SetArkStartupCacheApl_0100
+ * @tc.name: test SetArkStartupCacheApl
+ * @tc.desc: 1.Test the SetArkStartupCacheApl
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, SetArkStartupCacheApl_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    auto ret = impl.SetArkStartupCacheApl("");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

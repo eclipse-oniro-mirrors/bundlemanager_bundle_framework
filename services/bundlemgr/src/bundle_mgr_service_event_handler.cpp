@@ -322,6 +322,7 @@ void BMSEventHandler::AfterBmsStart()
     BundleResourceHelper::RegisterCommonEventSubscriber();
     BundleResourceHelper::RegisterConfigurationObserver();
     ProcessCheckAppEl1Dir();
+    ProcessCheckSystemOptimizeDir();
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
 }
 
@@ -956,7 +957,6 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
 #else
     ProcessBootBundleInstallFromScan(userId);
 #endif
-    ProcessCheckSystemOptimizeDir();
 }
 
 void BMSEventHandler::ProcessBootBundleInstallFromScan(int32_t userId)
@@ -1284,7 +1284,6 @@ void BMSEventHandler::ProcessRebootBundle()
     CleanAllBundleShaderCache();
     CleanAllBundleEl1ShaderCacheLocal();
     CleanAllBundleEl1ArkStartupCacheLocal();
-    ProcessCheckSystemOptimizeDir();
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)

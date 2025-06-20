@@ -271,7 +271,7 @@ public:
     void WriteToConfigFile(const std::string& filename, 
         const std::vector<std::string>& newEntries) const;
     ErrCode MkdirIfNotExist(const std::string &dir) const;
-    void GetExistedEntries(const std::string &filename, 
+    void GetExistedEntries(const std::string &filename,
         std::set<std::string> &existingEntries,
         std::vector<std::string> &allLines) const;
 
@@ -646,7 +646,7 @@ bool BmsBundleInstallerTest::CheckShaderCachePathExist(const std::string &bundle
     return isExist;
 }
 
-void BmsBundleInstallerTest::GetExistedEntries(const std::string &filename, 
+void BmsBundleInstallerTest::GetExistedEntries(const std::string &filename,
     std::set<std::string> &existingEntries, std::vector<std::string> &allLines) const
 {
     bool fileExists = std::filesystem::exists(filename);
@@ -672,7 +672,7 @@ void BmsBundleInstallerTest::GetExistedEntries(const std::string &filename,
     }
 }
 
-void BmsBundleInstallerTest::WriteToConfigFile(const std::string &filename, 
+void BmsBundleInstallerTest::WriteToConfigFile(const std::string &filename,
     const std::vector<std::string> &newEntries) const
 {
     bool fileExists = std::filesystem::exists(filename);
@@ -11923,30 +11923,55 @@ HWTEST_F(BmsBundleInstallerTest, ParseAppStartupBundleNames_0100, Function | Sma
     BaseBundleInstaller installer;
     auto ret2 = MkdirIfNotExist(dir);
     EXPECT_EQ(ret2, ERR_OK);
-
+ 
     BundleUtil bundleUtil;
     std::string confPath = "/system/etc/ark/test.conf";
     std::unordered_set<std::string> res = bundleUtil.ParseAppStartupBundleNames(confPath);
     EXPECT_TRUE(res.empty());
-
+ 
     std::vector<std::string> entries = {
         "",
         "#",
         " # ",
-        "cn.cnr.cnrnetohos:aot # ",
-        "com.hmos.soundrecorder:aot # ",
-        "com.hmos.finddevice:aot # ",
-        "com.hmos.photos:aot # ",
-        "com.cmbchina.harmony # ",
-        "com.bankcomm.app.maidanba # ",
-        "com.gotokeep.hm.keep # Keep"
+        "cn.123.cnrnetohos:aot # ",
+        "com.456.harmony # ",
     };
-
+ 
     WriteToConfigFile(ServiceConstants::APP_STARTUP_CACHE_CONG, entries);
     res = bundleUtil.ParseAppStartupBundleNames(ServiceConstants::APP_STARTUP_CACHE_CONG);
     EXPECT_FALSE(res.empty());
 }
-
+ 
+/**
+ * @tc.number: CleanArkStartupCache_0010
+ * @tc.name: test CleanArkStartupCache
+ * @tc.desc: 1.Test the CleanArkStartupCache of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CleanArkStartupCache_0010, Function | SmallTest | Level0)
+{
+    // test no FOUNDATION_UID
+    std::string cacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
+    std::string bundleName = "";
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.CleanArkStartupCache(cacheDir, bundleName, 100);
+    EXPECT_EQ(ret, ERR_OK);
+}
+ 
+/**
+ * @tc.number: DeleteArkStartupCache_0010
+ * @tc.name: test DeleteArkStartupCache
+ * @tc.desc: 1.Test the DeleteArkStartupCache of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, DeleteArkStartupCache_0010, Function | SmallTest | Level0)
+{
+    // test no FOUNDATION_UID
+    std::string cacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
+    std::string bundleName = "test1";
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.DeleteArkStartupCache(cacheDir, bundleName, 100);
+    EXPECT_EQ(ret, ERR_OK);
+}
+ 
 /**
  * @tc.number: CreateArkStartupCache_0010
  * @tc.name: test CreateArkStartupCache
@@ -11966,7 +11991,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0010, Function | SmallTes
     ErrCode ret = installer1.CreateArkStartupCache(ceateArk);
     EXPECT_EQ(ret, ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_APP_OR_ATOMIC);
 }
-
+ 
 /**
  * @tc.number: CreateArkStartupCache_0020
  * @tc.name: test CreateArkStartupCache
@@ -11975,21 +12000,92 @@ HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0010, Function | SmallTes
 HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0020, Function | SmallTest | Level0)
 {
     ArkStartupCache ceateArk;
-    ceateArk.bundleName = "com.test";
+    ceateArk.bundleName = "com.test2";
     ceateArk.bundleType = BundleType::APP;
     ceateArk.cacheDir = "";
     ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
     ceateArk.uid = 0;
     ceateArk.gid = 0;
-
+ 
     // test bundlename is not in white list, bundleType is APP or ATOMIC
     BaseBundleInstaller installer2;
     ErrCode ret = installer2.CreateArkStartupCache(ceateArk);
     EXPECT_EQ(ret, ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST);
-
+ 
     ceateArk.bundleType = BundleType::ATOMIC_SERVICE;
     ret = installer2.CreateArkStartupCache(ceateArk);
     EXPECT_EQ(ret, ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST);
+}
+ 
+/**
+ * @tc.number: CreateArkStartupCache_0030
+ * @tc.name: test CreateArkStartupCache
+ * @tc.desc: 1.Test the CreateArkStartupCache of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0030, Function | SmallTest | Level0)
+{
+    ArkStartupCache ceateArk;
+    ceateArk.bundleName = "com.test2";
+    ceateArk.bundleType = BundleType::APP;
+    ceateArk.cacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
+    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
+    ceateArk.uid = 0;
+    ceateArk.gid = 0;
+    std::vector<std::string> entries = {
+        "com.test2 # Keep"
+    };
+    WriteToConfigFile(ServiceConstants::APP_STARTUP_CACHE_CONG, entries);
+ 
+    // test bundlename in white list
+    BaseBundleInstaller installer3;
+    ErrCode ret = installer3.CreateArkStartupCache(ceateArk);
+    EXPECT_EQ(ret, ERR_OK);
+ 
+    ret = installer3.CleanArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, "com.test2", 100);
+    EXPECT_EQ(ret, ERR_OK);
+ 
+    ret = installer3.DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, "com.test2", 101);
+    EXPECT_EQ(ret, ERR_OK);
+    setuid(Constants::ROOT_UID);
+}
+ 
+/**
+ * @tc.number: CreateArkStartupCacheDir_0100
+ * @tc.name: test CreateArkStartupCacheDir
+ * @tc.desc: 1.Test CreateArkStartupCacheDir of the BundleUserMgrHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCacheDir_0100, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    ErrCode ret = host.CreateArkStartupCacheDir(103);
+    EXPECT_EQ(ret, ERR_OK);
+}
+ 
+/**
+ * @tc.number: RemoveSystemOptimizeDir_0100
+ * @tc.name: test RemoveSystemOptimizeDir
+ * @tc.desc: 1.Test RemoveSystemOptimizeDir of the BundleUserMgrHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, RemoveSystemOptimizeDir_0100, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    ErrCode ret = host.RemoveSystemOptimizeDir(103);
+    EXPECT_EQ(ret, ERR_OK);
+}
+ 
+/**
+ * @tc.number: SetArkStartupCacheApl_0100
+ * @tc.name: test SetArkStartupCacheApl
+ * @tc.desc: 1.Test the SetArkStartupCacheApl
+*/
+HWTEST_F(BmsBundleInstallerTest, SetArkStartupCacheApl_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    auto ret = impl.SetArkStartupCacheApl("");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+ 
+    ret = impl.SetArkStartupCacheApl(BUNDLE_DATA_DIR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
 }
 
 /**

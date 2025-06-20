@@ -1303,4 +1303,33 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7000, Function | SmallTest |
     auto ret = installdProxy->MigrateData(sourcePaths, destPath);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_7100
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling SetArkStartupCacheApl of proxy
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+ 
+    auto ret = proxy->SetArkStartupCacheApl(TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+ 
+/**
+ * @tc.number: InstalldProxyTest_7200
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling SetArkStartupCacheApl of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7200, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> proxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(proxy, nullptr);
+ 
+    auto ret = proxy->SetArkStartupCacheApl(TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
 } // OHOS
