@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -253,7 +253,7 @@ ErrCode AppControlManagerRdb::DeleteAppRunningControlRule(const std::string &cal
 ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callingName,
     int32_t userId, std::vector<std::string> &appIds)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(CALLING_NAME, callingName);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, RUNNING_CONTROL);
@@ -294,7 +294,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
 ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, RUNNING_CONTROL);
@@ -569,7 +569,7 @@ ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
 ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(const std::vector<std::string> &appIdList, int32_t appIndex,
     int32_t userId, std::vector<DisposedRule>& disposedRules)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_DEFAULT, "rdb begin to GetAbilityRunningControlRule");
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);

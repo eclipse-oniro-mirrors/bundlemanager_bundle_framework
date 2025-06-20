@@ -93,7 +93,7 @@ BundleMgrProxy::~BundleMgrProxy()
 bool BundleMgrProxy::GetApplicationInfo(
     const std::string &appName, const ApplicationFlag flag, const int userId, ApplicationInfo &appInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to GetApplicationInfo of %{public}s", appName.c_str());
     if (appName.empty()) {
         LOG_E(BMS_TAG_QUERY, "fail to GetApplicationInfo due to params empty");
@@ -128,7 +128,7 @@ bool BundleMgrProxy::GetApplicationInfo(
 bool BundleMgrProxy::GetApplicationInfo(
     const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to GetApplicationInfo of %{public}s", appName.c_str());
     if (appName.empty()) {
         LOG_E(BMS_TAG_QUERY, "fail to GetApplicationInfo due to params empty");
@@ -164,7 +164,7 @@ bool BundleMgrProxy::GetApplicationInfo(
 ErrCode BundleMgrProxy::GetApplicationInfoV9(
     const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to GetApplicationInfoV9 of %{public}s", appName.c_str());
     if (appName.empty()) {
         LOG_E(BMS_TAG_QUERY, "fail to GetApplicationInfoV9 due to params empty");
@@ -201,7 +201,7 @@ ErrCode BundleMgrProxy::GetApplicationInfoV9(
 bool BundleMgrProxy::GetApplicationInfos(
     const ApplicationFlag flag, int userId, std::vector<ApplicationInfo> &appInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get GetApplicationInfos of specific userId id %{private}d", userId);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -228,7 +228,7 @@ bool BundleMgrProxy::GetApplicationInfos(
 bool BundleMgrProxy::GetApplicationInfos(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get GetApplicationInfos of specific userId id %{private}d", userId);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -254,7 +254,7 @@ bool BundleMgrProxy::GetApplicationInfos(
 ErrCode BundleMgrProxy::GetApplicationInfosV9(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get GetApplicationInfosV9 of specific userId id is %{private}d", userId);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -276,7 +276,7 @@ ErrCode BundleMgrProxy::GetApplicationInfosV9(
 bool BundleMgrProxy::GetBundleInfo(
     const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfo due to params empty");
@@ -308,7 +308,7 @@ bool BundleMgrProxy::GetBundleInfo(
 bool BundleMgrProxy::GetBundleInfo(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfo due to params empty");
@@ -344,7 +344,7 @@ bool BundleMgrProxy::GetBundleInfo(
 ErrCode BundleMgrProxy::GetBundleInfoV9(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoV9 fail bundleName empty");
@@ -392,7 +392,7 @@ ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<Want> &wants, int32
 ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
     std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to batch get bundle info, bundle name count=%{public}u",
         static_cast<unsigned int>(bundleNames.size()));
     if (bundleNames.empty()) {
@@ -437,7 +437,7 @@ ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<std::string> &bundl
 
 ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle info for self");
 
     MessageParcel data;
@@ -482,7 +482,7 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
 
 ErrCode BundleMgrProxy::GetBundleInfoForSelfWithOutCache(int32_t flags, BundleInfo &bundleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle info for self");
 
     MessageParcel data;
@@ -506,7 +506,7 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelfWithOutCache(int32_t flags, BundleIn
 ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo,
     GetDependentBundleInfoFlag flag)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get dependent bundle info");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -533,7 +533,7 @@ ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, Bu
 ErrCode BundleMgrProxy::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetBundlePackInfo due to params empty");
@@ -565,7 +565,7 @@ ErrCode BundleMgrProxy::GetBundlePackInfo(
 ErrCode BundleMgrProxy::GetBundlePackInfo(
     const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetBundlePackInfo due to params empty");
@@ -597,7 +597,7 @@ ErrCode BundleMgrProxy::GetBundlePackInfo(
 bool BundleMgrProxy::GetBundleInfos(
     const BundleFlag flag, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle infos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -623,7 +623,7 @@ bool BundleMgrProxy::GetBundleInfos(
 bool BundleMgrProxy::GetBundleInfos(
     int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle infos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -648,7 +648,7 @@ bool BundleMgrProxy::GetBundleInfos(
 
 ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_NOFUNC_I(BMS_TAG_QUERY, "begin to get bundleinfos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -679,7 +679,7 @@ int32_t BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const 
         APP_LOGE("failed to GetUidByBundleName due to bundleName empty");
         return Constants::INVALID_UID;
     }
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get uid of %{public}s, userId : %{public}d, appIndex : %{public}d", bundleName.c_str(),
         userId, appIndex);
 
@@ -717,7 +717,7 @@ int BundleMgrProxy::GetUidByDebugBundleName(const std::string &bundleName, const
         APP_LOGE("failed to GetUidByBundleName due to bundleName empty");
         return Constants::INVALID_UID;
     }
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get uid of %{public}s, userId : %{public}d", bundleName.c_str(), userId);
 
     MessageParcel data;
@@ -750,7 +750,7 @@ std::string BundleMgrProxy::GetAppIdByBundleName(const std::string &bundleName, 
         APP_LOGE("failed to GetAppIdByBundleName due to bundleName empty");
         return Constants::EMPTY_STRING;
     }
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get appId of %{public}s", bundleName.c_str());
 
     MessageParcel data;
@@ -779,7 +779,7 @@ std::string BundleMgrProxy::GetAppIdByBundleName(const std::string &bundleName, 
 
 bool BundleMgrProxy::GetBundleNameForUid(const int uid, std::string &bundleName)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetBundleNameForUid of %{public}d", uid);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -808,7 +808,7 @@ bool BundleMgrProxy::GetBundleNameForUid(const int uid, std::string &bundleName)
 
 bool BundleMgrProxy::GetBundlesForUid(const int uid, std::vector<std::string> &bundleNames)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetBundlesForUid of %{public}d", uid);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -838,7 +838,7 @@ bool BundleMgrProxy::GetBundlesForUid(const int uid, std::vector<std::string> &b
 
 ErrCode BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetNameForUid of %{public}d", uid);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -866,7 +866,7 @@ ErrCode BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
 
 ErrCode BundleMgrProxy::GetNameAndIndexForUid(const int32_t uid, std::string &bundleName, int32_t &appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetNameAndIndexForUid of %{public}d", uid);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -895,7 +895,7 @@ ErrCode BundleMgrProxy::GetNameAndIndexForUid(const int32_t uid, std::string &bu
 ErrCode BundleMgrProxy::GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
     std::string &appIdentifier, int32_t &appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetAppIdentifierAndAppIndex of %{public}d", accessTokenId);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -925,7 +925,7 @@ ErrCode BundleMgrProxy::GetAppIdentifierAndAppIndex(const uint32_t accessTokenId
 ErrCode BundleMgrProxy::GetSimpleAppInfoForUid(
     const std::vector<std::int32_t> &uids, std::vector<SimpleAppInfo> &simpleAppInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetSimpleAppInfoForUid list");
     if (uids.empty()) {
         APP_LOGE("failed to GetSimpleAppInfoForUid list due to uids empty");
@@ -947,7 +947,7 @@ ErrCode BundleMgrProxy::GetSimpleAppInfoForUid(
 
 bool BundleMgrProxy::GetBundleGids(const std::string &bundleName, std::vector<int> &gids)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetBundleGids of %{public}s", bundleName.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -977,7 +977,7 @@ bool BundleMgrProxy::GetBundleGids(const std::string &bundleName, std::vector<in
 
 bool BundleMgrProxy::GetBundleGidsByUid(const std::string &bundleName, const int &uid, std::vector<int> &gids)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetBundleGidsByUid of %{public}s", bundleName.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -1015,7 +1015,7 @@ std::string BundleMgrProxy::GetAppType(const std::string &bundleName)
         APP_LOGE("failed to GetAppType due to bundleName empty");
         return Constants::EMPTY_STRING;
     }
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetAppType of %{public}s", bundleName.c_str());
 
     MessageParcel data;
@@ -1040,7 +1040,7 @@ std::string BundleMgrProxy::GetAppType(const std::string &bundleName)
 
 bool BundleMgrProxy::CheckIsSystemAppByUid(const int uid)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to CheckIsSystemAppByUid of %{public}d", uid);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -1062,7 +1062,7 @@ bool BundleMgrProxy::CheckIsSystemAppByUid(const int uid)
 
 bool BundleMgrProxy::GetBundleInfosByMetaData(const std::string &metaData, std::vector<BundleInfo> &bundleInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetBundleInfosByMetaData of %{public}s", metaData.c_str());
     if (metaData.empty()) {
         APP_LOGE("fail to GetBundleInfosByMetaData due to params empty");
@@ -1088,7 +1088,7 @@ bool BundleMgrProxy::GetBundleInfosByMetaData(const std::string &metaData, std::
 
 bool BundleMgrProxy::QueryAbilityInfo(const Want &want, AbilityInfo &abilityInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "QueryAbilityInfo write MessageParcel fail");
@@ -1109,7 +1109,7 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, AbilityInfo &abilityInfo
 bool BundleMgrProxy::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "QueryAbilityInfo write MessageParcel fail");
@@ -1145,7 +1145,7 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, int32_t flags, int32_t u
 
 bool BundleMgrProxy::SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to silent install");
 
     MessageParcel data;
@@ -1174,7 +1174,7 @@ bool BundleMgrProxy::SilentInstall(const Want &want, int32_t userId, const sptr<
 
 void BundleMgrProxy::UpgradeAtomicService(const Want &want, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to UpgradeAtomicService due to write descriptor");
@@ -1194,7 +1194,7 @@ void BundleMgrProxy::UpgradeAtomicService(const Want &want, int32_t userId)
 
 bool BundleMgrProxy::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "QueryAbilityInfo mutiparam write MessageParcel fail");
@@ -1222,7 +1222,7 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, int32_t flags, int32_t u
 
 bool BundleMgrProxy::QueryAbilityInfos(const Want &want, std::vector<AbilityInfo> &abilityInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "QueryAbilityInfos write MessageParcel fail");
@@ -1243,7 +1243,7 @@ bool BundleMgrProxy::QueryAbilityInfos(const Want &want, std::vector<AbilityInfo
 bool BundleMgrProxy::QueryAbilityInfos(
     const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "QueryAbilityInfos mutiparam write MessageParcel fail");
@@ -1272,7 +1272,7 @@ bool BundleMgrProxy::QueryAbilityInfos(
 ErrCode BundleMgrProxy::QueryAbilityInfosV9(
     const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "write interfaceToken failed");
@@ -1297,7 +1297,7 @@ ErrCode BundleMgrProxy::QueryAbilityInfosV9(
 ErrCode BundleMgrProxy::GetAbilityInfos(
     const std::string &uri, uint32_t flags, std::vector<AbilityInfo> &abilityInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "write interfaceToken failed");
@@ -1318,7 +1318,7 @@ ErrCode BundleMgrProxy::GetAbilityInfos(
 ErrCode BundleMgrProxy::BatchQueryAbilityInfos(
     const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");
@@ -1349,7 +1349,7 @@ ErrCode BundleMgrProxy::BatchQueryAbilityInfos(
 ErrCode BundleMgrProxy::QueryLauncherAbilityInfos(
     const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "write interfaceToken failed");
@@ -1370,7 +1370,7 @@ ErrCode BundleMgrProxy::QueryLauncherAbilityInfos(
 ErrCode BundleMgrProxy::GetLauncherAbilityInfoSync(
     const std::string &bundleName, int32_t userId, std::vector<AbilityInfo> &abilityInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "write interfaceToken failed");
@@ -1390,7 +1390,7 @@ ErrCode BundleMgrProxy::GetLauncherAbilityInfoSync(
 
 bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "QueryAbilityInfo write MessageParcel fail");
@@ -1414,7 +1414,7 @@ bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std:
 
 bool BundleMgrProxy::QueryAbilityInfoByUri(const std::string &abilityUri, AbilityInfo &abilityInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "QueryAbilityInfoByUri write MessageParcel fail");
@@ -1434,7 +1434,7 @@ bool BundleMgrProxy::QueryAbilityInfoByUri(const std::string &abilityUri, Abilit
 
 bool BundleMgrProxy::QueryAbilityInfosByUri(const std::string &abilityUri, std::vector<AbilityInfo> &abilityInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "QueryAbilityInfosByUri write MessageParcel fail");
@@ -1479,7 +1479,7 @@ bool BundleMgrProxy::QueryAbilityInfoByUri(
 
 bool BundleMgrProxy::QueryKeepAliveBundleInfos(std::vector<BundleInfo> &bundleInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to QueryKeepAliveBundleInfos");
 
     MessageParcel data;
@@ -1497,7 +1497,7 @@ bool BundleMgrProxy::QueryKeepAliveBundleInfos(std::vector<BundleInfo> &bundleIn
 
 std::string BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const std::string &abilityName)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetAbilityLabel of %{public}s", bundleName.c_str());
     if (bundleName.empty() || abilityName.empty()) {
         APP_LOGE("fail to GetAbilityLabel due to params empty");
@@ -1529,7 +1529,7 @@ std::string BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const
 ErrCode BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, std::string &label)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("GetAbilityLabel begin %{public}s", bundleName.c_str());
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
         APP_LOGE("fail to GetAbilityLabel due to params empty");
@@ -1566,7 +1566,7 @@ ErrCode BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const std
 
 bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, const BundleFlag flag, BundleInfo &bundleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetBundleArchiveInfo of %{private}s", hapFilePath.c_str());
     if (hapFilePath.empty()) {
         APP_LOGE("params empty");
@@ -1596,7 +1596,7 @@ bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, const 
 
 bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetBundleArchiveInfo with int flags of %{private}s", hapFilePath.c_str());
     if (hapFilePath.empty()) {
         APP_LOGE("fail to GetBundleArchiveInfo due to params empty");
@@ -1627,7 +1627,7 @@ bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, int32_
 
 ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetBundleArchiveInfoV9 with int flags of %{private}s", hapFilePath.c_str());
     if (hapFilePath.empty()) {
         APP_LOGE("fail to GetBundleArchiveInfoV9 due to params empty");
@@ -1653,7 +1653,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, i
 
 bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleInfo &hapModuleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetHapModuleInfo of %{public}s", abilityInfo.package.c_str());
     if (abilityInfo.bundleName.empty() || abilityInfo.package.empty()) {
         APP_LOGE("fail to GetHapModuleInfo due to params empty");
@@ -1679,7 +1679,7 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleI
 
 bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t userId, HapModuleInfo &hapModuleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetHapModuleInfo of %{public}s", abilityInfo.package.c_str());
     if (abilityInfo.bundleName.empty() || abilityInfo.package.empty()) {
         APP_LOGE("fail to GetHapModuleInfo due to params empty");
@@ -1710,7 +1710,7 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t us
 
 ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Want &want, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetLaunchWantForBundle of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetHapModuleInfo due to params empty");
@@ -1739,7 +1739,7 @@ ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Wa
 
 ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetPermissionDef of %{public}s", permissionName.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -1757,7 +1757,7 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
 
 ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     if (cacheSize == 0) {
         APP_LOGE("parameter error, cache size must be greater than 0");
@@ -1785,7 +1785,7 @@ ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
 ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback, int32_t userId, int32_t appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to CleanBundleCacheFiles of %{public}s, userId:%{public}d, appIndex:%{public}d",
         bundleName.c_str(), userId, appIndex);
     if (bundleName.empty()) {
@@ -1829,7 +1829,7 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
 
 bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName, const int userId, const int appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to CleanBundleDataFiles of %{public}s, userId:%{public}d, appIndex:%{public}d",
         bundleName.c_str(), userId, appIndex);
     if (bundleName.empty()) {
@@ -1865,7 +1865,7 @@ bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName, const i
 
 bool BundleMgrProxy::RegisterBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to RegisterBundleStatusCallback");
     if (!bundleStatusCallback || bundleStatusCallback->GetBundleName().empty()) {
         APP_LOGE("fail to RegisterBundleStatusCallback");
@@ -1900,7 +1900,7 @@ bool BundleMgrProxy::RegisterBundleStatusCallback(const sptr<IBundleStatusCallba
 
 bool BundleMgrProxy::RegisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to RegisterBundleEventCallback");
     if (!bundleEventCallback) {
         APP_LOGE("bundleEventCallback is null");
@@ -1927,7 +1927,7 @@ bool BundleMgrProxy::RegisterBundleEventCallback(const sptr<IBundleEventCallback
 
 bool BundleMgrProxy::UnregisterBundleEventCallback(const sptr<IBundleEventCallback> &bundleEventCallback)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to UnregisterBundleEventCallback");
     if (!bundleEventCallback) {
         APP_LOGE("bundleEventCallback is null");
@@ -1954,7 +1954,7 @@ bool BundleMgrProxy::UnregisterBundleEventCallback(const sptr<IBundleEventCallba
 
 bool BundleMgrProxy::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to ClearBundleStatusCallback");
     if (!bundleStatusCallback) {
         APP_LOGE("fail to ClearBundleStatusCallback, for bundleStatusCallback is nullptr");
@@ -1981,7 +1981,7 @@ bool BundleMgrProxy::ClearBundleStatusCallback(const sptr<IBundleStatusCallback>
 
 bool BundleMgrProxy::UnregisterBundleStatusCallback()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to UnregisterBundleStatusCallback");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -2000,7 +2000,7 @@ bool BundleMgrProxy::UnregisterBundleStatusCallback()
 bool BundleMgrProxy::DumpInfos(
     const DumpFlag flag, const std::string &bundleName, int32_t userId, std::string &result)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to dump");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -2041,7 +2041,7 @@ bool BundleMgrProxy::DumpInfos(
 ErrCode BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
     bool &isRemovable)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to IsModuleRemovable of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to IsModuleRemovable due to bundleName empty");
@@ -2080,7 +2080,7 @@ ErrCode BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const s
 
 bool BundleMgrProxy::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to SetModuleRemovable of %{public}s", bundleName.c_str());
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("fail to SetModuleRemovable due to params empty");
@@ -2115,7 +2115,7 @@ bool BundleMgrProxy::SetModuleRemovable(const std::string &bundleName, const std
 
 bool BundleMgrProxy::GetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetModuleUpgradeFlag of %{public}s", bundleName.c_str());
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("fail to GetModuleUpgradeFlag due to params empty");
@@ -2147,7 +2147,7 @@ bool BundleMgrProxy::GetModuleUpgradeFlag(const std::string &bundleName, const s
 ErrCode BundleMgrProxy::SetModuleUpgradeFlag(const std::string &bundleName,
     const std::string &moduleName, int32_t upgradeFlag)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to SetModuleUpgradeFlag of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to SetModuleUpgradeFlag due to bundleName empty");
@@ -2186,7 +2186,7 @@ ErrCode BundleMgrProxy::SetModuleUpgradeFlag(const std::string &bundleName,
 
 ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool &isEnable)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to IsApplicationEnabled of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to IsApplicationEnabled due to params empty");
@@ -2216,7 +2216,7 @@ ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool
 
 ErrCode BundleMgrProxy::IsCloneApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool &isEnable)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to IsCloneApplicationEnabled of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to IsCloneApplicationEnabled due to params empty");
@@ -2250,7 +2250,7 @@ ErrCode BundleMgrProxy::IsCloneApplicationEnabled(const std::string &bundleName,
 
 ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to SetApplicationEnabled of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to SetApplicationEnabled due to params empty");
@@ -2284,7 +2284,7 @@ ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, boo
 ErrCode BundleMgrProxy::SetCloneApplicationEnabled(
     const std::string &bundleName, int32_t appIndex, bool isEnable, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to SetCloneApplicationEnabled of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to SetCloneApplicationEnabled due to params empty");
@@ -2321,7 +2321,7 @@ ErrCode BundleMgrProxy::SetCloneApplicationEnabled(
 
 ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to IsAbilityEnabled of %{public}s", abilityInfo.name.c_str());
     if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
         APP_LOGE("fail to IsAbilityEnabled due to params empty");
@@ -2350,7 +2350,7 @@ ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &i
 
 ErrCode BundleMgrProxy::IsCloneAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool &isEnable)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to IsCloneAbilityEnabled of %{public}s", abilityInfo.name.c_str());
     if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
         APP_LOGE("fail to IsCloneAbilityEnabled due to params empty");
@@ -2383,7 +2383,7 @@ ErrCode BundleMgrProxy::IsCloneAbilityEnabled(const AbilityInfo &abilityInfo, in
 
 ErrCode BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to SetAbilityEnabled of %{public}s", abilityInfo.name.c_str());
     if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
         APP_LOGE("fail to SetAbilityEnabled due to params empty");
@@ -2417,7 +2417,7 @@ ErrCode BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
 ErrCode BundleMgrProxy::SetCloneAbilityEnabled(
     const AbilityInfo &abilityInfo, int32_t appIndex, bool isEnabled, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to SetCloneAbilityEnabled of %{public}s", abilityInfo.name.c_str());
     if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
         APP_LOGE("fail to SetCloneAbilityEnabled due to params empty");
@@ -2455,7 +2455,7 @@ ErrCode BundleMgrProxy::SetCloneAbilityEnabled(
 bool BundleMgrProxy::GetAbilityInfo(
     const std::string &bundleName, const std::string &abilityName, AbilityInfo &abilityInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "GetAbilityInfo bundleName:%{public}s abilityName:%{public}s",
         bundleName.c_str(), abilityName.c_str());
     if (bundleName.empty() || abilityName.empty()) {
@@ -2488,7 +2488,7 @@ bool BundleMgrProxy::GetAbilityInfo(
     const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, AbilityInfo &abilityInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "GetAbilityInfo bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
@@ -2524,7 +2524,7 @@ bool BundleMgrProxy::GetAbilityInfo(
 
 sptr<IBundleInstaller> BundleMgrProxy::GetBundleInstaller()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get bundle installer");
     MessageParcel data;
     MessageParcel reply;
@@ -2552,7 +2552,7 @@ sptr<IBundleInstaller> BundleMgrProxy::GetBundleInstaller()
 
 sptr<IBundleUserMgr> BundleMgrProxy::GetBundleUserMgr()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -2578,7 +2578,7 @@ sptr<IBundleUserMgr> BundleMgrProxy::GetBundleUserMgr()
 
 sptr<IVerifyManager> BundleMgrProxy::GetVerifyManager()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -2604,7 +2604,7 @@ sptr<IVerifyManager> BundleMgrProxy::GetVerifyManager()
 
 sptr<IExtendResourceManager> BundleMgrProxy::GetExtendResourceManager()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -2629,7 +2629,7 @@ sptr<IExtendResourceManager> BundleMgrProxy::GetExtendResourceManager()
 
 bool BundleMgrProxy::GetAllFormsInfo(std::vector<FormInfo> &formInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetAllFormsInfo due to write MessageParcel fail");
@@ -2645,7 +2645,7 @@ bool BundleMgrProxy::GetAllFormsInfo(std::vector<FormInfo> &formInfos)
 
 bool BundleMgrProxy::GetFormsInfoByApp(const std::string &bundleName, std::vector<FormInfo> &formInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("fail to GetFormsInfoByApp due to params empty");
         return false;
@@ -2670,7 +2670,7 @@ bool BundleMgrProxy::GetFormsInfoByApp(const std::string &bundleName, std::vecto
 bool BundleMgrProxy::GetFormsInfoByModule(
     const std::string &bundleName, const std::string &moduleName, std::vector<FormInfo> &formInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("fail to GetFormsByModule due to params empty");
         return false;
@@ -2701,7 +2701,7 @@ bool BundleMgrProxy::GetFormsInfoByModule(
 
 bool BundleMgrProxy::GetShortcutInfos(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("fail to GetShortcutInfos due to params empty");
         return false;
@@ -2728,7 +2728,7 @@ bool BundleMgrProxy::GetShortcutInfos(const std::string &bundleName, std::vector
 ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName,
     std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("fail to GetShortcutInfos due to params empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -2781,7 +2781,7 @@ ErrCode BundleMgrProxy::GetShortcutInfoByAppIndex(const std::string &bundleName,
 
 bool BundleMgrProxy::GetAllCommonEventInfo(const std::string &eventKey, std::vector<CommonEventInfo> &commonEventInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (eventKey.empty()) {
         APP_LOGE("fail to GetAllCommonEventInfo due to eventKey empty");
         return false;
@@ -2981,7 +2981,7 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, const Ext
 bool BundleMgrProxy::QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
     std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfos write InterfaceToken fail");
@@ -3029,7 +3029,7 @@ bool BundleMgrProxy::QueryExtensionAbilityInfoByUri(const std::string &uri, int3
     ExtensionAbilityInfo &extensionAbilityInfo)
 {
     LOG_D(BMS_TAG_QUERY, "begin to QueryExtensionAbilityInfoByUri");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (uri.empty()) {
         LOG_E(BMS_TAG_QUERY, "uri is empty");
         return false;
@@ -3060,7 +3060,7 @@ bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags
     AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo)
 {
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryInfoByPriority");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "ImplicitQueryInfoByPriority write MessageParcel fail");
@@ -3109,7 +3109,7 @@ bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags
 bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos, bool &findDefaultApp)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "WriteInterfaceToken failed");
@@ -3199,7 +3199,7 @@ bool BundleMgrProxy::GetAllDependentModuleNames(const std::string &bundleName, c
     std::vector<std::string> &dependentModuleNames)
 {
     APP_LOGD("begin to GetAllDependentModuleNames");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("bundleName or moduleName is empty");
         return false;
@@ -3237,7 +3237,7 @@ bool BundleMgrProxy::GetAllDependentModuleNames(const std::string &bundleName, c
 bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
 {
     APP_LOGD("begin to ObtainCallingBundleName");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -3266,7 +3266,7 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag)
 {
     APP_LOGI("begin %{public}s", bundleName.c_str());
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("failed to GetBundleStats due to write MessageParcel fail");
@@ -3349,7 +3349,7 @@ ErrCode BundleMgrProxy::BatchGetBundleStats(const std::vector<std::string> &bund
 bool BundleMgrProxy::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
 {
     APP_LOGI("GetAllBundleStats start");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("failed to GetAllBundleStats due to write MessageParcel fail");
@@ -3381,7 +3381,7 @@ bool BundleMgrProxy::CheckAbilityEnableInstall(
     const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
     APP_LOGD("begin to CheckAbilityEnableInstall");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -3420,7 +3420,7 @@ std::string BundleMgrProxy::GetStringById(const std::string &bundleName, const s
     uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
     APP_LOGD("begin to GetStringById");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("fail to GetStringById due to params empty");
         return Constants::EMPTY_STRING;
@@ -3464,7 +3464,7 @@ std::string BundleMgrProxy::GetIconById(
     const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
 {
     APP_LOGD("begin to GetIconById");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("fail to GetIconById due to params empty");
         return Constants::EMPTY_STRING;
@@ -3508,7 +3508,7 @@ std::string BundleMgrProxy::GetIconById(
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -3536,7 +3536,7 @@ sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 sptr<IAppControlMgr> BundleMgrProxy::GetAppControlProxy()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -3563,7 +3563,7 @@ sptr<IAppControlMgr> BundleMgrProxy::GetAppControlProxy()
 
 sptr<IBundleMgrExt> BundleMgrProxy::GetBundleMgrExtProxy()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -3593,7 +3593,7 @@ ErrCode BundleMgrProxy::GetSandboxAbilityInfo(const Want &want, int32_t appIndex
     AbilityInfo &info)
 {
     APP_LOGD("begin to GetSandboxAbilityInfo");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("GetSandboxAbilityInfo params are invalid");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
@@ -3628,7 +3628,7 @@ ErrCode BundleMgrProxy::GetSandboxExtAbilityInfos(const Want &want, int32_t appI
     std::vector<ExtensionAbilityInfo> &infos)
 {
     APP_LOGD("begin to GetSandboxExtAbilityInfos");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("appIndex is invalid,: %{public}d,", appIndex);
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
@@ -3663,7 +3663,7 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
     HapModuleInfo &info)
 {
     APP_LOGD("begin to GetSandboxHapModuleInfo");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("GetSandboxHapModuleInfo params are invalid");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
@@ -3692,7 +3692,7 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
 ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get media data of %{public}s, %{public}s", bundleName.c_str(), abilityName.c_str());
     if (bundleName.empty() || abilityName.empty()) {
         APP_LOGE("fail to GetMediaData due to params empty");
@@ -3764,7 +3764,7 @@ ErrCode BundleMgrProxy::GetMediaDataFromAshMem(
 
 sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to get quick fix manager proxy due to write InterfaceToken failed");
@@ -3790,7 +3790,7 @@ sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
 
 ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed");
@@ -3860,7 +3860,7 @@ bool BundleMgrProxy::ProcessPreload(const Want &want)
 
 sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed");
@@ -3887,7 +3887,7 @@ sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
 ErrCode BundleMgrProxy::GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
     AppProvisionInfo &appProvisionInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get AppProvisionInfo of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetAppProvisionInfo due to params empty");
@@ -3914,7 +3914,7 @@ ErrCode BundleMgrProxy::GetAppProvisionInfo(const std::string &bundleName, int32
 ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
     std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos, GetDependentBundleInfoFlag flag)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get base shared package infos");
     if (bundleName.empty()) {
         APP_LOGE("fail to GetBaseSharedBundleInfos due to bundleName empty");
@@ -3939,7 +3939,7 @@ ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
 
 ErrCode BundleMgrProxy::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetAllSharedBundleInfo");
 
     MessageParcel data;
@@ -3954,7 +3954,7 @@ ErrCode BundleMgrProxy::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sh
 ErrCode BundleMgrProxy::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
     std::vector<SharedBundleInfo> &sharedBundles)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetSharedBundleInfo");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -3975,7 +3975,7 @@ ErrCode BundleMgrProxy::GetSharedBundleInfo(const std::string &bundleName, const
 
 ErrCode BundleMgrProxy::GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetSharedBundleInfoBySelf");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -3994,7 +3994,7 @@ ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, con
     std::vector<Dependency> &dependencies)
 {
     APP_LOGD("begin to GetSharedDependencies");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("bundleName or moduleName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -4021,7 +4021,7 @@ ErrCode BundleMgrProxy::GetProxyDataInfos(const std::string &bundleName, const s
     std::vector<ProxyData> &proxyDatas, int32_t userId)
 {
     APP_LOGD("begin to GetProxyDataInfos");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -4050,7 +4050,7 @@ ErrCode BundleMgrProxy::GetProxyDataInfos(const std::string &bundleName, const s
 ErrCode BundleMgrProxy::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas, int32_t userId)
 {
     APP_LOGD("begin to GetAllProxyDatas");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetAllProxyDatas due to write InterfaceToken fail");
@@ -4067,7 +4067,7 @@ ErrCode BundleMgrProxy::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas,
 ErrCode BundleMgrProxy::GetSpecifiedDistributionType(const std::string &bundleName,
     std::string &specifiedDistributionType)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
@@ -4094,7 +4094,7 @@ ErrCode BundleMgrProxy::GetSpecifiedDistributionType(const std::string &bundleNa
 ErrCode BundleMgrProxy::BatchGetSpecifiedDistributionType(const std::vector<std::string> &bundleNames,
     std::vector<BundleDistributionType> &specifiedDistributionTypes)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to batch get specified distributionType, bundle name count=%{public}u",
         static_cast<unsigned int>(bundleNames.size()));
     if (bundleNames.empty()) {
@@ -4124,7 +4124,7 @@ ErrCode BundleMgrProxy::BatchGetSpecifiedDistributionType(const std::vector<std:
 ErrCode BundleMgrProxy::GetAdditionalInfo(const std::string &bundleName,
     std::string &additionalInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
@@ -4151,7 +4151,7 @@ ErrCode BundleMgrProxy::GetAdditionalInfo(const std::string &bundleName,
 ErrCode BundleMgrProxy::BatchGetAdditionalInfo(const std::vector<std::string> &bundleNames,
     std::vector<BundleAdditionalInfo> &additionalInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to batch get bundle additional infos, bundle name count=%{public}u",
         static_cast<unsigned int>(bundleNames.size()));
     if (bundleNames.empty()) {
@@ -4182,7 +4182,7 @@ ErrCode BundleMgrProxy::BatchGetAdditionalInfo(const std::vector<std::string> &b
 ErrCode BundleMgrProxy::GetAdditionalInfoForAllUser(const std::string &bundleName,
     std::string &additionalInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
@@ -4209,7 +4209,7 @@ ErrCode BundleMgrProxy::GetAdditionalInfoForAllUser(const std::string &bundleNam
 ErrCode BundleMgrProxy::SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, const std::string &extName, const std::string &mimeType)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
         APP_LOGE("bundleName, moduleName or abilityName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -4255,7 +4255,7 @@ ErrCode BundleMgrProxy::SetExtNameOrMIMEToApp(const std::string &bundleName, con
 ErrCode BundleMgrProxy::DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, const std::string &extName, const std::string &mimeType)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
         APP_LOGE("bundleName, moduleName or abilityName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -4301,7 +4301,7 @@ ErrCode BundleMgrProxy::DelExtNameOrMIMEToApp(const std::string &bundleName, con
 bool BundleMgrProxy::QueryDataGroupInfos(const std::string &bundleName,
     int32_t userId, std::vector<DataGroupInfo> &infos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
@@ -4329,7 +4329,7 @@ bool BundleMgrProxy::QueryDataGroupInfos(const std::string &bundleName,
 
 bool BundleMgrProxy::GetGroupDir(const std::string &dataGroupId, std::string &dir)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (dataGroupId.empty()) {
         APP_LOGE("dataGroupId is empty");
         return false;
@@ -4360,7 +4360,7 @@ bool BundleMgrProxy::GetGroupDir(const std::string &dataGroupId, std::string &di
 bool BundleMgrProxy::QueryAppGalleryBundleName(std::string &bundleName)
 {
     APP_LOGD("QueryAppGalleryBundleName in bundle proxy start");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to QueryAppGalleryBundleName due to write InterfaceToken failed");
@@ -4441,7 +4441,7 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosOnlyWithTypeName(const std::st
 ErrCode BundleMgrProxy::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
     int32_t triggerMode)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("ResetAOTCompileStatus begin, bundleName : %{public}s, moduleName : %{public}s, triggerMode : %{public}d",
         bundleName.c_str(), moduleName.c_str(), triggerMode);
     if (bundleName.empty() || moduleName.empty()) {
@@ -4476,7 +4476,7 @@ ErrCode BundleMgrProxy::ResetAOTCompileStatus(const std::string &bundleName, con
 ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::string &bundleName,
     const std::string &moduleName, std::string &profile, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetJsonProfile");
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
@@ -4510,7 +4510,7 @@ ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::strin
 
 sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -4537,7 +4537,7 @@ sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
 ErrCode BundleMgrProxy::GetRecoverableApplicationInfo(
     std::vector<RecoverableApplicationInfo> &recoverableApplications)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetRecoverableApplicationInfo");
 
     MessageParcel data;
@@ -4551,7 +4551,7 @@ ErrCode BundleMgrProxy::GetRecoverableApplicationInfo(
 
 ErrCode BundleMgrProxy::GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetUninstalledBundleInfo of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to GetUninstalledBundleInfo due to params empty");
@@ -4579,7 +4579,7 @@ ErrCode BundleMgrProxy::GetUninstalledBundleInfo(const std::string bundleName, B
 
 ErrCode BundleMgrProxy::SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("Called. BundleName : %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("Invalid param");
@@ -4609,7 +4609,7 @@ ErrCode BundleMgrProxy::SetAdditionalInfo(const std::string &bundleName, const s
 
 ErrCode BundleMgrProxy::CreateBundleDataDir(int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("CreateBundleDataDir Called. userId: %{public}d", userId);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -4631,7 +4631,7 @@ ErrCode BundleMgrProxy::CreateBundleDataDir(int32_t userId)
 
 ErrCode BundleMgrProxy::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("Called. userId: %{public}d el: %{public}d", userId, static_cast<uint8_t>(dirEl));
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -4657,7 +4657,7 @@ ErrCode BundleMgrProxy::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirE
 
 ErrCode BundleMgrProxy::MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("MigrateData Called");
     if (sourcePaths.empty()) {
         APP_LOGE("source paths empty!");
@@ -4690,7 +4690,7 @@ ErrCode BundleMgrProxy::MigrateData(const std::vector<std::string> &sourcePaths,
 
 ErrCode BundleMgrProxy::GetOdid(std::string &odid)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("GetOdid Called");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -4713,7 +4713,7 @@ ErrCode BundleMgrProxy::GetOdid(std::string &odid)
 ErrCode BundleMgrProxy::GetAllBundleInfoByDeveloperId(const std::string &developerId,
     std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("begin GetAllBundleInfoByDeveloperId, developerId: %{public}s, userId :%{public}d",
         developerId.c_str(), userId);
     MessageParcel data;
@@ -4736,7 +4736,7 @@ ErrCode BundleMgrProxy::GetAllBundleInfoByDeveloperId(const std::string &develop
 ErrCode BundleMgrProxy::GetDeveloperIds(const std::string &appDistributionType,
     std::vector<std::string> &developerIdList, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGI("begin to GetDeveloperIds of %{public}s", appDistributionType.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5208,7 +5208,7 @@ ErrCode BundleMgrProxy::InnerGetBigString(MessageParcel &reply, std::string &res
 ErrCode BundleMgrProxy::CompileProcessAOT(const std::string &bundleName, const std::string &compileMode,
     bool isAllBundle, std::vector<std::string> &compileResults)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to compile");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5245,7 +5245,7 @@ ErrCode BundleMgrProxy::CompileProcessAOT(const std::string &bundleName, const s
 
 ErrCode BundleMgrProxy::CompileReset(const std::string &bundleName, bool isAllBundle)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to reset");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5271,7 +5271,7 @@ ErrCode BundleMgrProxy::CompileReset(const std::string &bundleName, bool isAllBu
 
 ErrCode BundleMgrProxy::CopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to CopyAp");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5308,7 +5308,7 @@ ErrCode BundleMgrProxy::CopyAp(const std::string &bundleName, bool isAllBundle, 
 ErrCode BundleMgrProxy::CanOpenLink(
     const std::string &link, bool &canOpen)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");
@@ -5336,7 +5336,7 @@ ErrCode BundleMgrProxy::CanOpenLink(
 ErrCode BundleMgrProxy::GetAllPreinstalledApplicationInfos(
     std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("Called");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5350,7 +5350,7 @@ ErrCode BundleMgrProxy::GetAllPreinstalledApplicationInfos(
 ErrCode BundleMgrProxy::SwitchUninstallState(const std::string &bundleName, const bool &state,
     bool isNeedSendNotify)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");
@@ -5379,7 +5379,7 @@ ErrCode BundleMgrProxy::SwitchUninstallState(const std::string &bundleName, cons
 ErrCode BundleMgrProxy::QueryAbilityInfoByContinueType(const std::string &bundleName,
     const std::string &continueType,  AbilityInfo &abilityInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to QueryAbilityInfoByContinueType due to write interfaceToken fail");
@@ -5404,7 +5404,7 @@ ErrCode BundleMgrProxy::QueryAbilityInfoByContinueType(const std::string &bundle
 ErrCode BundleMgrProxy::QueryCloneAbilityInfo(const ElementName &element,
     int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "write interfaceToken failed");
@@ -5433,7 +5433,7 @@ ErrCode BundleMgrProxy::QueryCloneAbilityInfo(const ElementName &element,
 ErrCode BundleMgrProxy::GetCloneBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
     BundleInfo &bundleInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetCloneBundleInfo of %{public}s", bundleName.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5464,7 +5464,7 @@ ErrCode BundleMgrProxy::GetCloneBundleInfo(const std::string &bundleName, int32_
 ErrCode BundleMgrProxy::GetCloneBundleInfoExt(const std::string &bundleName, uint32_t flags, int32_t appIndex,
     int32_t userId, BundleInfo &bundleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetCloneBundleInfoExt of %{public}s", bundleName.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5495,7 +5495,7 @@ ErrCode BundleMgrProxy::GetCloneBundleInfoExt(const std::string &bundleName, uin
 ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
     int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetCloneAppIndexes of %{public}s", bundleName.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5529,7 +5529,7 @@ ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::v
 
 ErrCode BundleMgrProxy::GetLaunchWant(Want &want)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetLaunchWant");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5571,7 +5571,7 @@ ErrCode BundleMgrProxy::QueryCloneExtensionAbilityInfoWithAppIndex(const Element
 
 ErrCode BundleMgrProxy::GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin %{public}s", bundleName.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5587,7 +5587,7 @@ ErrCode BundleMgrProxy::GetSignatureInfoByBundleName(const std::string &bundleNa
 
 ErrCode BundleMgrProxy::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &signatureInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin %{public}d", uid);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5604,7 +5604,7 @@ ErrCode BundleMgrProxy::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &
 
 ErrCode BundleMgrProxy::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("UpdateAppEncryptedStatus write InterfaceToken fail");
@@ -5632,7 +5632,7 @@ ErrCode BundleMgrProxy::UpdateAppEncryptedStatus(const std::string &bundleName, 
 
 ErrCode BundleMgrProxy::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("AddDesktopShortcutInfo write InterfaceToken fail");
@@ -5657,7 +5657,7 @@ ErrCode BundleMgrProxy::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo,
 
 ErrCode BundleMgrProxy::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write InterfaceToken fail");
@@ -5682,7 +5682,7 @@ ErrCode BundleMgrProxy::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutIn
 
 ErrCode BundleMgrProxy::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("GetAllDesktopShortcutInfo write InterfaceToken fail");
@@ -5698,7 +5698,7 @@ ErrCode BundleMgrProxy::GetAllDesktopShortcutInfo(int32_t userId, std::vector<Sh
 
 ErrCode BundleMgrProxy::GetOdidByBundleName(const std::string &bundleName, std::string &odid)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("GetOdidByBundleName Called");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5725,7 +5725,7 @@ ErrCode BundleMgrProxy::GetOdidByBundleName(const std::string &bundleName, std::
 bool BundleMgrProxy::GetBundleInfosForContinuation(
     int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle infos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -5751,7 +5751,7 @@ bool BundleMgrProxy::GetBundleInfosForContinuation(
 ErrCode BundleMgrProxy::GetContinueBundleNames(
     const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("Write interface token fail");
@@ -5786,7 +5786,7 @@ ErrCode BundleMgrProxy::GetContinueBundleNames(
 ErrCode BundleMgrProxy::IsBundleInstalled(const std::string &bundleName, int32_t userId,
     int32_t appIndex, bool &isInstalled)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("Write interface token fail");
@@ -5821,7 +5821,7 @@ ErrCode BundleMgrProxy::IsBundleInstalled(const std::string &bundleName, int32_t
 
 ErrCode BundleMgrProxy::GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("Write interface token fail");
@@ -5848,7 +5848,7 @@ ErrCode BundleMgrProxy::GetCompatibleDeviceType(const std::string &bundleName, s
 ErrCode BundleMgrProxy::GetBundleNameByAppId(const std::string &appId, std::string &bundleName)
 {
     APP_LOGD("GetBundleNameByAppId: appId: %{private}s", appId.c_str());
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (appId.empty()) {
         APP_LOGE("appId empty");
@@ -5878,7 +5878,7 @@ ErrCode BundleMgrProxy::GetBundleNameByAppId(const std::string &appId, std::stri
 ErrCode BundleMgrProxy::GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
     std::string &dataDir)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("Write interface token fail");
@@ -5909,7 +5909,7 @@ ErrCode BundleMgrProxy::GetDirByBundleNameAndAppIndex(const std::string &bundleN
 ErrCode BundleMgrProxy::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)
 {
     APP_LOGI("GetAllBundleCacheStat start");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (processCacheCallback == nullptr) {
         APP_LOGE("fail to CleanBundleCacheFiles due to params error");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -5940,7 +5940,7 @@ ErrCode BundleMgrProxy::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
 ErrCode BundleMgrProxy::CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback)
 {
     APP_LOGI("CleanAllBundleCache start");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (processCacheCallback == nullptr) {
         APP_LOGE("fail to CleanBundleCacheFiles due to params error");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -5970,7 +5970,7 @@ ErrCode BundleMgrProxy::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
 
 ErrCode BundleMgrProxy::SetAppDistributionTypes(std::set<AppDistributionTypeEnum> &appDistributionTypeEnums)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to set appDistributionTypes");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -6004,7 +6004,7 @@ ErrCode BundleMgrProxy::SetAppDistributionTypes(std::set<AppDistributionTypeEnum
 ErrCode BundleMgrProxy::GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
     std::vector<PluginBundleInfo> &pluginBundleInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("Write interface token fail");
@@ -6024,7 +6024,7 @@ ErrCode BundleMgrProxy::GetAllPluginInfo(const std::string &hostBundleName, int3
 
 ErrCode BundleMgrProxy::GetPluginInfosForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("Write interface token fail");
@@ -6036,7 +6036,7 @@ ErrCode BundleMgrProxy::GetPluginInfosForSelf(std::vector<PluginBundleInfo> &plu
 
 ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("Write interface token fail");
@@ -6052,7 +6052,7 @@ ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> 
 
 ErrCode BundleMgrProxy::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin");
     if (!pluginEventCallback) {
         APP_LOGE("pluginEventCallback is null");
@@ -6080,7 +6080,7 @@ ErrCode BundleMgrProxy::RegisterPluginEventCallback(const sptr<IBundleEventCallb
 
 ErrCode BundleMgrProxy::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin");
     if (!pluginEventCallback) {
         APP_LOGE("pluginEventCallback is null");
@@ -6146,7 +6146,7 @@ ErrCode BundleMgrProxy::GetPluginAbilityInfo(const std::string &hostBundleName, 
     const std::string &pluginModuleName, const std::string &pluginAbilityName,
     const int32_t userId, AbilityInfo &abilityInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "GetPluginAbilityInfo bundleName:%{public}s pluginName:%{public}s abilityName:%{public}s",
         hostBundleName.c_str(), pluginBundleName.c_str(), pluginAbilityName.c_str());
     if (hostBundleName.empty() || pluginBundleName.empty() || pluginAbilityName.empty()) {
@@ -6220,7 +6220,7 @@ ErrCode BundleMgrProxy::GetPluginHapModuleInfo(const std::string &hostBundleName
     const std::string &pluginBundleName, const std::string &pluginModuleName,
     const int32_t userId, HapModuleInfo &hapModuleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "GetPluginHapModuleInfo bundleName:%{public}s pluginName:%{public}s moduleName:%{public}s",
         hostBundleName.c_str(), pluginBundleName.c_str(), pluginModuleName.c_str());
     if (hostBundleName.empty() || pluginBundleName.empty() || pluginModuleName.empty()) {
@@ -6255,7 +6255,7 @@ ErrCode BundleMgrProxy::GetPluginHapModuleInfo(const std::string &hostBundleName
 
 ErrCode BundleMgrProxy::SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("SetShortcutVisibleForSelf write InterfaceToken fail");
@@ -6279,7 +6279,7 @@ ErrCode BundleMgrProxy::SetShortcutVisibleForSelf(const std::string &shortcutId,
 
 ErrCode BundleMgrProxy::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("GetAllShortcutInfoForSelf write InterfaceToken fail");
@@ -6292,7 +6292,7 @@ ErrCode BundleMgrProxy::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &sho
 bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
     const int32_t patchVersion)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("BundleMgrProxy::GreatOrEqualTargetAPIVersion, major: %{public}d, minor: %{public}d, patch: %{public}d",
         platformVersion, minorVersion, patchVersion);
     MessageParcel data;

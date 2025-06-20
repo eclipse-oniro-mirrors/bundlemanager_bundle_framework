@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -257,7 +257,7 @@ ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& wan
 ErrCode AppControlManager::GetAppRunningControlRule(
     const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
@@ -479,7 +479,7 @@ void AppControlManager::DeleteAbilityRunningRuleCache(const std::vector<std::str
 ErrCode AppControlManager::GetAbilityRunningControlRule(
     const std::string &bundleName, int32_t appIndex, int32_t userId, std::vector<DisposedRule> &disposedRules)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");

@@ -533,7 +533,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     const int32_t userId = createDirParam.userId;
     LOG_I(BMS_TAG_INSTALLD, "CreateBundleDataDir %{public}s begin, %{public}d",
         bundleName.c_str(), userId);
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
@@ -687,7 +687,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 
 ErrCode InstalldHostImpl::CreateBundleDataDirWithEl(const CreateDirParam &createDirParam)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_I(BMS_TAG_INSTALLD, "%{public}s begin, %{public}d, el %{public}" PRIu8 "",
         createDirParam.bundleName.c_str(), createDirParam.userId, static_cast<uint8_t>(createDirParam.dataDirEl));
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {

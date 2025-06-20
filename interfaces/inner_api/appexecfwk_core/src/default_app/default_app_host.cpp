@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -65,7 +65,7 @@ int DefaultAppHost::OnRemoteRequest(
 ErrCode DefaultAppHost::HandleIsDefaultApplication(Parcel& data, Parcel& reply)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to HandleIsDefaultApplication");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string type = data.ReadString();
     bool isDefaultApp = false;
     ErrCode ret = IsDefaultApplication(type, isDefaultApp);
@@ -85,7 +85,7 @@ ErrCode DefaultAppHost::HandleIsDefaultApplication(Parcel& data, Parcel& reply)
 ErrCode DefaultAppHost::HandleGetDefaultApplication(Parcel& data, Parcel& reply)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to HandleGetDefaultApplication");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t userId = data.ReadInt32();
     std::string type = data.ReadString();
     BundleInfo bundleInfo;
@@ -106,7 +106,7 @@ ErrCode DefaultAppHost::HandleGetDefaultApplication(Parcel& data, Parcel& reply)
 ErrCode DefaultAppHost::HandleSetDefaultApplication(Parcel& data, Parcel& reply)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to HandleSetDefaultApplication");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t userId = data.ReadInt32();
     std::string type = data.ReadString();
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
@@ -125,7 +125,7 @@ ErrCode DefaultAppHost::HandleSetDefaultApplication(Parcel& data, Parcel& reply)
 ErrCode DefaultAppHost::HandleResetDefaultApplication(Parcel& data, Parcel& reply)
 {
     LOG_I(BMS_TAG_DEFAULT, "begin to HandleResetDefaultApplication");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t userId = data.ReadInt32();
     std::string type = data.ReadString();
     ErrCode ret = ResetDefaultApplication(userId, type);

@@ -55,7 +55,7 @@ int32_t BundleMgrExtHost::OnRemoteRequest(
 
 ErrCode BundleMgrExtHost::HandleGetBundleNamesForUidExt(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     int32_t uid = data.ReadInt32();
     std::vector<std::string> bundleNames;
     ErrCode ret = GetBundleNamesForUidExt(uid, bundleNames);

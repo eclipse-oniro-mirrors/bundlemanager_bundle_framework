@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -85,7 +85,7 @@ int32_t BundleResourceHost::OnRemoteRequest(uint32_t code, MessageParcel &data,
 
 ErrCode BundleResourceHost::HandleGetBundleResourceInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     uint32_t flags = data.ReadUint32();
     int32_t appIndex = data.ReadInt32();
@@ -103,7 +103,7 @@ ErrCode BundleResourceHost::HandleGetBundleResourceInfo(MessageParcel &data, Mes
 
 ErrCode BundleResourceHost::HandleGetLauncherAbilityResourceInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     uint32_t flags = data.ReadUint32();
     int32_t appIndex = data.ReadInt32();
@@ -121,7 +121,7 @@ ErrCode BundleResourceHost::HandleGetLauncherAbilityResourceInfo(MessageParcel &
 
 ErrCode BundleResourceHost::HandleGetAllBundleResourceInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     uint32_t flags = data.ReadUint32();
     std::vector<BundleResourceInfo> bundleResourceInfos;
     ErrCode ret = GetAllBundleResourceInfo(flags, bundleResourceInfos);
@@ -137,7 +137,7 @@ ErrCode BundleResourceHost::HandleGetAllBundleResourceInfo(MessageParcel &data, 
 
 ErrCode BundleResourceHost::HandleGetAllLauncherAbilityResourceInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     uint32_t flags = data.ReadUint32();
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
     ErrCode ret = GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
@@ -153,7 +153,7 @@ ErrCode BundleResourceHost::HandleGetAllLauncherAbilityResourceInfo(MessageParce
 
 ErrCode BundleResourceHost::HandleAddResourceInfoByBundleName(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     ErrCode ret = AddResourceInfoByBundleName(bundleName, userId);
@@ -166,7 +166,7 @@ ErrCode BundleResourceHost::HandleAddResourceInfoByBundleName(MessageParcel &dat
 
 ErrCode BundleResourceHost::HandleAddResourceInfoByAbility(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     std::string abilityName = data.ReadString();
@@ -181,7 +181,7 @@ ErrCode BundleResourceHost::HandleAddResourceInfoByAbility(MessageParcel &data, 
 
 ErrCode BundleResourceHost::HandleDeleteResourceInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string key = data.ReadString();
     ErrCode ret = DeleteResourceInfo(key);
     if (!reply.WriteInt32(ret)) {
@@ -193,7 +193,7 @@ ErrCode BundleResourceHost::HandleDeleteResourceInfo(MessageParcel &data, Messag
 
 ErrCode BundleResourceHost::HandleGetExtensionAbilityResourceInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     ExtensionAbilityType extensionAbilityType = static_cast<ExtensionAbilityType>(data.ReadInt32());
     uint32_t flags = data.ReadUint32();

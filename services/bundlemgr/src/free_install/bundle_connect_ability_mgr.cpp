@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -315,7 +315,7 @@ bool BundleConnectAbilityMgr::ProcessPreload(const Want &want)
 bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo, const Want &want,
     const FreeInstallParams &freeInstallParams, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_I(BMS_TAG_DEFAULT, "SilentInstall");
     if (!CheckIsOnDemandLoad(targetAbilityInfo)) {
         ErmsCallerInfo callerInfo;
@@ -736,7 +736,7 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
 void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo &targetAbilityInfo, const Want &want,
     int32_t userId, const FreeInstallParams &freeInstallParams)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -1091,7 +1091,7 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdateWrap(InnerBundleInfo &inner
 bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,
     int32_t userId, AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_DEFAULT, "QueryAbilityInfo");
     InnerBundleInfo innerBundleInfo;
     if (IsObtainAbilityInfo(want, flags, userId, abilityInfo, callBack, innerBundleInfo)) {

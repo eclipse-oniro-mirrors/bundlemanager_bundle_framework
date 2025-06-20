@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -85,7 +85,7 @@ int OverlayManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
 
 ErrCode OverlayManagerHost::HandleGetAllOverlayModuleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     APP_LOGD("bundleName %{public}s, userId %{public}d", bundleName.c_str(), userId);
@@ -107,7 +107,7 @@ ErrCode OverlayManagerHost::HandleGetAllOverlayModuleInfo(MessageParcel &data, M
 
 ErrCode OverlayManagerHost::HandleGetOverlayModuleInfoByName(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     int32_t userId = data.ReadInt32();
@@ -131,7 +131,7 @@ ErrCode OverlayManagerHost::HandleGetOverlayModuleInfoByName(MessageParcel &data
 
 ErrCode OverlayManagerHost::HandleGetOverlayModuleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string moduleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     APP_LOGD("moduleName %{public}s, userId %{public}d", moduleName.c_str(), userId);
@@ -153,7 +153,7 @@ ErrCode OverlayManagerHost::HandleGetOverlayModuleInfo(MessageParcel &data, Mess
 
 ErrCode OverlayManagerHost::HandleGetTargetOverlayModuleInfo(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string targetModuleName = data.ReadString();
     int32_t userId = data.ReadInt32();
 
@@ -175,7 +175,7 @@ ErrCode OverlayManagerHost::HandleGetTargetOverlayModuleInfo(MessageParcel &data
 
 ErrCode OverlayManagerHost::HandleGetOverlayModuleInfoByBundleName(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     int32_t userId = data.ReadInt32();
@@ -198,7 +198,7 @@ ErrCode OverlayManagerHost::HandleGetOverlayModuleInfoByBundleName(MessageParcel
 
 ErrCode OverlayManagerHost::HandleGetOverlayBundleInfoForTarget(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string targetBundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
 
@@ -220,7 +220,7 @@ ErrCode OverlayManagerHost::HandleGetOverlayBundleInfoForTarget(MessageParcel &d
 
 ErrCode OverlayManagerHost::HandleGetOverlayModuleInfoForTarget(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string targetBundleName = data.ReadString();
     std::string targetModuleName = data.ReadString();
     int32_t userId = data.ReadInt32();
@@ -243,7 +243,7 @@ ErrCode OverlayManagerHost::HandleGetOverlayModuleInfoForTarget(MessageParcel &d
 
 ErrCode OverlayManagerHost::HandleSetOverlayEnabled(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     bool isEnabled = data.ReadBool();
@@ -259,7 +259,7 @@ ErrCode OverlayManagerHost::HandleSetOverlayEnabled(MessageParcel &data, Message
 
 ErrCode OverlayManagerHost::HandleSetOverlayEnabledForSelf(MessageParcel &data, MessageParcel &reply)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string moduleName = data.ReadString();
     bool isEnabled = data.ReadBool();
     int32_t userId = data.ReadInt32();

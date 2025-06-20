@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,7 +57,7 @@ BundleSandboxInstaller::~BundleSandboxInstaller()
 ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName, const int32_t &dlpType,
     const int32_t &userId, int32_t &appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("InstallSandboxApp %{public}s begin", bundleName.c_str());
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
@@ -172,7 +172,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
 ErrCode BundleSandboxInstaller::UninstallSandboxApp(
     const std::string &bundleName, const int32_t &appIndex, const int32_t &userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("UninstallSandboxApp %{public}s _ %{public}d begin", bundleName.c_str(), appIndex);
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());

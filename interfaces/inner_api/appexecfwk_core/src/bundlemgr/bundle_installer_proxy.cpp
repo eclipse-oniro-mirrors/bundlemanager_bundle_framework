@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,7 +56,7 @@ BundleInstallerProxy::~BundleInstallerProxy()
 bool BundleInstallerProxy::Install(
     const std::string &bundlePath, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -80,7 +80,7 @@ bool BundleInstallerProxy::Install(
 bool BundleInstallerProxy::Install(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
     const sptr<IStatusReceiver> &statusReceiver)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -133,7 +133,7 @@ bool BundleInstallerProxy::Recover(const std::string &bundleName,
 bool BundleInstallerProxy::Uninstall(
     const std::string &bundleName, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -156,7 +156,7 @@ bool BundleInstallerProxy::Uninstall(
 bool BundleInstallerProxy::Uninstall(const std::string &bundleName, const std::string &modulePackage,
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -199,7 +199,7 @@ bool BundleInstallerProxy::Uninstall(const UninstallParam &uninstallParam,
 ErrCode BundleInstallerProxy::InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId,
     int32_t &appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -237,7 +237,7 @@ ErrCode BundleInstallerProxy::InstallSandboxApp(const std::string &bundleName, i
 
 ErrCode BundleInstallerProxy::UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -271,7 +271,7 @@ ErrCode BundleInstallerProxy::UninstallSandboxApp(const std::string &bundleName,
 ErrCode BundleInstallerProxy::InstallPlugin(const std::string &hostBundleName,
     const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -312,7 +312,7 @@ ErrCode BundleInstallerProxy::InstallPlugin(const std::string &hostBundleName,
 ErrCode BundleInstallerProxy::UninstallPlugin(const std::string &hostBundleName, const std::string &pluginBundleName,
     const InstallPluginParam &installPluginParam)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -346,7 +346,7 @@ sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const I
     const sptr<IStatusReceiver> &statusReceiver, const std::vector<std::string> &originHapPaths)
 {
     LOG_D(BMS_TAG_INSTALLER, "create stream installer begin");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -407,7 +407,7 @@ sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const I
 bool BundleInstallerProxy::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
 {
     LOG_D(BMS_TAG_INSTALLER, "destory stream installer begin");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -426,7 +426,7 @@ bool BundleInstallerProxy::DestoryBundleStreamInstaller(uint32_t streamInstaller
 bool BundleInstallerProxy::UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam,
     const sptr<IStatusReceiver> &statusReceiver)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel reply;
     MessageParcel data;
     MessageOption option(MessageOption::TF_SYNC);
@@ -449,7 +449,7 @@ bool BundleInstallerProxy::UninstallAndRecover(const std::string &bundleName, co
 ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bundleFilePaths,
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_INSTALLER, "stream install start");
     if (statusReceiver == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "stream install failed due to nullptr status receiver");
@@ -860,7 +860,7 @@ ErrCode BundleInstallerProxy::SendInstallRequestWithErrCode(
 
 ErrCode BundleInstallerProxy::InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -899,7 +899,7 @@ ErrCode BundleInstallerProxy::InstallCloneApp(const std::string &bundleName, int
 ErrCode BundleInstallerProxy::UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex,
                                                 const DestroyAppCloneParam &destroyAppCloneParam)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -934,7 +934,7 @@ ErrCode BundleInstallerProxy::UninstallCloneApp(const std::string &bundleName, i
 
 ErrCode BundleInstallerProxy::InstallExisted(const std::string &bundleName, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);

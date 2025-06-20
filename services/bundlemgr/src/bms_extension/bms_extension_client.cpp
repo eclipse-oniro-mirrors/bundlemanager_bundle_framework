@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,7 +30,7 @@ BmsExtensionClient::BmsExtensionClient()
 ErrCode BmsExtensionClient::QueryLauncherAbility(const Want &want, int32_t userId,
     std::vector<AbilityInfo> &abilityInfos) const
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "start to query launcher abilities from bms extension");
     auto dataMgr = GetDataMgr();
     if (dataMgr == nullptr) {
@@ -72,7 +72,7 @@ ErrCode BmsExtensionClient::QueryLauncherAbility(const Want &want, int32_t userI
 ErrCode BmsExtensionClient::QueryAbilityInfos(const Want &want, int32_t flags, int32_t userId,
     std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "start to query abilityInfos from bms extension");
     auto dataMgr = GetDataMgr();
     if (dataMgr == nullptr) {
@@ -113,7 +113,7 @@ ErrCode BmsExtensionClient::QueryAbilityInfos(const Want &want, int32_t flags, i
 ErrCode BmsExtensionClient::BatchQueryAbilityInfos(const std::vector<Want> &wants, int32_t flags, int32_t userId,
     std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start to query abilityInfos from bms extension");
     auto dataMgr = GetDataMgr();
     if (dataMgr == nullptr) {
@@ -160,7 +160,7 @@ ErrCode BmsExtensionClient::BatchQueryAbilityInfos(const std::vector<Want> &want
 ErrCode BmsExtensionClient::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, bool isNewVersion) const
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "start to query abilityInfo from bms extension");
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = QueryAbilityInfos(want, flags, userId, abilityInfos, isNewVersion);
@@ -180,7 +180,7 @@ ErrCode BmsExtensionClient::QueryAbilityInfo(const Want &want, int32_t flags, in
 ErrCode BmsExtensionClient::GetBundleInfos(
     int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId, bool isNewVersion) const
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "start to query bundle infos from bms extension");
     if (userId != Constants::ALL_USERID) {
         auto dataMgr = GetDataMgr();
@@ -209,7 +209,7 @@ ErrCode BmsExtensionClient::GetBundleInfos(
 ErrCode BmsExtensionClient::GetBundleInfo(const std::string &bundleName, int32_t flags,
     BundleInfo &bundleInfo, int32_t userId, bool isNewVersion) const
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "start to query bundle info from bms extension");
     auto dataMgr = GetDataMgr();
     if (dataMgr == nullptr) {
@@ -245,7 +245,7 @@ ErrCode BmsExtensionClient::GetBundleInfo(const std::string &bundleName, int32_t
 ErrCode BmsExtensionClient::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
     std::vector<BundleInfo> &bundleInfos, int32_t userId, bool isNewVersion) const
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start to batch query bundle info from bms extension");
     auto dataMgr = GetDataMgr();
     if (dataMgr == nullptr) {
@@ -280,7 +280,7 @@ ErrCode BmsExtensionClient::BatchGetBundleInfo(const std::vector<std::string> &b
 ErrCode BmsExtensionClient::ImplicitQueryAbilityInfos(
     const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "start to implicitly query ability info from bms extension");
     if (userId != Constants::ALL_USERID) {
         auto dataMgr = GetDataMgr();
@@ -319,7 +319,7 @@ ErrCode BmsExtensionClient::ImplicitQueryAbilityInfos(
 ErrCode BmsExtensionClient::GetBundleStats(
     const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -328,7 +328,7 @@ ErrCode BmsExtensionClient::GetBundleStats(
 }
 ErrCode BmsExtensionClient::ClearData(const std::string &bundleName, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -337,7 +337,7 @@ ErrCode BmsExtensionClient::ClearData(const std::string &bundleName, int32_t use
 }
 ErrCode BmsExtensionClient::ClearCache(const std::string &bundleName, sptr<IRemoteObject> callback, int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -346,7 +346,7 @@ ErrCode BmsExtensionClient::ClearCache(const std::string &bundleName, sptr<IRemo
 }
 ErrCode BmsExtensionClient::GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t &uid)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -355,7 +355,7 @@ ErrCode BmsExtensionClient::GetUidByBundleName(const std::string &bundleName, in
 }
 ErrCode BmsExtensionClient::GetBundleNameByUid(int32_t uid, std::string &bundleName)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -365,7 +365,7 @@ ErrCode BmsExtensionClient::GetBundleNameByUid(int32_t uid, std::string &bundleN
 
 ErrCode BmsExtensionClient::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -376,7 +376,7 @@ ErrCode BmsExtensionClient::AddResourceInfoByBundleName(const std::string &bundl
 ErrCode BmsExtensionClient::AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, const int32_t userId)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -386,7 +386,7 @@ ErrCode BmsExtensionClient::AddResourceInfoByAbility(const std::string &bundleNa
 
 ErrCode BmsExtensionClient::DeleteResourceInfo(const std::string &key)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -397,7 +397,7 @@ ErrCode BmsExtensionClient::DeleteResourceInfo(const std::string &key)
 ErrCode BmsExtensionClient::OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
     int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -423,7 +423,7 @@ void BmsExtensionClient::ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) con
 ErrCode BmsExtensionClient::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo, const int32_t appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -434,7 +434,7 @@ ErrCode BmsExtensionClient::GetBundleResourceInfo(const std::string &bundleName,
 ErrCode BmsExtensionClient::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -445,7 +445,7 @@ ErrCode BmsExtensionClient::GetLauncherAbilityResourceInfo(const std::string &bu
 ErrCode BmsExtensionClient::GetAllBundleResourceInfo(const uint32_t flags,
     std::vector<BundleResourceInfo> &bundleResourceInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -456,7 +456,7 @@ ErrCode BmsExtensionClient::GetAllBundleResourceInfo(const uint32_t flags,
 ErrCode BmsExtensionClient::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bmsExtensionImpl_ == nullptr) {
         APP_LOGW("bmsExtensionImpl_ is null");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;

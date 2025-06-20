@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,7 +33,7 @@ BundleMgrMiniProxy::~BundleMgrMiniProxy()
 
 ErrCode BundleMgrMiniProxy::GetNameForUid(const int uid, std::string &name)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to GetNameForUid of %{public}d", uid);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -64,7 +64,7 @@ std::string BundleMgrMiniProxy::GetAppIdByBundleName(const std::string &bundleNa
         APP_LOGE("failed to GetAppIdByBundleName due to bundleName empty");
         return Constants::EMPTY_STRING;
     }
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get appId of %{public}s", bundleName.c_str());
 
     MessageParcel data;
@@ -102,7 +102,7 @@ int32_t BundleMgrMiniProxy::GetUidByBundleName(const std::string &bundleName, co
         APP_LOGE("failed to GetUidByBundleName due to bundleName empty");
         return Constants::INVALID_UID;
     }
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to get uid of %{public}s, userId : %{public}d, appIndex : %{public}d", bundleName.c_str(),
         userId, appIndex);
 

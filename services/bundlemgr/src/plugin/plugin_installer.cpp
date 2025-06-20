@@ -60,7 +60,7 @@ PluginInstaller::~PluginInstaller()
 ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
     const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to install plugin for %{public}s", hostBundleName.c_str());
 
     if (!InitDataMgr()) {
@@ -117,7 +117,7 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
 ErrCode PluginInstaller::UninstallPlugin(const std::string &hostBundleName, const std::string &pluginBundleName,
     const InstallPluginParam &installPluginParam)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to uninstall plugin %{public}s for %{public}s",
         pluginBundleName.c_str(), hostBundleName.c_str());
 
