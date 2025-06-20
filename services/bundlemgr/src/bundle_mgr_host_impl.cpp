@@ -133,7 +133,7 @@ ErrCode BundleMgrHostImpl::GetApplicationInfoV9(
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(appName)) {
-        LOG_E(BMS_TAG_QUERY, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "permission denied");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -483,7 +483,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
-        LOG_E(BMS_TAG_QUERY, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "permission denied");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfosV9");
@@ -1218,7 +1218,7 @@ std::string BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, co
     // API9 need to be system app otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        APP_LOGD("non-system app calling system api");
+        APP_LOGD("non-system calling system");
         return Constants::EMPTY_STRING;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
@@ -4718,7 +4718,7 @@ bool BundleMgrHostImpl::IsBundleExist(const std::string &bundleName)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is nullptr");
+        APP_LOGE("Mgr is nullptr");
         return false;
     }
     return dataMgr->IsBundleExist(bundleName);

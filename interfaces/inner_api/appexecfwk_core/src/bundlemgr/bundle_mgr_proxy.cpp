@@ -5012,7 +5012,7 @@ bool BundleMgrProxy::SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel 
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+        APP_LOGE("error code %{public}d in transact cmd %{public}d", result, code);
         return false;
     }
     return true;

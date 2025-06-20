@@ -3216,7 +3216,7 @@ bool BundleDataMgr::GetBundleType(const std::string &bundleName, BundleType &bun
         return false;
     }
     bundleType = item->second.GetApplicationBundleType();
-    APP_LOGI("bundle %{public}s bundleType is %{public}d", bundleName.c_str(), bundleType);
+    APP_LOGI("bundle %{public}s Type is %{public}d", bundleName.c_str(), bundleType);
     return true;
 }
 

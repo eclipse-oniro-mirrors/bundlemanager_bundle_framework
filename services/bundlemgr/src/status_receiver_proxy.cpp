@@ -790,7 +790,7 @@ void StatusReceiverProxy::OnStatusNotify(const int32_t progress)
 
 void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string &resultMsg)
 {
-    APP_LOGI("service result %{public}d, %{public}s", resultCode, resultMsg.c_str());
+    APP_LOGI("result %{public}d, %{public}s", resultCode, resultMsg.c_str());
     // transform service error code to client error code.
     TransformResult(resultCode);
     if (!resultMsg.empty()) {
@@ -847,7 +847,7 @@ void StatusReceiverProxy::TransformResult(const int32_t resultCode)
 void StatusReceiverProxy::CloseStreamInstaller(uint32_t installerId)
 {
     if (installerId <= 0) {
-        APP_LOGE("invalid installer id: %{public}u", installerId);
+        APP_LOGE("installer id: %{public}u", installerId);
         return;
     }
     sptr<IBundleInstaller> bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
