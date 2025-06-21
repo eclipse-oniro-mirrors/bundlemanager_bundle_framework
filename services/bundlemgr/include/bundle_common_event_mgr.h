@@ -96,12 +96,15 @@ public:
 private:
     std::string GetCommonEventData(const NotifyType &type);
     void SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBundleEvents &installResult);
+    bool PublishCommonEvent(const std::string &bundleName, const std::string &action,
+        const int32_t publishUserId, const EventFwk::CommonEventData &commonData);
     bool ProcessBundleChangedEventForOtherUsers(const std::shared_ptr<BundleDataMgr> &dataMgr,
         const std::string &bundleName, const std::string &action, const int32_t publishUserId,
         const EventFwk::CommonEventData &commonData);
     void Init();
 
     std::unordered_map<NotifyType, std::string> commonEventMap_;
+    std::set<std::string> eventSet_;
 };
 } // AppExecFwk
 } // OHOS

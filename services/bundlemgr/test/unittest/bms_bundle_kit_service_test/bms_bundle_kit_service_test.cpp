@@ -14838,6 +14838,45 @@ HWTEST_F(BmsBundleKitServiceTest, NotifyBundleStatus_0100, Function | SmallTest 
 }
 
 /**
+ * @tc.number: NotifyBundleStatus_0200
+ * @tc.name: test NotifyBundleStatus
+ * @tc.desc: 1.NotifyBundleStatus
+ */
+HWTEST_F(BmsBundleKitServiceTest, NotifyBundleStatus_0200, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
+    bool result = GetBundleDataMgr()->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_TRUE(result);
+    EXPECT_NE(commonEventMgr_, nullptr);
+    installRes_.uid = 1;
+    installRes_.type = NotifyType::START_INSTALL;
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
+    int32_t callbackResult = bundleStatusCallback->GetResultCode();
+    EXPECT_EQ(callbackResult, ERR_TIMED_OUT);
+}
+
+/**
+ * @tc.number: NotifyBundleStatus_0300
+ * @tc.name: test NotifyBundleStatus
+ * @tc.desc: 1.NotifyBundleStatus
+ */
+HWTEST_F(BmsBundleKitServiceTest, NotifyBundleStatus_0300, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
+    bool result = GetBundleDataMgr()->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_TRUE(result);
+    EXPECT_NE(commonEventMgr_, nullptr);
+    installRes_.uid = 1;
+    installRes_.type = NotifyType::INSTALL;
+    installRes_.bundleName = BUNDLE_NAME;
+    commonEventMgr_->NotifyBundleStatus(installRes_, GetBundleDataMgr());
+    int32_t callbackResult = bundleStatusCallback->GetResultCode();
+    EXPECT_EQ(callbackResult, ERR_TIMED_OUT);
+}
+
+/**
  * @tc.number: Mgr_Proxy_SetShortcutVisibleForSelf_0100
  * @tc.name: test BundleMgrProxy interface SetShortcutVisibleForSelf
  */
