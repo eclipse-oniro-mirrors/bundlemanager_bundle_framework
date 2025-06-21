@@ -371,6 +371,7 @@ constexpr const char* MODULE_TYPE = "type";
 constexpr const char* MODULE_PROCESS = "process";
 constexpr const char* MODULE_MAIN_ELEMENT = "mainElement";
 constexpr const char* MODULE_DEVICE_TYPES = "deviceTypes";
+constexpr const char* MODULE_REQUIRED_DEVICE_FEATURES = "requiredDeviceFeatures";
 constexpr const char* MODULE_ABILITY_SRC_ENTRY_DELEGATOR = "abilitySrcEntryDelegator";
 constexpr const char* MODULE_ABILITY_STAGE_SRC_ENTRY_DELEGATOR = "abilityStageSrcEntryDelegator";
 constexpr const char* MODULE_HNP_PACKAGE = "hnpPackages";
