@@ -112,11 +112,11 @@ const nlohmann::json MODULE_JSON2 = R"(
         "deviceTypes": [
             "default"
         ],
-        "deviceFeatures": [
-            "multi_process",
-            "free_multi_window",
-            "directory_permission"
-        ],
+        "requiredDeviceFeatures": {
+            "phone": [
+                "large_screen"
+            ]
+        },
         "abilities": [
             {
                 "description": "$string:MainAbility_desc",
@@ -189,7 +189,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoMarshallingTest_0100, Func
     HapModuleInfo info;
     info.abilitySrcEntryDelegator = "abilitySrcEntryDelegator";
     info.abilityStageSrcEntryDelegator = "abilityStageSrcEntryDelegator";
-    info.deviceFeatures = { "multi_process", "free_multi_window" };
+    info.requiredDeviceFeatures = {{"phone", {"large_screen"}}};
     info.crossAppSharedConfig = "$profile:shared_config";
     Parcel parcel{};
     auto ret = info.Marshalling(parcel);
@@ -201,7 +201,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoMarshallingTest_0100, Func
     EXPECT_EQ(info2.abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(info2.abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
     EXPECT_EQ(info2.crossAppSharedConfig, "$profile:shared_config");
-    EXPECT_EQ(info2.deviceFeatures.size(), 2);
+    EXPECT_EQ(info2.requiredDeviceFeatures.size(), 1);
 }
 
 /**
@@ -215,18 +215,18 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoFromJsonTest_0100, Functio
         {
             "abilitySrcEntryDelegator": "abilitySrcEntryDelegator",
             "abilityStageSrcEntryDelegator": "abilityStageSrcEntryDelegator",
-            "deviceFeatures": [
-                "multi_process",
-                "free_multi_window",
-                "directory_permission"
-            ]
+            "requiredDeviceFeatures": {
+                "phone": [
+                    "large_screen"
+                ]
+            }
         }
     )"_json;
     HapModuleInfo info;
     from_json(json, info);
     EXPECT_EQ(info.abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(info.abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
-    EXPECT_EQ(info.deviceFeatures.size(), 3);
+    EXPECT_EQ(info.requiredDeviceFeatures.size(), 1);
 }
 
 /**
@@ -240,7 +240,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoToJsonTest_0100, Function 
     info.abilitySrcEntryDelegator = "abilitySrcEntryDelegator";
     info.abilityStageSrcEntryDelegator = "abilityStageSrcEntryDelegator";
     info.crossAppSharedConfig = "$profile:shared_config";
-    info.deviceFeatures = { "multi_process", "free_multi_window" };
+    info.requiredDeviceFeatures = {{"phone", {"large_screen"}}};
     nlohmann::json json;
     to_json(json, info);
 
@@ -249,7 +249,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoToJsonTest_0100, Function 
     EXPECT_EQ(info.abilitySrcEntryDelegator, info2.abilitySrcEntryDelegator);
     EXPECT_EQ(info.abilityStageSrcEntryDelegator, info2.abilityStageSrcEntryDelegator);
     EXPECT_EQ(info.crossAppSharedConfig, info2.crossAppSharedConfig);
-    EXPECT_EQ(info.deviceFeatures.size(), info2.deviceFeatures.size());
+    EXPECT_EQ(info.requiredDeviceFeatures.size(), info2.requiredDeviceFeatures.size());
 }
 
 /**
@@ -276,7 +276,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, ModuleProfileToInnerModuleInfoTest_0100
     EXPECT_EQ(innerModuleInfo->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->crossAppSharedConfig, "$profile:shared_config");
-    EXPECT_EQ(innerModuleInfo->deviceFeatures.size(), 0);
+    EXPECT_EQ(innerModuleInfo->requiredDeviceFeatures.size(), 0);
 
     auto bundleInfo = innerBundleInfo.GetBaseBundleInfo();
     EXPECT_EQ(bundleInfo.targetMinorApiVersion, 1);
@@ -310,7 +310,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, ModuleProfileToInnerModuleInfoTest_0200
     EXPECT_NE(innerModuleInfo, std::nullopt);
     EXPECT_EQ(innerModuleInfo->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
-    EXPECT_EQ(innerModuleInfo->deviceFeatures.size(), 3);
+    EXPECT_EQ(innerModuleInfo->requiredDeviceFeatures.size(), 1);
     EXPECT_TRUE(innerModuleInfo->crossAppSharedConfig.empty());
 
     auto bundleInfo = innerBundleInfo.GetBaseBundleInfo();
@@ -345,7 +345,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, FindHapModuleInfoTest_0100, Function | 
     EXPECT_NE(hapModule, std::nullopt);
     EXPECT_EQ(hapModule->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(hapModule->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
-    EXPECT_EQ(hapModule->deviceFeatures.size(), 0);
+    EXPECT_EQ(hapModule->requiredDeviceFeatures.size(), 0);
     EXPECT_EQ(hapModule->crossAppSharedConfig, "$profile:shared_config");
 }
 
@@ -372,7 +372,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, FindHapModuleInfoTest_0200, Function | 
     EXPECT_NE(hapModule, std::nullopt);
     EXPECT_EQ(hapModule->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(hapModule->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
-    EXPECT_EQ(hapModule->deviceFeatures.size(), 3);
+    EXPECT_EQ(hapModule->requiredDeviceFeatures.size(), 1);
     EXPECT_TRUE(hapModule->crossAppSharedConfig.empty());
 }
 

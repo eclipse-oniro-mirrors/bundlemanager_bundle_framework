@@ -348,6 +348,23 @@ void GenerateMap(FuzzedDataProvider& fdp, std::map<std::string, std::string> &da
     }
 }
 
+void GenerateDeviceFeatureMap(FuzzedDataProvider& fdp, std::map<std::string, std::vector<std::string>> &data)
+{
+    // Generate number of key-value pairs (0 to 128)
+    const size_t numPairs = fdp.ConsumeIntegralInRange<size_t>(0, ARRAY_MAX_LENGTH);
+
+    for (size_t i = 0; i < numPairs; ++i) {
+        // Generate key with maximum length 128
+        const std::string key = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+
+        // Generate vector value
+        const std::vector<std::string> value = GenerateStringArray(fdp);
+
+        // Insert into map (allow overwriting existing keys)
+        data[key] = value;
+    }
+}
+
 void GenerateInstallParam(FuzzedDataProvider& fdp, InstallParam &installParam)
 {
     installParam.isKeepData = fdp.ConsumeBool();
@@ -642,7 +659,7 @@ void GenerateHapModuleInfo(FuzzedDataProvider& fdp, HapModuleInfo &hapModuleInfo
     hapModuleInfo.nativeLibraryFileNames = GenerateStringArray(fdp);
     hapModuleInfo.reqCapabilities = GenerateStringArray(fdp);
     hapModuleInfo.deviceTypes = GenerateStringArray(fdp);
-    hapModuleInfo.deviceFeatures = GenerateStringArray(fdp);
+    GenerateDeviceFeatureMap(fdp, hapModuleInfo.requiredDeviceFeatures);
 }
 }  // namespace BMSFuzzTestUtil
 }  // namespace AppExecFwk

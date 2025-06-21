@@ -180,7 +180,7 @@ struct HapModuleInfo : public Parcelable {
 
     std::vector<std::string> reqCapabilities;
     std::vector<std::string> deviceTypes;
-    std::vector<std::string> deviceFeatures;
+    std::map<std::string, std::vector<std::string>> requiredDeviceFeatures;
     std::vector<Dependency> dependencies;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;

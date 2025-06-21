@@ -307,7 +307,7 @@ struct Module {
     std::string process;
     std::string mainElement;
     std::vector<std::string> deviceTypes;
-    std::vector<std::string> deviceFeatures;
+    std::map<std::string, std::vector<std::string>> requiredDeviceFeatures;
     std::string virtualMachine = MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE;
     std::string pages;
     std::string systemTheme;
@@ -1392,14 +1392,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         true,
         g_parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+    GetValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
         jsonObjectEnd,
-        MODULE_DEVICE_FEATURES,
-        module.deviceFeatures,
-        JsonType::ARRAY,
+        MODULE_REQUIRED_DEVICE_FEATURES,
+        module.requiredDeviceFeatures,
+        JsonType::OBJECT,
         false,
         g_parseResult,
-        ArrayType::STRING);
+        ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_DELIVERY_WITH_INSTALL,
@@ -2557,8 +2557,8 @@ bool ToInnerModuleInfo(
     for (const std::string &deviceType : moduleJson.module.deviceTypes) {
         innerModuleInfo.deviceTypes.emplace_back(deviceType);
     }
-    for (const std::string &deviceFeature : moduleJson.module.deviceFeatures) {
-        innerModuleInfo.deviceFeatures.emplace_back(deviceFeature);
+    for (const auto &deviceFeature : moduleJson.module.requiredDeviceFeatures) {
+        innerModuleInfo.requiredDeviceFeatures.insert(deviceFeature);
     }
 
     if (Profile::VIRTUAL_MACHINE_SET.find(moduleJson.module.virtualMachine) != Profile::VIRTUAL_MACHINE_SET.end()) {

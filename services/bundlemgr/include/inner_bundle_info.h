@@ -142,7 +142,7 @@ struct InnerModuleInfo {
     std::vector<std::string> abilityKeys;
     std::vector<std::string> skillKeys;
     std::vector<std::string> deviceTypes;
-    std::vector<std::string> deviceFeatures;
+    std::map<std::string, std::vector<std::string>> requiredDeviceFeatures;
     std::vector<std::string> extensionKeys;
     std::vector<std::string> extensionSkillKeys;
     std::vector<std::string> nativeLibraryFileNames;
