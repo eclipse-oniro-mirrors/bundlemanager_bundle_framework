@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,20 +45,20 @@ public:
         const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId);
     bool GetHapModuleInfo(const std::string &bundleName, const std::string &hapName, HapModuleInfo &hapModuleInfo);
     bool GetResConfigFile(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
-        std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     bool GetResConfigFile(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
-        std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     bool GetResConfigFile(const AbilityInfo &abilityInfo, const std::string &metadataName,
-        std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     ErrCode InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId, int32_t &appIndex);
     ErrCode UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId);
     ErrCode GetSandboxBundleInfo(const std::string &bundleName, int32_t appIndex, int32_t userId, BundleInfo &info);
     bool GetProfileFromExtension(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
-        std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     bool GetProfileFromAbility(const AbilityInfo &abilityInfo, const std::string &metadataName,
-        std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     bool GetProfileFromHap(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
-        std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     ErrCode GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo);
     ErrCode GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
@@ -75,9 +75,11 @@ private:
     void OnDeath();
     bool ConvertResourcePath(const std::string &bundleName, std::string &resPath, bool isCompressed) const;
     bool GetResProfileByMetadata(const std::vector<Metadata> &metadata, const std::string &metadataName,
-        const std ::string &resourcePath, bool isCompressed, std::vector<std::string> &profileInfos) const;
+        const std ::string &resourcePath, bool isCompressed,
+        bool includeSysRes, std::vector<std::string> &profileInfos) const;
 #ifdef GLOBAL_RESMGR_ENABLE
-    std::shared_ptr<Global::Resource::ResourceManager> InitResMgr(const std::string &resourcePath) const;
+    std::shared_ptr<Global::Resource::ResourceManager> InitResMgr(
+        const std::string &resourcePath, bool includeSysRes) const;
     bool GetResFromResMgr(const std::string &resName, const std::shared_ptr<Global::Resource::ResourceManager> &resMgr,
         bool isCompressed, std::vector<std::string> &profileInfos) const;
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -93,63 +93,63 @@ bool BundleMgrClient::GetHapModuleInfo(const std::string &bundleName, const std:
 }
 
 bool BundleMgrClient::GetResConfigFile(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const
+    std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
         return false;
     }
-    return impl_->GetResConfigFile(hapModuleInfo, metadataName, profileInfos);
+    return impl_->GetResConfigFile(hapModuleInfo, metadataName, profileInfos, includeSysRes);
 }
 
 bool BundleMgrClient::GetResConfigFile(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const
+    std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
         return false;
     }
-    return impl_->GetResConfigFile(extensionInfo, metadataName, profileInfos);
+    return impl_->GetResConfigFile(extensionInfo, metadataName, profileInfos, includeSysRes);
 }
 
 bool BundleMgrClient::GetResConfigFile(const AbilityInfo &abilityInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const
+    std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
         return false;
     }
-    return impl_->GetResConfigFile(abilityInfo, metadataName, profileInfos);
+    return impl_->GetResConfigFile(abilityInfo, metadataName, profileInfos, includeSysRes);
 }
 
 bool BundleMgrClient::GetProfileFromExtension(const ExtensionAbilityInfo &extensionInfo,
-    const std::string &metadataName, std::vector<std::string> &profileInfos) const
+    const std::string &metadataName, std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
         return false;
     }
-    return impl_->GetProfileFromExtension(extensionInfo, metadataName, profileInfos);
+    return impl_->GetProfileFromExtension(extensionInfo, metadataName, profileInfos, includeSysRes);
 }
 
 bool BundleMgrClient::GetProfileFromAbility(const AbilityInfo &abilityInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const
+    std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
         return false;
     }
-    return impl_->GetProfileFromAbility(abilityInfo, metadataName, profileInfos);
+    return impl_->GetProfileFromAbility(abilityInfo, metadataName, profileInfos, includeSysRes);
 }
 
 bool BundleMgrClient::GetProfileFromHap(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const
+    std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     if (impl_ == nullptr) {
         APP_LOGE("Bundle mgr client impl is nullptr");
         return false;
     }
-    return impl_->GetProfileFromHap(hapModuleInfo, metadataName, profileInfos);
+    return impl_->GetProfileFromHap(hapModuleInfo, metadataName, profileInfos, includeSysRes);
 }
 
 ErrCode BundleMgrClient::InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId,

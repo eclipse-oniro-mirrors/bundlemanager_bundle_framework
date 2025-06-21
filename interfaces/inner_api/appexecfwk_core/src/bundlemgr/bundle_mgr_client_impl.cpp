@@ -160,11 +160,12 @@ bool BundleMgrClientImpl::GetHapModuleInfo(const std::string &bundleName, const 
 }
 
 bool BundleMgrClientImpl::GetResConfigFile(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const
+    std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     bool isCompressed = !hapModuleInfo.hapPath.empty();
     std::string resourcePath = isCompressed ? hapModuleInfo.hapPath : hapModuleInfo.resourcePath;
-    if (!GetResProfileByMetadata(hapModuleInfo.metadata, metadataName, resourcePath, isCompressed, profileInfos)) {
+    if (!GetResProfileByMetadata(
+        hapModuleInfo.metadata, metadataName, resourcePath, isCompressed, includeSysRes, profileInfos)) {
         APP_LOGE("GetResProfileByMetadata failed");
         return false;
     }
@@ -177,11 +178,12 @@ bool BundleMgrClientImpl::GetResConfigFile(const HapModuleInfo &hapModuleInfo, c
 }
 
 bool BundleMgrClientImpl::GetResConfigFile(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const
+    std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     bool isCompressed = !extensionInfo.hapPath.empty();
     std::string resourcePath = isCompressed ? extensionInfo.hapPath : extensionInfo.resourcePath;
-    if (!GetResProfileByMetadata(extensionInfo.metadata, metadataName, resourcePath, isCompressed, profileInfos)) {
+    if (!GetResProfileByMetadata(
+        extensionInfo.metadata, metadataName, resourcePath, isCompressed, includeSysRes, profileInfos)) {
         APP_LOGE("GetResProfileByMetadata failed");
         return false;
     }
@@ -194,11 +196,12 @@ bool BundleMgrClientImpl::GetResConfigFile(const ExtensionAbilityInfo &extension
 }
 
 bool BundleMgrClientImpl::GetResConfigFile(const AbilityInfo &abilityInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const
+    std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     bool isCompressed = !abilityInfo.hapPath.empty();
     std::string resourcePath = isCompressed ? abilityInfo.hapPath : abilityInfo.resourcePath;
-    if (!GetResProfileByMetadata(abilityInfo.metadata, metadataName, resourcePath, isCompressed, profileInfos)) {
+    if (!GetResProfileByMetadata(
+        abilityInfo.metadata, metadataName, resourcePath, isCompressed, includeSysRes, profileInfos)) {
         APP_LOGE("GetResProfileByMetadata failed");
         return false;
     }
@@ -210,7 +213,7 @@ bool BundleMgrClientImpl::GetResConfigFile(const AbilityInfo &abilityInfo, const
 }
 
 bool BundleMgrClientImpl::GetProfileFromExtension(const ExtensionAbilityInfo &extensionInfo,
-    const std::string &metadataName, std::vector<std::string> &profileInfos) const
+    const std::string &metadataName, std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     APP_LOGD("get extension config file from extension dir begin");
     bool isCompressed = !extensionInfo.hapPath.empty();
@@ -225,11 +228,11 @@ bool BundleMgrClientImpl::GetProfileFromExtension(const ExtensionAbilityInfo &ex
     } else {
         innerExtension.resourcePath = resPath;
     }
-    return GetResConfigFile(innerExtension, metadataName, profileInfos);
+    return GetResConfigFile(innerExtension, metadataName, profileInfos, includeSysRes);
 }
 
 bool BundleMgrClientImpl::GetProfileFromAbility(const AbilityInfo &abilityInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const
+    std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     APP_LOGD("get ability config file from ability begin");
     bool isCompressed = !abilityInfo.hapPath.empty();
@@ -244,11 +247,11 @@ bool BundleMgrClientImpl::GetProfileFromAbility(const AbilityInfo &abilityInfo, 
     } else {
         innerAbilityInfo.resourcePath = resPath;
     }
-    return GetResConfigFile(innerAbilityInfo, metadataName, profileInfos);
+    return GetResConfigFile(innerAbilityInfo, metadataName, profileInfos, includeSysRes);
 }
 
 bool BundleMgrClientImpl::GetProfileFromHap(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const
+    std::vector<std::string> &profileInfos, bool includeSysRes) const
 {
     APP_LOGD("get hap module config file from hap begin");
     bool isCompressed = !hapModuleInfo.hapPath.empty();
@@ -263,7 +266,7 @@ bool BundleMgrClientImpl::GetProfileFromHap(const HapModuleInfo &hapModuleInfo, 
     } else {
         innerHapModuleInfo.resourcePath = resPath;
     }
-    return GetResConfigFile(innerHapModuleInfo, metadataName, profileInfos);
+    return GetResConfigFile(innerHapModuleInfo, metadataName, profileInfos, includeSysRes);
 }
 
 bool BundleMgrClientImpl::ConvertResourcePath(
@@ -288,7 +291,7 @@ bool BundleMgrClientImpl::ConvertResourcePath(
 
 bool BundleMgrClientImpl::GetResProfileByMetadata(const std::vector<Metadata> &metadata,
     const std::string &metadataName, const std ::string &resourcePath, bool isCompressed,
-    std::vector<std::string> &profileInfos) const
+    bool includeSysRes, std::vector<std::string> &profileInfos) const
 {
 #ifdef GLOBAL_RESMGR_ENABLE
     if (metadata.empty()) {
@@ -299,7 +302,7 @@ bool BundleMgrClientImpl::GetResProfileByMetadata(const std::vector<Metadata> &m
         APP_LOGE("GetResProfileByMetadata failed due to empty resourcePath");
         return false;
     }
-    std::shared_ptr<ResourceManager> resMgr = InitResMgr(resourcePath);
+    std::shared_ptr<ResourceManager> resMgr = InitResMgr(resourcePath, includeSysRes);
     if (resMgr == nullptr) {
         APP_LOGE("GetResProfileByMetadata init resMgr failed");
         return false;
@@ -330,14 +333,15 @@ bool BundleMgrClientImpl::GetResProfileByMetadata(const std::vector<Metadata> &m
 }
 
 #ifdef GLOBAL_RESMGR_ENABLE
-std::shared_ptr<ResourceManager> BundleMgrClientImpl::InitResMgr(const std::string &resourcePath) const
+std::shared_ptr<ResourceManager> BundleMgrClientImpl::InitResMgr(
+    const std::string &resourcePath, bool includeSysRes) const
 {
     APP_LOGD("InitResMgr begin");
     if (resourcePath.empty()) {
         APP_LOGE("InitResMgr failed due to invalid param");
         return nullptr;
     }
-    std::shared_ptr<ResourceManager> resMgr(CreateResourceManager());
+    std::shared_ptr<ResourceManager> resMgr(CreateResourceManager(includeSysRes));
     if (!resMgr) {
         APP_LOGE("InitResMgr resMgr is nullptr");
         return nullptr;

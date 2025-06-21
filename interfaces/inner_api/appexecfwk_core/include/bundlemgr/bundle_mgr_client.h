@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,35 +56,38 @@ public:
      * @param hapModuleInfo Indicates the information of a hap of this bundle.
      * @param MetadataName Indicates the name of the Metadata.
      * @param profileInfos Indicates the obtained profiles in json string.
+     * @param includeSysRes whether include system resource.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool GetResConfigFile(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
-    std::vector<std::string> &profileInfos) const;
+    std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     /**
      * @brief Obtain the profile which are deploied in the Metadata in the bundle.
      * @param extensionInfo Indicates the information of the extension info of the bundle.
      * @param MetadataName Indicates the name of the Metadata.
+     * @param includeSysRes whether include system resource.
      * @param profileInfos Indicates the obtained profiles in json string.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool GetResConfigFile(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
-        std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     /**
      * @brief Obtain the profile which are deploied in the Metadata in the bundle.
      * @param abilityInfo Indicates the information of the ability info of the bundle.
      * @param MetadataName Indicates the name of the Metadata.
+     * @param includeSysRes whether include system resource.
      * @param profileInfos Indicates the obtained profiles in json string.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool GetResConfigFile(const AbilityInfo &abilityInfo, const std::string &metadataName,
-        std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
 
     bool GetProfileFromExtension(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
-        std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     bool GetProfileFromAbility(const AbilityInfo &abilityInfo, const std::string &metadataName,
-        std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     bool GetProfileFromHap(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
-        std::vector<std::string> &profileInfos) const;
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     /**
      * @brief Install sandbox application.
      * @param bundleName Indicates the bundle name of the sandbox application to be install.
