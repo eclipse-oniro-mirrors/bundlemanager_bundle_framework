@@ -457,6 +457,9 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_007, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
+    ret = GetResConfigFile(info, metadataName, profileInfo, false);
+    EXPECT_TRUE(ret);
+
     std::cout << "END GetResourceConfigFile_007" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -827,7 +830,9 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_020, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
-    
+    ret = GetResConfigFile(info, metadataName, profileInfo, false);
+    EXPECT_TRUE(ret);
+
     std::cout << "END GetResourceConfigFile_020" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -1234,7 +1239,9 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_034, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
-    
+    ret = GetResConfigFile(info, metadataName, profileInfo, false);
+    EXPECT_TRUE(ret);
+
     std::cout << "END GetResourceConfigFile_034" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -1874,6 +1881,8 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromHap001, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = bundleMgrClient.GetProfileFromHap(info, metadataName, profileInfo);
     EXPECT_FALSE(ret);
+    ret = bundleMgrClient.GetProfileFromHap(info, metadataName, profileInfo, false);
+    EXPECT_FALSE(ret);
 
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME, uninstallMsg);
@@ -2168,7 +2177,7 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_004, TestSize.Level1)
     BundleMgrClientImpl impl;
     std::string resName = "";
     std::shared_ptr<Global::Resource::ResourceManager> resMgr
-        = impl.InitResMgr(RESOURCE_PATH);
+        = impl.InitResMgr(RESOURCE_PATH, true);
     bool isCompressed = true;
     std::vector<std::string> profileInfos;
     bool res = impl.GetResFromResMgr(resName, resMgr, isCompressed, profileInfos);
@@ -2317,7 +2326,7 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_0011, TestSize.Level1)
 {
     BundleMgrClientImpl impl;
     std::shared_ptr<Global::Resource::ResourceManager> resMgr
-        = impl.InitResMgr("");
+        = impl.InitResMgr("", true);
     EXPECT_EQ(resMgr, nullptr);
 }
 
