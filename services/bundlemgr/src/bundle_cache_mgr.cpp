@@ -108,7 +108,7 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
-    dataMgr->GetBundleCacheInfos(userId, validBundles, false);
+    dataMgr->GetBundleCacheInfos(userId, validBundles, true);
     if (!validBundles.empty()) {
         auto getAllBundleCache = [validBundles, userId, processCacheCallback]() {
             uint64_t cacheStat = 0;
