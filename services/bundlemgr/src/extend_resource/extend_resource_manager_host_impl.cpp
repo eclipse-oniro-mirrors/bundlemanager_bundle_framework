@@ -457,16 +457,17 @@ ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
     ExtendResourceInfo extendResourceInfo;
     ErrCode ret = GetExtendResourceInfo(bundleName, moduleName, extendResourceInfo, userId, appIndex);
     CHECK_RESULT(ret, "GetExtendResourceInfo failed %{public}d");
-    bool isNeedToProcessDynamicIcon = CheckWhetherDynamicIconNeedProcess(bundleName, userId);
-    if (isNeedToProcessDynamicIcon && !ParseBundleResource(bundleName, extendResourceInfo, userId, appIndex)) {
+    if (!CheckWhetherDynamicIconNeedProcess(bundleName, userId)) {
+        APP_LOGE("%{public}s enable failed due to existing custom themes", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED_DUE_TO_EXISTING_CUSTOM_THEMES;
+    }
+    if (!ParseBundleResource(bundleName, extendResourceInfo, userId, appIndex)) {
         APP_LOGE("%{public}s no extend Resources", bundleName.c_str());
         return ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED;
     }
 
     SaveCurDynamicIcon(bundleName, moduleName, userId, appIndex);
-    if (isNeedToProcessDynamicIcon) {
-        SendBroadcast(bundleName, true, userId, appIndex);
-    }
+    SendBroadcast(bundleName, true, userId, appIndex);
     return ERR_OK;
 }
 
@@ -616,8 +617,8 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
     SaveCurDynamicIcon(bundleName, "", userId, appIndex);
     if (CheckWhetherDynamicIconNeedProcess(bundleName, userId)) {
         (void)ResetBundleResourceIcon(bundleName, userId, appIndex);
-        SendBroadcast(bundleName, false, userId, appIndex);
     }
+    SendBroadcast(bundleName, false, userId, appIndex);
     return ERR_OK;
 }
 
