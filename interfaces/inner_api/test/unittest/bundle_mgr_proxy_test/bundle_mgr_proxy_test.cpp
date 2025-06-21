@@ -611,39 +611,9 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3300, Function | SmallTest | 
     BundleMgrExtProxy bundleMgrExtProxy(impl);
     int32_t uid = -1;
     std::vector<std::string> bundleNames;
-    auto result = bundleMgrExtProxy.GetBundleNamesForUidExt(uid, bundleNames);
-    EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
-}
-
-/**
- * @tc.number: Bundle_Mgr_Proxy_Test_3400
- * @tc.name: test the GetBundleNamesForUidExt
- * @tc.desc: 1. hapPath is empty
- */
-HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3400, Function | SmallTest | Level0)
-{
-    sptr<IRemoteObject> impl = nullptr;
-    BundleMgrExtProxy bundleMgrExtProxy(impl);
-    int32_t uid = -1;
-    std::vector<std::string> bundleNames;
-    auto result = bundleMgrExtProxy.GetBundleNamesForUidExt(uid, bundleNames);
-    EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
-}
-
-/**
- * @tc.number: Bundle_Mgr_Proxy_Test_3500
- * @tc.name: test the GetBundleNamesForUidExt
- * @tc.desc: 1. hapPath is empty
- */
-HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3500, Function | SmallTest | Level0)
-{
-    sptr<IRemoteObject> impl = nullptr;
-    BundleMgrExtProxy bundleMgrExtProxy(impl);
-    BundleMgrExtInterfaceCode code = BundleMgrExtInterfaceCode::GET_BUNDLE_NAMES_FOR_UID_EXT;
-    MessageParcel data;
-    MessageParcel reply;
-    auto result = bundleMgrExtProxy.SendTransactCmd(code, data, reply);
-    EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto result = bundleMgrExtProxy.GetBundleNamesForUidExt(uid, bundleNames, funcResult);
+    EXPECT_EQ(result, ERR_INVALID_DATA);
 }
 
 /**

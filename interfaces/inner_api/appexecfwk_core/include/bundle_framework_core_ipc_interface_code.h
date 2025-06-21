@@ -386,10 +386,6 @@ enum class ExtendResourceManagerInterfaceCode : uint8_t {
     GET_DYNAMIC_ICON_INFO = 8,
 };
 
-/* SAID: 401-180 Interface No.180 subservice also provides the following interfaces */
-enum class BundleMgrExtInterfaceCode : uint8_t {
-    GET_BUNDLE_NAMES_FOR_UID_EXT = 0,
-};
 } // namespace AppExecFwk
 } // namespace OHOS
 #endif // OHOS_BUNDLE_APPEXECFWK_CORE_IPC_INTERFACE_CODE_H

@@ -31,6 +31,8 @@ ohos_systemtest("BmsBundleMgrHostTest") {
   deps = [
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
+    "${core_path}:bundle_mgr_ext_proxy",
+    "${core_path}:bundle_mgr_ext_stub",
   ]
 
   defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
