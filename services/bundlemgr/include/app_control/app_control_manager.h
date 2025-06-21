@@ -110,7 +110,7 @@ private:
     bool GetDisposedRuleOnlyForBms(const std::string &appId, std::vector<DisposedRule> &disposedRules);
     void DeleteAbilityRunningRuleBmsCache(const std::string &appId);
     bool CheckCanDispose(const std::string &appId, int32_t userId);
-    void PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules);
+    void PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules, const std::string &key);
     std::string GenerateAppRunningRuleCacheKey(const std::string &appId, int32_t userId, int32_t appIndex);
 
     bool isAppInstallControlEnabled_ = false;

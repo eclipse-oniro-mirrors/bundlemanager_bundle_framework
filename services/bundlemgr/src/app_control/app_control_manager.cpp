@@ -31,6 +31,7 @@ namespace AppExecFwk {
 namespace {
     constexpr const char* APP_MARKET_CALLING = "app market";
     constexpr const char* INVALID_MESSAGE = "INVALID_MESSAGE";
+    constexpr const char* ATOMIC_SERVICE = "atomicservice";
 }
 
 AppControlManager::AppControlManager()
@@ -495,7 +496,7 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
     std::string key = GenerateAppRunningRuleCacheKey(appId, userId, appIndex);
     bool findCache = GetAbilityRunningRuleCache(key, disposedRules);
     if (findCache) {
-        PrintDisposedRuleInfo(disposedRules);
+        PrintDisposedRuleInfo(disposedRules, appId);
         return ERR_OK;
     }
     std::vector<std::string> appIdList;
@@ -514,7 +515,7 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
         LOG_I(BMS_TAG_DEFAULT, "find from bms cache -n %{public}s", bundleName.c_str());
     };
     SetAbilityRunningRuleCache(key, disposedRules);
-    PrintDisposedRuleInfo(disposedRules);
+    PrintDisposedRuleInfo(disposedRules, appId);
     return ret;
 }
 
@@ -630,8 +631,11 @@ ErrCode AppControlManager::DeleteUninstallDisposedRule(
     return ERR_OK;
 }
 
-void AppControlManager::PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules)
+void AppControlManager::PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules, const std::string &key)
 {
+    if (key.find(ATOMIC_SERVICE) != std::string::npos) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "get rule by %{public}s", key.c_str());
+    }
     for (const auto &rule : disposedRules) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "control rule caller:%{public}s time:%{public}" PRId64,
         rule.callerName.c_str(), rule.setTime);
