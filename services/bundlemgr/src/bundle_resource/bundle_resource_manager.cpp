@@ -174,6 +174,7 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
     }
     if (tempTaskNum != currentTaskNum_) {
         APP_LOGI("need stop current task, new first");
+        isInterrupted_ = true;
         return false;
     }
     PrepareSysRes();
@@ -191,6 +192,7 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
         }
     }
     SendBundleResourcesChangedEvent(userId, type);
+    isInterrupted_ = false;
     std::string systemState;
     if (bundleResourceRdb_->GetCurrentSystemState(systemState)) {
         APP_LOGI_NOFUNC("current resource rdb system state:%{public}s", systemState.c_str());
@@ -280,7 +282,10 @@ void BundleResourceManager::InnerProcessResourceInfoBySystemThemeChanged(
     std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
     const int32_t userId)
 {
-    if (!CheckAllAddResourceInfo(userId)) {
+    // There are two scenarios need to add all resource:
+    // 1. The icons dir is empty.
+    // 2. Previous theme change is interrupted.
+    if (!CheckAllAddResourceInfo(userId) && !isInterrupted_) {
         // judge whether the bundle theme exists
         for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
             if (!BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
@@ -400,6 +405,7 @@ bool BundleResourceManager::AddResourceInfosByMap(
     for (const auto &item : resourceInfosMap) {
         if (tempTaskNumber != currentTaskNum_) {
             APP_LOGI("need stop current task, new first");
+            isInterrupted_ = true;
             threadPool->Stop();
             return false;
         }
