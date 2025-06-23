@@ -71,7 +71,11 @@ group("bundlemanagerfuzztest") {
     "bmsgetpermissiondef_fuzzer:BMSGetPermissionDefFuzzTest",
     "bmshapmoduleinfo_fuzzer:BMSHapModuleInfoFuzzTest",
     "bmsinstallparam_fuzzer:BMSInstallParamFuzzTest",
-    "bmsverifymanagerhost_fuzzer:BMSVerifyManagerHostFuzzTest"
+    "bmsverifymanagerhost_fuzzer:BMSVerifyManagerHostFuzzTest",
+    "bmsisexistfirstinstallbundleinfo_fuzzer:BMSIsExistFirstInstallBundleInfoFuzzTest",
+    "bmsconverttargetabilityinfo_fuzzer:BMSConvertTargetAbilityInfoFuzzTest",
+    "bmsqueryrpcidbyabilitytoservicecenter_fuzzer:BMSQueryRpcIdByAbilityToServiceCenterFuzzTest",
+    "bmssendcallback_fuzzer:BMSSendCallbackFuzzTest"
   ]
 
   if (bundle_framework_default_app) {
