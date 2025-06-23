@@ -1057,7 +1057,7 @@ static ani_object QueryExAbilityInfoSyncWithoutWant(ani_env* env, ani_string ani
     }
     if (extensionTypeName.empty()) {
         APP_LOGE("the input extensionAbilityType is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR, "");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR);
         return nullptr;
     }
     if (!CommonFunAni::TryCastDoubleTo(aniExtensionAbilityFlags, &flags)) {
