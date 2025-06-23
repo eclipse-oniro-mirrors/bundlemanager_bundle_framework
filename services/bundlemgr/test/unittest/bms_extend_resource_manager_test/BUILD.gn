@@ -161,6 +161,7 @@ ohos_unittest("BmsExtendResourceManagerTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_rdb_data_manager.cpp",
   ]
+  defines += [ "BMS_MOCK_RDB_DATA_MANAGER_RETURN_TRUE" ]
   if (bundle_framework_app_control) {
     defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
     sources += [

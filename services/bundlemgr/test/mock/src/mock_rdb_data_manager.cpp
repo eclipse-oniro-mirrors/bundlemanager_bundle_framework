@@ -51,7 +51,12 @@ bool RdbDataManager::InsertData(const NativeRdb::ValuesBucket &valuesBucket)
 
 bool RdbDataManager::BatchInsert(int64_t &outInsertNum, const std::vector<NativeRdb::ValuesBucket> &valuesBuckets)
 {
+#ifdef BMS_MOCK_RDB_DATA_MANAGER_RETURN_TRUE
+    outInsertNum = valuesBuckets.size();
+    return true;
+#else
     return false;
+#endif
 }
 
 bool RdbDataManager::UpdateData(const std::string &key, const std::string &value)
