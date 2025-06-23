@@ -3789,7 +3789,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0160, Function | SmallTest
         info.bundleName_ = BUNDLE_NAME;
         info.iconNeedParse_ = true;
         resourceInfosMap[BUNDLE_NAME].emplace_back(info);
-        manager->InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, USERID);
+        manager->InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
         EXPECT_TRUE(resourceInfosMap.empty()); // theme not exist
     }
 }
@@ -5877,7 +5877,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0230, Function | SmallTest
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
-        auto ret = manager->CheckAllAddResourceInfo(USERID);
+        auto ret = manager->CheckAllAddResourceInfo(THEME_TEST_USERID);
         EXPECT_FALSE(ret);
     }
 }
