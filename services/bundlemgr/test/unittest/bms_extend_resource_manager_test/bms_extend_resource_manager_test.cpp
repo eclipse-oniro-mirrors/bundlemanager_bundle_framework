@@ -1411,10 +1411,9 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0500, Function | Smal
 HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0600, Function | SmallTest | Level1)
 {
     std::string bundleName = TEST_BUNDLE;
-    std::vector<std::string> iconId;
     ExtendResourceInfo extendResourceInfo;
     extendResourceInfo.filePath = BUNDLE_PATH;
-    extendResourceInfo.iconId = 16777217;
+    extendResourceInfo.iconId = 1;
 
     ExtendResourceManagerHostImpl impl;
     bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, USER_ID, 0);
@@ -1724,6 +1723,36 @@ HWTEST_F(BmsExtendResourceManagerTest, EnableDynamicIcon_0020, Function | SmallT
     }
     ret = OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: EnableDynamicIcon_0030
+ * @tc.name: test EnableDynamicIcon
+ * @tc.desc: 1.EnableDynamic test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, EnableDynamicIcon_0030, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.SetCurDynamicIconModule(BUNDLE_NAME);
+
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.moduleName = BUNDLE_NAME;
+    extendResourceInfo.iconId = 16777217;
+    extendResourceInfo.filePath = BUNDLE_PATH;
+    info.extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+    dataMgr->bundleInfos_[BUNDLE_NAME] = info;
+
+    ExtendResourceManagerHostImpl impl;
+    auto ret = impl.EnableDynamicIcon(BUNDLE_NAME, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto item = dataMgr->bundleInfos_.find(BUNDLE_NAME);
+    if (item != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(item);
+    }
 }
 
 /**
