@@ -36,6 +36,11 @@ public:
     uint64_t GetCacheStat() override;
     void OnCleanAllBundleCacheFinished(int32_t result) override;
     int32_t GetCleanRet();
+    void setAllComplete(bool getAllcomplete)
+    {
+        std::lock_guard<std::mutex> lock(getAllMutex_);
+        getAllcomplete_ = getAllcomplete;
+    }
 private:
     uint64_t cacheSize_ = 0;
     std::mutex getAllMutex_;

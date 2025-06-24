@@ -22,7 +22,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-const int32_t MAX_WAITING_TIME = 60;
 
 ProcessCacheCallbackHost::ProcessCacheCallbackHost()
 {
@@ -80,14 +79,9 @@ uint64_t ProcessCacheCallbackHost::GetCacheStat()
     if (getAllcomplete_) {
         return cacheSize_;
     }
-    const auto timeout = std::chrono::seconds(MAX_WAITING_TIME);
     // wait for ready
-    if (getAllFuture_.wait_for(timeout) == std::future_status::ready) {
-        cacheSize_ = getAllFuture_.get();
-        return cacheSize_;
-    } else {
-        return 0;
-    }
+    cacheSize_ = getAllFuture_.get();
+    return cacheSize_;
 }
 
 void ProcessCacheCallbackHost::OnCleanAllBundleCacheFinished(int32_t result)
