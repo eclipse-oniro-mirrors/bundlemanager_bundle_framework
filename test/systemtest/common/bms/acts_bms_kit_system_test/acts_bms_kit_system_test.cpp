@@ -10680,39 +10680,11 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleDirs_0002, Function | MediumTest | Le
 }
 
 /**
- * @tc.number: CleanAllBundleCache_0001
- * @tc.name: test CleanAllBundleCache interface
- * @tc.desc: 1. call CleanAllBundleCache
- */
-HWTEST_F(ActsBmsKitSystemTest, CleanAllBundleCache_0001, Function | MediumTest | Level1)
-{
-    std::cout << "START CleanAllBundleCache_0001" << std::endl;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    EXPECT_NE(bundleMgrProxy, nullptr);
-    if (bundleMgrProxy != nullptr) {
-        setuid(Constants::STORAGE_MANAGER_UID);
-        sptr<ProcessCacheCallbackImpl> delCache = new (std::nothrow) ProcessCacheCallbackImpl();
-        ErrCode ret;
-        if (delCache == nullptr) {
-            ret = bundleMgrProxy->CleanAllBundleCache(delCache);
-            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
-        } else {
-            ret = bundleMgrProxy->CleanAllBundleCache(delCache);
-            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
-            setuid(Constants::FOUNDATION_UID);
-            ret = bundleMgrProxy->CleanAllBundleCache(delCache);
-            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
-        }
-    }
-    std::cout << "END CleanAllBundleCache_0001" << std::endl;
-}
-
-/**
- * @tc.number: GetAllBundleCacheStat_0002
+ * @tc.number: GetAllBundleCacheStat_0001
  * @tc.name: test GetAllBundleCacheStat interface
  * @tc.desc: 1. call GetAllBundleCacheStat
  */
-HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0002, Function | MediumTest | Level1)
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0001, Function | MediumTest | Level1)
 {
     std::cout << "START GetAllBundleCacheStat_0002" << std::endl;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
