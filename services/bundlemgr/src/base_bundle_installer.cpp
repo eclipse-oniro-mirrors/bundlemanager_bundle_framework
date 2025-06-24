@@ -6958,6 +6958,24 @@ bool BaseBundleInstaller::IsDriverForAllUser(const std::string &bundleName)
     return false;
 }
 
+int32_t BaseBundleInstaller::GetDriverInstallUser(const std::string &bundleName)
+{
+    if (!InitDataMgr()) {
+        return Constants::START_USERID;
+    }
+
+    InnerBundleInfo info;
+    bool isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName, info);
+    if (isAppExist) {
+        const auto userInfos = info.GetInnerBundleUserInfos();
+        if (!userInfos.empty()) {
+            const auto item = userInfos.begin();
+            return item->second.bundleUserInfo.userId;
+        }
+    }
+    return Constants::START_USERID;
+}
+
 bool BaseBundleInstaller::IsEnterpriseForAllUser(const InstallParam &installParam, const std::string &bundleName)
 {
     if (!installParam.IsEnterpriseForAllUser()) {

@@ -8999,6 +8999,26 @@ HWTEST_F(BmsBundleInstallerTest, SetBundleFirstInstallTime_0100, Function | Medi
 }
 
 /**
+ * @tc.number: GetDriverInstallUser_0100
+ * @tc.name: test GetDriverInstallUser
+ * @tc.desc: 1.Test setup bundle first installation time
+*/
+HWTEST_F(BmsBundleInstallerTest, GetDriverInstallUser_0100, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    EXPECT_EQ(installer.GetDriverInstallUser(BUNDLE_NAME_TEST), Constants::START_USERID);
+
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+    installer.dataMgr_ = GetBundleDataMgr();
+    EXPECT_EQ(installer.GetDriverInstallUser(SYSTEMFIEID_NAME), Constants::START_USERID);
+
+    EXPECT_EQ(installer.GetDriverInstallUser(BUNDLE_NAME_TEST), Constants::START_USERID);
+    UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
  * @tc.number: IsEnterpriseForAllUser_0100
  * @tc.name: test IsEnterpriseForAllUser
  * @tc.desc: 1.Test IsEnterpriseForAllUser
