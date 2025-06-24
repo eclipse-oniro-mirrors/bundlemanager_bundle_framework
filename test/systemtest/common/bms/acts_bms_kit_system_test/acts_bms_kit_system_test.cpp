@@ -10686,7 +10686,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleDirs_0002, Function | MediumTest | Le
  */
 HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0001, Function | MediumTest | Level1)
 {
-    std::cout << "START GetAllBundleCacheStat_0002" << std::endl;
+    std::cout << "START GetAllBundleCacheStat_0001" << std::endl;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     EXPECT_NE(bundleMgrProxy, nullptr);
  
@@ -10717,7 +10717,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0001, Function | MediumTest
     EXPECT_EQ(ret, ERR_OK);
     ret = bundleMgrProxy->GetAllBundleCacheStat(getCache4);
     EXPECT_EQ(ret, ERR_OK);
-    std::cout << "END GetAllBundleCacheStat_0002" << std::endl;
+    std::cout << "END GetAllBundleCacheStat_0001" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
