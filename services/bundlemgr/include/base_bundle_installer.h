@@ -817,6 +817,7 @@ private:
     void MarkIsForceUninstall(const std::string &bundleName, bool isForceUninstalled);
     bool CheckCanInstallPreBundle(const std::string &bundleName, const int32_t userId);
     void PrintStartWindowIconId(const InnerBundleInfo &info);
+    bool ProcessExtProfile(const InstallParam &installParam);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

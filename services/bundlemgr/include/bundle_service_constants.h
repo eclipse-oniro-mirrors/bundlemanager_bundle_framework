@@ -223,6 +223,10 @@ constexpr const char* JSON_SUFFIX = ".json";
 
 // app temp path
 constexpr const char* BMS_APP_TEMP_PATH = "/data/service/el1/public/bms/bundle_manager_service/app_temp";
+
+constexpr const char* EXT_PROFILE = "ext_profile";
+constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
+constexpr const char* MANIFEST_JSON = "manifest.json";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

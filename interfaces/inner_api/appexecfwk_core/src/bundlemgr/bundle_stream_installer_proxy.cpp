@@ -194,6 +194,42 @@ int32_t BundleStreamInstallerProxy::CreatePgoFileStream(const std::string &modul
     return fd;
 }
 
+int32_t BundleStreamInstallerProxy::CreateExtProfileFileStream(const std::string &fileName)
+{
+    LOG_D(BMS_TAG_INSTALLER, "bundle stream installer proxy create ext profile file stream begin");
+    int32_t fd = Constants::DEFAULT_STREAM_FD;
+    if (fileName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "BundleStreamInstallerProxy create stream failed due to empty fileName");
+        return fd;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(BundleStreamInstallerProxy::GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "fail to CreateExtProfileFileStream due to write interface token fail");
+        return fd;
+    }
+    if (!data.WriteString(fileName)) {
+        LOG_E(BMS_TAG_INSTALLER, "fail to CreateExtProfileFileStream due to write fileName fail");
+        return fd;
+    }
+    MessageParcel reply;
+    if (!SendStreamInstallRequest(BundleStreamInstallerInterfaceCode::CREATE_EXT_PROFILE_FILE_STREAM, data, reply)) {
+        LOG_E(BMS_TAG_INSTALLER, "fail to SendStreamInstallRequest");
+        return fd;
+    }
+
+    int32_t sharedFd = reply.ReadFileDescriptor();
+    if (sharedFd < 0) {
+        LOG_E(BMS_TAG_INSTALLER, "fail to CreateExtProfileFileStream");
+        return fd;
+    }
+
+    fd = dup(sharedFd);
+    close(sharedFd);
+
+    LOG_D(BMS_TAG_INSTALLER, "bundle stream installer proxy create stream end");
+    return fd;
+}
+
 bool BundleStreamInstallerProxy::Install()
 {
     LOG_D(BMS_TAG_INSTALLER, "bundle stream installer proxy install begin");

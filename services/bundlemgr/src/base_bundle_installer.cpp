@@ -1425,6 +1425,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CreateDataGroupDirs(hapVerifyResults, oldInfo);
     groupDirGuard.Dismiss();
     ProcessAddResourceInfo(installParam, bundleName_, userId_);
+    if (!ProcessExtProfile(installParam)) {
+        LOG_W(BMS_TAG_INSTALLER, "ProcessExtProfile failed");
+    }
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     return result;
@@ -7237,6 +7240,37 @@ void BaseBundleInstaller::CheckPreBundleRecoverResult(ErrCode &result)
         LOG_E(BMS_TAG_INSTALLER, "install failed, result = %{public}d, only restore to preinstalled", result);
         result = ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED;
     }
+}
+
+bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
+{
+    auto extProfileDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_
+        + ServiceConstants::PATH_SEPARATOR + ServiceConstants::EXT_PROFILE;
+    std::string targetPath = extProfileDir + ServiceConstants::PATH_SEPARATOR + ServiceConstants::MANIFEST_JSON;
+    auto iter = installParam.parameters.find(ServiceConstants::ENTERPRISE_MANIFEST);
+    if ((iter == installParam.parameters.end()) || (iter->second.empty())) {
+        bool isExtProfileExist = false;
+        InstalldClient::GetInstance()->IsExistDir(extProfileDir, isExtProfileExist);
+        if (isExtProfileExist) {
+            if (RemoveModuleDir(targetPath) != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "fail to delete ext profile file, error is %{public}d", errno);
+                return false;
+            }
+        }
+        return true;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "create ext profile dir %{public}s", extProfileDir.c_str());
+    ErrCode result = InstalldClient::GetInstance()->CreateBundleDir(extProfileDir);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "fail to create ext profile dir, error is %{public}d", result);
+        return false;
+    }
+    if (InstalldClient::GetInstance()->CopyFile(iter->second, targetPath) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "copy file from %{public}s to %{public}s failed", iter->second.c_str(),
+            targetPath.c_str());
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
