@@ -56,6 +56,7 @@ constexpr int32_t EMPTY_USER_ID = -500;
 static void CheckToCache(
     ani_env* env, const int32_t uid, const int32_t callingUid, const ANIQuery& query, ani_object aniObject)
 {
+    RETURN_IF_NULL(aniObject);
     if (uid != callingUid) {
         return;
     }
@@ -72,6 +73,7 @@ template <typename T>
 static void CheckInfoCache(ani_env* env, const ANIQuery& query,
     const OHOS::AAFwk::Want& want, std::vector<T> infos, ani_object aniObject)
 {
+    RETURN_IF_NULL(aniObject);
     ElementName element = want.GetElement();
     if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
         return;
@@ -93,6 +95,7 @@ static void CheckInfoCache(ani_env* env, const ANIQuery& query,
 static void CheckBatchAbilityInfoCache(ani_env* env, const ANIQuery &query,
     const std::vector<OHOS::AAFwk::Want> &wants, std::vector<AbilityInfo> abilityInfos, ani_object aniObject)
 {
+    RETURN_IF_NULL(aniObject);
     for (size_t i = 0; i < wants.size(); i++) {
         ElementName element = wants[i].GetElement();
         if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
@@ -116,6 +119,7 @@ static void CheckBatchAbilityInfoCache(ani_env* env, const ANIQuery &query,
 
 static bool ParseAniWant(ani_env* env, ani_object aniWant, OHOS::AAFwk::Want& want)
 {
+    RETURN_FALSE_IF_NULL(aniWant);
     ani_string string = nullptr;
     std::string bundleName;
     std::string abilityName;
@@ -150,6 +154,7 @@ static bool ParseAniWant(ani_env* env, ani_object aniWant, OHOS::AAFwk::Want& wa
 
 static bool ParseAniWantList(ani_env* env, ani_object aniWants, std::vector<OHOS::AAFwk::Want> &wants)
 {
+    RETURN_FALSE_IF_NULL(aniWants);
     return CommonFunAni::AniArrayForeach(env, aniWants, [env, &wants](ani_object aniWantItem) {
         OHOS::AAFwk::Want want;
         bool result = UnwrapWant(env, aniWantItem, want);
@@ -1185,9 +1190,21 @@ void ANIClearCacheListener::DoClearCache()
     ani_env* env = nullptr;
     ani_option interopEnabled { "--interop=disable", nullptr };
     ani_options aniArgs { 1, &interopEnabled };
-    g_vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
-    for (auto& item : g_aniCache) {
-        env->GlobalReference_Delete(item.second);
+    if (g_vm == nullptr) {
+        APP_LOGE("g_vm is empty");
+        return;
+    }
+    ani_status status = g_vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+    if (status != ANI_OK) {
+        APP_LOGE("AttachCurrentThread fail %{public}d", status);
+        return;
+    }
+    if (env == nullptr) {
+        APP_LOGE("env is empty");
+    } else {
+        for (auto& item : g_aniCache) {
+            env->GlobalReference_Delete(item.second);
+        }
     }
     g_vm->DetachCurrentThread();
     g_aniCache.clear();

@@ -21,6 +21,8 @@ import StartOptions from '@ohos.app.ability.StartOptions';
 export default namespace launcherBundleManager {
   loadLibrary("ani_launcher_bundle_manager.z");
 
+  const EMPTY_USER_ID: number = -500;
+
   export native function startShortcutNative(shortcutInfo: ShortcutInfo, options: StartOptions): void;
   export native function getShortcutInfoNative(bundleName: string, userId: number, isSync: boolean): Array<ShortcutInfo>;
   export native function getLauncherAbilityInfoNative(bundleName: string, userId: number, isSync: boolean): Array<LauncherAbilityInfo>;
@@ -46,7 +48,7 @@ export default namespace launcherBundleManager {
   }
 
   function getShortcutInfoSync(bundleName: string): Array<ShortcutInfo> {
-    return launcherBundleManager.getShortcutInfoNative(bundleName, -500, true);
+    return launcherBundleManager.getShortcutInfoNative(bundleName, EMPTY_USER_ID, true);
   }
 
   function getShortcutInfoSync(bundleName: string, userId: number): Array<ShortcutInfo> {
@@ -55,7 +57,7 @@ export default namespace launcherBundleManager {
 
   function getShortcutInfo(bundleName: string, callback: AsyncCallback<Array<ShortcutInfo>>): void {
     let cb = (): (Array<ShortcutInfo>) => {
-      return launcherBundleManager.getShortcutInfoNative(bundleName, -500, false);
+      return launcherBundleManager.getShortcutInfoNative(bundleName, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -71,7 +73,7 @@ export default namespace launcherBundleManager {
   function getShortcutInfo(bundleName: string): Promise<Array<ShortcutInfo>> {
     let p = new Promise<Array<ShortcutInfo>>((resolve: (arrShortcutInfo: Array<ShortcutInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<ShortcutInfo>) => {
-        return launcherBundleManager.getShortcutInfoNative(bundleName, -500, false);
+        return launcherBundleManager.getShortcutInfoNative(bundleName, EMPTY_USER_ID, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
