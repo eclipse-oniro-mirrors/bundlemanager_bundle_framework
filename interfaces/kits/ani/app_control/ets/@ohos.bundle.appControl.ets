@@ -91,8 +91,7 @@ export default namespace appControl {
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
-      let br: BusinessError = new BusinessError();
-      callback(br, undefined);
+      callback(null, undefined);
     }, (err: Error): void => {
       callback(err as BusinessError, undefined);
     });
@@ -125,11 +124,9 @@ export default namespace appControl {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let result: Want = e as Want;
-      let br: BusinessError = new BusinessError();
-      callback(br, result);
+      callback(null, result);
     }, (err: Error): void => {
-      let result: Want = {};
-      callback(err as BusinessError, result);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -159,8 +156,7 @@ export default namespace appControl {
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
-      let br: BusinessError = new BusinessError();
-      callback(br, undefined);
+      callback(null, undefined);
     }, (err: Error): void => {
       callback(err as BusinessError, undefined);
     });

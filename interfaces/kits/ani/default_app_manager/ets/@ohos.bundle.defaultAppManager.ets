@@ -27,6 +27,8 @@ export default namespace defaultAppManager {
 
   loadLibrary("ani_default_app_manager.z");
 
+  const EMPTY_USER_ID: number = -500;
+
   export enum ApplicationType {
     BROWSER = 'Web Browser',
     IMAGE = 'Image Gallery',
@@ -51,10 +53,9 @@ export default namespace defaultAppManager {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let result: boolean = e as boolean;
-      let br = new BusinessError();
-      callback(br, result);
+      callback(null, result);
     }, (err: Error): void => {
-      callback(err as BusinessError, false);
+      callback(err as BusinessError, undefined);
     });
 
   }
@@ -87,31 +88,27 @@ export default namespace defaultAppManager {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let result: BundleInfo = e as BundleInfo;
-      let br: BusinessError = new BusinessError();
-      callback(br, result);
+      callback(null, result);
     }, (err: Error): void => {
-      let result: BundleInfo = new BundleInfoInner;
-      callback(err as BusinessError, result);
+      callback(err as BusinessError, undefined);
     });
   }
 
   function getDefaultApplication(type: string, callback: AsyncCallback<BundleInfo>): void {
     let cb = (): BundleInfo => {
-      return defaultAppManager.getDefaultApplicationNative(type, -500, false);
+      return defaultAppManager.getDefaultApplicationNative(type, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let result: BundleInfo = e as BundleInfo;
-      let br: BusinessError = new BusinessError();
-      callback(br, result);
+      callback(null, result);
     }, (err: Error): void => {
-      let result: BundleInfo = new BundleInfoInner;
-      callback(err as BusinessError, result);
+      callback(err as BusinessError, undefined);
     });
   }
 
   function getDefaultApplication(type: string, userId?: number): Promise<BundleInfo> {
-    let userIdInfo: number = userId ?? -500;
+    let userIdInfo: number = userId ?? EMPTY_USER_ID;
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Error) => void) => {
       let cb = (): BundleInfo => {
         return defaultAppManager.getDefaultApplicationNative(type, userIdInfo, false);
@@ -128,7 +125,7 @@ export default namespace defaultAppManager {
   }
 
   function getDefaultApplicationSync(type: string, userId?: number): BundleInfo {
-    let userIdInfo: number = userId ?? -500;
+    let userIdInfo: number = userId ?? EMPTY_USER_ID;
     return defaultAppManager.getDefaultApplicationNative(type, userIdInfo, true);
   }
 
@@ -138,8 +135,7 @@ export default namespace defaultAppManager {
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
-      let br: BusinessError = new BusinessError();
-      callback(br, undefined);
+      callback(null, undefined);
     }, (err: Error): void => {
       callback(err as BusinessError, undefined);
     });
@@ -147,19 +143,18 @@ export default namespace defaultAppManager {
 
   function setDefaultApplication(type: string, elementName: ElementName, callback: AsyncCallback<void>): void {
     let cb = (): void => {
-      return defaultAppManager.setDefaultApplicationNative(type, elementName, -500, false);
+      return defaultAppManager.setDefaultApplicationNative(type, elementName, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
-      let br: BusinessError = new BusinessError();
-      callback(br, undefined);
+      callback(null, undefined);
     }, (err: Error): void => {
       callback(err as BusinessError, undefined);
     });
   }
 
   function setDefaultApplication(type: string, elementName: ElementName, userId?: number): Promise<void> {
-    let userIdInfo: number = userId ?? -500;
+    let userIdInfo: number = userId ?? EMPTY_USER_ID;
     let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
       let cb = (): void => {
         return defaultAppManager.setDefaultApplicationNative(type, elementName, userIdInfo, false);
@@ -176,7 +171,7 @@ export default namespace defaultAppManager {
   }
 
   function setDefaultApplicationSync(type: string, elementName: ElementName, userId?: number): void {
-    let userIdInfo: number = userId ?? -500;
+    let userIdInfo: number = userId ?? EMPTY_USER_ID;
     return defaultAppManager.setDefaultApplicationNative(type, elementName, userIdInfo, true);
   }
 
@@ -186,8 +181,7 @@ export default namespace defaultAppManager {
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
-      let br: BusinessError = new BusinessError();
-      callback(br, undefined);
+      callback(null, undefined);
     }, (err: Error): void => {
       callback(err as BusinessError, undefined);
     });
@@ -195,19 +189,18 @@ export default namespace defaultAppManager {
 
   function resetDefaultApplication(type: string, callback: AsyncCallback<void>): void {
     let cb = (): void => {
-      return defaultAppManager.resetDefaultApplicationNative(type, -500, false);
+      return defaultAppManager.resetDefaultApplicationNative(type, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
-      let br: BusinessError = new BusinessError();
-      callback(br, undefined);
+      callback(null, undefined);
     }, (err: Error): void => {
       callback(err as BusinessError, undefined);
     });
   }
 
   function resetDefaultApplication(type: string, userId?: number): Promise<void> {
-    let userIdInfo: number = userId ?? -500;
+    let userIdInfo: number = userId ?? EMPTY_USER_ID;
     let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
       let cb = (): void => {
         return defaultAppManager.resetDefaultApplicationNative(type, userIdInfo, false);
@@ -224,7 +217,7 @@ export default namespace defaultAppManager {
   }
 
   function resetDefaultApplicationSync(type: string, userId?: number): void {
-    let userIdInfo: number = userId ?? -500;
+    let userIdInfo: number = userId ?? EMPTY_USER_ID;
     return defaultAppManager.resetDefaultApplicationNative(type, userIdInfo, true);
   }
 }

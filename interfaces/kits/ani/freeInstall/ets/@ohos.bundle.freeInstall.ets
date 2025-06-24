@@ -19,8 +19,6 @@ import { BundlePackInfo as _BundlePackInfo, PackageConfig as _PackageConfig, Pac
   BundleConfigInfo as _BundleConfigInfo, ExtensionAbility as _ExtensionAbility, ModuleConfigInfo as _ModuleConfigInfo,
   ModuleDistroInfo as _ModuleDistroInfo, ModuleAbilityInfo as _ModuleAbilityInfo, AbilityFormInfo as _AbilityFormInfo,
   Version as _Version, ApiVersion as _ApiVersion } from 'bundleManager.BundlePackInfo';
-import { BundlePackInfoInner } from './bundleManager/BundlePackInfoInner';
-import { DispatchInfoInner } from './bundleManager/DispatchInfoInner';
 
 namespace freeInstall {
 
@@ -50,8 +48,7 @@ namespace freeInstall {
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
-      let r = new BusinessError();
-      callback(r, undefined);
+      callback(null, undefined);
     }).catch((err: Error): void => {
       callback(err as BusinessError, undefined);
     });
@@ -79,10 +76,9 @@ namespace freeInstall {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let result: boolean = e as boolean;
-      let r = new BusinessError();
-      callback(r, result);
+      callback(null, result);
     }, (err: Error): void => {
-      callback(err as BusinessError, false);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -109,11 +105,9 @@ namespace freeInstall {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let result: BundlePackInfo = e as BundlePackInfo;
-      let r = new BusinessError();
-      callback(r, result);
+      callback(null, result);
     }, (err: Error): void => {
-      let result = new BundlePackInfoInner;
-      callback(err as BusinessError, result);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -140,11 +134,9 @@ namespace freeInstall {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let result: DispatchInfo = e as DispatchInfo;
-      let r = new BusinessError();
-      callback(r, result);
+      callback(null, result);
     }, (err: Error): void => {
-      let result = new DispatchInfoInner;
-      callback(err as BusinessError, result);
+      callback(err as BusinessError, undefined);
     });
   }
 
