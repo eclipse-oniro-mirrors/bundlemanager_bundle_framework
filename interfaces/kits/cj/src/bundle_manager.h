@@ -40,6 +40,9 @@ public:
     static std::tuple<int32_t, std::vector<std::string>> GetProfileByAbility(
         std::string moduleName, std::string abilityName, char* metadataName);
     static bool InnerCanOpenLink(std::string link, int32_t& code);
+    static int32_t GetBundleInfo(
+        const std::string& bundleName, int32_t bundleFlags, int32_t userId, AppExecFwk::BundleInfo& bundleInfo);
+    static std::string GetBundleNameByUid(int32_t userId, int32_t* errcode);
 };
 
 } // BundleManager
