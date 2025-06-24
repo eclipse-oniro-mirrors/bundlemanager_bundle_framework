@@ -1064,7 +1064,7 @@ static ani_object QueryExAbilityInfoSyncWithoutWant(ani_env* env, ani_string ani
     }
     if (extensionTypeName.empty()) {
         APP_LOGE("the input extensionAbilityType is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR, "");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR);
         return nullptr;
     }
     if (!CommonFunAni::TryCastDoubleTo(aniExtensionAbilityFlags, &flags)) {
@@ -1130,8 +1130,11 @@ static ani_object GetBundleArchiveInfoNative(
     std::string hapFilePath;
     if (!CommonFunAni::ParseString(env, aniHapFilePath, hapFilePath)) {
         APP_LOGE("hapFilePath parse failed");
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, isSync ? HAP_FILE_PATH : PARAM_TYPE_CHECK_ERROR, isSync ? TYPE_STRING : "");
+        if (isSync) {
+            BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, HAP_FILE_PATH, TYPE_STRING);
+        } else {
+            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        }
         return nullptr;
     }
     int32_t bundleFlags = 0;
