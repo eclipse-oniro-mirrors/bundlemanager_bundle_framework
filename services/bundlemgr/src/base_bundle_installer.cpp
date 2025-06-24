@@ -1777,6 +1777,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
     dataMgr_->DisableBundle(bundleName);
 
+    // kill again after disable bundle
+    if (installParam.GetKillProcess() && !AbilityManagerHelper::UninstallApplicationProcesses(bundleName, uid)) {
+        LOG_E(BMS_TAG_INSTALLER, "kill process failed %{public}s", bundleName.c_str());
+    }
+
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall already start");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
