@@ -21,7 +21,7 @@
 #include "appexecfwk_errors.h"
 #include "json_util.h"
 #include "pre_scan_info.h"
-
+#include <unordered_set>
 namespace OHOS {
 namespace AppExecFwk {
 class PreBundleProfile {
@@ -79,6 +79,15 @@ public:
         const nlohmann::json &jsonBuf, std::set<std::string> &extensionTypeList) const;
     void ProcessOnDemandList(std::set<PreScanInfo> &scanAppInfos,
         std::set<PreScanInfo> &scanDemandInfos) const;
+    /**
+     * @brief Transform the jsonBuf to bundleNames.
+     * @param jsonBuf Indicates the jsonBuf.
+     * @param arkStartupCacheList Indicates the ark atsrtup cache bundlenames.
+     * @return Returns ERR_OK if the information transformed successfully; returns error code otherwise.
+     */
+    ErrCode TransToArkStartupCacheList(
+        const nlohmann::json &jsonBuf,
+        std::unordered_set<std::string> &arkStartupCacheList) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

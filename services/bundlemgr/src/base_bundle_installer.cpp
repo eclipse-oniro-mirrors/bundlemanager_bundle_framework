@@ -44,6 +44,7 @@
 #include "bms_extension_data_mgr.h"
 #include "bundle_clone_installer.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_parser.h"
 #include "bundle_resource_helper.h"
 #include "bundle_util.h"
 #include "code_protect_bundle_info.h"
@@ -6657,8 +6658,8 @@ ErrCode BaseBundleInstaller::CreateArkStartupCache(const ArkStartupCache &create
         return ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_APP_OR_ATOMIC;
     }
 
-    std::unordered_set<std::string> startupBundles =
-        BundleUtil::ParseAppStartupBundleNames(ServiceConstants::APP_STARTUP_CACHE_CONG);
+    std::unordered_set<std::string> startupBundles;
+    BundleParser::ParseArkStartupCacheConfig(ServiceConstants::APP_STARTUP_CACHE_CONG, startupBundles);
     if (startupBundles.find(createArk.bundleName) == startupBundles.end()) {
         LOG_W(BMS_TAG_INSTALLER, "%{public}s is not in startupBundles", createArk.bundleName.c_str());
         return ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST;

@@ -168,7 +168,7 @@ constexpr int32_t SYSTEM_OPTIMIZE_MODE = (S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH 
 constexpr const char* ARK_STARTUP_CACHE_DIR = "/ark_startup_cache/";
 constexpr const char* SYSTEM_OPTIMIZE_PATH = "/data/app/el1/%/system_optimize/";
 // configuration of app startup list
-constexpr const char* APP_STARTUP_CACHE_CONG = "/system/etc/ark/app_startup_snapshot.conf";
+constexpr const char* APP_STARTUP_CACHE_CONG = "/system/etc/ark/app_startup_snapshot.json";
 // code signature
 constexpr const char* CODE_SIGNATURE_FILE_SUFFIX = ".sig";
 constexpr const char* CODE_SIGNATURE_HAP = "Hap";
