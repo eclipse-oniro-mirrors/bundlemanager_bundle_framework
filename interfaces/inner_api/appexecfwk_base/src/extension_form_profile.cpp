@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <sstream>
 #include <map>
 #include <mutex>
 #include <set>
@@ -137,7 +138,7 @@ struct FormFunInteractionParams {
 struct FormSceneAnimationParams {
     std::string abilityName;
     bool isAlwaysActive = false;
-    std::string disabledDesktopBehaviors;
+    std::vector<std::string> disabledDesktopBehaviors;
 };
 
 struct ExtensionFormProfileInfo {
@@ -225,12 +226,14 @@ void from_json(const nlohmann::json &jsonObject, FormSceneAnimationParams &scene
         sceneAnimationParams.isAlwaysActive,
         false,
         g_parseResult);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::DISABLED_DESKTOP_BEHAVIORS,
         sceneAnimationParams.disabledDesktopBehaviors,
+        JsonType::ARRAY,
         false,
-        g_parseResult);
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
@@ -668,7 +671,6 @@ void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormI
     info.funInteractionParams.keepStateDuration = form.funInteractionParams.keepStateDuration;
     info.sceneAnimationParams.abilityName = form.sceneAnimationParams.abilityName;
     info.sceneAnimationParams.isAlwaysActive = form.sceneAnimationParams.isAlwaysActive;
-    info.sceneAnimationParams.disabledDesktopBehaviors = form.sceneAnimationParams.disabledDesktopBehaviors;
     info.resizable = form.resizable;
     info.groupId = form.groupId;
 }
@@ -680,6 +682,16 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
         return false;
     }
     TransformToFormInfoExt(form, info);
+
+    auto& disabledDesktopBehaviors = form.sceneAnimationParams.disabledDesktopBehaviors;
+    std::ostringstream oss;
+    for (size_t i = 0; i < disabledDesktopBehaviors.size(); i++) {
+        oss << disabledDesktopBehaviors[i];
+        if (i < disabledDesktopBehaviors.size() - 1) {
+            oss << "|";
+        }
+    }
+    info.sceneAnimationParams.disabledDesktopBehaviors = oss.str();
 
     size_t len = sizeof(FORM_COLOR_MODE_MAP_KEY) / sizeof(FORM_COLOR_MODE_MAP_KEY[0]);
     for (size_t i = 0; i < len; i++) {
