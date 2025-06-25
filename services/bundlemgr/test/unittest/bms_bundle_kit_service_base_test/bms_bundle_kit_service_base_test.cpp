@@ -109,6 +109,9 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+    const std::shared_ptr<BundleDistributedManager> GetBundleDistributedManager() const;
+#endif
     void MockInstallBundle(
         const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
         bool userDataClearable, bool isSystemApp) const;
@@ -154,6 +157,13 @@ void BmsBundleKitServiceBaseTest::SetUp()
 
 void BmsBundleKitServiceBaseTest::TearDown()
 {}
+
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+const std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceBaseTest::GetBundleDistributedManager() const
+{
+    return bundleMgrService_->GetBundleDistributedManager();
+}
+#endif
 
 void BmsBundleKitServiceBaseTest::MockInstallBundle(
     const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
@@ -480,7 +490,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0400, Function |
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0200, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = DEVICE_ID_NORMAL;
@@ -489,7 +499,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0200, Function | 
     std::string abilityName = ABILITY_NAME_MY_APPLICATION;
     want.SetElementName(deviceId, bundleName, abilityName, moduleName);
     TargetAbilityInfo targetAbilityInfo;
-    auto ret = mgr.ConvertTargetAbilityInfo(want, targetAbilityInfo);
+    auto ret = mgr->ConvertTargetAbilityInfo(want, targetAbilityInfo);
     EXPECT_EQ(targetAbilityInfo.targetInfo.bundleName, bundleName);
     EXPECT_EQ(targetAbilityInfo.targetInfo.moduleName, moduleName);
     EXPECT_EQ(targetAbilityInfo.targetInfo.abilityName, abilityName);
@@ -504,12 +514,12 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0200, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0300, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string nullString = EMPTY_STRING;
     TargetAbilityInfo targetAbilityInfo;
-    auto ret = mgr.ConvertTargetAbilityInfo(want, targetAbilityInfo);
+    auto ret = mgr->ConvertTargetAbilityInfo(want, targetAbilityInfo);
     EXPECT_EQ(targetAbilityInfo.targetInfo.bundleName, nullString);
     EXPECT_EQ(targetAbilityInfo.targetInfo.moduleName, nullString);
     EXPECT_EQ(targetAbilityInfo.targetInfo.abilityName, nullString);
@@ -525,7 +535,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0300, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0400, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     RpcIdResult rpcIdResult;
     ElementName element;
@@ -535,7 +545,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0400, Function | 
     std::string abilityName = ABILITY_NAME_MY_APPLICATION;
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     rpcIdResult.abilityInfo.rpcId.emplace_back(RPC_ID);
-    auto ret = mgr.ComparePcIdString(want, rpcIdResult);
+    auto ret = mgr->ComparePcIdString(want, rpcIdResult);
     EXPECT_EQ(ret, DECODE_SYS_CAP_FAILED);
     sleep(1);
 }
@@ -547,7 +557,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0400, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0500, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     RpcIdResult rpcIdResult;
     ElementName element;
@@ -556,7 +566,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0500, Function | 
     std::string moduleName = MODULE_NAME_MY_APPLICATION;
     std::string abilityName = ABILITY_NAME_MY_APPLICATION;
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
-    auto ret = mgr.ComparePcIdString(want, rpcIdResult);
+    auto ret = mgr->ComparePcIdString(want, rpcIdResult);
     EXPECT_EQ(ret, DECODE_SYS_CAP_FAILED);
     sleep(1);
 }
@@ -568,11 +578,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0500, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0600, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     RpcIdResult rpcIdResult;
     rpcIdResult.abilityInfo.rpcId.emplace_back(RPC_ID);
-    auto ret = mgr.ComparePcIdString(want, rpcIdResult);
+    auto ret = mgr->ComparePcIdString(want, rpcIdResult);
     EXPECT_EQ(ret, GET_DEVICE_PROFILE_FAILED);
     sleep(1);
 }
@@ -585,11 +595,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0600, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0700, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     int32_t missionId = 0;
     int32_t userId = 0;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
     sleep(1);
 }
@@ -601,7 +611,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0700, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0800, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = DEVICE_ID_NORMAL;
@@ -611,7 +621,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0800, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 0;
     int32_t userId = 0;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
     sleep(1);
 }
@@ -623,7 +633,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0800, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0900, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = DEVICE_ID_NORMAL;
@@ -634,7 +644,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0900, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 100;
     int32_t userId = 100;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_TRUE(ret);
     MockUninstallBundle(bundleName);
     sleep(1);
@@ -647,7 +657,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0900, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1000, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = EMPTY_STRING;
@@ -657,7 +667,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1000, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 100;
     int32_t userId = 0;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
     sleep(1);
 }
@@ -669,7 +679,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1000, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1100, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = EMPTY_STRING;
@@ -679,7 +689,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1100, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 100;
     int32_t userId = 200;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
     sleep(1);
 }
@@ -691,7 +701,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1100, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1200, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = EMPTY_STRING;
@@ -702,7 +712,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1200, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 100;
     int32_t userId = 100;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_TRUE(ret);
     MockUninstallBundle(bundleName);
     sleep(1);
@@ -715,7 +725,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1200, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1300, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = EMPTY_STRING;
@@ -725,7 +735,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1300, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 100;
     int32_t userId = 200;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
     sleep(1);
 }
@@ -737,7 +747,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1300, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1400, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = EMPTY_STRING;
@@ -747,7 +757,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1400, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 100;
     int32_t userId = 0;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
     sleep(1);
 }
@@ -759,7 +769,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1400, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1500, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = DEVICE_ID_NORMAL;
@@ -769,7 +779,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1500, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 100;
     int32_t userId = 0;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
     sleep(1);
 }
@@ -781,7 +791,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1500, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1600, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = EMPTY_STRING;
@@ -792,7 +802,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1600, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 0;
     int32_t userId = 200;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     EXPECT_FALSE(ret);
     sleep(1);
@@ -805,7 +815,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1600, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1700, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = DEVICE_ID_NORMAL;
@@ -815,7 +825,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1700, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 0;
     int32_t userId = 0;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
     sleep(1);
 }
@@ -827,7 +837,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1700, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1800, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     Want want;
     ElementName element;
     std::string deviceId = DEVICE_ID_NORMAL;
@@ -838,7 +848,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1800, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     int32_t missionId = 100;
     int32_t userId = 100;
-    auto ret = mgr.CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     sleep(1);
@@ -850,7 +860,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1800, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1900, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     std::string bundleName = BUNDLE_NAME_MY_APPLICATION;
     std::string moduleName = MODULE_NAME_MY_APPLICATION;
     std::string abilityName = ABILITY_NAME_MY_APPLICATION;
@@ -860,7 +870,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1900, Function | 
     targetAbilityInfo.targetInfo.bundleName = bundleName;
     setuid(Constants::FOUNDATION_UID);
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
-    auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+    auto ret = mgr->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
 #ifdef USE_ARM64
     EXPECT_TRUE(ret);
 #else
@@ -876,7 +886,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1900, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2000, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     std::string bundleName = BUNDLE_NAME_TEST;
     std::string moduleName = MODULE_NAME_MY_APPLICATION;
     std::string abilityName = ABILITY_NAME_MY_APPLICATION;
@@ -886,7 +896,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2000, Function | 
     targetAbilityInfo.targetInfo.bundleName = bundleName;
     setuid(Constants::FOUNDATION_UID);
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
-    auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+    auto ret = mgr->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
 #ifdef USE_ARM64
     EXPECT_TRUE(ret);
 #else
@@ -902,11 +912,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2000, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2100, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     TargetAbilityInfo targetAbilityInfo;
     setuid(Constants::FOUNDATION_UID);
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
-    auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+    auto ret = mgr->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
 #ifdef USE_ARM64
     EXPECT_TRUE(ret);
 #else
@@ -922,13 +932,13 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2100, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2600, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     std::string queryRetPerfix = QUERY_RET_PERFIX;
     std::string queryRet = QUERY_RET;
     std::string queryRetSuffix = QUERY_RET_SUFFIX;
     std::string queryRpcIdResult = queryRetPerfix + queryRet + queryRetSuffix;
-    mgr.OnQueryRpcIdFinished(queryRpcIdResult);
-    EXPECT_TRUE(mgr.queryAbilityParamsMap_.size() == 0);
+    mgr->OnQueryRpcIdFinished(queryRpcIdResult);
+    EXPECT_TRUE(mgr->queryAbilityParamsMap_.size() == 0);
     sleep(1);
 }
 
@@ -939,10 +949,10 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2600, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2700, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     std::string queryRpcIdResult = EMPTY_STRING;
-    mgr.OnQueryRpcIdFinished(queryRpcIdResult);
-    EXPECT_TRUE(mgr.queryAbilityParamsMap_.size() == 0);
+    mgr->OnQueryRpcIdFinished(queryRpcIdResult);
+    EXPECT_TRUE(mgr->queryAbilityParamsMap_.size() == 0);
     sleep(1);
 }
 
@@ -953,15 +963,15 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2700, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2800, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     QueryRpcIdParams param;
     param.missionId = 0;
-    mgr.queryAbilityParamsMap_.emplace(TRANSACT_ID, param);
+    mgr->queryAbilityParamsMap_.emplace(TRANSACT_ID, param);
     std::string transactId = EMPTY_STRING;
     int32_t resultCode = 0;
-    mgr.SendCallbackRequest(resultCode, transactId);
-    EXPECT_FALSE(mgr.queryAbilityParamsMap_.size() == 0);
-    mgr.queryAbilityParamsMap_.erase(TRANSACT_ID);
+    mgr->SendCallbackRequest(resultCode, transactId);
+    EXPECT_FALSE(mgr->queryAbilityParamsMap_.size() == 0);
+    mgr->queryAbilityParamsMap_.erase(TRANSACT_ID);
     sleep(1);
 }
 
@@ -972,14 +982,14 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2800, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2900, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     QueryRpcIdParams param;
     param.missionId = 0;
-    mgr.queryAbilityParamsMap_.emplace(TRANSACT_ID, param);
+    mgr->queryAbilityParamsMap_.emplace(TRANSACT_ID, param);
     std::string transactId = TRANSACT_ID;
     int32_t resultCode = 0;
-    mgr.SendCallbackRequest(resultCode, transactId);
-    EXPECT_TRUE(mgr.queryAbilityParamsMap_.size() == 0);
+    mgr->SendCallbackRequest(resultCode, transactId);
+    EXPECT_TRUE(mgr->queryAbilityParamsMap_.size() == 0);
     sleep(1);
 }
 
@@ -990,10 +1000,10 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2900, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_3000, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     QueryRpcIdParams param;
     int32_t resultCode = 0;
-    mgr.SendCallback(resultCode, param);
+    mgr->SendCallback(resultCode, param);
     EXPECT_TRUE(param.callback == nullptr);
     sleep(1);
 }
@@ -1005,11 +1015,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_3000, Function | 
  */
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_3100, Function | MediumTest | Level1)
 {
-    BundleDistributedManager mgr;
+    auto mgr = GetBundleDistributedManager();
     QueryRpcIdParams param;
     param.callback = new (std::nothrow) MockBundleManagerCallbackStub();
     int32_t resultCode = 0;
-    mgr.SendCallback(resultCode, param);
+    mgr->SendCallback(resultCode, param);
     EXPECT_TRUE(param.callback != nullptr);
     sleep(1);
 }
