@@ -38,7 +38,6 @@ constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo
 constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
 constexpr const char* PARSE_REASON_MESSAGE = "parse ReasonMessage failed";
 constexpr const char* START_SHORTCUT_WITH_REASON = "StartShortcutWithReason";
-const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 
 const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
     {ERR_OK, ERR_OK},

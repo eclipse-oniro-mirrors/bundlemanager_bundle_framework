@@ -47,6 +47,7 @@ constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* APP_INDEX = "appIndex";
+constexpr const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
 
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* APP_FLAGS = "appFlags";
