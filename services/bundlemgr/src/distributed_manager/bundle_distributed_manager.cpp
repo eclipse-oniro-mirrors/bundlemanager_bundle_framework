@@ -233,6 +233,10 @@ void BundleDistributedManager::OutTimeMonitor(const std::string transactId)
         APP_LOGI("RegisterEventListenerFunc transactId:%{public}s", transactId.c_str());
         this->SendCallbackRequest(ErrorCode::WAITING_TIMEOUT, transactId);
     };
+    if (serialQueue_ == nullptr) {
+        APP_LOGE("serialQueue_ is null");
+        return;
+    }
     serialQueue_->ScheduleDelayTask(transactId, OUT_TIME, registerEventListenerFunc);
 }
 
