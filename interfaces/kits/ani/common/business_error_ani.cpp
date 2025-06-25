@@ -25,12 +25,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr const char* ERROR_MESSAGE_PLACEHOLDER = "$";
 constexpr const char* BUSINESS_ERROR_CLASS = "L@ohos/base/BusinessError;";
 } // namespace
     
 void BusinessErrorAni::ThrowError(ani_env *env, int32_t err, const std::string &msg)
 {
     if (env == nullptr) {
+        APP_LOGE("env is null");
         return;
     }
     ani_object error = CreateError(env, err, msg);
@@ -40,6 +42,7 @@ void BusinessErrorAni::ThrowError(ani_env *env, int32_t err, const std::string &
 ani_object BusinessErrorAni::WrapError(ani_env *env, const std::string &msg)
 {
     if (env == nullptr) {
+        APP_LOGE("env is null");
         return nullptr;
     }
     ani_class cls = nullptr;
@@ -57,17 +60,17 @@ ani_object BusinessErrorAni::WrapError(ani_env *env, const std::string &msg)
 
     ani_status status = env->FindClass("Lescompat/Error;", &cls);
     if (status != ANI_OK) {
-        APP_LOGE("FindClass : %{public}d", status);
+        APP_LOGE("FindClass err : %{public}d", status);
         return nullptr;
     }
     status = env->Class_FindMethod(cls, "<ctor>", "Lstd/core/String;Lescompat/ErrorOptions;:V", &method);
     if (status != ANI_OK) {
-        APP_LOGE("Class_FindMethod : %{public}d", status);
+        APP_LOGE("Class_FindMethod err : %{public}d", status);
         return nullptr;
     }
     status = env->Object_New(cls, method, &obj, aniMsg, undefRef);
     if (status != ANI_OK) {
-        APP_LOGE("Object_New : %{public}d", status);
+        APP_LOGE("Object_New err : %{public}d", status);
         return nullptr;
     }
     return obj;
@@ -76,6 +79,7 @@ ani_object BusinessErrorAni::WrapError(ani_env *env, const std::string &msg)
 ani_object BusinessErrorAni::CreateError(ani_env *env, int32_t code, const std::string& msg)
 {
     if (env == nullptr) {
+        APP_LOGE("err is nullptr");
         return nullptr;
     }
     ani_class cls = nullptr;
@@ -83,12 +87,12 @@ ani_object BusinessErrorAni::CreateError(ani_env *env, int32_t code, const std::
     ani_object obj = nullptr;
     ani_status status = env->FindClass(BUSINESS_ERROR_CLASS, &cls);
     if (status != ANI_OK) {
-        APP_LOGE("FindClass : %{public}d", status);
+        APP_LOGE("FindClass err : %{public}d", status);
         return nullptr;
     }
     status = env->Class_FindMethod(cls, "<ctor>", "DLescompat/Error;:V", &method);
     if (status != ANI_OK) {
-        APP_LOGE("Class_FindMethod : %{public}d", status);
+        APP_LOGE("Class_FindMethod err : %{public}d", status);
         return nullptr;
     }
     ani_object error = WrapError(env, msg);
@@ -99,7 +103,7 @@ ani_object BusinessErrorAni::CreateError(ani_env *env, int32_t code, const std::
     ani_double dCode(code);
     status = env->Object_New(cls, method, &obj, dCode, error);
     if (status != ANI_OK) {
-        APP_LOGE("Object_New : %{public}d", status);
+        APP_LOGE("Object_New err : %{public}d", status);
         return nullptr;
     }
     return obj;
@@ -109,6 +113,7 @@ void BusinessErrorAni::ThrowCommonError(ani_env *env, int32_t err,
     const std::string &parameter, const std::string &type)
 {
     if (env == nullptr) {
+        APP_LOGE("err is nullptr");
         return;
     }
     ani_object error = CreateCommonError(env, err, parameter, type);
@@ -118,6 +123,7 @@ void BusinessErrorAni::ThrowCommonError(ani_env *env, int32_t err,
 void BusinessErrorAni::ThrowTooFewParametersError(ani_env *env, int32_t err)
 {
     if (env == nullptr) {
+        APP_LOGE("err is nullptr");
         return;
     }
     ThrowError(env, err, BussinessErrorNS::ERR_MSG_PARAM_NUMBER_ERROR);
@@ -127,10 +133,11 @@ ani_object BusinessErrorAni::CreateCommonError(
     ani_env *env, int32_t err, const std::string &functionName, const std::string &permissionName)
 {
     if (env == nullptr) {
+        APP_LOGE("err is nullptr");
         return nullptr;
     }
     std::string errMessage = BussinessErrorNS::ERR_MSG_BUSINESS_ERROR;
-    auto iter = errMessage.find("$");
+    auto iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, std::to_string(err));
     }
@@ -139,10 +146,10 @@ ani_object BusinessErrorAni::CreateCommonError(
     if (errMap.find(err) != errMap.end()) {
         errMessage += errMap[err];
     }
-    iter = errMessage.find("$");
+    iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, functionName);
-        iter = errMessage.find("$");
+        iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
         if (iter != std::string::npos) {
             errMessage = errMessage.replace(iter, 1, permissionName);
         }
@@ -154,6 +161,7 @@ void BusinessErrorAni::ThrowEnumError(ani_env *env,
     const std::string &parameter, const std::string &type)
 {
     if (env == nullptr) {
+        APP_LOGE("err is nullptr");
         return;
     }
     ani_object error = CreateEnumError(env, parameter, type);
@@ -164,18 +172,19 @@ ani_object BusinessErrorAni::CreateEnumError(ani_env *env,
     const std::string &parameter, const std::string &enumClass)
 {
     if (env == nullptr) {
+        APP_LOGE("err is nullptr");
         return nullptr;
     }
     std::string errMessage = BussinessErrorNS::ERR_MSG_BUSINESS_ERROR;
-    auto iter = errMessage.find("$");
+    auto iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, std::to_string(ERROR_PARAM_CHECK_ERROR));
     }
     errMessage += BussinessErrorNS::ERR_MSG_ENUM_ERROR;
-    iter = errMessage.find("$");
+    iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, parameter);
-        iter = errMessage.find("$");
+        iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
         if (iter != std::string::npos) {
             errMessage = errMessage.replace(iter, 1, enumClass);
         }

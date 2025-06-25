@@ -20,7 +20,6 @@
 
 import { AsyncCallback, BusinessError } from '@ohos.base';
 import { OverlayModuleInfo as _OverlayModuleInfo } from 'bundleManager.OverlayModuleInfo';
-import { OverlayModuleInfoInner } from './bundleManager/OverlayModuleInfoInner';
 
 export default namespace overlay {
 
@@ -39,8 +38,7 @@ export default namespace overlay {
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
-      let br: BusinessError = new BusinessError();
-      callback(br, undefined);
+      callback(null, undefined);
     }, (err: Error): void => {
       callback(err as BusinessError, undefined);
     });
@@ -68,8 +66,7 @@ export default namespace overlay {
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
-      let br: BusinessError = new BusinessError();
-      callback(br, undefined);
+      callback(null, undefined);
     }, (err: Error): void => {
       callback(err as BusinessError, undefined);
     });
@@ -98,11 +95,9 @@ export default namespace overlay {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let result: OverlayModuleInfo = e as OverlayModuleInfo;
-      let br: BusinessError = new BusinessError();
-      callback(br, result);
+      callback(null, result);
     }, (err: Error): void => {
-      let result: OverlayModuleInfo = new OverlayModuleInfoInner;
-      callback(err as BusinessError, result);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -129,11 +124,9 @@ export default namespace overlay {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
-      let br: BusinessError = new BusinessError();
-      callback(br, resultArray);
+      callback(null, resultArray);
     }, (err: Error): void => {
-      let resultArray: Array<OverlayModuleInfo> = new Array<OverlayModuleInfo>;
-      callback(err as BusinessError, resultArray);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -160,11 +153,9 @@ export default namespace overlay {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
-      let br: BusinessError = new BusinessError();
-      callback(br, resultArray);
+      callback(null, resultArray);
     }, (err: Error): void => {
-      let resultArray: Array<OverlayModuleInfo> = new Array<OverlayModuleInfo>;
-      callback(err as BusinessError, resultArray);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -175,11 +166,9 @@ export default namespace overlay {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
-      let br: BusinessError = new BusinessError();
-      callback(br, resultArray);
+      callback(null, resultArray);
     }, (err: Error): void => {
-      let resultArray: Array<OverlayModuleInfo> = new Array<OverlayModuleInfo>;
-      callback(err as BusinessError, resultArray);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -207,11 +196,9 @@ export default namespace overlay {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
-      let br: BusinessError = new BusinessError();
-      callback(br, resultArray);
+      callback(null, resultArray);
     }, (err: Error): void => {
-      let resultArray: Array<OverlayModuleInfo> = new Array<OverlayModuleInfo>;
-      callback(err as BusinessError, resultArray);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -222,11 +209,9 @@ export default namespace overlay {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
-      let br: BusinessError = new BusinessError();
-      callback(br, resultArray);
+      callback(null, resultArray);
     }, (err: Error): void => {
-      let resultArray: Array<OverlayModuleInfo> = new Array<OverlayModuleInfo>;
-      callback(err as BusinessError, resultArray);
+      callback(err as BusinessError, undefined);
     });
   }
 

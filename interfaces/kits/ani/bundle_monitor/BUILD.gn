@@ -52,6 +52,16 @@ ohos_shared_library("ani_bundle_monitor") {
     "${kits_path}/js/common:bundle_napi_common",
   ]
 
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
   external_deps = [
     "c_utils:utils",
     "common_event_service:cesfwk_core",

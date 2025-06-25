@@ -16,6 +16,8 @@ import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
 ohos_shared_library("ani_freeInstall") {
+  branch_protector_ret = "pac_ret"
+
   sanitize = {
     boundary_sanitize = true
     cfi = true
@@ -49,6 +51,16 @@ ohos_shared_library("ani_freeInstall") {
     "${core_path}:appexecfwk_core",
     "${kits_path}/ani/common:bms_ani_common",
     "${kits_path}/js/common:bundle_napi_common",
+  ]
+
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
   ]
 
   external_deps = [
