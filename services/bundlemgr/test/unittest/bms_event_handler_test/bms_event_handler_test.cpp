@@ -26,6 +26,7 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "common_event_subscriber.h"
+#include "directory_ex.h"
 #include "el5_filekey_callback.h"
 #include "installd_client.h"
 #include "installd_service.h"
@@ -60,6 +61,8 @@ namespace {
     const std::string BUNDLE_TEST_PATH = "/data/app/el1/bundle/public/test/";
     const std::string MODULE_UPDATE_PATH = "/module_update/test/";
     const std::string PRELOAD_BUNDLE_PATH = "/preload/app/test";
+    const std::string OLD_BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/+old-com.example.mytest";
+    const std::string REAL_BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/com.example.mytest";
     constexpr const char* SYSTEM_RESOURCES_CAMERA_PATH = "/system/app/Camera";
     constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
     constexpr const char* VERSION_CODE = "versionCode";
@@ -2574,6 +2577,29 @@ HWTEST_F(BmsEventHandlerTest, InnerBundleInfo_0200, Function | SmallTest | Level
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.UpdateRemovable(true, true);
     EXPECT_TRUE(innerBundleInfo.IsRemovable());
+}
+
+/**
+ * @tc.number: HandleAllBundleExceptionInfo_0100
+ * @tc.name: HandleAllBundleExceptionInfo
+ * @tc.desc: test HandleAllBundleExceptionInfo
+ */
+HWTEST_F(BmsEventHandlerTest, HandleAllBundleExceptionInfo_0100, Function | SmallTest | Level0)
+{
+    bool ans = OHOS::ForceCreateDirectory(OLD_BUNDLE_DIR_NAME);
+    EXPECT_TRUE(ans);
+
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    handler->HandleAllBundleExceptionInfo();
+
+    auto pathExist = access(OLD_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_EQ(pathExist, 0);
+    pathExist = access(REAL_BUNDLE_DIR_NAME.c_str(), F_OK);
+    EXPECT_NE(pathExist, 0);
+
+    (void)OHOS::ForceRemoveDirectory(REAL_BUNDLE_DIR_NAME);
+    (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
 }
 
 /**
