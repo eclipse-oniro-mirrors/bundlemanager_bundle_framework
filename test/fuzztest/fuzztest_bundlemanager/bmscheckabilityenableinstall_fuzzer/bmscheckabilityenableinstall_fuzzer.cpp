@@ -19,14 +19,17 @@
 #include <fuzzer/FuzzedDataProvider.h>
 #define private public
 #include "bundle_distributed_manager.h"
-#include "bmssendcallback_fuzzer.h"
+#include "bmscheckabilityenableinstall_fuzzer.h"
 #include "bms_fuzztest_util.h"
 
 using Want = OHOS::AAFwk::Want;
-
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
+std::string DEVICE_ID_NORMAL = "deviceId";
+std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
+std::string MODULE_NAME_MY_APPLICATION = "com.example.MyModuleName";
+std::string ABILITY_NAME_MY_APPLICATION = "com.example.MyApplication.MainAbility";
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     std::shared_ptr<BundleDistributedManager> BundleDistributedManager_ =
@@ -35,14 +38,16 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         return false;
     }
     FuzzedDataProvider fdp(data, size);
-    int32_t resultCode = fdp.ConsumeIntegral<int32_t>();
-    std::string transactId = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    BundleDistributedManager_->SendCallbackRequest(resultCode, transactId);
-    QueryRpcIdParams param;
-    int32_t resultCode2 = fdp.ConsumeIntegral<int32_t>();
-    std::string transactId2 = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    BundleDistributedManager_->SendCallback(resultCode2, param);
-    BundleDistributedManager_->OutTimeMonitor(transactId2);
+    Want want;
+    std::string deviceId = DEVICE_ID_NORMAL;
+    std::string bundleName = BUNDLE_NAME_TEST;
+    std::string moduleName = MODULE_NAME_MY_APPLICATION;
+    std::string abilityName = ABILITY_NAME_MY_APPLICATION;
+    want.SetElementName(deviceId, bundleName, moduleName, abilityName);
+    int32_t missionId = fdp.ConsumeIntegral<int32_t>();
+    int32_t userId = GenerateRandomUser(fdp);
+    sptr<IRemoteObject> callerToken = nullptr;
+    BundleDistributedManager_->CheckAbilityEnableInstall(want, missionId, userId, callerToken);
     return true;
 }
 }
