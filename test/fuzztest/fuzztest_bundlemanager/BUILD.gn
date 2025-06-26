@@ -84,6 +84,7 @@ group("bundlemanagerfuzztest") {
     "bmsgetpermissiondef_fuzzer:BMSGetPermissionDefFuzzTest",
     "bmshapmoduleinfo_fuzzer:BMSHapModuleInfoFuzzTest",
     "bmsinstallparam_fuzzer:BMSInstallParamFuzzTest",
+    "bmsinstallpluginparam_fuzzer:BMSInstallPluginParamFuzzTest",
     "bmsisexistfirstinstallbundleinfo_fuzzer:BMSIsExistFirstInstallBundleInfoFuzzTest",
     "bmsqueryabilityinfobyuri_fuzzer:BMSQueryAbilityInfoByUriFuzzTest",
     "bmsqueryabilityinfos_fuzzer:BMSQueryAbilityInfosFuzzTest",
