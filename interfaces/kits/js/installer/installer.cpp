@@ -50,7 +50,6 @@ const char* HASH_PARAMS = "hashParams";
 const char* VERSION_CODE = "versionCode";
 const char* SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
 const char* SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
-const char* ADDITIONAL_INFO = "additionalInfo";
 const char* VERIFY_CODE_PARAM = "verifyCodeParams";
 const char* SIGNATURE_FILE_PATH = "signatureFilePath";
 const char* PGO_PARAM = "pgoParams";

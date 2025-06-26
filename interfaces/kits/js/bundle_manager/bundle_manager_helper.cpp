@@ -351,5 +351,120 @@ ErrCode BundleManagerHelper::InnerGetAllAppCloneBundleInfo(
     }
     return SUCCESS;
 }
+
+ErrCode BundleManagerHelper::InnerGetAllSharedBundleInfo(std::vector<SharedBundleInfo>& sharedBundles)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAllSharedBundleInfo(sharedBundles);
+    APP_LOGI("GetAllSharedBundleInfo ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetSharedBundleInfo(
+    const std::string& bundleName, const std::string& moduleName, std::vector<SharedBundleInfo>& sharedBundles)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetSharedBundleInfo(bundleName, moduleName, sharedBundles);
+    APP_LOGI("GetSharedBundleInfo ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetExtResource(const std::string& bundleName, std::vector<std::string>& moduleNames)
+{
+    auto extResourceManager = CommonFunc::GetExtendResourceManager();
+    if (extResourceManager == nullptr) {
+        APP_LOGE("extResourceManager is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    ErrCode ret = extResourceManager->GetExtResource(bundleName, moduleNames);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetExtResource failed");
+    }
+    APP_LOGI("GetExtResource ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerDisableDynamicIcon(const std::string& bundleName)
+{
+    auto extResourceManager = CommonFunc::GetExtendResourceManager();
+    if (extResourceManager == nullptr) {
+        APP_LOGE("extResourceManager is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    ErrCode ret = extResourceManager->DisableDynamicIcon(bundleName);
+    if (ret != ERR_OK) {
+        APP_LOGE("DisableDynamicIcon failed");
+    }
+    APP_LOGI("DisableDynamicIcon ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerVerify(const std::vector<std::string>& abcPaths, bool flag)
+{
+    auto verifyManager = CommonFunc::GetVerifyManager();
+    if (verifyManager == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    ErrCode ret = verifyManager->Verify(abcPaths);
+    if (ret == ERR_OK && flag) {
+        verifyManager->RemoveFiles(abcPaths);
+    }
+    APP_LOGI("VerifyAbc ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerDeleteAbc(const std::string& path)
+{
+    auto verifyManager = CommonFunc::GetVerifyManager();
+    if (verifyManager == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    ErrCode ret = verifyManager->DeleteAbc(path);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteAbc failed");
+    }
+    APP_LOGI("DeleteAbc ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetRecoverableApplicationInfo(
+    std::vector<RecoverableApplicationInfo>& recoverableApplications)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetRecoverableApplicationInfo(recoverableApplications);
+    APP_LOGI("GetRecoverableApplicationInfo ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetAllPluginInfo(
+    std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
+    APP_LOGI("GetAllPluginInfo ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
 } // AppExecFwk
 } // OHOS

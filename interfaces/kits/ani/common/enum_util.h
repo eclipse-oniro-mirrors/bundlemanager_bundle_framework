@@ -41,6 +41,8 @@ constexpr const char* CLASSNAME_BUNDLEMANAGER_PERMISSIONGRANTSTATE =
     "L@ohos/bundle/bundleManager/bundleManager/PermissionGrantState;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_APPLICATION_FLAG =
     "L@ohos/bundle/bundleManager/bundleManager/ApplicationFlag;";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_COMPATIBLEPOLICY =
+    "L@ohos/bundle/bundleManager/bundleManager/CompatiblePolicy;";
 constexpr const char* CLASSNAME_BUNDLE_DISPLAYORIENTATION = "L@ohos/bundle/bundle/DisplayOrientation;";
 constexpr const char* CLASSNAME_BUNDLE_ABILITY_TYPE = "L@ohos/bundle/bundle/AbilityType;";
 constexpr const char* CLASSNAME_BUNDLE_ABILITYSUB_TYPE = "L@ohos/bundle/bundle/AbilitySubType;";
@@ -366,6 +368,15 @@ public:
     {
         return EnumNativeToETSByTable(
             env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APPLICATION_FLAG, value, Array_BundleManager_ApplicationFlag);
+    }
+
+    // bundleManager.CompatiblePolicy
+    // enum CompatiblePolicy {
+    //     BACKWARD_COMPATIBILITY = 1
+    // }
+    static inline ani_enum_item EnumNativeToETS_BundleManager_CompatiblePolicy(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_COMPATIBLEPOLICY, value, 1);
     }
 
     // bundle.DisplayOrientation

@@ -157,10 +157,16 @@ public:
 
     static ani_object ConvertAppCloneIdentity(ani_env* env, const std::string& bundleName, const int32_t appIndex);
     static ani_object ConvertPermissionDef(ani_env* env, const PermissionDef& permissionDef);
+    static ani_object ConvertSharedBundleInfo(ani_env* env, const SharedBundleInfo& sharedBundleInfo);
+    static ani_object ConvertSharedModuleInfo(ani_env* env, const SharedModuleInfo& sharedModuleInfo);
     static ani_object ConvertAppProvisionInfo(ani_env* env, const AppProvisionInfo& appProvisionInfo);
     static ani_object ConvertValidity(ani_env* env, const Validity& validity);
+    static ani_object ConvertRecoverableApplicationInfo(
+        ani_env* env, const RecoverableApplicationInfo& recoverableApplicationInfo);
     static ani_object ConvertPreinstalledApplicationInfo(
         ani_env* env, const PreinstalledApplicationInfo& reinstalledApplicationInfo);
+    static ani_object ConvertPluginBundleInfo(ani_env* env, const PluginBundleInfo& pluginBundleInfo);
+    static ani_object ConvertPluginModuleInfo(ani_env* env, const PluginModuleInfo& pluginModuleInfo);
 
     static ani_object ConvertShortcutInfo(ani_env* env, const ShortcutInfo& shortcutInfo);
     static ani_object ConvertShortcutIntent(ani_env* env, const ShortcutIntent& shortcutIntent);
