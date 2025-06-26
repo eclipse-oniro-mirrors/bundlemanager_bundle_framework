@@ -104,6 +104,7 @@ void GenerateApplicationInfo(FuzzedDataProvider& fdp, ApplicationInfo &applicati
     applicationInfo.hwasanEnabled = fdp.ConsumeBool();
     applicationInfo.ubsanEnabled = fdp.ConsumeBool();
     applicationInfo.cloudFileSyncEnabled = fdp.ConsumeBool();
+    applicationInfo.cloudStructuredDataSyncEnabled = fdp.ConsumeBool();
     applicationInfo.needAppDetail = fdp.ConsumeBool();
     applicationInfo.versionCode = fdp.ConsumeIntegral<uint32_t>();
     applicationInfo.apiCompatibleVersion = fdp.ConsumeIntegral<uint32_t>();

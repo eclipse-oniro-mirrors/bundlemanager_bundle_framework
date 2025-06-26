@@ -3642,6 +3642,14 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
+        uint32_t cloudFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT);
+        if (((static_cast<uint32_t>(flags) & cloudFlag) == cloudFlag) &&
+            !innerBundleInfo.GetCloudFileSyncEnabled() &&
+            !innerBundleInfo.GetCloudStructuredDataSyncEnabled()) {
+            APP_LOGD("getAllBundleInfosV9 bundleName %{public}s does not enable cloud sync",
+                innerBundleInfo.GetBundleName().c_str());
+            continue;
+        }
         BundleInfo bundleInfo;
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
             continue;
@@ -3687,6 +3695,14 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
             static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY)) &&
             (info.IsHideDesktopIcon())) {
             APP_LOGD("getAllBundleInfosV9 bundleName %{public}s is hide desktopIcon",
+                info.GetBundleName().c_str());
+            continue;
+        }
+        uint32_t cloudFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT);
+        if (((static_cast<uint32_t>(flags) & cloudFlag) == cloudFlag) &&
+            !info.GetCloudFileSyncEnabled() &&
+            !info.GetCloudStructuredDataSyncEnabled()) {
+            APP_LOGD("getAllBundleInfosV9 bundleName %{public}s does not enable cloud sync",
                 info.GetBundleName().c_str());
             continue;
         }

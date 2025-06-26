@@ -1201,6 +1201,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0018, Function | MediumTest | Lev
     EXPECT_EQ(bundleInfo.applicationInfo.name, appName);
     EXPECT_FALSE(bundleInfo.applicationInfo.metadata.empty());
     EXPECT_FALSE(bundleInfo.applicationInfo.appEnvironments.empty());
+    EXPECT_FALSE(bundleInfo.applicationInfo.cloudStructuredDataSyncEnabled);
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -9468,6 +9469,52 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0300, Function | MediumTest
         EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     }
     std::cout << "END GetApplicationInfosV9_0300" << std::endl;
+}
+
+/**
+ * @tc.number: GetBundleInfos_0001
+ * @tc.name: test GetBundleInfos interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetBundleInfos
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfos_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInfos_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto res1 = bundleMgrProxy->GetBundleInfosV9(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT),
+        bundleInfos, Constants::ALL_USERID);
+    EXPECT_EQ(res1, ERR_OK);
+
+    auto res2 = bundleMgrProxy->GetBundleInfosV9(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT), bundleInfos, Constants::ALL_USERID);
+    EXPECT_EQ(res2, ERR_OK);
+
+    auto res3 = bundleMgrProxy->GetBundleInfosV9(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT),
+        bundleInfos, USERID);
+    EXPECT_EQ(res3, ERR_OK);
+
+    auto res4 = bundleMgrProxy->GetBundleInfosV9(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT), bundleInfos, USERID);
+    EXPECT_EQ(res4, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetBundleInfos_0001" << std::endl;
 }
 
 /**

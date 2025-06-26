@@ -697,6 +697,16 @@ public:
         baseApplicationInfo_->cloudFileSyncEnabled = cloudFileSyncEnabled;
     }
 
+    bool GetCloudStructuredDataSyncEnabled() const
+    {
+        return baseApplicationInfo_->cloudStructuredDataSyncEnabled;
+    }
+
+    void SetCloudStructuredDataSyncEnabled(bool cloudStructuredDataSyncEnabled)
+    {
+        baseApplicationInfo_->cloudStructuredDataSyncEnabled = cloudStructuredDataSyncEnabled;
+    }
+
     /**
      * @brief Get version code in application.
      * @return Returns version code.
