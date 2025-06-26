@@ -25,6 +25,7 @@
 #include "bundle_user_info.h"
 #include "form_info.h"
 #include "install_param.h"
+#include "install_plugin_param.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -401,6 +402,12 @@ void GenerateInstallParam(FuzzedDataProvider& fdp, InstallParam &installParam)
     GenerateMap(fdp, installParam.pgoParams);
     GenerateMap(fdp, installParam.hashParams);
     GenerateMap(fdp, installParam.verifyCodeParams);
+}
+
+void GenerateInstallPluginParam(FuzzedDataProvider& fdp, InstallPluginParam &installPluginParam)
+{
+    installPluginParam.userId = fdp.ConsumeIntegral<int32_t>();
+    GenerateMap(fdp, installPluginParam.parameters);
 }
 
 void GenerateBundleUserInfo(FuzzedDataProvider& fdp, BundleUserInfo &bundleUserInfo)
