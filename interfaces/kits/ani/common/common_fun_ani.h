@@ -162,10 +162,6 @@ public:
     static ani_object ConvertPreinstalledApplicationInfo(
         ani_env* env, const PreinstalledApplicationInfo& reinstalledApplicationInfo);
 
-    static ani_object ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo);
-    static ani_object ConvertLauncherAbilityResourceInfo(ani_env* env,
-        const LauncherAbilityResourceInfo& launcherAbilityResourceInfo);
-
     static ani_object ConvertShortcutInfo(ani_env* env, const ShortcutInfo& shortcutInfo);
     static ani_object ConvertShortcutIntent(ani_env* env, const ShortcutIntent& shortcutIntent);
     static ani_object ConvertShortcutIntentParameter(ani_env* env, const std::pair<std::string, std::string>& item);

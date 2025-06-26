@@ -19,10 +19,12 @@
  */
 
 import { BundleResourceInfo } from 'bundleManager.BundleResourceInfo';
+import { DrawableDescriptor } from '@ohos.arkui.drawableDescriptor';
 
 export class BundleResourceInfoInner implements BundleResourceInfo {
     readonly bundleName: string = '';
     readonly icon: string = '';
     readonly label: string = '';
+    readonly drawableDescriptor: DrawableDescriptor = new DrawableDescriptor;
     readonly appIndex: number;
 }
