@@ -35,7 +35,8 @@ class BundleManagerCallbackStubFuzzTest : public BundleManagerCallbackStub {
 public:
     BundleManagerCallbackStubFuzzTest() = default;
     virtual ~BundleManagerCallbackStubFuzzTest() = default;
-    int32_t OnQueryRpcIdFinished(const std::string &RpcIdResult) override {
+    int32_t OnQueryRpcIdFinished(const std::string &RpcIdResult) override
+    {
         return 0;
     }
 };
