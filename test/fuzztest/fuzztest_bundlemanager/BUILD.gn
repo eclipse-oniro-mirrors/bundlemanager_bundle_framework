@@ -61,6 +61,7 @@ group("bundlemanagerfuzztest") {
     "bmscompatibleabilityinfo_fuzzer:BMSCompatibleAbilityInfoFuzzTest",
     "bmscompatibleapplicationinfo_fuzzer:BMSCompatibleApplicationInfoFuzzTest",
     "bmsconverttargetabilityinfo_fuzzer:BMSConvertTargetAbilityInfoFuzzTest",
+    "bmsdriverinstaller_fuzzer:BMSDriverInstallerFuzzTest",
     "bmsextensionabilityinfo_fuzzer:BMSExtensionAbilityInfoFuzzTest",
     "bmsforminfo_fuzzer:BMSFormInfoFuzzTest",
     "bmsgetabilitylabel_fuzzer:BMSGetAbilityLabelFuzzTest",
