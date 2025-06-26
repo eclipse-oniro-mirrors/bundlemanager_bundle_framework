@@ -1164,6 +1164,7 @@ public:
         const int32_t patchVersion);
     void CheckIfShortcutBundleExist(nlohmann::json &jsonResult);
     ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
+    void UpdateDesktopShortcutInfo(const std::string &bundleName);
 
 private:
     /**
