@@ -56,6 +56,7 @@ constexpr const char* SHORTCUT_ID = "shortcutId";
 constexpr const char* MANAGE_SHORTCUTS = "ohos.permission.MANAGE_SHORTCUTS";
 constexpr const char* IS_BUNDLE_EXIST = "isBundleExist";
 constexpr const char* CROSS_APP_SHARED_CONFIG = "crossAppSharedConfig";
+constexpr const char* IS_RECOVER = "isRecover";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -240,6 +241,7 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     }
     want.SetParam(IS_BUNDLE_EXIST, installResult.isBundleExist);
     want.SetParam(CROSS_APP_SHARED_CONFIG, installResult.crossAppSharedConfig);
+    want.SetParam(IS_RECOVER, installResult.isRecover);
 }
 
 ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info, int32_t uid, int32_t userId,

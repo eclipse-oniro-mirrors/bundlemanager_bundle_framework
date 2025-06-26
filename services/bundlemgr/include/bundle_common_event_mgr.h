@@ -72,6 +72,7 @@ struct NotifyBundleEvents {
     bool keepData = false;
     bool isBundleExist = false;
     bool crossAppSharedConfig = false;
+    bool isRecover = false;
 };
 
 class BundleCommonEventMgr {
