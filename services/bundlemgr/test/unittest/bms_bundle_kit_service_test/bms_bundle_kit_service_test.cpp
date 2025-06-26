@@ -9876,6 +9876,25 @@ HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoByAppIndex_0100, Function | Med
 }
 
 /**
+ * @tc.number: GetShortcutInfoByAppIndex_0200
+ * @tc.name: test can get shortcutInfo by bundleName and appIndex
+ * @tc.desc: 1.can not get shortcutInfo by empty bundle name
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetShortcutInfoByAppIndex_0200, Function | SmallTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    int32_t appIndex = 0;
+    auto ret = bundleMgrProxy->GetShortcutInfoByAppIndex("", appIndex, shortcutInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(shortcutInfos.empty());
+}
+
+/**
  * @tc.number: BundleStreamInstallerHostImplInit_0100
  * @tc.name: test Init
  * @tc.desc: Init is false
