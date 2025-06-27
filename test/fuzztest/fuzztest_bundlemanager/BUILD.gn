@@ -71,6 +71,7 @@ group("bundlemanagerfuzztest") {
     "bmsextensionabilityinfo_fuzzer:BMSExtensionAbilityInfoFuzzTest",
     "bmsfirstinstallbundleinfo_fuzzer:BMSFirstInstallBundleInfoFuzzTest",
     "bmsforminfo_fuzzer:BMSFormInfoFuzzTest",
+    "bmsfreeinstall_fuzzer:BMSFreeInstallFuzzTest",
     "bmsgetabilitylabel_fuzzer:BMSGetAbilityLabelFuzzTest",
     "bmsgetappidbybundlename_fuzzer:BMSGetAppIdByBundleNameFuzzTest",
     "bmsgetapplicationinfo_fuzzer:BMSGetApplicationInfoFuzzTest",
