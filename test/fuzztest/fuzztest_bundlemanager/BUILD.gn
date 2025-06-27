@@ -103,11 +103,12 @@ group("bundlemanagerfuzztest") {
     "bmsqueryrpcidbyabilitytoservicecenter_fuzzer:BMSQueryRpcIdByAbilityToServiceCenterFuzzTest",
     "bmsremoteabilityinfo_fuzzer:BMSRemoteAbilityInfoFuzzTest",
     "bmssendcallback_fuzzer:BMSSendCallbackFuzzTest",
-    "bmsverifymanagerhost_fuzzer:BMSVerifyManagerHostFuzzTest"
+    "bmsverifymanagerhost_fuzzer:BMSVerifyManagerHostFuzzTest",
   ]
 
   if (bundle_framework_default_app) {
     deps += [
+      "bmsdefaultapp_fuzzer:BMSDefaultAppFuzzTest",
       "bmsdefaultapphost_fuzzer:BMSDefaultAppHostFuzzTest"
     ]
   }

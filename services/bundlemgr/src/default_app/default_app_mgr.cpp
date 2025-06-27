@@ -313,7 +313,6 @@ ErrCode DefaultAppMgr::SetDefaultApplicationInternal(
 ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& type) const
 {
     LOG_I(BMS_TAG_DEFAULT, "ResetDefault,userId:%{public}d,type:%{private}s", userId, type.c_str());
-
     ErrCode ret = VerifyPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION);
     if (ret != ERR_OK) {
         return ret;
