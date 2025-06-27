@@ -4776,8 +4776,6 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
     cloneInfo.userId = userId;
     cloneInfo.appIndex = appIndex;
     // copy from user
-    cloneInfo.enabled = userInfo.bundleUserInfo.enabled;
-    cloneInfo.disabledAbilities = userInfo.bundleUserInfo.disabledAbilities;
     cloneInfo.accessTokenId = attr.accessTokenId;
     cloneInfo.accessTokenIdEx = attr.accessTokenIdEx;
     cloneInfo.uid = attr.uid;
