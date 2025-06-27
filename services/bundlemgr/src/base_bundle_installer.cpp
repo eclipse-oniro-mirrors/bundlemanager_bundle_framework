@@ -346,10 +346,14 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     if (result == ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL) {
         CheckBundleNameAndStratAbility(bundleName, appIdentifier_);
     }
-    if ((result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) &&
-        (UninstallBundleFromBmsExtension(bundleName) == ERR_OK)) {
-        isUninstalledFromBmsExtension = true;
-        result = ERR_OK;
+    if (result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) {
+        ErrCode bmsExtensionResult = UninstallBundleFromBmsExtension(bundleName);
+        if (bmsExtensionResult == ERR_OK) {
+            isUninstalledFromBmsExtension = true;
+            result = ERR_OK;
+        } else if (bmsExtensionResult == ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED) {
+            result = ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED;
+        }
     }
 
     if (!installParam.isKeepData && (result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE ||
@@ -565,10 +569,14 @@ ErrCode BaseBundleInstaller::UninstallBundle(
     int32_t uid = Constants::INVALID_UID;
     bool isUninstalledFromBmsExtension = false;
     ErrCode result = ProcessBundleUninstall(bundleName, modulePackage, installParam, uid);
-    if ((result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) &&
-        (UninstallBundleFromBmsExtension(bundleName) == ERR_OK)) {
-        isUninstalledFromBmsExtension = true;
-        result = ERR_OK;
+    if (result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) {
+        ErrCode bmsExtensionResult = UninstallBundleFromBmsExtension(bundleName);
+        if (bmsExtensionResult == ERR_OK) {
+            isUninstalledFromBmsExtension = true;
+            result = ERR_OK;
+        } else if (bmsExtensionResult == ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED) {
+            result = ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED;
+        }
     }
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
@@ -6237,7 +6245,7 @@ ErrCode BaseBundleInstaller::UninstallBundleFromBmsExtension(const std::string &
     }
     LOG_E(BMS_TAG_INSTALLER, "uninstall bundle(%{public}s) from bms extension faile due to errcode %{public}d",
         bundleName.c_str(), ret);
-    return ERR_BUNDLE_MANAGER_UNINSTALL_FROM_BMS_EXTENSION_FAILED;
+    return ret;
 }
 
 ErrCode BaseBundleInstaller::CheckBundleInBmsExtension(const std::string &bundleName, int32_t userId)
