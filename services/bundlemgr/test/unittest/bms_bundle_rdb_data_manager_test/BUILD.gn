@@ -41,7 +41,7 @@ ohos_unittest("BmsBundleRdbDataManagerTest") {
     "mock_rdb_helper.cpp",
   ]
 
-  configs = []
+  configs = [ "${common_path}:appexecfwk_common_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]

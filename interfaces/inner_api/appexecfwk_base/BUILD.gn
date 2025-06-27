@@ -28,14 +28,6 @@ config("appexecfwk_base_sdk_config") {
   ]
 }
 
-config("bundle_all_dependent_config") {
-  include_dirs = [
-    "//base/notification/common_event_service/interfaces/inner_api",
-    "include",
-    "include/clone",
-  ]
-}
-
 ohos_shared_library("appexecfwk_base") {
   branch_protector_ret = "pac_ret"
 
@@ -109,9 +101,10 @@ ohos_shared_library("appexecfwk_base") {
     "src/skill.cpp",
   ]
 
-  public_configs = [ ":appexecfwk_base_sdk_config" ]
-
-  all_dependent_configs = [ ":bundle_all_dependent_config" ]
+  public_configs = [
+    ":appexecfwk_base_sdk_config",
+    "${common_path}:appexecfwk_common_config",
+  ]
 
   defines = [
     "APP_LOG_TAG = \"BMS\"",
@@ -136,6 +129,7 @@ ohos_shared_library("appexecfwk_base") {
 
   external_deps = [
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "hilog:libhilog",
     "ipc:ipc_single",
   ]
