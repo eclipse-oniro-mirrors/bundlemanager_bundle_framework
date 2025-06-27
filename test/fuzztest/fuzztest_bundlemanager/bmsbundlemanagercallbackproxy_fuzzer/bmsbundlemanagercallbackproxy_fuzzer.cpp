@@ -18,8 +18,8 @@
 #include <set>
 #include <fuzzer/FuzzedDataProvider.h>
 #define private public
-#include "bundle_distributed_manager.h"
-#include "bmssendcallback_fuzzer.h"
+#include "bundle_manager_callback_proxy.h"
+#include "bmsbundlemanagercallbackproxy_fuzzer.h"
 #include "bms_fuzztest_util.h"
 
 using Want = OHOS::AAFwk::Want;
@@ -27,28 +27,23 @@ using Want = OHOS::AAFwk::Want;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
+bool DoSomethingInterestingWithMyAPI(const uint8_t *data, size_t size)
 {
-    std::shared_ptr<BundleDistributedManager> BundleDistributedManager_ =
-        std::make_shared<BundleDistributedManager>();
+    sptr<IRemoteObject> impl = nullptr;
+    std::shared_ptr<BundleManagerCallbackProxy> BundleDistributedManager_ =
+        std::make_shared<BundleManagerCallbackProxy>(impl);
     if (BundleDistributedManager_ == nullptr) {
         return false;
     }
     FuzzedDataProvider fdp(data, size);
-    int32_t resultCode = fdp.ConsumeIntegral<int32_t>();
-    std::string transactId = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    BundleDistributedManager_->SendCallbackRequest(resultCode, transactId);
-    QueryRpcIdParams param;
-    int32_t resultCode2 = fdp.ConsumeIntegral<int32_t>();
-    std::string transactId2 = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    BundleDistributedManager_->SendCallback(resultCode2, param);
-    BundleDistributedManager_->OutTimeMonitor(transactId2);
+    std::string installResult = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    BundleDistributedManager_->OnQueryRpcIdFinished(installResult);
     return true;
 }
 }
 
 // Fuzzer entry point.
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     // Run your code on data.
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
