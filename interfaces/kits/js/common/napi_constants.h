@@ -51,6 +51,14 @@ constexpr int32_t GET_REMOTE_ABILITY_INFO_MAX_SIZE = 10;
 constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
 constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
 
+constexpr int32_t ENUM_ONE = 1;
+constexpr int32_t ENUM_TWO = 2;
+constexpr int32_t ENUM_THREE = 3;
+constexpr int32_t ENUM_FOUR = 4;
+constexpr int32_t ENUM_FIVE = 5;
+constexpr int32_t ENUM_SIX = 6;
+constexpr int32_t ENUM_SEVEN = 7;
+
 constexpr const char* TYPE_NUMBER = "number";
 constexpr const char* TYPE_STRING = "string";
 constexpr const char* TYPE_OBJECT = "object";
@@ -67,7 +75,14 @@ constexpr const char* EXTENSION_TYPE_NAME = "extensionTypeName";
 constexpr const char* EXTENSION_ABILITY_TYPE = "extensionAbilityType";
 constexpr const char* HAP_FILE_PATH = "hapFilePath";
 constexpr const char* PERMISSION_NAME = "permissionName";
+constexpr const char* PROFILE_TYPE = "profileType";
+constexpr const char* ADDITIONAL_INFO = "additionalInfo";
 constexpr const char* DEVELOPER_ID = "developerId";
+constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
+constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
+constexpr const char* HOST_BUNDLE_NAME = "hostBundleName";
+constexpr const char* SOURCE_PATHS = "sourcePaths";
+constexpr const char* DESTINATION_PATHS = "destinationPath";
 constexpr const char* LINK = "link";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 constexpr const char*  PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
@@ -232,6 +247,19 @@ constexpr const char* GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExten
 constexpr const char* GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
 constexpr const char* GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
 constexpr const char* GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
+constexpr const char* GET_ALL_SHARED_BUNDLE_INFO = "GetAllSharedBundleInfo";
+constexpr const char* GET_SHARED_BUNDLE_INFO = "GetSharedBundleInfo";
+constexpr const char* GET_JSON_PROFILE = "GetJsonProfile";
+constexpr const char* RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
+constexpr const char* GET_EXT_RESOURCE = "GetExtResource";
+constexpr const char* DISABLE_DYNAMIC_ICON = "DisableDynamicIcon";
+constexpr const char* VERIFY_ABC = "VerifyAbc";
+constexpr const char* DELETE_ABC = "DeleteAbc";
+constexpr const char* GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
+constexpr const char* RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
+constexpr const char* GET_DEVELOPER_IDS = "GetDeveloperIds";
+constexpr const char* GET_ALL_PLUGIN_INFO = "GetAllPluginInfo";
+constexpr const char* MIGRATE_DATA = "MigrateData";
 }
 }
 }

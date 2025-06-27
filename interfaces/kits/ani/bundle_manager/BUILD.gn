@@ -244,6 +244,24 @@ ohos_prebuilt_etc("permission_def_etc") {
   deps = [ ":permission_def" ]
 }
 
+generate_static_abc("share_bundle_info") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/SharedBundleInfo.ets",
+    "./ets/bundleManager/SharedBundleInfoInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/share_bundle_info.abc"
+}
+
+ohos_prebuilt_etc("share_bundle_info_etc") {
+  source = "$target_out_dir/share_bundle_info.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":share_bundle_info" ]
+}
+
 generate_static_abc("app_provision_info") {
   base_url = "./ets"
   files = [
@@ -260,6 +278,42 @@ ohos_prebuilt_etc("app_provision_info_etc") {
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
   deps = [ ":app_provision_info" ]
+}
+
+generate_static_abc("recoverable_application_info") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/RecoverableApplicationInfo.ets",
+    "./ets/bundleManager/RecoverableApplicationInfoInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/recoverable_application_info.abc"
+}
+
+ohos_prebuilt_etc("recoverable_application_info_etc") {
+  source = "$target_out_dir/recoverable_application_info.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":recoverable_application_info" ]
+}
+
+generate_static_abc("plugin_bundle_info") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/PluginBundleInfo.ets",
+    "./ets/bundleManager/PluginBundleInfoInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/plugin_bundle_info.abc"
+}
+
+ohos_prebuilt_etc("plugin_bundle_info_etc") {
+  source = "$target_out_dir/plugin_bundle_info.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":plugin_bundle_info" ]
 }
 
 ohos_copy("copy_bundleManager_ets") {

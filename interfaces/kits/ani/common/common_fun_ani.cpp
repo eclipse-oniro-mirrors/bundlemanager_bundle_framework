@@ -37,10 +37,16 @@ constexpr const char* CLASSNAME_USEDSCENE = "LbundleManager/BundleInfoInner/Used
 constexpr const char* CLASSNAME_SIGNATUREINFO = "LbundleManager/BundleInfoInner/SignatureInfoInner;";
 constexpr const char* CLASSNAME_APPCLONEIDENTITY = "LbundleManager/BundleInfoInner/AppCloneIdentityInner;";
 constexpr const char* CLASSNAME_PERMISSIONDEF = "LbundleManager/PermissionDefInner/PermissionDefInner;";
+constexpr const char* CLASSNAME_SHAREDBUNDLEINFO = "LbundleManager/SharedBundleInfoInner/SharedBundleInfoInner;";
+constexpr const char* CLASSNAME_SHAREDMODULEINFO = "LbundleManager/SharedBundleInfoInner/SharedModuleInfoInner;";
 constexpr const char* CLASSNAME_APPPROVISIONINFO = "LbundleManager/AppProvisionInfoInner/AppProvisionInfoInner;";
 constexpr const char* CLASSNAME_VALIDITY = "LbundleManager/AppProvisionInfoInner/ValidityInner;";
+constexpr const char* CLASSNAME_RECOVERABLEAPPLICATIONINFO =
+    "LbundleManager/RecoverableApplicationInfoInner/RecoverableApplicationInfoInner;";
 constexpr const char* CLASSNAME_PREINSTALLEDAPPLICATIONINFO =
     "LbundleManager/ApplicationInfoInner/PreinstalledApplicationInfoInner;";
+constexpr const char* CLASSNAME_PLUGINBUNDLEINFO = "LbundleManager/PluginBundleInfoInner/PluginBundleInfoInner;";
+constexpr const char* CLASSNAME_PLUGINMODULEINFO = "LbundleManager/PluginBundleInfoInner/PluginModuleInfoInner;";
 constexpr const char* CLASSNAME_METADATA = "LbundleManager/MetadataInner/MetadataInner;";
 constexpr const char* CLASSNAME_RESOURCE = "Lglobal/resourceInner/ResourceInner;";
 constexpr const char* CLASSNAME_ROUTERITEM = "LbundleManager/HapModuleInfoInner/RouterItemInner;";
@@ -244,6 +250,8 @@ constexpr const char* PROPERTYNAME_ELEMENTLIST = "elementList";
 constexpr const char* PROPERTYNAME_UNINSTALLCOMPONENTTYPE = "uninstallComponentType";
 constexpr const char* PROPERTYNAME_PERMISSIONNAME = "permissionName";
 constexpr const char* PROPERTYNAME_GRANTMODE = "grantMode";
+constexpr const char* PROPERTYNAME_COMPATIBLEPOLICY = "compatiblePolicy";
+constexpr const char* PROPERTYNAME_SHAREDMODULEINFO = "sharedModuleInfo";
 constexpr const char* PROPERTYNAME_UUID = "uuid";
 constexpr const char* PROPERTYNAME_NOTBEFORE = "notBefore";
 constexpr const char* PROPERTYNAME_NOTAFTER = "notAfter";
@@ -252,6 +260,9 @@ constexpr const char* PROPERTYNAME_DEVELOPERID = "developerId";
 constexpr const char* PROPERTYNAME_APL = "apl";
 constexpr const char* PROPERTYNAME_ISSUER = "issuer";
 constexpr const char* PROPERTYNAME_ORGANIZATION = "organization";
+constexpr const char* PROPERTYNAME_CODEPATHS = "codePaths";
+constexpr const char* PROPERTYNAME_PLUGINBUNDLENAME = "pluginBundleName";
+constexpr const char* PROPERTYNAME_PLUGINMODULEINFOS = "pluginModuleInfos";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
@@ -1677,6 +1688,69 @@ ani_object CommonFunAni::ConvertPermissionDef(ani_env* env, const PermissionDef&
     return object;
 }
 
+ani_object CommonFunAni::ConvertSharedBundleInfo(ani_env* env, const SharedBundleInfo& sharedBundleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_SHAREDBUNDLEINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedBundleInfo.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // bundleType: bundleManager.CompatiblePolicy
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_COMPATIBLEPOLICY,
+        EnumUtils::EnumNativeToETS_BundleManager_CompatiblePolicy(
+            env, static_cast<int32_t>(CompatiblePolicy::BACKWARD_COMPATIBILITY))));
+
+    // sharedModuleInfo: Array<SharedModuleInfo>
+    ani_object aSharedModuleInfosObject =
+        ConvertAniArray(env, sharedBundleInfo.sharedModuleInfos, ConvertSharedModuleInfo);
+    RETURN_NULL_IF_NULL(aSharedModuleInfosObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SHAREDMODULEINFO, aSharedModuleInfosObject));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertSharedModuleInfo(ani_env* env, const SharedModuleInfo& sharedModuleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_SHAREDMODULEINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // versionCode: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONCODE, sharedModuleInfo.versionCode));
+
+    // versionName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.versionName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONNAME, string));
+
+    // description: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.description, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string));
+
+    // descriptionId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, sharedModuleInfo.descriptionId));
+
+    return object;
+}
+
 ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisionInfo& appProvisionInfo)
 {
     RETURN_NULL_IF_NULL(env);
@@ -1759,6 +1833,50 @@ ani_object CommonFunAni::ConvertValidity(ani_env* env, const Validity& validity)
     return object;
 }
 
+ani_object CommonFunAni::ConvertRecoverableApplicationInfo(
+    ani_env* env, const RecoverableApplicationInfo& recoverableApplicationInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_RECOVERABLEAPPLICATIONINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, recoverableApplicationInfo.bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, recoverableApplicationInfo.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // labelId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, recoverableApplicationInfo.labelId));
+
+    // iconId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, recoverableApplicationInfo.iconId));
+
+    // systemApp: boolean
+    RETURN_NULL_IF_FALSE(
+        CallSetter(env, cls, object, PROPERTYNAME_SYSTEMAPP, BoolToAniBoolean(recoverableApplicationInfo.systemApp)));
+
+    // bundleType: bundleManager.BundleType
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLETYPE,
+        EnumUtils::EnumNativeToETS_BundleManager_BundleType(
+            env, static_cast<int32_t>(recoverableApplicationInfo.bundleType))));
+    
+    // codePaths: Array<string>
+    ani_ref aCodePaths = ConvertAniArrayString(env, recoverableApplicationInfo.codePaths);
+    RETURN_NULL_IF_NULL(aCodePaths);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_CODEPATHS, aCodePaths));
+
+    return object;
+}
+
 ani_object CommonFunAni::ConvertPreinstalledApplicationInfo(
     ani_env* env, const PreinstalledApplicationInfo& reinstalledApplicationInfo)
 {
@@ -1785,6 +1903,78 @@ ani_object CommonFunAni::ConvertPreinstalledApplicationInfo(
 
     // labelId: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, reinstalledApplicationInfo.labelId));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertPluginBundleInfo(ani_env* env, const PluginBundleInfo& pluginBundleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_PLUGINBUNDLEINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // label: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.label, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
+
+    // labelId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, pluginBundleInfo.labelId));
+
+    // icon: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.icon, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICON, string));
+
+    // iconId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, pluginBundleInfo.iconId));
+
+    // pluginBundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.pluginBundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PLUGINBUNDLENAME, string));
+
+    // versionCode: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONCODE, pluginBundleInfo.versionCode));
+
+    // versionName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.versionName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONNAME, string));
+
+    // pluginModuleInfos: Array<PluginModuleInfo>
+    ani_object apluginModuleInfosObject =
+        ConvertAniArray(env, pluginBundleInfo.pluginModuleInfos, ConvertPluginModuleInfo);
+    RETURN_NULL_IF_NULL(apluginModuleInfosObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PLUGINMODULEINFOS, apluginModuleInfosObject));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertPluginModuleInfo(ani_env* env, const PluginModuleInfo& pluginModuleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_PLUGINMODULEINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginModuleInfo.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // descriptionId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, pluginModuleInfo.descriptionId));
+
+    // description: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginModuleInfo.description, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string));
 
     return object;
 }

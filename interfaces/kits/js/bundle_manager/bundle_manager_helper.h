@@ -49,6 +49,16 @@ public:
         std::vector<PreinstalledApplicationInfo>& preinstalledApplicationInfos);
     static ErrCode InnerGetAllAppCloneBundleInfo(
         const std::string& bundleName, int32_t bundleFlags, int32_t userId, std::vector<BundleInfo>& bundleInfos);
+    static ErrCode InnerGetAllSharedBundleInfo(std::vector<SharedBundleInfo>& sharedBundles);
+    static ErrCode InnerGetSharedBundleInfo(
+        const std::string& bundleName, const std::string& moduleName, std::vector<SharedBundleInfo>& sharedBundles);
+    static ErrCode InnerGetExtResource(const std::string& bundleName, std::vector<std::string>& moduleNames);
+    static ErrCode InnerDisableDynamicIcon(const std::string& bundleName);
+    static ErrCode InnerVerify(const std::vector<std::string>& abcPaths, bool flag);
+    static ErrCode InnerDeleteAbc(const std::string& path);
+    static ErrCode InnerGetRecoverableApplicationInfo(std::vector<RecoverableApplicationInfo>& recoverableApplications);
+    static ErrCode InnerGetAllPluginInfo(
+        std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos);
 };
 } // AppExecFwk
 } // OHOS
