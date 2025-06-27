@@ -548,8 +548,6 @@ bool BMSEventHandler::HasModuleSavedInPreInstalledDb(const std::string& bundleNa
 
 void BMSEventHandler::SavePreInstallException(const std::string& bundleDir) {}
 
-void BMSEventHandler::HandleAllBundleExceptionInfo() {}
-
 void BMSEventHandler::HandlePreInstallException() {}
 
 bool BMSEventHandler::OTAInstallSystemBundle(
