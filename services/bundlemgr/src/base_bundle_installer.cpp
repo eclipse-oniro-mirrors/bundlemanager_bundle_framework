@@ -309,7 +309,8 @@ ErrCode BaseBundleInstaller::Recover(
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .appDistributionType = appDistributionType_
+            .appDistributionType = appDistributionType_,
+            .isRecover = true
         };
         NotifyBundleStatus(installRes);
     }
