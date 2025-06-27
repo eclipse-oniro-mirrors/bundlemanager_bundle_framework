@@ -119,8 +119,15 @@ void BundleInstaller::Uninstall(const std::string &bundleName, const InstallPara
 {
     ErrCode resultCode = ERR_OK;
     bool isDriver = IsDriverForAllUser(bundleName);
-    if (installParam.userId < Constants::START_USERID && isDriver) {
-        resultCode = UninstallBundle(bundleName, installParam);
+    int32_t userId = GetDriverInstallUser(bundleName);
+    if (isDriver && (userId == Constants::DEFAULT_USERID || userId == Constants::U1)) {
+        InstallParam param = installParam;
+        param.userId = userId;
+        resultCode = UninstallBundle(bundleName, param);
+        if (statusReceiver_ != nullptr) {
+            statusReceiver_->OnFinished(resultCode, "");
+        }
+        return;
     }
     if (installParam.userId == Constants::ALL_USERID ||
         (!installParam.isRemoveUser && isDriver)) {
@@ -167,8 +174,15 @@ void BundleInstaller::Uninstall(
 {
     ErrCode resultCode = ERR_OK;
     bool isDriver = IsDriverForAllUser(bundleName);
-    if (installParam.userId < Constants::START_USERID && isDriver) {
-        resultCode = UninstallBundle(bundleName, modulePackage, installParam);
+    int32_t userId = GetDriverInstallUser(bundleName);
+    if (isDriver && (userId == Constants::DEFAULT_USERID || userId == Constants::U1)) {
+        InstallParam param = installParam;
+        param.userId = userId;
+        resultCode = UninstallBundle(bundleName, modulePackage, param);
+        if (statusReceiver_ != nullptr) {
+            statusReceiver_->OnFinished(resultCode, "");
+        }
+        return;
     }
     if (installParam.userId == Constants::ALL_USERID || isDriver) {
         std::vector<ErrCode> errCode;

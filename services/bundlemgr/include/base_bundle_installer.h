@@ -202,6 +202,8 @@ protected:
 
     bool IsDriverForAllUser(const std::string &bundleName);
 
+    int32_t GetDriverInstallUser(const std::string &bundleName);
+
     bool IsEnterpriseForAllUser(const InstallParam &installParam, const std::string &bundleName);
 
 private:
