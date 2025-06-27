@@ -424,5 +424,19 @@ ErrCode BundleParser::ParseNoDisablingList(const std::string &configPath, std::v
     }
     return ERR_OK;
 }
+
+ErrCode BundleParser::ParseArkStartupCacheConfig(
+    const std::string &configFile,
+    std::unordered_set<std::string> &bundleNames)
+{
+    APP_LOGD("Parse ParseArkStartupCacheConfig from %{public}s", configFile.c_str());
+    nlohmann::json jsonBuf;
+    if (!ReadFileIntoJson(configFile, jsonBuf)) {
+        return ERR_APPEXECFWK_PARSE_FILE_FAILED;
+    }
+
+    PreBundleProfile preBundleProfile;
+    return preBundleProfile.TransToArkStartupCacheList(jsonBuf, bundleNames);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

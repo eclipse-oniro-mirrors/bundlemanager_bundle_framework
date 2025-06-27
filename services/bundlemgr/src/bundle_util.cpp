@@ -1222,40 +1222,5 @@ bool BundleUtil::GetBitValue(const uint8_t num, const uint8_t pos)
 {
     return (num & (1U << pos)) != 0;
 }
-
-std::unordered_set<std::string> BundleUtil::ParseAppStartupBundleNames(const std::string &confFilePath)
-{
-    std::unordered_set<std::string> bundleNames;
-    std::ifstream file(confFilePath);
-    
-    if (!file.is_open()) {
-        APP_LOGE("fail to open %{public}s file, errno:%{public}d",
-            confFilePath.c_str(), errno);
-        return bundleNames;
-    }
-    
-    std::string line;
-    while (std::getline(file, line)) {
-        // Skip empty lines and comments
-        if (line.empty() || line[0] == '#') {
-            continue;
-        }
-        // Remove leading and trailing whitespace
-        line.erase(0, line.find_first_not_of(" \t"));
-        line.erase(line.find_last_not_of(" \t") + 1);
-        
-        // Find the end of bundle name (before' ' or '#')
-        size_t endPos = line.find_first_of("# \t");
-        if (endPos == std::string::npos) {
-            endPos = line.length();
-        }
-        
-        std::string bundleName = line.substr(0, endPos);
-        if (!bundleName.empty()) {
-            bundleNames.insert(bundleName);
-        }
-    }
-    return bundleNames;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -268,8 +268,7 @@ public:
     void ResetDataMgr();
     bool CheckShaderCachePathExist(const std::string &bundleName,
         const int32_t appIndex, const int32_t &userId) const;
-    void WriteToConfigFile(const std::string& filename, 
-        const std::vector<std::string>& newEntries) const;
+    bool WriteToConfigFile(const std::string& bundleName) const;
     ErrCode MkdirIfNotExist(const std::string &dir) const;
     void GetExistedEntries(const std::string &filename,
         std::set<std::string> &existingEntries,
@@ -672,39 +671,26 @@ void BmsBundleInstallerTest::GetExistedEntries(const std::string &filename,
     }
 }
 
-void BmsBundleInstallerTest::WriteToConfigFile(const std::string &filename,
-    const std::vector<std::string> &newEntries) const
+bool BmsBundleInstallerTest::WriteToConfigFile(const std::string &bundleName) const
 {
-    bool fileExists = std::filesystem::exists(filename);
-    std::set<std::string> existingBundleNames;
-    std::vector<std::string> allLines;
-    if (fileExists) {
-        GetExistedEntries(filename, existingBundleNames, allLines);
+    const std::string filename = ServiceConstants::APP_STARTUP_CACHE_CONG;
+    nlohmann::json jsonObject;
+    std::ifstream inFile(filename);
+    if (!inFile.is_open()) {
+        APP_LOGE("Copy file failed due to open conf file failed errno:%{public}d", errno);
+        APP_LOGE("create json file:%{public}s", filename.c_str());
+        jsonObject = nlohmann::json::object();
+    } else {
+        inFile >> jsonObject;
     }
+    if (!jsonObject.contains("ark_startup_snapshot_list") || !jsonObject["ark_startup_snapshot_list"].is_array()) {
+        jsonObject["ark_startup_snapshot_list"] = nlohmann::json::array();
+    }
+    jsonObject["ark_startup_snapshot_list"].push_back(bundleName);
     std::ofstream outFile(filename);
-    if (!outFile.is_open()) {
-        LOG_E(BMS_TAG_INSTALLD, "%{public}s can not open, errno: %{public}d",
-            filename.c_str(), errno);
-        return;
-    }
-    
-    for (const auto& line : allLines) {
-        outFile << line << "\n";
-    }
-    for (const auto& entry : newEntries) {
-        std::string bundleName;
-        size_t endPos = entry.find_first_of(":# \t");
-        if (endPos == std::string::npos) {
-            bundleName = entry;
-        } else {
-            bundleName = entry.substr(0, endPos);
-        }
-        if (existingBundleNames.find(bundleName) == existingBundleNames.end()) {
-            outFile << entry << "\n";
-            existingBundleNames.insert(bundleName);
-        }
-    }
+    outFile << std::setw(Constants::DUMP_INDENT) << jsonObject;
     outFile.close();
+    return true;
 }
 
 ErrCode BmsBundleInstallerTest::MkdirIfNotExist(const std::string &dir) const
@@ -11911,36 +11897,6 @@ HWTEST_F(BmsBundleInstallerTest, GetConfirmUserId_0002, Function | SmallTest | L
     auto res = installer.GetConfirmUserId(TEST_U100, infos);
     EXPECT_EQ(res, TEST_U1);
 }
-
-/**
- * @tc.number: ParseAppStartupBundleNames_0100
- * @tc.name: test ParseAppStartupBundleNames
- * @tc.desc: 1.parse the conf file
- */
-HWTEST_F(BmsBundleInstallerTest, ParseAppStartupBundleNames_0100, Function | SmallTest | Level0)
-{
-    std::string dir = "/data/test/bms_insatller_test";
-    BaseBundleInstaller installer;
-    auto ret2 = MkdirIfNotExist(dir);
-    EXPECT_EQ(ret2, ERR_OK);
- 
-    BundleUtil bundleUtil;
-    std::string confPath = "/system/etc/ark/test.conf";
-    std::unordered_set<std::string> res = bundleUtil.ParseAppStartupBundleNames(confPath);
-    EXPECT_TRUE(res.empty());
- 
-    std::vector<std::string> entries = {
-        "",
-        "#",
-        " # ",
-        "cn.123.cnrnetohos:aot # ",
-        "com.456.harmony # ",
-    };
- 
-    WriteToConfigFile(ServiceConstants::APP_STARTUP_CACHE_CONG, entries);
-    res = bundleUtil.ParseAppStartupBundleNames(ServiceConstants::APP_STARTUP_CACHE_CONG);
-    EXPECT_FALSE(res.empty());
-}
  
 /**
  * @tc.number: CleanArkStartupCache_0010
@@ -12031,10 +11987,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0030, Function | SmallTes
     ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
     ceateArk.uid = 0;
     ceateArk.gid = 0;
-    std::vector<std::string> entries = {
-        "com.test2 # Keep"
-    };
-    WriteToConfigFile(ServiceConstants::APP_STARTUP_CACHE_CONG, entries);
+    WriteToConfigFile("com.test2");
  
     // test bundlename in white list
     BaseBundleInstaller installer3;

@@ -91,8 +91,7 @@ public:
     void ClearBundleInfo();
     void ClearDataMgr();
     void ResetDataMgr();
-    void WriteToConfigFile(const std::string& filename,
-        const std::vector<std::string>& newEntries) const;
+    bool WriteToConfigFile(const std::string &bundleName) const;
     void GetExistedEntries(const std::string &filename,
         std::set<std::string> &existingEntries,
         std::vector<std::string> &allLines) const;
@@ -360,39 +359,26 @@ void BmsBundleInstallerPermissionTest::GetExistedEntries(const std::string &file
     }
 }
 
-void BmsBundleInstallerPermissionTest::WriteToConfigFile(const std::string &filename,
-    const std::vector<std::string> &newEntries) const
+bool BmsBundleInstallerPermissionTest::WriteToConfigFile(const std::string &bundleName) const
 {
-    bool fileExists = std::filesystem::exists(filename);
-    std::set<std::string> existingBundleNames;
-    std::vector<std::string> allLines;
-    if (fileExists) {
-        GetExistedEntries(filename, existingBundleNames, allLines);
+    const std::string filename = ServiceConstants::APP_STARTUP_CACHE_CONG;
+    nlohmann::json jsonObject;
+    std::ifstream inFile(filename);
+    if (!inFile.is_open()) {
+        APP_LOGE("Copy file failed due to open conf file failed errno:%{public}d", errno);
+        APP_LOGE("create json file:%{public}s", filename.c_str());
+        jsonObject = nlohmann::json::object();
+    } else {
+        inFile >> jsonObject;
     }
+    if (!jsonObject.contains("ark_startup_snapshot_list") || !jsonObject["ark_startup_snapshot_list"].is_array()) {
+        jsonObject["ark_startup_snapshot_list"] = nlohmann::json::array();
+    }
+    jsonObject["ark_startup_snapshot_list"].push_back(bundleName);
     std::ofstream outFile(filename);
-    if (!outFile.is_open()) {
-        LOG_E(BMS_TAG_INSTALLD, "%{public}s can not open, errno: %{public}d",
-            filename.c_str(), errno);
-        return;
-    }
-    
-    for (const auto& line : allLines) {
-        outFile << line << "\n";
-    }
-    for (const auto& entry : newEntries) {
-        std::string bundleName;
-        size_t endPos = entry.find_first_of(":# \t");
-        if (endPos == std::string::npos) {
-            bundleName = entry;
-        } else {
-            bundleName = entry.substr(0, endPos);
-        }
-        if (existingBundleNames.find(bundleName) == existingBundleNames.end()) {
-            outFile << entry << "\n";
-            existingBundleNames.insert(bundleName);
-        }
-    }
+    outFile << std::setw(Constants::DUMP_INDENT) << jsonObject;
     outFile.close();
+    return true;
 }
 
 /**
@@ -1157,10 +1143,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, CreateArkStartupCache_0030, Function 
     ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
     ceateArk.uid = 0;
     ceateArk.gid = 0;
-    std::vector<std::string> entries = {
-        "com.test # Keep"
-    };
-    WriteToConfigFile(ServiceConstants::APP_STARTUP_CACHE_CONG, entries);
+    WriteToConfigFile("com.test");
  
     // test bundlename in white list
     BaseBundleInstaller installer3;

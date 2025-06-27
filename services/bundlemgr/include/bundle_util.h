@@ -245,7 +245,6 @@ public:
     static bool StrToUint32(const std::string &str, uint32_t &value);
     static std::string ExtractStringFromJson(nlohmann::json &jsonObject, const std::string &key);
     static std::unordered_map<std::string, std::string> ParseMapFromJson(const std::string &jsonStr);
-    static std::unordered_set<std::string> ParseAppStartupBundleNames(const std::string &confFilePath);
 private:
     static std::mutex g_mutex;
 };

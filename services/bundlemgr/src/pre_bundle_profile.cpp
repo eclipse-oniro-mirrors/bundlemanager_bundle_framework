@@ -26,6 +26,7 @@ constexpr const char* ON_DEMAND_INSTALL_LIST = "on_demand_install_list";
 constexpr const char* UNINSTALL_LIST = "uninstall_list";
 constexpr const char* EXTENSION_TYPE = "extensionType";
 constexpr const char* RECOVER_LIST = "recover_list";
+constexpr const char* ARK_STARTUP_SNAPSHOT_LIST = "ark_startup_snapshot_list";
 constexpr const char* APP_DIR = "app_dir";
 constexpr const char* REMOVABLE = "removable";
 constexpr const char* APPIDENTIFIER = "appIdentifier";
@@ -547,6 +548,35 @@ void PreBundleProfile::ProcessOnDemandList(std::set<PreScanInfo> &scanAppInfos,
             ++iter;
         }
     }
+}
+
+ErrCode PreBundleProfile::TransToArkStartupCacheList(
+    const nlohmann::json &jsonBuf,
+    std::unordered_set<std::string> &arkStartupCacheList) const
+{
+    APP_LOGD("transform jsonBuf to bundleNames");
+    if (jsonBuf.is_discarded()) {
+        APP_LOGE("profile format error");
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+
+    const auto &jsonObjectEnd = jsonBuf.end();
+    int32_t parseResult = ERR_OK;
+    std::vector<std::string> names;
+    GetValueIfFindKey<std::vector<std::string>>(jsonBuf,
+        jsonObjectEnd,
+        ARK_STARTUP_SNAPSHOT_LIST,
+        names,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    for (const auto &name : names) {
+        APP_LOGD("ark startup cache bundleName %{public}s", name.c_str());
+        arkStartupCacheList.insert(name);
+    }
+    names.clear();
+    return parseResult;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -15,6 +15,7 @@
 
 #define private public
 
+#include <fstream>
 #include <sstream>
 #include <string>
 #include <gtest/gtest.h>
@@ -1312,6 +1313,7 @@ protected:
     void CheckProfileModule(const nlohmann::json &checkedProfileJson, const ErrCode code) const;
     ErrCode CheckProfileDefaultPermission(const nlohmann::json &checkedProfileJson,
         std::set<DefaultPermission> &defaultPermissions) const;
+    bool WriteToConfigFile(const std::string &bundleName) const;
 protected:
     std::ostringstream pathStream_;
 };
@@ -1554,6 +1556,28 @@ ErrCode BmsBundleParserTest::CheckProfileDefaultPermission(const nlohmann::json 
     }
 
     return profile.TransformTo(jsonObject, defaultPermissions);
+}
+
+bool BmsBundleParserTest::WriteToConfigFile(const std::string &bundleName) const
+{
+    const std::string filename = ServiceConstants::APP_STARTUP_CACHE_CONG;
+    nlohmann::json jsonObject;
+    std::ifstream inFile(filename);
+    if (!inFile.is_open()) {
+        APP_LOGE("Copy file failed due to open conf file failed errno:%{public}d", errno);
+        APP_LOGE("create json file:%{public}s", filename.c_str());
+        jsonObject = nlohmann::json::object();
+    } else {
+        inFile >> jsonObject;
+    }
+    if (!jsonObject.contains("ark_startup_snapshot_list") || !jsonObject["ark_startup_snapshot_list"].is_array()) {
+        jsonObject["ark_startup_snapshot_list"] = nlohmann::json::array();
+    }
+    jsonObject["ark_startup_snapshot_list"].push_back(bundleName);
+    std::ofstream outFile(filename);
+    outFile << std::setw(Constants::DUMP_INDENT) << jsonObject;
+    outFile.close();
+    return true;
 }
 
 /**
@@ -4313,5 +4337,21 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0600, Function | MediumTest | Level1)
     to_json(jsonObject, formInfo);
     EXPECT_EQ(jsonObject["groupId"], "123");
     EXPECT_EQ(jsonObject["name"], "testName");
+}
+
+/**
+ * @tc.number: ParseArkStartupCacheConfig_0100
+ * @tc.name: Test ParseArkStartupCacheConfig
+ * @tc.desc: test the ParseArkStartupCacheConfig of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, ParseArkStartupCacheConfig_0100, Function | MediumTest | Level1)
+{
+    std::string configFile = ServiceConstants::APP_STARTUP_CACHE_CONG;
+    std::unordered_set<std::string> arkStartupCacheList;
+    ErrCode ret = BundleParser::ParseArkStartupCacheConfig(configFile, arkStartupCacheList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+    WriteToConfigFile("com.123");
+    ret = BundleParser::ParseArkStartupCacheConfig(configFile, arkStartupCacheList);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS
