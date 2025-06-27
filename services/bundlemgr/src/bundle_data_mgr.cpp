@@ -1670,7 +1670,7 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
     if (CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_SYSTEMAPP_ONLY) && !info.IsSystemApp()) {
         return;
     }
-    std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
+    const std::map<std::string, std::vector<Skill>> &skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
         bool isPrivateType = MatchPrivateType(
             want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes, paramMimeTypes);
@@ -1806,7 +1806,7 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags, cons
         LOG_W(BMS_TAG_QUERY, "target not system app");
         return;
     }
-    std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
+    const std::map<std::string, std::vector<Skill>> &skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
         AbilityInfo abilityinfo = abilityInfoPair.second;
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
@@ -2038,7 +2038,7 @@ void BundleDataMgr::GetMultiLauncherAbilityInfo(const Want& want,
     int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const
 {
     int32_t count = 0;
-    std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
+    const std::map<std::string, std::vector<Skill>> &skillInfos = info.GetInnerSkillInfos();
     for (const auto& abilityInfoPair : info.GetInnerAbilityInfos()) {
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
         if (skillsPair == skillInfos.end()) {
