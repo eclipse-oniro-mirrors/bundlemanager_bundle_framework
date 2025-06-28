@@ -40,7 +40,8 @@ constexpr const char* INTEGRITY_CHECK = "PRAGMA integrity_check";
 constexpr const char* CHECK_OK = "ok";
 }
 
-std::mutex RdbDataManager::restoreRdbMutex_;
+std::mutex RdbDataManager::restoreRdbMapMutex_;
+std::unordered_map<std::string, std::mutex> RdbDataManager::restoreRdbMap_;
 
 RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)
     : bmsRdbConfig_(bmsRdbConfig)
@@ -58,9 +59,19 @@ void RdbDataManager::ClearCache()
     NativeRdb::RdbHelper::ClearCache();
 }
 
+std::mutex &RdbDataManager::GetRdbRestoreMutex(const std::string &dbName)
+{
+    std::lock_guard<std::mutex> restoreLock(restoreRdbMapMutex_);
+    if (!isInitial_) {
+        isInitial_ = restoreRdbMap_.find(dbName) != restoreRdbMap_.end();
+    }
+    return restoreRdbMap_[dbName];
+}
+
 void RdbDataManager::GetRdbStoreFromNative()
 {
-    std::lock_guard<std::mutex> restoreLock(restoreRdbMutex_);
+    auto &mutex = GetRdbRestoreMutex(bmsRdbConfig_.dbName);
+    std::lock_guard<std::mutex> restoreLock(mutex);
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
@@ -421,7 +432,7 @@ void RdbDataManager::DelayCloseRdbStore()
 
 bool RdbDataManager::RdbIntegrityCheckNeedRestore()
 {
-    APP_LOGI("integrity check start");
+    APP_LOGI("integrity check start db %{public}s", bmsRdbConfig_.dbName.c_str());
     if (rdbStore_ == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
@@ -434,7 +445,7 @@ bool RdbDataManager::RdbIntegrityCheckNeedRestore()
             APP_LOGW("rdb error need to restore");
             return true;
         }
-        APP_LOGI("rdb integrity check succeed");
+        APP_LOGI("integrity check succeed db %{public}s", bmsRdbConfig_.dbName.c_str());
     }
     return false;
 }

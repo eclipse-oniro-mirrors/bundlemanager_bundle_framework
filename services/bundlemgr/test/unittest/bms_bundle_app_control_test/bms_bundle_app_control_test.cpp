@@ -83,11 +83,12 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     void StartInstalldService() const;
     void StartBundleService();
+    std::shared_ptr<IAppControlManagerDb> appControlManagerDb_ =
+        DelayedSingleton<AppControlManager>::GetInstance()->appControlManagerDb_;
 
 private:
     static std::shared_ptr<InstalldService> installdService_;
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
-    static std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
 };
 
 std::shared_ptr<BundleMgrService> BmsBundleAppControlTest::bundleMgrService_ =
@@ -95,9 +96,6 @@ std::shared_ptr<BundleMgrService> BmsBundleAppControlTest::bundleMgrService_ =
 
 std::shared_ptr<InstalldService> BmsBundleAppControlTest::installdService_ =
     std::make_shared<InstalldService>();
-
-std::shared_ptr<IAppControlManagerDb> BmsBundleAppControlTest::appControlManagerDb_ =
-    std::make_shared<AppControlManagerRdb>();
 
 BmsBundleAppControlTest::BmsBundleAppControlTest()
 {}

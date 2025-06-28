@@ -2580,29 +2580,6 @@ HWTEST_F(BmsEventHandlerTest, InnerBundleInfo_0200, Function | SmallTest | Level
 }
 
 /**
- * @tc.number: HandleAllBundleExceptionInfo_0100
- * @tc.name: HandleAllBundleExceptionInfo
- * @tc.desc: test HandleAllBundleExceptionInfo
- */
-HWTEST_F(BmsEventHandlerTest, HandleAllBundleExceptionInfo_0100, Function | SmallTest | Level0)
-{
-    bool ans = OHOS::ForceCreateDirectory(OLD_BUNDLE_DIR_NAME);
-    EXPECT_TRUE(ans);
-
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    handler->HandleAllBundleExceptionInfo();
-
-    auto pathExist = access(OLD_BUNDLE_DIR_NAME.c_str(), F_OK);
-    EXPECT_EQ(pathExist, 0);
-    pathExist = access(REAL_BUNDLE_DIR_NAME.c_str(), F_OK);
-    EXPECT_NE(pathExist, 0);
-
-    (void)OHOS::ForceRemoveDirectory(REAL_BUNDLE_DIR_NAME);
-    (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
-}
-
-/**
  * @tc.number: InnerProcessCheckAppLogDir_0100
  * @tc.name: InnerProcessCheckAppLogDir
  * @tc.desc: test InnerProcessCheckAppLogDir

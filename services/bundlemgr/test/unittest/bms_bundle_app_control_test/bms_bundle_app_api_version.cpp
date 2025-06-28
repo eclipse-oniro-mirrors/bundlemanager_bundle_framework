@@ -82,7 +82,6 @@ BmsBundleAppApiVersionTest();
 private:
     static std::shared_ptr<InstalldService> installdService_;
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
-    static std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
 };
 
 std::shared_ptr<BundleMgrService> BmsBundleAppApiVersionTest::bundleMgrService_ =
@@ -90,9 +89,6 @@ std::shared_ptr<BundleMgrService> BmsBundleAppApiVersionTest::bundleMgrService_ 
 
 std::shared_ptr<InstalldService> BmsBundleAppApiVersionTest::installdService_ =
     std::make_shared<InstalldService>();
-
-std::shared_ptr<IAppControlManagerDb> BmsBundleAppApiVersionTest::appControlManagerDb_ =
-    std::make_shared<AppControlManagerRdb>();
 
 BmsBundleAppApiVersionTest::BmsBundleAppApiVersionTest()
 {}

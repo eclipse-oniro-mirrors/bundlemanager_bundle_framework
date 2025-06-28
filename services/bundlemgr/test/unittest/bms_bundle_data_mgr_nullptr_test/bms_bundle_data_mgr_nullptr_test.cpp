@@ -1448,4 +1448,26 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, RdbDataManager_0004, Function | MediumTest
     auto ret6 = rdbDataManager->IsRetryErrCode(NativeRdb::E_SQLITE_IOERR);
     EXPECT_TRUE(ret6);
 }
+
+/**
+ * @tc.number: GetRdbRestoreMutex_0010
+ * @tc.name: Test GetRdbRestoreMutex
+ * @tc.desc: 1.GetRdbRestoreMutex
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, GetRdbRestoreMutex_0010, Function | SmallTest | Level1)
+{
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbPath = DB_PATH;
+    std::string dbName = "bms_not_exist.db";
+    bmsRdbConfig.dbName = dbName;
+    bmsRdbConfig.tableName = TABLE_NAME;
+    auto rdbDataManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    ASSERT_NE(rdbDataManager, nullptr);
+
+    (void)rdbDataManager->GetRdbRestoreMutex(dbName);
+    ASSERT_FALSE(rdbDataManager->isInitial_);
+
+    (void)rdbDataManager->GetRdbRestoreMutex(dbName);
+    ASSERT_TRUE(rdbDataManager->isInitial_);
+}
 } // OHOS

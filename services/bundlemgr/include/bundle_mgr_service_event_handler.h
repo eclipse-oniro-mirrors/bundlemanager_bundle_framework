@@ -583,7 +583,6 @@ private:
     void HandlePreInstallException();
     static bool IsHapPathExist(const BundleInfo &bundleInfo);
     static bool IsHspPathExist(const InnerBundleInfo &innerBundleInfo);
-    void HandleAllBundleExceptionInfo();
 
     bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);

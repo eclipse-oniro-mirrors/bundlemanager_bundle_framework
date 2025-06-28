@@ -106,7 +106,7 @@ void InstallExceptionMgr::HandleBundleExceptionInfo(
 
 void InstallExceptionMgr::HandleAllBundleExceptionInfo()
 {
-    APP_LOGI("hand exception start");
+    APP_LOGI("handle exception start");
     if (installExceptionMgr_ == nullptr) {
         APP_LOGE("installExceptionMgr_ is null");
         return;
@@ -148,7 +148,7 @@ void InstallExceptionMgr::HandleAllBundleExceptionInfo()
             (void)InstalldClient::GetInstance()->RemoveDir(newCodePath);
         }
     }
-    APP_LOGI("hand exception end");
+    APP_LOGI("handle exception end");
 }
 } // AppExecFwk
 } // OHOS
