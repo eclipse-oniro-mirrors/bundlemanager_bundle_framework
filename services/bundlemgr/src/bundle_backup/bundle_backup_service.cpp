@@ -44,7 +44,7 @@ ErrCode BundleBackupService::OnRestore(nlohmann::json &jsonObject)
     if (dataMgr_ == nullptr) {
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    dataMgr_->CheckIfShortcutBundleExist(jsonObject);
+    dataMgr_->FilterShortcutJson(jsonObject);
     if (!shortcutStorage_->UpdateAllShortcuts(jsonObject)) {
         APP_LOGE("Failed to clear shortcut table");
         return ERR_APPEXECFWK_DB_UPDATE_ERROR;

@@ -11116,7 +11116,7 @@ ErrCode BundleDataMgr::GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32
     return ERR_OK;
 }
 
-void BundleDataMgr::CheckIfShortcutBundleExist(nlohmann::json &jsonResult)
+void BundleDataMgr::FilterShortcutJson(nlohmann::json &jsonResult)
 {
     if (!jsonResult.is_array()) {
         APP_LOGE("Invalid JSON format: expected array");
@@ -11135,32 +11135,14 @@ void BundleDataMgr::CheckIfShortcutBundleExist(nlohmann::json &jsonResult)
             it = jsonResult.erase(it);
             continue;
         }
-        std::string bundleName = (*it)[BUNDLE_NAME].get<std::string>();
-        int32_t appIndex = (*it)[APP_INDEX].get<int>();
         int32_t userId = (*it)[USER_ID].get<int>();
-        {
-            std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-            auto iter = bundleInfos_.find(bundleName);
-            if (iter == bundleInfos_.end()) {
-                it = jsonResult.erase(it);
-                continue;
-            }
-            if (!HasUserId(userId)) {
-                it = jsonResult.erase(it);
-                continue;
-            }
-            InnerBundleUserInfo innerBundleUserInfo;
-            if (!iter->second.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-                it = jsonResult.erase(it);
-                continue;
-            }
-            if (appIndex != 0) {
-                auto cloneIter = innerBundleUserInfo.cloneInfos.find(std::to_string(appIndex));
-                if (cloneIter == innerBundleUserInfo.cloneInfos.end()) {
-                    it = jsonResult.erase(it);
-                    continue;
-                }
-            }
+        if (userId != Constants::START_USERID) {
+            std::string bundleName = (*it)[BUNDLE_NAME].get<std::string>();
+            int32_t appIndex = (*it)[APP_INDEX].get<int>();
+            APP_LOGW("userId %{public}d is not supported for clone %{public}s %{public}d",
+                userId, bundleName.c_str(), appIndex);
+            it = jsonResult.erase(it);
+            continue;
         }
         ++it;
     }

@@ -6115,38 +6115,42 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0040, Function | MediumTest |
 }
 
 /**
- * @tc.number: CheckIfShortcutBundleExist_0010
- * @tc.name: test CheckIfShortcutBundleExist
- * @tc.desc: 1.test CheckIfShortcutBundleExist json which is not array
+ * @tc.number: FilterShortcutJson_0010
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson json which is not array
  */
-HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0010, Function | MediumTest | Level1)
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0010, Function | MediumTest | Level1)
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_FALSE(backupJson.is_object());
 }
 
 /**
- * @tc.number: CheckIfShortcutBundleExist_0020
- * @tc.name: test CheckIfShortcutBundleExist
- * @tc.desc: 1.test CheckIfShortcutBundleExist with invalid bundle name
+ * @tc.number: FilterShortcutJson_0020
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson with invalid bundle name
  */
-HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0020, Function | MediumTest | Level1)
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0020, Function | MediumTest | Level1)
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
     backupJson.push_back({{"BUNDLE_NAME", "com.invalid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", 100}});
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
-    EXPECT_EQ(backupJson.size(), 0);
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 1);
+    nlohmann::json backupJson2;
+    backupJson2.push_back({{"BUNDLE_NAME", "com.invalid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", 101}});
+    bundleDataMgr.FilterShortcutJson(backupJson2);
+    EXPECT_EQ(backupJson2.size(), 0);
 }
 
 /**
- * @tc.number: CheckIfShortcutBundleExist_0030
- * @tc.name: test CheckIfShortcutBundleExist
- * @tc.desc: 1.test CheckIfShortcutBundleExist with invalid userId
+ * @tc.number: FilterShortcutJson_0030
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson with invalid userId
  */
-HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0030, Function | MediumTest | Level1)
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0030, Function | MediumTest | Level1)
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
@@ -6155,16 +6159,16 @@ HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0030, Function | MediumTest 
     InnerBundleInfo innerBundleInfo;
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
-    EXPECT_EQ(backupJson.size(), 0);
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 1);
 }
 
 /**
- * @tc.number: CheckIfShortcutBundleExist_0040
- * @tc.name: test CheckIfShortcutBundleExist
- * @tc.desc: 1.test CheckIfShortcutBundleExist with invalid userId
+ * @tc.number: FilterShortcutJson_0040
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson with invalid userId
  */
-HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0040, Function | MediumTest | Level1)
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0040, Function | MediumTest | Level1)
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
@@ -6174,16 +6178,16 @@ HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0040, Function | MediumTest 
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.multiUserIdsSet_.insert(100);
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
-    EXPECT_EQ(backupJson.size(), 0);
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 1);
 }
 
 /**
- * @tc.number: CheckIfShortcutBundleExist_0050
- * @tc.name: test CheckIfShortcutBundleExist
- * @tc.desc: 1.test CheckIfShortcutBundleExist
+ * @tc.number: FilterShortcutJson_0050
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson
  */
-HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0050, Function | MediumTest | Level1)
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0050, Function | MediumTest | Level1)
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
@@ -6193,19 +6197,19 @@ HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0050, Function | MediumTest 
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.multiUserIdsSet_.insert(-5);
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
-    EXPECT_EQ(backupJson.size(), 1);
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 0);
     std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
     bool result = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(bundleName);
     EXPECT_TRUE(result);
 }
 
 /**
- * @tc.number: CheckIfShortcutBundleExist_0060
- * @tc.name: test CheckIfShortcutBundleExist
- * @tc.desc: 1.test CheckIfShortcutBundleExist with invalid appIndex
+ * @tc.number: FilterShortcutJson_0060
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson with invalid appIndex
  */
-HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0060, Function | MediumTest | Level1)
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0060, Function | MediumTest | Level1)
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
@@ -6222,46 +6226,46 @@ HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0060, Function | MediumTest 
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.multiUserIdsSet_.insert(100);
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
-    EXPECT_EQ(backupJson.size(), 0);
+    bundleDataMgr.FilterShortcutJson(backupJson);
+    EXPECT_EQ(backupJson.size(), 1);
 }
 
 /**
- * @tc.number: CheckIfShortcutBundleExist_0070
- * @tc.name: test CheckIfShortcutBundleExist
- * @tc.desc: 1.test CheckIfShortcutBundleExist with invalid json
+ * @tc.number: FilterShortcutJson_0070
+ * @tc.name: test FilterShortcutJson
+ * @tc.desc: 1.test FilterShortcutJson with invalid json
  */
-HWTEST_F(BmsDataMgrTest, CheckIfShortcutBundleExist_0130, Function | MediumTest | Level1)
+HWTEST_F(BmsDataMgrTest, FilterShortcutJson_0130, Function | MediumTest | Level1)
 {
     BundleDataMgr bundleDataMgr;
     nlohmann::json backupJson;
     backupJson.push_back({{"APP_INDEX", 0}, {"USER_ID", 100}});
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 
     backupJson.clear();
     backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"USER_ID", 100}});
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 
     backupJson.clear();
     backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}});
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 
     backupJson.clear();
     backupJson.push_back({{"BUNDLE_NAME", 1}, {"APP_INDEX", 0}, {"USER_ID", 100}});
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 
     backupJson.clear();
     backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", "appIndex"}, {"USER_ID", 100}});
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 
     backupJson.clear();
     backupJson.push_back({{"BUNDLE_NAME", "com.valid.bundle"}, {"APP_INDEX", 0}, {"USER_ID", "userId"}});
-    bundleDataMgr.CheckIfShortcutBundleExist(backupJson);
+    bundleDataMgr.FilterShortcutJson(backupJson);
     EXPECT_EQ(backupJson.size(), 0);
 }
 
