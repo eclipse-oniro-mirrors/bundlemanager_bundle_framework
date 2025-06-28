@@ -654,7 +654,10 @@ ohos_shared_library("bundle_tool_libs") {
     integer_overflow = true
     ubsan = true
   }
-  public_configs = [ ":bundle_tool_libs_config" ]
+  public_configs = [
+    ":bundle_tool_libs_config",
+    "${common_path}:appexecfwk_common_config",
+  ]
 
   sources = [ "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp" ]
 
