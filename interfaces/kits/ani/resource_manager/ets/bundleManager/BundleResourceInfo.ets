@@ -18,56 +18,9 @@
  * @kit AbilityKit
  */
 
-/**
- * Obtains resource information about a bundle
- *
- * @typedef BundleResourceInfo
- * @syscap SystemCapability.BundleManager.BundleFramework.Resource
- * @systemapi
- * @since 11
- */
 export interface BundleResourceInfo {
-  /**
-   * Indicates the bundleName of this bundle
-   *
-   * @type { string }
-   * @readonly
-   * @syscap SystemCapability.BundleManager.BundleFramework.Resource
-   * @systemapi
-   * @since 11
-   */
   readonly bundleName: string;
-
-  /**
-   * Indicates the icon of this bundle, which is base64 format
-   *
-   * @type { string }
-   * @readonly
-   * @syscap SystemCapability.BundleManager.BundleFramework.Resource
-   * @systemapi
-   * @since 11
-   */
   readonly icon: string;
-
-  /**
-   * Indicates the label of this bundle
-   *
-   * @type { string }
-   * @readonly
-   * @syscap SystemCapability.BundleManager.BundleFramework.Resource
-   * @systemapi
-   * @since 11
-   */
   readonly label: string;
-
-  /**
-   * Indicates the index of the bundle
-   *
-   * @type { number }
-   * @readonly
-   * @syscap SystemCapability.BundleManager.BundleFramework.Resource
-   * @systemapi
-   * @since 12
-   */
   readonly appIndex: number;
 }
