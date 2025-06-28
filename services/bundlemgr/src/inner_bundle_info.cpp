@@ -82,7 +82,7 @@ constexpr const char* INNER_BUNDLE_USER_INFOS = "innerBundleUserInfos";
 constexpr const char* MODULE_PROCESS = "process";
 constexpr const char* MODULE_SRC_ENTRANCE = "srcEntrance";
 constexpr const char* MODULE_DEVICE_TYPES = "deviceTypes";
-constexpr const char* MODULE_DEVICE_FEATURES = "deviceFeatures";
+constexpr const char* MODULE_REQUIRED_DEVICE_FEATURES = "requiredDeviceFeatures";
 constexpr const char* MODULE_VIRTUAL_MACHINE = "virtualMachine";
 constexpr const char* MODULE_UI_SYNTAX = "uiSyntax";
 constexpr const char* MODULE_PAGES = "pages";
@@ -413,7 +413,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_PROCESS, info.process},
         {MODULE_SRC_ENTRANCE, info.srcEntrance},
         {MODULE_DEVICE_TYPES, info.deviceTypes},
-        {MODULE_DEVICE_FEATURES, info.deviceFeatures},
+        {MODULE_REQUIRED_DEVICE_FEATURES, info.requiredDeviceFeatures},
         {MODULE_VIRTUAL_MACHINE, info.virtualMachine},
         {MODULE_UI_SYNTAX, info.uiSyntax},
         {MODULE_PAGES, info.pages},
@@ -741,14 +741,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+    GetValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
         jsonObjectEnd,
-        MODULE_DEVICE_FEATURES,
-        info.deviceFeatures,
-        JsonType::ARRAY,
+        MODULE_REQUIRED_DEVICE_FEATURES,
+        info.requiredDeviceFeatures,
+        JsonType::OBJECT,
         false,
         parseResult,
-        ArrayType::STRING);
+        ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_VIRTUAL_MACHINE,
@@ -1601,7 +1601,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.isModuleJson = it->second.isModuleJson;
     hapInfo.isStageBasedModel = it->second.isStageBasedModel;
     hapInfo.deviceTypes = it->second.deviceTypes;
-    hapInfo.deviceFeatures = it->second.deviceFeatures;
+    hapInfo.requiredDeviceFeatures = it->second.requiredDeviceFeatures;
     hapInfo.appStartup = it->second.appStartup;
     hapInfo.formExtensionModule = it->second.formExtensionModule;
     hapInfo.formWidgetModule = it->second.formWidgetModule;

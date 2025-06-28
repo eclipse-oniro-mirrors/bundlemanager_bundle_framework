@@ -40,7 +40,7 @@ const char* HAP_MODULE_INFO_HASH_VALUE = "hashValue";
 const char* HAP_MODULE_INFO_SUPPORTED_MODES = "supportedModes";
 const char* HAP_MODULE_INFO_REQ_CAPABILITIES = "reqCapabilities";
 const char* HAP_MODULE_INFO_DEVICE_TYPES = "deviceTypes";
-const char* HAP_MODULE_INFO_DEVICE_FEATURES = "deviceFeatures";
+const char* HAP_MODULE_INFO_REQUIRED_DEVICE_FEATURES = "requiredDeviceFeatures";
 const char* HAP_MODULE_INFO_ABILITY_INFOS = "abilityInfos";
 const char* HAP_MODULE_INFO_COLOR_MODE = "colorMode";
 const char* HAP_MODULE_INFO_MAIN_ELEMENTNAME = "mainElementName";
@@ -530,9 +530,16 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t deviceFeaturesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceFeaturesSize);
-    CONTAINER_SECURITY_VERIFY(parcel, deviceFeaturesSize, &deviceFeatures);
+    CONTAINER_SECURITY_VERIFY(parcel, deviceFeaturesSize, &requiredDeviceFeatures);
     for (auto i = 0; i < deviceFeaturesSize; i++) {
-        deviceFeatures.emplace_back(Str16ToStr8(parcel.ReadString16()));
+        std::string key = Str16ToStr8(parcel.ReadString16());
+        std::vector<std::string> value;
+        int32_t valueSize;
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, valueSize);
+        for (auto j = 0; j < valueSize; j++) {
+            value.emplace_back(Str16ToStr8(parcel.ReadString16()));
+        }
+        requiredDeviceFeatures[key] = value;
     }
 
     int32_t dependenciesSize;
@@ -730,9 +737,13 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceType));
     }
 
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceFeatures.size());
-    for (auto &deviceFeature : deviceFeatures) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceFeature));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, requiredDeviceFeatures.size());
+    for (auto &deviceFeature : requiredDeviceFeatures) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceFeature.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceFeature.second.size());
+        for (auto &item : deviceFeature.second) {
+            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item));
+        }
     }
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dependencies.size());
@@ -835,7 +846,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_SUPPORTED_MODES, hapModuleInfo.supportedModes},
         {HAP_MODULE_INFO_REQ_CAPABILITIES, hapModuleInfo.reqCapabilities},
         {HAP_MODULE_INFO_DEVICE_TYPES, hapModuleInfo.deviceTypes},
-        {HAP_MODULE_INFO_DEVICE_FEATURES, hapModuleInfo.deviceFeatures},
+        {HAP_MODULE_INFO_REQUIRED_DEVICE_FEATURES, hapModuleInfo.requiredDeviceFeatures},
         {HAP_MODULE_INFO_ABILITY_INFOS, hapModuleInfo.abilityInfos},
         {HAP_MODULE_INFO_COLOR_MODE, hapModuleInfo.colorMode},
         {Constants::BUNDLE_NAME, hapModuleInfo.bundleName},
@@ -1007,14 +1018,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+    GetValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
         jsonObjectEnd,
-        HAP_MODULE_INFO_DEVICE_FEATURES,
-        hapModuleInfo.deviceFeatures,
-        JsonType::ARRAY,
+        HAP_MODULE_INFO_REQUIRED_DEVICE_FEATURES,
+        hapModuleInfo.requiredDeviceFeatures,
+        JsonType::OBJECT,
         false,
         parseResult,
-        ArrayType::STRING);
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<AbilityInfo>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_ABILITY_INFOS,
