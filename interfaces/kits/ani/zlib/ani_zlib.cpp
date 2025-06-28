@@ -216,16 +216,16 @@ static void CompressFile(ani_env* env, ani_string aniInFile, ani_string aniOutFi
     RETURN_IF_NULL(aniOutFile);
     RETURN_IF_NULL(aniOptions);
 
-    std::string inFile = CommonFunAni::AniStrToString(env, aniInFile);
-    if (inFile.empty()) {
-        APP_LOGE("inFile is empty.");
+    std::string inFile;
+    if (!CommonFunAni::ParseString(env, aniInFile, inFile)) {
+        APP_LOGE("parse aniInFile failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, TYPE_STRING);
         return;
     }
 
-    std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
-    if (outFile.empty()) {
-        APP_LOGE("outFile is empty.");
+    std::string outFile;
+    if (!CommonFunAni::ParseString(env, aniOutFile, outFile)) {
+        APP_LOGE("parse aniOutFile failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, TYPE_STRING);
         return;
     }
@@ -260,9 +260,9 @@ static void CompressFiles(ani_env* env, ani_object aniInFiles, ani_string aniOut
         return;
     }
 
-    std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
-    if (outFile.empty()) {
-        APP_LOGE("outFile is empty.");
+    std::string outFile;
+    if (!CommonFunAni::ParseString(env, aniOutFile, outFile)) {
+        APP_LOGE("parse aniOutFile failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, TYPE_STRING);
         return;
     }
@@ -290,16 +290,16 @@ static void DecompressFile(ani_env* env, ani_string aniInFile, ani_string aniOut
     RETURN_IF_NULL(aniOutFile);
     RETURN_IF_NULL(aniOptions);
 
-    std::string inFile = CommonFunAni::AniStrToString(env, aniInFile);
-    if (inFile.empty()) {
-        APP_LOGE("inFile is empty.");
+    std::string inFile;
+    if (!CommonFunAni::ParseString(env, aniInFile, inFile)) {
+        APP_LOGE("parse aniInFile failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, TYPE_STRING);
         return;
     }
 
-    std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
-    if (outFile.empty()) {
-        APP_LOGE("outFile is empty.");
+    std::string outFile;
+    if (!CommonFunAni::ParseString(env, aniOutFile, outFile)) {
+        APP_LOGE("parse aniOutFile failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, TYPE_STRING);
         return;
     }
@@ -322,9 +322,9 @@ static void DecompressFile(ani_env* env, ani_string aniInFile, ani_string aniOut
 
 static ani_double GetOriginalSize(ani_env* env, ani_string aniCompressedFile)
 {
-    std::string compressedFile = CommonFunAni::AniStrToString(env, aniCompressedFile);
-    if (compressedFile.empty()) {
-        APP_LOGE("compressedFile is empty.");
+    std::string compressedFile;
+    if (!CommonFunAni::ParseString(env, aniCompressedFile, compressedFile)) {
+        APP_LOGE("parse aniCompressedFile failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, TYPE_STRING);
         return 0;
     }
