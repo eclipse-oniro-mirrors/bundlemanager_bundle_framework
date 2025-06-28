@@ -701,6 +701,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GREAT_OR_EQUAL_API_TARGET_VERSION):
             errCode = HandleGreatOrEqualTargetAPIVersion(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PLUGIN_INFO):
+            errCode = HandleGetPluginInfo(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -4872,6 +4875,27 @@ ErrCode BundleMgrHost::HandleGreatOrEqualTargetAPIVersion(MessageParcel &data, M
     if (!reply.WriteBool(ret)) {
         APP_LOGE("WriteBool failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetPluginInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string hostBundleName = data.ReadString();
+    std::string pluginBundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    PluginBundleInfo pluginBundleInfo;
+    auto ret = GetPluginInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteParcelable(&pluginBundleInfo)) {
+            APP_LOGE("write pluginBundleInfo failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

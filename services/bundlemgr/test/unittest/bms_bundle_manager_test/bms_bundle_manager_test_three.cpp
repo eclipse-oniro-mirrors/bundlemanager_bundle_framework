@@ -2026,4 +2026,20 @@ HWTEST_F(BmsBundleManagerTest3, SetAppDistributionTypes_0001, Function | MediumT
     retCode = hostImpl->SetAppDistributionTypes(appDistributionTypeEnums);
     EXPECT_EQ(retCode, ERR_OK);
 }
+
+/**
+ * @tc.number: GetPluginInfo_0001
+ * @tc.name: test GetPluginInfo
+ * @tc.desc: 1.test GetPluginInfo
+ */
+HWTEST_F(BmsBundleManagerTest3, GetPluginInfo_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string hostBundleName = "bundle";
+    std::string pluginBundleName = "plugin";
+    int32_t userId = 100;
+    PluginBundleInfo pluginBundleInfo;
+    ErrCode retCode = hostImpl->GetPluginInfo(hostBundleName, pluginBundleName, 100, pluginBundleInfo);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
 } // OHOS

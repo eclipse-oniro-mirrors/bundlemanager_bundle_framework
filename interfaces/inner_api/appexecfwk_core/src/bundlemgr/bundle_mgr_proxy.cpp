@@ -6374,5 +6374,30 @@ bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
     }
     return reply.ReadBool();
 }
+
+ErrCode BundleMgrProxy::GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+    const int32_t userId, PluginBundleInfo &pluginBundleInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(hostBundleName)) {
+        APP_LOGE("Write host bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(pluginBundleName)) {
+        APP_LOGE("Write plugin name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write user id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<PluginBundleInfo>(
+        BundleMgrInterfaceCode::GET_PLUGIN_INFO, data, pluginBundleInfo);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

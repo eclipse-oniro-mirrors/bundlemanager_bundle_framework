@@ -1827,6 +1827,12 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const int32_t userId, PluginBundleInfo &pluginBundleInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

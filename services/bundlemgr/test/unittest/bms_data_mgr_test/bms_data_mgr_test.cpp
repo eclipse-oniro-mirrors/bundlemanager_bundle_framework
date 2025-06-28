@@ -6392,4 +6392,45 @@ HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0002, Function | MediumTest |
     bundleDataMgr.GetAllDesktopShortcutInfo(USERID, shortcutInfos);
     EXPECT_EQ(shortcutInfos.size(), 0);
 }
+
+/**
+ * @tc.number: GetPluginInfo_0001
+ * @tc.name: GetPluginInfo
+ * @tc.desc: test BundleDataMgr::GetPluginInfo
+ */
+HWTEST_F(BmsDataMgrTest, GetPluginInfo_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hostBundleName = "test1";
+    std::string pluginBundleName = "test2";
+    int32_t userId = 10;
+    PluginBundleInfo pluginBundleInfo;
+    pluginBundleInfo.pluginBundleName = pluginBundleName;
+    auto ret = bundleDataMgr.GetPluginInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userId = Constants::ANY_USERID;
+    ret = bundleDataMgr.GetPluginInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    userId = 100;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = hostBundleName;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    userInfo.bundleName = hostBundleName;
+    info.AddInnerBundleUserInfo(userInfo);
+    bundleDataMgr.bundleInfos_.emplace(hostBundleName, info);
+    bundleDataMgr.AddUserId(userId);
+    ret = bundleDataMgr.GetPluginInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
+
+    ret = bundleDataMgr.AddPluginInfo(hostBundleName, pluginBundleInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    PluginBundleInfo newPluginInfo;
+    ret = bundleDataMgr.GetPluginInfo(hostBundleName, pluginBundleName, userId, newPluginInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(newPluginInfo.pluginBundleName, pluginBundleName);
+}
 } // OHOS
