@@ -422,6 +422,8 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
         tempDir += pathseparator + ABC_FILE_PATH;
     } else if (type == DirType::EXT_RESOURCE_FILE_DIR) {
         tempDir += pathseparator + ServiceConstants::EXT_RESOURCE_FILE_PATH;
+    } else if (type == DirType::EXT_PROFILE_DIR) {
+        tempDir += pathseparator + ServiceConstants::EXT_PROFILE;
     } else {
         return "";
     }

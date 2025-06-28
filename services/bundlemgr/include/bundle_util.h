@@ -34,6 +34,7 @@ enum class DirType : uint8_t {
     ABC_FILE_DIR = 3,
     PGO_FILE_DIR = 4,
     EXT_RESOURCE_FILE_DIR = 5,
+    EXT_PROFILE_DIR = 6,
     UNKNOWN
 };
 

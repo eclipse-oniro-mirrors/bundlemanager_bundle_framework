@@ -69,6 +69,11 @@ int BundleStreamInstallerHostImpl::CreatePgoFileStream(const std::string &module
     return -1;
 }
 
+int BundleStreamInstallerHostImpl::CreateExtProfileFileStream(const std::string &fileName)
+{
+    return -1;
+}
+
 bool BundleStreamInstallerHostImpl::Install()
 {
     return true;

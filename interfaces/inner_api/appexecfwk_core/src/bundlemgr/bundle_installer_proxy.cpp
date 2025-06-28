@@ -35,6 +35,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const char* SEPARATOR = "/";
+constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
 } // namespace
 
 BundleInstallerProxy::BundleInstallerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IBundleInstaller>(object)
@@ -484,6 +485,12 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
         LOG_W(BMS_TAG_INSTALLER, "CopyPgoFileToService failed due to %{public}d", res);
     }
 
+    // copy ext profile file to bms service
+    res = CopyExtProfileFileToService(streamInstaller, installParam);
+    if (res != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "CopyExtProfileFileToService failed due to %{public}d", res);
+    }
+
     // write shared bundles
     size_t size = installParam.sharedBundleDirPaths.size();
     for (uint32_t i = 0; i < size; ++i) {
@@ -726,6 +733,61 @@ ErrCode BundleInstallerProxy::CopyPgoFileToService(sptr<IBundleStreamInstaller> 
             LOG_W(BMS_TAG_INSTALLER, "WritePgoFileToStream failed due to %{public}d", res);
             continue;
         }
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerProxy::WriteExtProfileFileToStream(sptr<IBundleStreamInstaller> streamInstaller,
+    const std::string &path)
+{
+    if (streamInstaller == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to nullptr stream installer");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::string fileName;
+    ErrCode ret = ERR_OK;
+    ret = GetFileNameByFilePath(path, fileName);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid file path");
+        return ret;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "write file stream of hap path %{public}s", path.c_str());
+
+    int32_t outputFd = streamInstaller->CreateExtProfileFileStream(fileName);
+    if (outputFd < 0) {
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file descriptor");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
+    ret = WriteFile(path, outputFd);
+    close(outputFd);
+
+    return ret;
+}
+
+ErrCode BundleInstallerProxy::CopyExtProfileFileToService(sptr<IBundleStreamInstaller> streamInstaller,
+    const InstallParam &installParam)
+{
+    if (streamInstaller == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "copy file failed due to nullptr stream installer");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    auto iter = installParam.parameters.find(ENTERPRISE_MANIFEST);
+    if ((iter == installParam.parameters.end()) || (iter->second.empty())) {
+        return ERR_OK;
+    }
+    
+    std::string realPath;
+    if (!BundleFileUtil::CheckFilePath(iter->second, realPath)) {
+        LOG_W(BMS_TAG_INSTALLER, "CheckFilePath ext profile file path %{public}s failed", iter->second.c_str());
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    ErrCode res = WriteExtProfileFileToStream(streamInstaller, realPath);
+    if (res != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "WriteExtProfileFileToStream failed due to %{public}d", res);
+        return res;
     }
 
     return ERR_OK;
