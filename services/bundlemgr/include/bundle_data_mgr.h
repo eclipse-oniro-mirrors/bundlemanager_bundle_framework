@@ -1162,6 +1162,8 @@ public:
     ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos);
     bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
         const int32_t patchVersion);
+    ErrCode GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32_t userId, std::unordered_map<std::string,
+        std::vector<std::pair<int32_t, int32_t>>> &cloneInfos) const;
     void CheckIfShortcutBundleExist(nlohmann::json &jsonResult);
     ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
     void UpdateDesktopShortcutInfo(const std::string &bundleName);

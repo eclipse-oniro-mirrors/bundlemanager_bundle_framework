@@ -229,6 +229,7 @@ void BMSEventHandler::BeforeBmsStart()
 void BMSEventHandler::OnBmsStarting()
 {
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BMSEventHandler OnBmsStarting start");
+    ProcessCheckSystemOptimizeDir();
     // Judge whether there is install info in the persistent Db
     if (LoadInstallInfosFromDb()) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OnBmsStarting Load install info from db success");
@@ -1283,6 +1284,7 @@ void BMSEventHandler::ProcessRebootBundle()
     // Driver update may cause shader cache invalidity and need to be cleared
     CleanAllBundleShaderCache();
     CleanAllBundleEl1ShaderCacheLocal();
+    CleanSystemOptimizeShaderCache();
     CleanAllBundleEl1ArkStartupCacheLocal();
 }
 
@@ -1509,6 +1511,7 @@ void BMSEventHandler::ProcessCheckShaderCacheDir()
     LOG_I(BMS_TAG_DEFAULT, "Need to check shader cache dir");
     InnerProcessCheckShaderCacheDir();
     CheckAllBundleEl1ShaderCacheLocal();
+    CheckSystemOptimizeShaderCache();
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
 }
 
@@ -5056,6 +5059,86 @@ bool BMSEventHandler::CleanAllBundleEl1ArkStartupCacheLocal()
         }
     }
     return true;
+}
+
+ErrCode BMSEventHandler::CheckSystemOptimizeBundleShaderCache(const std::string &bundleName,
+    int32_t appIndex, int32_t userId, int32_t uid)
+{
+    std::string cloneBundleName = bundleName;
+    if (appIndex != 0) {
+        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName,
+            appIndex);
+    }
+    if (uid == Constants::INVALID_UID) {
+        LOG_W(BMS_TAG_DEFAULT, "invalid uid for: %{public}s", cloneBundleName.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH;
+    systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
+        1, std::to_string(userId));
+    systemOptimizeShaderCache = systemOptimizeShaderCache +
+        cloneBundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
+    return InstalldClient::GetInstance()->Mkdir(systemOptimizeShaderCache,
+        ServiceConstants::NEW_SHADRE_CACHE_MODE,
+        uid, ServiceConstants::NEW_SHADRE_CACHE_GID);
+}
+
+ErrCode BMSEventHandler::CheckSystemOptimizeShaderCache()
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::unordered_map<std::string, std::vector<std::pair<int32_t, int32_t>>> cloneInfos;
+        dataMgr->GetAllCloneAppIndexesAndUidsByInnerBundleInfo(userId, cloneInfos);
+        for (const auto& [bundleName, pairs] : cloneInfos) {
+            for (const auto& [appIndex, uid] : pairs) {
+                CheckSystemOptimizeBundleShaderCache(bundleName, appIndex, userId, uid);
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BMSEventHandler::CleanSystemOptimizeBundleShaderCache(const std::string &bundleName,
+    int32_t appIndex, int32_t userId)
+{
+    std::string cloneBundleName = bundleName;
+    if (appIndex != 0) {
+        cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName,
+            appIndex);
+    }
+    std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH;
+    systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
+        1, std::to_string(userId));
+    systemOptimizeShaderCache = systemOptimizeShaderCache +
+        cloneBundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
+    return InstalldClient::GetInstance()->CleanBundleDataDir(systemOptimizeShaderCache);
+}
+
+ErrCode BMSEventHandler::CleanSystemOptimizeShaderCache()
+{
+    LOG_I(BMS_TAG_DEFAULT, "start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::unordered_map<std::string, std::vector<std::pair<int32_t, int32_t>>> cloneInfos;
+        dataMgr->GetAllCloneAppIndexesAndUidsByInnerBundleInfo(userId, cloneInfos);
+        for (const auto& [bundleName, pairs] : cloneInfos) {
+            for (const auto& [appIndex, uid] : pairs) {
+                CleanSystemOptimizeBundleShaderCache(bundleName, appIndex, userId);
+            }
+        }
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -698,6 +698,14 @@ private:
     bool SaveUpdatePermissionsFlag();
     bool CleanAllBundleEl1ArkStartupCacheLocal();
     bool ProcessCheckSystemOptimizeDir();
+
+    ErrCode CheckSystemOptimizeBundleShaderCache(const std::string &bundleName,
+        int32_t appIndex, int32_t userId, int32_t uid);
+    ErrCode CheckSystemOptimizeShaderCache();
+    ErrCode CleanSystemOptimizeBundleShaderCache(const std::string &bundleName,
+        int32_t appIndex, int32_t userId);
+    ErrCode CleanSystemOptimizeShaderCache();
+
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
     // Used to notify bundle scan status

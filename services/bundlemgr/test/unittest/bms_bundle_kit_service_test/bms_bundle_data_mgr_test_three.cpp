@@ -3495,4 +3495,48 @@ HWTEST_F(BmsBundleDataMgrTest3, FetchPluginBundleInfo_0001, Function | MediumTes
         pluginBundleInfo);
     EXPECT_EQ(result, false);
 }
+
+/**
+ * @tc.number: GetAllCloneAppIndexesAndUidsByInnerBundleInfo_0001
+ * @tc.name: GetAllCloneAppIndexesAndUidsByInnerBundleInfo
+ * @tc.desc: test GetAllCloneAppIndexesAndUidsByInnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetAllCloneAppIndexesAndUidsByInnerBundleInfo_0001, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    std::unordered_map<std::string, std::vector<std::pair<int32_t, int32_t>>> cloneInfos;
+    int32_t userId = 100;
+    // test bundleInfos_ empty
+    bundleDataMgr->bundleInfos_.clear();
+    ErrCode ret = bundleDataMgr->GetAllCloneAppIndexesAndUidsByInnerBundleInfo(userId, cloneInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    // test bundleName empty
+    InnerBundleInfo innerBundleInfo;
+    std::string testBundleName = "";
+    bundleDataMgr->bundleInfos_[testBundleName] = innerBundleInfo;
+    ret = bundleDataMgr->GetAllCloneAppIndexesAndUidsByInnerBundleInfo(userId, cloneInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    // test add clone
+    testBundleName = "test.GetAllCloneAppIndexesAndUidsByInnerBundleInfo";
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo2.baseApplicationInfo_->bundleName = testBundleName;
+    BundleInfo bundleInfo;
+    bundleInfo.name = testBundleName;
+    bundleInfo.applicationInfo.bundleName = testBundleName;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.bundleName = testBundleName;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.userId = 100;
+    cloneInfo.uid = 1001;
+    cloneInfo.appIndex = 1;
+    cloneInfo.accessTokenId = 20000;
+    innerBundleInfo.AddCloneBundle(cloneInfo);
+
+    ret = bundleDataMgr->GetAllCloneAppIndexesAndUidsByInnerBundleInfo(userId, cloneInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
