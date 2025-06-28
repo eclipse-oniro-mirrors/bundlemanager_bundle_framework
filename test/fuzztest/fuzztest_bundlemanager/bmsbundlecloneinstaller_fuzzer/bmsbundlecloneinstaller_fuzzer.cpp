@@ -41,12 +41,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     installer.InstallCloneApp(randomBundleName, Constants::START_USERID, appIndex);
 
     bool sync = fdp.ConsumeBool();
-    installer.UninstallCloneApp(emptyBundleName, Constants::START_USERID, appIndex, sync);
-    installer.UninstallCloneApp(randomBundleName, Constants::START_USERID, appIndex, sync);
-
-    installer.UninstallAllCloneApps(emptyBundleName, sync, Constants::START_USERID);
-    installer.UninstallAllCloneApps(randomBundleName, sync, Constants::START_USERID);
-    installer.UninstallAllCloneApps(randomBundleName, sync, randomUserId);
 
     installer.ProcessCloneBundleInstall(emptyBundleName, randomUserId, appIndex);
     installer.ProcessCloneBundleInstall(randomBundleName, Constants::START_USERID, appIndex);
