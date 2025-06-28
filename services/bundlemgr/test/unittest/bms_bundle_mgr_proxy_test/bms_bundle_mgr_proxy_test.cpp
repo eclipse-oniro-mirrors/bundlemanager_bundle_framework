@@ -1350,14 +1350,15 @@ HWTEST_F(BmsBundleMgrProxyTest, ProcessCacheCallbackHost_0100, Function | Medium
     sptr<ProcessCacheCallbackHost> getCache = new (std::nothrow) ProcessCacheCallbackHost();
     EXPECT_NE(getCache, nullptr);
 
-    // test no finish, wait timeout
-    uint64_t cacheSize = getCache->GetCacheStat();
-    EXPECT_EQ(cacheSize, 0);
-
     // test finish
-    getCache->OnGetAllBundleCacheFinished(1);
+    getCache->OnGetAllBundleCacheFinished(2);
+    uint64_t cacheSize = getCache->GetCacheStat();
+    EXPECT_EQ(cacheSize, 2);
+
+    // test no finish, wait timeout
+    getCache->setAllComplete(false);
     cacheSize = getCache->GetCacheStat();
-    EXPECT_EQ(cacheSize, 1);
+    EXPECT_EQ(cacheSize, 2);
 }
 }
 }
