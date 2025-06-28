@@ -28,9 +28,9 @@ public:
     VerifyManagerHostImpl();
     virtual ~VerifyManagerHostImpl();
 
-    int32_t CallbackEnter(uint32_t code) override;
+    int32_t CallbackEnter([[maybe_unused]] uint32_t code) override;
 
-    int32_t CallbackExit(uint32_t code, int32_t result) override;
+    int32_t CallbackExit([[maybe_unused]] uint32_t code, [[maybe_unused]] int32_t result) override;
 
     ErrCode Verify(const std::vector<std::string> &abcPaths, int32_t &funcResult) override;
 

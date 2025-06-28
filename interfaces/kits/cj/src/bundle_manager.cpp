@@ -45,7 +45,7 @@ AppExecFwk::BundleInfo BundleManagerImpl::GetBundleInfoForSelf(int32_t bundleFla
  
 int32_t BundleManagerImpl::VerifyAbc(std::vector<std::string> abcPaths, bool flag)
 {
-    ErrCode ret = AppExecFwk::VerifyManagerClient::GetInstance().Verify(abcPaths);   
+    ErrCode ret = AppExecFwk::VerifyManagerClient::GetInstance().Verify(abcPaths);
     if (ret == ERR_OK && flag) {
         AppExecFwk::VerifyManagerClient::GetInstance().RemoveFiles(abcPaths);
     }

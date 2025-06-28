@@ -142,13 +142,13 @@ VerifyManagerHostImpl::~VerifyManagerHostImpl()
     APP_LOGI("destroy VerifyManagerHostImpl");
 }
 
-int32_t VerifyManagerHostImpl::CallbackEnter(maybe unused)
+int32_t VerifyManagerHostImpl::CallbackEnter([[maybe_unused]] uint32_t code)
 {
     BundleMemoryGuard::SetBundleMemoryGuard();
     return ERR_NONE;
 }
 
-int32_t VerifyManagerHostImpl::CallbackExit(maybe unused, int32_t result)
+int32_t VerifyManagerHostImpl::CallbackExit([[maybe_unused]] uint32_t code, [[maybe_unused]] int32_t result)
 {
     BundleMemoryGuard::ClearBundleMemoryGuard();
     return ERR_NONE;

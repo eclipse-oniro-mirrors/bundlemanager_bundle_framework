@@ -80,7 +80,7 @@ ErrCode VerifyManagerClient::RemoveFiles(const std::vector<std::string> &abcPath
 
 ErrCode VerifyManagerClient::DeleteAbc(const std::string& path)
 {
-    APP_LOGI("begin to call DeleteAbc");    
+    APP_LOGI("begin to call DeleteAbc");
     if (path.empty()) {
         APP_LOGE("DeleteAbc failed due to params error");
         return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
