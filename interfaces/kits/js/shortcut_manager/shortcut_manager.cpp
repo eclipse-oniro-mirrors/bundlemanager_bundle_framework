@@ -30,7 +30,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
+constexpr const char* INVALID_SHORTCUT_INFO_ERROR =
+    "invalid ShortcutInfo: parameter type error, or appIndex is less than 0";
 constexpr const char* SET_SHORTCUT_VISIBLE = "SetShortcutVisibleForSelf";
 constexpr const char* GET_ALL_SHORTCUT_INFO_FOR_SELF = "GetAllShortcutInfoForSelf";
 }
@@ -94,7 +95,7 @@ napi_value AddDesktopShortcutInfo(napi_env env, napi_callback_info info)
         if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo) ||
             !CommonFunc::CheckShortcutInfo(asyncCallbackInfo->shortcutInfo)) {
             APP_LOGE("ParseShortCutInfo is error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
             return nullptr;
         }
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], asyncCallbackInfo->userId)) {
@@ -176,7 +177,7 @@ napi_value DeleteDesktopShortcutInfo(napi_env env, napi_callback_info info)
         if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo) ||
             !CommonFunc::CheckShortcutInfo(asyncCallbackInfo->shortcutInfo)) {
             APP_LOGE("ParseShortCutInfo is error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
             return nullptr;
         }
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], asyncCallbackInfo->userId)) {
