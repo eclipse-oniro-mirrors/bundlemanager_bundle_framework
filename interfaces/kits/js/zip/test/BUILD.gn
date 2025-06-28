@@ -46,7 +46,7 @@ ohos_unittest("zip_test") {
 
   deps = [
     "${base_path}:appexecfwk_base",
-    "${bundle_framework_path}/interfaces/kits/js/zip/test/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/resourceManagerTest:resourceManagerTest",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",

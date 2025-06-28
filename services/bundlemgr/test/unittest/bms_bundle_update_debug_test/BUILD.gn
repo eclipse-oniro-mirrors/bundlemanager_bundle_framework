@@ -22,7 +22,7 @@ config("private_config") {
   ]
 }
 
-module_output_path = "bundle_framework/bundlemgrservice"
+module_output_path = "bundle_framework/bundle_framework"
 
 ohos_unittest("BmsBundleUpdateDebugTest") {
   sanitize = {
@@ -70,7 +70,7 @@ ohos_unittest("BmsBundleUpdateDebugTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${bundle_framework_path}/test/sceneProject/unittest/bundle_permission_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_update_debug:bundle_update_debug",
     "${core_path}:appexecfwk_core",
   ]

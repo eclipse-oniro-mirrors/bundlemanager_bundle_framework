@@ -705,7 +705,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
     Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities)
 {
-    LOG_I(BMS_TAG_DEFAULT, "start, init hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    LOG_I(BMS_TAG_DEFAULT, "init hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, dlpType);
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo, appServiceCapabilities);
 #ifdef X86_EMULATOR_MODE
