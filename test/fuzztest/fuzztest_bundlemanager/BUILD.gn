@@ -29,6 +29,7 @@ group("bundlemanagerfuzztest") {
     "bmsagingutil_fuzzer:BMSAgingUtilFuzzTest",
     "bmsappcontrolhost_fuzzer:BMSAppControlHostFuzzTest",
     "bmsapplicationinfo_fuzzer:BMSApplicationInfoFuzzTest",
+    "bmsappservicefwkinstaller_fuzzer:BMSAppServiceFwkInstallerFuzzTest",
     "bmsappservicefwkinstalleraddappprovisioninfo_fuzzer:BMSAppServiceFwkInstallerAddAppProvisionInfoFuzzTest",
     "bmsappservicefwkinstallerbeforeinstall_fuzzer:BMSAppServiceFwkInstallerBeforeInstallFuzzTest",
     "bmsappservicefwkinstallercheckandparsefiles_fuzzer:BMSAppServiceFwkInstallerCheckAndParseFilesFuzzTest",
@@ -96,6 +97,8 @@ group("bundlemanagerfuzztest") {
     "bmsinstallparam_fuzzer:BMSInstallParamFuzzTest",
     "bmsinstallpluginparam_fuzzer:BMSInstallPluginParamFuzzTest",
     "bmsisexistfirstinstallbundleinfo_fuzzer:BMSIsExistFirstInstallBundleInfoFuzzTest",
+    "bmsnavigation_fuzzer:BMSNavigationFuzzTest",
+    "bmsplugininstaller_fuzzer:BMSPluginInstallerFuzzTest",
     "bmsonqueryrpcidfinished_fuzzer:BMSOnQueryRpcIdFinishedFuzzTest",
     "bmsqueryabilityinfobyuri_fuzzer:BMSQueryAbilityInfoByUriFuzzTest",
     "bmsqueryabilityinfos_fuzzer:BMSQueryAbilityInfosFuzzTest",
@@ -105,6 +108,7 @@ group("bundlemanagerfuzztest") {
     "bmsqueryrpcidbyabilitytoservicecenter_fuzzer:BMSQueryRpcIdByAbilityToServiceCenterFuzzTest",
     "bmsremoteabilityinfo_fuzzer:BMSRemoteAbilityInfoFuzzTest",
     "bmssendcallback_fuzzer:BMSSendCallbackFuzzTest",
+    "bmsuninstalldatamgr_fuzzer:BMSUninstallDataMgrFuzzTest",
     "bmsverifymanagerhost_fuzzer:BMSVerifyManagerHostFuzzTest",
   ]
 
