@@ -32,16 +32,16 @@ using namespace arkts::ani_signature;
 
 static void CompressFile(ani_env* env, ani_string aniInFile, ani_string aniOutFile, ani_object aniOptions)
 {
-    std::string inFile = CommonFunAni::AniStrToString(env, aniInFile);
-    if (inFile.empty()) {
-        APP_LOGE("inFile is empty.");
+    std::string inFile;
+    if (!CommonFunAni::ParseString(env, aniInFile, inFile)) {
+        APP_LOGE("parse aniInFile failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, TYPE_STRING);
         return;
     }
 
-    std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
-    if (outFile.empty()) {
-        APP_LOGE("outFile is empty.");
+    std::string outFile;
+    if (!CommonFunAni::ParseString(env, aniOutFile, outFile)) {
+        APP_LOGE("parse aniOutFile failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, TYPE_STRING);
         return;
     }
@@ -62,16 +62,16 @@ static void CompressFile(ani_env* env, ani_string aniInFile, ani_string aniOutFi
 
 static void DecompressFile(ani_env* env, ani_string aniInFile, ani_string aniOutFile, ani_object aniOptions)
 {
-    std::string inFile = CommonFunAni::AniStrToString(env, aniInFile);
-    if (inFile.empty()) {
-        APP_LOGE("inFile is empty.");
+    std::string inFile;
+    if (!CommonFunAni::ParseString(env, aniInFile, inFile)) {
+        APP_LOGE("parse aniInFile failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILE, TYPE_STRING);
         return;
     }
 
-    std::string outFile = CommonFunAni::AniStrToString(env, aniOutFile);
-    if (outFile.empty()) {
-        APP_LOGE("outFile is empty.");
+    std::string outFile;
+    if (!CommonFunAni::ParseString(env, aniOutFile, outFile)) {
+        APP_LOGE("parse aniOutFile failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OUT_FILE, TYPE_STRING);
         return;
     }
