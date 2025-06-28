@@ -23,8 +23,3 @@ group("bundle_permission_test") {
     "feature_hap:feature_hap",
   ]
 }
-
-ohos_copy("copy_ohos_test") {
-  sources = [ "./ohos_test.xml" ]
-  outputs = [ "$root_out_dir/tests/unittest/bundle_framework/bundlemgrservice/resource/ohos_test.xml" ]
-}
