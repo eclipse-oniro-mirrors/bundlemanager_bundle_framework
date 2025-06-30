@@ -434,7 +434,6 @@ ErrCode BundleParser::ParseArkStartupCacheConfig(
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
-
     PreBundleProfile preBundleProfile;
     return preBundleProfile.TransToArkStartupCacheList(jsonBuf, bundleNames);
 }
