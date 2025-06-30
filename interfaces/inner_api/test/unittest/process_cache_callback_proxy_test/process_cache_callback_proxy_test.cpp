@@ -77,5 +77,17 @@ HWTEST_F(ProcessCacheCallbackProxyTest, Process_Cache_Callback_Proxy_Test_0200, 
     int32_t result = 0;
     EXPECT_NO_THROW(processCacheCallbackProxy.OnCleanAllBundleCacheFinished(result));
 }
+
+/**
+ * @tc.number: Process_Cache_Callback_Proxy_Test_0300
+ * @tc.name: test the GetCacheStat
+ * @tc.desc: 1. GetCacheStat
+ */
+HWTEST_F(ProcessCacheCallbackProxyTest, Process_Cache_Callback_Proxy_Test_0300, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> object = nullptr;
+    ProcessCacheCallbackProxy processCacheCallbackProxy(object);
+    EXPECT_NO_THROW(processCacheCallbackProxy.GetCacheStat());
+}
 } // AppExecFwk
 } // OHOS
