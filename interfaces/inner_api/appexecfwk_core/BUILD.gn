@@ -11,8 +11,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//build/config/components/idl_tool/idl.gni")
 import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
+
+idl_gen_interface("bundle_mgr_ext_interface") {
+  sources = [ "IBundleMgrExt.idl" ]
+  # log_domainid = "0xD0011FC"
+  # log_tag = "BMSExt"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  hitrace = "HITRACE_TAG_APP"
+}
+
+config("bundlemgr_ipc_public_config") {
+  include_dirs = [ "${target_gen_dir}" ]
+}
 
 config("bundlemgr_sdk_config") {
   include_dirs = [
@@ -26,6 +40,7 @@ config("bundlemgr_sdk_config") {
     "include/quick_fix",
     "include/verify",
     "include/bundlemgr_ext",
+    "${target_gen_dir}",
   ]
 }
 
@@ -70,8 +85,7 @@ ohos_shared_library("appexecfwk_core") {
     "src/bundlemgr/process_cache_callback_host.cpp",
     "src/bundlemgr/process_cache_callback_proxy.cpp",
     "src/bundlemgr/status_receiver_host.cpp",
-    "src/bundlemgr_ext/bundle_mgr_ext_host.cpp",
-    "src/bundlemgr_ext/bundle_mgr_ext_proxy.cpp",
+    "src/bundlemgr_ext/bundle_mgr_ext_client.cpp",
     "src/extend_resource/extend_resource_manager_host.cpp",
     "src/extend_resource/extend_resource_manager_proxy.cpp",
     "src/verify/verify_manager_host.cpp",
@@ -106,6 +120,8 @@ ohos_shared_library("appexecfwk_core") {
   deps = [
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    ":bundle_mgr_ext_proxy",
+    ":bundle_mgr_ext_stub",
   ]
 
   external_deps = [
@@ -226,6 +242,7 @@ ohos_shared_library("bundlemgr_mini") {
   deps = [
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    ":bundle_mgr_ext_interface",
   ]
 
   external_deps = [
@@ -248,5 +265,78 @@ ohos_shared_library("bundlemgr_mini") {
     "platformsdk",
     "sasdk",
   ]
+  part_name = "bundle_framework"
+}
+
+ohos_source_set("bundle_mgr_ext_proxy") {
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+  configs = [ ":bundlemgr_ipc_public_config" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  output_values = get_target_outputs(":bundle_mgr_ext_interface")
+  sources = filter_include(output_values, [ "*bundle_mgr_ext_proxy.cpp" ])
+  deps = [ ":bundle_mgr_ext_interface" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_single",
+  ]
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
+
+ohos_source_set("bundle_mgr_ext_stub") {
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+  configs = [ ":bundlemgr_ipc_public_config" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  output_values = get_target_outputs(":bundle_mgr_ext_interface")
+  sources = filter_include(output_values, [ "*bundle_mgr_ext_stub.cpp" ])
+  deps = [ ":bundle_mgr_ext_interface" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_single",
+  ]
+  subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
