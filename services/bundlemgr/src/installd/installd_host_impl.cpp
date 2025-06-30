@@ -592,6 +592,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                 createDirParam.bundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
             InstalldOperator::MkOwnerDir(systemOptimizeShaderCachePath, ServiceConstants::NEW_SHADRE_CACHE_MODE,
                 createDirParam.uid, ServiceConstants::NEW_SHADRE_CACHE_GID);
+            SetArkStartupCacheApl(systemOptimizeShaderCachePath);
         }
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             for (const auto &dir : BUNDLE_DATA_DIR) {
