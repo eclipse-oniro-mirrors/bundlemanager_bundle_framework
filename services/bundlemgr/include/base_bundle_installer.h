@@ -761,6 +761,7 @@ private:
 #endif
     void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
+    void ParseSizeFromProvision(int32_t &sizeMb) const;
     void VerifyDomain();
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
     bool IsRdDevice() const;

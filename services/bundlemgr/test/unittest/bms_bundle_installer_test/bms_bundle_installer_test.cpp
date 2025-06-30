@@ -9985,6 +9985,47 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9600, Function | MediumTest
 }
 
 /**
+* @tc.number: ParseSizeFromProvision_0010
+* @tc.name: test arseSizeFromProvision
+* @tc.desc: 1.Test arseSizeFromProvision
+*/
+HWTEST_F(BmsBundleInstallerTest, ParseSizeFromProvision_0010, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    int32_t sizeMb = 200;
+    Security::Verify::ProvisionInfo provisionInfo;
+
+    provisionInfo.appServiceCapabilities = "";
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.ParseSizeFromProvision(sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.TEST\":{\"storageSize\": 1024}}";
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.ParseSizeFromProvision(sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.atomicService.MANAGE_STORAGE\":{\"test\": 1024}}";
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.ParseSizeFromProvision(sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.atomicService.MANAGE_STORAGE\":{\"storageSize\": 100}}";
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.ParseSizeFromProvision(sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.atomicService.MANAGE_STORAGE\":{\"storageSize\": 1024}}";
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.ParseSizeFromProvision(sizeMb);
+    EXPECT_EQ(sizeMb, 1024);
+}
+
+/**
 * @tc.number: ProcessDynamicIconFileWhenUpdate_0010
 * @tc.name: test ProcessDynamicIconFileWhenUpdate
 * @tc.desc: 1.Test ProcessDynamicIconFileWhenUpdate

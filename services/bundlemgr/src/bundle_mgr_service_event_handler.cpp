@@ -119,6 +119,7 @@ constexpr const char* BUNDLE_SCAN_START = "0";
 constexpr const char* BUNDLE_SCAN_FINISH = "1";
 constexpr const char* CODE_PROTECT_FLAG = "codeProtectFlag";
 constexpr const char* CODE_PROTECT_FLAG_CHECKED = "checked";
+constexpr const char* KEY_STORAGE_SIZE = "storageSize";
 constexpr int64_t TEN_MB = 1024 * 1024 * 10; //10MB
 
 std::set<PreScanInfo> installList_;
@@ -1933,7 +1934,40 @@ void BMSEventHandler::PrepareBundleDirQuota(const std::string &bundleName, const
     }
 #endif // QUOTA_PARAM_SET_ENABLE
 #endif // STORAGE_SERVICE_ENABLE
+    ParseSizeFromProvision(bundleName, atomicserviceDatasizeThreshold);
     SendToStorageQuota(bundleName, uid, bundleDataDirPath, atomicserviceDatasizeThreshold);
+}
+
+void BMSEventHandler::ParseSizeFromProvision(const std::string &bundleName, int32_t &sizeMb) const
+{
+    AppProvisionInfo provisionInfo;
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName, provisionInfo)) {
+        LOG_W(BMS_TAG_DEFAULT, "GetAppProvisionInfo failed");
+        return;
+    }
+    if (provisionInfo.appServiceCapabilities.empty()) {
+        return;
+    }
+    auto appServiceCapabilityMap = BundleUtil::ParseMapFromJson(provisionInfo.appServiceCapabilities);
+    for (auto &item : appServiceCapabilityMap) {
+        if (item.first != ServiceConstants::PERMISSION_MANAGE_STORAGE) {
+            continue;
+        }
+        std::unordered_map<std::string, std::string> storageMap = BundleUtil::ParseMapFromJson(item.second);
+        auto it = storageMap.find(KEY_STORAGE_SIZE);
+        if (it == storageMap.end()) {
+            LOG_W(BMS_TAG_INSTALLER, "storageSize not found");
+            return;
+        }
+        int32_t tempSize = atoi(it->second.c_str());
+        if (tempSize >= sizeMb) {
+            sizeMb = tempSize;
+            LOG_I(BMS_TAG_INSTALLER, "set %{public}s quota to %{public}d", bundleName.c_str(), sizeMb);
+        } else {
+            LOG_W(BMS_TAG_INSTALLER, "%{public}s storageSize %{public}d is not valid", bundleName.c_str(), tempSize);
+        }
+        return;
+    }
 }
 
 void BMSEventHandler::RefreshQuotaForAllUid()
