@@ -147,7 +147,7 @@ OH_NativeBundle_ApplicationInfo OH_NativeBundle_GetCurrentApplicationInfo()
         ReleaseStrings(nativeApplicationInfo.bundleName, nativeApplicationInfo.fingerprint);
         return nativeApplicationInfo;
     }
-    APP_LOGI("OH_NativeBundle_GetCurrentApplicationInfo success");
+    APP_LOGD("OH_NativeBundle_GetCurrentApplicationInfo success");
     return nativeApplicationInfo;
 }
 
@@ -178,7 +178,7 @@ char* OH_NativeBundle_GetAppId()
         free(appId);
         return nullptr;
     }
-    APP_LOGI("OH_NativeBundle_GetAppId success");
+    APP_LOGD("OH_NativeBundle_GetAppId success");
     return appId;
 }
 
@@ -210,7 +210,7 @@ char* OH_NativeBundle_GetAppIdentifier()
         free(appIdentifier);
         return nullptr;
     }
-    APP_LOGI("Native_Identifier success");
+    APP_LOGD("Native_Identifier success");
     return appIdentifier;
 }
 
@@ -276,7 +276,7 @@ char* OH_NativeBundle_GetCompatibleDeviceType()
         free(deviceTypeC);
         return nullptr;
     }
-    APP_LOGI("OH_NativeBundle_GetCompatibleDeviceType success");
+    APP_LOGD("OH_NativeBundle_GetCompatibleDeviceType success");
     return deviceTypeC;
 }
 
@@ -298,7 +298,7 @@ bool OH_NativeBundle_IsDebugMode(bool* isDebugMode)
     }
 
     *isDebugMode = bundleInfo.applicationInfo.debug;
-    APP_LOGI("OH_NativeBundle_IsDebugMode success");
+    APP_LOGD("OH_NativeBundle_IsDebugMode success");
     return true;
 }
 
@@ -538,6 +538,6 @@ OH_NativeBundle_ModuleMetadata* OH_NativeBundle_GetModuleMetadata(size_t* size)
         return nullptr;
     }
     *size = bundleInfo.applicationInfo.metadata.size();
-    APP_LOGI("OH_NativeBundle_GetModuleMetadata success");
+    APP_LOGD("OH_NativeBundle_GetModuleMetadata success");
     return moduleMetadata;
 }

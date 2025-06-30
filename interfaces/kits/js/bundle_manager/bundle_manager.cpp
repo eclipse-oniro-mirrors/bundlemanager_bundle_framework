@@ -5636,7 +5636,7 @@ napi_value GetAppCloneBundleInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     if (!CommonFunc::ParseInt(env, args[ARGS_POS_THREE], asyncCallbackInfo->userId)) {
-        APP_LOGI("Parse userId failed, use default value");
+        APP_LOGD("Parse userId failed, use default value");
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<CloneAppBundleInfoCallbackInfo>(
         env, asyncCallbackInfo.get(), GET_APP_CLONE_BUNDLE_INFO,
@@ -5764,7 +5764,7 @@ napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], asyncCallbackInfo->userId)) {
-        APP_LOGI("Parse userId failed, use default value");
+        APP_LOGD("Parse userId failed, use default value");
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<CloneAppBundleInfosCallbackInfo>(
         env, asyncCallbackInfo.get(), GET_ALL_APP_CLONE_BUNDLE_INFO,
