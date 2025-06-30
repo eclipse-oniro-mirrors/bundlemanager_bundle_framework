@@ -366,13 +366,6 @@ enum class BundleResourceInterfaceCode : uint8_t {
     GET_EXTENSION_ABILITY_RESOURCE_INFO = 7,
 };
 
-/* SAID: 401-126 Interface No.126 subservice also provides the following interfaces */
-enum class VerifyManagerInterfaceCode : uint8_t {
-    VERIFY = 0,
-    CREATE_FD = 1,
-    DELETE_ABC = 2,
-};
-
 /* SAID: 401-127 Interface No.127 subservice also provides the following interfaces */
 enum class ExtendResourceManagerInterfaceCode : uint8_t {
     ADD_EXT_RESOURCE = 0,

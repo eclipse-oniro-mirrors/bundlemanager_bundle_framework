@@ -55,8 +55,6 @@ static sptr<IBundleMgr> GetBundleMgr();
 
 static sptr<IBundleInstaller> GetBundleInstaller();
 
-static sptr<IVerifyManager> GetVerifyManager();
-
 static sptr<IExtendResourceManager> GetExtendResourceManager();
 
 static bool CheckBundleFlagWithPermission(int32_t flag);

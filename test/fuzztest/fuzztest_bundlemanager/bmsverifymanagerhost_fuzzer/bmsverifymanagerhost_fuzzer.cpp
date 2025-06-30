@@ -19,28 +19,51 @@
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
 
-#include "verify_manager_host.h"
-#include "securec.h"
 #include "bms_fuzztest_util.h"
+#include "securec.h"
+#include "verify_manager_stub.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
 constexpr size_t MESSAGE_SIZE = 3;
 
+class MockVerifyManagerStub : public VerifyManagerStub {
+public:
+    int32_t CallbackEnter(uint32_t code) override
+    {
+        return 0;
+    }
+    
+    int32_t CallbackExit(uint32_t code, int32_t result) override
+    {
+        return 0;
+    }
+    
+    ErrCode Verify(const std::vector<std::string>& abcPaths, int32_t& funcResult) override
+    {
+        return ERR_OK;
+    }
+        
+    ErrCode DeleteAbc(const std::string& path, int32_t& funcResult) override
+    {
+        return ERR_OK;
+    }
+};
+
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
     uint32_t code = fdp.ConsumeIntegralInRange<uint32_t>(0, MESSAGE_SIZE);
     MessageParcel datas;
-    std::u16string descriptor = VerifyManagerHost::GetDescriptor();
+    std::u16string descriptor = MockVerifyManagerStub::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
     datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    VerifyManagerHost verifyManagerHost;
-    verifyManagerHost.OnRemoteRequest(code, datas, reply, option);
+    MockVerifyManagerStub verifyManagerStub;
+    verifyManagerStub.OnRemoteRequest(code, datas, reply, option);
     return true;
 }
 }

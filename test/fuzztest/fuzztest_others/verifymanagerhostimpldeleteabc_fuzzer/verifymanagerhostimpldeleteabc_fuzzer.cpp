@@ -18,6 +18,7 @@
 
 #include "verify_manager_host_impl.h"
 
+#include "appexecfwk_errors.h"
 #include "verifymanagerhostimpldeleteabc_fuzzer.h"
 #include "securec.h"
 
@@ -29,7 +30,8 @@ namespace OHOS {
     {
         VerifyManagerHostImpl impl;
         std::string path = data;
-        auto ret1 = impl.DeleteAbc(path);
+        int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+        auto ret1 = impl.DeleteAbc(path, funcResult);
         return true;
     }
 }

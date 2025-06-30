@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,14 +19,16 @@
 
 #include "ability_info.h"
 #include "app_log_wrapper.h"
+#include "ability_info.h"
 #include "bundle_error.h"
 #include "bundle_info.h"
-#include "bundle_manager_sync.h"
 #include "bundle_mgr_client.h"
+#include "bundle_manager_sync.h"
 #include "bundle_mgr_proxy.h"
 #include "common_func.h"
 #include "extension_ability_info.h"
 #include "ipc_skeleton.h"
+#include "verify_manager_client.h"
 
 namespace OHOS {
 namespace CJSystemapi {
@@ -44,15 +46,9 @@ AppExecFwk::BundleInfo BundleManagerImpl::GetBundleInfoForSelf(int32_t bundleFla
  
 int32_t BundleManagerImpl::VerifyAbc(std::vector<std::string> abcPaths, bool flag)
 {
-    auto verifyManager = AppExecFwk::CommonFunc::GetVerifyManager();
-    if (verifyManager == nullptr) {
-        APP_LOGE("VerifyAbc failed due to iBundleMgr is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
- 
-    ErrCode ret = verifyManager->Verify(abcPaths);
+    ErrCode ret = AppExecFwk::VerifyManagerClient::GetInstance().Verify(abcPaths);
     if (ret == ERR_OK && flag) {
-        verifyManager->RemoveFiles(abcPaths);
+        AppExecFwk::VerifyManagerClient::GetInstance().RemoveFiles(abcPaths);
     }
     return AppExecFwk::CommonFunc::ConvertErrCode(ret);
 }

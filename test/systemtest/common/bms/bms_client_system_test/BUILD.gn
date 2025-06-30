@@ -35,6 +35,8 @@ ohos_systemtest("BundleMgrClientSystemTest") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
+    "${core_path}:verify_manager_proxy",
+    "${core_path}:verify_manager_stub",
   ]
 
   defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
