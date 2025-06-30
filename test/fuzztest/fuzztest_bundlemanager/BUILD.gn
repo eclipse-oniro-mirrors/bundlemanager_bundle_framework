@@ -70,6 +70,7 @@ group("bundlemanagerfuzztest") {
     "bmsconverttargetabilityinfo_fuzzer:BMSConvertTargetAbilityInfoFuzzTest",
     "bmsdeletefirstinstallbundleinfo_fuzzer:BMSDeleteFirstInstallBundleInfoFuzzTest",
     "bmsdriverinstaller_fuzzer:BMSDriverInstallerFuzzTest",
+    "bmsextendresourcemanager_fuzzer:BMSExtendResourceManagerFuzzTest",
     "bmsextensionabilityinfo_fuzzer:BMSExtensionAbilityInfoFuzzTest",
     "bmsfirstinstallbundleinfo_fuzzer:BMSFirstInstallBundleInfoFuzzTest",
     "bmsforminfo_fuzzer:BMSFormInfoFuzzTest",
