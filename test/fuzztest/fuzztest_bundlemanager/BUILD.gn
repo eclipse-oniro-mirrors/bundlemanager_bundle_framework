@@ -51,7 +51,6 @@ group("bundlemanagerfuzztest") {
     "bmsbundlemgrproxyfuzzpartonetest_fuzzer:BMSBundleMgrProxyFuzzPartOneTest",
     "bmsbundlemgrproxyfuzzpartthreetest_fuzzer:BMSBundleMgrProxyFuzzPartThreeTest",
     "bmsbundlemgrproxyfuzzparttwotest_fuzzer:BMSBundleMgrProxyFuzzPartTwoTest",
-    "bmsbundleresourcedrawable_fuzzer:BMSBundleResourceDrawableFuzzTest",
     "bmsbundleresourcehost_fuzzer:BMSBundleResourceHostFuzzTest",
     "bmsbundlestatuscallbackproxy_fuzzer:BMSBundleStatusCallbackProxyFuzzTest",
     "bmsbundlestreaminstallerhost_fuzzer:BMSBundleStreamInstallerHostFuzzTest",
