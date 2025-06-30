@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@
 #include "common_event_support.h"
 #include "common_tool.h"
 #include "iservice_registry.h"
+#include "overlay_manager_client.h"
 #include "system_ability_definition.h"
 #include "status_receiver_host.h"
 
@@ -248,10 +249,8 @@ ErrCode BmsOverlayInternalInstallTest::UninstallBundle(const std::string &bundle
 ErrCode BmsOverlayInternalInstallTest::GetOverlayModuleInfo(const std::string &bundleName,
     const std::string &moduleName, OverlayModuleInfo &overlayModuleInfo)
 {
-    sptr<IOverlayManager> overlayProxy = GetOverlayManagerProxy();
-    EXPECT_NE(overlayProxy, nullptr);
-
-    auto ret = overlayProxy->GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo, USERID);
+    auto ret = OverlayManagerClient::GetInstance().GetOverlayModuleInfo(bundleName, moduleName,
+        overlayModuleInfo, USERID);
     return ret;
 }
 
@@ -259,10 +258,8 @@ ErrCode BmsOverlayInternalInstallTest::GetOverlayModuleInfoForTarget(const std::
     const std::string &moduleName,
     std::vector<OverlayModuleInfo> &overlayModuleInfos)
 {
-    sptr<IOverlayManager> overlayProxy = GetOverlayManagerProxy();
-    EXPECT_NE(overlayProxy, nullptr);
-
-    auto ret = overlayProxy->GetOverlayModuleInfoForTarget(targetBundleName, moduleName, overlayModuleInfos, USERID);
+    auto ret = OverlayManagerClient::GetInstance().GetOverlayModuleInfoForTarget(targetBundleName,
+        moduleName, overlayModuleInfos, USERID);
     return ret;
 }
 

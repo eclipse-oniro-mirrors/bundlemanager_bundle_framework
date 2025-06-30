@@ -249,12 +249,8 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
-  sources = [
-    "${core_path}/src/overlay/overlay_manager_host.cpp",
-    "${core_path}/src/overlay/overlay_manager_proxy.cpp",
-  ]
 
-  sources += bundle_mgr_source
+  sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
@@ -294,6 +290,8 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   deps = [
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
+    "${core_path}:overlay_manager_proxy",
+    "${core_path}:overlay_manager_stub",
   ]
   deps += bundle_install_deps
 
