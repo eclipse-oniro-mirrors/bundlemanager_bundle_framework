@@ -38,7 +38,7 @@ static void AniAddDesktopShortcutInfo(ani_env* env, ani_object info, ani_double 
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
         BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, TYPE_NUMBER);
+            env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return;
     }
     
@@ -71,7 +71,7 @@ static void AniDeleteDesktopShortcutInfo(ani_env* env, ani_object info, ani_doub
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
         BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, TYPE_NUMBER);
+            env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return;
     }
 
@@ -105,7 +105,7 @@ static ani_ref AniGetAllDesktopShortcutInfo(ani_env* env, ani_double aniUserId)
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast aniUserId failed");
         BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, Constants::USER_ID, TYPE_NUMBER);
+            env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return nullptr;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,8 +22,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-} // namespace
 
 void BusinessError::ThrowError(napi_env env, int32_t err, const std::string &msg)
 {
@@ -40,7 +38,7 @@ void BusinessError::ThrowParameterTypeError(napi_env env, int32_t err,
 
 void BusinessError::ThrowTooFewParametersError(napi_env env, int32_t err)
 {
-    ThrowError(env, err, BussinessErrorNS::ERR_MSG_PARAM_NUMBER_ERROR);
+    ThrowError(env, err, BusinessErrorNS::ERR_MSG_PARAM_NUMBER_ERROR);
 }
 
 napi_value BusinessError::CreateError(napi_env env, int32_t err, const std::string& msg)
@@ -58,7 +56,7 @@ napi_value BusinessError::CreateError(napi_env env, int32_t err, const std::stri
 napi_value BusinessError::CreateCommonError(
     napi_env env, int32_t err, const std::string &functionName, const std::string &permissionName)
 {
-    std::string errMessage = BussinessErrorNS::ERR_MSG_BUSINESS_ERROR;
+    std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
     auto iter = errMessage.find("$");
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, std::to_string(err));
@@ -89,12 +87,12 @@ void BusinessError::ThrowEnumError(napi_env env,
 napi_value BusinessError::CreateEnumError(napi_env env,
     const std::string &parameter, const std::string &enumClass)
 {
-    std::string errMessage = BussinessErrorNS::ERR_MSG_BUSINESS_ERROR;
+    std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
     auto iter = errMessage.find("$");
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, std::to_string(ERROR_PARAM_CHECK_ERROR));
     }
-    errMessage += BussinessErrorNS::ERR_MSG_ENUM_ERROR;
+    errMessage += BusinessErrorNS::ERR_MSG_ENUM_ERROR;
     iter = errMessage.find("$");
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, parameter);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -167,6 +167,22 @@ constexpr const char* ERROR_MSG_PLUGIN_NOT_FOUND =
     "Failed to uninstall the plugin because the specified plugin is not found.";
 constexpr const char* ERROR_MSG_PLUGIN_SAME_BUNDLE_NAME =
     "Failed to install the plugin because the plugin name is same as host bundle name.";
+constexpr const char* ERROR_MSG_INSTALL_FILE_IS_SHARED_LIBRARY =
+    "Failed to install because disallow install a shared bundle by hapFilePaths.";
+constexpr const char* ERROR_MSG_SOURCE_PATHS_AREINVALID =
+    "The source paths are invalid.";
+constexpr const char* ERROR_MSG_DESTINATION_PATHS_AREINVALID =
+    "The destination path is invalid.";
+constexpr const char* ERROR_MSG_USER_AUTHENTICATION_FAILED =
+    "User authentication failed.";
+constexpr const char* ERROR_MSG_WAITING_FOR_USER_AUTHENTICATION_TIMEOUT =
+    "Waiting for user authentication timeout.";
+constexpr const char* ERROR_MSG_SOURCE_PATH_ACCESS_FAILED =
+    "There are inaccessible path in the source paths.";
+constexpr const char* ERROR_MSG_DESTINATION_PATH_ACCESS_FAILED =
+    "The destination path cannot be accessed.";
+constexpr const char* ERROR_MSG_DATA_MIGRATION_COPY_FAILED =
+    "System error occurred during copy execution.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -257,7 +273,15 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_DEVICE_NOT_SUPPORT_PLUGIN, ERROR_MSG_DEVICE_NOT_SUPPORT_PLUGIN},
     { ERROR_PLUGIN_ID_PARSE_ERROR, ERROR_MSG_PLUGIN_ID_PARSE_ERROR },
     { ERROR_PLUGIN_NOT_FOUND, ERROR_MSG_PLUGIN_NOT_FOUND },
-    { ERROR_PLUGIN_SAME_BUNDLE_NAME, ERROR_MSG_PLUGIN_SAME_BUNDLE_NAME}
+    { ERROR_PLUGIN_SAME_BUNDLE_NAME, ERROR_MSG_PLUGIN_SAME_BUNDLE_NAME},
+    { ERROR_INSTALL_FILE_IS_SHARED_LIBRARY, ERROR_MSG_INSTALL_FILE_IS_SHARED_LIBRARY},
+    { ERROR_SOURCE_PATHS_AREINVALID, ERROR_MSG_SOURCE_PATHS_AREINVALID},
+    { ERROR_DESTINATION_PATHS_AREINVALID, ERROR_MSG_DESTINATION_PATHS_AREINVALID},
+    { ERROR_USER_AUTHENTICATION_FAILED, ERROR_MSG_USER_AUTHENTICATION_FAILED},
+    { ERROR_WAITING_FOR_USER_AUTHENTICATION_TIMEOUT, ERROR_MSG_WAITING_FOR_USER_AUTHENTICATION_TIMEOUT},
+    { ERROR_SOURCE_PATH_ACCESS_FAILED, ERROR_MSG_SOURCE_PATH_ACCESS_FAILED},
+    { ERROR_DESTINATION_PATH_ACCESS_FAILED, ERROR_MSG_DESTINATION_PATH_ACCESS_FAILED},
+    { ERROR_DATA_MIGRATION_COPY_FAILED, ERROR_MSG_DATA_MIGRATION_COPY_FAILED}
 };
 } // namespace
 void BusinessErrorMap::GetErrMap(std::unordered_map<int32_t, const char*>& errMap)

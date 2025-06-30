@@ -13,11 +13,6 @@
  * limitations under the License.
  */
 
-/**
- * @file
- * @kit AbilityKit
- */
-
 import { BundleResourceInfo } from 'bundleManager.BundleResourceInfo';
 
 export class BundleResourceInfoInner implements BundleResourceInfo {

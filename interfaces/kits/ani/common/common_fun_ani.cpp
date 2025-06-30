@@ -2034,8 +2034,8 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
     }
 
     // labelId?: number
-    if (CallGetterOptional(env, object, PROPERTYNAME_LABELID, &intValue)) {
-        shortcutInfo.labelId = intValue;
+    if (CallGetterOptional(env, object, PROPERTYNAME_LABELID, &uintValue)) {
+        shortcutInfo.labelId = uintValue;
     }
 
     // wants?: Array<ShortcutWant>
@@ -2382,13 +2382,6 @@ bool CommonFunAni::ParseApplicationInfo(ani_env* env, ani_object object, Applica
     RETURN_FALSE_IF_NULL(object);
 
     ani_string string = nullptr;
-    ani_object arrayObject = nullptr;
-    ani_object aniObject = nullptr;
-    ani_enum_item enumItem = nullptr;
-    ani_int intValue = 0;
-    ani_boolean boolValue = ANI_FALSE;
-    uint32_t uintValue = 0;
-
     // name: string
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_NAME, &string));
     appInfo.name = AniStrToString(env, string);
@@ -2397,10 +2390,12 @@ bool CommonFunAni::ParseApplicationInfo(ani_env* env, ani_object object, Applica
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTION, &string));
     appInfo.description = AniStrToString(env, string);
 
+    uint32_t uintValue = 0;
     // descriptionId: number
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTIONID, &uintValue));
     appInfo.descriptionId = uintValue;
 
+    ani_boolean boolValue = ANI_FALSE;
     // enabled: boolean
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ENABLED, &boolValue));
     appInfo.enabled = AniBooleanToBool(boolValue);
@@ -2425,6 +2420,7 @@ bool CommonFunAni::ParseApplicationInfo(ani_env* env, ani_object object, Applica
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PROCESS, &string));
     appInfo.process = AniStrToString(env, string);
 
+    ani_object arrayObject = nullptr;
     // permissions: Array<string>
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PERMISSIONS, &arrayObject));
     RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, appInfo.permissions));
@@ -2461,10 +2457,12 @@ bool CommonFunAni::ParseApplicationInfo(ani_env* env, ani_object object, Applica
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ACCESSTOKENID, &uintValue));
     appInfo.accessTokenId = uintValue;
 
+    ani_int intValue = 0;
     // uid: number
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_UID, &intValue));
     appInfo.uid = intValue;
 
+    ani_object aniObject = nullptr;
     // iconResource: Resource
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ICONRESOURCE, &aniObject));
     RETURN_FALSE_IF_FALSE(ParseResource(env, aniObject, appInfo.iconResource));
@@ -2489,6 +2487,7 @@ bool CommonFunAni::ParseApplicationInfo(ani_env* env, ani_object object, Applica
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SYSTEMAPP, &boolValue));
     appInfo.isSystemApp = AniBooleanToBool(boolValue);
 
+    ani_enum_item enumItem = nullptr;
     // bundleType: bundleManager.BundleType
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLETYPE, &enumItem));
     RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, appInfo.bundleType));
@@ -2657,13 +2656,6 @@ bool CommonFunAni::ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo
     RETURN_FALSE_IF_NULL(object);
 
     ani_string string = nullptr;
-    ani_object arrayObject = nullptr;
-    ani_object aniObject = nullptr;
-    ani_enum_item enumItem = nullptr;
-    ani_int intValue = 0;
-    ani_boolean boolValue = ANI_FALSE;
-    uint32_t uintValue = 0;
-
     // bundleName: string
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
     abilityInfo.bundleName = AniStrToString(env, string);
@@ -2680,6 +2672,7 @@ bool CommonFunAni::ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABEL, &string));
     abilityInfo.label = AniStrToString(env, string);
 
+    uint32_t uintValue = 0;
     // labelId: number
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABELID, &uintValue));
     abilityInfo.labelId = uintValue;
@@ -2704,10 +2697,12 @@ bool CommonFunAni::ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PROCESS, &string));
     abilityInfo.process = AniStrToString(env, string);
 
+    ani_boolean boolValue = ANI_FALSE;
     // exported: boolean
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_EXPORTED, &boolValue));
     abilityInfo.visible = AniBooleanToBool(boolValue);
 
+    ani_enum_item enumItem = nullptr;
     // orientation: bundleManager.DisplayOrientation
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ORIENTATION, &enumItem));
     RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, abilityInfo.orientation));
@@ -2716,6 +2711,7 @@ bool CommonFunAni::ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LAUNCHTYPE, &enumItem));
     RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, abilityInfo.launchMode));
 
+    ani_object arrayObject = nullptr;
     // permissions: Array<string>
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PERMISSIONS, &arrayObject));
     RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, abilityInfo.permissions));
@@ -2724,6 +2720,7 @@ bool CommonFunAni::ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DEVICETYPES, &arrayObject));
     RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, abilityInfo.deviceTypes));
 
+    ani_object aniObject = nullptr;
     // applicationInfo: ApplicationInfo
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPLICATIONINFO, &aniObject));
     RETURN_FALSE_IF_FALSE(ParseApplicationInfo(env, aniObject, abilityInfo.applicationInfo));
@@ -2752,6 +2749,7 @@ bool CommonFunAni::ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SKILLS, &arrayObject));
     RETURN_FALSE_IF_FALSE(ParseAniArray(env, arrayObject, abilityInfo.skills, ParseAbilitySkill));
 
+    ani_int intValue = 0;
     // appIndex: number
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPINDEX, &intValue));
     abilityInfo.appIndex = intValue;

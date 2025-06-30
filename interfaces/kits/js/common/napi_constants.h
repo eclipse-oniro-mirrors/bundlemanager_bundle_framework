@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -141,7 +141,7 @@ constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* FILE_PATH = "filePath";
 constexpr const char* ADD_EXT_RESOURCE = "AddExtResource";
 constexpr const char* REMOVE_EXT_RESOURCE = "RemoveExtResource";
-constexpr const char* HAPS_FILE_NEEDED =
+constexpr const char* PARAM_HAPS_FILE_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
 constexpr const char* CREATE_APP_CLONE = "CreateAppClone";
 constexpr const char* DESTROY_APP_CLONE = "destroyAppClone";

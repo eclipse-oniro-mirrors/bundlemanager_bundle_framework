@@ -25,13 +25,14 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleManagerHelper {
 public:
-    static ErrCode InnerBatchQueryAbilityInfos(const std::vector<OHOS::AAFwk::Want> &wants,
-        int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos);
-    static ErrCode InnerGetDynamicIcon(const std::string &bundleName, std::string &moduleName);
-    static ErrCode InnerIsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable, int32_t appIndex);
-    static ErrCode InnerSetAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable, int32_t appIndex);
-    static ErrCode InnerSetApplicationEnabled(const std::string &bundleName, bool &isEnable, int32_t appIndex);
-    static ErrCode InnerEnableDynamicIcon(const std::string &bundleName, const std::string &moduleName);
+    static ErrCode InnerBatchQueryAbilityInfos(const std::vector<OHOS::AAFwk::Want>& wants, int32_t flags,
+        int32_t userId, std::vector<AbilityInfo>& abilityInfos);
+    static ErrCode InnerGetDynamicIcon(const std::string& bundleName, std::string& moduleName);
+    static ErrCode InnerIsAbilityEnabled(const AbilityInfo& abilityInfo, bool& isEnable, int32_t appIndex);
+    static ErrCode InnerSetAbilityEnabled(const AbilityInfo& abilityInfo, bool& isEnable, int32_t appIndex);
+    static ErrCode InnerSetApplicationEnabled(const std::string& bundleName, bool& isEnable, int32_t appIndex);
+    static ErrCode InnerEnableDynamicIcon(const std::string& bundleName, const std::string& moduleName);
+    static ErrCode InnerGetAppCloneIdentity(int32_t uid, std::string& bundleName, int32_t& appIndex);
 };
 } // AppExecFwk
 } // OHOS

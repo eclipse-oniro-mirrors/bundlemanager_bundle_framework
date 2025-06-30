@@ -878,7 +878,7 @@ napi_value Install(napi_env env, napi_callback_info info)
         return nullptr;
     }
     if (callbackPtr->hapFiles.empty() && !callbackPtr->installParam.verifyCodeParams.empty()) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, HAPS_FILE_NEEDED);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_HAPS_FILE_EMPTY_ERROR);
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
@@ -1137,7 +1137,7 @@ napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
         return nullptr;
     }
     if (callbackPtr->hapFiles.empty() && !callbackPtr->installParam.verifyCodeParams.empty()) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, HAPS_FILE_NEEDED);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_HAPS_FILE_EMPTY_ERROR);
         return nullptr;
     }
     callbackPtr->installParam.isSelfUpdate = true;

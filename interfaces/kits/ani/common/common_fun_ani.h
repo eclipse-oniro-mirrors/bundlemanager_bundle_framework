@@ -488,7 +488,7 @@ public:
                                  std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
                 double d = 0;
                 status =
-                    env->Object_CallMethodByName_Double(reinterpret_cast<ani_object>(ref), "doubleValue", nullptr, &d);
+                    env->Object_CallMethodByName_Double(reinterpret_cast<ani_object>(ref), "unboxed", nullptr, &d);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_GetPropertyByName %{public}s failed %{public}d", propertyName, status);
                     return false;

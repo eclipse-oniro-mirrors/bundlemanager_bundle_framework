@@ -126,7 +126,7 @@ void BusinessErrorAni::ThrowTooFewParametersError(ani_env *env, int32_t err)
         APP_LOGE("err is nullptr");
         return;
     }
-    ThrowError(env, err, BussinessErrorNS::ERR_MSG_PARAM_NUMBER_ERROR);
+    ThrowError(env, err, BusinessErrorNS::ERR_MSG_PARAM_NUMBER_ERROR);
 }
 
 ani_object BusinessErrorAni::CreateCommonError(
@@ -136,7 +136,7 @@ ani_object BusinessErrorAni::CreateCommonError(
         APP_LOGE("err is nullptr");
         return nullptr;
     }
-    std::string errMessage = BussinessErrorNS::ERR_MSG_BUSINESS_ERROR;
+    std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
     auto iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, std::to_string(err));
@@ -175,12 +175,12 @@ ani_object BusinessErrorAni::CreateEnumError(ani_env *env,
         APP_LOGE("err is nullptr");
         return nullptr;
     }
-    std::string errMessage = BussinessErrorNS::ERR_MSG_BUSINESS_ERROR;
+    std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
     auto iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, std::to_string(ERROR_PARAM_CHECK_ERROR));
     }
-    errMessage += BussinessErrorNS::ERR_MSG_ENUM_ERROR;
+    errMessage += BusinessErrorNS::ERR_MSG_ENUM_ERROR;
     iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, parameter);
