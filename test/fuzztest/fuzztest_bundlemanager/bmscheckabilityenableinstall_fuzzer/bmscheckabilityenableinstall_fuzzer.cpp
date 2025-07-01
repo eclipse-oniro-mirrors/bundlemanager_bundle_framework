@@ -48,6 +48,14 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     int32_t userId = GenerateRandomUser(fdp);
     sptr<IRemoteObject> callerToken = nullptr;
     BundleDistributedManager_->CheckAbilityEnableInstall(want, missionId, userId, callerToken);
+#ifdef BMS_DEVICE_INFO_MANAGER_ENABLE
+    RpcIdResult rpcIdResult;
+    rpcIdResult.retCode = fdp.ConsumeIntegral<int32_t>();
+    rpcIdResult.version = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    rpcIdResult.transactId = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    rpcIdResult.resultMsg = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    BundleDistributedManager_->ComparePcIdString(want, rpcIdResult);
+#endif
     return true;
 }
 }
