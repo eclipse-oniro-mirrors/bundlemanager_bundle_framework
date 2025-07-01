@@ -485,8 +485,26 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
-    if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags,
-        launcherAbilityResourceInfo, appIndex)) {
+
+    int32_t requestUserId = BundleUtil::GetUserIdByCallingUid();
+    int32_t activeUserId = AccountHelper::GetCurrentActiveUserId();
+    if (activeUserId == Constants::INVALID_USERID) {
+        APP_LOGW("activeUserId is invalid");
+        activeUserId = requestUserId;
+    }
+
+    bool isResourceInfoFetched = false;
+    if (requestUserId != activeUserId) {
+        APP_LOGI_NOFUNC("requestUserId %{public}d is not equal to activeUserId %{public}d",
+            requestUserId, activeUserId);
+        isResourceInfoFetched = GetResourceInfoForRequestUser(bundleName, requestUserId,
+            resourceFlags, appIndex, launcherAbilityResourceInfo);
+    } else {
+        isResourceInfoFetched = bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags,
+            launcherAbilityResourceInfo, appIndex);
+    }
+
+    if (isResourceInfoFetched) {
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
@@ -499,6 +517,90 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
     }
     APP_LOGE_NOFUNC("%{public}s not exist in resource rdb", bundleName.c_str());
     return false;
+}
+
+bool BundleResourceManager::GetResourceInfoForRequestUser(
+    const std::string &bundleName,
+    const int32_t userId,
+    const uint32_t flags,
+    const int32_t appIndex,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+{
+    std::vector<ResourceInfo> resourceInfos;
+    if (!BundleResourceProcess::GetResourceInfoByBundleName(bundleName, userId, resourceInfos, appIndex)) {
+        APP_LOGE("-n %{public}s -i %{public}d GetResourceInfoByBundleName failed",
+            bundleName.c_str(), appIndex);
+        return false;
+    }
+    if (resourceInfos.empty()) {
+        APP_LOGE("resourceInfos is empty");
+        return false;
+    }
+    BundleResourceParser parser;
+    if (!parser.ParseResourceInfos(userId, resourceInfos)) {
+        APP_LOGW_NOFUNC("key:%{public}s Parse failed, need to modify label and icon",
+            resourceInfos[0].GetKey().c_str());
+        ProcessResourceInfoWhenParseFailed(resourceInfos[0]);
+    }
+    if (appIndex != 0) {
+        auto it = std::find(resourceInfos[0].appIndexes_.begin(), resourceInfos[0].appIndexes_.end(), appIndex);
+        if (it == resourceInfos[0].appIndexes_.end()) {
+            APP_LOGE("appIndex not exist in resourceInfos");
+            return false;
+        }
+        if (!parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
+            APP_LOGE("-n %{public}s -i %{public}d parse clone resource failed", bundleName.c_str(), appIndex);
+        }
+    }
+    for (auto &resourceInfo : resourceInfos) {
+        if (resourceInfo.icon_.empty()) {
+            APP_LOGW("resourceInfo icon is empty");
+            resourceInfo.icon_ = resourceInfos[0].icon_;
+            resourceInfo.foreground_ = resourceInfos[0].foreground_;
+            resourceInfo.background_ = resourceInfos[0].background_;
+        }
+        if (resourceInfo.label_.empty()) {
+            APP_LOGW("resourceInfo label is empty");
+            resourceInfo.label_ = resourceInfos[0].label_;
+        }
+        LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+        if (ConvertLauncherAbilityResourceInfo(resourceInfo, flags, launcherAbilityResourceInfo)) {
+            launcherAbilityResourceInfos.push_back(launcherAbilityResourceInfo);
+        }
+    }
+    return true;
+}
+
+bool BundleResourceManager::ConvertLauncherAbilityResourceInfo(const ResourceInfo &resourceInfo, const uint32_t flags,
+    LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
+{
+    if (resourceInfo.moduleName_.empty() || resourceInfo.abilityName_.empty()) {
+        APP_LOGW("moduleName or abilityName is empty.");
+        return false;
+    }
+    launcherAbilityResourceInfo.bundleName = resourceInfo.bundleName_;
+    launcherAbilityResourceInfo.moduleName = resourceInfo.moduleName_;
+    launcherAbilityResourceInfo.abilityName = resourceInfo.abilityName_;
+    launcherAbilityResourceInfo.appIndex = resourceInfo.appIndex_;
+    bool getAll = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    bool getLabel = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+    if (getAll || getLabel) {
+        launcherAbilityResourceInfo.label = resourceInfo.label_;
+    }
+    bool getIcon = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON);
+    if (getAll || getIcon) {
+        launcherAbilityResourceInfo.icon = resourceInfo.icon_;
+    }
+    bool getDrawable = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    if (getDrawable) {
+        launcherAbilityResourceInfo.foreground = resourceInfo.foreground_;
+        launcherAbilityResourceInfo.background = resourceInfo.background_;
+    }
+    return true;
 }
 
 bool BundleResourceManager::GetAllBundleResourceInfo(const uint32_t flags,
