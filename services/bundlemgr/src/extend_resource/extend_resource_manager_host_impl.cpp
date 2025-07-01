@@ -576,12 +576,6 @@ bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &b
         return false;
     }
 
-    // Delete dynamic icon resource
-    if (!manager->DeleteResourceInfo(bundleName)) {
-        APP_LOGE("DeleteResourceInfo failed, bundleName:%{public}s", bundleName.c_str());
-        return false;
-    }
-
     // Reset default icon
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if ((currentUserId <= 0)) {
