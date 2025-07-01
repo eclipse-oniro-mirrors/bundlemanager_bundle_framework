@@ -256,6 +256,7 @@ struct App {
     bool tsanEnabled = false;
     bool ubsanEnabled = false;
     bool cloudFileSyncEnabled = false;
+    bool cloudStructuredDataSyncEnabled = false;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
     uint32_t descriptionId = 0;
@@ -1342,6 +1343,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         g_parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
+        APP_CLOUD_STRUCTURED_DATA_SYNC_ENABLED,
+        app.cloudStructuredDataSyncEnabled,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
         APP_UBSAN_ENABLED,
         app.ubsanEnabled,
         false,
@@ -2264,6 +2271,7 @@ bool ToApplicationInfo(
         ToInnerProfileConfiguration(bundleExtractor, app.configuration, applicationInfo.configuration);
     }
     applicationInfo.cloudFileSyncEnabled = app.cloudFileSyncEnabled;
+    applicationInfo.cloudStructuredDataSyncEnabled = app.cloudStructuredDataSyncEnabled;
     return true;
 }
 

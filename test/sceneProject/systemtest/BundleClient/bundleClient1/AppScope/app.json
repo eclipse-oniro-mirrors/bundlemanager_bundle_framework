@@ -25,6 +25,7 @@
     "multiAppMode": {
       "multiAppModeType": "appClone",
       "maxCount": 5
-    }
+    },
+    "cloudStructuredDataSyncEnabled": false
   }
 }

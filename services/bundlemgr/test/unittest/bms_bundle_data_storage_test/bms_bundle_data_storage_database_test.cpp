@@ -1232,6 +1232,7 @@ protected:
                 "installSource": "unknown",
                 "configuration":"",
                 "cloudFileSyncEnabled": false,
+                "cloudStructuredDataSyncEnabled": false,
                 "applicationFlags":1,
                 "installedForAllUser": false,
                 "isForceRotate": false,

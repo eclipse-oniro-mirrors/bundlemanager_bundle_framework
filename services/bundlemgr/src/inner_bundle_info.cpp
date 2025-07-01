@@ -1871,6 +1871,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     baseApplicationInfo_->userDataClearable = applicationInfo.userDataClearable;
     baseApplicationInfo_->accessible = applicationInfo.accessible;
     baseApplicationInfo_->cloudFileSyncEnabled = applicationInfo.cloudFileSyncEnabled;
+    baseApplicationInfo_->cloudStructuredDataSyncEnabled = applicationInfo.cloudStructuredDataSyncEnabled;
 
     if (!baseApplicationInfo_->isSystemApp) {
         baseApplicationInfo_->isSystemApp = applicationInfo.isSystemApp;

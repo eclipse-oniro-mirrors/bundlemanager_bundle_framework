@@ -141,6 +141,7 @@ const char* APPLICATION_INSTALL_SOURCE = "installSource";
 const char* APPLICATION_CONFIGURATION = "configuration";
 const char* APPLICATION_HWASAN_ENABLED = "hwasanEnabled";
 const char* APPLICATION_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
+const char* APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED = "cloudStructuredDataSyncEnabled";
 const char* APPLICATION_APPLICATION_FLAGS = "applicationFlags";
 const char* APPLICATION_ALLOW_MULTI_PROCESS = "allowMultiProcess";
 const char* APPLICATION_UBSAN_ENABLED = "ubsanEnabled";
@@ -603,6 +604,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     configuration = Str16ToStr8(parcel.ReadString16());
     codeLanguage = parcel.ReadString();
     cloudFileSyncEnabled = parcel.ReadBool();
+    cloudStructuredDataSyncEnabled = parcel.ReadBool();
     applicationFlags = parcel.ReadInt32();
     ubsanEnabled = parcel.ReadBool();
     allowMultiProcess = parcel.ReadBool();
@@ -790,6 +792,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(configuration));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, cloudFileSyncEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, cloudStructuredDataSyncEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, applicationFlags);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, ubsanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowMultiProcess);
@@ -1047,6 +1050,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_CONFIGURATION, applicationInfo.configuration},
         {Constants::CODE_LANGUAGE, applicationInfo.codeLanguage},
         {APPLICATION_CLOUD_FILE_SYNC_ENABLED, applicationInfo.cloudFileSyncEnabled},
+        {APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED, applicationInfo.cloudStructuredDataSyncEnabled},
         {APPLICATION_APPLICATION_FLAGS, applicationInfo.applicationFlags},
         {APPLICATION_UBSAN_ENABLED, applicationInfo.ubsanEnabled},
         {APPLICATION_ALLOW_MULTI_PROCESS, applicationInfo.allowMultiProcess},
@@ -1265,6 +1269,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.codeLanguage, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_FILE_SYNC_ENABLED,
         applicationInfo.cloudFileSyncEnabled, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED,
+        applicationInfo.cloudStructuredDataSyncEnabled, false, parseResult);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_APPLICATION_FLAGS,
         applicationInfo.applicationFlags, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_UBSAN_ENABLED,
