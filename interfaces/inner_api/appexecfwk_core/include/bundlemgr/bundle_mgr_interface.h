@@ -42,7 +42,7 @@
 #include "overlay_manager_interface.h"
 #include "plugin/plugin_bundle_info.h"
 #include "quick_fix_manager_interface.h"
-#include "verify_manager_interface.h"
+#include "iverify_manager.h"
 #include "distributed_bundle_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"

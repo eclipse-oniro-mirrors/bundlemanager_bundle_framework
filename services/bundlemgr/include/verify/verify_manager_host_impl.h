@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,18 +18,23 @@
 
 #include <mutex>
 #include <shared_mutex>
-#include "verify_manager_host.h"
+#include "bundle_memory_guard.h"
+#include "verify_manager_stub.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class VerifyManagerHostImpl : public VerifyManagerHost {
+class VerifyManagerHostImpl : public VerifyManagerStub {
 public:
     VerifyManagerHostImpl();
     virtual ~VerifyManagerHostImpl();
 
-    ErrCode Verify(const std::vector<std::string> &abcPaths) override;
+    int32_t CallbackEnter([[maybe_unused]] uint32_t code) override;
 
-    ErrCode DeleteAbc(const std::string &path) override;
+    int32_t CallbackExit([[maybe_unused]] uint32_t code, [[maybe_unused]] int32_t result) override;
+
+    ErrCode Verify(const std::vector<std::string> &abcPaths, int32_t &funcResult) override;
+
+    ErrCode DeleteAbc(const std::string &path, int32_t &funcResult) override;
 
 private:
     ErrCode InnerVerify(const std::string &bundleName,
@@ -53,6 +58,7 @@ private:
     std::string GetRealPath(const std::string &bundleName,
         int32_t userId, const std::string &relativePath);
     bool GetCallingBundleName(std::string &bundleName);
+    ErrCode VerifyDeleteAbcPermission(const std::string &path);
 
     std::atomic<uint32_t> id_ = 0;
     mutable std::shared_mutex bundleMutex_;

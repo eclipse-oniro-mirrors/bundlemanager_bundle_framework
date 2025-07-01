@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,7 @@
 #include <fstream>
 #include <future>
 #include <gtest/gtest.h>
-#include "verify_manager_host.h"
+#include "verify_manager_stub.h"
 
 
 using namespace testing::ext;
@@ -50,6 +50,28 @@ void BmsVerifyManagerHostTest::SetUp()
 void BmsVerifyManagerHostTest::TearDown()
 {}
 
+class MockVerifyManagerStub : public VerifyManagerStub {
+public:
+    int32_t CallbackEnter(uint32_t code) override
+    {
+        return 0;
+    }
+    
+    int32_t CallbackExit(uint32_t code, int32_t result) override
+    {
+        return 0;
+    }
+    
+    ErrCode Verify(const std::vector<std::string>& abcPaths, int32_t& funcResult) override
+    {
+        return ERR_OK;
+    }
+	
+    ErrCode DeleteAbc(const std::string& path, int32_t& funcResult) override
+    {
+        return ERR_OK;
+    }
+};
 /**
  * @tc.number: OnRemoteRequest_0100
  * @tc.name: test the OnRemoteRequest
@@ -58,48 +80,18 @@ void BmsVerifyManagerHostTest::TearDown()
  */
 HWTEST_F(BmsVerifyManagerHostTest, OnRemoteRequest_0100, Function | MediumTest | Level1)
 {
-    VerifyManagerHost verifyManagerHost;
+    MockVerifyManagerStub sub;
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    ErrCode res = verifyManagerHost.OnRemoteRequest(CODE_VERIFY, data, reply, option);
-    EXPECT_EQ(res, OBJECT_NULL);
+    ErrCode res = sub.OnRemoteRequest(CODE_VERIFY, data, reply, option);
+    EXPECT_EQ(res, ERR_TRANSACTION_FAILED);
 
-    res = verifyManagerHost.OnRemoteRequest(CODE_DELETE_ABC, data, reply, option);
-    EXPECT_EQ(res, OBJECT_NULL);
+    res = sub.OnRemoteRequest(CODE_DELETE_ABC, data, reply, option);
+    EXPECT_EQ(res, ERR_TRANSACTION_FAILED);
 
-    res = verifyManagerHost.OnRemoteRequest(CODE_ERR, data, reply, option);
-    EXPECT_EQ(res, OBJECT_NULL);
-}
-
-/**
- * @tc.number: HandleVerify_0100
- * @tc.name: test the HandleVerify
- * @tc.desc: 1. system running normally
- *           2. test HandleVerify
- */
-HWTEST_F(BmsVerifyManagerHostTest, HandleVerify_0100, Function | MediumTest | Level1)
-{
-    VerifyManagerHost verifyManagerHost;
-    MessageParcel data;
-    MessageParcel reply;
-    ErrCode res = verifyManagerHost.HandleVerify(data, reply);
-    EXPECT_EQ(res, ERR_OK);
-}
-
-/**
- * @tc.number: HandleDeleteAbc_0100
- * @tc.name: test the HandleDeleteAbc
- * @tc.desc: 1. system running normally
- *           2. test HandleDeleteAbc
- */
-HWTEST_F(BmsVerifyManagerHostTest, HandleDeleteAbc_0100, Function | MediumTest | Level1)
-{
-    VerifyManagerHost verifyManagerHost;
-    MessageParcel data;
-    MessageParcel reply;
-    ErrCode res = verifyManagerHost.HandleDeleteAbc(data, reply);
-    EXPECT_EQ(res, ERR_OK);
+    res = sub.OnRemoteRequest(CODE_ERR, data, reply, option);
+    EXPECT_EQ(res, ERR_TRANSACTION_FAILED);
 }
 } // AppExecFwk
 } // OHOS

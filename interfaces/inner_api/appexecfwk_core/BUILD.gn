@@ -15,17 +15,28 @@ import("//build/config/components/idl_tool/idl.gni")
 import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
 
-idl_gen_interface("bundle_mgr_ext_interface") {
-  sources = [ "IBundleMgrExt.idl" ]
-  # log_domainid = "0xD0011FC"
-  # log_tag = "BMSExt"
+idl_gen_interface("verify_manager_interface") {
+  sources = [ "IVerifyManager.idl" ]
   subsystem_name = "bundlemanager"
+
+  # log_domainid = "0xD001120"
+  # log_tag = "BMS"
   part_name = "bundle_framework"
   hitrace = "HITRACE_TAG_APP"
 }
 
 config("bundlemgr_ipc_public_config") {
   include_dirs = [ "${target_gen_dir}" ]
+}
+
+idl_gen_interface("bundle_mgr_ext_interface") {
+  sources = [ "IBundleMgrExt.idl" ]
+
+  # log_domainid = "0xD0011FC"
+  # log_tag = "BMSExt"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  hitrace = "HITRACE_TAG_APP"
 }
 
 config("bundlemgr_sdk_config") {
@@ -48,6 +59,7 @@ config("appexecfwk_core_config") {
   include_dirs = [
     "${common_path}/log/include",
     "include",
+    "${target_gen_dir}",
   ]
 }
 
@@ -88,9 +100,14 @@ ohos_shared_library("appexecfwk_core") {
     "src/bundlemgr_ext/bundle_mgr_ext_client.cpp",
     "src/extend_resource/extend_resource_manager_host.cpp",
     "src/extend_resource/extend_resource_manager_proxy.cpp",
-    "src/verify/verify_manager_host.cpp",
-    "src/verify/verify_manager_proxy.cpp",
+    "src/verify/verify_manager_client.cpp",
   ]
+  output_values = get_target_outputs(":verify_manager_interface")
+  sources += filter_include(output_values,
+                            [
+                              "*verify_manager_proxy.cpp",
+                              "*verify_manager_stub.cpp",
+                            ])
 
   public_configs = [
     "../appexecfwk_base:appexecfwk_base_sdk_config",
@@ -118,11 +135,12 @@ ohos_shared_library("appexecfwk_core") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${base_path}:appexecfwk_base",
-    "${common_path}:libappexecfwk_common",
     ":bundle_mgr_ext_proxy",
     ":bundle_mgr_ext_stub",
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
   ]
+  deps += [ ":verify_manager_interface" ]
 
   external_deps = [
     "c_utils:utils",
@@ -131,7 +149,7 @@ ohos_shared_library("appexecfwk_core") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
-    "safwk:api_cache_manager"
+    "safwk:api_cache_manager",
   ]
 
   public_external_deps = [
@@ -240,9 +258,10 @@ ohos_shared_library("bundlemgr_mini") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    ":bundle_mgr_ext_interface",
+    ":verify_manager_interface",
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
-    ":bundle_mgr_ext_interface",
   ]
 
   external_deps = [
@@ -268,6 +287,79 @@ ohos_shared_library("bundlemgr_mini") {
   part_name = "bundle_framework"
 }
 
+ohos_source_set("verify_manager_proxy") {
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+  configs = [ ":bundlemgr_ipc_public_config" ]
+
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  output_values = get_target_outputs(":verify_manager_interface")
+  sources = filter_include(output_values, [ "*verify_manager_proxy.cpp" ])
+  deps = [ ":verify_manager_interface" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_single",
+  ]
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
+
+ohos_source_set("verify_manager_stub") {
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+  configs = [ ":bundlemgr_ipc_public_config" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  output_values = get_target_outputs(":verify_manager_interface")
+  sources = filter_include(output_values, [ "*verify_manager_stub.cpp" ])
+  deps = [ ":verify_manager_interface" ]
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "ipc:ipc_single",
+  ]
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
 ohos_source_set("bundle_mgr_ext_proxy") {
   sanitize = {
     boundary_sanitize = true
