@@ -1560,23 +1560,46 @@ ErrCode BmsBundleParserTest::CheckProfileDefaultPermission(const nlohmann::json 
 
 bool BmsBundleParserTest::WriteToConfigFile(const std::string &bundleName) const
 {
-    const std::string filename = ServiceConstants::APP_STARTUP_CACHE_CONG;
+const std::string filename = ServiceConstants::APP_STARTUP_CACHE_CONG;
     nlohmann::json jsonObject;
     std::ifstream inFile(filename);
-    if (!inFile.is_open()) {
-        APP_LOGE("Copy file failed due to open conf file failed errno:%{public}d", errno);
-        APP_LOGE("create json file:%{public}s", filename.c_str());
-        jsonObject = nlohmann::json::object();
+    if (inFile.is_open()) {
+        try {
+            inFile >> jsonObject;
+        } catch (const nlohmann::json::parse_error& e) {
+            APP_LOGW("JSON parse failed for empty file or invalid format, err: %{public}s", e.what());
+            jsonObject = nlohmann::json::object();
+        }
+        inFile.close();
     } else {
-        inFile >> jsonObject;
+        APP_LOGI("create new fike: %{public}s", filename.c_str());
+        jsonObject = nlohmann::json::object();
     }
     if (!jsonObject.contains("ark_startup_snapshot_list") || !jsonObject["ark_startup_snapshot_list"].is_array()) {
         jsonObject["ark_startup_snapshot_list"] = nlohmann::json::array();
     }
-    jsonObject["ark_startup_snapshot_list"].push_back(bundleName);
-    std::ofstream outFile(filename);
+
+    auto& snapshotList = jsonObject["ark_startup_snapshot_list"];
+    if (std::find(snapshotList.begin(), snapshotList.end(), bundleName) == snapshotList.end()) {
+        snapshotList.push_back(bundleName);
+    } else {
+        APP_LOGI("bundlename already existed: %{public}s", bundleName.c_str());
+    }
+
+    const std::string tempFile = filename + ".tmp";
+    std::ofstream outFile(tempFile);
+    if (!outFile) {
+        APP_LOGE("create file failed: %{public}s, err: %{public}d", tempFile.c_str(), errno);
+        return false;
+    }
     outFile << std::setw(Constants::DUMP_INDENT) << jsonObject;
     outFile.close();
+
+    if (std::rename(tempFile.c_str(), filename.c_str())) {
+        APP_LOGE("rename file failed: %{public}s, err: %{public}d", tempFile.c_str(), errno);
+        std::remove(tempFile.c_str());
+        return false;
+    }
     return true;
 }
 

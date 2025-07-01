@@ -5078,9 +5078,15 @@ ErrCode BMSEventHandler::CheckSystemOptimizeBundleShaderCache(const std::string 
         1, std::to_string(userId));
     systemOptimizeShaderCache = systemOptimizeShaderCache +
         cloneBundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
-    return InstalldClient::GetInstance()->Mkdir(systemOptimizeShaderCache,
+    ErrCode ret = InstalldClient::GetInstance()->Mkdir(systemOptimizeShaderCache,
         ServiceConstants::NEW_SHADRE_CACHE_MODE,
         uid, ServiceConstants::NEW_SHADRE_CACHE_GID);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "Mkdir %{public}s failed, error is %{public}d",
+            systemOptimizeShaderCache.c_str(), errno);
+        return ret;
+    }
+    return InstalldClient::GetInstance()->SetArkStartupCacheApl(systemOptimizeShaderCache);
 }
 
 ErrCode BMSEventHandler::CheckSystemOptimizeShaderCache()

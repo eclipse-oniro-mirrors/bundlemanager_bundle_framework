@@ -2911,9 +2911,13 @@ HWTEST_F(BmsEventHandlerTest, CheckSystemOptimizeShaderCache_0200, Function | Sm
     ret = handler->CheckSystemOptimizeBundleShaderCache(bundleName, appIndex, userId, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
+    setuid(Constants::FOUNDATION_UID);
     uid = 1003;
     ret = handler->CheckSystemOptimizeBundleShaderCache(bundleName, appIndex, userId, uid);
     EXPECT_EQ(ret, ERR_OK);
+    setuid(Constants::ROOT_UID);
+    ret = handler->CheckSystemOptimizeBundleShaderCache(bundleName, appIndex, userId, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
 /**
@@ -2928,11 +2932,13 @@ HWTEST_F(BmsEventHandlerTest, CheckSystemOptimizeShaderCache_0300, Function | Sm
     std::string bundleName = "com.CheckSystemOptimizeShaderCache_0300";
     int32_t appIndex = 1;
     int32_t userId = 100;
+    setuid(Constants::FOUNDATION_UID);
     ErrCode ret = handler->CleanSystemOptimizeBundleShaderCache(bundleName, appIndex, userId);
     EXPECT_EQ(ret, ERR_OK);
 
     appIndex = 0;
     ret = handler->CleanSystemOptimizeBundleShaderCache(bundleName, appIndex, userId);
     EXPECT_EQ(ret, ERR_OK);
+    setuid(Constants::ROOT_UID);
 }
 } // OHOS
