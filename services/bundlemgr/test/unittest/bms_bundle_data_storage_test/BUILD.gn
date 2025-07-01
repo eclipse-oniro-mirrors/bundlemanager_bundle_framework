@@ -13,6 +13,7 @@
 
 import("//build/test.gni")
 import("../../../../../appexecfwk.gni")
+import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 config("private_config") {
   include_dirs = [
@@ -75,6 +76,7 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
     "ipc:ipc_core",
     "jsoncpp:jsoncpp",
   ]
+  external_deps += bundle_install_external_deps
   defines = []
   if (ability_runtime_enable) {
     external_deps += [

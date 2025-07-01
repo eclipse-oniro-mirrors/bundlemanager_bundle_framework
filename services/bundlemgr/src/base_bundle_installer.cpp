@@ -1489,6 +1489,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     VerifyDomain();
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, inBundlePaths,
         newInfos.begin()->second.GetVersionCode(), AppPatchType::INTERNAL, installParam.isPatch);
+    UpdateHasCloudkitConfig();
     // check mark install finish
     result = MarkInstallFinish();
     if (result != ERR_OK) {
@@ -6229,6 +6230,14 @@ void BaseBundleInstaller::UpdateAppInstallControlled(int32_t userId)
 #else
     LOG_W(BMS_TAG_INSTALLER, "app control is disable");
 #endif
+}
+
+void BaseBundleInstaller::UpdateHasCloudkitConfig()
+{
+    InnerBundleInfo info;
+    tempInfo_.GetTempBundleInfo(info);
+    info.UpdateHasCloudkitConfig();
+    tempInfo_.SetTempBundleInfo(info);
 }
 
 ErrCode BaseBundleInstaller::UninstallBundleFromBmsExtension(const std::string &bundleName)

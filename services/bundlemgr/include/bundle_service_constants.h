@@ -260,6 +260,7 @@ constexpr const char* UPDATE_PERMISSIONS_FLAG_UPDATED = "updated";
 constexpr const char* EXT_PROFILE = "ext_profile";
 constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
 constexpr const char* MANIFEST_JSON = "manifest.json";
+constexpr const char* CLOUD_PROFILE_PATH = "resources/base/profile/cloudkit_config.json";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

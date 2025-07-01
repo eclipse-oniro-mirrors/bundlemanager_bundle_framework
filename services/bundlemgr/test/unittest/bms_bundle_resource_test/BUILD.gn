@@ -243,6 +243,7 @@ ohos_unittest("BmsBundleMgrHostUnitTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 }
 
 group("unittest") {

@@ -687,6 +687,7 @@ private:
     bool IsBundleEncrypted(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
     void UpdateAppInstallControlled(int32_t userId);
+    void UpdateHasCloudkitConfig();
     ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         bool needDeleteOldLibraryPath);
     ErrCode FinalProcessHapAndSoForBundleUpdate(const std::unordered_map<std::string, InnerBundleInfo> &infos,

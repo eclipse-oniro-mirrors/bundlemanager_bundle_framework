@@ -631,6 +631,8 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "syscap_codec:syscap_interface_shared",
   ]
 
+  external_deps += bundle_install_external_deps
+
   if (device_usage_statistics_enabled) {
     external_deps += [ "device_usage_statistics:usagestatsinner" ]
     defines += [ "DEVICE_USAGE_STATISTICS_ENABLED" ]

@@ -13,6 +13,7 @@
 
 import("//build/test.gni")
 import("../../../../../appexecfwk.gni")
+import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 module_output_path = "bundle_framework/bundle_framework"
 
 ohos_unittest("BmsBundleResourceInfoTest") {
@@ -47,6 +48,7 @@ ohos_unittest("BmsBundleResourceInfoTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 }
 
 group("unittest") {

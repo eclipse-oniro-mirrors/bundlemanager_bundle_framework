@@ -13,6 +13,7 @@
 
 import("//build/test.gni")
 import("../../../../../appexecfwk.gni")
+import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = "bundle_framework/bundle_framework"
 
@@ -60,6 +61,7 @@ ohos_unittest("BmsPatchParserTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
   ]
+  external_deps += bundle_install_external_deps
   defines = []
   if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
