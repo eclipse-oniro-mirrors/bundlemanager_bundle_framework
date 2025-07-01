@@ -1468,8 +1468,8 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
     }
 
     // labelId?: number
-    if (CallGetterOptional(env, object, PROPERTYNAME_LABELID, &intValue)) {
-        shortcutInfo.labelId = intValue;
+    if (CallGetterOptional(env, object, PROPERTYNAME_LABELID, &uintValue)) {
+        shortcutInfo.labelId = uintValue;
     }
 
     // wants?: Array<ShortcutWant>
