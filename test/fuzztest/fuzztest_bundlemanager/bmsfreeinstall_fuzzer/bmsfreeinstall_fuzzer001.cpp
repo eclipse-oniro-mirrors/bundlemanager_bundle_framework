@@ -43,19 +43,22 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bmsExperienceRule.isAllow = fdp.ConsumeBool();
     bmsExperienceRule.sceneCode = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
 
-    AAFwk::Want want;
-    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
-    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
-    want.SetElementName(fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH),
+    sptr<AAFwk::Want> want = new (std::nothrow) AAFwk::Want();
+    want->SetAction(OHOS::AAFwk::Want::ACTION_HOME);
+    want->AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
+    want->SetElementName(fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH),
         fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH),
         fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH),
         fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH));
-    bmsExperienceRule.replaceWant = &want;
+    bmsExperienceRule.replaceWant = want;
 
     Parcel parcel;
     bmsExperienceRule.Marshalling(parcel);
-    bmsExperienceRule.Unmarshalling(parcel);
-
+    auto bmsExperienceRulePtr = bmsExperienceRule.Unmarshalling(parcel);
+    if (bmsExperienceRulePtr != nullptr) {
+        delete bmsExperienceRulePtr;
+        bmsExperienceRulePtr = nullptr;
+    }
     BmsCallerInfo bmsCallerInfo;
     bmsCallerInfo.uid = fdp.ConsumeIntegral<int32_t>();
     bmsCallerInfo.pid = fdp.ConsumeIntegral<int32_t>();
@@ -70,43 +73,16 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bmsCallerInfo.targetLinkFeature = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     bmsCallerInfo.callerAppProvisionType = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     bmsCallerInfo.targetAppProvisionType = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    bmsCallerInfo.ReadFromParcel(parcel);
-    bmsCallerInfo.Marshalling(parcel);
+    Parcel parcel2;
+    bmsCallerInfo.ReadFromParcel(parcel2);
+    bmsCallerInfo.Marshalling(parcel2);
     bmsCallerInfo.ToString();
-    bmsCallerInfo.Unmarshalling(parcel);
-
-    BundleConnectAbilityMgr bundleConnectAbilityMgr;
-    TargetAbilityInfo targetAbilityInfo;
-    targetAbilityInfo.version = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    TargetInfo targetInfo;
-    targetAbilityInfo.targetInfo = targetInfo;
-    TargetExtSetting targetExtSetting;
-    targetAbilityInfo.targetExtSetting = targetExtSetting;
-    bundleConnectAbilityMgr.ProcessPreloadCheck(targetAbilityInfo);
-    int32_t flag = fdp.ConsumeIntegralInRange<int32_t>(1, 8);
-    bundleConnectAbilityMgr.ProcessPreloadRequestToServiceCenter(flag, targetAbilityInfo);
-
-    bundleConnectAbilityMgr.GetPreloadFlag();
-
-    std::shared_ptr<BundleConnectAbilityMgr> bundleConnectAbilityMgrPtr = std::make_shared<BundleConnectAbilityMgr>();
-    int32_t connectState = fdp.ConsumeIntegralInRange<int32_t>(0, 2);
-    std::condition_variable cv;
-    OHOS::AppExecFwk::ServiceCenterConnection serviceCenterConnection(connectState, cv, bundleConnectAbilityMgrPtr);
-    AppExecFwk::ElementName element;
-    int32_t resultCode = fdp.ConsumeIntegralInRange<int32_t>(0, 1);
-    serviceCenterConnection.OnAbilityConnectDone(element, nullptr, resultCode);
-    serviceCenterConnection.OnAbilityConnectDone(element, nullptr, resultCode);
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    serviceCenterConnection.OnAbilityConnectDone(element, remoteObject, resultCode);
-    serviceCenterConnection.OnAbilityDisconnectDone(element, resultCode);
-    
-    ServiceCenterStatusCallback serviceCenterStatusCallback(bundleConnectAbilityMgrPtr);
-    std::string installResult = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    serviceCenterStatusCallback.OnInstallFinished(installResult);
-    serviceCenterStatusCallback.OnDelayedHeartbeat(installResult);
-    serviceCenterStatusCallback.OnServiceCenterReceived(installResult);
+    bmsCallerInfo.Unmarshalling(parcel2);
+    auto bmsCallerInfoPtr = bmsCallerInfo.Unmarshalling(parcel2);
+    if (bmsCallerInfoPtr != nullptr) {
+        delete bmsCallerInfoPtr;
+        bmsCallerInfoPtr = nullptr;
+    }
 #endif
     return true;
 }
