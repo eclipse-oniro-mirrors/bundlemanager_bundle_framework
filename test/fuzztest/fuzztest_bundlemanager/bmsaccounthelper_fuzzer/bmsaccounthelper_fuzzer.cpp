@@ -36,6 +36,12 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     AccountHelper::IsOsAccountVerified(userId);
     int32_t uid = fdp.ConsumeIntegral<int32_t>();
     AccountHelper::GetOsAccountLocalIdFromUid(uid);
+    std::set<int32_t> userIds;
+    AccountHelper::QueryAllCreatedOsAccounts(userIds);
+    bool isOtaInstall = fdp.ConsumeBool();
+    AccountHelper::GetCurrentActiveUserIdWithRetry(isOtaInstall);
+    std::string constraint = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    AccountHelper::CheckOsAccountConstraintEnabled(userId, constraint);
     return true;
 }
 } // namespace OHOS
@@ -46,4 +52,4 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     /* Run your code on data */
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
-}
+}
