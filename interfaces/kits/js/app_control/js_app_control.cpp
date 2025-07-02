@@ -52,6 +52,9 @@ const char* UNINSTALL_DISPOSED_RULE_TYPE = "UninstallDisposedRule";
 const char* SET_UNINSTALL_DISPOSED_RULE = "SetUninstallDisposedRule";
 const char* DELETE_UNINSTALL_DISPOSED_RULE = "DeleteUninstallDisposedRule";
 const char* GET_UNINSTALL_DISPOSED_RULE = "GetUninstallDisposedRule";
+const char* SET_DISPOSED_RULES = "SetDisposedRules";
+const char* PARAM_LENGTH_ERROR = "parameter length invalid";
+const int16_t MAX_VECTOR_NUM = 1000;
 }
 static OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> GetAppControlProxy()
 {
@@ -630,21 +633,26 @@ bool ParseDisposedRuleConfiguration(napi_env env, napi_value nDisposedRuleConfig
     std::string appId;
     if (!CommonFunc::ParseString(env, prop, appId)) {
         APP_LOGE("appId invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return false;
     }
     if (appId.empty()) {
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_INVALID_APPID, SET_DISPOSED_STATUS_SYNC);
+            env, ERROR_INVALID_APPID, SET_DISPOSED_RULES);
         napi_throw(env, businessError);
         return false;
     }
     disposedRuleConfiguration.appId = appId;
     napi_get_named_property(env, nDisposedRuleConfiguration, "appIndex", &prop);
     int32_t appIndex = Constants::MAIN_APP_INDEX;
-    if (!CommonFunc::ParseInt(env, prop, appIndex)||
-        appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (!CommonFunc::ParseInt(env, prop, appIndex)) {
+        APP_LOGE("appIndex invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        return false;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_INVALID_APPINDEX, SET_DISPOSED_STATUS_SYNC);
+            env, ERROR_INVALID_APPINDEX, SET_DISPOSED_RULES);
         napi_throw(env, businessError);
         return false;
     }
@@ -654,6 +662,7 @@ bool ParseDisposedRuleConfiguration(napi_env env, napi_value nDisposedRuleConfig
     DisposedRule disposedRule;
     if (!ParseDiposedRule(env, prop, disposedRule)) {
         APP_LOGE("disposedRule invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
         return false;
     }
     disposedRuleConfiguration.disposedRule = disposedRule;
@@ -672,6 +681,11 @@ bool ParseDisposedRuleConfigurationArray(napi_env env, napi_value nDisposedRuleC
     uint32_t arrayLength = 0;
     NAPI_CALL_BASE(env, napi_get_array_length(env, nDisposedRuleConfigurations, &arrayLength), false);
     APP_LOGD("length=%{public}ud", arrayLength);
+    if (arrayLength <= 0 || arrayLength > MAX_VECTOR_NUM) {
+        APP_LOGE("disposedRuleConfigurations length invalid!");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_LENGTH_ERROR);
+        return false;
+    }
     for (uint32_t j = 0; j < arrayLength; j++) {
         napi_value value = nullptr;
         NAPI_CALL_BASE(env, napi_get_element(env, nDisposedRuleConfigurations, j, &value), false);
@@ -844,14 +858,14 @@ napi_value SetDisposedRules(napi_env env, napi_callback_info info)
     std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
     if (!ParseDisposedRuleConfigurationArray(env, args[ARGS_POS_ZERO], disposedRuleConfigurations)) {
         APP_LOGE("disposedRuleConfigurations invalid!");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
         return nRet;
     }
     auto appControlProxy = GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-            GET_DISPOSED_STATUS_SYNC);
+            SET_DISPOSED_RULES);
         napi_throw(env, error);
         return nullptr;
     }
@@ -861,7 +875,7 @@ napi_value SetDisposedRules(napi_env env, napi_callback_info info)
     if (ret != ERR_OK) {
         APP_LOGE("SetDisposedRules failed");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+            env, ret, SET_DISPOSED_RULES, PERMISSION_DISPOSED_STATUS);
         napi_throw(env, businessError);
         return nullptr;
     }
