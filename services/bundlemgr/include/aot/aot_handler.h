@@ -41,6 +41,7 @@ public:
     ErrCode HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle,
         std::vector<std::string> &compileResults) const;
     void HandleResetAOT(const std::string &bundleName, bool isAllBundle) const;
+    void HandleResetAllAOT() const;
     ErrCode HandleCopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results) const;
 private:
     AOTHandler();

@@ -387,6 +387,22 @@ void AOTHandler::HandleResetAOT(const std::string &bundleName, bool isAllBundle)
     });
 }
 
+void AOTHandler::HandleResetAllAOT() const
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is null");
+        return;
+    }
+    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
+    std::for_each(bundleNames.cbegin(), bundleNames.cend(), [dataMgr](const auto &bundleToReset) {
+        std::string removeDir = ServiceConstants::ARK_CACHE_PATH + bundleToReset;
+        ErrCode ret = InstalldClient::GetInstance()->RemoveDir(removeDir);
+        APP_LOGI("reset all aot removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
+        dataMgr->ResetAOTFlagsCommand(bundleToReset);
+    });
+}
+
 ErrCode AOTHandler::MkApDestDirIfNotExist() const
 {
     ErrCode errCode;

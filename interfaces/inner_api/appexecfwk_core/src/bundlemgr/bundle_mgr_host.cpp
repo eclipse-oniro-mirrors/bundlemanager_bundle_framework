@@ -701,6 +701,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GREAT_OR_EQUAL_API_TARGET_VERSION):
             errCode = HandleGreatOrEqualTargetAPIVersion(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_ALL_AOT):
+            errCode = HandleResetAllAOT(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1977,6 +1980,18 @@ ErrCode BundleMgrHost::HandleCompileReset(MessageParcel &data, MessageParcel &re
     APP_LOGI("reset info %{public}s", bundleName.c_str());
     ErrCode ret = CompileReset(bundleName, isAllBundle);
     APP_LOGI("ret %{public}d", ret);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleResetAllAOT(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    ErrCode ret = ResetAllAOT();
+    APP_LOGI("reset all aots ret %{public}d", ret);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

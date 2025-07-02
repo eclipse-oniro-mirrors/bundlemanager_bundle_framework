@@ -9115,6 +9115,13 @@ HWTEST_F(BmsBundleKitServiceTest, CompileReset_0100, Function | SmallTest | Leve
     std::string bundleName;
     ErrCode ret = hostImpl->CompileReset(bundleName, true);
     EXPECT_EQ(ret, ERR_OK);
+    ret = hostImpl->ResetAllAOT();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    auto saveuid = getuid();
+    setuid(Constants::CODE_SIGN_UID);
+    ret = hostImpl->ResetAllAOT();
+    setuid(saveuid);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

@@ -629,6 +629,11 @@ public:
      */
     virtual ErrCode CompileReset(const std::string &bundleName, bool isAllBundle) override;
     /**
+     * @brief Reset the bundle informations through the proxy object.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode ResetAllAOT() override;
+    /**
      * @brief copy ap file to /data/local/pgo through the proxy object.
      * @param bundleName Indicates the bundle name if needed.
      * @param isAllBundle Does it represent all bundlenames.

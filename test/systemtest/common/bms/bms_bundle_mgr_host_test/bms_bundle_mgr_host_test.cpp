@@ -2202,5 +2202,20 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetSandboxDataDir_0001, Function | MediumTe
     ErrCode res = bundleMgrHost.HandleGetSandboxDataDir(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: HandleCompileReset_0001
+ * @tc.name: test the HandleCompileReset
+ * @tc.desc: 1. system running normally
+ *           2. test HandleCompileReset
+ */
+ HWTEST_F(BmsBundleMgrHostTest, HandleResetAllAOT_0001, Function | MediumTest | Level1)
+ {
+     BundleMgrHost bundleMgrHost;
+     MessageParcel data;
+     MessageParcel reply;
+     ErrCode res = bundleMgrHost.HandleResetAllAOT(data, reply);
+     EXPECT_EQ(res, ERR_OK);
+ }
 } // AppExecFwk
 } // OHOS
