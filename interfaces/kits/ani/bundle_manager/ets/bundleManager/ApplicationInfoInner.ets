@@ -50,6 +50,7 @@ export class ApplicationInfoInner implements ApplicationInfo {
   readonly installSource: string = "";
   readonly releaseType: string = "";
   readonly cloudFileSyncEnabled: boolean;
+  readonly cloudStructuredDataSyncEnabled?: boolean|undefined;
   readonly flags?: number|undefined;
 }
 
