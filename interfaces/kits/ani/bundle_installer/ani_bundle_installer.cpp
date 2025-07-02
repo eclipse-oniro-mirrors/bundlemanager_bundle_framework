@@ -201,7 +201,7 @@ static bool GetInstallParamForInstall(ani_env* env, ani_array arrayObj, ani_obje
         return false;
     }
     if (hapFiles.empty() && !installParam.verifyCodeParams.empty()) {
-        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, HAPS_FILE_NEEDED);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_HAPS_FILE_EMPTY_ERROR);
         return false;
     }
     return true;
@@ -463,14 +463,14 @@ static void AniInstallPlugin(ani_env* env, [[maybe_unused]] ani_object installer
 
     std::vector<std::string> pluginFilePaths;
     if (aniPluginFilePaths == nullptr || !CommonFunAni::ParseStrArray(env, aniPluginFilePaths, pluginFilePaths)) {
-        APP_LOGE("pluginFilePaths parse failed.");
+        APP_LOGE("pluginFilePaths parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, FILE_PATH, TYPE_ARRAY);
         return;
     }
 
     InstallPluginParam pluginParam;
     if (aniPluginParam == nullptr || !CommonFunAni::ParsePluginParam(env, aniPluginParam, pluginParam)) {
-        APP_LOGE("pluginParam parse failed.");
+        APP_LOGE("pluginParam parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return;
     }
@@ -506,7 +506,7 @@ static void AniUninstallPlugin(ani_env* env, [[maybe_unused]] ani_object install
 
     InstallPluginParam pluginParam;
     if (aniPluginParam == nullptr || !CommonFunAni::ParsePluginParam(env, aniPluginParam, pluginParam)) {
-        APP_LOGE("pluginParam parse failed.");
+        APP_LOGE("pluginParam parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
         return;
     }
@@ -582,7 +582,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     };
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
     RETURN_ANI_STATUS_IF_NOT_OK(res, "Cannot bind native methods");
-    APP_LOGI("BundleInstaller class binding..");
+    APP_LOGI("BundleInstaller class binding");
     ani_class installerClz;
     res = env->FindClass(Builder::BuildClass(INNERINSTALLER_CLASSNAME).Descriptor().c_str(), &installerClz);
     RETURN_ANI_STATUS_IF_NOT_OK(res, "Not found clsName");

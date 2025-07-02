@@ -189,9 +189,9 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED, ERROR_USER_AUTHENTICATION_FAILED },
     { ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_TIME_OUT, ERROR_WAITING_FOR_USER_AUTHENTICATION_TIMEOUT },
     { ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED, ERROR_DATA_MIGRATION_COPY_FAILED },
-    { ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED, ERROR_SOURCE_PATH_ACCESS_FAILED_FAILED },
+    { ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED_FAILED, ERROR_SOURCE_PATH_ACCESS_FAILED },
     { ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_ACCESS_FAILED_FAILED,
-        ERROR_DESTINATION_PATH_ACCESS_FAILED_FAILED },
+        ERROR_DESTINATION_PATH_ACCESS_FAILED },
     { ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED, ERROR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED },
     { ERR_APPEXECFWK_PLUGIN_INSTALL_FILEPATH_INVALID, ERROR_INSTALL_HAP_FILEPATH_INVALID },
     { ERR_APPEXECFWK_PLUGIN_INSTALL_CHECK_PLUGINID_ERROR, ERROR_PLUGIN_ID_CHECK_ERROR },
@@ -2697,8 +2697,7 @@ bool CommonFunc::ParseParameterItem(napi_env env, napi_value param, std::string 
     return true;
 }
 
-void CommonFunc::GetBundleNameAndIndexByName(
-    const std::string &keyName, std::string &bundleName, int32_t &appIndex)
+void CommonFunc::GetBundleNameAndIndexByName(const std::string& keyName, std::string& bundleName, int32_t& appIndex)
 {
     bundleName = keyName;
     appIndex = 0;
@@ -2714,14 +2713,14 @@ void CommonFunc::GetBundleNameAndIndexByName(
     bundleName = keyName.substr(pos + strlen(CLONE_BUNDLE_PREFIX));
 }
 
-std::string CommonFunc::GetCloneBundleIdKey(const std::string &bundleName, const int32_t appIndex)
+std::string CommonFunc::GetCloneBundleIdKey(const std::string& bundleName, const int32_t appIndex)
 {
     return std::to_string(appIndex) + CLONE_BUNDLE_PREFIX + bundleName;
 }
 
 OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> CommonFunc::GetOverlayMgrProxy()
 {
-    auto bundleMgr = CommonFunc::GetBundleMgr();
+    auto bundleMgr = GetBundleMgr();
     if (bundleMgr == nullptr) {
         APP_LOGE("GetBundleMgr failed");
         return nullptr;

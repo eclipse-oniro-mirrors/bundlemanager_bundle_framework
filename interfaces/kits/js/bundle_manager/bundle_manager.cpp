@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -236,18 +236,6 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerGetAppCloneIdentity(int32_t uid, std::string &bundleName, int32_t &appIndex)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = iBundleMgr->GetNameAndIndexForUid(uid, bundleName, appIndex);
-    APP_LOGD("GetNameAndIndexForUid ErrCode : %{public}d", ret);
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 static ErrCode InnerGetApplicationInfo(const std::string &bundleName, int32_t flags,
     int32_t userId, ApplicationInfo &appInfo)
 {
@@ -309,8 +297,8 @@ void GetBundleNameByUidExec(napi_env env, void *data)
         }
     }
     int32_t appIndex = 0;
-    asyncCallbackInfo->err =
-        InnerGetAppCloneIdentity(asyncCallbackInfo->uid, asyncCallbackInfo->bundleName, appIndex);
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetAppCloneIdentity(
+        asyncCallbackInfo->uid, asyncCallbackInfo->bundleName, appIndex);
     std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
     if ((asyncCallbackInfo->err == NO_ERROR) && queryOwn && g_ownBundleName.empty()) {
         g_ownBundleName = asyncCallbackInfo->bundleName;
@@ -359,7 +347,7 @@ void GetAppCloneIdentityExec(napi_env env, void *data)
             return;
         }
     }
-    asyncCallbackInfo->err = InnerGetAppCloneIdentity(
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetAppCloneIdentity(
         asyncCallbackInfo->uid, asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex);
     std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
     if ((asyncCallbackInfo->err == NO_ERROR) && queryOwn && g_ownBundleName.empty()) {

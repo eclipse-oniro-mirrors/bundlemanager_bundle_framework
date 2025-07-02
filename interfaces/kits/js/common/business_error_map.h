@@ -18,7 +18,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace BussinessErrorNS {
+namespace BusinessErrorNS {
 constexpr const char* ERR_MSG_BUSINESS_ERROR = "BusinessError $: ";
 constexpr const char* ERR_MSG_PARAM_NUMBER_ERROR =
     "BusinessError 401: Parameter error. The number of parameters is incorrect.";

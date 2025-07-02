@@ -25,8 +25,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 
-ErrCode BundleManagerHelper::InnerBatchQueryAbilityInfos(const std::vector<OHOS::AAFwk::Want> &wants,
-    int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+ErrCode BundleManagerHelper::InnerBatchQueryAbilityInfos(
+    const std::vector<OHOS::AAFwk::Want>& wants, int32_t flags, int32_t userId, std::vector<AbilityInfo>& abilityInfos)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -38,7 +38,7 @@ ErrCode BundleManagerHelper::InnerBatchQueryAbilityInfos(const std::vector<OHOS:
     return CommonFunc::ConvertErrCode(ret);
 }
 
-ErrCode BundleManagerHelper::InnerGetDynamicIcon(const std::string &bundleName, std::string &moduleName)
+ErrCode BundleManagerHelper::InnerGetDynamicIcon(const std::string& bundleName, std::string& moduleName)
 {
     auto extResourceManager = CommonFunc::GetExtendResourceManager();
     if (extResourceManager == nullptr) {
@@ -52,8 +52,7 @@ ErrCode BundleManagerHelper::InnerGetDynamicIcon(const std::string &bundleName, 
     return CommonFunc::ConvertErrCode(ret);
 }
 
-ErrCode BundleManagerHelper::InnerIsAbilityEnabled(
-    const AbilityInfo &abilityInfo, bool &isEnable, int32_t appIndex)
+ErrCode BundleManagerHelper::InnerIsAbilityEnabled(const AbilityInfo& abilityInfo, bool& isEnable, int32_t appIndex)
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
@@ -69,8 +68,7 @@ ErrCode BundleManagerHelper::InnerIsAbilityEnabled(
     return CommonFunc::ConvertErrCode(ret);
 }
 
-ErrCode BundleManagerHelper::InnerSetAbilityEnabled(
-    const AbilityInfo &abilityInfo, bool &isEnable, int32_t appIndex)
+ErrCode BundleManagerHelper::InnerSetAbilityEnabled(const AbilityInfo& abilityInfo, bool& isEnable, int32_t appIndex)
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
@@ -86,8 +84,7 @@ ErrCode BundleManagerHelper::InnerSetAbilityEnabled(
     return CommonFunc::ConvertErrCode(ret);
 }
 
-ErrCode BundleManagerHelper::InnerSetApplicationEnabled(
-    const std::string &bundleName, bool &isEnable, int32_t appIndex)
+ErrCode BundleManagerHelper::InnerSetApplicationEnabled(const std::string& bundleName, bool& isEnable, int32_t appIndex)
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
@@ -103,8 +100,7 @@ ErrCode BundleManagerHelper::InnerSetApplicationEnabled(
     return CommonFunc::ConvertErrCode(ret);
 }
 
-ErrCode BundleManagerHelper::InnerEnableDynamicIcon(
-    const std::string &bundleName, const std::string &moduleName)
+ErrCode BundleManagerHelper::InnerEnableDynamicIcon(const std::string& bundleName, const std::string& moduleName)
 {
     auto extResourceManager = CommonFunc::GetExtendResourceManager();
     if (extResourceManager == nullptr) {
@@ -117,6 +113,18 @@ ErrCode BundleManagerHelper::InnerEnableDynamicIcon(
         APP_LOGE("EnableDynamicIcon failed");
     }
 
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetAppCloneIdentity(int32_t uid, std::string& bundleName, int32_t& appIndex)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetNameAndIndexForUid(uid, bundleName, appIndex);
+    APP_LOGD("GetNameAndIndexForUid ErrCode : %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }
 } // AppExecFwk

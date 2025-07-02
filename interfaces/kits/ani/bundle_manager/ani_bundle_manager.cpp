@@ -361,9 +361,8 @@ static ani_object GetAllBundleInfoNative(ani_env* env, ani_double aniBundleFlags
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGW("Parse userId failed, set this parameter to the caller userId");
     }
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
-        userId = callingUid / Constants::BASE_USER_RANGE;
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
 
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -399,9 +398,8 @@ static ani_object GetAllApplicationInfoNative(ani_env* env, ani_double aniApplic
         APP_LOGW("Parse userId failed, set this parameter to the caller userId");
     }
 
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
-        userId = callingUid / Constants::BASE_USER_RANGE;
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
 
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -482,9 +480,8 @@ static ani_object QueryAbilityInfoSyncNative(ani_env* env,
         APP_LOGW("Parse userId failed, set this parameter to the caller userId");
     }
     
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
-        userId = callingUid / Constants::BASE_USER_RANGE;
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     const ANIQuery query(want.ToString(), QUERY_ABILITY_INFOS_SYNC, abilityFlags, userId);
     {
@@ -537,17 +534,11 @@ static ani_object GetAppCloneIdentityNative(ani_env* env, ani_double aniUid)
             return CommonFunAni::ConvertAppCloneIdentity(env, bundleName, appIndex);
         }
     }
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("GetBundleMgr failed");
-        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
-        return nullptr;
-    }
-    ErrCode ret = iBundleMgr->GetNameAndIndexForUid(uid, bundleName, appIndex);
+
+    ErrCode ret = BundleManagerHelper::InnerGetAppCloneIdentity(uid, bundleName, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE("GetNameAndIndexForUid failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            GET_APP_CLONE_IDENTITY, APP_CLONE_IDENTITY_PERMISSIONS);
+        BusinessErrorAni::ThrowCommonError(env, ret, GET_APP_CLONE_IDENTITY, APP_CLONE_IDENTITY_PERMISSIONS);
         return nullptr;
     }
     
@@ -608,7 +599,7 @@ static ani_string GetAbilityLabelNative(ani_env* env,
     }
     return aniAbilityLabel;
 #else
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    APP_LOGW("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ABILITY_LABEL, "");
     return nullptr;
 #endif
@@ -628,9 +619,8 @@ static ani_object GetLaunchWantForBundleNative(ani_env* env,
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGW("Parse userId failed, set this parameter to the caller userId");
     }
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
-        userId = callingUid / Constants::BASE_USER_RANGE;
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
 
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -678,9 +668,8 @@ static ani_object GetAppCloneBundleInfoNative(ani_env* env, ani_string aniBundle
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGW("Parse userId failed, use default value");
     }
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
-        userId = callingUid / Constants::BASE_USER_RANGE;
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
 
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -733,18 +722,6 @@ static ani_string GetSpecifiedDistributionType(ani_env* env, ani_string aniBundl
     return aniSpecifiedDistributionType;
 }
 
-static ErrCode InnerGetAppCloneIdentity(int32_t uid, std::string &bundleName, int32_t &appIndex)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = iBundleMgr->GetNameAndIndexForUid(uid, bundleName, appIndex);
-    APP_LOGD("GetNameAndIndexForUid ErrCode : %{public}d", ret);
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 static ani_string GetBundleNameByUidNative(ani_env* env, ani_double aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGD("ani GetBundleNameByUid called");
@@ -773,7 +750,7 @@ static ani_string GetBundleNameByUidNative(ani_env* env, ani_double aniUserId, a
         }
     }
     int32_t appIndex = 0;
-    ErrCode ret = InnerGetAppCloneIdentity(userId, bundleName, appIndex);
+    ErrCode ret = BundleManagerHelper::InnerGetAppCloneIdentity(userId, bundleName, appIndex);
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     if (ret != ERR_OK) {
         BusinessErrorAni::ThrowCommonError(
@@ -818,9 +795,8 @@ static ani_object QueryAbilityInfoWithWantsNative(ani_env* env,
         APP_LOGW("Parse userId failed, set this parameter to the caller userId");
     }
     
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
-        userId = callingUid / Constants::BASE_USER_RANGE;
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     std::string bundleNames = "[";
     for (uint32_t i = 0; i < wants.size(); i++) {
@@ -995,9 +971,8 @@ static ani_object QueryExtensionAbilityInfoNative(ani_env* env,
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGW("Parse userId failed, set this parameter to the caller userId");
     }
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
-        userId = callingUid / Constants::BASE_USER_RANGE;
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
 
     std::string key = want.ToString() + std::to_string(static_cast<int32_t>(extensionAbilityType));
@@ -1073,9 +1048,8 @@ static ani_object QueryExAbilityInfoSyncWithoutWant(ani_env* env, ani_string ani
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGW("Parse userId failed, set this parameter to the caller userId");
     }
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (userId == EMPTY_USER_ID) {
-        userId = callingUid / Constants::BASE_USER_RANGE;
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
 
     auto iBundleMgr = CommonFunc::GetBundleMgr();
