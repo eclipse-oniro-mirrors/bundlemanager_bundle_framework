@@ -23,6 +23,7 @@
 #endif
 #include "app_log_tag_wrapper.h"
 #include "bms_extension_data_mgr.h"
+#include "bundle_extractor.h"
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
@@ -5288,6 +5289,28 @@ std::string InnerBundleInfo::GetModuleCodeLanguage(const std::string &moduleName
         return Constants::EMPTY_STRING;
     }
     return item->second.codeLanguage;
+}
+
+void InnerBundleInfo::UpdateHasCloudkitConfig()
+{
+    std::string entryModuleName = GetEntryModuleName();
+    auto item = innerModuleInfos_.find(entryModuleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGE("entry module info is not found");
+        return;
+    }
+    BundleExtractor bundleExtractor(item->second.hapPath);
+    if (!bundleExtractor.Init()) {
+        APP_LOGE("bundle extractor init failed");
+        return;
+    }
+    bool hasConfig = bundleExtractor.HasEntry(ServiceConstants::CLOUD_PROFILE_PATH);
+    APP_LOGD("cloudkit config exist: %{public}d", hasConfig);
+    if (hasConfig) {
+        BundleUtil::SetBit(InnerModuleInfoBoolFlag::HAS_CLOUD_KIT_CONFIG, item->second.boolSet);
+    } else {
+        BundleUtil::ResetBit(InnerModuleInfoBoolFlag::HAS_CLOUD_KIT_CONFIG, item->second.boolSet);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

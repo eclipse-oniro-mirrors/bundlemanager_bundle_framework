@@ -185,6 +185,7 @@ enum class GetInnerModuleInfoFlag : uint8_t {
 
 enum InnerModuleInfoBoolFlag : uint8_t {
     HAS_INTENT = 0,
+    HAS_CLOUD_KIT_CONFIG = 1,
 };
 
 struct InstallMark {
@@ -2349,6 +2350,7 @@ public:
     bool RemovePluginFromUserInfo(const std::string &pluginBundleName, const int32_t userId);
     void GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos) const;
     std::string GetApplicationCodeLanguage() const;
+    void UpdateHasCloudkitConfig();
 
 private:
     bool IsExistLauncherAbility() const;

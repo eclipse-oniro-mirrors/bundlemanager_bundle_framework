@@ -119,7 +119,8 @@ const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::UTD_SDT_PROFILE, UTD_SDT_PROFILE_PATH },
     { ProfileType::PKG_CONTEXT_PROFILE, PKG_CONTEXT_PROFILE_PATH },
     { ProfileType::FILE_ICON_PROFILE, FILE_ICON_PROFILE_PATH },
-    { ProfileType::INSIGHT_INTENT_PROFILE, INSIGHT_INTENT_PROFILE_PATH }
+    { ProfileType::INSIGHT_INTENT_PROFILE, INSIGHT_INTENT_PROFILE_PATH },
+    { ProfileType::CLOUD_PROFILE, ServiceConstants::CLOUD_PROFILE_PATH}
 };
 const std::string SCHEME_END = "://";
 const std::string LINK_FEATURE = "linkFeature";

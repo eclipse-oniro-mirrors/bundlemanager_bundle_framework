@@ -4996,6 +4996,25 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13100, Function | Sma
 }
 
 /**
+ * @tc.number: InnerBundleInfo_13300
+ * @tc.name: Test UpdateHasCloudkitConfig
+ * @tc.desc: Test the UpdateHasCloudkitConfig of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.UpdateHasCloudkitConfig();
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    innerModuleInfo.isEntry = true;
+    info.innerModuleInfos_.try_emplace(MODULE_NAME, innerModuleInfo);
+    info.UpdateHasCloudkitConfig();
+    EXPECT_EQ(info.innerModuleInfos_[MODULE_NAME].boolSet, 0);
+}
+
+/**
  * @tc.number: GetApplicationInfoV9_0001
  * @tc.name: Test GetApplicationInfoV9
  * @tc.desc: Test the GetApplicationInfoV9 of InnerBundleInfo

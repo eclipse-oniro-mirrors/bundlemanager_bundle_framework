@@ -223,6 +223,7 @@ ohos_unittest("BmsBundleCloneAppDataStructTest") {
     "ipc:ipc_core",
     "json:nlohmann_json_static",
   ]
+  external_deps += bundle_install_external_deps
   defines = []
   if (ability_runtime_enable) {
     external_deps += [ "ability_runtime:ability_manager" ]

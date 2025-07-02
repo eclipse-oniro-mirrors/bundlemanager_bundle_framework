@@ -13,6 +13,7 @@
 
 import("//build/test.gni")
 import("../../../../../appexecfwk.gni")
+import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = "bundle_framework/bundle_framework"
 
@@ -63,6 +64,7 @@ ohos_unittest("BmsBundleParserTest") {
     "ipc:ipc_core",
     "zlib:shared_libz",
   ]
+  external_deps += bundle_install_external_deps
   defines = []
   if (ability_runtime_enable) {
     external_deps += [

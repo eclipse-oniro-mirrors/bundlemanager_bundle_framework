@@ -61,6 +61,7 @@ ohos_unittest("BmsBundleRdbDataManagerTest") {
     "jsoncpp:jsoncpp",
     "relational_store:native_rdb",
   ]
+  external_deps += bundle_install_external_deps
 }
 
 group("unittest") {
