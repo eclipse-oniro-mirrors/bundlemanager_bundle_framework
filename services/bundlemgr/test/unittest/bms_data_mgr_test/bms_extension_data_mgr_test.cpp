@@ -1248,4 +1248,42 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0035, Function | SmallTest | Leve
     bool res = bundleMgrExtTest.IsNeedToSkipPreBundleInstall();
     EXPECT_FALSE(res);
 }
+
+/**
+ * @tc.number: BundleMgrExt_0037
+ * @tc.name: RegisterPreInstallWithCard
+ * @tc.desc: RegisterPreInstallWithCard
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0037, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    ErrCode res = bundleMgrExtTest.RegisterPreInstallWithCard();
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: RegisterPreInstallWithCard_001
+ * @tc.name: RegisterPreInstallWithCard
+ * @tc.desc: RegisterPreInstallWithCard
+ */
+HWTEST_F(BmsExtensionDataMgrTest, RegisterPreInstallWithCard_001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgrTest;
+    bmsExtensionDataMgrTest.handler_ = nullptr;
+    ErrCode res = bmsExtensionDataMgrTest.RegisterPreInstallWithCard();
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+
+    #endif
+    int16_t handleTest = 1;
+    bmsExtensionDataMgrTest.handler_ = &handleTest;
+    res = bmsExtensionDataMgrTest.RegisterPreInstallWithCard();
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
+}
 } // OHOS
