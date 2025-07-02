@@ -34,6 +34,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_ext_proxy.h"
+#include "bundle_user_mgr_proxy.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_proxy.h"
 #endif
@@ -655,6 +656,33 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3800, Function | SmallTest | 
     BundleMgrProxy bundleMgrProxy(impl);
     auto result = bundleMgrProxy.UnregisterPluginEventCallback(nullptr);
     EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_3900
+ * @tc.name: test the CreateBundleDataDir
+ * @tc.desc: 1. CreateBundleDataDir
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_3900, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleMgrProxy bundleMgrProxy(impl);
+    int32_t userId = 11111;
+    auto result = bundleMgrProxy.CreateBundleDataDir(userId);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Proxy_Test_4000
+ * @tc.name: test the RemoveUser
+ * @tc.desc: 1. callback is nullptr
+ */
+HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_4000, Function | SmallTest | Level0)
+{
+    sptr<IRemoteObject> impl = nullptr;
+    BundleUserMgrProxy bundleUserMgrProxy(impl);
+    auto result = bundleUserMgrProxy.RemoveUser(11111);
+    EXPECT_NE(result, ERR_OK);
 }
 } // AppExecFwk
 } // OHOS

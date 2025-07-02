@@ -73,5 +73,109 @@ HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0100, Function | S
     auto ret = bundleMgrClientImpl->CreateBundleDataDirWithEl(userId, dirEl);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_0200
+ * @tc.name: test the GetBundlePackInfo
+ * @tc.desc: 1. GetBundlePackInfo
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    std::string bundleName = "com.example.bundle.wrong";
+    BundlePackFlag flag = BundlePackFlag::GET_PACK_INFO_ALL;
+    BundlePackInfo bundlePackInfo;
+    int32_t userId = 101;
+    auto ret = bundleMgrClientImpl->GetBundlePackInfo(bundleName, flag, bundlePackInfo, userId);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_0300
+ * @tc.name: test the GetHapModuleInfo
+ * @tc.desc: 1. GetHapModuleInfo
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    std::string bundleName = "com.example.bundle.wrong";
+    std::string hapName = "entry";
+    HapModuleInfo hapModuleInfo;
+    auto ret = bundleMgrClientImpl->GetHapModuleInfo(bundleName, hapName, hapModuleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_0400
+ * @tc.name: test the GetProfileFromExtension
+ * @tc.desc: 1. GetProfileFromExtension
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0400, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    ExtensionAbilityInfo extensionInfo;
+    std::string metadataName = "profile";
+    std::vector<std::string> profileInfos;
+    auto ret = bundleMgrClientImpl->GetProfileFromExtension(extensionInfo, metadataName, profileInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_0500
+ * @tc.name: test the GetProfileFromAbility
+ * @tc.desc: 1. GetProfileFromAbility
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0500, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    AbilityInfo abilityInfo;
+    std::string metadataName = "profile";
+    std::vector<std::string> profileInfos;
+    auto ret = bundleMgrClientImpl->GetProfileFromAbility(abilityInfo, metadataName, profileInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_0600
+ * @tc.name: test the GetProfileFromHap
+ * @tc.desc: 1. GetProfileFromHap
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0600, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    HapModuleInfo hapModuleInfo;
+    std::string metadataName = "profile";
+    std::vector<std::string> profileInfos;
+    auto ret = bundleMgrClientImpl->GetProfileFromHap(hapModuleInfo, metadataName, profileInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_0700
+ * @tc.name: test the CreateBundleDataDir
+ * @tc.desc: 1. CreateBundleDataDir
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0700, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    int32_t userId = 1111;
+    auto ret = bundleMgrClientImpl->CreateBundleDataDir(userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: Bundle_Mgr_Client_Impl_Test_0800
+ * @tc.name: test the GetDirByBundleNameAndAppIndex
+ * @tc.desc: 1. GetDirByBundleNameAndAppIndex
+ */
+HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0800, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    std::string bundleName;
+    int32_t appIndex = -1;
+    std::string dataDir;
+    auto ret = bundleMgrClientImpl->GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
+    EXPECT_NE(ret, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS
