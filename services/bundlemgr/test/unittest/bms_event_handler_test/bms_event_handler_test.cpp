@@ -1761,7 +1761,7 @@ HWTEST_F(BmsEventHandlerTest, HandlePreInstallAppServicePathsException_0100, Fun
                 preInstallExceptionMgr->exceptionPaths_.end());
 }
 
-/**
+/** 
  * @tc.number: HandlePreInstallAppPathsException_0100
  * @tc.name: HandlePreInstallAppPathsException
  * @tc.desc: test HandlePreInstallAppPathsException
