@@ -679,6 +679,5 @@ ErrCode AppControlHost::GetVectorParcelInfo(MessageParcel &data, std::vector<T> 
 
     return ERR_OK;
 }
-template bool AppControlHost::WriteParcelableVector(std::vector<Parcelable> &parcelableVector, MessageParcel &reply);
 } // AppExecFwk
 } // OHOS

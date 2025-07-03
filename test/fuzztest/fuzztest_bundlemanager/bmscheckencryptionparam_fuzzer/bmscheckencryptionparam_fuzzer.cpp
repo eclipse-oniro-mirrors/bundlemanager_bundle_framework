@@ -37,7 +37,14 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 
     checkEncryptionParam.ReadFromParcel(parcel);
     checkEncryptionParam.Marshalling(parcel);
-    checkEncryptionParam.Unmarshalling(parcel);
+    if (!checkEncryptionParam.Marshalling(parcel)) {
+            return false;
+        }
+    auto rulePtr = CheckEncryptionParam::Unmarshalling(parcel);
+        if (rulePtr == nullptr) {
+            return false;
+        }
+        delete rulePtr;
     return true;
 }
 }
