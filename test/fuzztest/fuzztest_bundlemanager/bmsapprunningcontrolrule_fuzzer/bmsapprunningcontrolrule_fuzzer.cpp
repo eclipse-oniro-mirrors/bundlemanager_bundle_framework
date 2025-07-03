@@ -19,6 +19,7 @@
 
 #include "app_running_control_rule.h"
 #include "parcel.h"
+#include "ipc/extract_param.h"
 
 #include "bmsapprunningcontrolrule_fuzzer.h"
 #include "bms_fuzztest_util.h"
@@ -52,6 +53,9 @@ namespace OHOS {
         AppRunningControlRule readRule;
         GetRandomAppRunningControlRule(fdp, readRule);
         bool ret = readRule.ReadFromParcel(dataMessageParcel);
+        ExtractParam extractParam;
+        extractParam.Marshalling(dataMessageParcel);
+        extractParam.ToString();
         return ret;
     }
 }

@@ -41,6 +41,11 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
         MessageOption option;
         DelayedSingleton<BundleMgrService>::GetInstance()->OnStop();
         installdHost.OnRemoteRequest(code, datas, reply, option);
+        installdHost.HandleExecuteAOT(data,reply);
+        installdHost.HandleGetDiskUsageFromPath(data, reply);
+        installdHost.HandleCreateDataGroupDirs(data, reply);
+        installdHost.HandleDeleteDataGroupDirs(data, reply);
+        installdHost.AddCloseInstalldTask();
     }
     return true;
 }

@@ -44,6 +44,10 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     datas.RewindRead(0);
     MessageOption option;
     appControlHost.OnRemoteRequest(code, datas, reply, option);
+    std::vector<std::string> stringVector;
+    std::vector<Parcelable> parcelableVector;
+    appControlHost.WriteStringVector(stringVector, reply);
+    appControlHost.WriteParcelableVector(parcelableVector, reply);
     return true;
 }
 }
