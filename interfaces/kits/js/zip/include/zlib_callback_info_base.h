@@ -12,27 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef OHOS_APPEXECFWK_LIBZIP_ZLIB_CALLBACK_BASE_H
+#define OHOS_APPEXECFWK_LIBZIP_ZLIB_CALLBACK_BASE_H
 
-#ifndef BUNDLE_FRAMEWORK_INTERFACES_KITS_ANI_ZLIB_H
-#define BUNDLE_FRAMEWORK_INTERFACES_KITS_ANI_ZLIB_H
-
-#include "app_log_wrapper.h"
 #include "bundle_errors.h"
-#include "business_error_ani.h"
-#include "common_fun_ani.h"
-#include "common_func.h"
-#include "enum_util.h"
-#include "file_path.h"
-#include "zip_utils.h"
+#include "event_handler.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-bool ANIParseOptions(ani_env* env, ani_object object, LIBZIP::OPTIONS& options);
-ErrCode ANICompressFileImpl(const std::string& inFile, const std::string& outFile, const LIBZIP::OPTIONS& options);
-ErrCode ANIDecompressFileImpl(const std::string& inFile, const std::string& outFile, const LIBZIP::OPTIONS& options);
-} // namespace LIBZIP
-} // namespace AppExecFwk
-} // namespace OHOS
-
-#endif
+class ZlibCallbackInfoBase {
+public:
+    ZlibCallbackInfoBase() = default;
+    virtual ~ZlibCallbackInfoBase() = default;
+    virtual void OnZipUnZipFinish(ErrCode result) = 0;
+    virtual void DoTask(const OHOS::AppExecFwk::InnerEvent::Callback& task) = 0;
+};
+}  // namespace LIBZIP
+}  // namespace AppExecFwk
+}  // namespace OHOS
+#endif  // OHOS_APPEXECFWK_LIBZIP_ZLIB_CALLBACK_H

@@ -26,6 +26,7 @@ ohos_shared_library("ani_bundle_res_manager") {
     integer_overflow = true
     ubsan = true
   }
+
   include_dirs = [
     "${inner_api_path}/appexecfwk_core/include",
     "${kits_path}/ani/resource_manager",
@@ -112,4 +113,22 @@ ohos_prebuilt_etc("bundle_resource_manager_etc") {
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
   deps = [ ":bundle_resource_manager" ]
+}
+
+generate_static_abc("launcher_ability_resource_info") {
+  base_url = "./ets"
+  files = [
+    "./ets/bundleManager/LauncherAbilityResourceInfo.ets",
+    "./ets/bundleManager/LauncherAbilityResourceInfoInner.ets",
+  ]
+  is_boot_abc = "True"
+  device_dst_file = "/system/framework/launcher_ability_resource_info.abc"
+}
+
+ohos_prebuilt_etc("launcher_ability_resource_info_etc") {
+  source = "$target_out_dir/launcher_ability_resource_info.abc"
+  module_install_dir = "framework"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  deps = [ ":launcher_ability_resource_info" ]
 }

@@ -41,6 +41,8 @@ constexpr const char* CLASSNAME_BUNDLEMANAGER_PERMISSIONGRANTSTATE =
     "L@ohos/bundle/bundleManager/bundleManager/PermissionGrantState;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_APPLICATION_FLAG =
     "L@ohos/bundle/bundleManager/bundleManager/ApplicationFlag;";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_COMPATIBLEPOLICY =
+    "L@ohos/bundle/bundleManager/bundleManager/CompatiblePolicy;";
 constexpr const char* CLASSNAME_BUNDLE_DISPLAYORIENTATION = "L@ohos/bundle/bundle/DisplayOrientation;";
 constexpr const char* CLASSNAME_BUNDLE_ABILITY_TYPE = "L@ohos/bundle/bundle/AbilityType;";
 constexpr const char* CLASSNAME_BUNDLE_ABILITYSUB_TYPE = "L@ohos/bundle/bundle/AbilitySubType;";
@@ -48,6 +50,10 @@ constexpr const char* CLASSNAME_BUNDLE_LAUNCHMODE = "L@ohos/bundle/bundle/Launch
 constexpr const char* CLASSNAME_ZLIB_COMPRESSLEVEL = "L@ohos/zlib/zlib/CompressLevel;";
 constexpr const char* CLASSNAME_ZLIB_MEMLEVEL = "L@ohos/zlib/zlib/MemLevel;";
 constexpr const char* CLASSNAME_ZLIB_COMPRESSSTRATEGY = "L@ohos/zlib/zlib/CompressStrategy;";
+constexpr const char* CLASSNAME_APPCONTROL_COMPONENTTYPE = "L@ohos/bundle/appControl/ComponentType";
+constexpr const char* CLASSNAME_APPCONTROL_DISPOSEDTYPE = "L@ohos/bundle/appControl/DisposedType";
+constexpr const char* CLASSNAME_APPCONTROL_CONTROLTYPE = "L@ohos/bundle/appControl/ControlType";
+constexpr const char* CLASSNAME_APPCONTROL_UNINSTALLCOMPONENTTYPE = "L@ohos/bundle/appControl/UninstallComponentType";
 } // namespace CommonFunAniNS
 class EnumUtils {
 private:
@@ -370,6 +376,15 @@ public:
             env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APPLICATION_FLAG, value, Array_BundleManager_ApplicationFlag);
     }
 
+    /* bundleManager.CompatiblePolicy
+    enum CompatiblePolicy {
+        BACKWARD_COMPATIBILITY = 1
+    } */
+    static inline ani_enum_item EnumNativeToETS_BundleManager_CompatiblePolicy(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_COMPATIBLEPOLICY, value, 1);
+    }
+
     /* bundle.DisplayOrientation
     enum DisplayOrientation {
         UNSPECIFIED,
@@ -438,6 +453,46 @@ public:
     static inline ani_enum_item EnumNativeToETS_Zlib_CompressStrategy(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_ZLIB_COMPRESSSTRATEGY, value, 0);
+    }
+
+    /* appControl.ComponentType
+    enum ComponentType {
+        UI_ABILITY = 1,
+        UI_EXTENSION = 2
+    } */
+    static inline ani_enum_item EnumNativeToETS_AppControl_ComponentType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_APPCONTROL_COMPONENTTYPE, value, 1);
+    }
+
+    /* appControl.DisposedType
+    enum DisposedType {
+        BLOCK_APPLICATION = 1,
+        BLOCK_ABILITY = 2,
+        NON_BLOCK = 3
+    } */
+    static inline ani_enum_item EnumNativeToETS_AppControl_DisposedType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_APPCONTROL_DISPOSEDTYPE, value, 1);
+    }
+
+    /* appControl.ControlType
+    enum ControlType {
+        ALLOWED_LIST = 1,
+        DISALLOWED_LIST = 2
+    } */
+    static inline ani_enum_item EnumNativeToETS_AppControl_ControlType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_APPCONTROL_CONTROLTYPE, value, 1);
+    }
+
+    /* appControl.UninstallComponentType
+    enum UninstallComponentType {
+        EXTENSION = 1,
+    } */
+    static inline ani_enum_item EnumNativeToETS_AppControl_UninstallComponentType(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_APPCONTROL_UNINSTALLCOMPONENTTYPE, value, 1);
     }
 };
 } // namespace AppExecFwk

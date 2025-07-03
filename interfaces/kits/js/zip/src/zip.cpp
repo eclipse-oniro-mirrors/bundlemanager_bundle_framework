@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -410,7 +410,7 @@ ErrCode UnzipWithFilterCallback(
 }
 
 bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS options,
-    std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo)
+    std::shared_ptr<ZlibCallbackInfoBase> zlibCallbackInfo)
 {
     if (zlibCallbackInfo == nullptr) {
         APP_LOGE("zlibCallbackInfo is nullptr");
@@ -453,7 +453,7 @@ bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS opti
             zlibCallbackInfo->OnZipUnZipFinish(err);
         }
     };
-    PostTask(innerTask);
+    zlibCallbackInfo->DoTask(innerTask);
     return true;
 }
 
@@ -527,7 +527,7 @@ ErrCode ZipsWithFilterCallback(const std::vector<FilePath> &srcFiles, const File
 }
 
 bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS &options,
-    bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo)
+    bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfoBase> zlibCallbackInfo)
 {
     if (zlibCallbackInfo == nullptr) {
         return false;
@@ -559,7 +559,7 @@ bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS 
         }
     };
 
-    PostTask(innerTask);
+    zlibCallbackInfo->DoTask(innerTask);
     return true;
 }
 
@@ -630,7 +630,7 @@ ErrCode GetOriginalSize(const std::string &srcFile, int64_t &originalSize)
 }
 
 bool Zips(const std::vector<std::string> &srcFiles, const std::string &destPath, const OPTIONS &options,
-    bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo)
+    bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfoBase> zlibCallbackInfo)
 {
     if (zlibCallbackInfo == nullptr) {
         return false;
@@ -668,7 +668,7 @@ bool Zips(const std::vector<std::string> &srcFiles, const std::string &destPath,
         }
     };
 
-    PostTask(innerTask);
+    zlibCallbackInfo->DoTask(innerTask);
     return true;
 }
 }  // namespace LIBZIP

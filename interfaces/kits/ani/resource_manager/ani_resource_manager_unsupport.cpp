@@ -34,6 +34,28 @@ static ani_object AniGetBundleResourceInfo(ani_env* env, ani_string aniBundleNam
     return nullptr;
 }
 
+static ani_object AniGetLauncherAbilityResourceInfo(ani_env* env, ani_string aniBundleName,
+    ani_double aniResFlag, ani_double aniAppIndex)
+{
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_LAUNCHER_ABILITY_RESOURCE_INFO, "");
+    return nullptr;
+}
+
+static ani_object AniGetAllBundleResourceInfo(ani_env* env, ani_double aniResFlag)
+{
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ALL_BUNDLE_RESOURCE_INFO, "");
+    return nullptr;
+}
+
+static ani_object AniGetAllLauncherAbilityResourceInfo(ani_env* env, ani_double aniResFlag)
+{
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO, "");
+    return nullptr;
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -53,6 +75,12 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     std::array methods = {
         ani_native_function { "getBundleResourceInfoNative", nullptr,
             reinterpret_cast<void*>(AniGetBundleResourceInfo) },
+        ani_native_function { "getLauncherAbilityResourceInfoNative", nullptr,
+            reinterpret_cast<void*>(AniGetLauncherAbilityResourceInfo) },
+        ani_native_function { "getAllBundleResourceInfoNative", nullptr,
+            reinterpret_cast<void*>(AniGetAllBundleResourceInfo) },
+        ani_native_function { "getAllLauncherAbilityResourceInfoNative", nullptr,
+            reinterpret_cast<void*>(AniGetAllLauncherAbilityResourceInfo) }
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
