@@ -45,6 +45,13 @@ namespace OHOS {
         int64_t fileSize = fdp.ConsumeIntegral<int64_t>();
         fileUtil.CheckFileSize(bundlePath, fileSize);
 
+        int64_t minFileSize = fdp.ConsumeIntegralInRange<int64_t>(0, 0);
+        fileUtil.CheckFileSize(bundlePath, minFileSize);
+        fileUtil.DeleteDir(bundlePath);
+        fileUtil.IsExistFile(bundlePath);
+        fileUtil.IsExistDir(bundlePath);
+        fileUtil.IsReportDataPartitionUsageEvent(bundlePath);
+        
         std::vector<std::string> hapFileList = BMSFuzzTestUtil::GenerateStringArray(fdp);;
         fileUtil.GetHapFilesFromBundlePath(bundlePath, hapFileList);
         return true;
