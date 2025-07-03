@@ -40,6 +40,10 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         return false;
     }
     FuzzedDataProvider fdp(data, size);
+    preInstallExceptionMgr->exceptionPaths_.insert("/module_update/test/");
+    preInstallExceptionMgr->exceptionBundleNames_.insert("/module_update/test/");
+    preInstallExceptionMgr->exceptionAppServicePaths_.insert("/module_update/test/");
+    preInstallExceptionMgr->exceptionAppServiceBundleNames_.insert(/data/app/el1/bundle/public/test/);
     bundleMgrService_->GetBmsParam();
     std::set<std::string> oldExceptionPaths;
     std::set<std::string> oldExceptionBundleNames;
@@ -62,6 +66,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     preInstallExceptionMgr->SavePreInstallExceptionBundleName(BUNDLE_TEMP_NAME);
     preInstallExceptionMgr->SavePreInstallExceptionBundleName(bundle);
     preInstallExceptionMgr->SavePreInstallExceptionPath(BUNDLE_PATH);
+    preInstallExceptionMgr->SavePreInstallExceptionPath(bundle);
     preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames,
         exceptionAppServicePaths, exceptionAppServiceBundleNames);
     preInstallExceptionMgr->DeletePreInstallExceptionBundleName(BUNDLE_TEMP_NAME);
