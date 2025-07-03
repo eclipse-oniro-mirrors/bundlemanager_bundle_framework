@@ -163,7 +163,7 @@ ErrCode InstalldClient::LoadInstalls()
 }
 
 ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-    bool isPreInstallApp, bool debug)
+    bool isPreInstallApp, bool debug, int32_t uid)
 {
     if (retIndex >= 0 && retIndex < static_cast<int32_t>(retList.size())) {
         return retList[retIndex++];

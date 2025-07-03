@@ -779,7 +779,7 @@ HWTEST_F(BmsEventHandlerTest, ReInstallAllInstallDirApps_0100, Function | SmallT
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->InnerProcessBootPreBundleProFileInstall(Constants::ALL_USERID);
-    handler->UpdateAppDataSelinuxLabel("", "", false, false);
+    handler->UpdateAppDataSelinuxLabel("", "", false, false, TEST_UID);
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleInstaller();
     auto res = handler->ReInstallAllInstallDirApps();
     EXPECT_EQ(res, ResultCode::REINSTALL_OK);

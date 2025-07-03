@@ -162,10 +162,11 @@ public:
      * @param apl Indicates the apl type.
      * @param isPreInstallApp Indicates the bundle install type.
      * @param debug Indicates the bundle debug mode.
+     * @param uid Indicates the uid.
      * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
      */
     virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-        bool isPreInstallApp, bool debug) override;
+        bool isPreInstallApp, bool debug, int32_t uid) override;
 
     /**
      * @brief Set dir apl.
@@ -285,7 +286,7 @@ private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
     bool CheckPathValid(const std::string &path, const std::string &prefix);
     ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-        unsigned int hapFlags);
+        unsigned int hapFlags, int32_t uid);
     unsigned int GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox);
     ErrCode InnerRemoveAtomicServiceBundleDataDir(
         const std::string &bundleName, const int32_t userId, const bool async);

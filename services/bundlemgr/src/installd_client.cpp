@@ -232,14 +232,14 @@ ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,
 }
 
 ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-    bool isPreInstallApp, bool debug)
+    bool isPreInstallApp, bool debug, int32_t uid)
 {
     if (dir.empty() || bundleName.empty() || apl.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::SetDirApl, dir, bundleName, apl, isPreInstallApp, debug);
+    return CallService(&IInstalld::SetDirApl, dir, bundleName, apl, isPreInstallApp, debug, uid);
 }
 
 ErrCode InstalldClient::SetArkStartupCacheApl(const std::string &dir)

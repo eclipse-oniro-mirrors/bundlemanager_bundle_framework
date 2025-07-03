@@ -150,10 +150,11 @@ public:
      * @param apl Indicates the apl type.
      * @param isPreInstallApp Indicates the bundle install type.
      * @param debug Indicates the bundle debug mode.
+     * @param uid Indicates the uid.
      * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
      */
     ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-        bool isPreInstallApp, bool debug);
+        bool isPreInstallApp, bool debug, int32_t uid);
 
     /**
      * @brief Set dir apl.

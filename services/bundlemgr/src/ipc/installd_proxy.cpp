@@ -433,7 +433,7 @@ ErrCode InstalldProxy::GetAllBundleStats(const int32_t userId,
 }
 
 ErrCode InstalldProxy::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-    bool isPreInstallApp, bool debug)
+    bool isPreInstallApp, bool debug, int32_t uid)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -442,6 +442,7 @@ ErrCode InstalldProxy::SetDirApl(const std::string &dir, const std::string &bund
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(apl));
     INSTALLD_PARCEL_WRITE(data, Bool, isPreInstallApp);
     INSTALLD_PARCEL_WRITE(data, Bool, debug);
+    INSTALLD_PARCEL_WRITE(data, Int32, uid);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
