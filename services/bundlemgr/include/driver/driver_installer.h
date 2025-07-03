@@ -18,6 +18,7 @@
 #include <unordered_map>
 
 #include "application_info.h"
+#include "driver_install_ext.h"
 #include "inner_bundle_info.h"
 
 namespace OHOS {

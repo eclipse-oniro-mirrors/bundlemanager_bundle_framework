@@ -33,6 +33,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "parameters.h"
 #include "system_bundle_installer.h"
 
 using namespace testing::ext;
@@ -71,6 +72,11 @@ const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.dri
 const std::string PACKAGE_NAME_FIRST = "com.example.driverTest";
 const std::string DRIVER_FILE_DIR = "/data/service/el1/public/print_service/cups/datadir/model/";
 const std::string DRIVER_FILE_NAME = "libpng.z.so";
+constexpr const char* LIB64_DRIVER_INSTALL_EXT_SO_PATH = "system/lib64/libdriver_install_ext.z.so";
+const std::string PARAM_EXT_SPACE = "persist.space_mgr_service.enterprise_space_init";
+const std::string EXT_SPACE_ENABLE = "2";
+const std::string EXT_SPACE_DISABLE = "1";
+const std::string PRINT_DRIVER_PATH = "/print_service/cups/datadir/model/";
 const std::string MODULE_NAME_FEATURE6 = "feature6";
 const std::string MODULE_NAME_FEATURE10 = "feature10";
 const std::string MODULE_NAME_FEATURE13 = "feature13";
@@ -1999,5 +2005,87 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7200, Function | SmallTest | 
     info.baseExtensionInfos_.insert(std::make_pair("1", extensionAbilityInfo));
     auto res = driverInstaller->CopyDriverSoFile(info, RESOURCE_ROOT_PATH, false);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+}
+
+/**
+ * @tc.number: InstallDriverTest_7300
+ * @tc.name: test the CreateDriverSoDestinedDir of print driver bundle with ext space enable
+ * @tc.desc: 1. system running normally
+ *           2. test CreateDriverSoDestinedDir
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7300, Function | SmallTest | Level0)
+{
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    OHOS::system::SetParameter(PARAM_EXT_SPACE, EXT_SPACE_ENABLE);
+    std::string res1 = driverInstaller->CreateDriverSoDestinedDir(BUNDLE_NAME,
+        MODULE_NAME_FEATURE6, DRIVER_FEATURE_BUNDLE, PRINT_DRIVER_PATH, false);
+    std::string res2 = "";
+    res2.append(PRINT_DRIVER_PATH).append(BUNDLE_NAME).append(Constants::FILE_UNDERLINE)
+        .append(MODULE_NAME_FEATURE6).append(Constants::FILE_UNDERLINE).append(DRIVER_FEATURE_BUNDLE);
+    void *driverInstallerHandle = dlopen(LIB64_DRIVER_INSTALL_EXT_SO_PATH, RTLD_NOW);
+    if (driverInstallerHandle != nullptr) {
+        EXPECT_NE(res1, res2);
+        dlclose(driverInstallerHandle);
+    } else {
+        EXPECT_EQ(res1, res2);
+    }
+}
+
+/**
+ * @tc.number: InstallDriverTest_7400
+ * @tc.name: test the CreateDriverSoDestinedDir of print driver bundle with ext space disable
+ * @tc.desc: 1. system running normally
+ *           2. test CreateDriverSoDestinedDir
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7400, Function | SmallTest | Level0)
+{
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    OHOS::system::SetParameter(PARAM_EXT_SPACE, EXT_SPACE_DISABLE);
+    std::string res1 = driverInstaller->CreateDriverSoDestinedDir(BUNDLE_NAME,
+        MODULE_NAME_FEATURE6, DRIVER_FEATURE_BUNDLE, PRINT_DRIVER_PATH, false);
+    std::string res2 = "";
+    res2.append(PRINT_DRIVER_PATH).append(BUNDLE_NAME).append(Constants::FILE_UNDERLINE)
+        .append(MODULE_NAME_FEATURE6).append(Constants::FILE_UNDERLINE).append(DRIVER_FEATURE_BUNDLE);
+    EXPECT_EQ(res1, res2);
+}
+
+/**
+ * @tc.number: InstallDriverTest_7500
+ * @tc.name: test the RedirectDriverInstallExtPath is not null
+ * @tc.desc: 1. system running normally
+ *           2. test RedirectDriverInstallExtPath
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7500, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(PARAM_EXT_SPACE, EXT_SPACE_ENABLE);
+    std::shared_ptr<DriverInstallExtHandler> driverExtHander = std::make_shared<DriverInstallExtHandler>();
+    std::vector<std::string> vec1 = {"/path"};
+    driverExtHander->getDriverExecuteExtPathsFunc_ = [](std::vector<std::string>& vec) -> int32_t {
+        vec = std::vector<std::string>{"/path"};
+        return 0;
+    };
+    std::vector<std::string> vec2;
+    driverExtHander->GetDriverExecuteExtPaths(vec2);
+    EXPECT_EQ(vec2, vec1);
+}
+ 
+/**
+ * @tc.number: InstallDriverTest_7600
+ * @tc.name: test the RedirectDriverInstallExtPath is not null
+ * @tc.desc: 1. system running normally
+ *           2. test RedirectDriverInstallExtPath
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7600, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(PARAM_EXT_SPACE, EXT_SPACE_DISABLE);
+    std::shared_ptr<DriverInstallExtHandler> driverExtHander = std::make_shared<DriverInstallExtHandler>();
+    std::string str1 = "/path";
+    driverExtHander->redirectDriverInstallExtPath_ = [](std::string& str) -> int32_t {
+        str = "/path";
+        return 0;
+    };
+    std::string str2;
+    driverExtHander->RedirectDriverInstallExtPath(str2);
+    EXPECT_EQ(str2, str1);
 }
 } // OHOS
