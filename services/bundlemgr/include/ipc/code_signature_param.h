@@ -26,11 +26,13 @@ struct CodeSignatureParam : public Parcelable {
     bool isCompileSdkOpenHarmony = false;
     bool isInternaltestingBundle = false;
     bool isCompressNativeLibrary = true;
+    bool isPlugin = false;
     std::string modulePath;
     std::string cpuAbi;
     std::string targetSoPath;
     std::string signatureFileDir;
     std::string appIdentifier;
+    std::string pluginId;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

@@ -1895,6 +1895,10 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for internaltesting bundle");
             ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
                 codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
+        } else if (codeSignatureParam.isPlugin) {
+            LOG_D(BMS_TAG_INSTALLD, "Verify code signature for plugin");
+            ret = codeSignHelper->EnforceCodeSignForAppWithPluginId(codeSignatureParam.appIdentifier,
+                codeSignatureParam.pluginId, codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
         } else {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForApp(

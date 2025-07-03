@@ -58,6 +58,7 @@ private:
     bool isPluginExist_ = false;
     bool isEnterpriseBundle_ = false;
     bool isCompressNativeLibs_ = true;
+    bool isDebug_ = false;
     int32_t userId_ = Constants::INVALID_USERID;
     // the real path or the parent directory of hsp files to be installed.
     std::string bundleName_;
@@ -117,6 +118,7 @@ private:
         const std::vector<std::string> &inBundlePaths, std::vector<std::string> &parsedPaths);
     void NotifyPluginEvents(const NotifyType &type, int32_t uid);
     std::string GetModuleNames();
+    std::string JoinPluginId() const;
 
 #define CHECK_RESULT(errcode, errmsg)                                              \
     do {                                                                           \
