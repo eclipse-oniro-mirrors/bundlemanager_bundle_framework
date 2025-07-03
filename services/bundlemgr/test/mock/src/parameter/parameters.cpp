@@ -22,10 +22,15 @@ namespace OHOS {
 namespace system {
 std::mutex mutex;
 
-std::map<std::string, std::string>& GetParameterMap()
+class ParameterMapWrapper {
+public:
+    std::map<std::string, std::string> paramMap;
+};
+
+std::shared_ptr<ParameterMapWrapper>GetParameterMap()
 {
-    static std::map<std::string, std::string> paramMap;
-    return paramMap;
+    static std::shared_ptr<ParameterMapWrapper> paramMapWrapper = std::make_shared<ParameterMapWrapper>();
+    return paramMapWrapper;
 }
 
 std::string GetDeviceType()
@@ -36,14 +41,14 @@ std::string GetDeviceType()
 bool GetBoolParameter(const std::string& key, bool def)
 {
 #ifndef GET_BOOL_PARAMETER_TRUE
-    auto item = GetParameterMap().find(key);
-    if (item == GetParameterMap().end()) {
+    auto item = GetParameterMap()->paramMap.find(key);
+    if (item == GetParameterMap()->paramMap.end()) {
         return def;
     }
     return "true" == item->second;
 #else
-    auto item = GetParameterMap().find(key);
-    if (item == GetParameterMap().end()) {
+    auto item = GetParameterMap()->paramMap.find(key);
+    if (item == GetParameterMap()->paramMap.end()) {
         return true;
     }
     return "true" == item->second;
@@ -55,8 +60,8 @@ T GetIntParameter(const std::string& key, T def)
 {
     std::lock_guard<std::mutex> lock(mutex);
     try {
-        auto item = GetParameterMap().find(key);
-        if (item == GetParameterMap().end()) {
+        auto item = GetParameterMap()->paramMap.find(key);
+        if (item == GetParameterMap()->paramMap.end()) {
             return def;
         }
         return atoi(item->second.c_str());
@@ -68,8 +73,8 @@ T GetIntParameter(const std::string& key, T def)
 std::string GetParameter(const std::string& key, const std::string& def)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    auto item = GetParameterMap().find(key);
-    if (item == GetParameterMap().end()) {
+    auto item = GetParameterMap()->paramMap.find(key);
+    if (item == GetParameterMap()->paramMap.end()) {
         return def;
     }
     return item->second;
@@ -78,13 +83,13 @@ std::string GetParameter(const std::string& key, const std::string& def)
 void RemoveParameter(const std::string& key)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    GetParameterMap().erase(key);
+    GetParameterMap()->paramMap.erase(key);
 }
 
 bool SetParameter(const std::string& key, const std::string& val)
 {
     std::lock_guard<std::mutex> lock(mutex);
-    GetParameterMap()[key] = val;
+    GetParameterMap()->paramMap[key] = val;
     return true;
 }
 
