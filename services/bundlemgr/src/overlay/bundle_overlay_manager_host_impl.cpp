@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "bundle_overlay_manager_host_impl.h"
 
+#include "bundle_memory_guard.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_overlay_data_manager.h"
 #include "bundle_overlay_manager.h"
@@ -45,19 +46,21 @@ OverlayManagerHostImpl::~OverlayManagerHostImpl()
     APP_LOGI("destory");
 }
 
-ErrCode OverlayManagerHostImpl::GetAllOverlayModuleInfo(const std::string &bundleName,
-    std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
+ErrCode OverlayManagerHostImpl::GetAllOverlayModuleInfo(const std::string &bundleName, int32_t userId,
+    std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t& funcResult)
 {
     APP_LOGD("start to get all overlay moduleInfo of bundle %{public}s", bundleName.c_str());
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_ALL_OVERLAY_MODULE_INFO);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (bundleName.empty()) {
         APP_LOGE("invalid param");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        return ERR_OK;
     }
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        return ERR_OK;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
@@ -66,13 +69,15 @@ ErrCode OverlayManagerHostImpl::GetAllOverlayModuleInfo(const std::string &bundl
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("no permission to query overlay info of targetBundleName %{public}s", bundleName.c_str());
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        return ERR_OK;
     }
-    return BundleOverlayManager::GetInstance()->GetAllOverlayModuleInfo(bundleName, overlayModuleInfo, userId);
+    funcResult = BundleOverlayManager::GetInstance()->GetAllOverlayModuleInfo(bundleName, overlayModuleInfo, userId);
+    return ERR_OK;
 }
 
 ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
-    OverlayModuleInfo &overlayModuleInfo, int32_t userId)
+    int32_t userId, OverlayModuleInfo &overlayModuleInfo, int32_t &funcResult)
 {
     APP_LOGD("start to get overlay moduleInfo of bundle %{public}s and module %{public}s", bundleName.c_str(),
         moduleName.c_str());
@@ -80,11 +85,13 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &bundleNa
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        return ERR_OK;
     }
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("invalid param");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        return ERR_OK;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
@@ -93,25 +100,29 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &bundleNa
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("no permission to query overlay info of targetBundleName %{public}s", bundleName.c_str());
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        return ERR_OK;
     }
-    return BundleOverlayManager::GetInstance()->GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo,
+    funcResult = BundleOverlayManager::GetInstance()->GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo,
         userId);
+    return ERR_OK;
 }
 
-ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &moduleName,
-    OverlayModuleInfo &overlayModuleInfo, int32_t userId)
+ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &moduleName, int32_t userId,
+    OverlayModuleInfo &overlayModuleInfo, int32_t &funcResult)
 {
     APP_LOGD("start to get overlay moduleInfo of module %{public}s", moduleName.c_str());
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_OVERLAY_MODULE_INFO_NO_BUNDLENAME);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (moduleName.empty()) {
         APP_LOGE("invalid param");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        return ERR_OK;
     }
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        return ERR_OK;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
@@ -121,22 +132,25 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &moduleNa
     std::string callingBundleName = OverlayDataMgr::GetInstance()->GetCallingBundleName();
     if (callingBundleName.empty()) {
         APP_LOGE("GetCallingBundleName failed");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        funcResult = ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_OK;
     }
     APP_LOGD("get overlay moduleInfo of bundle %{public}s", callingBundleName.c_str());
-    return BundleOverlayManager::GetInstance()->GetOverlayModuleInfo(callingBundleName, moduleName, overlayModuleInfo,
-        userId);
+    funcResult = BundleOverlayManager::GetInstance()->GetOverlayModuleInfo(callingBundleName, moduleName,
+        overlayModuleInfo, userId);
+    return ERR_OK;
 }
 
-ErrCode OverlayManagerHostImpl::GetTargetOverlayModuleInfo(const std::string &targetModuleName,
-    std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
+ErrCode OverlayManagerHostImpl::GetTargetOverlayModuleInfo(const std::string &targetModuleName, int32_t userId,
+    std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t &funcResult)
 {
     APP_LOGD("start to get target overlay moduleInfo of target module %{public}s", targetModuleName.c_str());
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_TARGET_OVERLAY_MODULE_INFO);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (targetModuleName.empty()) {
         APP_LOGE("invalid param");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        return ERR_OK;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
@@ -146,15 +160,18 @@ ErrCode OverlayManagerHostImpl::GetTargetOverlayModuleInfo(const std::string &ta
     std::string callingBundleName = OverlayDataMgr::GetInstance()->GetCallingBundleName();
     if (callingBundleName.empty()) {
         APP_LOGE("GetCallingBundleName failed");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        funcResult = ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_OK;
     }
     APP_LOGD("get target overlay moduleInfo of bundle %{public}s", callingBundleName.c_str());
-    return BundleOverlayManager::GetInstance()->GetOverlayModuleInfoForTarget(callingBundleName, targetModuleName,
-        overlayModuleInfos, userId);
+    funcResult = BundleOverlayManager::GetInstance()->GetOverlayModuleInfoForTarget(callingBundleName,
+        targetModuleName, overlayModuleInfos, userId);
+    return ERR_OK;
 }
 
 ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoByBundleName(const std::string &bundleName,
-    const std::string &moduleName, std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
+    const std::string &moduleName, int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfos,
+    int32_t &funcResult)
 {
     APP_LOGD("start to get overlay moduleInfo of bundle %{public}s and module %{public}s", bundleName.c_str(),
         moduleName.c_str());
@@ -162,7 +179,8 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoByBundleName(const std::stri
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (bundleName.empty()) {
         APP_LOGE("invalid param");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        return ERR_OK;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
@@ -171,42 +189,48 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoByBundleName(const std::stri
 
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app is not allowed to call this function");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        funcResult = ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        return ERR_OK;
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("no permission to query overlay info of bundleName %{public}s", bundleName.c_str());
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        return ERR_OK;
     }
     if (moduleName.empty()) {
         APP_LOGD("moduleName is empty, then to query all overlay module info in specified bundle");
-        return BundleOverlayManager::GetInstance()->GetAllOverlayModuleInfo(bundleName, overlayModuleInfos, userId);
+        funcResult = BundleOverlayManager::GetInstance()->GetAllOverlayModuleInfo(bundleName, overlayModuleInfos,
+            userId);
+        return ERR_OK;
     }
     OverlayModuleInfo overlayModuleInfo;
-    ErrCode res = BundleOverlayManager::GetInstance()->GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo,
+    funcResult = BundleOverlayManager::GetInstance()->GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo,
         userId);
-    if (res != ERR_OK) {
-        APP_LOGE("GetOverlayModuleInfo failed due to errcode %{public}d", res);
-        return res;
+    if (funcResult != ERR_OK) {
+        APP_LOGE("GetOverlayModuleInfo failed due to errcode %{public}d", funcResult);
+        return ERR_OK;
     }
     overlayModuleInfos.emplace_back(overlayModuleInfo);
     return ERR_OK;
 }
 
-ErrCode OverlayManagerHostImpl::GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
-    std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId)
+ErrCode OverlayManagerHostImpl::GetOverlayBundleInfoForTarget(const std::string &targetBundleName, int32_t userId,
+    std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t &funcResult)
 {
     APP_LOGD("start to get target overlay bundleInfo of bundle %{public}s", targetBundleName.c_str());
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_OVERLAY_BUNDLE_INFOFOR_TARGET);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        return ERR_OK;
     }
     if (targetBundleName.empty()) {
         APP_LOGE("invalid param");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        return ERR_OK;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
@@ -215,14 +239,17 @@ ErrCode OverlayManagerHostImpl::GetOverlayBundleInfoForTarget(const std::string 
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("no permission to query overlay info of targetBundleName %{public}s", targetBundleName.c_str());
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        return ERR_OK;
     }
-    return BundleOverlayManager::GetInstance()->
+    funcResult = BundleOverlayManager::GetInstance()->
         GetOverlayBundleInfoForTarget(targetBundleName, overlayBundleInfo, userId);
+    return ERR_OK;
 }
 
 ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
-    const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
+    const std::string &targetModuleName, int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfo,
+    int32_t &funcResult)
 {
     APP_LOGD("start to get target overlay moduleInfo of target bundle %{public}s and target module %{public}s",
         targetBundleName.c_str(), targetModuleName.c_str());
@@ -230,11 +257,13 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string 
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        return ERR_OK;
     }
     if (targetBundleName.empty()) {
         APP_LOGE("invalid param");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+        return ERR_OK;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
@@ -243,26 +272,30 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string 
 
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app is not allowed to call this function");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        funcResult = ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        return ERR_OK;
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::IsBundleSelfCalling(targetBundleName)) {
         APP_LOGE("no permission to query overlay info of targetBundleName %{public}s", targetBundleName.c_str());
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        return ERR_OK;
     }
-    return BundleOverlayManager::GetInstance()->GetOverlayModuleInfoForTarget(targetBundleName, targetModuleName,
-        overlayModuleInfo, userId);
+    funcResult = BundleOverlayManager::GetInstance()->GetOverlayModuleInfoForTarget(targetBundleName,
+        targetModuleName, overlayModuleInfo, userId);
+    return ERR_OK;
 }
 
 ErrCode OverlayManagerHostImpl::SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
-    int32_t userId)
+    int32_t userId, int32_t &funcResult)
 {
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_SET_OVERLAY_ENABLED_FOR_SELF);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (moduleName.empty()) {
         APP_LOGE("invalid param");
-        return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
+        return ERR_OK;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
@@ -271,21 +304,25 @@ ErrCode OverlayManagerHostImpl::SetOverlayEnabledForSelf(const std::string &modu
     std::string callingBundleName = OverlayDataMgr::GetInstance()->GetCallingBundleName();
     if (callingBundleName.empty()) {
         APP_LOGE("GetCallingBundleName failed");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        funcResult = ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_OK;
     }
     APP_LOGD("set overlay enable %{public}d for bundle %{public}s", isEnabled, callingBundleName.c_str());
-    return BundleOverlayManager::GetInstance()->SetOverlayEnabled(callingBundleName, moduleName, isEnabled, userId);
+    funcResult = BundleOverlayManager::GetInstance()->SetOverlayEnabled(callingBundleName, moduleName, isEnabled,
+        userId);
+    return ERR_OK;
 }
 
 ErrCode OverlayManagerHostImpl::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
-    bool isEnabled, int32_t userId)
+    bool isEnabled, int32_t userId, int32_t &funcResult)
 {
     APP_LOGD("start");
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_SET_OVERLAY_ENABLED);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("invalid param");
-        return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
+        return ERR_OK;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
@@ -294,14 +331,29 @@ ErrCode OverlayManagerHostImpl::SetOverlayEnabled(const std::string &bundleName,
 
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app is not allowed to call this function");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        funcResult = ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        return ERR_OK;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_OVERLAY_ENABLED_STATE) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("no permission to query overlay info of bundleName %{public}s", bundleName.c_str());
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        funcResult = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
+        return ERR_OK;
     }
-    return BundleOverlayManager::GetInstance()->SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
+    funcResult = BundleOverlayManager::GetInstance()->SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
+    return ERR_OK;
+}
+
+int32_t OverlayManagerHostImpl::CallbackEnter([[maybe_unused]] uint32_t code)
+{
+    BundleMemoryGuard::SetBundleMemoryGuard();
+    return ERR_NONE;
+}
+
+int32_t OverlayManagerHostImpl::CallbackExit([[maybe_unused]] uint32_t code, [[maybe_unused]] int32_t result)
+{
+    BundleMemoryGuard::ClearBundleMemoryGuard();
+    return ERR_NONE;
 }
 } // AppExecFwk
 } // OHOS

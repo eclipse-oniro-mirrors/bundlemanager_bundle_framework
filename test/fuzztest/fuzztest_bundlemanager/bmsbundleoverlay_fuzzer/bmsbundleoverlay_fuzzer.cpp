@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
 
+#include "appexecfwk_errors.h"
 #include "bms_fuzztest_util.h"
 #include "bundle_overlay_data_manager.h"
 #include "bundle_overlay_install_checker.h"
@@ -98,37 +99,55 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 
     // bundle_overlay_manager_host_impl.cpp
     OverlayManagerHostImpl hostImpl;
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     bundleName = "";
     overlayModuleInfos.clear();
-    hostImpl.GetAllOverlayModuleInfo(bundleName, overlayModuleInfos, userId);
+    hostImpl.GetAllOverlayModuleInfo(bundleName, userId, overlayModuleInfos, funcResult);
     bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    hostImpl.GetAllOverlayModuleInfo(bundleName, overlayModuleInfos, userId);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetAllOverlayModuleInfo(bundleName, userId, overlayModuleInfos, funcResult);
     moduleName = "";
-    hostImpl.GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo, userId);
-    hostImpl.GetOverlayModuleInfo(moduleName, overlayModuleInfo, userId);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetOverlayModuleInfo(bundleName, moduleName, userId, overlayModuleInfo, funcResult);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetOverlayModuleInfo(moduleName, userId, overlayModuleInfo, funcResult);
     moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    hostImpl.GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo, userId);
-    hostImpl.GetOverlayModuleInfo(moduleName, overlayModuleInfo, userId);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetOverlayModuleInfo(bundleName, moduleName, userId, overlayModuleInfo, funcResult);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetOverlayModuleInfo(moduleName, userId, overlayModuleInfo, funcResult);
     targetModuleName = "";
-    hostImpl.GetTargetOverlayModuleInfo(targetModuleName, overlayModuleInfos, userId);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetTargetOverlayModuleInfo(targetModuleName, userId, overlayModuleInfos, funcResult);
     targetModuleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    hostImpl.GetTargetOverlayModuleInfo(targetModuleName, overlayModuleInfos, userId);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetTargetOverlayModuleInfo(targetModuleName, userId, overlayModuleInfos, funcResult);
     bundleName = "";
     targetBundleName = "";
-    hostImpl.GetOverlayModuleInfoByBundleName(bundleName, moduleName, overlayModuleInfos, userId);
-    hostImpl.GetOverlayBundleInfoForTarget(targetBundleName, overlayBundleInfos, userId);
-    hostImpl.GetOverlayModuleInfoForTarget(targetBundleName, targetModuleName, overlayModuleInfos, userId);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetOverlayModuleInfoByBundleName(bundleName, moduleName, userId, overlayModuleInfos, funcResult);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetOverlayBundleInfoForTarget(targetBundleName, userId, overlayBundleInfos, funcResult);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetOverlayModuleInfoForTarget(targetBundleName, targetModuleName, userId, overlayModuleInfos, funcResult);
     bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     targetBundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    hostImpl.GetOverlayModuleInfoByBundleName(bundleName, moduleName, overlayModuleInfos, userId);
-    hostImpl.GetOverlayBundleInfoForTarget(targetBundleName, overlayBundleInfos, userId);
-    hostImpl.GetOverlayModuleInfoForTarget(targetBundleName, targetModuleName, overlayModuleInfos, userId);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetOverlayModuleInfoByBundleName(bundleName, moduleName, userId, overlayModuleInfos, funcResult);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetOverlayBundleInfoForTarget(targetBundleName, userId, overlayBundleInfos, funcResult);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.GetOverlayModuleInfoForTarget(targetBundleName, targetModuleName, userId, overlayModuleInfos, funcResult);
     moduleName = "";
-    hostImpl.SetOverlayEnabledForSelf(moduleName, isEnabled, userId);
-    hostImpl.SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.SetOverlayEnabledForSelf(moduleName, isEnabled, userId, funcResult);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.SetOverlayEnabled(bundleName, moduleName, isEnabled, userId, funcResult);
     moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    hostImpl.SetOverlayEnabledForSelf(moduleName, isEnabled, userId);
-    hostImpl.SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.SetOverlayEnabledForSelf(moduleName, isEnabled, userId, funcResult);
+    funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    hostImpl.SetOverlayEnabled(bundleName, moduleName, isEnabled, userId, funcResult);
     return true;
 }
 }

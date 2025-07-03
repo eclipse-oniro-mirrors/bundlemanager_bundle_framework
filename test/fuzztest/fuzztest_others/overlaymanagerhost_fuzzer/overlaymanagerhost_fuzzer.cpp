@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,7 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "overlay_manager_host.h"
+#include "bundle_overlay_manager_host_impl.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
@@ -30,14 +30,14 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     for (uint32_t code = 0; code <= CODE_MAX; code++) {
         MessageParcel datas;
-        std::u16string descriptor = OverlayManagerHost::GetDescriptor();
+        std::u16string descriptor = OverlayManagerStub::GetDescriptor();
         datas.WriteInterfaceToken(descriptor);
         datas.WriteBuffer(data, size);
         datas.RewindRead(0);
         MessageParcel reply;
         MessageOption option;
-        OverlayManagerHost overlayManagerHost;
-        overlayManagerHost.OnRemoteRequest(code, datas, reply, option);
+        OverlayManagerHostImpl overlayManagerHostImpl;
+        overlayManagerHostImpl.OnRemoteRequest(code, datas, reply, option);
     }
     return true;
 }

@@ -39,7 +39,7 @@
 #include "default_app_interface.h"
 #include "extend_resource_manager_interface.h"
 #include "ibundle_mgr_ext.h"
-#include "overlay_manager_interface.h"
+#include "ioverlay_manager.h"
 #include "plugin/plugin_bundle_info.h"
 #include "quick_fix_manager_interface.h"
 #include "iverify_manager.h"

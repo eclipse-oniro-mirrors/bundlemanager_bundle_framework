@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
 
 #include "bundle_overlay_manager_host_impl.h"
 #include "securec.h"
+#include "appexecfwk_errors.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
@@ -29,22 +30,24 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     OverlayManagerHostImpl overlayManagerHostImpl;
     std::vector<OverlayModuleInfo> overlayModuleInfos;
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     std::string bundleName(data, size);
-    overlayManagerHostImpl.GetAllOverlayModuleInfo(bundleName, overlayModuleInfos, USERID);
+    overlayManagerHostImpl.GetAllOverlayModuleInfo(bundleName, USERID, overlayModuleInfos, funcResult);
     OverlayModuleInfo overlayModuleInfo;
     std::string moduleName(data, size);
-    overlayManagerHostImpl.GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo, USERID);
-    overlayManagerHostImpl.GetOverlayModuleInfo(moduleName, overlayModuleInfo, USERID);
+    overlayManagerHostImpl.GetOverlayModuleInfo(bundleName, moduleName, USERID, overlayModuleInfo, funcResult);
+    overlayManagerHostImpl.GetOverlayModuleInfo(moduleName, USERID, overlayModuleInfo, funcResult);
     std::string targetModuleName(data, size);
-    overlayManagerHostImpl.GetTargetOverlayModuleInfo(targetModuleName, overlayModuleInfos, USERID);
-    overlayManagerHostImpl.GetOverlayModuleInfoByBundleName(bundleName, moduleName, overlayModuleInfos, USERID);
+    overlayManagerHostImpl.GetTargetOverlayModuleInfo(targetModuleName, USERID, overlayModuleInfos, funcResult);
+    overlayManagerHostImpl.GetOverlayModuleInfoByBundleName(bundleName, moduleName,
+        USERID, overlayModuleInfos, funcResult);
     std::string targetBundleName(data, size);
     std::vector<OverlayBundleInfo> overlayBundleInfos;
-    overlayManagerHostImpl.GetOverlayBundleInfoForTarget(targetBundleName, overlayBundleInfos, USERID);
+    overlayManagerHostImpl.GetOverlayBundleInfoForTarget(targetBundleName, USERID, overlayBundleInfos, funcResult);
     overlayManagerHostImpl.GetOverlayModuleInfoForTarget(targetBundleName,
-        targetModuleName, overlayModuleInfos, USERID);
-    overlayManagerHostImpl.SetOverlayEnabledForSelf(moduleName, true, USERID);
-    overlayManagerHostImpl.SetOverlayEnabled(bundleName, moduleName, true, USERID);
+        targetModuleName, USERID, overlayModuleInfos, funcResult);
+    overlayManagerHostImpl.SetOverlayEnabledForSelf(moduleName, true, USERID, funcResult);
+    overlayManagerHostImpl.SetOverlayEnabled(bundleName, moduleName, true, USERID, funcResult);
     return true;
 }
 }

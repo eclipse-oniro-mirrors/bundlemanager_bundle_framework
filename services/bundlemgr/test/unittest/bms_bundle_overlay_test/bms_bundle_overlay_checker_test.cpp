@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2057,12 +2057,13 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayManagerHostImpl_0100, Function | Sm
 {
     OverlayManagerHostImpl overlayManagerHostImpl;
     std::vector<OverlayModuleInfo> overlayModuleInfo;
-    ErrCode res = overlayManagerHostImpl.GetAllOverlayModuleInfo("", overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    ErrCode res = overlayManagerHostImpl.GetAllOverlayModuleInfo("", USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
     res = overlayManagerHostImpl.GetAllOverlayModuleInfo(
-        "bundleName", overlayModuleInfo, Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+        "bundleName", Constants::UNSPECIFIED_USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
 }
 
 /**
@@ -2076,21 +2077,22 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0200, Function | Smal
 {
     OverlayManagerHostImpl overlayManagerHostImpl;
     OverlayModuleInfo overlayModuleInfo;
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     ErrCode res = overlayManagerHostImpl.GetOverlayModuleInfo(
-        "", "moduleName", overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+        "", "moduleName", USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
     res = overlayManagerHostImpl.GetOverlayModuleInfo(
-        "bundleName", "", overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+        "bundleName", "", USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
     res = overlayManagerHostImpl.GetOverlayModuleInfo(
-        "", "", overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+        "", "",  USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
     res = overlayManagerHostImpl.GetOverlayModuleInfo(
-        "bundleName", "moduleName", overlayModuleInfo, Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+        "bundleName", "moduleName", Constants::UNSPECIFIED_USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
 }
 
 /**
@@ -2104,13 +2106,14 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0300, Function | Smal
 {
     OverlayManagerHostImpl overlayManagerHostImpl;
     std::vector<OverlayBundleInfo> overlayBundleInfo;
-    ErrCode res = overlayManagerHostImpl.GetOverlayBundleInfoForTarget(
-        "", overlayBundleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    ErrCode res =
+        overlayManagerHostImpl.GetOverlayBundleInfoForTarget("", USERID, overlayBundleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
     res = overlayManagerHostImpl.GetOverlayBundleInfoForTarget(
-        "targetBundleName", overlayBundleInfo, Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
+        "targetBundleName", Constants::UNSPECIFIED_USERID, overlayBundleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
 }
 
 /**
@@ -2124,21 +2127,22 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0400, Function | Smal
 {
     OverlayManagerHostImpl overlayManagerHostImpl;
     std::vector<OverlayModuleInfo> overlayModuleInfo;
-    ErrCode res = overlayManagerHostImpl.GetOverlayModuleInfoForTarget(
-        "", "targetModuleName", overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    ErrCode res = overlayManagerHostImpl.GetOverlayModuleInfoForTarget("", "targetModuleName",
+        USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
     res = overlayManagerHostImpl.GetOverlayModuleInfoForTarget(
-        "targetBundleName", "", overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
+        "targetBundleName", "", USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
 
     res = overlayManagerHostImpl.GetOverlayModuleInfoForTarget(
-        "", "", overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+        "", "", USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
     res = overlayManagerHostImpl.GetOverlayModuleInfoForTarget(
-        "targetBundleName", "targetModuleName", overlayModuleInfo, Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
+        "targetBundleName", "targetModuleName", Constants::UNSPECIFIED_USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
 }
 
 /**
@@ -2152,21 +2156,22 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0500, Function | Smal
 {
     OverlayManagerHostImpl overlayManagerHostImpl;
     bool isEnabled = false;
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     ErrCode res = overlayManagerHostImpl.SetOverlayEnabled(
-        "", "moduleName", isEnabled, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+        "", "moduleName", isEnabled, USERID, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
 
     res = overlayManagerHostImpl.SetOverlayEnabled(
-        "bundleName", "", isEnabled, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+        "bundleName", "", isEnabled, USERID, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
 
     res = overlayManagerHostImpl.SetOverlayEnabled(
-        "", "", isEnabled, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+        "", "", isEnabled, USERID, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
 
     res = overlayManagerHostImpl.SetOverlayEnabled(
-        "bundleName", "moduleName", isEnabled, Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+        "bundleName", "moduleName", isEnabled, Constants::UNSPECIFIED_USERID, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
 }
 
 /**
@@ -2179,10 +2184,11 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0500, Function | Smal
 HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0800, Function | SmallTest | Level0)
 {
     OverlayManagerHostImpl overlayManagerHostImpl;
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     std::vector<OverlayBundleInfo> overlayBundleInfo;
-    ErrCode res = overlayManagerHostImpl.GetOverlayBundleInfoForTarget(TEST_BUNDLE_NAME,
-        overlayBundleInfo, Constants::INVALID_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    ErrCode res = overlayManagerHostImpl.GetOverlayBundleInfoForTarget(TEST_BUNDLE_NAME, Constants::INVALID_USERID,
+        overlayBundleInfo,  funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 }
 
 /**
@@ -2197,14 +2203,15 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0900, Function | Smal
 {
     OverlayManagerHostImpl overlayManagerHostImpl;
 
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     std::vector<OverlayModuleInfo> overlayModuleInfos;
-    auto errCode = overlayManagerHostImpl.GetTargetOverlayModuleInfo("", overlayModuleInfos,
-        USERID);
-    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    auto errCode = overlayManagerHostImpl.GetTargetOverlayModuleInfo("", USERID, overlayModuleInfos,
+        funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
-    errCode = overlayManagerHostImpl.GetTargetOverlayModuleInfo(TEST_BUNDLE_NAME, overlayModuleInfos,
-        Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(errCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    errCode = overlayManagerHostImpl.GetTargetOverlayModuleInfo(TEST_BUNDLE_NAME, Constants::UNSPECIFIED_USERID,
+        overlayModuleInfos, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**
@@ -2218,19 +2225,20 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0900, Function | Smal
 HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_1000, Function | SmallTest | Level0)
 {
     OverlayManagerHostImpl overlayManagerHostImpl;
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
 
     std::vector<OverlayModuleInfo> overlayModuleInfos;
     auto errCode = overlayManagerHostImpl.GetOverlayModuleInfoByBundleName("", TEST_MODULE_NAME,
-        overlayModuleInfos, USERID);
-    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+        USERID, overlayModuleInfos, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
     errCode = overlayManagerHostImpl.GetOverlayModuleInfoByBundleName(TEST_BUNDLE_NAME, "",
-        overlayModuleInfos, Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+        Constants::UNSPECIFIED_USERID, overlayModuleInfos,  funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
 
     errCode = overlayManagerHostImpl.GetOverlayModuleInfoByBundleName(TEST_BUNDLE_NAME, TEST_MODULE_NAME,
-        overlayModuleInfos, Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+         Constants::UNSPECIFIED_USERID, overlayModuleInfos, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
 }
 
 /**
@@ -2244,15 +2252,16 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_1000, Function | Smal
 HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_1100, Function | SmallTest | Level0)
 {
     OverlayManagerHostImpl overlayManagerHostImpl;
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
 
     bool isEnabled = false;
     auto errCode = overlayManagerHostImpl.SetOverlayEnabledForSelf("",
-        isEnabled, USERID);
-    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+        isEnabled, USERID, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
 
     errCode = overlayManagerHostImpl.SetOverlayEnabledForSelf(TEST_MODULE_NAME,
-        isEnabled, Constants::UNSPECIFIED_USERID);
-    EXPECT_EQ(errCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+        isEnabled, Constants::UNSPECIFIED_USERID, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**

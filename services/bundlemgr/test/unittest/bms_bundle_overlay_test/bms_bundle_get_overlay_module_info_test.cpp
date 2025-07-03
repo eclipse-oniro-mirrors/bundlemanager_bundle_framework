@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -234,8 +234,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0100, Funct
     EXPECT_NE(hostImpl, nullptr);
 
     std::vector<OverlayModuleInfo> vec;
-    auto res = hostImpl->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, vec);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, UNSPECIFIED_USERID, vec, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -253,9 +255,11 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0200, Funct
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     std::vector<OverlayModuleInfo> vec;
-    auto res = hostImpl->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, vec, TEST_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+    auto res = hostImpl->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_USERID, vec, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+    EXPECT_EQ(res, ERR_OK);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
 
@@ -274,9 +278,11 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0300, Funct
 
     AddNonOverlayInnerBundleInfo();
 
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     std::vector<OverlayModuleInfo> vec;
-    auto res = hostImpl->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, vec, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE);
+    auto res = hostImpl->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, USERID, vec, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE);
+    EXPECT_EQ(res, ERR_OK);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
 
@@ -296,7 +302,9 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0400, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
     std::vector<OverlayModuleInfo> vec;
-    auto res = hostImpl->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, vec, USERID);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, USERID, vec, funcResult);
+    EXPECT_EQ(funcResult, ERR_OK);
     EXPECT_EQ(res, ERR_OK);
 
     EXPECT_EQ(vec.size(), OVERLAY_MODULE_INFO_SIZE);
@@ -318,8 +326,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0500, Funct
     EXPECT_NE(hostImpl, nullptr);
 
     OverlayModuleInfo overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME,  USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
 }
 
 /**
@@ -338,8 +348,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0600, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
     OverlayModuleInfo overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfo, TEST_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, TEST_USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
 
@@ -359,8 +371,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0700, Funct
     AddNonOverlayInnerBundleInfo();
 
     OverlayModuleInfo overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
 
@@ -380,8 +394,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0800, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
     OverlayModuleInfo overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME_THIRD, overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_MODULE);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME_THIRD, USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_MODULE);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
 
@@ -401,8 +417,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0900, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
     OverlayModuleInfo overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME_SECOND, overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_MODULE);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME_SECOND, USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_MODULE);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
 
@@ -422,8 +440,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1000, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
     OverlayModuleInfo overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME_SECOND, overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_MODULE);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME_SECOND, USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_MODULE);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
 
@@ -443,8 +463,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1100, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
     OverlayModuleInfo overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_OK);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_OK);
 
     CheckOverlayModuleInfo(overlayModuleInfo);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
@@ -464,8 +486,9 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1200, Funct
     EXPECT_NE(hostImpl, nullptr);
 
     std::vector<OverlayBundleInfo> overlayBundleInfo;
-    auto res = hostImpl->GetOverlayBundleInfoForTarget(TEST_BUNDLE_NAME, overlayBundleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayBundleInfoForTarget(TEST_BUNDLE_NAME, USERID, overlayBundleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
 }
 
 /**
@@ -484,8 +507,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1300, Funct
     AddOverlayBundleInfo();
 
     std::vector<OverlayBundleInfo> overlayBundleInfo;
-    auto res = hostImpl->GetOverlayBundleInfoForTarget(TEST_TARGET_BUNDLE_NAME, overlayBundleInfo, TEST_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayBundleInfoForTarget(TEST_TARGET_BUNDLE_NAME, TEST_USERID,
+        overlayBundleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
     RemoveBundleInfo(TEST_TARGET_BUNDLE_NAME);
 }
 
@@ -505,8 +530,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1400, Funct
     AddOverlayBundleInfo();
 
     std::vector<OverlayBundleInfo> overlayBundleInfo;
-    auto res = hostImpl->GetOverlayBundleInfoForTarget(TEST_TARGET_BUNDLE_NAME, overlayBundleInfo, USERID);
-    EXPECT_EQ(res, ERR_OK);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayBundleInfoForTarget(TEST_TARGET_BUNDLE_NAME, USERID,
+        overlayBundleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_OK);
 
     EXPECT_EQ(overlayBundleInfo.size(), OVERLAY_MODULE_INFO_SIZE);
     CheckOverlayBundleInfo(overlayBundleInfo[0]);
@@ -529,8 +556,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1500, Funct
     AddNonOverlayInnerBundleInfo();
 
     std::vector<OverlayBundleInfo> overlayBundleInfo;
-    auto res = hostImpl->GetOverlayBundleInfoForTarget(TEST_BUNDLE_NAME, overlayBundleInfo, USERID);
-    EXPECT_EQ(res, ERR_OK);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayBundleInfoForTarget(TEST_BUNDLE_NAME, USERID,
+        overlayBundleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_OK);
     EXPECT_EQ(overlayBundleInfo.size(), DEFAULT_OVERLAY_MODULE_INFO_SIZE);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
@@ -549,8 +578,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1600, Funct
     EXPECT_NE(hostImpl, nullptr);
 
     std::vector<OverlayModuleInfo> overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME, USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
 }
 
 /**
@@ -569,8 +600,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1700, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
 
     std::vector<OverlayModuleInfo> overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_IS_OVERLAY_BUNDLE);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME, USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_IS_OVERLAY_BUNDLE);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
 
@@ -590,9 +623,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1800, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
     std::vector<OverlayModuleInfo> overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfo,
-        TEST_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME,
+        TEST_USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
 
@@ -612,9 +646,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1900, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
     std::vector<OverlayModuleInfo> overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME_THIRD, overlayModuleInfo,
-        USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_MODULE_NOT_EXISTED);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME_THIRD,
+        USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_MODULE_NOT_EXISTED);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
 
@@ -634,8 +669,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2000, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
     std::vector<OverlayModuleInfo> overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_MODULE_IS_OVERLAY_MODULE);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME, USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_MODULE_IS_OVERLAY_MODULE);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
 
@@ -655,9 +692,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2100, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
     std::vector<OverlayModuleInfo> overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME_SECOND, overlayModuleInfo,
-        USERID);
-    EXPECT_EQ(res, ERR_OK);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TEST_MODULE_NAME_SECOND,
+        USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_OK);
     EXPECT_EQ(overlayModuleInfo.size(), DEFAULT_OVERLAY_MODULE_INFO_SIZE);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
 }
@@ -678,9 +716,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2200, Funct
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
 
     std::vector<OverlayModuleInfo> overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TARGET_MODULE_NAME, overlayModuleInfo,
-        USERID);
-    EXPECT_EQ(res, ERR_OK);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_BUNDLE_NAME, TARGET_MODULE_NAME, USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_OK);
     EXPECT_EQ(overlayModuleInfo.size(), OVERLAY_MODULE_INFO_SIZE);
 
     CheckOverlayModuleInfo(overlayModuleInfo[0]);
@@ -699,8 +738,9 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2300, Funct
     EXPECT_NE(hostImpl, nullptr);
 
     OverlayModuleInfo overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfo("", overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfo("", USERID, overlayModuleInfo, funcResult);
+    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 }
 
 /**
@@ -715,11 +755,13 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2400, Funct
     EXPECT_NE(hostImpl, nullptr);
 
     OverlayModuleInfo overlayModuleInfo;
-    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, overlayModuleInfo, UNSPECIFIED_USERID);
-    EXPECT_NE(res, ERR_OK);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, UNSPECIFIED_USERID,
+        overlayModuleInfo, funcResult);
+    EXPECT_NE(funcResult, ERR_OK);
 
-    res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, overlayModuleInfo, USERID);
-    EXPECT_NE(res, ERR_OK);
+    res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, USERID, overlayModuleInfo, funcResult);
+    EXPECT_NE(funcResult, ERR_OK);
 }
 
 /**
@@ -734,8 +776,10 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2500, Funct
     EXPECT_NE(hostImpl, nullptr);
 
     std::vector<OverlayModuleInfo> overlayModuleInfos;
-    auto res = hostImpl->GetTargetOverlayModuleInfo(TARGET_MODULE_NAME, overlayModuleInfos, UNSPECIFIED_USERID);
-    EXPECT_NE(res, ERR_OK);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->GetTargetOverlayModuleInfo(TARGET_MODULE_NAME, UNSPECIFIED_USERID,
+        overlayModuleInfos, funcResult);
+    EXPECT_NE(funcResult, ERR_OK);
 }
 
 /**
@@ -749,7 +793,9 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2600, Funct
     auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
-    auto res = hostImpl->SetOverlayEnabledForSelf(TARGET_MODULE_NAME, false, UNSPECIFIED_USERID);
-    EXPECT_NE(res, ERR_OK);
+    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
+    auto res = hostImpl->SetOverlayEnabledForSelf(TARGET_MODULE_NAME, false, UNSPECIFIED_USERID,
+        funcResult);
+    EXPECT_NE(funcResult, ERR_OK);
 }
 } // OHOS

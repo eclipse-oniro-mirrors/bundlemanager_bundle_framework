@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,7 @@
 #include "ipc_skeleton.h"
 #include "napi_arg.h"
 #include "napi_constants.h"
+#include "overlay_manager_client.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -42,34 +43,14 @@ const std::string GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME = "GetOverlayModuleInfo
 const std::string GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME = "GetTargetOverlayModuleInfosByBundleName";
 } // namespace
 
-static OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> GetOverlayMgrProxy()
-{
-    auto bundleMgr = CommonFunc::GetBundleMgr();
-    if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed");
-        return nullptr;
-    }
-    auto overlayMgrProxy = bundleMgr->GetOverlayManagerProxy();
-    if (overlayMgrProxy == nullptr) {
-        APP_LOGE("GetOverlayManagerProxy failed");
-        return nullptr;
-    }
-    return overlayMgrProxy;
-}
-
-
 static ErrCode InnerSetOverlayEnabledExec(napi_env, OverlayCallbackInfo *callback)
 {
-    auto overlayMgrProxy = GetOverlayMgrProxy();
-    if (overlayMgrProxy == nullptr) {
-        APP_LOGE("overlayMgrProxy is null");
-        return ERROR_SYSTEM_ABILITY_NOT_FOUND;
-    }
     ErrCode ret = ERR_OK;
     if (callback->option == OverlayOption::OPTION_SET_OVERLAY_ENABLED_BY_BUNDLE) {
-        ret = overlayMgrProxy->SetOverlayEnabled(callback->bundleName, callback->moduleName, callback->isEnabled);
+        ret = OverlayManagerClient::GetInstance().SetOverlayEnabled(callback->bundleName, callback->moduleName,
+            callback->isEnabled);
     } else {
-        ret = overlayMgrProxy->SetOverlayEnabledForSelf(callback->moduleName, callback->isEnabled);
+        ret = OverlayManagerClient::GetInstance().SetOverlayEnabledForSelf(callback->moduleName, callback->isEnabled);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -224,24 +205,18 @@ static ErrCode InnerGetOverlayModuleInfoExec(napi_env, OverlayCallbackInfo *over
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 
-    auto overlayMgrProxy = GetOverlayMgrProxy();
-    if (overlayMgrProxy == nullptr) {
-        APP_LOGE("overlayMgrProxy is null");
-        return ERROR_SYSTEM_ABILITY_NOT_FOUND;
-    }
-
     ErrCode ret = ERR_OK;
     if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO) {
-        ret = overlayMgrProxy->GetOverlayModuleInfo(overlayCbInfo->moduleName,
+        ret = OverlayManagerClient::GetInstance().GetOverlayModuleInfo(overlayCbInfo->moduleName,
             overlayCbInfo->overlayModuleInfo);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_TARGET_MODULE_INFO) {
-        ret = overlayMgrProxy->GetTargetOverlayModuleInfo(overlayCbInfo->targetModuleName,
+        ret = OverlayManagerClient::GetInstance().GetTargetOverlayModuleInfo(overlayCbInfo->targetModuleName,
             overlayCbInfo->infoVec);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME) {
-        ret = overlayMgrProxy->GetOverlayModuleInfoByBundleName(overlayCbInfo->bundleName, overlayCbInfo->moduleName,
-            overlayCbInfo->infoVec);
+        ret = OverlayManagerClient::GetInstance().GetOverlayModuleInfoByBundleName(overlayCbInfo->bundleName,
+            overlayCbInfo->moduleName, overlayCbInfo->infoVec);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME) {
-        ret = overlayMgrProxy->GetOverlayModuleInfoForTarget(overlayCbInfo->targetBundleName,
+        ret = OverlayManagerClient::GetInstance().GetOverlayModuleInfoForTarget(overlayCbInfo->targetBundleName,
             overlayCbInfo->moduleName, overlayCbInfo->infoVec);
     } else {
         APP_LOGE("invalid overlay option");
