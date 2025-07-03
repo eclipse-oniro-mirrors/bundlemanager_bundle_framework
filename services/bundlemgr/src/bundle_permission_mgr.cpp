@@ -283,7 +283,7 @@ bool BundlePermissionMgr::GetRequestPermissionStates(
                 }
             }
         } else {
-            LOG_E(BMS_TAG_DEFAULT, "request permission name : %{public}s is not exit in AccessTokenMgr", req.c_str());
+            LOG_NOFUNC_E(BMS_TAG_DEFAULT, "%{public}s not in ATM", req.c_str());
             bundleInfo.reqPermissionStates.emplace_back(
                 static_cast<int32_t>(AccessToken::PermissionState::PERMISSION_DENIED));
         }

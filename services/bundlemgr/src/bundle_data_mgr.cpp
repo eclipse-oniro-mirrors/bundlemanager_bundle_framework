@@ -1911,7 +1911,7 @@ bool BundleDataMgr::MatchUtd(Skill &skill, const std::string &utd, int32_t count
 bool BundleDataMgr::MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
-    LOG_W(BMS_TAG_QUERY, "skillUtd %{public}s, wantUtd %{public}s", skillUtd.c_str(), wantUtd.c_str());
+    LOG_D(BMS_TAG_QUERY, "skillUtd %{public}s, wantUtd %{public}s", skillUtd.c_str(), wantUtd.c_str());
     std::shared_ptr<UDMF::TypeDescriptor> wantTypeDescriptor;
     auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(wantUtd, wantTypeDescriptor);
     if (ret != ERR_OK || wantTypeDescriptor == nullptr) {
@@ -1932,7 +1932,7 @@ bool BundleDataMgr::MatchUtd(const std::string &skillUtd, const std::string &wan
 bool BundleDataMgr::MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
-    LOG_W(BMS_TAG_QUERY, "mimeType %{public}s, wantUtd %{public}s", mimeType.c_str(), wantUtd.c_str());
+    LOG_D(BMS_TAG_QUERY, "mimeType %{public}s, wantUtd %{public}s", mimeType.c_str(), wantUtd.c_str());
     std::vector<std::string> typeUtdVector = BundleUtil::GetUtdVectorByMimeType(mimeType);
     for (const std::string &typeUtd : typeUtdVector) {
         if (MatchUtd(typeUtd, wantUtd)) {
