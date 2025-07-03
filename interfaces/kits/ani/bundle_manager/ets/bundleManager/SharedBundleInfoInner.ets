@@ -25,8 +25,8 @@ export class SharedBundleInfoInner implements SharedBundleInfo {
 
 export class SharedModuleInfoInner implements SharedModuleInfo {
   public readonly name: string = '';
-  public readonly versionCode: number;
+  public readonly versionCode: long;
   public readonly versionName: string = '';
   public readonly description: string = '';
-  public readonly descriptionId: number;
+  public readonly descriptionId: long;
 }

@@ -15,7 +15,7 @@
 
 export interface PermissionDef {
   readonly permissionName: string;
-  readonly grantMode: number;
-  readonly labelId: number;
-  readonly descriptionId: number;
+  readonly grantMode: int;
+  readonly labelId: long;
+  readonly descriptionId: long;
 }

@@ -68,19 +68,19 @@ export interface AbilityFormInfo {
   readonly type: string;
   readonly updateEnabled: boolean;
   readonly scheduledUpdateTime: string;
-  readonly updateDuration: number;
+  readonly updateDuration: int;
   readonly supportDimensions: Array<string>;
   readonly defaultDimension: string;
 }
 
 export interface Version {
-  readonly minCompatibleVersionCode: number;
+  readonly minCompatibleVersionCode: int;
   readonly name: string;
-  readonly code: number;
+  readonly code: int;
 }
 
 export interface ApiVersion {
   readonly releaseType: string;
-  readonly compatible: number;
-  readonly target: number;
+  readonly compatible: int;
+  readonly target: int;
 }

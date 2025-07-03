@@ -23,8 +23,8 @@ export interface SharedBundleInfo {
 
 export interface SharedModuleInfo {
   readonly name: string;
-  readonly versionCode: number;
+  readonly versionCode: long;
   readonly versionName: string;
   readonly description: string;
-  readonly descriptionId: number;
+  readonly descriptionId: long;
 }

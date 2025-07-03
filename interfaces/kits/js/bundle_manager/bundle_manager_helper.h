@@ -58,7 +58,7 @@ public:
     static ErrCode InnerDeleteAbc(const std::string& path);
     static ErrCode InnerGetRecoverableApplicationInfo(std::vector<RecoverableApplicationInfo>& recoverableApplications);
     static ErrCode InnerGetAllPluginInfo(
-        std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos);
+        const std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos);
 };
 } // AppExecFwk
 } // OHOS

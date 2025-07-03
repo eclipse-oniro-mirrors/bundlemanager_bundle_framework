@@ -151,31 +151,31 @@ static ani_object ConvertCRCTable(ani_env* env, const tableType* table, const si
         return nullptr;
     }
 
-    Type doubleType = Builder::BuildClass("std.core.Double");
-    ani_class doubleClass = nullptr;
-    status = env->FindClass(doubleType.Descriptor().c_str(), &doubleClass);
+    Type longType = Builder::BuildClass("std.core.Long");
+    ani_class longClass = nullptr;
+    status = env->FindClass(longType.Descriptor().c_str(), &longClass);
     if (status != ANI_OK) {
-        APP_LOGE("FindClass Double failed %{public}d", status);
+        APP_LOGE("FindClass Long failed %{public}d", status);
         return nullptr;
     }
-    ani_method doubleCtor = nullptr;
-    status = env->Class_FindMethod(doubleClass, Builder::BuildConstructorName().c_str(),
-        Builder::BuildSignatureDescriptor({ Builder::BuildDouble() }).c_str(), &doubleCtor);
+    ani_method longCtor = nullptr;
+    status = env->Class_FindMethod(longClass, Builder::BuildConstructorName().c_str(),
+        Builder::BuildSignatureDescriptor({ Builder::BuildLong() }).c_str(), &longCtor);
     if (status != ANI_OK) {
-        APP_LOGE("Class_FindMethod Double ctor failed %{public}d", status);
+        APP_LOGE("Class_FindMethod Long ctor failed %{public}d", status);
         return nullptr;
     }
     std::string setSig = Builder::BuildSignatureDescriptor({ Builder::BuildInt(), Builder::BuildNull() });
 
     for (size_t i = 0; i < tableSize; ++i) {
-        ani_object doubleObj = nullptr;
-        status = env->Object_New(doubleClass, doubleCtor, &doubleObj, static_cast<double>(table[i]));
+        ani_object longObj = nullptr;
+        status = env->Object_New(longClass, longCtor, &longObj, static_cast<ani_long>(table[i]));
         if (status != ANI_OK) {
-            APP_LOGE("Object_New Double failed %{public}d", status);
+            APP_LOGE("Object_New Long failed %{public}d", status);
             return nullptr;
         }
-        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", setSig.c_str(), i, doubleObj);
-        env->Reference_Delete(doubleObj);
+        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", setSig.c_str(), i, longObj);
+        env->Reference_Delete(longObj);
         if (status != ANI_OK) {
             APP_LOGE("Object_CallMethodByName_Void failed %{public}d", status);
             return nullptr;
@@ -320,7 +320,7 @@ static void DecompressFile(ani_env* env, ani_string aniInFile, ani_string aniOut
     }
 }
 
-static ani_double GetOriginalSize(ani_env* env, ani_string aniCompressedFile)
+static ani_long GetOriginalSize(ani_env* env, ani_string aniCompressedFile)
 {
     std::string compressedFile;
     if (!CommonFunAni::ParseString(env, aniCompressedFile, compressedFile)) {
@@ -349,17 +349,9 @@ static ani_object CreateChecksumSync(ani_env* env)
     return objChecksum;
 }
 
-static ani_double Adler32(
-    ani_env* env, [[maybe_unused]] ani_object checksumObj, ani_double aniAdler, ani_arraybuffer buf)
+static ani_long Adler32(
+    ani_env* env, [[maybe_unused]] ani_object checksumObj, ani_long aniAdler, ani_arraybuffer buf)
 {
-    int64_t adler = 0;
-
-    if (!CommonFunAni::TryCastDoubleTo(aniAdler, &adler)) {
-        APP_LOGE("Cast aniAdler failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER, TYPE_NUMBER);
-        return 0;
-    }
-
     if (buf == nullptr) {
         APP_LOGE("buf is nullptr");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_BUF, TYPE_ARRAYBUFFER);
@@ -381,51 +373,24 @@ static ani_double Adler32(
         return 0;
     }
 
-    return adler32(static_cast<uLong>(adler), reinterpret_cast<Bytef*>(buffer), static_cast<uInt>(bufferLength));
+    return static_cast<ani_long>(
+        adler32(static_cast<uLong>(aniAdler), reinterpret_cast<Bytef*>(buffer), static_cast<uInt>(bufferLength)));
 }
 
-static ani_double Adler32Combine(ani_env* env,
-    [[maybe_unused]] ani_object checksumObj, ani_double aniAdler1, ani_double aniAdler2, ani_double aniLen2)
+static ani_long Adler32Combine(ani_env* env,
+    [[maybe_unused]] ani_object checksumObj, ani_long aniAdler1, ani_long aniAdler2, ani_long aniLen2)
 {
-    int64_t adler1 = 0;
-    int64_t adler2 = 0;
-    int64_t len2 = 0;
-
-    if (!CommonFunAni::TryCastDoubleTo(aniAdler1, &adler1)) {
-        APP_LOGE("Cast aniAdler1 failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER1, TYPE_NUMBER);
-        return 0;
-    }
-
-    if (!CommonFunAni::TryCastDoubleTo(aniAdler2, &adler2)) {
-        APP_LOGE("Cast aniAdler2 failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER2, TYPE_NUMBER);
-        return 0;
-    }
-
-    if (!CommonFunAni::TryCastDoubleTo(aniLen2, &len2)) {
-        APP_LOGE("Cast aniLen2 failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_LEN2, TYPE_NUMBER);
-        return 0;
-    }
-
 #ifdef Z_LARGE64
-    return adler32_combine64(static_cast<uLong>(adler1), static_cast<uLong>(adler2), static_cast<z_off64_t>(len2));
+    return static_cast<ani_long>(adler32_combine64(
+        static_cast<uLong>(aniAdler1), static_cast<uLong>(aniAdler2), static_cast<z_off64_t>(aniLen2)));
 #else
-    return adler32_combine(static_cast<uLong>(adler1), static_cast<uLong>(adler2), static_cast<z_off64_t>(len2));
+    return static_cast<ani_long>(adler32_combine(
+        static_cast<uLong>(aniAdler1), static_cast<uLong>(aniAdler2), static_cast<z_off_t>(aniLen2)));
 #endif
 }
 
-static ani_double Crc32(ani_env* env, [[maybe_unused]] ani_object checksumObj, ani_double aniCrc, ani_arraybuffer buf)
+static ani_long Crc32(ani_env* env, [[maybe_unused]] ani_object checksumObj, ani_long aniCrc, ani_arraybuffer buf)
 {
-    int64_t crc = 0;
-
-    if (!CommonFunAni::TryCastDoubleTo(aniCrc, &crc)) {
-        APP_LOGE("Cast aniCrc failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC, TYPE_NUMBER);
-        return 0;
-    }
-
     if (buf == nullptr) {
         APP_LOGE("buf is nullptr");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_BUF, TYPE_ARRAYBUFFER);
@@ -447,51 +412,24 @@ static ani_double Crc32(ani_env* env, [[maybe_unused]] ani_object checksumObj, a
         return 0;
     }
 
-    return crc32(static_cast<uLong>(crc), reinterpret_cast<Bytef*>(buffer), static_cast<uInt>(bufferLength));
+    return static_cast<ani_long>(
+        crc32(static_cast<uLong>(aniCrc), reinterpret_cast<Bytef*>(buffer), static_cast<uInt>(bufferLength)));
 }
 
-static ani_double Crc32Combine(ani_env* env,
-    [[maybe_unused]] ani_object checksumObj, ani_double aniCrc1, ani_double aniCrc2, ani_double aniLen2)
+static ani_long Crc32Combine(ani_env* env,
+    [[maybe_unused]] ani_object checksumObj, ani_long aniCrc1, ani_long aniCrc2, ani_long aniLen2)
 {
-    int64_t crc1 = 0;
-    int64_t crc2 = 0;
-    int64_t len2 = 0;
-
-    if (!CommonFunAni::TryCastDoubleTo(aniCrc1, &crc1)) {
-        APP_LOGE("Cast aniCrc1 failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC1, TYPE_NUMBER);
-        return 0;
-    }
-
-    if (!CommonFunAni::TryCastDoubleTo(aniCrc2, &crc2)) {
-        APP_LOGE("Cast aniCrc2 failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC2, TYPE_NUMBER);
-        return 0;
-    }
-
-    if (!CommonFunAni::TryCastDoubleTo(aniLen2, &len2)) {
-        APP_LOGE("Cast aniLen2 failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_LEN2, TYPE_NUMBER);
-        return 0;
-    }
-
 #ifdef Z_LARGE64
-    return crc32_combine64(static_cast<uLong>(crc1), static_cast<uLong>(crc2), static_cast<z_off64_t>(len2));
+    return static_cast<ani_long>(
+        crc32_combine64(static_cast<uLong>(aniCrc1), static_cast<uLong>(aniCrc2), static_cast<z_off64_t>(aniLen2)));
 #else
-    return crc32_combine(static_cast<uLong>(crc1), static_cast<uLong>(crc2), static_cast<z_off64_t>(len2));
+    return static_cast<ani_long>(
+        crc32_combine(static_cast<uLong>(aniCrc1), static_cast<uLong>(aniCrc2), static_cast<z_off_t>(aniLen2)));
 #endif
 }
 
-static ani_double Crc64(ani_env* env, [[maybe_unused]] ani_object checksumObj, ani_double aniCrc, ani_arraybuffer buf)
+static ani_long Crc64(ani_env* env, [[maybe_unused]] ani_object checksumObj, ani_long aniCrc, ani_arraybuffer buf)
 {
-    uint64_t crc = 0;
-
-    if (!CommonFunAni::TryCastDoubleTo(aniCrc, &crc)) {
-        APP_LOGE("Cast aniCrc failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC, TYPE_NUMBER);
-        return 0;
-    }
-
     if (buf == nullptr) {
         APP_LOGE("buf is nullptr");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_BUF, TYPE_ARRAYBUFFER);
@@ -513,7 +451,8 @@ static ani_double Crc64(ani_env* env, [[maybe_unused]] ani_object checksumObj, a
         return 0;
     }
 
-    return ComputeCrc64(crc, reinterpret_cast<char*>(buffer), bufferLength);
+    return static_cast<ani_long>(
+        ComputeCrc64(static_cast<uint64_t>(aniCrc), reinterpret_cast<char*>(buffer), bufferLength));
 }
 
 static ani_object GetCrcTable(ani_env* env, [[maybe_unused]] ani_object checksumObj)

@@ -57,7 +57,7 @@ ani_object AniResourceManagerConvert::ConvertBundleResourceInfo(ani_env* env, co
     RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, bundleResInfo.label, string));
     RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
 
-    // drawableDecriptor: DrawableDescriptor
+    // drawableDescriptor: DrawableDescriptor
     ani_object aDrawableDescriptor = AniResourceManagerDrawableUtils::ConvertDrawableDescriptor(env,
         bundleResInfo.foreground, bundleResInfo.background);
     if (aDrawableDescriptor == nullptr) {
@@ -67,7 +67,7 @@ ani_object AniResourceManagerConvert::ConvertBundleResourceInfo(ani_env* env, co
             CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_DRAWABLEDESCRIPTOR, aDrawableDescriptor));
     }
 
-    // appIndex: number
+    // appIndex: int
     RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, bundleResInfo.appIndex));
 
     return object;
@@ -116,7 +116,7 @@ ani_object AniResourceManagerConvert::ConvertLauncherAbilityResourceInfo(ani_env
             CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_DRAWABLEDESCRIPTOR, aDrawableDescriptor));
     }
 
-    // appIndex: number
+    // appIndex: int
     RETURN_NULL_IF_FALSE(
         CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, launcherAbilityResourceInfo.appIndex));
 

@@ -19,8 +19,8 @@ import { RecoverableApplicationInfo } from 'bundleManager.RecoverableApplication
 export class RecoverableApplicationInfoInner implements RecoverableApplicationInfo {
   public readonly bundleName: string = '';
   public readonly moduleName: string = '';
-  public readonly labelId: number;
-  public readonly iconId: number;
+  public readonly labelId: long;
+  public readonly iconId: long;
   public readonly systemApp: boolean;
   public readonly bundleType: bundleManager.BundleType = bundleManager.BundleType.APP;
   public readonly codePaths: Array<string> = [];

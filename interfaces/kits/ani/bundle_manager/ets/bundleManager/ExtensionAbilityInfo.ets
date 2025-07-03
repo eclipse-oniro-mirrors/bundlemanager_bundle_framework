@@ -22,9 +22,9 @@ export interface ExtensionAbilityInfo {
   readonly bundleName: string;
   readonly moduleName: string;
   readonly name: string;
-  readonly labelId: number;
-  readonly descriptionId: number;
-  readonly iconId: number;
+  readonly labelId: long;
+  readonly descriptionId: long;
+  readonly iconId: long;
   readonly exported: boolean;
   readonly extensionAbilityType: bundleManager.ExtensionAbilityType;
   readonly extensionAbilityTypeName: string;
@@ -35,6 +35,6 @@ export interface ExtensionAbilityInfo {
   readonly readPermission: string;
   readonly writePermission: string;
   readonly skills: Array<Skill>;
-  readonly appIndex: number;
+  readonly appIndex: int;
 }
 

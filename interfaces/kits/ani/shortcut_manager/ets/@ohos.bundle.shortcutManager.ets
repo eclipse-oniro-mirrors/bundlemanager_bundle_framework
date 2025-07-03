@@ -20,11 +20,11 @@ namespace shortcutManager {
 
   loadLibrary("ani_shortcut_manager.z");
 
-  export native function addDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;
-  export native function deleteDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;
-  export native function getAllDesktopShortcutInfoNative(userId: number): Array<ShortcutInfo>;
+  export native function addDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: int): void;
+  export native function deleteDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: int): void;
+  export native function getAllDesktopShortcutInfoNative(userId: int): Array<ShortcutInfo>;
 
-  function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
+  function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
     let p:Promise<void> = new Promise<void>((resolve:(v:PromiseLike<void>) =>void, reject: (error: Error) => void):void=> {
       let cb = ():NullishType=>{shortcutManager.addDesktopShortcutInfoNative(shortcutInfo, userId);return undefined;}
       let p1 = taskpool.execute(cb);
@@ -38,7 +38,7 @@ namespace shortcutManager {
     return p;
   }
 
-  function deleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
+  function deleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
     let p:Promise<void> = new Promise<void>((resolve:(v:PromiseLike<void>) =>void, reject: (error: Error) => void):void=> {
       let cb = ():NullishType=>{shortcutManager.deleteDesktopShortcutInfoNative(shortcutInfo, userId);return undefined;}
       let p1 = taskpool.execute(cb);
@@ -52,7 +52,7 @@ namespace shortcutManager {
     return p;
   }
 
-  function getAllDesktopShortcutInfo(userId: number): Promise<Array<ShortcutInfo>> {
+  function getAllDesktopShortcutInfo(userId: int): Promise<Array<ShortcutInfo>> {
     let p = new Promise<Array<ShortcutInfo>>((resolve: (arrShortcutInfo: Array<ShortcutInfo>) => void, reject: (error: Error)=>void) => {
       let cb = ():(Array<ShortcutInfo>)=>{return shortcutManager.getAllDesktopShortcutInfoNative(userId);};
       let p1 = taskpool.execute(cb);

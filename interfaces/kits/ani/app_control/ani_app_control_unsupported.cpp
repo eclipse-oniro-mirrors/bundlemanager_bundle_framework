@@ -44,7 +44,7 @@ static ani_object AniGetDisposedStatus(ani_env* env, ani_string aniAppId, ani_bo
     return nullptr;
 }
 
-static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_double aniAppIndex, ani_boolean aniIsSync)
+static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_int aniAppIndex, ani_boolean aniIsSync)
 {
     APP_LOGI("AppControl not supported");
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
@@ -52,34 +52,34 @@ static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_doubl
         isSync ? DELETE_DISPOSED_STATUS_SYNC : DELETE_DISPOSED_STATUS, "");
 }
 
-static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_double aniAppIndex)
+static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int aniAppIndex)
 {
     APP_LOGI("AppControl not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_DISPOSED_STATUS_SYNC, "");
     return nullptr;
 }
 
-static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object aniRule, ani_double aniAppIndex)
+static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object aniRule, ani_int aniAppIndex)
 {
     APP_LOGI("AppControl not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_DISPOSED_STATUS_SYNC, "");
 }
 
 static void AniSetUninstallDisposedRule(ani_env* env,
-    ani_string aniAppIdentifier, ani_object aniRule, ani_double aniAppIndex)
+    ani_string aniAppIdentifier, ani_object aniRule, ani_int aniAppIndex)
 {
     APP_LOGI("AppControl not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_UNINSTALL_DISPOSED_RULE, "");
 }
 
-static ani_object AniGetUninstallDisposedRule(ani_env* env, ani_string aniAppIdentifier, ani_double aniAppIndex)
+static ani_object AniGetUninstallDisposedRule(ani_env* env, ani_string aniAppIdentifier, ani_int aniAppIndex)
 {
     APP_LOGI("AppControl not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_UNINSTALL_DISPOSED_RULE, "");
     return nullptr;
 }
 
-static void AniDeleteUninstallDisposedRule(ani_env* env, ani_string aniAppIdentifier, ani_double aniAppIndex)
+static void AniDeleteUninstallDisposedRule(ani_env* env, ani_string aniAppIdentifier, ani_int aniAppIndex)
 {
     APP_LOGI("AppControl not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, DELETE_UNINSTALL_DISPOSED_RULE, "");

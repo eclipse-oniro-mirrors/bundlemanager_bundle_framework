@@ -15,17 +15,17 @@
 
 export interface PluginBundleInfo {
   readonly label: string;
-  readonly labelId: number;
+  readonly labelId: long;
   readonly icon: string;
-  readonly iconId: number;
+  readonly iconId: long;
   readonly pluginBundleName: string;
-  readonly versionCode: number;
+  readonly versionCode: long;
   readonly versionName: string;
   readonly pluginModuleInfos: Array<PluginModuleInfo>;
 }
 
 export interface PluginModuleInfo {
   readonly moduleName: string;
-  readonly descriptionId: number;
+  readonly descriptionId: long;
   readonly description: string;
 }
