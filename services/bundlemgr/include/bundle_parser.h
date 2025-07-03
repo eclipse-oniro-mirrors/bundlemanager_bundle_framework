@@ -62,9 +62,19 @@ public:
      * @brief Parse scanAppInfos by the configFile.
      * @param configFile Indicates the path of configFile.
      * @param scanInfos Indicates the obtained InnerBundleInfo object.
+     * @param scanDemandInfos Indicates the obtained onDemandBundleInfo object.
      * @return Returns ERR_OK if the bundle successfully parsed; returns ErrCode otherwise.
      */
-    ErrCode ParsePreAppListConfig(const std::string &configFile, std::set<PreScanInfo> &scanAppInfos) const;
+    ErrCode ParsePreAppListConfig(const std::string &configFile, std::set<PreScanInfo> &scanAppInfos,
+        std::set<PreScanInfo> &scanDemandInfos) const;
+    /**
+     * @brief Parse scanInfos by the configFile.
+     * @param configFile Indicates the path of configFile.
+     * @param scanInfos Indicates the obtained InnerBundleInfo object.
+     * @return Returns ERR_OK if the bundle successfully parsed; returns ErrCode otherwise.
+     */
+    ErrCode ParseDemandInstallConfig(
+        const std::string &configFile, std::set<PreScanInfo> &scanInfos) const;
     /**
      * @brief Parse bundleNames by the configFile.
      * @param configFile Indicates the path of configFile.

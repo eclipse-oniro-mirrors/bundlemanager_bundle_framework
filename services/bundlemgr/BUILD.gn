@@ -42,6 +42,7 @@ config("bundlemgr_common_config") {
     "include/utd",
     "include/verify",
     "include/plugin",
+    "include/on_demand_install",
     "../../interfaces/inner_api/appexecfwk_base/include",
     "../../interfaces/inner_api/bundlemgr_extension/include",
   ]

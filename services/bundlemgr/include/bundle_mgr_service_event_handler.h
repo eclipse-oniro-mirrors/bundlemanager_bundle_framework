@@ -23,9 +23,11 @@
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_host_impl.h"
+#include "bundle_verify_mgr.h"
 #include "common_event_manager.h"
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
+#include "pre_install_bundle_info.h"
 #include "pre_install_exception_mgr.h"
 #include "pre_scan_info.h"
 #include "nlohmann/json.hpp"
@@ -669,6 +671,13 @@ private:
         int32_t userId);
     void CheckAllBundleEl1ShaderCacheLocal();
     void CleanAllBundleEl1ShaderCacheLocal();
+    void InnerProcessBootCheckOnDemandBundle();
+    void ProcessRebootCheckOnDemandBundle();
+    bool ParseOnDemandHapFiles(const std::string &hapFilePath,
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults,
+        std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void ConvertToOnDemandInstallBundleInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+        PreInstallBundleInfo &preInstallBundleInfo);
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
     // Used to notify bundle scan status

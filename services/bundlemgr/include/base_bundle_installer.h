@@ -816,6 +816,8 @@ private:
     bool IsAllowEnterPrise();
     void MarkIsForceUninstall(const std::string &bundleName, bool isForceUninstalled);
     bool CheckCanInstallPreBundle(const std::string &bundleName, const int32_t userId);
+    ErrCode RecoverOnDemandInstallBundle(const std::string &bundleName,
+        const InstallParam &installParam, int32_t &uid);
     void PrintStartWindowIconId(const InnerBundleInfo &info);
     bool ProcessExtProfile(const InstallParam &installParam);
 
