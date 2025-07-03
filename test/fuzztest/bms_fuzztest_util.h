@@ -26,6 +26,7 @@
 #include "form_info.h"
 #include "install_param.h"
 #include "install_plugin_param.h"
+#include "shortcut_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -599,6 +600,25 @@ void GenerateFormInfo(FuzzedDataProvider& fdp, FormInfo &formInfo)
     formInfo.scheduledUpdateTime = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.multiScheduledUpdateTime = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     formInfo.src = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+}
+
+void GenerateShortcutInfo(FuzzedDataProvider& fdp, ShortcutInfo &shortcutInfo)
+{
+    shortcutInfo.isStatic = fdp.ConsumeBool();
+    shortcutInfo.isHomeShortcut = fdp.ConsumeBool();
+    shortcutInfo.isEnables = fdp.ConsumeBool();
+    shortcutInfo.visible = fdp.ConsumeBool();
+    shortcutInfo.iconId = fdp.ConsumeIntegral<uint32_t>();
+    shortcutInfo.labelId = fdp.ConsumeIntegral<uint32_t>();
+    shortcutInfo.appIndex = fdp.ConsumeIntegral<int32_t>();
+    shortcutInfo.sourceType = fdp.ConsumeIntegral<int32_t>();
+    shortcutInfo.id = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.hostAbility = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.icon = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.disableMessage = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
 }
 
 int32_t GenerateRandomUser(FuzzedDataProvider& fdp)
