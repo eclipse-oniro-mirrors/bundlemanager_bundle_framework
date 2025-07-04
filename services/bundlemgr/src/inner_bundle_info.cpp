@@ -5057,7 +5057,16 @@ bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
         pluginModuleInfo.compressNativeLibs = info.second.compressNativeLibs;
         pluginModuleInfo.isLibIsolated =  info.second.isLibIsolated;
         pluginModuleInfo.packageName = info.second.packageName;
+        pluginModuleInfo.compileMode = info.second.compileMode;
         pluginBundleInfo.pluginModuleInfos.emplace_back(pluginModuleInfo);
+        ModuleInfo moduleInfo;
+        moduleInfo.moduleName = info.second.name;
+        moduleInfo.preloads = info.second.preloads;
+        if (info.second.hapPath.empty()) {
+            moduleInfo.moduleSourceDir = info.second.modulePath;
+            pluginBundleInfo.appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
+        }
+        pluginBundleInfo.appInfo.moduleInfos.emplace_back(moduleInfo);
     }
     return true;
 }
