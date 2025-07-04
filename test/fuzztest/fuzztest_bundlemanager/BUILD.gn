@@ -119,6 +119,7 @@ group("bundlemanagerfuzztest") {
     "bmsquerykeepalivebundleinfos_fuzzer:BMSQueryKeepAliveBundleInfosFuzzTest",
     "bmsqueryrpcidbyabilitytoservicecenter_fuzzer:BMSQueryRpcIdByAbilityToServiceCenterFuzzTest",
     "bmsquickfixchecker_fuzzer:BMSQuickFixCheckerFuzzTest",
+    "bmsquickfixdatamgr_fuzzer:BMSQuickFixDataMgrFuzzTest",
     "bmsquickfixdeployer_fuzzer:BMSQuickFixDeployerFuzzTest",
     "bmsbundleresourcehelpersecond_fuzzer:BmsBundleResourceHelperSecondFuzzTest",
     "bmsremoteabilityinfo_fuzzer:BMSRemoteAbilityInfoFuzzTest",
