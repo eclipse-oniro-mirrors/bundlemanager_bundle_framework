@@ -20,6 +20,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "bundle_mgr_ext_client.h"
 #include "bundle_mgr_ext_proxy.h"
 #include "bundle_mgr_ext_stub.h"
 #include "bundle_mgr_ext_host_impl.h"
@@ -139,6 +140,26 @@ HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtProxy_0100, Function | Smal
 }
 
 /**
+ * @tc.number: GetBundleNamesForUidExtClient_0100
+ * @tc.name: GetBundleNamesForUidExtClient_0100
+ * @tc.desc: test GetBundleNamesForUidExt
+ */
+HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtClient_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IBundleMgrExt> bundleMgrExtProxy = bundleMgrProxy->GetBundleMgrExtProxy();
+    ASSERT_NE(bundleMgrExtProxy, nullptr);
+    BundleMgrExtClient::GetInstance().bundleMgrExtProxy_ = bundleMgrExtProxy;
+
+    int32_t uid = 111;
+    std::vector<std::string> bundleNames;
+    auto ret = BundleMgrExtClient::GetInstance().GetBundleNamesForUidExt(uid, bundleNames);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    EXPECT_EQ(bundleNames.empty(), true);
+}
+
+/**
  * @tc.number: GetBundleNamesForUidExtStub_0100
  * @tc.name: GetBundleNamesForUidExtStub_0100
  * @tc.desc: test GetBundleNamesForUidExt
@@ -153,5 +174,77 @@ HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtStub_0100, Function | Small
     MessageOption option(MessageOption::TF_SYNC);
     ErrCode ret = stub.OnRemoteRequest(0, data, reply, option);
     EXPECT_EQ(ret, TRANSACTION_ERR);
+}
+
+/**
+ * @tc.number: GetBundleNamesForUidExtImpl_0100
+ * @tc.name: GetBundleNamesForUidExtImpl_0100
+ * @tc.desc: test GetBundleNamesForUidExt
+ */
+HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtImpl_0100, Function | SmallTest | Level1)
+{
+    BundleMgrExtHostImpl impl;
+    int32_t uid = 111;
+    std::vector<std::string> bundleNames;
+    int32_t funcResult = 0;
+    ErrCode ret = impl.GetBundleNamesForUidExt(uid, bundleNames, funcResult);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: GetBundleNamesForUidExt_0100
+ * @tc.name: GetBundleNamesForUidExt_0100
+ * @tc.desc: test GetBundleNamesForUidExt
+ */
+HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExt_0100, Function | SmallTest | Level1)
+{
+    int32_t uid = 111;
+    std::vector<std::string> bundleNames;
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode ret = bmsExtensionDataMgr.GetBundleNamesForUidExt(uid, bundleNames);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: OnRemoteDied_0100
+ * @tc.name: OnRemoteDied_0100
+ * @tc.desc: test OnRemoteDied
+ */
+HWTEST_F(BmsBundleMgrExtTest, OnRemoteDied_0100, Function | SmallTest | Level1)
+{
+    BundleMgrExtClient::GetInstance().bundleMgrExtProxy_ = nullptr;
+    BundleMgrExtClient::GetInstance().deathRecipient_ = nullptr;
+    wptr<OHOS::IRemoteObject> remote = nullptr;
+    BundleMgrExtClient::BundleMgrExtDeathRecipient deathRecipient;
+    auto bundleMgrExtProxy = BundleMgrExtClient::GetInstance().GetBundleMgrExtProxy();
+    EXPECT_NE(bundleMgrExtProxy, nullptr);
+    deathRecipient.OnRemoteDied(remote);
+    EXPECT_NE(BundleMgrExtClient::GetInstance().bundleMgrExtProxy_, nullptr);
+    EXPECT_NE(BundleMgrExtClient::GetInstance().deathRecipient_, nullptr);
+
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    ASSERT_NE(systemAbilityManager, nullptr);
+    remote = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    ASSERT_NE(remote, nullptr);
+    deathRecipient.OnRemoteDied(remote);
+    EXPECT_EQ(BundleMgrExtClient::GetInstance().bundleMgrExtProxy_, nullptr);
+    EXPECT_EQ(BundleMgrExtClient::GetInstance().deathRecipient_, nullptr);
+}
+
+/**
+ * @tc.number: ResetBundleMgrExtProxy_0010
+ * @tc.name: test ResetBundleMgrExtProxy
+ * @tc.desc: 1.ResetBundleMgrExtProxy
+ */
+HWTEST_F(BmsBundleMgrExtTest, ResetBundleMgrExtProxy_0010, Function | SmallTest | Level1)
+{
+    BundleMgrExtClient::GetInstance().bundleMgrExtProxy_ = nullptr;
+    wptr<IRemoteObject> remote;
+    BundleMgrExtClient::GetInstance().ResetBundleMgrExtProxy(remote);
+    EXPECT_NE(BundleMgrExtClient::GetInstance().GetBundleMgrExtProxy(), nullptr);
+    BundleMgrExtClient::GetInstance().ResetBundleMgrExtProxy(remote);
+    EXPECT_EQ(BundleMgrExtClient::GetInstance().deathRecipient_, nullptr);
 }
 } // OHOS
