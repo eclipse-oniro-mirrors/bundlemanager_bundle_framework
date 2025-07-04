@@ -1167,6 +1167,8 @@ public:
     void FilterShortcutJson(nlohmann::json &jsonResult);
     ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
     void UpdateDesktopShortcutInfo(const std::string &bundleName);
+    ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const int32_t userId, PluginBundleInfo &pluginBundleInfo);
 
 private:
     /**

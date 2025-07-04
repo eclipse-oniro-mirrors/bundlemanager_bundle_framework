@@ -11184,5 +11184,39 @@ void BundleDataMgr::UpdateDesktopShortcutInfo(const std::string &bundleName)
     }
     shortcutStorage_->UpdateDesktopShortcutInfo(bundleName, shortcutInfos);
 }
+
+ErrCode BundleDataMgr::GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+    const int32_t userId, PluginBundleInfo &pluginBundleInfo)
+{
+    APP_LOGD("start GetPluginInfo -n %{public}s -u %{public}d", hostBundleName.c_str(), userId);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid userid :%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(hostBundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("-n %{public}s does not exist", hostBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        APP_LOGE("-n %{public}s is not installed in user %{public}d or 0", hostBundleName.c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    std::unordered_map<std::string, PluginBundleInfo> pluginInfoMap = innerBundleInfo.GetAllPluginBundleInfo();
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleInfo.GetInnerBundleUserInfo(responseUserId, innerBundleUserInfo);
+    if ((pluginInfoMap.find(pluginBundleName) == pluginInfoMap.end()) ||
+        (innerBundleUserInfo.installedPluginSet.find(pluginBundleName) ==
+        innerBundleUserInfo.installedPluginSet.end())) {
+        APP_LOGE("-p %{public}s -u %{public}d not exist", pluginBundleName.c_str(), userId);
+        return ERR_APPEXECFWK_PLUGIN_NOT_FOUND;
+    }
+    pluginBundleInfo = pluginInfoMap.at(pluginBundleName);
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -2202,5 +2202,20 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetSandboxDataDir_0001, Function | MediumTe
     ErrCode res = bundleMgrHost.HandleGetSandboxDataDir(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: HandleGetPluginInfo_0001
+ * @tc.name: test the HandleGetPluginInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetPluginInfo
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetPluginInfo_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetPluginInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS
