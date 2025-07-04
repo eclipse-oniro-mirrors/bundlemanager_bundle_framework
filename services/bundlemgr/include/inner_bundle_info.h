@@ -2351,6 +2351,7 @@ public:
     void GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos) const;
     std::string GetApplicationCodeLanguage() const;
     void UpdateHasCloudkitConfig();
+    int32_t GetModuleSize() const;
 
 private:
     bool IsExistLauncherAbility() const;

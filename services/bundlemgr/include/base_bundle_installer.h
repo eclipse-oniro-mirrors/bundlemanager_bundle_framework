@@ -747,6 +747,10 @@ private:
     ErrCode DeleteEl1ShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
     ErrCode DeleteBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
         const std::string &bundleName, int32_t userId) const;
+    ArkStartupCache CreateArkStartupCacheParameter(const std::string &bundleName,
+        int32_t userId, BundleType bundleType, int32_t uid);
+    ErrCode ProcessArkStartupCache(const ArkStartupCache &createArk,
+        int32_t moduleNum, int32_t userId) const;
     ErrCode CreateArkStartupCache(const ArkStartupCache &createArk) const;
     ErrCode CleanArkStartupCache(const std::string &cacheDir, const std::string &bundleName, int32_t userId) const;
     ErrCode DeleteArkStartupCache(const std::string &cacheDir, const std::string &bundleName, int32_t userId) const;
