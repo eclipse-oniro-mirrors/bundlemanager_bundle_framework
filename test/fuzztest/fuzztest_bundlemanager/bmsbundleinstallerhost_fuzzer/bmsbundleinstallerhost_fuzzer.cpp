@@ -89,6 +89,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     InstallParam installParam2;
     GenerateInstallParam(fdp, installParam2);
     bundleInstallerHost->IsPermissionVaild(installParam, installParam2);
+    DestroyAppCloneParam destroyAppCloneParam;
+    Parcel parcel;
+    destroyAppCloneParam.Marshalling(parcel);
     return true;
 }
 }

@@ -19,10 +19,10 @@ import("../../../../appexecfwk.gni")
 module_output_path = fuzz_test_path
 
 ##############################fuzztest##########################################
-ohos_fuzztest("BMSAppRunningControlRuleFuzzTest") {
+ohos_fuzztest("BMSCheckEncryptionParamFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
-      "../../../fuzztest/fuzztest_bundlemanager/bmsapprunningcontrolrule_fuzzer"
+      "../../../fuzztest/fuzztest_bundlemanager/bmscheckencryptionparam_fuzzer"
 
   cflags = [
     "-g",
@@ -30,22 +30,26 @@ ohos_fuzztest("BMSAppRunningControlRuleFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  include_dirs = [
+  include_dirs = [ 
     "${services_path}/bundlemgr/include",
-    "${test_path}/fuzztest",
+    "${test_path}/fuzztest" 
     ]
   sources = [
-    "bmsapprunningcontrolrule_fuzzer.cpp",
-    "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
-    ]
+    "bmscheckencryptionparam_fuzzer.cpp",
+    "${services_path}/bundlemgr/src/ipc/check_encryption_param.cpp",
+   ]
 
   deps = [
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
   ]
   external_deps = [
+    "ability_base:want",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
   ]
 }

@@ -63,6 +63,7 @@ group("bundlemanagerfuzztest") {
     "bmsbundleuserinfo_fuzzer:BMSBundleUserInfoFuzzTest",
     "bmsbundleusermgrhost_fuzzer:BMSBundleUserMgrHostFuzzTest",
     "bmsbundleusermgrproxy_fuzzer:BMSBundleUserMgrProxyFuzzTest",
+    "bmscheckencryptionparam_fuzzer:BMSCheckEncryptionParamFuzzTest",
     "bmscheckissystemappbyuid_fuzzer:BMSCheckIsSystemAppByUidFuzzTest",
     "bmscleanbundlecachefiles_fuzzer:BMSCleanBundleCacheFilesFuzzTest",
     "bmscleanbundledatafiles_fuzzer:BMSCleanBundleDataFilesFuzzTest",
