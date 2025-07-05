@@ -79,6 +79,7 @@ public:
     std::string GetCompatibleDeviceType(const std::string &bundleName);
     ErrCode VerifyActivationLockToken(bool &res);
     bool IsNeedToSkipPreBundleInstall();
+    ErrCode RegisterPreInstallWithCard();
 private:
     bool OpenHandler();
     static void *handler_;
