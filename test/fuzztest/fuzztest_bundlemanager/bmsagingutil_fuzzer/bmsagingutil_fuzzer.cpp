@@ -29,13 +29,24 @@ namespace OHOS {
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
-    std::string name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    int64_t time = fdp.ConsumeIntegral<int64_t>();
-    int32_t startCount = fdp.ConsumeIntegral<int32_t>();
-    AgingBundleInfo agingBundleInfo{name, time, startCount};
-    agingBundleInfo.GetBundleName();
-    agingBundleInfo.GetRecentlyUsedTime();
-    agingBundleInfo.GetStartCount();
+    AgingBundleInfo agingBundleInfo1{
+        fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH),
+        fdp.ConsumeIntegral<int64_t>(),
+        fdp.ConsumeIntegral<int32_t>()
+    };
+
+    AgingBundleInfo agingBundleInfo2{
+        fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH),
+        fdp.ConsumeIntegral<int64_t>(),
+        fdp.ConsumeIntegral<int32_t>()
+    };
+    std::vector<AgingBundleInfo> bundles{agingBundleInfo1, agingBundleInfo2};
+    AgingUtil::SortAgingBundles(bundles);
+    AgingUtil::SortTwoAgingBundleInfos(agingBundleInfo1, agingBundleInfo2);
+    AgingUtil::GetUnusedTimeMsBaseOnCurrentTime(
+        fdp.ConsumeIntegral<int64_t>(),
+        fdp.ConsumeIntegral<int32_t>()
+    );
     return true;
 }
 } // namespace OHOS
@@ -46,4 +57,4 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     /* Run your code on data */
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
-}
+}
