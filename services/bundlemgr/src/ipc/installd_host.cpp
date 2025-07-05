@@ -19,6 +19,7 @@
 #include "bundle_constants.h"
 #include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
+#include "mem_mgr_client.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
 #include "system_ability_definition.h"
@@ -27,16 +28,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int32_t UNLOAD_TIME = 3 * 60 * 1000; // 3 min for installd to unload
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
-constexpr const char* UNLOAD_TASK_NAME = "UnloadInstalldTask";
-constexpr const char* UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
 constexpr uint16_t MAX_VEC_SIZE = 1024;
 }
 
 InstalldHost::InstalldHost()
 {
-    InitEventHandler();
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd host created");
 }
 
@@ -45,18 +42,37 @@ InstalldHost::~InstalldHost()
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd host destroyed");
 }
 
+void InstalldHost::SetCritical(bool critical)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    LOG_D(BMS_TAG_INSTALLD, "critical: %{public}d, %{public}d", critical, counter_);
+    if (critical) {
+        counter_++;
+        if (counter_ == 1) {
+            Memory::MemMgrClient::GetInstance().SetCritical(
+                getpid(), critical, INSTALLD_SERVICE_ID);
+        }
+    } else {
+        counter_--;
+        if (counter_ == 0) {
+            Memory::MemMgrClient::GetInstance().SetCritical(
+                getpid(), critical, INSTALLD_SERVICE_ID);
+        }
+    }
+}
+
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     BundleMemoryGuard memoryGuard;
     LOG_D(BMS_TAG_INSTALLD, "installd host receives message from client, code = %{public}d, flags = %{public}d",
         code, option.GetFlags());
-    RemoveCloseInstalldTask();
     std::u16string descripter = InstalldHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
         LOG_E(BMS_TAG_INSTALLD, "installd host fail to write reply message due to the reply is nullptr");
         return OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    SetCritical(true);
     bool result = true;
     switch (code) {
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DIR):
@@ -244,24 +260,13 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
-            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+            int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+            SetCritical(false);
+            return ret;
     }
     LOG_D(BMS_TAG_INSTALLD, "installd host finish to process message from client");
-    AddCloseInstalldTask();
+    SetCritical(false);
     return result ? NO_ERROR : OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
-}
-
-void InstalldHost::InitEventHandler()
-{
-    std::lock_guard<std::mutex> lock(unloadTaskMutex_);
-    runner_ = EventRunner::Create(UNLOAD_QUEUE_NAME);
-    if (runner_ == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "init event runner failed");
-        return;
-    }
-    handler_ = std::make_shared<EventHandler>(runner_);
-    handler_->PostTask([]() { BundleMemoryGuard memoryGuard; },
-        AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 
 bool InstalldHost::HandleCreateBundleDir(MessageParcel &data, MessageParcel &reply)
@@ -1108,27 +1113,6 @@ bool InstalldHost::HandleLoadInstalls(MessageParcel &data, MessageParcel &reply)
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_OK);
     return true;
-}
-
-void InstalldHost::RemoveCloseInstalldTask()
-{
-    std::lock_guard<std::mutex> lock(unloadTaskMutex_);
-    handler_->RemoveTask(UNLOAD_TASK_NAME);
-}
-
-void InstalldHost::AddCloseInstalldTask()
-{
-    std::lock_guard<std::mutex> lock(unloadTaskMutex_);
-    auto task = [] {
-        BundleMemoryGuard memoryGuard;
-        if (!SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID)) {
-            LOG_E(BMS_TAG_INSTALLD, "fail to unload to system ability manager");
-            return;
-        }
-        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "unload Installd successfully");
-    };
-    handler_->PostTask(task, UNLOAD_TASK_NAME, UNLOAD_TIME);
-    LOG_D(BMS_TAG_INSTALLD, "send unload task successfully");
 }
 
 bool InstalldHost::HandleClearDir(MessageParcel &data, MessageParcel &reply)

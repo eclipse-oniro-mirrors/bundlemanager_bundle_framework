@@ -163,6 +163,7 @@ bundle_install_external_deps = [
   "appspawn:appspawn_client",
   "ffrt:libffrt",
   "hitrace:libhitracechain",
+  "memmgr:memmgrclient",
   "os_account:libaccountkits",
   "storage_service:storage_manager_acl",
   "zlib:shared_libz",

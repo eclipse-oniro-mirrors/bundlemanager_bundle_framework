@@ -829,4 +829,23 @@ HWTEST_F(BmsInstalldHostTest, HandleSetArkStartupCacheApl_0100, Function | Small
     bool res = installdHost.HandleSetArkStartupCacheApl(data, reply);
     EXPECT_TRUE(res);
 }
+
+/**
+ * @tc.number: SetCritical_0100
+ * @tc.name: test SetCritical_0100
+ * @tc.desc: SetCritical_0100
+ */
+HWTEST_F(BmsInstalldHostTest, SetCritical_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    EXPECT_EQ(installdHost.counter_, 0);
+    installdHost.SetCritical(true);
+    EXPECT_EQ(installdHost.counter_, 1);
+    installdHost.SetCritical(true);
+    EXPECT_EQ(installdHost.counter_, 2);
+    installdHost.SetCritical(false);
+    EXPECT_EQ(installdHost.counter_, 1);
+    installdHost.SetCritical(false);
+    EXPECT_EQ(installdHost.counter_, 0);
+}
 } // OHOS

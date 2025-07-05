@@ -245,15 +245,10 @@ private:
 
     bool HandleClearDir(MessageParcel &data, MessageParcel &reply);
 
-    void AddCloseInstalldTask();
+    void SetCritical(bool critical);
 
-    void RemoveCloseInstalldTask();
-
-    void InitEventHandler();
-
-    std::mutex unloadTaskMutex_;
-    std::shared_ptr<EventHandler> handler_ = nullptr;
-    std::shared_ptr<EventRunner> runner_ = nullptr;
+    std::mutex mutex_;
+    int32_t counter_ = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
