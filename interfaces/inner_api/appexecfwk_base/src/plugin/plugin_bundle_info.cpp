@@ -38,6 +38,7 @@ const char* PLUGIN_BUNDLE_INFO_MODULE_INFOS = "pluginModuleInfos";
 const char* PLUGIN_BUNDLE_INFO_ABILITY_INFOS = "abilityInfos";
 const char* PLUGIN_BUNDLE_INFO_APPLICATION_INFO = "appInfo";
 const char* PLUGIN_BUNDLE_INFO_NATIVE_LIB_PATH = "nativeLibraryPath";
+const char* COMPILE_MODE_ES_MODULE = "esmodule";
 }
 
 bool PluginBundleInfo::ReadFromParcel(Parcel &parcel)
@@ -288,6 +289,8 @@ bool PluginBundleInfo::GetHapModuleInfo(const std::string &moduleName,
             hapInfo.name = moduleInfo.moduleName;
             hapInfo.package = moduleInfo.moduleName;
             hapInfo.isModuleJson = true;
+            hapInfo.compileMode = (moduleInfo.compileMode == COMPILE_MODE_ES_MODULE) ?
+                CompileMode::ES_MODULE : CompileMode::JS_BUNDLE;
             std::string key;
             key.append(".").append(moduleName).append(".");
             for (const auto &ability : abilityInfos) {

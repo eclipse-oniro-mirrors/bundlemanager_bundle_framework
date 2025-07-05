@@ -34,6 +34,7 @@ struct PluginModuleInfo : public Parcelable {
     std::string hapPath;
     std::string cpuAbi;
     std::string nativeLibraryPath;
+    std::string compileMode;
     std::vector<std::string> nativeLibraryFileNames;
 
     bool ReadFromParcel(Parcel &parcel);

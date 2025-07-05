@@ -14672,6 +14672,28 @@ HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_3000, Function | SmallTest | 
     PluginBundleInfo pluginBundleInfo;
     PluginModuleInfo pluginModuleInfo;
     pluginModuleInfo.moduleName = "moduleName";
+    pluginModuleInfo.compileMode = "esmodule";
+    pluginBundleInfo.pluginModuleInfos.emplace_back(pluginModuleInfo);
+    AbilityInfo info;
+    info.name = "abilityName";
+    info.moduleName = "moduleName";
+    pluginBundleInfo.abilityInfos.emplace("abilityName.moduleName.", info);  
+    HapModuleInfo hapInfo;
+    bool result = pluginBundleInfo.GetHapModuleInfo("moduleName", hapInfo);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: GetHapModuleInfo_4000
+ * @tc.name: GetHapModuleInfo_4000
+ * @tc.desc: 1.Test GetHapModuleInfo_4000
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_4000, Function | SmallTest | Level0)
+{
+    PluginBundleInfo pluginBundleInfo;
+    PluginModuleInfo pluginModuleInfo;
+    pluginModuleInfo.moduleName = "moduleName";
+    pluginModuleInfo.compileMode = "jsbundle";
     pluginBundleInfo.pluginModuleInfos.emplace_back(pluginModuleInfo);
     AbilityInfo info;
     info.name = "abilityName";

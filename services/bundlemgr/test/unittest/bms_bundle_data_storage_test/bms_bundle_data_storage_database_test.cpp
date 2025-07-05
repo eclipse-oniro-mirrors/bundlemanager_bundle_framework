@@ -5166,6 +5166,23 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13200, Function | Sma
 }
 
 /**
+ * @tc.number: InnerBundleInfo_13400
+ * @tc.name: Test ConvertPluginBundleInfo
+ * @tc.desc: Test the ConvertPluginBundleInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    EXPECT_EQ(info.FromJson(innerBundleInfoJson_), OHOS::ERR_OK);
+    info.innerModuleInfos_.emplace("test", moduleInfo);
+    PluginBundleInfo pluginBundleInfo;
+    info.ConvertPluginBundleInfo(BUNDLE_NAME, pluginBundleInfo);
+    EXPECT_EQ(pluginBundleInfo.pluginBundleName, info.GetBundleName());
+    EXPECT_EQ(pluginBundleInfo.pluginModuleInfos.size(), info.innerModuleInfos_.size());
+}
+
+/**
  * @tc.number: GetApplicationCodeLanguage_0001
  * @tc.name: test GetApplicationCodeLanguage
  * @tc.desc: 1. test GetApplicationCodeLanguage of InnerBundleInfo on empty innerModuleInfos_

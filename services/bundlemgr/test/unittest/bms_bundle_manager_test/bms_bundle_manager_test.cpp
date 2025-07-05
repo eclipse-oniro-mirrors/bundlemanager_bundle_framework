@@ -3156,4 +3156,22 @@ HWTEST_F(BmsBundleManagerTest, ReportDataPartitionUsageEvent_0100, Function | Me
     ret = BundleFileUtil::IsReportDataPartitionUsageEvent(path2);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: GetPluginHapModuleInfo_0001
+ * @tc.name: test GetPluginHapModuleInfo
+ * @tc.desc: 1.test GetPluginHapModuleInfo
+ */
+HWTEST_F(BmsBundleManagerTest, GetPluginHapModuleInfo_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string hostBundleName = "test";
+    std::string pluginBundleName = "plugin";
+    std::string pluginModuleName = "module";
+    int32_t userId = 10;
+    HapModuleInfo hapModuleInfo;
+    auto ret = hostImpl->GetPluginHapModuleInfo(hostBundleName, pluginBundleName,
+        pluginModuleName, userId, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
 } // OHOS
