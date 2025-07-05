@@ -59,7 +59,6 @@ ErrCode BundleBackupMgr::OnBackup(MessageParcel& data, MessageParcel& reply)
         close(fd);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    close(fd);
     return ERR_OK;
 }
 
