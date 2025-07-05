@@ -703,6 +703,7 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_ALL_AOT):
             errCode = HandleResetAllAOT(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PLUGIN_INFO):
             errCode = HandleGetPluginInfo(data, reply);
             break;

@@ -2217,6 +2217,7 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetSandboxDataDir_0001, Function | MediumTe
      ErrCode res = bundleMgrHost.HandleResetAllAOT(data, reply);
      EXPECT_EQ(res, ERR_OK);
  }
+ /**
  * @tc.number: HandleGetPluginInfo_0001
  * @tc.name: test the HandleGetPluginInfo
  * @tc.desc: 1. system running normally
