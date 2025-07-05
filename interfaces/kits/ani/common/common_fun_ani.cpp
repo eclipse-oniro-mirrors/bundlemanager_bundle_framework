@@ -558,7 +558,7 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         env, cls, object, PROPERTYNAME_CLOUDFILESYNCENABLED, BoolToAniBoolean(appInfo.cloudFileSyncEnabled)));
 
     // cloudStructuredDataSyncEnabled?: boolean
-    RETURN_NULL_IF_FALSE(CallSetter(
+    RETURN_NULL_IF_FALSE(CallSetterOptional(
         env, cls, object, PROPERTYNAME_CLOUDSTRUCTUREDDATASYNCENABLED,
         BoolToAniBoolean(appInfo.cloudStructuredDataSyncEnabled)));
 

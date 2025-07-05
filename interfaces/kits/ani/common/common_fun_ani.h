@@ -560,7 +560,8 @@ public:
         }
 
         ani_object valueObj = nullptr;
-        if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
+        if constexpr (std::is_same_v<valueType, ani_boolean> || std::is_same_v<valueType, ani_char> ||
+                      std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
                       std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
                       std::is_same_v<valueType, ani_long> ||
                       std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
