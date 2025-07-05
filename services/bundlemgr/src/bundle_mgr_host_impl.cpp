@@ -2015,6 +2015,17 @@ ErrCode BundleMgrHostImpl::CompileReset(const std::string &bundleName, bool isAl
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::ResetAllAOT()
+{
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    if (uid != Constants::CODE_SIGN_UID) {
+        APP_LOGE("uid: %{public}d not code_sign", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    AOTHandler::GetInstance().HandleResetAllAOT();
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHostImpl::CopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {

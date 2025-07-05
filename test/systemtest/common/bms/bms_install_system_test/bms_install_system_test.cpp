@@ -2008,6 +2008,8 @@ HWTEST_F(BmsInstallSystemTest, CompileReset_0100, Function | SmallTest | Level1)
     }
     ErrCode ret = bundleMgrProxy->CompileReset("", false);
     EXPECT_EQ(ret, ERR_OK);
+    ret = bundleMgrProxy->ResetAllAOT();
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

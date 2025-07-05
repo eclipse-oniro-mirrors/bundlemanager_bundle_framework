@@ -5280,6 +5280,22 @@ ErrCode BundleMgrProxy::CompileReset(const std::string &bundleName, bool isAllBu
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::ResetAllAOT()
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to reset due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::RESET_ALL_AOT, data, reply)) {
+        APP_LOGE("fail to reset from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::CopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

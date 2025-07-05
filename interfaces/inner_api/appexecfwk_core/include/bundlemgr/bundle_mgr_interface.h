@@ -890,6 +890,14 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
+     * @brief Reset the bundle informations.
+     * @return Returns true if the reset result is successfully obtained; returns false otherwise.
+     */
+    virtual ErrCode ResetAllAOT()
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
      * @brief copy ap file to /data/local/pgo
      * @param bundleName Indicates the bundle name if needed.
      * @param isAllBundle Does it represent all bundlenames.
