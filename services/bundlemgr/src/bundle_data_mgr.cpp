@@ -235,7 +235,6 @@ void BundleDataMgr::LoadAllBundleStateDataFromJsonDb()
     }
 
     for (const auto& bundleState : bundleStateInfos) {
-        std::lock_guard<std::mutex> stateLock(stateMutex_);
         auto infoItem = bundleInfos_.find(bundleState.first);
         if (infoItem == bundleInfos_.end()) {
             APP_LOGW("BundleName(%{public}s) not exist in cache", bundleState.first.c_str());
