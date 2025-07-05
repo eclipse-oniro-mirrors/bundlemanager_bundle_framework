@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define private public
 
 #include <cstddef>
 #include <cstdint>
@@ -41,6 +42,12 @@ bool FuzzFirstInstallBundleInfo(const uint8_t *data, size_t size)
     FirstInstallBundleInfo BundleInfo;
     BundleInfo.firstInstallTime = fdp.ConsumeIntegral<int64_t>();
     firstInstallDataMgr->GetFirstInstallBundleInfo(bundleName2, userId2, BundleInfo);
+
+    firstInstallDataMgr->rdbDataManager_ = nullptr;
+    firstInstallDataMgr->IsExistFirstInstallBundleInfo(bundleName, userId);
+    firstInstallDataMgr->AddFirstInstallBundleInfo(bundleName, userId, firstInstallBundleInfo);
+    firstInstallDataMgr->GetFirstInstallBundleInfo(bundleName2, userId2, BundleInfo);
+    firstInstallDataMgr->DeleteFirstInstallBundleInfo(userId);
     return true;
 }
 }

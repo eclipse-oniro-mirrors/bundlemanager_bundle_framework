@@ -536,6 +536,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         std::vector<std::string> value;
         int32_t valueSize;
         READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, valueSize);
+        CONTAINER_SECURITY_VERIFY(parcel, valueSize, &value);
         for (auto j = 0; j < valueSize; j++) {
             value.emplace_back(Str16ToStr8(parcel.ReadString16()));
         }

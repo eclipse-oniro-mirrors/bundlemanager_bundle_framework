@@ -15,6 +15,15 @@ import("//build/config/components/idl_tool/idl.gni")
 import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
 
+idl_gen_interface("overlay_manager_interface") {
+  sources = [ "IOverlayManager.idl" ]
+  # log_domainid = "0xD001120"
+  # log_tag = "BMS"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  hitrace = "HITRACE_TAG_APP"
+}
+
 idl_gen_interface("verify_manager_interface") {
   sources = [ "IVerifyManager.idl" ]
   subsystem_name = "bundlemanager"
@@ -192,9 +201,11 @@ ohos_shared_library("appexecfwk_core") {
 
   if (bundle_framework_overlay_install) {
     defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
-    sources += [
-      "src/overlay/overlay_manager_host.cpp",
-      "src/overlay/overlay_manager_proxy.cpp",
+    sources += [ "src/overlay/overlay_manager_client.cpp" ]
+    deps += [
+      ":overlay_manager_interface",
+      ":overlay_manager_proxy",
+      ":overlay_manager_stub",
     ]
   }
 
@@ -259,6 +270,7 @@ ohos_shared_library("bundlemgr_mini") {
   }
   deps = [
     ":bundle_mgr_ext_interface",
+    ":overlay_manager_interface",
     ":verify_manager_interface",
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
@@ -360,6 +372,78 @@ ohos_source_set("verify_manager_stub") {
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
+
+ohos_source_set("overlay_manager_proxy") {
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+  configs = [ ":appexecfwk_core_config" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  output_values = get_target_outputs(":overlay_manager_interface")
+  sources = filter_include(output_values, [ "*overlay_manager_proxy.cpp" ])
+  deps = [
+    ":overlay_manager_interface",
+    "${base_path}:appexecfwk_base",
+  ]
+  external_deps = [
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+  ]
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
+
+ohos_source_set("overlay_manager_stub") {
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+  configs = [ ":appexecfwk_core_config" ]
+  cflags = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+
+  cflags_cc = [
+    "-Os",
+    "-fstack-protector-strong",
+  ]
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  output_values = get_target_outputs(":overlay_manager_interface")
+  sources = filter_include(output_values, [ "*overlay_manager_stub.cpp" ])
+  deps = [
+    ":overlay_manager_interface",
+    "${base_path}:appexecfwk_base",
+  ]
+  external_deps = [
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+  ]
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
+
 ohos_source_set("bundle_mgr_ext_proxy") {
   sanitize = {
     boundary_sanitize = true

@@ -131,7 +131,7 @@ static napi_value Init(napi_env env, napi_value exports)
             properties,
             &m_classBundleInstaller));
     napi_create_reference(env, m_classBundleInstaller, 1, &g_classBundleInstaller);
-    APP_LOGI("end");
+    APP_LOGD("end");
     return exports;
 }
 EXTERN_C_END

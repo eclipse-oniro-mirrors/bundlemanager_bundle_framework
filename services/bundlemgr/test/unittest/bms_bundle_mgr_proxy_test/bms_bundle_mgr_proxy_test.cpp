@@ -1360,5 +1360,23 @@ HWTEST_F(BmsBundleMgrProxyTest, ProcessCacheCallbackHost_0100, Function | Medium
     cacheSize = getCache->GetCacheStat();
     EXPECT_EQ(cacheSize, 2);
 }
+
+/**
+ * @tc.number: GetPluginInfo_0001
+ * @tc.name: test the GetPluginInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetPluginInfo
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetPluginInfo_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string hostBundleName = "bundle";
+    std::string pluginBundleName = "plugin";
+    int32_t userId = 100;
+    PluginBundleInfo pluginBundleInfo;
+    auto ret = bundleMgrProxy.GetPluginInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
 }
 }

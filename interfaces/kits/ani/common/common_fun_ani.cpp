@@ -101,6 +101,7 @@ constexpr const char* PROPERTYNAME_MULTIAPPMODE = "multiAppMode";
 constexpr const char* PROPERTYNAME_INSTALLSOURCE = "installSource";
 constexpr const char* PROPERTYNAME_RELEASETYPE = "releaseType";
 constexpr const char* PROPERTYNAME_CLOUDFILESYNCENABLED = "cloudFileSyncEnabled";
+constexpr const char* PROPERTYNAME_CLOUDSTRUCTUREDDATASYNCENABLED = "cloudStructuredDataSyncEnabled";
 constexpr const char* PROPERTYNAME_FLAGS = "flags";
 constexpr const char* PROPERTYNAME_BUNDLENAME = "bundleName";
 constexpr const char* PROPERTYNAME_EXPORTED = "exported";
@@ -555,6 +556,11 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
     // cloudFileSyncEnabled: boolean
     RETURN_NULL_IF_FALSE(CallSetter(
         env, cls, object, PROPERTYNAME_CLOUDFILESYNCENABLED, BoolToAniBoolean(appInfo.cloudFileSyncEnabled)));
+
+    // cloudStructuredDataSyncEnabled?: boolean
+    RETURN_NULL_IF_FALSE(CallSetter(
+        env, cls, object, PROPERTYNAME_CLOUDSTRUCTUREDDATASYNCENABLED,
+        BoolToAniBoolean(appInfo.cloudStructuredDataSyncEnabled)));
 
     // flags?: number
     RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_FLAGS, appInfo.flags));

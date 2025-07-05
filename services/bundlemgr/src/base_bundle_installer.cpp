@@ -221,9 +221,9 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .bundleName = bundleName_,
             .modulePackage = moduleName_,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .abilityName = mainAbility_,
             .appDistributionType = appDistributionType_,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
         if (installParam.allUser || IsDriverForAllUser(bundleName_) ||
             IsEnterpriseForAllUser(installParam, bundleName_)) {
@@ -266,8 +266,8 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .bundleType = static_cast<int32_t>(bundleType_),
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .bundleName = bundleName,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .appDistributionType = appDistributionType_
+            .appDistributionType = appDistributionType_,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
@@ -308,8 +308,8 @@ ErrCode BaseBundleInstaller::Recover(
             .uid = uid,
             .bundleType = static_cast<int32_t>(bundleType_),
             .bundleName = bundleName,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .appDistributionType = appDistributionType_,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
             .isRecover = true
         };
         NotifyBundleStatus(installRes);
@@ -386,8 +386,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .appId = uninstallBundleAppId_,
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .keepData = installParam.isKeepData
+            .keepData = installParam.isKeepData,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
 
         if (installParam.concentrateSendEvent) {
@@ -594,8 +594,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .developerId = developerId,
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-            .isBundleExist = isBundleExist_
+            .isBundleExist = isBundleExist_,
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
         };
         NotifyBundleStatus(installRes);
     }

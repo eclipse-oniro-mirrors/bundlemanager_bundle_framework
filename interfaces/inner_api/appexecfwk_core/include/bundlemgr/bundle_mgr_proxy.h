@@ -1250,6 +1250,9 @@ public:
 
     virtual bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
         const int32_t minorVersion, const int32_t patchVersion) override;
+
+    virtual ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const int32_t userId, PluginBundleInfo &pluginBundleInfo) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

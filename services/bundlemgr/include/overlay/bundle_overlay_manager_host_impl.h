@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,34 +18,36 @@
 
 #include <atomic>
 
-#include "overlay_manager_host.h"
+#include "overlay_manager_stub.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class OverlayManagerHostImpl : public OverlayManagerHost {
+class OverlayManagerHostImpl : public OverlayManagerStub {
 public:
     OverlayManagerHostImpl();
     virtual ~OverlayManagerHostImpl();
 
-    virtual ErrCode GetAllOverlayModuleInfo(const std::string &bundleName,
-        std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
-    virtual ErrCode GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
-        OverlayModuleInfo &overlayModuleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
-    virtual ErrCode GetOverlayModuleInfo(const std::string &moduleName, OverlayModuleInfo &overlayModuleInfo,
-        int32_t userId = Constants::UNSPECIFIED_USERID) override;
-    virtual ErrCode GetTargetOverlayModuleInfo(const std::string &targetModuleName,
-        std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode GetAllOverlayModuleInfo(const std::string &bundleName, int32_t userId,
+        std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t &funcResult) override;
+    virtual ErrCode GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName, int32_t userId,
+        OverlayModuleInfo &overlayModuleInfo, int32_t &funcResult) override;
+    virtual ErrCode GetOverlayModuleInfo(const std::string &moduleName, int32_t userId,
+        OverlayModuleInfo &overlayModuleInfo, int32_t &funcResult) override;
+    virtual ErrCode GetTargetOverlayModuleInfo(const std::string &targetModuleName, int32_t userId,
+        std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t &funcResult) override;
     virtual ErrCode GetOverlayModuleInfoByBundleName(const std::string &bundleName, const std::string &moduleName,
-        std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
-    virtual ErrCode GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
-        std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t &funcResult) override;
+    virtual ErrCode GetOverlayBundleInfoForTarget(const std::string &targetBundleName, int32_t userId,
+        std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t &funcResult) override;
     virtual ErrCode GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
-        const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo,
-        int32_t userId = Constants::UNSPECIFIED_USERID) override;
-    virtual ErrCode SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
-        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        const std::string &targetModuleName, int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfo,
+        int32_t& funcResult) override;
+    virtual ErrCode SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled, int32_t userId,
+        int32_t& funcResult) override;
     virtual ErrCode SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
-        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        int32_t userId, int32_t &funcResult) override;
+    virtual int32_t CallbackEnter([[maybe_unused]] uint32_t code) override;
+    virtual int32_t CallbackExit([[maybe_unused]] uint32_t code, [[maybe_unused]] int32_t result) override;
 };
 } // AppExecFwk
 } // OHOS

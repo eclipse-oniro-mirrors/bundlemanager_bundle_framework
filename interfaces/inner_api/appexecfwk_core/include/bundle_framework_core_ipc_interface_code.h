@@ -221,7 +221,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     BATCH_GET_ADDITIONAL_INFO = 195,
     BATCH_GET_BUNDLE_STATS = 196,
     GET_SHORTCUT_INFO_BY_APPINDEX = 197,
-    RESET_ALL_AOT = 198,
+    GET_PLUGIN_INFO = 198,
+    RESET_ALL_AOT = 199,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

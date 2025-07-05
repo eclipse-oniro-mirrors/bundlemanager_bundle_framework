@@ -39,7 +39,7 @@
 #include "default_app_interface.h"
 #include "extend_resource_manager_interface.h"
 #include "ibundle_mgr_ext.h"
-#include "overlay_manager_interface.h"
+#include "ioverlay_manager.h"
 #include "plugin/plugin_bundle_info.h"
 #include "quick_fix_manager_interface.h"
 #include "iverify_manager.h"
@@ -1832,6 +1832,12 @@ public:
     }
 
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const int32_t userId, PluginBundleInfo &pluginBundleInfo)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

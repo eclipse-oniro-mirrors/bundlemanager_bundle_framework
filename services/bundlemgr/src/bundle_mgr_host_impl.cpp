@@ -5790,5 +5790,25 @@ bool BundleMgrHostImpl::GreatOrEqualTargetAPIVersion(const int32_t platformVersi
     }
     return dataMgr->GreatOrEqualTargetAPIVersion(platformVersion, minorVersion, patchVersion);
 }
+
+ErrCode BundleMgrHostImpl::GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+    const int32_t userId, PluginBundleInfo &pluginBundleInfo)
+{
+    APP_LOGD("start GetPluginInfo");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetPluginInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -47,12 +47,6 @@ ZipReader::EntryInfo::EntryInfo(const std::string &fileNameInZip, const unz_file
     // Check the file name here for directory traversal issues.
     isUnsafe_ = filePath_.ReferencesParent();
 
-    // We also consider that the file name is unsafe, if it's absolute.
-    // On Windows, IsAbsolute() returns false for paths starting with "/".
-    if (filePath_.IsAbsolute() || StartsWith(fileNameInZip, "/")) {
-        isUnsafe_ = true;
-    }
-
     // Whether the file is encrypted is bit 0 of the flag.
     isEncrypted_ = rawFileInfo.flag & 1;
 
