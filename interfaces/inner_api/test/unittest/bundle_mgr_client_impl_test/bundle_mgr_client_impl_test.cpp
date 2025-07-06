@@ -177,5 +177,19 @@ HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0800, Function | S
     auto ret = bundleMgrClientImpl->GetDirByBundleNameAndAppIndex(bundleName, appIndex, dataDir);
     EXPECT_NE(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: GetProfileFromSharedHap_0100
+ * @tc.name: GetProfileFromSharedHap_0100
+ * @tc.desc: Test GetProfileFromSharedHap with undef GLOBAL_RESMGR_ENABLE
+ */
+HWTEST_F(BundleMgrClientImplTest, GetProfileFromSharedHap_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrClientImpl> bundleMgrClientImpl = std::make_shared<BundleMgrClientImpl>();
+    HapModuleInfo hapModuleInfo;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    std::vector<std::string> profileInfos = {};
+    EXPECT_FALSE(bundleMgrClientImpl->GetProfileFromSharedHap(hapModuleInfo, extensionAbilityInfo, profileInfos, true));
+}
 } // AppExecFwk
 } // OHOS
