@@ -162,6 +162,16 @@ ErrCode BundleMgrClient::InstallSandboxApp(const std::string &bundleName, int32_
     return impl_->InstallSandboxApp(bundleName, dlpType, userId, appIndex);
 }
 
+bool BundleMgrClient::GetProfileFromSharedHap(const HapModuleInfo &hapModuleInfo,
+    const ExtensionAbilityInfo &extensionInfo, std::vector<std::string> &profileInfos, bool includeSysRes) const
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return false;
+    }
+    return impl_->GetProfileFromSharedHap(hapModuleInfo, extensionInfo, profileInfos, includeSysRes);
+}
+
 ErrCode BundleMgrClient::UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId)
 {
     if (impl_ == nullptr) {

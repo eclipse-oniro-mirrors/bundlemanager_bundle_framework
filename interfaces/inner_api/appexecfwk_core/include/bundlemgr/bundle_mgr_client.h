@@ -88,6 +88,8 @@ public:
         std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     bool GetProfileFromHap(const HapModuleInfo &hapModuleInfo, const std::string &metadataName,
         std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
+    bool GetProfileFromSharedHap(const HapModuleInfo &hapModuleInfo, const ExtensionAbilityInfo &extensionInfo,
+        std::vector<std::string> &profileInfos, bool includeSysRes = true) const;
     /**
      * @brief Install sandbox application.
      * @param bundleName Indicates the bundle name of the sandbox application to be install.

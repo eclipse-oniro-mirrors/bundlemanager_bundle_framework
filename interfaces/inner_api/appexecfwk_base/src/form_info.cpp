@@ -85,6 +85,7 @@ const char* JSON_KEY_SUB_BUNDLE_NAME = "subBundleName";
 const char* JSON_KEY_KEEP_STATE_DURATION = "keepStateDuration";
 const char* JSON_KEY_RESIZABLE = "resizable";
 const char* JSON_KEY_GROUP_ID = "groupId";
+const char* JSON_KEY_DISTRIBUTED_DEVICE_TYPES = "distributedDeviceTypes";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -165,6 +166,9 @@ void FormInfo::SetInfoByFormExt(const ExtensionFormInfo &formInfo)
     appFormVisibleNotify = formInfo.appFormVisibleNotify;
     resizable = formInfo.resizable;
     groupId = formInfo.groupId;
+    for (const auto &deviceType : formInfo.distributedDeviceTypes) {
+        distributedDeviceTypes.push_back(deviceType);
+    }
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -292,6 +296,12 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     sceneAnimationParams.disabledDesktopBehaviors = Str16ToStr8(parcel.ReadString16());
     resizable = parcel.ReadBool();
     groupId = Str16ToStr8(parcel.ReadString16());
+    int32_t distributedDeviceTypeSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, distributedDeviceTypeSize);
+    CONTAINER_SECURITY_VERIFY(parcel, distributedDeviceTypeSize, &distributedDeviceTypes);
+    for (int32_t i = 0; i < distributedDeviceTypeSize; i++) {
+        distributedDeviceTypes.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     return true;
 }
 
@@ -397,6 +407,11 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.disabledDesktopBehaviors));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, resizable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(groupId));
+    const auto distributedDeviceTypeSize = static_cast<int32_t>(distributedDeviceTypes.size());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, distributedDeviceTypeSize);
+    for (auto i = 0; i < distributedDeviceTypeSize; i++) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(distributedDeviceTypes[i]));
+    }
     return true;
 }
 
@@ -488,7 +503,9 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_FUN_INTERACTION_PARAMS, formInfo.funInteractionParams},
         {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams},
         {JSON_KEY_RESIZABLE, formInfo.resizable},
-        {JSON_KEY_GROUP_ID, formInfo.groupId}
+        {JSON_KEY_GROUP_ID, formInfo.groupId},
+        {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams},
+        {JSON_KEY_DISTRIBUTED_DEVICE_TYPES, formInfo.distributedDeviceTypes}
     };
 }
 
@@ -932,6 +949,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         formInfo.groupId,
         false,
         parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DISTRIBUTED_DEVICE_TYPES,
+        formInfo.distributedDeviceTypes,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formInfo jsonObject error : %{public}d", parseResult);
     }

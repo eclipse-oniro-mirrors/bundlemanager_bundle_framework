@@ -112,6 +112,16 @@ const FormType UI_SYNTAX_MAP_VALUE[] = {
     FormType::ETS
 };
 
+constexpr const char* DISTRIBUTED_DEVICE_TYPE_MAP_VALUE[] = {
+    "default",
+    "phone",
+    "tablet",
+    "tv",
+    "wearable",
+    "car",
+    "2in1",
+};
+
 struct Window {
     int32_t designWidth = 720;
     bool autoDesignWidth = false;
@@ -169,6 +179,7 @@ struct ExtensionFormProfileInfo {
     FormSceneAnimationParams sceneAnimationParams;
     bool resizable = false;
     std::string groupId;
+    std::vector<std::string> distributedDeviceTypes {};
 };
 
 struct ExtensionFormProfileInfoStruct {
@@ -599,6 +610,27 @@ bool GetSupportShapes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &i
     return true;
 }
 
+bool GetDistributedDeviceTypes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
+    std::set<std::string> distributedDeviceTypeSet {};
+    size_t len = sizeof(DISTRIBUTED_DEVICE_TYPE_MAP_VALUE) / sizeof(DISTRIBUTED_DEVICE_TYPE_MAP_VALUE[0]);
+    for (const auto &distributedDeviceType : form.distributedDeviceTypes) {
+        for (size_t i = 0; i < len; i++) {
+            if (std::strcmp(DISTRIBUTED_DEVICE_TYPE_MAP_VALUE[i], distributedDeviceType.c_str()) == 0) {
+                distributedDeviceTypeSet.emplace(DISTRIBUTED_DEVICE_TYPE_MAP_VALUE[i]);
+                break;
+            }
+        }
+    }
+    if (distributedDeviceTypeSet.empty()) {
+        return false;
+    }
+    for (const auto &deviceType : distributedDeviceTypeSet) {
+        info.distributedDeviceTypes.emplace_back(deviceType);
+    }
+    return true;
+}
+
 bool GetPreviewImages(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
     for (const auto &previewImage: form.previewImages) {
@@ -701,6 +733,10 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
             info.type = FORM_TYPE_MAP_VALUE[i];
         if (UI_SYNTAX_MAP_KEY[i] == form.uiSyntax)
             info.uiSyntax = UI_SYNTAX_MAP_VALUE[i];
+    }
+
+    if (!GetDistributedDeviceTypes(form, info)) {
+        APP_LOGW("form don't have distributed device types");
     }
 
     if (!GetMetadata(form, info)) {
