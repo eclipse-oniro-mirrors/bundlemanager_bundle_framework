@@ -4392,7 +4392,7 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0700, Function | MediumTest | Level1)
     FormInfo formInfo;
     from_json(jsonObject, formInfo);
     EXPECT_EQ(formInfo.name, "testName");
-    EXPECT_TRUE(formInfo.distributedDeviceTypes.size() > 0);
+    EXPECT_TRUE(!formInfo.distributedDeviceTypes.empty());
 }
 
 /**
