@@ -12,63 +12,65 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include "driver_install_ext.h"
- 
+
 #include <dlfcn.h>
- 
+
 #include "app_log_wrapper.h"
 #include "parameters.h"
- 
+
 namespace OHOS {
 namespace AppExecFwk {
- 
+
 namespace {
-constexpr const char* REDIRECT_PATH_FUNCTION_NAME = "RedirectDriverInstallExtPath";
-constexpr const char* GET_DRIVER_EXCUTE_FUNCTION_NAME = "GetDriverExecuteExtPaths";
-constexpr const char* LIB64_DRIVER_INSTALL_EXT_SO_PATH = "system/lib64/libdriver_install_ext.z.so";
-constexpr const char* PARAM_EXT_SPACE = "persist.space_mgr_service.enterprise_space_init";
+constexpr const char *REDIRECT_PATH_FUNCTION_NAME = "RedirectDriverInstallExtPath";
+constexpr const char *GET_DRIVER_EXCUTE_FUNCTION_NAME = "GetDriverExecuteExtPaths";
+constexpr const char *LIB64_DRIVER_INSTALL_EXT_SO_PATH = "system/lib64/libdriver_install_ext.z.so";
+constexpr const char *PARAM_EXT_SPACE = "persist.space_mgr_service.enterprise_space_init";
 const std::string EXT_SPACE_ENABLE = "2";
-} // namespace
- 
+}  // namespace
+
 DriverInstallExtHandler::DriverInstallExtHandler()
 {
     OpenDriverInstallHandler();
 }
- 
+
 DriverInstallExtHandler::~DriverInstallExtHandler()
 {
     ClearSymbols();
 }
- 
-void DriverInstallExtHandler::RedirectDriverInstallExtPath(std::string& path)
+
+void DriverInstallExtHandler::RedirectDriverInstallExtPath(std::string &path)
 {
-    if (redirectDriverInstallExtPath_ == nullptr) {
-        APP_LOGW("redirectDriverInstallExtPath_ func is nullptr");
-        return;
+    if (redirectDriverInstallExtPath_ != nullptr) {
+        redirectDriverInstallExtPath_(path);
     }
-    redirectDriverInstallExtPath_(path);
+    APP_LOGW("redirectDriverInstallExtPath_ func is nullptr");
 }
- 
-void DriverInstallExtHandler::GetDriverExecuteExtPaths(std::vector<std::string>& paths)
+
+void DriverInstallExtHandler::GetDriverExecuteExtPaths(std::vector<std::string> &paths)
 {
-    if (getDriverExecuteExtPathsFunc_ == nullptr) {
-        APP_LOGW("getDriverExecuteExtPathsFunc_ func is nullptr");
-        return;
+    if (getDriverExecuteExtPathsFunc_ != nullptr) {
+        getDriverExecuteExtPathsFunc_(paths);
     }
-    getDriverExecuteExtPathsFunc_(paths);
+    APP_LOGW("getDriverExecuteExtPathsFunc_ func is nullptr");
 }
- 
+
 bool DriverInstallExtHandler::IsExtSpaceEnable()
 {
     std::string extSpaceEnable = OHOS::system::GetParameter(PARAM_EXT_SPACE, "");
-    return extSpaceEnable == EXT_SPACE_ENABLE;
+    if (extSpaceEnable == EXT_SPACE_ENABLE) {
+        APP_LOGI("IsExtSpaceEnable return true.");
+        return true;
+    }
+    APP_LOGW("IsExtSpaceEnable return false.");
+    return false;
 }
- 
+
 bool DriverInstallExtHandler::OpenDriverInstallHandler()
 {
     if (!IsExtSpaceEnable()) {
-        APP_LOGW("ExtSpace is disable");
         return false;
     }
     APP_LOGD("OpenDriverInstallHandler start");
@@ -79,16 +81,21 @@ bool DriverInstallExtHandler::OpenDriverInstallHandler()
     }
     redirectDriverInstallExtPath_ =
         reinterpret_cast<RedirectPathFunc>(dlsym(driverInstallerHandle_, REDIRECT_PATH_FUNCTION_NAME));
+    if (redirectDriverInstallExtPath_ == nullptr) {
+        APP_LOGE("dlsym redirectDriverInstallExtPath_ failed %{public}s", dlerror());
+        ClearSymbols();
+        return false;
+    }
     getDriverExecuteExtPathsFunc_ =
         reinterpret_cast<GetDriverExtPathsFunc>(dlsym(driverInstallerHandle_, GET_DRIVER_EXCUTE_FUNCTION_NAME));
-    if (getDriverExecuteExtPathsFunc_ == nullptr || redirectDriverInstallExtPath_ == nullptr) {
-        APP_LOGE("dlsym lib failed %{public}s", dlerror());
+    if (getDriverExecuteExtPathsFunc_ == nullptr) {
+        APP_LOGE("dlsym getDriverExecuteExtPathsFunc_ failed %{public}s", dlerror());
         ClearSymbols();
         return false;
     }
     return true;
 }
- 
+
 void DriverInstallExtHandler::ClearSymbols()
 {
     redirectDriverInstallExtPath_ = nullptr;
@@ -98,6 +105,6 @@ void DriverInstallExtHandler::ClearSymbols()
     }
     driverInstallerHandle_ = nullptr;
 }
- 
-} // AppExecFwk
-} // OHOS
+
+}  // AppExecFwk
+}  // OHOS
