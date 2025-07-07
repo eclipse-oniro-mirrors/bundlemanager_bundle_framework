@@ -84,10 +84,7 @@ private:
     void ReportSysEvent(const std::map<std::string, EventInfo> &sysEventMap) const;
 
     void DeleteArkAp(const BundleInfo &bundleInfo, const int32_t userId) const;
-    void ClearArkAp(const std::string &oldAOTVersion, const std::string &curAOTVersion) const;
-    std::string GetCurAOTVersion() const;
-    bool GetOldAOTVersion(std::string &oldAOTVersion) const;
-    void SaveAOTVersion(const std::string &curAOTVersion) const;
+    void ClearArkAp() const;
     void HandleArkPathsChange() const;
     void DelDeprecatedArkPaths() const;
     void CreateArkProfilePaths() const;

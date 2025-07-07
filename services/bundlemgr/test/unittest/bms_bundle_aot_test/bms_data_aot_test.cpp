@@ -1135,12 +1135,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3100, Function | SmallTest | Level0)
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
     ClearDataMgr();
-    std::string curAOTVersion = AOTHandler::GetInstance().GetCurAOTVersion();
-    EXPECT_EQ(curAOTVersion.empty(), false);
-    std::string oldAOTVersion;
-    (void)AOTHandler::GetInstance().GetOldAOTVersion(oldAOTVersion);
-    EXPECT_EQ(oldAOTVersion, "");
-    AOTHandler::GetInstance().ClearArkAp(curAOTVersion, oldAOTVersion);
+    AOTHandler::GetInstance().ClearArkAp();
     ResetDataMgr();
 }
 
@@ -1558,42 +1553,6 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_4000, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: AOTHandler_4100
- * @tc.name: test AOTHandler
- * @tc.desc: test GetCurAOTVersion function running
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_4100, Function | SmallTest | Level0)
-{
-    std::string result = AOTHandler::GetInstance().GetCurAOTVersion();
-    EXPECT_FALSE(result.empty());
-}
-
-/**
- * @tc.number: AOTHandler_4200
- * @tc.name: test AOTHandler
- * @tc.desc: test GetOldAOTVersion function running
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_4200, Function | SmallTest | Level0)
-{
-    std::string oldAOTVersion = "";
-    bool result = AOTHandler::GetInstance().GetOldAOTVersion(oldAOTVersion);
-    EXPECT_FALSE(result);
-}
-
-/**
- * @tc.number: AOTHandler_4300
- * @tc.name: test AOTHandler
- * @tc.desc: test SaveAOTVersion function running
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_4300, Function | SmallTest | Level0)
-{
-    std::string curAOTVersion = "2.5";
-    AOTHandler::GetInstance().SaveAOTVersion(curAOTVersion);
-    bool result = AOTHandler::GetInstance().GetOldAOTVersion(curAOTVersion);
-    EXPECT_FALSE(result);
-}
-
-/**
  * @tc.number: AOTHandler_4400
  * @tc.name: Test HandleCompileWithBundle
  * @tc.desc: 1.HandleCompileWithBundle
@@ -1651,33 +1610,6 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_4700, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.number: AOTHandler_4800
- * @tc.name: Test GetOldAOTVersion
- * @tc.desc: 1.GetOldAOTVersion
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_4800, Function | SmallTest | Level1)
-{
-    std::string oldAOTVersion;
-    DelayedSingleton<BundleMgrService>::GetInstance()->InitBmsParam();
-    auto result = AOTHandler::GetInstance().GetOldAOTVersion(oldAOTVersion);
-    EXPECT_FALSE(result);
-}
-
-/**
- * @tc.number: AOTHandler_4900
- * @tc.name: Test GetOldAOTVersion
- * @tc.desc: 1.GetOldAOTVersion
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_4900, Function | SmallTest | Level1)
-{
-    std::string oldAOTVersion;
-    BmsParam bmsParam;
-    bmsParam.SaveBmsParam(AOT_VERSION, AOT_BUNDLE_NAME);
-    auto result = AOTHandler::GetInstance().GetOldAOTVersion(oldAOTVersion);
-    EXPECT_TRUE(result);
-}
-
-/**
  * @tc.number: AOTHandler_5000
  * @tc.name: Test GetOTACompileList
  * @tc.desc: 1.GetOTACompileList
@@ -1717,34 +1649,6 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_5200, Function | SmallTest | Level1)
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
     InstalldClient::GetInstance()->installdProxy_ = nullptr;
     InstalldClient::GetInstance()->GetInstalldProxy();
-}
-
-/**
- * @tc.number: AOTHandler_5300
- * @tc.name: Test SaveAOTVersion
- * @tc.desc: 1.SaveAOTVersion
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_5300, Function | SmallTest | Level1)
-{
-    OHOS::AppExecFwk::BmsParam bmsParam;
-    AOTHandler::GetInstance().SaveAOTVersion(AOT_MODULE_NAME);
-    std::string value;
-    bmsParam.GetBmsParam(AOT_VERSION, value);
-    EXPECT_EQ(value, AOT_MODULE_NAME);
-}
-
-/**
- * @tc.number: AOTHandler_5400
- * @tc.name: Test SaveAOTVersion
- * @tc.desc: 1.SaveAOTVersion
- */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_5400, Function | SmallTest | Level1)
-{
-    OHOS::AppExecFwk::BmsParam bmsParam;
-    AOTHandler::GetInstance().SaveAOTVersion(STRING_EMPTY);
-    std::string value;
-    bmsParam.GetBmsParam(AOT_VERSION, value);
-    EXPECT_NE(value, STRING_EMPTY);
 }
 
 /**
