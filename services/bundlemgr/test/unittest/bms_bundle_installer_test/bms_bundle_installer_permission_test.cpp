@@ -1162,7 +1162,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, CreateArkStartupCache_0030, Function 
     ArkStartupCache ceateArk;
     ceateArk.bundleName = "com.test";
     ceateArk.bundleType = BundleType::APP;
-    ceateArk.cacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
+    ceateArk.cacheDir = "com.test";
     ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
     ceateArk.uid = 0;
     ceateArk.gid = 0;
@@ -1183,6 +1183,26 @@ HWTEST_F(BmsBundleInstallerPermissionTest, SetArkStartupCacheApl_0100, Function 
 {
     InstalldHostImpl impl;
     auto ret = impl.SetArkStartupCacheApl("");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ProcessArkStartupCache_0010
+ * @tc.name: test ProcessArkStartupCache
+ * @tc.desc: 1.Test the ProcessArkStartupCache of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, ProcessArkStartupCache_0010, Function | SmallTest | Level0)
+{
+    // test no FOUNDATION_UID
+    ArkStartupCache ceateArk;
+    ceateArk.bundleName = "com.test";
+    ceateArk.bundleType = BundleType::APP;
+    ceateArk.cacheDir = "com.test";
+    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
+    ceateArk.uid = 0;
+    ceateArk.gid = 0;
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.ProcessArkStartupCache(ceateArk, 1, 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

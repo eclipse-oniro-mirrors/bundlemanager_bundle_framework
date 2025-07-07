@@ -1454,11 +1454,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
             BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
     }
 #endif
+    InnerBundleInfo cacheInfo;
+    tempInfo_.GetTempBundleInfo(cacheInfo);
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     if (needDeleteQuickFixInfo_) {
         LOG_D(BMS_TAG_INSTALLER, "module update, quick fix old patch need to delete:%{public}s", bundleName_.c_str());
-        InnerBundleInfo cacheInfo;
-        tempInfo_.GetTempBundleInfo(cacheInfo);
         if (!oldInfo.GetAppQuickFix().deployedAppqfInfo.hqfInfos.empty()) {
             LOG_D(BMS_TAG_INSTALLER, "quickFixInfo need disable, bundleName:%{public}s", bundleName_.c_str());
             auto quickFixSwitcher = std::make_unique<QuickFixSwitcher>(bundleName_, false);
@@ -1502,6 +1502,14 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(oldInfo); });
     CreateDataGroupDirs(hapVerifyResults, oldInfo);
     groupDirGuard.Dismiss();
+    // process ark startup cache
+    if (result == ERR_OK) {
+        InnerBundleUserInfo newInnerBundleUserInfo;
+        cacheInfo.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo);
+        ArkStartupCache ceateArk = CreateArkStartupCacheParameter(bundleName_, userId_,
+            oldInfo.GetApplicationBundleType(), newInnerBundleUserInfo.uid);
+        ProcessArkStartupCache(ceateArk, cacheInfo.GetModuleSize(), userId_);
+    }
     ProcessUpdateShortcut();
     ProcessAddResourceInfo(installParam, bundleName_, userId_);
     if (!ProcessExtProfile(installParam)) {
@@ -3247,20 +3255,6 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     if (userId_ == Constants::START_USERID) {
         CreateCloudShader(info.GetBundleName(), createDirParam.uid, createDirParam.gid);
     }
-    
-    // create ark startup cache
-    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
-        info.GetBundleName() + ServiceConstants::ARK_STARTUP_CACHE_DIR;
-    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
-        std::to_string(userId_));
-    ArkStartupCache ceateArk;
-    ceateArk.bundleName = info.GetBundleName();
-    ceateArk.bundleType = info.GetApplicationBundleType();
-    ceateArk.cacheDir = el1ArkStartupCachePath;
-    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
-    ceateArk.uid = createDirParam.uid;
-    ceateArk.gid = createDirParam.gid;
-    CreateArkStartupCache(ceateArk);
 
     // create asan log directory when asanEnabled is true
     // In update condition, delete asan log directory when asanEnabled is false if directory is exist
@@ -6696,6 +6690,32 @@ ErrCode BaseBundleInstaller::DeleteEl1ShaderCache(const InnerBundleInfo &oldInfo
     return DeleteBundleClonesShaderCache(allAppIndexes, bundleName, userId);
 }
 
+ArkStartupCache BaseBundleInstaller::CreateArkStartupCacheParameter(const std::string &bundleName,
+    int32_t userId, BundleType bundleType, int32_t uid)
+{
+    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
+        bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
+    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(userId));
+    ArkStartupCache ceateArk;
+    ceateArk.bundleName = bundleName;
+    ceateArk.bundleType = bundleType;
+    ceateArk.cacheDir = el1ArkStartupCachePath;
+    ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
+    ceateArk.uid = uid;
+    ceateArk.gid = uid;
+    return ceateArk;
+}
+
+ErrCode BaseBundleInstaller::ProcessArkStartupCache(const ArkStartupCache &createArk,
+    int32_t moduleNum, int32_t userId) const
+{
+    if (moduleNum != 1) {
+        return DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, createArk.bundleName, userId);
+    }
+    return CreateArkStartupCache(createArk);
+}
+
 ErrCode BaseBundleInstaller::CreateArkStartupCache(const ArkStartupCache &createArk) const
 {
     if (createArk.bundleType != BundleType::APP && createArk.bundleType != BundleType::ATOMIC_SERVICE) {
@@ -6734,7 +6754,7 @@ ErrCode BaseBundleInstaller::CleanArkStartupCache(const std::string &cacheDir,
 ErrCode BaseBundleInstaller::DeleteArkStartupCache(const std::string &cacheDir,
     const std::string &bundleName, int32_t userId) const
 {
-    std::string el1ArkStartupCachePath = cacheDir + bundleName;
+    std::string el1ArkStartupCachePath = cacheDir + bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
     el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
         std::to_string(userId));
     return InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);

@@ -2895,6 +2895,11 @@ void InnerBundleInfo::GetModuleNames(std::vector<std::string> &moduleNames) cons
     }
 }
 
+int32_t InnerBundleInfo::GetModuleSize() const
+{
+    return innerModuleInfos_.size();
+}
+
 void InnerBundleInfo::ResetBundleState(int32_t userId)
 {
     if (userId == Constants::ALL_USERID) {
