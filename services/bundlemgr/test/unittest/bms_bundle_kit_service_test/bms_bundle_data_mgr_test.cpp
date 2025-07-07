@@ -4550,4 +4550,48 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrProxyBatchGetBundleStats_0100, Function 
     ErrCode ret = localBundleMgrProxy->BatchGetBundleStats(bundleNames, USERID, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: GetTestRunner_0100
+ * @tc.name: GetTestRunner_0100
+ * @tc.desc: test GetTestRunner
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetTestRunner_0100, Function | MediumTest | Level1)
+{
+    ModuleTestRunner testRunner;
+    ErrCode ret = GetBundleDataMgr()->GetTestRunner(BUNDLE_NAME_TEST, MODULE_NAME_TEST, testRunner);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+* @tc.number: GetTestRunner_0200
+* @tc.name: GetTestRunner_0200
+* @tc.desc: test GetTestRunner
+*/
+HWTEST_F(BmsBundleDataMgrTest, GetTestRunner_0200, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    ModuleTestRunner testRunner;
+    ErrCode ret = GetBundleDataMgr()->GetTestRunner(BUNDLE_NAME_TEST, BUNDLE_NAME_TEST, testRunner);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+* @tc.number: GetTestRunner_0300
+* @tc.name: GetTestRunner_0300
+* @tc.desc: test GetTestRunner
+*/
+HWTEST_F(BmsBundleDataMgrTest, GetTestRunner_0300, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    ModuleTestRunner testRunner;
+    ErrCode ret = GetBundleDataMgr()->GetTestRunner(BUNDLE_NAME_TEST, MODULE_NAME_TEST, testRunner);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_UNEXPECTED);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
 } // OHOS

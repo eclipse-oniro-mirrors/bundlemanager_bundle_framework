@@ -54,6 +54,7 @@
 #include "ipc/create_dir_param.h"
 #include "uninstall_data_mgr_storage_rdb.h"
 #include "module_info.h"
+#include "module_test_runner.h"
 #include "preinstall_data_storage_interface.h"
 #include "router_data_storage_interface.h"
 #include "shortcut_data_storage_interface.h"
@@ -1170,6 +1171,7 @@ public:
     ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo);
     bool SetBundleUserInfoRemovable(const std::string bundleName, int32_t userId, bool removable);
+    ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName, ModuleTestRunner &testRunner);
 
 private:
     /**

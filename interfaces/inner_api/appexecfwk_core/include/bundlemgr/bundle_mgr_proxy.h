@@ -1256,6 +1256,9 @@ public:
 
     virtual ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo) override;
+
+    virtual ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName,
+        ModuleTestRunner &testRunner) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

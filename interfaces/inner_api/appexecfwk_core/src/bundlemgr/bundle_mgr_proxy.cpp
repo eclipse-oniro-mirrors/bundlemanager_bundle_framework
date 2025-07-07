@@ -6458,5 +6458,40 @@ ErrCode BundleMgrProxy::GetPluginInfo(const std::string &hostBundleName, const s
     return GetParcelableInfoWithErrCode<PluginBundleInfo>(
         BundleMgrInterfaceCode::GET_PLUGIN_INFO, data, pluginBundleInfo);
 }
+
+ErrCode BundleMgrProxy::GetTestRunner(
+    const std::string &bundleName, const std::string &moduleName, ModuleTestRunner &testRunner)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "GetTestRunner -n %{public}s -m %{public}s", bundleName.c_str(), moduleName.c_str());
+    if (bundleName.empty() || moduleName.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetTestRunner failed -n %{public}s -m %{public}s",
+            bundleName.c_str(), moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetTestRunner write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetTestRunner write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetTestRunner write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelInfoIntelligent<ModuleTestRunner>(
+        BundleMgrInterfaceCode::GET_TEST_RUNNER, data, testRunner);
+    if (res != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetTestRunner failed -n %{public}s -m %{public}s error: %{public}d",
+            bundleName.c_str(), moduleName.c_str(), res);
+        return res;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

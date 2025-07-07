@@ -9258,4 +9258,19 @@ HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetAllShortcutInfoForSelf_0100, Func
     auto ret = bundleMgrProxy->GetAllShortcutInfoForSelf(shortcutInfos);
     EXPECT_NE(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: GetTestRunner_0100
+ * @tc.name: Test GetTestRunner
+ * @tc.desc: 1.Test the GetTestRunner by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetTestRunner_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ModuleTestRunner testRunner;
+    ErrCode ret = hostImpl->GetTestRunner(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, testRunner);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
 }

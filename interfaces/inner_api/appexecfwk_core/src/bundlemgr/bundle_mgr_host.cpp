@@ -707,6 +707,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PLUGIN_INFO):
             errCode = HandleGetPluginInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_TEST_RUNNER):
+            errCode = HandleGetTestRunner(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -4912,6 +4915,29 @@ ErrCode BundleMgrHost::HandleGetPluginInfo(MessageParcel &data, MessageParcel &r
             APP_LOGE("write pluginBundleInfo failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetTestRunner(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("bundleName or moduleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    APP_LOGD("-n %{public}s, -m %{public}s", bundleName.c_str(), moduleName.c_str());
+    ModuleTestRunner testRunner;
+    auto ret = GetTestRunner(bundleName, moduleName, testRunner);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+        return WriteParcelInfoIntelligent<ModuleTestRunner>(testRunner, reply);
     }
     return ERR_OK;
 }

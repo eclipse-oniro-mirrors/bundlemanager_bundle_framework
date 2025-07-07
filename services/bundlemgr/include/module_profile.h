@@ -20,6 +20,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_extractor.h"
 #include "inner_bundle_info.h"
+#include "module_test_runner.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -42,6 +43,8 @@ public:
         const std::ostringstream &source,
         const BundleExtractor &bundleExtractor,
         InnerBundleInfo &innerBundleInfo) const;
+
+    ErrCode TransformToTestRunner(const std::ostringstream &source, ModuleTestRunner &testRunner) const;
 
 private:
     OverlayMsg ObtainOverlayType(const nlohmann::json &jsonObject) const;

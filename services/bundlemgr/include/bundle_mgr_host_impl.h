@@ -1144,6 +1144,8 @@ public:
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
     virtual ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo) override;
+    virtual ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName,
+        ModuleTestRunner &testRunner) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);

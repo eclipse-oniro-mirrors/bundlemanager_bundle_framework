@@ -39,6 +39,7 @@
 #include "default_app_interface.h"
 #include "extend_resource_manager_interface.h"
 #include "ibundle_mgr_ext.h"
+#include "module_test_runner.h"
 #include "overlay_manager_interface.h"
 #include "plugin/plugin_bundle_info.h"
 #include "quick_fix_manager_interface.h"
@@ -1845,6 +1846,12 @@ public:
 
     virtual ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName,
+        ModuleTestRunner &testRunner)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
