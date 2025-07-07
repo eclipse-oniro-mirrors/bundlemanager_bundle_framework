@@ -486,6 +486,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.groupId,
         false,
         g_parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::DISTRIBUTED_DEVICE_TYPES,
+        extensionFormProfileInfo.distributedDeviceTypes,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
