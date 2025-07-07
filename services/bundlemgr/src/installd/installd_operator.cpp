@@ -47,6 +47,7 @@
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "directory_ex.h"
+#include "driver_install_ext.h"
 #include "el5_filekey_manager_error.h"
 #include "el5_filekey_manager_kit.h"
 #include "ffrt.h"
@@ -1791,6 +1792,12 @@ bool InstalldOperator::MoveFile(const std::string &srcPath, const std::string &d
         return destPath.find(dir) != std::string::npos;
     };
     if (std::any_of(DRIVER_EXECUTE_DIR.begin(), DRIVER_EXECUTE_DIR.end(), filterExecuteFile)) {
+        mode |= S_IXUSR;
+        mode &= ~S_IWUSR;
+    }
+    std::vector<std::string> driverExecuteExtPaths{};
+    DelayedSingleton<DriverInstallExtHandler>::GetInstance()->GetDriverExecuteExtPaths(driverExecuteExtPaths);
+    if (std::any_of(driverExecuteExtPaths.begin(), driverExecuteExtPaths.end(), filterExecuteFile)) {
         mode |= S_IXUSR;
         mode &= ~S_IWUSR;
     }

@@ -33,6 +33,7 @@ install_daemon_sources = [
   "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
+  "${services_path}/bundlemgr/src/driver_install_ext.cpp",
 ]
 
 bundle_install_sources = [
@@ -78,6 +79,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/system_bundle_installer.cpp",
   "${services_path}/bundlemgr/src/utd/utd_handler.cpp",
   "${services_path}/bundlemgr/src/xcollie_helper.cpp",
+  "${services_path}/bundlemgr/src/driver_install_ext.cpp",
 ]
 
 aging = [

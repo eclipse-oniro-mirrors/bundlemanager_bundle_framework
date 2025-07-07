@@ -185,6 +185,7 @@ std::string DriverInstaller::CreateDriverSoDestinedDir(const std::string &bundle
         return "";
     }
     std::string resStr = destinedDir;
+    DelayedSingleton<DriverInstallExtHandler>::GetInstance()->RedirectDriverInstallExtPath(resStr);
     if (resStr.back() != ServiceConstants::PATH_SEPARATOR[0]) {
         resStr += ServiceConstants::PATH_SEPARATOR;
     }
