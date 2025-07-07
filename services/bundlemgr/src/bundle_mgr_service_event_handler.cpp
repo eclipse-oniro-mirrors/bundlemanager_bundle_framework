@@ -4306,7 +4306,7 @@ bool BMSEventHandler::IsPathExistInInstalledBundleInfo(
             return true;
         }
     }
-    LOG_I(BMS_TAG_DEFAULT, "-n %{public}s path is not exist in bundleInfo, need reinstall", bundleInfo.name.c_str());
+    LOG_W(BMS_TAG_DEFAULT, "-n %{public}s path is not exist in bundleInfo, need reinstall", bundleInfo.name.c_str());
     return false;
 }
 

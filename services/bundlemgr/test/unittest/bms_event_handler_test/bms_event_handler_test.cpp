@@ -1524,11 +1524,10 @@ HWTEST_F(BmsEventHandlerTest, IsPathExistInInstalledBundleInfo_0100, Function | 
         ret = handler->IsPathExistInInstalledBundleInfo("aaa", bundleInfo);
         EXPECT_TRUE(ret);
 
-        moduleInfo.hapPath = "/data/app/el1/public/aaa";
+        moduleInfo.hapPath = "/data/app/el1/bundle/public/aaa";
         bundleInfo.hapModuleInfos.push_back(moduleInfo);
         ret = handler->IsPathExistInInstalledBundleInfo("bbb", bundleInfo);
         EXPECT_TRUE(ret);
-
     }
 }
 
