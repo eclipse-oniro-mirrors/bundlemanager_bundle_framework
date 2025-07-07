@@ -20,7 +20,7 @@ ohos_fuzztest("BundleResProcessFuzzTest") {
   fuzz_config_file = "../../../fuzztest/fuzztest_others/bundleresprocess_fuzzer"
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = []
+  include_dirs = [ "${test_path}/fuzztest" ]
   sources = bundle_mgr_source
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
@@ -60,6 +60,7 @@ ohos_fuzztest("BundleResProcessFuzzTest") {
     "appspawn:hnpapi",
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
+    "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
