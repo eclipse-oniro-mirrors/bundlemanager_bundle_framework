@@ -296,7 +296,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     sceneAnimationParams.disabledDesktopBehaviors = Str16ToStr8(parcel.ReadString16());
     resizable = parcel.ReadBool();
     groupId = Str16ToStr8(parcel.ReadString16());
-    int32_t distributedDeviceTypeSize;
+    int32_t distributedDeviceTypeSize = 0;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, distributedDeviceTypeSize);
     CONTAINER_SECURITY_VERIFY(parcel, distributedDeviceTypeSize, &distributedDeviceTypes);
     for (int32_t i = 0; i < distributedDeviceTypeSize; i++) {
@@ -504,7 +504,6 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams},
         {JSON_KEY_RESIZABLE, formInfo.resizable},
         {JSON_KEY_GROUP_ID, formInfo.groupId},
-        {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams},
         {JSON_KEY_DISTRIBUTED_DEVICE_TYPES, formInfo.distributedDeviceTypes}
     };
 }
