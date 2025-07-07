@@ -248,7 +248,6 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
 
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
@@ -264,12 +263,9 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/systemcapability.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
-
+  include_dirs = []
   defines = []
   if (bundle_framework_overlay_install) {
     include_dirs += [ "${core_path}/include/overlay" ]
@@ -409,7 +405,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -425,9 +421,6 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/systemcapability.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
@@ -560,7 +553,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -578,9 +571,6 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/systemcapability.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
@@ -714,7 +704,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "${services_path}/bundlemgr/test/mock/include/parameter" ]
+  include_dirs = []
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -732,9 +722,6 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/systemcapability.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
