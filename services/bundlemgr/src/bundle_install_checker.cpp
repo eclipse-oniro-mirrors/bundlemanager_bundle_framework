@@ -442,17 +442,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         infos.emplace(bundlePaths[i], newInfo);
     }
     if (!infos.empty()) {
-        const InnerBundleInfo &first = infos.begin()->second;
-        int32_t cloneNum = 0;
-        if (DetermineCloneApp(first, cloneNum)) {
-            for (auto &info : infos) {
-                MultiAppModeData multiAppMode;
-                multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
-                multiAppMode.maxCount = cloneNum;
-                info.second.SetMultiAppMode(multiAppMode);
-            }
-        }
-        result = CheckEnterpriseForAllUser(infos, checkParam, first.GetAppDistributionType());
+        result = CheckEnterpriseForAllUser(infos, checkParam, infos.begin()->second.GetAppDistributionType());
         if (result != ERR_OK) {
             return result;
         }
@@ -1754,24 +1744,29 @@ void BundleInstallChecker::SetCheckResultMsg(const std::string checkResultMsg)
     checkResultMsg_ = checkResultMsg;
 }
 
-bool BundleInstallChecker::DetermineCloneApp(const InnerBundleInfo &innerBundleInfo, int32_t &cloneNum)
+bool BundleInstallChecker::DetermineCloneApp(InnerBundleInfo &innerBundleInfo)
 {
-    const ApplicationInfo applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
+    ApplicationInfo applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
     if (applicationInfo.multiAppMode.multiAppModeType != MultiAppModeType::APP_CLONE
         || applicationInfo.multiAppMode.maxCount == 0) {
         BmsExtensionDataMgr bmsExtensionDataMgr;
+        int32_t cloneNum = 0;
         const std::string appIdentifier = innerBundleInfo.GetAppIdentifier();
         if (!bmsExtensionDataMgr.DetermineCloneNum(applicationInfo.bundleName, appIdentifier, cloneNum)) {
+            LOG_W(BMS_TAG_INSTALLER, "DetermineCloneNum failed");
             return false;
         }
         if (cloneNum == 0) {
+            LOG_W(BMS_TAG_INSTALLER, "DetermineCloneNum -c %{public}d", cloneNum);
             return false;
         }
         LOG_I(BMS_TAG_INSTALLER, "install -n %{public}s -c %{public}d",
             applicationInfo.bundleName.c_str(), cloneNum);
-        return true;
+        applicationInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+        applicationInfo.multiAppMode.maxCount = cloneNum;
+        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     }
-    return false;
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

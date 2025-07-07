@@ -196,6 +196,7 @@ public:
 
     ErrCode CheckU1EnableSameInHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::string &bundleName, bool &u1Enable);
+    bool DetermineCloneApp(InnerBundleInfo &innerBundleInfo);
 private:
 
     ErrCode ParseBundleInfo(
@@ -264,7 +265,6 @@ private:
     bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     std::tuple<bool, std::string, std::string> GetValidReleaseType(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    bool DetermineCloneApp(const InnerBundleInfo &innerBundleInfo, int32_t &cloneNum);
 
     std::string checkResultMsg_ = "";
 };
