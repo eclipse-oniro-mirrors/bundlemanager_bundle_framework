@@ -667,6 +667,7 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);
     void InnerProcessRebootUninstallWrongBundle();
     bool InnerCheckSingletonBundleUserInfo(const InnerBundleInfo &bundleInfo);
+    bool IsPathExistInInstalledBundleInfo(const std::string &path, const BundleInfo &bundleInfo);
     void ProcessCheckAppEl1Dir();
     void static ProcessCheckAppEl1DirTask();
     // check el2 data dir for all userids's bundleinfos

@@ -2138,6 +2138,10 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                     updateBundle = true;
                     break;
                 }
+                if (!IsPathExistInInstalledBundleInfo(item.first, hasInstalledInfo)) {
+                    updateBundle = true;
+                    break;
+                }
                 // update pre install app data dir selinux label
                 if (!updateSelinuxLabel) {
                     UpdateAppDataSelinuxLabel(bundleName, hasInstalledInfo.applicationInfo.appPrivilegeLevel,
@@ -4292,6 +4296,18 @@ bool BMSEventHandler::IsHspPathExist(const InnerBundleInfo &innerBundleInfo)
         }
     }
     return true;
+}
+
+bool BMSEventHandler::IsPathExistInInstalledBundleInfo(
+    const std::string &path, const BundleInfo &bundleInfo)
+{
+    for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        if ((hapModuleInfo.hapPath == path) || (hapModuleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0)) {
+            return true;
+        }
+    }
+    LOG_W(BMS_TAG_DEFAULT, "-n %{public}s path is not exist in bundleInfo, need reinstall", bundleInfo.name.c_str());
+    return false;
 }
 
 void BMSEventHandler::CheckALLResourceInfo()

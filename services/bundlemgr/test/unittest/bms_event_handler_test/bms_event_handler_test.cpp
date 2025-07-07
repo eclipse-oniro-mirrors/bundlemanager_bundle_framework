@@ -1502,6 +1502,36 @@ HWTEST_F(BmsEventHandlerTest, InnerCheckSingletonBundleUserInfo_0100, Function |
 }
 
 /**
+ * @tc.number: IsPathExistInInstalledBundleInfo_0100
+ * @tc.name: IsPathExistInInstalledBundleInfo
+ * @tc.desc: test IsPathExistInInstalledBundleInfo
+ */
+HWTEST_F(BmsEventHandlerTest, IsPathExistInInstalledBundleInfo_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        BundleInfo bundleInfo;
+        bool ret = handler->IsPathExistInInstalledBundleInfo("", bundleInfo);
+        EXPECT_FALSE(ret);
+
+        HapModuleInfo moduleInfo;
+        moduleInfo.hapPath = "aaa";
+        bundleInfo.hapModuleInfos.push_back(moduleInfo);
+        ret = handler->IsPathExistInInstalledBundleInfo("bbb", bundleInfo);
+        EXPECT_FALSE(ret);
+
+        ret = handler->IsPathExistInInstalledBundleInfo("aaa", bundleInfo);
+        EXPECT_TRUE(ret);
+
+        moduleInfo.hapPath = "/data/app/el1/bundle/public/aaa";
+        bundleInfo.hapModuleInfos.push_back(moduleInfo);
+        ret = handler->IsPathExistInInstalledBundleInfo("bbb", bundleInfo);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: GetBundleNameByPreInstallPath_0100
  * @tc.name: GetBundleNameByPreInstallPath
  * @tc.desc: test GetBundleNameByPreInstallPath

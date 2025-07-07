@@ -676,6 +676,11 @@ bool InnerCheckSingletonBundleUserInfo(const InnerBundleInfo &bundleInfo)
     return true;
 }
 
+bool BMSEventHandler::IsPathExistInInstalledBundleInfo(const std::string &path, const BundleInfo &bundleInfo)
+{
+    return true;
+}
+
 bool BMSEventHandler::IsHapPathExist(const BundleInfo &bundleInfo)
 {
     return true;
