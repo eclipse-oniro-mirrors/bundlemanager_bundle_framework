@@ -37,9 +37,6 @@ const int8_t DIMENSION_2_3 = 8;
 #ifndef FORM_DIMENSION_3_3
 const int8_t DIMENSION_3_3 = 9;
 #endif
-#ifndef FORM_DIMENSION_3_4
-const int8_t DIMENSION_3_4 = 10;
-#endif
 constexpr const char* FORM_COLOR_MODE_MAP_KEY[] = {
     "auto",
     "dark",
@@ -545,13 +542,6 @@ void supportFormDimension(std::set<int32_t> &supportDimensionSet, const Extensio
             }
         #endif
 
-        #ifndef FORM_DIMENSION_3_4
-            if (dimensionItem == DIMENSION_3_4) {
-                APP_LOGW("dimension invalid in TV Device form %{public}d", dimensionItem);
-                continue;
-            }
-        #endif
-        
         supportDimensionSet.emplace(dimensionItem);
     }
 }
