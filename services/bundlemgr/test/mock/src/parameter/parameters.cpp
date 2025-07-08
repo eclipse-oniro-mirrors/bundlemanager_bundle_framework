@@ -27,9 +27,9 @@ public:
     std::map<std::string, std::string> paramMap;
 };
 
-std::shared_ptr<ParameterMapWrapper>GetParameterMap()
+ParameterMapWrapper* GetParameterMap()
 {
-    static std::shared_ptr<ParameterMapWrapper> paramMapWrapper = std::make_shared<ParameterMapWrapper>();
+    static ParameterMapWrapper* paramMapWrapper = new ParameterMapWrapper();
     return paramMapWrapper;
 }
 
