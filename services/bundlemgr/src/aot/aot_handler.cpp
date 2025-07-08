@@ -86,10 +86,7 @@ constexpr const char* COMPILE_NONE = "none";
 
 constexpr const char* USER_STATUS_SO_NAME = "libuser_status_client.z.so";
 constexpr const char* USER_STATUS_FUNC_NAME = "GetUserPreferenceApp";
-constexpr const char* ARK_SO_NAME = "libark_jsruntime.so";
-constexpr const char* AOT_VERSION_FUNC_NAME = "GetAOTVersion";
 constexpr const char* BM_AOT_TEST = "bm.aot.test";
-const std::string AOT_VERSION = "aot_version";
 
 constexpr const char* SYS_COMP_AN_DIR = "/data/service/el1/public/for-all-app/framework_ark_cache/";
 constexpr const char* SYS_COMP_CONFIG_PATH = "/system/etc/ark/system_framework_aot_enable_list.conf";
@@ -316,15 +313,8 @@ void AOTHandler::ClearArkCacheDir() const
     });
 }
 
-void AOTHandler::ClearArkAp(const std::string &oldAOTVersion, const std::string &curAOTVersion) const
+void AOTHandler::ClearArkAp() const
 {
-    APP_LOGI("oldAOTVersion(%{public}s), curAOTVersion(%{public}s)",
-        oldAOTVersion.c_str(), curAOTVersion.c_str());
-    if (!oldAOTVersion.empty() && curAOTVersion == oldAOTVersion) {
-        APP_LOGI("Version not changed");
-        return;
-    }
-
     APP_LOGI("ClearArkAp start");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -535,11 +525,7 @@ void AOTHandler::HandleOTA()
     ResetAOTFlags();
     HandleArkPathsChange();
     ClearArkCacheDir();
-    std::string curAOTVersion = GetCurAOTVersion();
-    std::string oldAOTVersion;
-    (void)GetOldAOTVersion(oldAOTVersion);
-    ClearArkAp(oldAOTVersion, curAOTVersion);
-    SaveAOTVersion(curAOTVersion);
+    ClearArkAp();
     HandleOTACompile();
 }
 
@@ -960,55 +946,6 @@ ErrCode AOTHandler::HandleCompileModules(const std::vector<std::string> &moduleN
         }
     });
     return ret;
-}
-
-std::string AOTHandler::GetCurAOTVersion() const
-{
-    APP_LOGI("GetCurAOTVersion begin");
-    void* handle = dlopen(ARK_SO_NAME, RTLD_NOW);
-    if (handle == nullptr) {
-        APP_LOGE("get aot version dlopen failed : %{public}s", dlerror());
-        return Constants::EMPTY_STRING;
-    }
-    AOTVersionFunc aotVersionFunc = reinterpret_cast<AOTVersionFunc>(dlsym(handle, AOT_VERSION_FUNC_NAME));
-    if (aotVersionFunc == nullptr) {
-        APP_LOGE("get aot version dlsym failed : %{public}s", dlerror());
-        dlclose(handle);
-        return Constants::EMPTY_STRING;
-    }
-    std::string aotVersion;
-    ErrCode ret = aotVersionFunc(aotVersion);
-    APP_LOGI("GetCurAOTVersion ret : %{public}d, aotVersion: %{public}s", ret, aotVersion.c_str());
-    dlclose(handle);
-    return aotVersion;
-}
-
-bool AOTHandler::GetOldAOTVersion(std::string &oldAOTVersion) const
-{
-    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
-    if (bmsPara == nullptr) {
-        APP_LOGE("bmsPara is nullptr");
-        return false;
-    }
-    bmsPara->GetBmsParam(AOT_VERSION, oldAOTVersion);
-    if (oldAOTVersion.empty()) {
-        APP_LOGI("oldAOTVersion is empty");
-        return false;
-    }
-    return true;
-}
-
-void AOTHandler::SaveAOTVersion(const std::string &curAOTVersion) const
-{
-    if (curAOTVersion.empty()) {
-        return;
-    }
-    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
-    if (bmsPara == nullptr) {
-        APP_LOGE("bmsPara is nullptr");
-        return;
-    }
-    bmsPara->SaveBmsParam(AOT_VERSION, curAOTVersion);
 }
 
 void AOTHandler::HandleArkPathsChange() const
