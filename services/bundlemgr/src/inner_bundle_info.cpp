@@ -5232,6 +5232,21 @@ bool InnerBundleInfo::SetCurDynamicIconModule(
     return true;
 }
 
+bool InnerBundleInfo::IsDynamicIconModuleExist() const
+{
+    for (const auto &item : innerBundleUserInfos_) {
+        if (!item.second.curDynamicIconModule.empty()) {
+            return true;
+        }
+        for (const auto &clone : item.second.cloneInfos) {
+            if (!clone.second.curDynamicIconModule.empty()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void InnerBundleInfo::GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos) const
 {
     for (const auto &item : innerBundleUserInfos_) {

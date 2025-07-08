@@ -1278,6 +1278,8 @@ public:
     bool SetCurDynamicIconModule(const std::string &curDynamicIconModule,
         const int32_t userId, const int32_t appIndex);
 
+    bool IsDynamicIconModuleExist() const;
+
     uint32_t GetIconId() const
     {
         return baseApplicationInfo_->iconId;

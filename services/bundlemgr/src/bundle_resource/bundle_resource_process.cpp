@@ -348,6 +348,7 @@ ResourceInfo BundleResourceProcess::ConvertToBundleResourceInfo(const InnerBundl
     }
     resourceInfo.moduleName_ = moduleName;
     resourceInfo.abilityName_ = std::string();
+    resourceInfo.hasDynamicIcon_ = innerBundleInfo.IsDynamicIconModuleExist();
     return resourceInfo;
 }
 
