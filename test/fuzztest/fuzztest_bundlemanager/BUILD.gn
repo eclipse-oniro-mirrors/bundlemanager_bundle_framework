@@ -39,6 +39,7 @@ group("bundlemanagerfuzztest") {
     "bmsappservicefwkinstallerinnerprocessinstall_fuzzer:BMSAppServiceFwkInstallerInnerProcessInstallFuzzTest",
     "bmsappservicefwkinstallerprocessnativelibrary_fuzzer:BMSAppServiceFwkInstallerProcessNativeLibraryFuzzTest",
     "bmsbundlecloneinstaller_fuzzer:BmsBundleCloneInstallerFuzzTest",
+    "bmsbundleresourceeventsubscriber_fuzzer:BmsBundleResourceEventSubscriberFuzzTest",
     "bmsapplicationinfofromjson_fuzzer:BMSApplicationInfoFromJsonFuzzTest",
     "bmsbundlefileutil_fuzzer:BMSBundleFileUtilFuzzTest",
     "bmsbundleinfo_fuzzer:BMSBundleInfoFuzzTest",
