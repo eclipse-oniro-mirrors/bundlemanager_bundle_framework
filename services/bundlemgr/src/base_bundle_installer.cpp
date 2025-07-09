@@ -92,6 +92,7 @@ constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr const char* LIBS_TMP = "libs_tmp";
 constexpr const char* PRIVILEGE_ALLOW_HDC_INSTALL = "AllowHdcInstall";
+constexpr const char* KEY_STORAGE_SIZE = "storageSize";
 
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
@@ -1005,6 +1006,13 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     }
 
     uid = bundleInfo.GetUid(userId_);
+    if (bundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
+        std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[0]
+            + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE +
+            bundleInfo.GetBundleName();
+        PrepareBundleDirQuota(bundleInfo.GetBundleName(), uid, bundleDataDir,
+            ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET);
+    }
     mainAbility_ = bundleInfo.GetMainAbility();
     return result;
 }
@@ -3185,7 +3193,36 @@ void BaseBundleInstaller::PrepareBundleDirQuota(const std::string &bundleName, c
     }
 #endif // QUOTA_PARAM_SET_ENABLE
 #endif // STORAGE_SERVICE_ENABLE
+    ParseSizeFromProvision(atomicserviceDatasizeThreshold);
     SendToStorageQuota(bundleName, uid, bundleDataDirPath, atomicserviceDatasizeThreshold);
+}
+
+void BaseBundleInstaller::ParseSizeFromProvision(int32_t &sizeMb) const
+{
+    std::string appServiceCapabilities = verifyRes_.GetProvisionInfo().appServiceCapabilities;
+    if (appServiceCapabilities.empty()) {
+        return;
+    }
+    auto appServiceCapabilityMap = BundleUtil::ParseMapFromJson(appServiceCapabilities);
+    for (auto &item : appServiceCapabilityMap) {
+        if (item.first != ServiceConstants::PERMISSION_MANAGE_STORAGE) {
+            continue;
+        }
+        std::unordered_map<std::string, std::string> storageMap = BundleUtil::ParseMapFromJson(item.second);
+        auto it = storageMap.find(KEY_STORAGE_SIZE);
+        if (it == storageMap.end()) {
+            LOG_W(BMS_TAG_INSTALLER, "storageSize not found");
+            return;
+        }
+        int32_t tempSize = atoi(it->second.c_str());
+        if (tempSize >= sizeMb) {
+            sizeMb = tempSize;
+            LOG_I(BMS_TAG_INSTALLER, "set %{public}s quota to %{public}d", bundleName_.c_str(), sizeMb);
+        } else {
+            LOG_W(BMS_TAG_INSTALLER, "%{public}s storageSize %{public}d is not valid", bundleName_.c_str(), tempSize);
+        }
+        return;
+    }
 }
 
 ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
