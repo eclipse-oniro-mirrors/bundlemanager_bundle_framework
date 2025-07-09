@@ -5725,6 +5725,74 @@ HWTEST_F(BmsBundleResourceTest, GetDynamicIcon_0010, Function | SmallTest | Leve
     EXPECT_FALSE(ret);
     OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
 }
+
+/**
+ * @tc.number: InnerProcessResourceInfoByUserIdChanged_0010
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessResourceInfoByUserIdChanged
+ */
+HWTEST_F(BmsBundleResourceTest, InnerProcessResourceInfoByUserIdChanged_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        std::vector<ResourceInfo> resourceInfos;
+        ResourceInfo resourceInfo;
+        resourceInfos.push_back(resourceInfo);
+        resourceInfosMap["bundleName"] = resourceInfos;
+        manager->InnerProcessResourceInfoByUserIdChanged(resourceInfosMap, 100, 101);
+        EXPECT_TRUE(resourceInfosMap.empty());
+
+        resourceInfos.clear();
+        resourceInfo.hasDynamicIcon_ = true;
+        resourceInfos.push_back(resourceInfo);
+        resourceInfosMap["bundleName"] = resourceInfos;
+        manager->InnerProcessResourceInfoByUserIdChanged(resourceInfosMap, 100, 101);
+        EXPECT_FALSE(resourceInfosMap.empty());
+        EXPECT_FALSE(resourceInfosMap["bundleName"].empty());
+        if (!resourceInfosMap["bundleName"].empty()) {
+            EXPECT_TRUE(resourceInfosMap["bundleName"][0].hasDynamicIcon_);
+        }
+    }
+}
+
+/**
+ * @tc.number: IsDynamicIconModuleExist_0010
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test IsDynamicIconModuleExist
+ */
+HWTEST_F(BmsBundleResourceTest, IsDynamicIconModuleExist_0010, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    bool ret = innerBundleInfo.IsDynamicIconModuleExist();
+    EXPECT_FALSE(ret);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleInfo.innerBundleUserInfos_["100"] = innerBundleUserInfo;
+    ret = innerBundleInfo.IsDynamicIconModuleExist();
+    EXPECT_FALSE(ret);
+
+    InnerBundleCloneInfo cloneInfo;
+    innerBundleUserInfo.cloneInfos["1"] = cloneInfo;
+    innerBundleInfo.innerBundleUserInfos_["100"] = innerBundleUserInfo;
+    ret = innerBundleInfo.IsDynamicIconModuleExist();
+    EXPECT_FALSE(ret);
+
+    cloneInfo.curDynamicIconModule = "dynamic_icon";
+    innerBundleUserInfo.cloneInfos["1"] = cloneInfo;
+    innerBundleInfo.innerBundleUserInfos_["100"] = innerBundleUserInfo;
+    ret = innerBundleInfo.IsDynamicIconModuleExist();
+    EXPECT_TRUE(ret);
+
+    innerBundleUserInfo.curDynamicIconModule = "dynamic_icon";
+    innerBundleInfo.innerBundleUserInfos_["100"] = innerBundleUserInfo;
+    ret = innerBundleInfo.IsDynamicIconModuleExist();
+    EXPECT_TRUE(ret);
+}
 #endif
 
 /**

@@ -328,8 +328,11 @@ void BundleResourceManager::InnerProcessResourceInfoByUserIdChanged(
         bool isNewUserExistTheme = InnerProcessWhetherThemeExist(iter->first, userId);
         if (!isOldUserExistTheme && !isNewUserExistTheme && iter->second[0].appIndexes_.empty()) {
             APP_LOGD("bundleName:%{public}s not exist theme", iter->first.c_str());
-            iter = resourceInfosMap.erase(iter);
-            continue;
+            // exist dynamic icon
+            if (!iter->second[0].hasDynamicIcon_) {
+                iter = resourceInfosMap.erase(iter);
+                continue;
+            }
         }
         APP_LOGI("bundleName:%{public}s oldUser:%{public}d or newUser:%{public}d exist theme",
             iter->first.c_str(), oldUserId, userId);
