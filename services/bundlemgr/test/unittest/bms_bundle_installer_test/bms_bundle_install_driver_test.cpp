@@ -2060,9 +2060,8 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7500, Function | SmallTest | 
     OHOS::system::SetParameter(PARAM_EXT_SPACE, EXT_SPACE_ENABLE);
     std::shared_ptr<DriverInstallExtHandler> driverExtHander = std::make_shared<DriverInstallExtHandler>();
     std::vector<std::string> vec1 = {"/path"};
-    driverExtHander->getDriverExecuteExtPathsFunc_ = [](std::vector<std::string>& vec) -> int32_t {
+    driverExtHander->getDriverExecuteExtPathsFunc_ = [](std::vector<std::string>& vec) -> void {
         vec = std::vector<std::string>{"/path"};
-        return 0;
     };
     std::vector<std::string> vec2;
     driverExtHander->GetDriverExecuteExtPaths(vec2);
@@ -2080,9 +2079,8 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7600, Function | SmallTest | 
     OHOS::system::SetParameter(PARAM_EXT_SPACE, EXT_SPACE_DISABLE);
     std::shared_ptr<DriverInstallExtHandler> driverExtHander = std::make_shared<DriverInstallExtHandler>();
     std::string str1 = "/path";
-    driverExtHander->redirectDriverInstallExtPath_ = [](std::string& str) -> int32_t {
+    driverExtHander->redirectDriverInstallExtPath_ = [](std::string& str) -> void {
         str = "/path";
-        return 0;
     };
     std::string str2;
     driverExtHander->RedirectDriverInstallExtPath(str2);
