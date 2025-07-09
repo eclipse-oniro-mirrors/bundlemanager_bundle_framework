@@ -297,14 +297,16 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
         std::string baseDir = baseBundleDataDir + ServiceConstants::BASE + bundleInfo.name;
         if (InstalldClient::GetInstance()->SetDirApl(baseDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
-            bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG) != ERR_OK) {
+            bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG,
+            Constants::ROOT_UID) != ERR_OK) {
             APP_LOGW_NOFUNC("failed to SetDirApl baseDir dir");
             continue;
         }
         std::string baseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + bundleInfo.name;
         if (InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
-            bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG) != ERR_OK) {
+            bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG,
+            Constants::ROOT_UID) != ERR_OK) {
             APP_LOGW_NOFUNC("failed to SetDirApl baseDataDir dir");
         }
     }
@@ -489,7 +491,8 @@ void UpdateAppDataMgr::CreateSharefilesSubDataDirs(const std::vector<BundleInfo>
         }
         if (InstalldClient::GetInstance()->SetDirApl(sharefilesDataDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
-            bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG) != ERR_OK) {
+            bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG,
+            bundleInfo.uid) != ERR_OK) {
             APP_LOGW("SetDirApl failed: %{public}s", sharefilesDataDir.c_str());
             continue;
         }

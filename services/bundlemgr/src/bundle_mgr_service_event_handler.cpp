@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2180,7 +2180,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 if (!updateSelinuxLabel) {
                     UpdateAppDataSelinuxLabel(bundleName, hasInstalledInfo.applicationInfo.appPrivilegeLevel,
                         hasInstalledInfo.isPreInstallApp,
-                        hasInstalledInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+                        hasInstalledInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG,
+                        Constants::ROOT_UID);
                     updateSelinuxLabel = true;
                 }
                 // Used to judge whether the module has been installed.
@@ -4005,7 +4006,7 @@ void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleNam
 }
 
 void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
-    bool isPreInstall, bool debug)
+    bool isPreInstall, bool debug, int32_t uid)
 {
     LOG_D(BMS_TAG_DEFAULT, "UpdateAppDataSelinuxLabel bundleName: %{public}s start", bundleName.c_str());
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -4033,13 +4034,14 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
                 // Can see UserUnlockedEventSubscriber::UpdateAppDataDirSelinuxLabel
                 continue;
             }
-            result = InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleName, apl, isPreInstall, debug);
+            result = InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleName, apl, isPreInstall, debug, uid);
             if (result != ERR_OK) {
                 LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s, fail to SetDirApl baseDataDir dir, error is %{public}d",
                     bundleName.c_str(), result);
             }
             std::string databaseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + bundleName;
-            result = InstalldClient::GetInstance()->SetDirApl(databaseDataDir, bundleName, apl, isPreInstall, debug);
+            result = InstalldClient::GetInstance()->SetDirApl(
+                databaseDataDir, bundleName, apl, isPreInstall, debug, uid);
             if (result != ERR_OK) {
                 LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s, fail to SetDirApl databaseDir dir, error is %{public}d",
                     bundleName.c_str(), result);

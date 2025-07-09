@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -313,7 +313,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1000, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING, false, false);
+    auto ret = proxy->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING, false, false, UID);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1268,7 +1268,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6800, Function | SmallTest |
     sptr<InstalldProxy> proxy = new (std::nothrow) InstalldProxy(nullptr);
     ASSERT_NE(proxy, nullptr);
 
-    auto ret = proxy->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING, false, false);
+    auto ret = proxy->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING, false, false, UID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 

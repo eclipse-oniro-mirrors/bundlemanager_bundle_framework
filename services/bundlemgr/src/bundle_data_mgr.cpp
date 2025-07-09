@@ -9221,7 +9221,7 @@ void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
             LOG_W(BMS_TAG_INSTALLER, "create el5 dir %{public}s failed", dir.c_str());
         }
         ErrCode result = InstalldClient::GetInstance()->SetDirApl(
-            dir, el5Param.bundleName, el5Param.apl, el5Param.isPreInstallApp, el5Param.debug);
+            dir, el5Param.bundleName, el5Param.apl, el5Param.isPreInstallApp, el5Param.debug, el5Param.uid);
         if (result != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "fail to SetDirApl dir %{public}s, error is %{public}d", dir.c_str(), result);
         }

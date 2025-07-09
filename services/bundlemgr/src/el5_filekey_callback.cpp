@@ -142,7 +142,7 @@ void El5FilekeyCallback::CheckEl5Dir(const Security::AccessToken::AppKeyInfo &in
     }
     result = InstalldClient::GetInstance()->SetDirApl(
         baseDir, bundleName, bundleInfo.GetAppPrivilegeLevel(), bundleInfo.IsPreInstallApp(),
-        bundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+        bundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG, info.uid);
     if (result != ERR_OK) {
         APP_LOGW("fail to SetDirApl dir %{public}s, error is %{public}d", baseDir.c_str(), result);
     }
@@ -156,7 +156,7 @@ void El5FilekeyCallback::CheckEl5Dir(const Security::AccessToken::AppKeyInfo &in
     }
     result = InstalldClient::GetInstance()->SetDirApl(
         databaseDir, bundleName, bundleInfo.GetAppPrivilegeLevel(), bundleInfo.IsPreInstallApp(),
-        bundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+        bundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG, info.uid);
     if (result != ERR_OK) {
         APP_LOGW("fail to SetDirApl dir %{public}s, error is %{public}d", databaseDir.c_str(), result);
     }

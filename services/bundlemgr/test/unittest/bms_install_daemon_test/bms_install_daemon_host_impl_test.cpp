@@ -232,7 +232,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1000, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING, false, false);
+    auto ret = hostImpl->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING, false, false, 0);
 #ifdef WITH_SELINUX
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 #else

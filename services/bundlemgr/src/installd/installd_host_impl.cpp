@@ -433,7 +433,7 @@ ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &creat
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
         createDirParam.isDlpSandbox);
-    res = SetDirApl(bundleShareFilesDataDir, bundleName, createDirParam.apl, hapFlags);
+    res = SetDirApl(bundleShareFilesDataDir, bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (res != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLD, "SetDirApl failed: %{public}s, errno: %{public}d",
             bundleShareFilesDataDir.c_str(), res);
@@ -617,7 +617,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             }
             CreateSharefilesDataDirEl2(createDirParam);
         }
-        ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
+        ErrCode ret = SetDirApl(
+            bundleDataDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
             return ret;
@@ -633,7 +634,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         }
         AclSetDir(createDirParam.debug, databaseDir, false, true);
         InstalldOperator::RmvDeleteDfx(databaseDir);
-        ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
+        ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
             return ret;
@@ -662,14 +663,15 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     std::string bundleBackupDir;
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
         DirType::DIR_EL2);
-    ErrCode ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
+    ErrCode ret = SetDirApl(
+        bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
     }
 
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
         DirType::DIR_EL1);
-    ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
+    ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir DIR_EL1 SetDirApl failed, errno is %{public}d", ret);
     }
@@ -678,7 +680,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     CreateNewBackupExtHomeDir(createDirParam.bundleName,
         createDirParam.userId, createDirParam.uid, newBundleBackupDir, DirType::DIR_EL2);
     ret = SetDirApl(newBundleBackupDir, createDirParam.bundleName, createDirParam.apl,
-        createDirParam.isPreInstallApp, createDirParam.debug);
+        createDirParam.isPreInstallApp, createDirParam.debug, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
     }
@@ -686,7 +688,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     CreateNewBackupExtHomeDir(createDirParam.bundleName,
         createDirParam.userId, createDirParam.uid, newBundleBackupDir, DirType::DIR_EL1);
     ret = SetDirApl(newBundleBackupDir, createDirParam.bundleName, createDirParam.apl,
-        createDirParam.isPreInstallApp, createDirParam.debug);
+        createDirParam.isPreInstallApp, createDirParam.debug, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir DIR_EL1 SetDirApl failed: %{public}d", ret);
     }
@@ -771,7 +773,8 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
     }
     AclSetDir(createDirParam.debug, bundleDataDir, true, true);
     InstalldOperator::RmvDeleteDfx(bundleDataDir);
-    ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
+    ErrCode ret = SetDirApl(
+        bundleDataDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
         return ret;
@@ -788,7 +791,7 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
     }
     AclSetDir(createDirParam.debug, databaseDir, false, true);
     InstalldOperator::RmvDeleteDfx(databaseDir);
-    ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
+    ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
         return ret;
@@ -859,7 +862,8 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
         DirType::DIR_EL2);
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
         createDirParam.isDlpSandbox);
-    ErrCode ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
+    ErrCode ret = SetDirApl(
+        bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
     }
@@ -869,7 +873,7 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
     CreateNewBackupExtHomeDir(createDirParam.bundleName,
         createDirParam.userId, createDirParam.uid, newBundleBackupDir, DirType::DIR_EL2);
     ret = SetDirApl(newBundleBackupDir, createDirParam.bundleName, createDirParam.apl,
-        createDirParam.isPreInstallApp, createDirParam.debug);
+        createDirParam.isPreInstallApp, createDirParam.debug, createDirParam.uid);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
     }
@@ -905,7 +909,8 @@ ErrCode InstalldHostImpl::CreateExtensionDir(const CreateDirParam &createDirPara
         if (isLog) {
             continue;
         }
-        auto ret = SetDirApl(extensionDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
+        auto ret = SetDirApl(
+            extensionDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "dir %{public}s SetDirApl failed", extensionDir.c_str());
             return ret;
@@ -1418,21 +1423,21 @@ unsigned int InstalldHostImpl::GetHapFlags(const bool isPreInstallApp, const boo
 }
 
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-    bool isPreInstallApp, bool debug)
+    bool isPreInstallApp, bool debug, int32_t uid)
 {
     unsigned int hapFlags = GetHapFlags(isPreInstallApp, debug, false);
-    return SetDirApl(dir, bundleName, apl, hapFlags);
+    return SetDirApl(dir, bundleName, apl, hapFlags, uid);
 }
 
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-    unsigned int hapFlags)
+    unsigned int hapFlags, int32_t uid)
 {
 #ifdef WITH_SELINUX
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (dir.empty() || bundleName.empty()) {
+    if (dir.empty() || bundleName.empty() || uid <= Constants::INVALID_UID) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function SetDirApl with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
@@ -1442,6 +1447,7 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
     hapFileInfo.packageName = bundleName;
     hapFileInfo.flags = SELINUX_HAP_RESTORECON_RECURSE;
     hapFileInfo.hapFlags = hapFlags;
+    hapFileInfo.uid = uid;
     HapContext hapContext;
     int ret = hapContext.HapFileRestorecon(hapFileInfo);
     if (ret != 0) {

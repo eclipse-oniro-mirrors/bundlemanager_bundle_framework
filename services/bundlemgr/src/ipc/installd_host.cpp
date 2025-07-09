@@ -613,7 +613,8 @@ bool InstalldHost::HandleSetDirApl(MessageParcel &data, MessageParcel &reply)
     std::string apl = Str16ToStr8(data.ReadString16());
     bool isPreInstallApp = data.ReadBool();
     bool debug = data.ReadBool();
-    ErrCode result = SetDirApl(dataDir, bundleName, apl, isPreInstallApp, debug);
+    int32_t uid = data.ReadInt32();
+    ErrCode result = SetDirApl(dataDir, bundleName, apl, isPreInstallApp, debug, uid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

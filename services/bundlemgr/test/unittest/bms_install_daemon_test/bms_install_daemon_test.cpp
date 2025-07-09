@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -677,11 +677,11 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0100, Function | SmallTest | Level
         service->Start();
     }
     std::string TEST_STRING = "test.string";
-    ErrCode ret = InstalldClient::GetInstance()->SetDirApl("", BUNDLE_NAME, TEST_STRING, false, false);
+    ErrCode ret = InstalldClient::GetInstance()->SetDirApl("", BUNDLE_NAME, TEST_STRING, false, false, UID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, "", TEST_STRING, false, false);
+    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, "", TEST_STRING, false, false, UID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "", true, true);
+    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "", true, true, UID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

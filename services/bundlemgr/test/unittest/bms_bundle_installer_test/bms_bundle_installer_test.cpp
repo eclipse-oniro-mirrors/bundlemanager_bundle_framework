@@ -5713,16 +5713,19 @@ HWTEST_F(BmsBundleInstallerTest, SetDirApl_0100, Function | SmallTest | Level0)
     InstalldHostImpl impl;
     bool isPreInstallApp = false;
     bool debug = false;
-    auto ret = impl.SetDirApl("", BUNDLE_NAME, "", isPreInstallApp, debug);
+    auto ret = impl.SetDirApl("", BUNDLE_NAME, "", isPreInstallApp, debug, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.SetDirApl(BUNDLE_DATA_DIR, "", "", isPreInstallApp, debug);
+    ret = impl.SetDirApl(BUNDLE_DATA_DIR, "", "", isPreInstallApp, debug, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.SetDirApl("", "", "", isPreInstallApp, debug);
+    ret = impl.SetDirApl("", "", "", isPreInstallApp, debug, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = impl.SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "", isPreInstallApp, debug);
+    ret = impl.SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "test.string", isPreInstallApp, debug, -1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "", isPreInstallApp, debug, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
 }
 
@@ -7322,7 +7325,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0104, Function | Sma
     CreateDirParam createDirParam2;
     createDirParam2.bundleName = TEST_SHARE_FILES;
     createDirParam2.userId = 100;
-    createDirParam2.uid = INVAILD_CODE;
+    createDirParam2.uid = ZERO_CODE;
     createDirParam2.gid = INVAILD_CODE;
     createDirParam2.apl = TEST_APL_INVALID;
     createDirParam2.isPreInstallApp = false;
@@ -7382,7 +7385,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharefilesDataDirEl2_0107, Function | Sma
     CreateDirParam createDirParam2;
     createDirParam2.bundleName = TEST_SHARE_FILES;
     createDirParam2.userId = 100;
-    createDirParam2.uid = INVAILD_CODE;
+    createDirParam2.uid = ZERO_CODE;
     createDirParam2.gid = ZERO_CODE;
     createDirParam2.apl = TEST_APL_INVALID;
     createDirParam2.isPreInstallApp = false;
