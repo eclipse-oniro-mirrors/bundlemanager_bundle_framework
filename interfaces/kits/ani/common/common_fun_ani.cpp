@@ -33,6 +33,18 @@ constexpr const char* CLASSNAME_BUNDLEINFO = "LbundleManager/BundleInfoInner/Bun
 constexpr const char* CLASSNAME_PERMISSION = "LbundleManager/BundleInfoInner/ReqPermissionDetailInner;";
 constexpr const char* CLASSNAME_USEDSCENE = "LbundleManager/BundleInfoInner/UsedSceneInner;";
 constexpr const char* CLASSNAME_SIGNATUREINFO = "LbundleManager/BundleInfoInner/SignatureInfoInner;";
+constexpr const char* CLASSNAME_APPCLONEIDENTITY = "LbundleManager/BundleInfoInner/AppCloneIdentityInner;";
+constexpr const char* CLASSNAME_PERMISSIONDEF = "LbundleManager/PermissionDefInner/PermissionDefInner;";
+constexpr const char* CLASSNAME_SHAREDBUNDLEINFO = "LbundleManager/SharedBundleInfoInner/SharedBundleInfoInner;";
+constexpr const char* CLASSNAME_SHAREDMODULEINFO = "LbundleManager/SharedBundleInfoInner/SharedModuleInfoInner;";
+constexpr const char* CLASSNAME_APPPROVISIONINFO = "LbundleManager/AppProvisionInfoInner/AppProvisionInfoInner;";
+constexpr const char* CLASSNAME_VALIDITY = "LbundleManager/AppProvisionInfoInner/ValidityInner;";
+constexpr const char* CLASSNAME_RECOVERABLEAPPLICATIONINFO =
+    "LbundleManager/RecoverableApplicationInfoInner/RecoverableApplicationInfoInner;";
+constexpr const char* CLASSNAME_PREINSTALLEDAPPLICATIONINFO =
+    "LbundleManager/ApplicationInfoInner/PreinstalledApplicationInfoInner;";
+constexpr const char* CLASSNAME_PLUGINBUNDLEINFO = "LbundleManager/PluginBundleInfoInner/PluginBundleInfoInner;";
+constexpr const char* CLASSNAME_PLUGINMODULEINFO = "LbundleManager/PluginBundleInfoInner/PluginModuleInfoInner;";
 constexpr const char* CLASSNAME_METADATA = "LbundleManager/MetadataInner/MetadataInner;";
 constexpr const char* CLASSNAME_RESOURCE = "Lglobal/resourceInner/ResourceInner;";
 constexpr const char* CLASSNAME_ROUTERITEM = "LbundleManager/HapModuleInfoInner/RouterItemInner;";
@@ -45,9 +57,30 @@ constexpr const char* CLASSNAME_CUSTOMIZEDATA = "LbundleManager/customizeDataInn
 constexpr const char* CLASSNAME_SKILL = "LbundleManager/SkillInner/SkillInner;";
 constexpr const char* CLASSNAME_SKILLURI = "LbundleManager/SkillInner/SkillUriInner;";
 constexpr const char* CLASSNAME_BUNDLERESINFO = "LbundleManager/BundleResourceInfoInner/BundleResourceInfoInner;";
+constexpr const char* CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER =
+    "LbundleManager/LauncherAbilityResourceInfoInner/LauncherAbilityResourceInfoInner;";
 constexpr const char* CLASSNAME_SHORTCUTINFO = "LbundleManager/ShortcutInfo/ShortcutInfoInner;";
 constexpr const char* CLASSNAME_SHORTCUTWANT = "LbundleManager/ShortcutInfo/ShortcutWantInner;";
 constexpr const char* CLASSNAME_SHORTCUT_PARAMETERITEM = "LbundleManager/ShortcutInfo/ParameterItemInner;";
+constexpr const char* CLASSNAME_LAUNCHER_ABILITY_INFO_INNER =
+    "LbundleManager/LauncherAbilityInfoInner/LauncherAbilityInfoInner;";
+constexpr const char* CLASSNAME_BUNDLE_CHANGED_INFO_INNER =
+    "L@ohos/bundle/bundleMonitor/bundleMonitor/BundleChangedInfoInner;";
+constexpr const char* CLASSNAME_BUNDLE_PACK_INFO_INNER = "LbundleManager/BundlePackInfoInner/BundlePackInfoInner;";
+constexpr const char* CLASSNAME_PACKAGE_CONFIG_INNER = "LbundleManager/BundlePackInfoInner/PackageConfigInner;";
+constexpr const char* CLASSNAME_PACKAGE_SUMMARY_INNER = "LbundleManager/BundlePackInfoInner/PackageSummaryInner;";
+constexpr const char* CLASSNAME_BUNDLE_CONFIG_INFO_INNER = "LbundleManager/BundlePackInfoInner/BundleConfigInfoInner;";
+constexpr const char* CLASSNAME_EXTENSION_ABILITY_INNER = "LbundleManager/BundlePackInfoInner/ExtensionAbilityInner;";
+constexpr const char* CLASSNAME_MODULE_CONFIG_INFO_INNER = "LbundleManager/BundlePackInfoInner/ModuleConfigInfoInner;";
+constexpr const char* CLASSNAME_MODULE_DISTRO_INFO_INNER = "LbundleManager/BundlePackInfoInner/ModuleDistroInfoInner;";
+constexpr const char* CLASSNAME_MODULE_ABILITY_INFO_INNER =
+    "LbundleManager/BundlePackInfoInner/ModuleAbilityInfoInner;";
+constexpr const char* CLASSNAME_ABILITY_FORM_INFO_INNER = "LbundleManager/BundlePackInfoInner/AbilityFormInfoInner;";
+constexpr const char* CLASSNAME_VERSION_INNER = "LbundleManager/BundlePackInfoInner/VersionInner;";
+constexpr const char* CLASSNAME_API_VERSION_INNER = "LbundleManager/BundlePackInfoInner/ApiVersionInner;";
+constexpr const char* CLASSNAME_DISPATCH_INFO_INNER = "LbundleManager/DispatchInfoInner/DispatchInfoInner;";
+constexpr const char* CLASSNAME_OVERLAY_MOUDLE_INFO_INNER =
+    "LbundleManager/OverlayModuleInfoInner/OverlayModuleInfoInner;";
 
 constexpr const char* PROPERTYNAME_NAME = "name";
 constexpr const char* PROPERTYNAME_VENDOR = "vendor";
@@ -171,6 +204,56 @@ constexpr const char* PROPERTYNAME_TARGETBUNDLE = "targetBundle";
 constexpr const char* PROPERTYNAME_TARGETMODULE = "targetModule";
 constexpr const char* PROPERTYNAME_TARGETABILITY = "targetAbility";
 constexpr const char* PROPERTYNAME_PARAMETERS = "parameters";
+constexpr const char* PROPERTYNAME_ELEMENTNAME = "elementName";
+constexpr const char* PROPERTYNAME_USERID = "userId";
+constexpr const char* PROPERTYNAME_HASHPARAMS = "hashParams";
+constexpr const char* PROPERTYNAME_PGOFILEPATH = "pgoFilePath";
+constexpr const char* PROPERTYNAME_PGOPARAMS = "pgoParams";
+constexpr const char* PROPERTYNAME_SPECIFIEDDISTRIBUTIONTYPE = "specifiedDistributionType";
+constexpr const char* PROPERTYNAME_ISKEEPDATA = "isKeepData";
+constexpr const char* PROPERTYNAME_INSTALLFLAG = "installFlag";
+constexpr const char* PROPERTYNAME_CROWDTESTDEADLINE = "crowdtestDeadline";
+constexpr const char* PROPERTYNAME_SHAREDBUNDLEDIRPATHS = "sharedBundleDirPaths";
+constexpr const char* PROPERTYNAME_ADDITIONALINFO = "additionalInfo";
+constexpr const char* PROPERTYNAME_CODE = "code";
+constexpr const char* PROPERTYNAME_VERSION = "version";
+constexpr const char* PROPERTYNAME_UPDATEENABLED = "updateEnabled";
+constexpr const char* PROPERTYNAME_SCHEDULEDUPDATETIME = "scheduledUpdateTime";
+constexpr const char* PROPERTYNAME_UPDATEDURATION = "updateDuration";
+constexpr const char* PROPERTYNAME_SUPPORTDIMENSIONS = "supportDimensions";
+constexpr const char* PROPERTYNAME_DEFAULTDIMENSION = "defaultDimension";
+constexpr const char* PROPERTYNAME_FORMS = "forms";
+constexpr const char* PROPERTYNAME_DELIVERYWITHINSTALL = "deliveryWithInstall";
+constexpr const char* PROPERTYNAME_MODULETYPE = "moduleType";
+constexpr const char* PROPERTYNAME_COMPATIBLE = "compatible";
+constexpr const char* PROPERTYNAME_TARGET = "target";
+constexpr const char* PROPERTYNAME_MAINABILITY = "mainAbility";
+constexpr const char* PROPERTYNAME_APIVERSION = "apiVersion";
+constexpr const char* PROPERTYNAME_DISTRO = "distro";
+constexpr const char* PROPERTYNAME_EXTENSIONABILITIES = "extensionAbilities";
+constexpr const char* PROPERTYNAME_APP = "app";
+constexpr const char* PROPERTYNAME_MODULES = "modules";
+constexpr const char* PROPERTYNAME_PACKAGES = "packages";
+constexpr const char* PROPERTYNAME_SUMMARY = "summary";
+constexpr const char* PROPERTYNAME_DISPATCHAPIVERSION = "dispatchAPIVersion";
+constexpr const char* PROPERTYNAME_TARGETMOUDLENAME = "targetModuleName";
+constexpr const char* PROPERTYNAME_PRIORITY = "priority";
+constexpr const char* PROPERTYNAME_STATE = "state";
+constexpr const char* PROPERTYNAME_PERMISSIONNAME = "permissionName";
+constexpr const char* PROPERTYNAME_GRANTMODE = "grantMode";
+constexpr const char* PROPERTYNAME_COMPATIBLEPOLICY = "compatiblePolicy";
+constexpr const char* PROPERTYNAME_SHAREDMODULEINFO = "sharedModuleInfo";
+constexpr const char* PROPERTYNAME_UUID = "uuid";
+constexpr const char* PROPERTYNAME_NOTBEFORE = "notBefore";
+constexpr const char* PROPERTYNAME_NOTAFTER = "notAfter";
+constexpr const char* PROPERTYNAME_VALIDITY = "validity";
+constexpr const char* PROPERTYNAME_DEVELOPERID = "developerId";
+constexpr const char* PROPERTYNAME_APL = "apl";
+constexpr const char* PROPERTYNAME_ISSUER = "issuer";
+constexpr const char* PROPERTYNAME_ORGANIZATION = "organization";
+constexpr const char* PROPERTYNAME_CODEPATHS = "codePaths";
+constexpr const char* PROPERTYNAME_PLUGINBUNDLENAME = "pluginBundleName";
+constexpr const char* PROPERTYNAME_PLUGINMODULEINFOS = "pluginModuleInfos";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
@@ -194,7 +277,7 @@ std::string CommonFunAni::AniStrToString(ani_env* env, ani_string aniStr)
     buffer.resize(strSize + 1);
     ani_size retSize = 0;
     status = env->String_GetUTF8(aniStr, buffer.data(), buffer.size(), &retSize);
-    if (status != ANI_OK || retSize == 0) {
+    if (status != ANI_OK) {
         APP_LOGE("String_GetUTF8SubString failed %{public}d", status);
         return "";
     }
@@ -348,6 +431,258 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     // firstInstallTime?: number
     RETURN_NULL_IF_FALSE(
         CallSetterOptional(env, cls, object, PROPERTYNAME_FIRSTINSTALLTIME, bundleInfo.firstInstallTime));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertDefaultAppAbilityInfo(ani_env* env, const AbilityInfo& abilityInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_ABILITYINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // label: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.label, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
+
+    // description: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.description, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string));
+
+    // icon: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.iconPath, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICON, string));
+
+    // process: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_PROCESS));
+
+    // exported: boolean
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_EXPORTED));
+
+    // orientation: bundleManager.DisplayOrientation
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_ORIENTATION));
+
+    // launchType: bundleManager.LaunchType
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_LAUNCHTYPE));
+
+    // permissions: Array<string>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_PERMISSIONS));
+
+    // deviceTypes: Array<string>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_DEVICETYPES));
+
+    // applicationInfo: ApplicationInfo
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_APPLICATIONINFO));
+
+    // metadata: Array<Metadata>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_METADATA));
+
+    // enabled: boolean
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_ENABLED));
+
+    // supportWindowModes: Array<bundleManager.SupportWindowMode>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_SUPPORTWINDOWMODES));
+
+    // windowSize: WindowSize
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_WINDOWSIZE));
+
+    // excludeFromDock: boolean
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_EXCLUDEFROMDOCK));
+
+    // skills: Array<Skill>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_SKILLS));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertDefaultAppExtensionInfo(ani_env* env, const ExtensionAbilityInfo& extensionInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_EXTENSIONABILITYINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // exported: boolean
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_EXPORTED));
+
+    // extensionAbilityType: bundleManager.ExtensionAbilityType
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_EXTENSIONABILITYTYPE));
+
+    // extensionAbilityTypeName: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_EXTENSIONABILITYTYPENAME));
+
+    // permissions: Array<string>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_PERMISSIONS));
+
+    // applicationInfo: ApplicationInfo
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_APPLICATIONINFO));
+
+    // metadata: Array<Metadata>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_METADATA));
+
+    // enabled: boolean
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_ENABLED));
+
+    // readPermission: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_READPERMISSION));
+
+    // writePermission: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_WRITEPERMISSION));
+
+    // skills: Array<Skill>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_SKILLS));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertDefaultAppHapModuleInfo(ani_env* env, const BundleInfo &bundleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_HAPMODULEINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    // name: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_NAME));
+
+    // icon: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_ICON));
+
+    // label: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_LABEL));
+
+    // description: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_DESCRIPTION));
+
+    // mainElementName: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_MAINELEMENTNAME));
+
+    // abilitiesInfo: Array<AbilityInfo>
+    ani_object aAbilityInfoObject = ConvertAniArray(env, bundleInfo.abilityInfos, ConvertDefaultAppAbilityInfo);
+    RETURN_NULL_IF_NULL(aAbilityInfoObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ABILITIESINFO, aAbilityInfoObject));
+
+    // extensionAbilitiesInfo: Array<ExtensionAbilityInfo>
+    ani_object aExtensionInfoObject = ConvertAniArray(env, bundleInfo.extensionInfos, ConvertDefaultAppExtensionInfo);
+    RETURN_NULL_IF_NULL(aExtensionInfoObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_EXTENSIONABILITIESINFO, aExtensionInfoObject));
+
+    // metadata: Array<Metadata>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_METADATA));
+
+    // deviceTypes: Array<string>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_DEVICETYPES));
+
+    // installationFree: boolean
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_INSTALLATIONFREE));
+
+    // hashValue: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_HASHVALUE));
+
+    // type: bundleManager.ModuleType
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_TYPE));
+
+    // dependencies: Array<Dependency>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_DEPENDENCIES));
+
+    // preloads: Array<PreloadItem>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_PRELOADS));
+
+    // fileContextMenuConfig: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_FILECONTEXTMENUCONFIG));
+
+    // routerMap: Array<RouterItem>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_ROUTERMAP));
+
+    // nativeLibraryPath: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_NATIVELIBRARYPATH));
+
+    // codePath: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_CODEPATH));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertDefaultAppBundleInfo(ani_env* env, const BundleInfo &bundleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLEINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleInfo.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // vendor: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_VENDOR));
+
+    // versionName: string
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_VERSIONNAME));
+
+    // appInfo: ApplicationInfo
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_APPINFO));
+
+    // hapModulesInfo: Array<HapModuleInfo>
+    std::vector<BundleInfo> bundleInfos = {bundleInfo};
+    ani_object aHapModuleInfosObject = ConvertAniArray(env, bundleInfos, ConvertDefaultAppHapModuleInfo);
+    RETURN_NULL_IF_NULL(aHapModuleInfosObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_HAPMODULESINFO, aHapModuleInfosObject));
+
+    // reqPermissionDetails: Array<ReqPermissionDetail>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_REQPERMISSIONDETAILS));
+
+    // permissionGrantStates: Array<bundleManager.PermissionGrantState>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_PERMISSIONGRANTSTATES));
+
+    // signatureInfo: SignatureInfo
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_SIGNATUREINFO));
+
+    // routerMap: Array<RouterItem>
+    RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_ROUTERMAP));
 
     return object;
 }
@@ -1294,6 +1629,347 @@ ani_object CommonFunAni::ConvertAbilitySkillInner(ani_env* env, const Skill& ski
     return object;
 }
 
+ani_object CommonFunAni::ConvertAppCloneIdentity(ani_env* env, const std::string& bundleName, const int32_t appIndex)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_APPCLONEIDENTITY);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // appIndex: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, appIndex));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertPermissionDef(ani_env* env, const PermissionDef& permissionDef)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_PERMISSIONDEF);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // permissionName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, permissionDef.permissionName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PERMISSIONNAME, string));
+
+    // grantMode: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_GRANTMODE, permissionDef.grantMode));
+
+    // labelId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, permissionDef.labelId));
+
+    // descriptionId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, permissionDef.descriptionId));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertSharedBundleInfo(ani_env* env, const SharedBundleInfo& sharedBundleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_SHAREDBUNDLEINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedBundleInfo.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // bundleType: bundleManager.CompatiblePolicy
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_COMPATIBLEPOLICY,
+        EnumUtils::EnumNativeToETS_BundleManager_CompatiblePolicy(
+            env, static_cast<int32_t>(CompatiblePolicy::BACKWARD_COMPATIBILITY))));
+
+    // sharedModuleInfo: Array<SharedModuleInfo>
+    ani_object aSharedModuleInfosObject =
+        ConvertAniArray(env, sharedBundleInfo.sharedModuleInfos, ConvertSharedModuleInfo);
+    RETURN_NULL_IF_NULL(aSharedModuleInfosObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SHAREDMODULEINFO, aSharedModuleInfosObject));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertSharedModuleInfo(ani_env* env, const SharedModuleInfo& sharedModuleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_SHAREDMODULEINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // versionCode: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONCODE, sharedModuleInfo.versionCode));
+
+    // versionName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.versionName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONNAME, string));
+
+    // description: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.description, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string));
+
+    // descriptionId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, sharedModuleInfo.descriptionId));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisionInfo& appProvisionInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_APPPROVISIONINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // versionCode: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONCODE, appProvisionInfo.versionCode));
+
+    // versionName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.versionName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONNAME, string));
+
+    // uuid: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.uuid, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_UUID, string));
+
+    // type: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.type, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TYPE, string));
+
+    // appDistributionType: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.appDistributionType, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPDISTRIBUTIONTYPE, string));
+
+    // validity: Validity
+    ani_object aniValidityObject = ConvertValidity(env, appProvisionInfo.validity);
+    RETURN_NULL_IF_NULL(aniValidityObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VALIDITY, aniValidityObject));
+
+    // developerId: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.developerId, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DEVELOPERID, string));
+
+    // certificate: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.certificate, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_CERTIFICATE, string));
+
+    // apl: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.apl, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APL, string));
+
+    // issuer: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.issuer, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ISSUER, string));
+
+    // appIdentifier: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.appIdentifier, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPIDENTIFIER, string));
+
+    // organization: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.organization, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ORGANIZATION, string));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertValidity(ani_env* env, const Validity& validity)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_VALIDITY);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    // notBefore: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NOTBEFORE, validity.notBefore));
+
+    // notAfter: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NOTAFTER, validity.notAfter));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertRecoverableApplicationInfo(
+    ani_env* env, const RecoverableApplicationInfo& recoverableApplicationInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_RECOVERABLEAPPLICATIONINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, recoverableApplicationInfo.bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, recoverableApplicationInfo.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // labelId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, recoverableApplicationInfo.labelId));
+
+    // iconId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, recoverableApplicationInfo.iconId));
+
+    // systemApp: boolean
+    RETURN_NULL_IF_FALSE(
+        CallSetter(env, cls, object, PROPERTYNAME_SYSTEMAPP, BoolToAniBoolean(recoverableApplicationInfo.systemApp)));
+
+    // bundleType: bundleManager.BundleType
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLETYPE,
+        EnumUtils::EnumNativeToETS_BundleManager_BundleType(
+            env, static_cast<int32_t>(recoverableApplicationInfo.bundleType))));
+    
+    // codePaths: Array<string>
+    ani_ref aCodePaths = ConvertAniArrayString(env, recoverableApplicationInfo.codePaths);
+    RETURN_NULL_IF_NULL(aCodePaths);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_CODEPATHS, aCodePaths));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertPreinstalledApplicationInfo(
+    ani_env* env, const PreinstalledApplicationInfo& reinstalledApplicationInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_PREINSTALLEDAPPLICATIONINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, reinstalledApplicationInfo.bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, reinstalledApplicationInfo.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // iconId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, reinstalledApplicationInfo.iconId));
+
+    // labelId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, reinstalledApplicationInfo.labelId));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertPluginBundleInfo(ani_env* env, const PluginBundleInfo& pluginBundleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_PLUGINBUNDLEINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // label: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.label, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
+
+    // labelId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, pluginBundleInfo.labelId));
+
+    // icon: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.icon, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICON, string));
+
+    // iconId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, pluginBundleInfo.iconId));
+
+    // pluginBundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.pluginBundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PLUGINBUNDLENAME, string));
+
+    // versionCode: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONCODE, pluginBundleInfo.versionCode));
+
+    // versionName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.versionName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONNAME, string));
+
+    // pluginModuleInfos: Array<PluginModuleInfo>
+    ani_object apluginModuleInfosObject =
+        ConvertAniArray(env, pluginBundleInfo.pluginModuleInfos, ConvertPluginModuleInfo);
+    RETURN_NULL_IF_NULL(apluginModuleInfosObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PLUGINMODULEINFOS, apluginModuleInfosObject));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertPluginModuleInfo(ani_env* env, const PluginModuleInfo& pluginModuleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_PLUGINMODULEINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginModuleInfo.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // descriptionId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, pluginModuleInfo.descriptionId));
+
+    // description: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginModuleInfo.description, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string));
+
+    return object;
+}
+
 ani_object CommonFunAni::ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo)
 {
     RETURN_NULL_IF_NULL(env);
@@ -1322,6 +1998,47 @@ ani_object CommonFunAni::ConvertBundleResourceInfo(ani_env* env, const BundleRes
 
     // appIndex: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, bundleResInfo.appIndex));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertLauncherAbilityResourceInfo(
+    ani_env* env, const LauncherAbilityResourceInfo& launcherAbilityResourceInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, launcherAbilityResourceInfo.bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, launcherAbilityResourceInfo.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // abilityName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, launcherAbilityResourceInfo.abilityName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ABILITYNAME, string));
+
+    // icon: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, launcherAbilityResourceInfo.icon, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICON, string));
+
+    // label: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, launcherAbilityResourceInfo.label, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
+
+    // drawableDescriptor: DrawableDescriptor;
+
+    // appIndex: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, launcherAbilityResourceInfo.appIndex));
 
     return object;
 }
@@ -1425,6 +2142,452 @@ inline ani_object CommonFunAni::ConvertShortcutIntentParameter(
     return ConvertKeyValuePair(env, item, CLASSNAME_SHORTCUT_PARAMETERITEM);
 }
 
+ani_object CommonFunAni::ConvertLauncherAbilityInfo(ani_env* env, const LauncherAbilityInfo& launcherAbility)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_LAUNCHER_ABILITY_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    // applicationInfo: ApplicationInfo
+    ani_object aObject = ConvertApplicationInfo(env, launcherAbility.applicationInfo);
+    RETURN_NULL_IF_NULL(aObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPLICATIONINFO, aObject));
+
+    // elementName: ElementName
+    ani_object aElementNameObject = ConvertElementName(env, launcherAbility.elementName);
+    RETURN_NULL_IF_NULL(aElementNameObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ELEMENTNAME, aElementNameObject));
+
+    // labelId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, launcherAbility.labelId));
+
+    // iconId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, launcherAbility.iconId));
+
+    // userId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_USERID, launcherAbility.userId));
+
+    // installTime: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_INSTALLTIME, launcherAbility.installTime));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertOverlayModuleInfo(ani_env* env, const OverlayModuleInfo& overlayModuleInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_OVERLAY_MOUDLE_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // targetModuleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.targetModuleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TARGETMOUDLENAME, string));
+
+    // priority: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PRIORITY, overlayModuleInfo.priority));
+
+    // state: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_STATE, overlayModuleInfo.state));
+
+    return object;
+}
+
+ani_object CommonFunAni::CreateBundleChangedInfo(
+    ani_env* env, const std::string& bundleName, int32_t userId, int32_t appIndex)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLE_CHANGED_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // userId: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_USERID, userId));
+
+    // appIndex: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, appIndex));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertVersion(ani_env* env, const Version& version)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_VERSION_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // minCompatibleVersionCode: number
+    RETURN_NULL_IF_FALSE(
+        CallSetter(env, cls, object, PROPERTYNAME_MINCOMPATIBLEVERSIONCODE, version.minCompatibleVersionCode));
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, version.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // code: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_CODE, version.code));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertPackageApp(ani_env* env, const PackageApp& packageApp)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLE_CONFIG_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, packageApp.bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // version: Version
+    ani_object aObject = ConvertVersion(env, packageApp.version);
+    RETURN_NULL_IF_NULL(aObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSION, aObject));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertAbilityFormInfo(ani_env* env, const AbilityFormInfo& abilityFormInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_ABILITY_FORM_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // type: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.type, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TYPE, string));
+
+    // updateEnabled: boolean
+    RETURN_NULL_IF_FALSE(
+        CallSetter(env, cls, object, PROPERTYNAME_UPDATEENABLED, BoolToAniBoolean(abilityFormInfo.updateEnabled)));
+
+    // scheduledUpdateTime: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.scheduledUpdateTime, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SCHEDULEDUPDATETIME, string));
+
+    // updateDuration: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_UPDATEDURATION, abilityFormInfo.updateDuration));
+
+    // supportDimensions: Array<string>
+    ani_ref aSupportDimensions = ConvertAniArrayString(env, abilityFormInfo.supportDimensions);
+    RETURN_NULL_IF_NULL(aSupportDimensions);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SUPPORTDIMENSIONS, aSupportDimensions));
+
+    // defaultDimension: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.defaultDimension, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DEFAULTDIMENSION, string));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertModuleAbilityInfo(ani_env* env, const ModuleAbilityInfo& moduleAbilityInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_MODULE_ABILITY_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleAbilityInfo.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // label: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleAbilityInfo.label, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
+
+    // exported: boolean
+    RETURN_NULL_IF_FALSE(
+        CallSetter(env, cls, object, PROPERTYNAME_EXPORTED, BoolToAniBoolean(moduleAbilityInfo.visible)));
+
+    // forms: Array<AbilityFormInfo>
+    ani_object aAbilityFormInfoObject = ConvertAniArray(env, moduleAbilityInfo.forms, ConvertAbilityFormInfo);
+    RETURN_NULL_IF_NULL(aAbilityFormInfoObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_FORMS, aAbilityFormInfoObject));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertModuleDistro(ani_env* env, const ModuleDistro& moduleDistro)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_MODULE_DISTRO_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // deliveryWithInstall: boolean
+    RETURN_NULL_IF_FALSE(CallSetter(
+        env, cls, object, PROPERTYNAME_DELIVERYWITHINSTALL, BoolToAniBoolean(moduleDistro.deliveryWithInstall)));
+
+    // installationFree: boolean
+    RETURN_NULL_IF_FALSE(
+        CallSetter(env, cls, object, PROPERTYNAME_INSTALLATIONFREE, BoolToAniBoolean(moduleDistro.installationFree)));
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleDistro.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // moduleType: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleDistro.moduleType, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULETYPE, string));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertApiVersion(ani_env* env, const ApiVersion& apiVersion)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_API_VERSION_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // releaseType: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, apiVersion.releaseType, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_RELEASETYPE, string));
+
+    // compatible: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_COMPATIBLE, apiVersion.compatible));
+
+    // target: number
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TARGET, apiVersion.target));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertExtensionAbilities(ani_env* env, const ExtensionAbilities& extensionAbilities)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_EXTENSION_ABILITY_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionAbilities.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // forms: Array<AbilityFormInfo>
+    ani_object aAbilityFormInfoObject = ConvertAniArray(env, extensionAbilities.forms, ConvertAbilityFormInfo);
+    RETURN_NULL_IF_NULL(aAbilityFormInfoObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_FORMS, aAbilityFormInfoObject));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertPackageModule(ani_env* env, const PackageModule& packageModule)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_MODULE_CONFIG_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // mainAbility: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, packageModule.mainAbility, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MAINABILITY, string));
+
+    // apiVersion: ApiVersion
+    ani_object aApiVersionObject = ConvertApiVersion(env, packageModule.apiVersion);
+    RETURN_NULL_IF_NULL(aApiVersionObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APIVERSION, aApiVersionObject));
+
+    // deviceTypes: Array<string>
+    ani_ref aDeviceTypes = ConvertAniArrayString(env, packageModule.deviceType);
+    RETURN_NULL_IF_NULL(aDeviceTypes);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DEVICETYPES, aDeviceTypes));
+
+    // distro: ModuleDistroInfo
+    ani_object aModuleDistroInfoObject = ConvertModuleDistro(env, packageModule.distro);
+    RETURN_NULL_IF_NULL(aModuleDistroInfoObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DISTRO, aModuleDistroInfoObject));
+
+    // abilities: Array<ModuleAbilityInfo>
+    ani_object aModuleAbilityInfoObject = ConvertAniArray(env, packageModule.abilities, ConvertModuleAbilityInfo);
+    RETURN_NULL_IF_NULL(aModuleAbilityInfoObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ABILITIES, aModuleAbilityInfoObject));
+
+    // extensionAbilities: Array<ExtensionAbility>
+    ani_object aExtensionAbilityObject =
+        ConvertAniArray(env, packageModule.extensionAbilities, ConvertExtensionAbilities);
+    RETURN_NULL_IF_NULL(aExtensionAbilityObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_EXTENSIONABILITIES, aExtensionAbilityObject));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertSummary(ani_env* env, const Summary& summary)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_PACKAGE_SUMMARY_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    // app: BundleConfigInfo
+    ani_object aBundleConfigInfoObject = ConvertPackageApp(env, summary.app);
+    RETURN_NULL_IF_NULL(aBundleConfigInfoObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APP, aBundleConfigInfoObject));
+
+    // modules: Array<ModuleConfigInfo>
+    ani_object aModuleConfigInfoObject = ConvertAniArray(env, summary.modules, ConvertPackageModule);
+    RETURN_NULL_IF_NULL(aModuleConfigInfoObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULES, aModuleConfigInfoObject));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertPackages(ani_env* env, const Packages& packages)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_PACKAGE_CONFIG_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // deviceTypes: Array<string>
+    ani_ref aDeviceTypes = ConvertAniArrayString(env, packages.deviceType);
+    RETURN_NULL_IF_NULL(aDeviceTypes);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DEVICETYPES, aDeviceTypes));
+
+    // name: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, packages.name, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // moduleType: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, packages.moduleType, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULETYPE, string));
+
+    // deliveryWithInstall: boolean
+    RETURN_NULL_IF_FALSE(
+        CallSetter(env, cls, object, PROPERTYNAME_DELIVERYWITHINSTALL, BoolToAniBoolean(packages.deliveryWithInstall)));
+
+    return object;
+}
+
+ani_object CommonFunAni::ConvertBundlePackInfo(ani_env* env, const BundlePackInfo& bundlePackInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLE_PACK_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    // packages: Array<PackageConfig>
+    ani_object aPackageConfigObject = ConvertAniArray(env, bundlePackInfo.packages, ConvertPackages);
+    RETURN_NULL_IF_NULL(aPackageConfigObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PACKAGES, aPackageConfigObject));
+
+    // summary: PackageSummary
+    ani_object aPackageSummaryObject = ConvertSummary(env, bundlePackInfo.summary);
+    RETURN_NULL_IF_NULL(aPackageSummaryObject);
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SUMMARY, aPackageSummaryObject));
+
+    return object;
+}
+
+ani_object CommonFunAni::CreateDispatchInfo(
+    ani_env* env, const std::string& version, const std::string& dispatchAPIVersion)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_DISPATCH_INFO_INNER);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // version: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, version, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSION, string));
+
+    // dispatchAPIVersion: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, dispatchAPIVersion, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DISPATCHAPIVERSION, string));
+
+    return object;
+}
+
 bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutInfo& shortcutInfo)
 {
     RETURN_FALSE_IF_NULL(env);
@@ -1468,8 +2631,8 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
     }
 
     // labelId?: number
-    if (CallGetterOptional(env, object, PROPERTYNAME_LABELID, &intValue)) {
-        shortcutInfo.labelId = intValue;
+    if (CallGetterOptional(env, object, PROPERTYNAME_LABELID, &uintValue)) {
+        shortcutInfo.labelId = uintValue;
     }
 
     // wants?: Array<ShortcutWant>
@@ -1522,8 +2685,8 @@ bool CommonFunAni::ParseShortcutIntent(ani_env* env, ani_object object, Shortcut
     return true;
 }
 
-bool CommonFunAni::ParseKeyValuePairWithName(ani_env* env, ani_object object,
-    std::pair<std::string, std::string>& pair, const char* keyName, const char* valueName)
+bool CommonFunAni::ParseKeyValuePairWithName(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair,
+    const char* keyName, const char* valueName)
 {
     RETURN_FALSE_IF_NULL(env);
     RETURN_FALSE_IF_NULL(object);
@@ -1544,6 +2707,683 @@ bool CommonFunAni::ParseKeyValuePairWithName(ani_env* env, ani_object object,
 bool CommonFunAni::ParseKeyValuePair(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
 {
     return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_KEY, PROPERTYNAME_VALUE);
+}
+
+bool CommonFunAni::ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
+{
+    return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULENAME, PROPERTYNAME_HASHVALUE);
+}
+
+bool CommonFunAni::ParsePgoParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
+{
+    return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULENAME, PROPERTYNAME_PGOFILEPATH);
+}
+
+bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallParam& installParam)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_array array = nullptr;
+    // hashParams?
+    if (CallGetterOptional(env, object, PROPERTYNAME_HASHPARAMS, &array)) {
+        std::vector<std::pair<std::string, std::string>> hashParams;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, hashParams, ParseHashParams));
+        for (const auto& parameter : hashParams) {
+            installParam.hashParams[parameter.first] = parameter.second;
+        }
+    }
+
+    // parameters?
+    if (CallGetterOptional(env, object, PROPERTYNAME_PARAMETERS, &array)) {
+        std::vector<std::pair<std::string, std::string>> parameters;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, parameters, ParseKeyValuePair));
+        for (const auto& parameter : parameters) {
+            installParam.parameters[parameter.first] = parameter.second;
+        }
+    }
+
+    // pgoParams?
+    if (CallGetterOptional(env, object, PROPERTYNAME_PGOPARAMS, &array)) {
+        std::vector<std::pair<std::string, std::string>> pgoParams;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, pgoParams, ParsePgoParams));
+        for (const auto& parameter : pgoParams) {
+            installParam.pgoParams[parameter.first] = parameter.second;
+        }
+    }
+
+    ani_int intValue = 0;
+    // userId?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+        installParam.userId = intValue;
+    } else {
+        APP_LOGW("Parse userId failed,using default value");
+    }
+    // installFlag?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_INSTALLFLAG, &intValue)) {
+        if ((intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::NORMAL)) &&
+            (intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::REPLACE_EXISTING)) &&
+            (intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::FREE_INSTALL))) {
+            APP_LOGE("invalid installFlag param");
+        }
+        installParam.installFlag = static_cast<OHOS::AppExecFwk::InstallFlag>(intValue);
+    } else {
+        APP_LOGW("Parse installFlag failed,using default value");
+    }
+
+    ani_boolean boolValue = false;
+    // isKeepData?: boolean
+    if (CallGetterOptional(env, object, PROPERTYNAME_ISKEEPDATA, &boolValue)) {
+        installParam.isKeepData = boolValue;
+    } else {
+        APP_LOGW("Parse isKeepData failed,using default value");
+    }
+
+    // crowdtestDeadline?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_CROWDTESTDEADLINE, &intValue)) {
+        installParam.crowdtestDeadline = intValue;
+    } else {
+        APP_LOGW("Parse crowdtestDeadline failed,using default value");
+    }
+
+    // sharedBundleDirPaths?: Array<string>
+    if (CallGetterOptional(env, object, PROPERTYNAME_SHAREDBUNDLEDIRPATHS, &array)) {
+        RETURN_FALSE_IF_FALSE(ParseStrArray(env, array, installParam.sharedBundleDirPaths));
+    }
+
+    ani_string string = nullptr;
+
+    // specifiedDistributionType?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_SPECIFIEDDISTRIBUTIONTYPE, &string)) {
+        installParam.specifiedDistributionType = AniStrToString(env, string);
+    } else {
+        APP_LOGW("Parse specifiedDistributionType failed,using default value");
+    }
+
+    // additionalInfo?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_ADDITIONALINFO, &string)) {
+        installParam.specifiedDistributionType = AniStrToString(env, string);
+    } else {
+        APP_LOGW("Parse additionalInfo failed,using default value");
+    }
+    return true;
+}
+
+bool CommonFunAni::ParseUninstallParam(ani_env* env, ani_object object, UninstallParam& uninstallParam)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+    ani_string string = nullptr;
+    // bundleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    uninstallParam.bundleName = AniStrToString(env, string);
+    ani_int intValue = 0;
+    // versionCode?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_VERSIONCODE, &intValue)) {
+        uninstallParam.versionCode = intValue;
+    } else {
+        APP_LOGW("Parse crowdtestDeadline failed,using default value");
+    }
+    return true;
+}
+
+bool CommonFunAni::ParseDestroyAppCloneParam(
+    ani_env* env, ani_object object, DestroyAppCloneParam& destroyAppCloneParam)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+    ani_int intValue = 0;
+    // userId?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+        destroyAppCloneParam.userId = intValue;
+    } else {
+        destroyAppCloneParam.userId = Constants::UNSPECIFIED_USERID;
+        APP_LOGW("Parse userId failed,using default value");
+    }
+    ani_array array = nullptr;
+    // parameters?
+    if (CallGetterOptional(env, object, PROPERTYNAME_PARAMETERS, &array)) {
+        std::vector<std::pair<std::string, std::string>> parameters;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, parameters, ParseKeyValuePair));
+        for (const auto& parameter : parameters) {
+            destroyAppCloneParam.parameters[parameter.first] = parameter.second;
+        }
+    }
+    return true;
+}
+
+bool CommonFunAni::ParsePluginParam(ani_env* env, ani_object object, InstallPluginParam& installPluginParam)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_int intValue = 0;
+    ani_array array = nullptr;
+
+    // userId?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+        installPluginParam.userId = intValue;
+    } else {
+        installPluginParam.userId = Constants::UNSPECIFIED_USERID;
+        APP_LOGW("Parse userId failed, using default value");
+    }
+
+    // parameters?
+    if (CallGetterOptional(env, object, PROPERTYNAME_PARAMETERS, &array)) {
+        std::vector<std::pair<std::string, std::string>> parameters;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, parameters, ParseKeyValuePair));
+        for (const auto& parameter : parameters) {
+            installPluginParam.parameters[parameter.first] = parameter.second;
+        }
+    }
+
+    return true;
+}
+
+bool CommonFunAni::ParseCreateAppCloneParam(ani_env* env, ani_object object, int32_t& userId, int32_t& appIdx)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+    ani_int intValue = 0;
+    // userId?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+        userId = intValue;
+    } else {
+        userId = Constants::UNSPECIFIED_USERID;
+        APP_LOGW("Parse userId failed,using default value");
+    }
+
+    // appIdx?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_APPINDEX, &intValue)) {
+        appIdx = intValue;
+    } else {
+        appIdx = Constants::INITIAL_APP_INDEX;
+        APP_LOGW("Parse appIdx failed,using default value");
+    }
+    return true;
+}
+
+bool CommonFunAni::ParseMetadata(ani_env* env, ani_object object, Metadata& metadata)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+    uint32_t uintValue = 0;
+
+    // name: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_NAME, &string));
+    metadata.name = AniStrToString(env, string);
+
+    // value: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_VALUE, &string));
+    metadata.value = AniStrToString(env, string);
+
+    // resource: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_RESOURCE, &string));
+    metadata.resource = AniStrToString(env, string);
+
+    // valueId?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_VALUEID, &uintValue)) {
+        metadata.valueId = uintValue;
+    }
+
+    return true;
+}
+
+bool CommonFunAni::ParseResource(ani_env* env, ani_object object, Resource& resource)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+    uint32_t uintValue = 0;
+
+    // bundleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    resource.bundleName = AniStrToString(env, string);
+
+    // moduleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MODULENAME, &string));
+    resource.moduleName = AniStrToString(env, string);
+
+    // id: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ID, &uintValue));
+    resource.id = uintValue;
+
+    return true;
+}
+
+bool CommonFunAni::ParseMultiAppMode(ani_env* env, ani_object object, MultiAppModeData& multiAppMode)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_enum_item enumItem = nullptr;
+    ani_int intValue = 0;
+
+    // maxCount: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MAXCOUNT, &intValue));
+    multiAppMode.maxCount = intValue;
+
+    // multiAppModeType: bundleManager.MultiAppModeType
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MULTIAPPMODETYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, multiAppMode.multiAppModeType));
+
+    return true;
+}
+
+bool CommonFunAni::ParseApplicationInfo(ani_env* env, ani_object object, ApplicationInfo& appInfo)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+    // name: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_NAME, &string));
+    appInfo.name = AniStrToString(env, string);
+
+    // description: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTION, &string));
+    appInfo.description = AniStrToString(env, string);
+
+    uint32_t uintValue = 0;
+    // descriptionId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTIONID, &uintValue));
+    appInfo.descriptionId = uintValue;
+
+    ani_boolean boolValue = ANI_FALSE;
+    // enabled: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ENABLED, &boolValue));
+    appInfo.enabled = AniBooleanToBool(boolValue);
+
+    // label: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABEL, &string));
+    appInfo.label = AniStrToString(env, string);
+
+    // labelId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABELID, &uintValue));
+    appInfo.labelId = uintValue;
+
+    // icon: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ICON, &string));
+    appInfo.iconPath = AniStrToString(env, string);
+
+    // iconId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ICONID, &uintValue));
+    appInfo.iconId = uintValue;
+
+    // process: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PROCESS, &string));
+    appInfo.process = AniStrToString(env, string);
+
+    ani_object arrayObject = nullptr;
+    // permissions: Array<string>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PERMISSIONS, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, appInfo.permissions));
+
+    // codePath: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_CODEPATH, &string));
+    appInfo.codePath = AniStrToString(env, string);
+
+    // metadataArray: Array<ModuleMetadata>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_METADATAARRAY, &arrayObject));
+    RETURN_FALSE_IF_FALSE(AniArrayForeach(env, arrayObject, [env, &appInfo](ani_object itemModuleMetadataANI) {
+        // moduleName: string
+        ani_string stringValue = nullptr;
+        RETURN_FALSE_IF_FALSE(CallGetter(env, itemModuleMetadataANI, PROPERTYNAME_MODULENAME, &stringValue));
+        std::string key = AniStrToString(env, stringValue);
+        RETURN_FALSE_IF_FALSE(!key.empty());
+
+        // metadata: Array<Metadata>
+        ani_object arrayMetadataANI = nullptr;
+        RETURN_FALSE_IF_FALSE(CallGetter(env, itemModuleMetadataANI, PROPERTYNAME_METADATA, &arrayMetadataANI));
+        std::vector<Metadata> arrayMetadataNative;
+        RETURN_FALSE_IF_FALSE(ParseAniArray(env, arrayMetadataANI, arrayMetadataNative, ParseMetadata));
+
+        appInfo.metadata.emplace(key, std::move(arrayMetadataNative));
+
+        return true;
+    }));
+
+    // removable: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_REMOVABLE, &boolValue));
+    appInfo.removable = AniBooleanToBool(boolValue);
+
+    // accessTokenId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ACCESSTOKENID, &uintValue));
+    appInfo.accessTokenId = uintValue;
+
+    ani_int intValue = 0;
+    // uid: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_UID, &intValue));
+    appInfo.uid = intValue;
+
+    ani_object aniObject = nullptr;
+    // iconResource: Resource
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ICONRESOURCE, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseResource(env, aniObject, appInfo.iconResource));
+
+    // labelResource: Resource
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABELRESOURCE, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseResource(env, aniObject, appInfo.labelResource));
+
+    // descriptionResource: Resource
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTIONRESOURCE, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseResource(env, aniObject, appInfo.descriptionResource));
+
+    // appDistributionType: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPDISTRIBUTIONTYPE, &string));
+    appInfo.appDistributionType = AniStrToString(env, string);
+
+    // appProvisionType: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPPROVISIONTYPE, &string));
+    appInfo.appProvisionType = AniStrToString(env, string);
+
+    // systemApp: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SYSTEMAPP, &boolValue));
+    appInfo.isSystemApp = AniBooleanToBool(boolValue);
+
+    ani_enum_item enumItem = nullptr;
+    // bundleType: bundleManager.BundleType
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLETYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, appInfo.bundleType));
+
+    // debug: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DEBUG, &boolValue));
+    appInfo.debug = AniBooleanToBool(boolValue);
+
+    // dataUnclearable: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DATAUNCLEARABLE, &boolValue));
+    appInfo.userDataClearable = AniBooleanToBool(!boolValue);
+
+    // nativeLibraryPath: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_NATIVELIBRARYPATH, &string));
+    appInfo.nativeLibraryPath = AniStrToString(env, string);
+
+    // multiAppMode: MultiAppMode
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MULTIAPPMODE, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseMultiAppMode(env, aniObject, appInfo.multiAppMode));
+
+    // appIndex: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPINDEX, &intValue));
+    appInfo.appIndex = intValue;
+
+    // installSource: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_INSTALLSOURCE, &string));
+    appInfo.installSource = AniStrToString(env, string);
+
+    // releaseType: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_RELEASETYPE, &string));
+    appInfo.apiReleaseType = AniStrToString(env, string);
+
+    // cloudFileSyncEnabled: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_CLOUDFILESYNCENABLED, &boolValue));
+    appInfo.cloudFileSyncEnabled = AniBooleanToBool(boolValue);
+
+    // flags?: number
+    if (CallGetterOptional(env, object, PROPERTYNAME_FLAGS, &intValue)) {
+        appInfo.flags = intValue;
+    }
+
+    return true;
+}
+
+bool CommonFunAni::ParseWindowSize(ani_env* env, ani_object object, AbilityInfo& abilityInfo)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_double doubleValue = 0;
+    uint32_t uintValue = 0;
+
+    // maxWindowRatio: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MAXWINDOWRATIO, &doubleValue));
+    abilityInfo.maxWindowRatio = doubleValue;
+
+    // minWindowRatio: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MINWINDOWRATIO, &doubleValue));
+    abilityInfo.minWindowRatio = doubleValue;
+
+    // maxWindowWidth: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MAXWINDOWWIDTH, &uintValue));
+    abilityInfo.maxWindowWidth = uintValue;
+
+    // minWindowWidth: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MINWINDOWWIDTH, &uintValue));
+    abilityInfo.minWindowWidth = uintValue;
+
+    // maxWindowHeight: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MAXWINDOWHEIGHT, &uintValue));
+    abilityInfo.maxWindowHeight = uintValue;
+
+    // minWindowHeight: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MINWINDOWHEIGHT, &uintValue));
+    abilityInfo.minWindowHeight = uintValue;
+
+    return object;
+}
+
+bool CommonFunAni::ParseAbilitySkillUriInner(ani_env* env, ani_object object, SkillUri& skillUri, bool isExtension)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+    ani_int intValue = 0;
+
+    // scheme: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SCHEME, &string));
+    skillUri.scheme = AniStrToString(env, string);
+
+    // host: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_HOST, &string));
+    skillUri.host = AniStrToString(env, string);
+
+    // port: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PORT, &intValue));
+    skillUri.port = std::to_string(intValue);
+
+    // path: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PATH, &string));
+    skillUri.path = AniStrToString(env, string);
+
+    // pathStartWith: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PATHSTARTWITH, &string));
+    skillUri.pathStartWith = AniStrToString(env, string);
+
+    // pathRegex: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PATHREGEX, &string));
+    skillUri.pathRegex = AniStrToString(env, string);
+
+    // type: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_TYPE, &string));
+    skillUri.type = AniStrToString(env, string);
+
+    // utd: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_UTD, &string));
+    skillUri.utd = AniStrToString(env, string);
+
+    // maxFileSupported: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MAXFILESUPPORTED, &intValue));
+    skillUri.maxFileSupported = intValue;
+
+    if (!isExtension) {
+        // linkFeature: string
+        RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LINKFEATURE, &string));
+        skillUri.linkFeature = AniStrToString(env, string);
+    }
+
+    return true;
+}
+
+bool CommonFunAni::ParseAbilitySkillInner(ani_env* env, ani_object object, Skill& skill, bool isExtension)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_object arrayObject = nullptr;
+    ani_boolean boolValue = ANI_FALSE;
+
+    // actions: Array<string>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ACTIONS, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, skill.actions));
+
+    // entities: Array<string>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ENTITIES, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, skill.entities));
+
+    // uris: Array<SkillUri>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_URIS, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseAniArray(
+        env, arrayObject, skill.uris, isExtension ? ParseExtensionAbilitySkillUri : ParseAbilitySkillUri));
+
+    if (!isExtension) {
+        // domainVerify: boolean
+        RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DOMAINVERIFY, &boolValue));
+        skill.domainVerify = AniBooleanToBool(boolValue);
+    }
+
+    return true;
+}
+
+bool CommonFunAni::ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo& abilityInfo)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+    // bundleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    abilityInfo.bundleName = AniStrToString(env, string);
+
+    // moduleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MODULENAME, &string));
+    abilityInfo.moduleName = AniStrToString(env, string);
+
+    // name: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_NAME, &string));
+    abilityInfo.name = AniStrToString(env, string);
+
+    // label: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABEL, &string));
+    abilityInfo.label = AniStrToString(env, string);
+
+    uint32_t uintValue = 0;
+    // labelId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LABELID, &uintValue));
+    abilityInfo.labelId = uintValue;
+
+    // description: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTION, &string));
+    abilityInfo.description = AniStrToString(env, string);
+
+    // descriptionId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DESCRIPTIONID, &uintValue));
+    abilityInfo.descriptionId = uintValue;
+
+    // icon: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ICON, &string));
+    abilityInfo.iconPath = AniStrToString(env, string);
+
+    // iconId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ICONID, &uintValue));
+    abilityInfo.iconId = uintValue;
+
+    // process: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PROCESS, &string));
+    abilityInfo.process = AniStrToString(env, string);
+
+    ani_boolean boolValue = ANI_FALSE;
+    // exported: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_EXPORTED, &boolValue));
+    abilityInfo.visible = AniBooleanToBool(boolValue);
+
+    ani_enum_item enumItem = nullptr;
+    // orientation: bundleManager.DisplayOrientation
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ORIENTATION, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, abilityInfo.orientation));
+
+    // launchType: bundleManager.LaunchType
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_LAUNCHTYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, abilityInfo.launchMode));
+
+    ani_object arrayObject = nullptr;
+    // permissions: Array<string>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_PERMISSIONS, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, abilityInfo.permissions));
+
+    // deviceTypes: Array<string>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_DEVICETYPES, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseStrArray(env, arrayObject, abilityInfo.deviceTypes));
+
+    ani_object aniObject = nullptr;
+    // applicationInfo: ApplicationInfo
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPLICATIONINFO, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseApplicationInfo(env, aniObject, abilityInfo.applicationInfo));
+
+    // metadata: Array<Metadata>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_METADATA, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseAniArray(env, arrayObject, abilityInfo.metadata, ParseMetadata));
+
+    // enabled: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ENABLED, &boolValue));
+    abilityInfo.enabled = AniBooleanToBool(boolValue);
+
+    // supportWindowModes: Array<bundleManager.SupportWindowMode>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SUPPORTWINDOWMODES, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseEnumArray(env, arrayObject, abilityInfo.windowModes));
+
+    // windowSize: WindowSize
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_WINDOWSIZE, &aniObject));
+    RETURN_FALSE_IF_FALSE(ParseWindowSize(env, aniObject, abilityInfo));
+
+    // excludeFromDock: boolean
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_EXCLUDEFROMDOCK, &boolValue));
+    abilityInfo.excludeFromDock = AniBooleanToBool(boolValue);
+
+    // skills: Array<Skill>
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SKILLS, &arrayObject));
+    RETURN_FALSE_IF_FALSE(ParseAniArray(env, arrayObject, abilityInfo.skills, ParseAbilitySkill));
+
+    ani_int intValue = 0;
+    // appIndex: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPINDEX, &intValue));
+    abilityInfo.appIndex = intValue;
+
+    // orientationId: number
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ORIENTATIONID, &uintValue));
+    abilityInfo.orientationId = uintValue;
+
+    return true;
+}
+
+bool CommonFunAni::ParseElementName(ani_env* env, ani_object object, ElementName& elementName)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // deviceId?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_DEVICEID, &string)) {
+        elementName.SetDeviceID(AniStrToString(env, string));
+    }
+
+    // bundleName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    elementName.SetBundleName(AniStrToString(env, string));
+
+    // moduleName?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_MODULENAME, &string)) {
+        elementName.SetModuleName(AniStrToString(env, string));
+    }
+
+    // abilityName: string
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ABILITYNAME, &string));
+    elementName.SetAbilityName(AniStrToString(env, string));
+
+    return true;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

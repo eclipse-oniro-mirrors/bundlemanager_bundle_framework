@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,14 +39,6 @@ const std::vector<int32_t> BUNDLE_PACK_FLAGS = {
     BundlePackFlag::GET_BUNDLE_SUMMARY,
     BundlePackFlag::GET_MODULE_SUMMARY,
 };
-const char* RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE = "isHapModuleRemovable";
-const char* RESOURCE_NAME_OF_SET_HAP_MODULE_UPGRADE_FLAG = "setHapModuleUpgradeFlag";
-const char* RESOURCE_NAME_OF_GET_BUNDLE_PACK_INFO = "getBundlePackInfo";
-const char* RESOURCE_NAME_OF_GET_DISPATCH_INFO = "getDispatchInfo";
-const char* DISPATCH_INFO_VERSION = "1";
-const char* DISPATCH_INFO_DISPATCH_API = "1.0";
-const char* UPGRADE_FLAG = "upgradeFlag";
-const char* BUNDLE_PACK_FLAG = "bundlePackFlag";
 }
 
 static ErrCode InnerIsHapModuleRemovable(const std::string &bundleName,

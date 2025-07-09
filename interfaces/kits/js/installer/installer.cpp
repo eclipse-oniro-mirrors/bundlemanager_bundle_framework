@@ -27,6 +27,7 @@
 #include "common_func.h"
 #include "if_system_ability_manager.h"
 #include "installer_callback.h"
+#include "installer_helper.h"
 #include "napi_arg.h"
 #include "napi_constants.h"
 #include "system_ability_definition.h"
@@ -36,26 +37,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 // resource name
-const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
-const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC = "GetBundleInstallerSync";
-const char* RESOURCE_NAME_OF_INSTALL = "Install";
-const char* RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
-const char* RESOURCE_NAME_OF_RECOVER = "Recover";
-const char* RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
-const char* RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER = "UninstallAndRecover";
 const char* EMPTY_STRING = "";
 // install message
-constexpr const char* INSTALL_PERMISSION =
-    "ohos.permission.INSTALL_BUNDLE or "
-    "ohos.permission.INSTALL_ENTERPRISE_BUNDLE or "
-    "ohos.permission.INSTALL_ENTERPRISE_MDM_BUNDLE or "
-    "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE or "
-    "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE";
-constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.UNINSTALL_BUNDLE";
-constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
-constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
-constexpr const char* PARAMETERS = "parameters";
-constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* FUNCTION_TYPE = "napi_function";
 constexpr const char* CALLBACK = "callback";
 // property name
@@ -64,32 +47,18 @@ const char* IS_KEEP_DATA = "isKeepData";
 const char* CROWD_TEST_DEADLINE = "crowdtestDeadline";
 const char* HASH_VALUE = "hashValue";
 const char* HASH_PARAMS = "hashParams";
-const char* FILE_PATH = "filePath";
-const char* ADD_EXT_RESOURCE = "AddExtResource";
-const char* REMOVE_EXT_RESOURCE = "RemoveExtResource";
 const char* VERSION_CODE = "versionCode";
 const char* SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
 const char* SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
-const char* ADDITIONAL_INFO = "additionalInfo";
 const char* VERIFY_CODE_PARAM = "verifyCodeParams";
 const char* SIGNATURE_FILE_PATH = "signatureFilePath";
 const char* PGO_PARAM = "pgoParams";
 const char* PGO_FILE_PATH = "pgoFilePath";
 const char* KEY = "key";
 const char* VALUE = "value";
-const char* HAPS_FILE_NEEDED =
-    "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
-const char* CREATE_APP_CLONE = "CreateAppClone";
-const char* DESTROY_APP_CLONE = "destroyAppClone";
-const char* INSTALL_PREEXISTING_APP = "installPreexistingApp";
-const char* INSTALL_PLUGIN = "InstallPlugin";
-const char* UNINSTALL_PLUGIN = "UninstallPlugin";
-const char* PLUGIN_BUNDLE_NAME = "pluginBundleName";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
-constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
-constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
 constexpr int32_t ILLEGAL_APP_INDEX = -1;
 } // namespace
 napi_ref thread_local g_classBundleInstaller;
@@ -236,218 +205,6 @@ napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
     APP_LOGD("call GetBundleInstallerSync done");
     return nBundleInstaller;
     APP_LOGI("call GetBundleInstallerSync done");
-}
-
-static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
-{
-    errCodeMap = {
-        { IStatusReceiver::SUCCESS, SUCCESS},
-        { IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALL_HOST_INSTALLER_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALLD_PARAM_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALLD_GET_PROXY_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALL_INSTALLD_SERVICE_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_FAILED_SERVICE_DIED, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_FAILED_GET_INSTALLER_PROXY, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_USER_CREATE_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_USER_REMOVE_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_UNINSTALL_KILLING_APP_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALL_GENERATE_UID_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALL_STATE_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_RECOVER_NOT_ALLOWED, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_RECOVER_GET_BUNDLEPATH_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_UNINSTALL_AND_RECOVER_NOT_PREINSTALLED_BUNDLE, ERROR_BUNDLE_NOT_PREINSTALLED },
-        { IStatusReceiver::ERR_UNINSTALL_SYSTEM_APP_ERROR, ERROR_UNINSTALL_PREINSTALL_APP_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_FAILED, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_UNEXPECTED, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_MISSING_BUNDLE, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_NO_PROFILE, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_BAD_PROFILE, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_TYPE_ERROR, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_MISSING_PROP, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_PERMISSION_ERROR, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_CHECK_ERROR, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_RPCID_FAILED, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_NATIVE_SO_FAILED, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_AN_FAILED, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_MISSING_ABILITY, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_PROFILE_PARSE_FAIL, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_VERIFICATION_FAILED, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE_FILE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_NO_BUNDLE_SIGNATURE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_APP_PKCS7_FAIL, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_DIGEST, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_BUNDLE_INTEGRITY_VERIFICATION_FAILURE,
-            ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_PUBLICKEY, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_NO_PROFILE_BLOCK_FAIL, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE,
-            ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_SOURCE_INIT_FAIL, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_DEVICE_UNAUTHORIZED, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_U1_ENABLE_NOT_SAME_IN_ALL_BUNDLE_INFOS, ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_FAILED_INCONSISTENT_SIGNATURE, ERROR_INSTALL_FAILED_INCONSISTENT_SIGNATURE },
-        { IStatusReceiver::ERR_INSTALL_PARAM_ERROR, ERROR_BUNDLE_NOT_EXIST },
-        { IStatusReceiver::ERR_UNINSTALL_PARAM_ERROR, ERROR_BUNDLE_NOT_EXIST },
-        { IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME, ERROR_BUNDLE_NOT_EXIST },
-        { IStatusReceiver::ERR_UNINSTALL_INVALID_NAME, ERROR_BUNDLE_NOT_EXIST },
-        { IStatusReceiver::ERR_INSTALL_INVALID_BUNDLE_FILE, ERROR_INSTALL_HAP_FILEPATH_INVALID },
-        { IStatusReceiver::ERR_INSTALL_FAILED_MODULE_NAME_EMPTY, ERROR_MODULE_NOT_EXIST },
-        { IStatusReceiver::ERR_INSTALL_FAILED_MODULE_NAME_DUPLICATE, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_FAILED_CHECK_HAP_HASH_PARAM, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_BUNDLE, ERROR_BUNDLE_NOT_EXIST },
-        { IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_MODULE, ERROR_MODULE_NOT_EXIST },
-        { IStatusReceiver::ERR_USER_NOT_INSTALL_HAP, ERROR_BUNDLE_NOT_EXIST },
-        { IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID, ERROR_INSTALL_HAP_FILEPATH_INVALID },
-        { IStatusReceiver::ERR_INSTALL_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
-        { IStatusReceiver::ERR_UNINSTALL_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
-        { IStatusReceiver::ERR_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED, ERROR_INSTALL_PERMISSION_CHECK_ERROR },
-        { IStatusReceiver::ERR_INSTALL_UPDATE_HAP_TOKEN_FAILED, ERROR_INSTALL_PERMISSION_CHECK_ERROR },
-        { IStatusReceiver::ERR_INSTALLD_CREATE_DIR_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALLD_CHOWN_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALLD_CREATE_DIR_EXIST, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALLD_REMOVE_DIR_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALLD_EXTRACT_FILES_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALLD_RNAME_DIR_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALLD_CLEAN_DIR_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_INSTALL_ENTRY_ALREADY_EXIST, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_ALREADY_EXIST, ERROR_INSTALL_ALREADY_EXIST },
-        { IStatusReceiver::ERR_INSTALL_BUNDLENAME_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_VERSIONCODE_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_VERSIONNAME_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME,
-            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_VENDOR_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_RELEASETYPE_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_RELEASETYPE_TARGET_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_SINGLETON_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_ZERO_USER_WITH_NO_SINGLETON, ERROR_INSTALL_FAILED_CONTROLLED },
-        { IStatusReceiver::ERR_INSTALL_CHECK_SYSCAP_FAILED, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_APPTYPE_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_URI_DUPLICATE, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_VERSION_NOT_COMPATIBLE, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_APP_PROVISION_TYPE_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_SO_INCOMPATIBLE, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_AN_INCOMPATIBLE, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_TYPE_ERROR, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_TYPE_ERROR, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SUPPORT, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT},
-        { IStatusReceiver::ERR_INSTALL_BUNDLE_TYPE_NOT_SAME, ERROR_INSTALL_PARSE_FAILED},
-        { IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT, ERROR_INSTALL_NO_DISK_SPACE_LEFT },
-        { IStatusReceiver::ERR_USER_NOT_EXIST, ERROR_INVALID_USER_ID },
-        { IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE, ERROR_INSTALL_VERSION_DOWNGRADE },
-        { IStatusReceiver::ERR_INSTALL_DEVICE_TYPE_NOT_SUPPORTED, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_CHECK_SYSCAP_FAILED_AND_DEVICE_TYPE_NOT_SUPPORTED, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_DEPENDENT_MODULE_NOT_EXIST, ERROR_INSTALL_DEPENDENT_MODULE_NOT_EXIST },
-        { IStatusReceiver::ERR_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED, ERROR_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED },
-        { IStatusReceiver::ERR_INSTALL_COMPATIBLE_POLICY_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_FILE_IS_SHARED_LIBRARY, ERROR_INSTALL_FILE_IS_SHARED_LIBRARY },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_NAME, ERROR_BUNDLE_NOT_EXIST },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_MODULE_NAME, ERROR_MODULE_NOT_EXIST},
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_ERROR_HAP_TYPE, ERROR_INVALID_TYPE },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_ERROR_BUNDLE_TYPE, ERROR_INVALID_TYPE },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_MISSED, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_NAME_MISSED, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME,
-            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INTERNAL_EXTERNAL_OVERLAY_EXISTED_SIMULTANEOUSLY,
-            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME,
-            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INCONSISTENT_VERSION_CODE,
-            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_SERVICE_EXCEPTION, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_BUNDLE_NAME_SAME_WITH_TARGET_BUNDLE_NAME,
-            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT},
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY,
-            ERROR_INSTALL_HAP_OVERLAY_CHECK_FAILED },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_DIFFERENT_SIGNATURE_CERTIFICATE,
-            ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_IS_OVERLAY_BUNDLE,
-            ERROR_INSTALL_HAP_OVERLAY_CHECK_FAILED },
-        {IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_IS_OVERLAY_MODULE,
-            ERROR_INSTALL_HAP_OVERLAY_CHECK_FAILED },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME,
-            ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_DIR, ERROR_BUNDLE_SERVICE_EXCEPTION },
-        { IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST,
-            ERROR_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST},
-        { IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED,
-            ERROR_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED},
-        { IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY,
-            ERROR_UNINSTALL_BUNDLE_IS_SHARED_BUNDLE},
-        { IStatusReceiver::ERR_INSATLL_CHECK_PROXY_DATA_URI_FAILED,
-            ERROR_INSTALL_WRONG_DATA_PROXY_URI},
-        { IStatusReceiver::ERR_INSATLL_CHECK_PROXY_DATA_PERMISSION_FAILED,
-            ERROR_INSTALL_WRONG_DATA_PROXY_PERMISSION},
-        { IStatusReceiver::ERR_INSTALL_FAILED_DEBUG_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
-        { IStatusReceiver::ERR_INSTALL_DISALLOWED, ERROR_DISALLOW_INSTALL},
-        { IStatusReceiver::ERR_INSTALL_ISOLATION_MODE_FAILED, ERROR_INSTALL_WRONG_MODE_ISOLATION },
-        { IStatusReceiver::ERR_UNINSTALL_DISALLOWED, ERROR_DISALLOW_UNINSTALL },
-        { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
-        { IStatusReceiver::ERR_UNINSTALL_FROM_BMS_EXTENSION_FAILED, ERROR_BUNDLE_NOT_EXIST},
-        { IStatusReceiver::ERR_INSTALL_SELF_UPDATE_NOT_MDM, ERROR_INSTALL_SELF_UPDATE_NOT_MDM},
-        { IStatusReceiver::ERR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED, ERROR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED},
-        { IStatusReceiver::ERR_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED,
-            ERROR_INSTALL_EXISTED_ENTERPRISE_NOT_ALLOWED_ERROR},
-        { IStatusReceiver::ERR_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME, ERROR_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME},
-        { IStatusReceiver::ERR_INSTALL_GWP_ASAN_ENABLED_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT},
-        { IStatusReceiver::ERR_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED, ERROR_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED},
-        { IStatusReceiver::ERR_INSTALL_CHECK_ENCRYPTION_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_DELIVERY_FILE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
-        { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_REMOVE_FILE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
-        { IStatusReceiver::ERR_INSTALL_CODE_APP_CONTROLLED_FAILED, ERROR_INSTALL_FAILED_CONTROLLED},
-        { IStatusReceiver::ERR_APPEXECFWK_INSTALL_FORCE_UNINSTALLED_BUNDLE_NOT_ALLOW_RECOVER,
-            ERROR_INSTALL_FAILED_CONTROLLED},
-        { IStatusReceiver::ERR_APPEXECFWK_INSTALL_PREINSTALL_BUNDLE_ONLY_ALLOW_FORCE_UNINSTALLED_BY_EDC,
-            ERROR_INSTALL_FAILED_CONTROLLED},
-        { IStatusReceiver::ERR_INSTALL_NATIVE_FAILED, ERROR_INSTALL_NATIVE_FAILED},
-        { IStatusReceiver::ERR_UNINSTALL_NATIVE_FAILED, ERROR_UNINSTALL_NATIVE_FAILED},
-        { IStatusReceiver::ERR_UNINSTALL_DISPOSED_RULE_DENIED, ERROR_APPLICATION_UNINSTALL},
-        { IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED, ERROR_INSTALL_NATIVE_FAILED},
-        { IStatusReceiver::ERR_UNINSTALL_CONTROLLED, ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED },
-        { IStatusReceiver::ERR_INSTALL_DEBUG_ENCRYPTED_BUNDLE_FAILED, ERROR_INSTALL_PARSE_FAILED },
-        { IStatusReceiver::ERR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL_ISR,
-            ERROR_APP_DISTRIBUTION_TYPE_NOT_ALLOW_INSTALL},
-        { IStatusReceiver::ERR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED,
-            ERROR_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED },
-        { IStatusReceiver::ERR_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON,
-            ERROR_INSTALL_FAILED_CONTROLLED },
-        { IStatusReceiver::ERR_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS,
-            ERROR_INSTALL_FAILED_CONTROLLED },
-        { IStatusReceiver::ERR_INSTALL_U1_ENABLE_NOT_SUPPORT_APP_SERVICE_AND_SHARED_BUNDLE,
-            ERROR_INSTALL_FAILED_CONTROLLED},
-    };
-}
-
-static void ConvertInstallResult(InstallResult &installResult)
-{
-    APP_LOGD("ConvertInstallResult msg %{public}s, errCode is %{public}d", installResult.resultMsg.c_str(),
-        installResult.resultCode);
-    std::unordered_map<int32_t, int32_t> errCodeMap;
-    CreateErrCodeMap(errCodeMap);
-    auto iter = errCodeMap.find(installResult.resultCode);
-    if (iter != errCodeMap.end()) {
-        installResult.resultCode = iter->second;
-        return;
-    }
-    installResult.resultCode = ERROR_BUNDLE_SERVICE_EXCEPTION;
 }
 
 static bool ParseHashParam(napi_env env, napi_value args, std::string &key, std::string &value)
@@ -962,18 +719,6 @@ static bool ParseUninstallParam(napi_env env, napi_value args, UninstallParam &u
     return true;
 }
 
-static void CreateProxyErrCode(std::unordered_map<int32_t, int32_t> &errCodeMap)
-{
-    errCodeMap = {
-        { ERR_APPEXECFWK_INSTALL_PARAM_ERROR, IStatusReceiver::ERR_INSTALL_PARAM_ERROR },
-        { ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR },
-        { ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID, IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID },
-        { ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT, IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT },
-        { ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID,
-            IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID}
-    };
-}
-
 void InstallExecuter(napi_env env, void *data)
 {
     AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
@@ -1016,7 +761,7 @@ void InstallExecuter(napi_env env, void *data)
     }
     APP_LOGE("install failed due to %{public}d", res);
     std::unordered_map<int32_t, int32_t> proxyErrCodeMap;
-    CreateProxyErrCode(proxyErrCodeMap);
+    InstallerHelper::CreateProxyErrCode(proxyErrCodeMap);
     if (proxyErrCodeMap.find(res) != proxyErrCodeMap.end()) {
         installResult.resultCode = proxyErrCodeMap.at(res);
         // append inner error code to TS interface result message
@@ -1047,7 +792,7 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
     AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
-    ConvertInstallResult(callbackPtr->installResult);
+    InstallerHelper::ConvertInstallResult(callbackPtr->installResult);
     if (callbackPtr->installResult.resultCode != SUCCESS) {
         switch (callbackPtr->option) {
             case InstallOption::INSTALL:
@@ -1137,7 +882,7 @@ napi_value Install(napi_env env, napi_callback_info info)
         return nullptr;
     }
     if (callbackPtr->hapFiles.empty() && !callbackPtr->installParam.verifyCodeParams.empty()) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, HAPS_FILE_NEEDED);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_HAPS_FILE_EMPTY_ERROR);
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
@@ -1396,7 +1141,7 @@ napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
         return nullptr;
     }
     if (callbackPtr->hapFiles.empty() && !callbackPtr->installParam.verifyCodeParams.empty()) {
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, HAPS_FILE_NEEDED);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_HAPS_FILE_EMPTY_ERROR);
         return nullptr;
     }
     callbackPtr->installParam.isSelfUpdate = true;
@@ -1476,30 +1221,6 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerAddExtResource(
-    const std::string &bundleName, const std::vector<std::string> &filePaths)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    std::vector<std::string> destFiles;
-    ErrCode ret = extResourceManager->CopyFiles(filePaths, destFiles);
-    if (ret != ERR_OK) {
-        APP_LOGE("CopyFiles failed");
-        return CommonFunc::ConvertErrCode(ret);
-    }
-
-    ret = extResourceManager->AddExtResource(bundleName, destFiles);
-    if (ret != ERR_OK) {
-        APP_LOGE("AddExtResource failed");
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void AddExtResourceExec(napi_env env, void *data)
 {
     ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
@@ -1507,7 +1228,7 @@ void AddExtResourceExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerAddExtResource(
+    asyncCallbackInfo->err = InstallerHelper::InnerAddExtResource(
         asyncCallbackInfo->bundleName, asyncCallbackInfo->filePaths);
 }
 
@@ -1573,23 +1294,6 @@ napi_value AddExtResource(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerRemoveExtResource(
-    const std::string &bundleName, const std::vector<std::string> &moduleNames)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    ErrCode ret = extResourceManager->RemoveExtResource(bundleName, moduleNames);
-    if (ret != ERR_OK) {
-        APP_LOGE("RemoveExtResource failed");
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void RemoveExtResourceExec(napi_env env, void *data)
 {
     ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
@@ -1597,7 +1301,7 @@ void RemoveExtResourceExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerRemoveExtResource(
+    asyncCallbackInfo->err = InstallerHelper::InnerRemoveExtResource(
         asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleNames);
 }
 
@@ -1663,23 +1367,6 @@ napi_value RemoveExtResource(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerCreateAppClone(std::string &bundleName, int32_t userId, int32_t &appIndex)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode result = iBundleInstaller->InstallCloneApp(bundleName, userId, appIndex);
-    APP_LOGD("InstallCloneApp result is %{public}d", result);
-    return result;
-}
-
 void CreateAppCloneExec(napi_env env, void *data)
 {
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
@@ -1691,8 +1378,8 @@ void CreateAppCloneExec(napi_env env, void *data)
         asyncCallbackInfo->bundleName.c_str(),
         asyncCallbackInfo->userId,
         asyncCallbackInfo->appIndex);
-    asyncCallbackInfo->err =
-        InnerCreateAppClone(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
+    asyncCallbackInfo->err = InstallerHelper::InnerCreateAppClone(asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
 }
 
 void CreateAppCloneComplete(napi_env env, napi_status status, void *data)
@@ -1773,24 +1460,6 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerDestroyAppClone(std::string &bundleName, int32_t userId, int32_t appIndex,
-                                    DestroyAppCloneParam &destroyAppCloneParam)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode result = iBundleInstaller->UninstallCloneApp(bundleName, userId, appIndex, destroyAppCloneParam);
-    APP_LOGD("UninstallCloneApp result is %{public}d", result);
-    return result;
-}
-
 void DestroyAppCloneExec(napi_env env, void *data)
 {
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
@@ -1802,9 +1471,8 @@ void DestroyAppCloneExec(napi_env env, void *data)
         asyncCallbackInfo->bundleName.c_str(),
         asyncCallbackInfo->userId,
         asyncCallbackInfo->appIndex);
-    asyncCallbackInfo->err =
-        InnerDestroyAppClone(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId,
-                             asyncCallbackInfo->appIndex, asyncCallbackInfo->destroyAppCloneParam);
+    asyncCallbackInfo->err = InstallerHelper::InnerDestroyAppClone(asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->userId, asyncCallbackInfo->appIndex, asyncCallbackInfo->destroyAppCloneParam);
 }
 
 void DestroyAppCloneComplete(napi_env env, napi_status status, void *data)
@@ -1898,23 +1566,6 @@ napi_value DestroyAppClone(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerInstallPreexistingApp(std::string &bundleName, int32_t userId)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode result = iBundleInstaller->InstallExisted(bundleName, userId);
-    APP_LOGD("result is %{public}d", result);
-    return result;
-}
-
 void InstallPreexistingAppExec(napi_env env, void *data)
 {
     InstallPreexistingAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallPreexistingAppCallbackInfo *>(data);
@@ -1926,7 +1577,7 @@ void InstallPreexistingAppExec(napi_env env, void *data)
         asyncCallbackInfo->bundleName.c_str(),
         asyncCallbackInfo->userId);
     asyncCallbackInfo->err =
-        InnerInstallPreexistingApp(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId);
+        InstallerHelper::InnerInstallPreexistingApp(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId);
 }
 
 void InstallPreexistingAppComplete(napi_env env, napi_status status, void *data)
@@ -2005,24 +1656,6 @@ void ParseInstallPluginParam(napi_env env, napi_value args, InstallPluginParam &
     }
 }
 
-static ErrCode InnerInstallPlugin(const std::string &hostBundleName,
-    const std::vector<std::string> &pluginFilePaths, const InstallPluginParam &installPluginParam)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode result = iBundleInstaller->InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
-    APP_LOGD("InstallPlugin result is %{public}d", result);
-    return result;
-}
-
 void InstallPluginExec(napi_env env, void *data)
 {
     PluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<PluginCallbackInfo *>(data);
@@ -2030,7 +1663,7 @@ void InstallPluginExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerInstallPlugin(asyncCallbackInfo->hostBundleName,
+    asyncCallbackInfo->err = InstallerHelper::InnerInstallPlugin(asyncCallbackInfo->hostBundleName,
         asyncCallbackInfo->pluginFilePaths, asyncCallbackInfo->installPluginParam);
 }
 
@@ -2101,24 +1734,6 @@ napi_value InstallPlugin(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerUninstallPlugin(const std::string &hostBundleName,
-    const std::string &pluginBundleName, const InstallPluginParam &installPluginParam)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode result = iBundleInstaller->UninstallPlugin(hostBundleName, pluginBundleName, installPluginParam);
-    APP_LOGD("UninstallPlugin result is %{public}d", result);
-    return result;
-}
-
 void UninstallPluginExec(napi_env env, void *data)
 {
     PluginCallbackInfo *asyncCallbackInfo = reinterpret_cast<PluginCallbackInfo *>(data);
@@ -2130,7 +1745,7 @@ void UninstallPluginExec(napi_env env, void *data)
         asyncCallbackInfo->hostBundleName.c_str(),
         asyncCallbackInfo->pluginBundleName.c_str(),
         asyncCallbackInfo->installPluginParam.userId);
-    asyncCallbackInfo->err = InnerUninstallPlugin(asyncCallbackInfo->hostBundleName,
+    asyncCallbackInfo->err = InstallerHelper::InnerUninstallPlugin(asyncCallbackInfo->hostBundleName,
         asyncCallbackInfo->pluginBundleName, asyncCallbackInfo->installPluginParam);
 }
 

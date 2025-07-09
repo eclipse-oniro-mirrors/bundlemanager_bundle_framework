@@ -32,10 +32,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* GET_LAUNCHER_ABILITY_INFO = "GetLauncherAbilityInfo";
-constexpr const char* GET_LAUNCHER_ABILITY_INFO_SYNC = "GetLauncherAbilityInfoSync";
-constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo";
-constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
 constexpr const char* PARSE_REASON_MESSAGE = "parse ReasonMessage failed";
 constexpr const char* START_SHORTCUT_WITH_REASON = "StartShortcutWithReason";
 
@@ -528,7 +524,7 @@ napi_value StartShortcut(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_typeof(env, args[i], &valueType));
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo)) {
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO_FAILED);
                 return nullptr;
             }
             if (asyncCallbackInfo->shortcutInfo.intents.empty()) {
@@ -538,7 +534,7 @@ napi_value StartShortcut(napi_env env, napi_callback_info info)
         } else if (i == ARGS_POS_ONE) {
             if ((valueType == napi_object) &&
                 (!AppExecFwk::UnwrapStartOptions(env, args[ARGS_POS_ONE], asyncCallbackInfo->startOptions))) {
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS_FAILED);
                 return nullptr;
             }
         } else {
@@ -636,7 +632,7 @@ napi_value StartShortcutWithReason(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_typeof(env, args[i], &valueType));
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo)) {
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO_FAILED);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -647,7 +643,7 @@ napi_value StartShortcutWithReason(napi_env env, napi_callback_info info)
         } else if (i == ARGS_POS_TWO) {
             if ((valueType == napi_object) &&
                 (!AppExecFwk::UnwrapStartOptions(env, args[ARGS_POS_TWO], asyncCallbackInfo->startOptions))) {
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS_FAILED);
                 return nullptr;
             }
         } else {

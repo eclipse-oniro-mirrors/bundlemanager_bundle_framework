@@ -27,7 +27,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
 constexpr const char* NS_NAME_SHORTCUTMANAGER = "@ohos.bundle.shortcutManager.shortcutManager";
 }
 

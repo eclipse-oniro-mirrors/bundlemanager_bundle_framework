@@ -13,18 +13,20 @@
  * limitations under the License.
  */
 
-import { BusinessError } from '@ohos.base';
+import { AsyncCallback, BusinessError } from '@ohos.base';
 import { ShortcutInfo as _ShortcutInfo, ShortcutWant as _ShortcutWant, ParameterItem as _ParameterItem } from 'bundleManager.ShortcutInfo';
+import { LauncherAbilityInfo } from 'bundleManager.LauncherAbilityInfo';
 import StartOptions from '@ohos.app.ability.StartOptions';
 
 export default namespace launcherBundleManager {
-
   loadLibrary("ani_launcher_bundle_manager.z");
 
   const EMPTY_USER_ID: number = -500;
 
   export native function startShortcutNative(shortcutInfo: ShortcutInfo, options: StartOptions): void;
   export native function getShortcutInfoNative(bundleName: string, userId: number, isSync: boolean): Array<ShortcutInfo>;
+  export native function getLauncherAbilityInfoNative(bundleName: string, userId: number, isSync: boolean): Array<LauncherAbilityInfo>;
+  export native function getAllLauncherAbilityInfoNative(userId: number): Array<LauncherAbilityInfo>;
 
   function startShortcut(shortcutInfo: ShortcutInfo, options?: StartOptions): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void): void => {
@@ -51,6 +53,97 @@ export default namespace launcherBundleManager {
 
   function getShortcutInfoSync(bundleName: string, userId: number): Array<ShortcutInfo> {
     return launcherBundleManager.getShortcutInfoNative(bundleName, userId, true);
+  }
+
+  function getShortcutInfo(bundleName: string, callback: AsyncCallback<Array<ShortcutInfo>>): void {
+    let cb = (): (Array<ShortcutInfo>) => {
+      return launcherBundleManager.getShortcutInfoNative(bundleName, EMPTY_USER_ID, false);
+    };
+    let p1 = taskpool.execute(cb);
+    p1.then((e: NullishType) => {
+      let resultShortcutInfo: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
+      callback(null, resultShortcutInfo);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
+    });
+  }
+
+  function getShortcutInfo(bundleName: string): Promise<Array<ShortcutInfo>> {
+    let p = new Promise<Array<ShortcutInfo>>((resolve: (arrShortcutInfo: Array<ShortcutInfo>) => void, reject: (error: BusinessError) => void) => {
+      let cb = (): (Array<ShortcutInfo>) => {
+        return launcherBundleManager.getShortcutInfoNative(bundleName, EMPTY_USER_ID, false);
+      };
+      let p1 = taskpool.execute(cb);
+      p1.then((e: NullishType) => {
+        let resultShortcutInfo: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
+        resolve(resultShortcutInfo);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function getLauncherAbilityInfo(bundleName: string, userId: number, callback: AsyncCallback<Array<LauncherAbilityInfo>, void>): void {
+    let cb = (): (Array<LauncherAbilityInfo>) => {
+      return launcherBundleManager.getLauncherAbilityInfoNative(bundleName, userId, false);
+    };
+    let p1 = taskpool.execute(cb);
+    p1.then((e: NullishType) => {
+      let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
+      callback(null, resultArray);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
+    });
+  }
+
+  function getLauncherAbilityInfo(bundleName: string, userId: number): Promise<Array<LauncherAbilityInfo>> {
+    let p = new Promise<Array<LauncherAbilityInfo>>((resolve: (arrLauncherAbilityInfo: Array<LauncherAbilityInfo>) => void, reject: (error: BusinessError) => void) => {
+      let cb = (): (Array<LauncherAbilityInfo>) => {
+        return launcherBundleManager.getLauncherAbilityInfoNative(bundleName, userId, false);
+      };
+      let p1 = taskpool.execute(cb);
+      p1.then((e: NullishType) => {
+        let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
+        resolve(resultArray);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function getLauncherAbilityInfoSync(bundleName: string, userId: number): Array<LauncherAbilityInfo> {
+    return launcherBundleManager.getLauncherAbilityInfoNative(bundleName, userId, true);
+  }
+
+  function getAllLauncherAbilityInfo(userId: number, callback: AsyncCallback<Array<LauncherAbilityInfo>, void>): void {
+    let cb = (): (Array<LauncherAbilityInfo>) => {
+      return launcherBundleManager.getAllLauncherAbilityInfoNative(userId);
+    };
+    let p1 = taskpool.execute(cb);
+    p1.then((e: NullishType) => {
+      let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
+      callback(null, resultArray);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
+    });
+  }
+
+  function getAllLauncherAbilityInfo(userId: number): Promise<Array<LauncherAbilityInfo>>{
+    let p = new Promise<Array<LauncherAbilityInfo>>((resolve: (arrLauncherAbilityInfo: Array<LauncherAbilityInfo>) => void, reject: (error: BusinessError) => void) => {
+      let cb = (): (Array<LauncherAbilityInfo>) => {
+        return launcherBundleManager.getAllLauncherAbilityInfoNative(userId);
+      };
+      let p1 = taskpool.execute(cb);
+      p1.then((e: NullishType) => {
+        let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
+        resolve(resultArray);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
   }
 
   export type ShortcutInfo = _ShortcutInfo;
