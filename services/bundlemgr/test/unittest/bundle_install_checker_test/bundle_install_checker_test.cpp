@@ -892,9 +892,24 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0037, TestSize.Level
     BundleInstallChecker bundleInstallChecker;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
-    int32_t cloneNum = 0;
 
-    auto ret = bundleInstallChecker.DetermineCloneApp(innerBundleInfo, cloneNum);
+    auto ret = bundleInstallChecker.DetermineCloneApp(innerBundleInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0038
+ * @tc.name: test the DetermineCloneApp.
+ * @tc.desc: test the DetermineCloneApp.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0038, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    innerBundleInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
+
+    auto ret = bundleInstallChecker.DetermineCloneApp(innerBundleInfo);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

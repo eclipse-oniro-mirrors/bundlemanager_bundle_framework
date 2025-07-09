@@ -2529,7 +2529,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         LOG_E(BMS_TAG_INSTALLER, "install module failed %{public}d", result);
         return result;
     }
-
+    (void)bundleInstallChecker_->DetermineCloneApp(newInfo);
     LOG_D(BMS_TAG_INSTALLER, "finish to call ProcessBundleUpdateStatus");
     return ERR_OK;
 }
