@@ -58,7 +58,6 @@ struct ExtensionFormInfo {
     std::vector<uint32_t> previewImages {};
     FormFunInteractionParams funInteractionParams;
     FormSceneAnimationParams sceneAnimationParams;
-    std::vector<std::string> distributedDeviceTypes {};
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

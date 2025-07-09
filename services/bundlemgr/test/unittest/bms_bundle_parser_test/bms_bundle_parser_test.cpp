@@ -4377,38 +4377,4 @@ HWTEST_F(BmsBundleParserTest, ParseArkStartupCacheConfig_0100, Function | Medium
     ret = BundleParser::ParseArkStartupCacheConfig(ServiceConstants::APP_STARTUP_CACHE_CONG, arkStartupCacheList);
     EXPECT_EQ(ret, ERR_OK);
 }
-
-/**
- * @tc.number: FormInfo_0700
- * @tc.name: Test from_json
- * @tc.desc: test the interface of FormInfo
- */
-HWTEST_F(BmsBundleParserTest, FormInfo_0700, Function | MediumTest | Level1)
-{
-    const std::vector<std::string> vec = {"phone", "tablet"};
-    nlohmann::json jsonObject;
-    jsonObject["name"] = "testName";
-    jsonObject["distributedDeviceTypes"] = vec;
-    FormInfo formInfo;
-    from_json(jsonObject, formInfo);
-    EXPECT_EQ(formInfo.name, "testName");
-    EXPECT_TRUE(!formInfo.distributedDeviceTypes.empty());
-}
-
-/**
- * @tc.number: FormInfo_0800
- * @tc.name: Test to_json
- * @tc.desc: test the interface of FormInfo
- */
-HWTEST_F(BmsBundleParserTest, FormInfo_0800, Function | MediumTest | Level1)
-{
-    const std::vector<std::string> vec = {"phone", "tablet"};
-    nlohmann::json jsonObject;
-    FormInfo formInfo;
-    formInfo.name = "testName";
-    formInfo.distributedDeviceTypes = vec;
-    to_json(jsonObject, formInfo);
-    EXPECT_TRUE(sizeof(jsonObject["distributedDeviceTypes"]) > 0);
-    EXPECT_EQ(jsonObject["name"], "testName");
-}
 } // OHOS

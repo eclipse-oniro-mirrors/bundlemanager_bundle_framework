@@ -73,7 +73,6 @@ struct FormInfo : public Parcelable {
     FormSceneAnimationParams sceneAnimationParams;
     bool resizable = false;
     std::string groupId;
-    std::vector<std::string> distributedDeviceTypes;
 
     FormInfo() = default;
     explicit FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo);
