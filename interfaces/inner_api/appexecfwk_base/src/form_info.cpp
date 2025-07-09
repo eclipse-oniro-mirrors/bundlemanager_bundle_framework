@@ -488,7 +488,7 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_FUN_INTERACTION_PARAMS, formInfo.funInteractionParams},
         {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams},
         {JSON_KEY_RESIZABLE, formInfo.resizable},
-        {JSON_KEY_GROUP_ID, formInfo.groupId},
+        {JSON_KEY_GROUP_ID, formInfo.groupId}
     };
 }
 

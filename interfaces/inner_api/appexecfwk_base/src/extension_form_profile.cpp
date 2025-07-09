@@ -134,6 +134,7 @@ struct FormFunInteractionParams {
 struct FormSceneAnimationParams {
     std::string abilityName;
     bool isAlwaysActive = false;
+    std::vector<std::string> disabledDesktopBehaviors;
 };
 
 struct ExtensionFormProfileInfo {
