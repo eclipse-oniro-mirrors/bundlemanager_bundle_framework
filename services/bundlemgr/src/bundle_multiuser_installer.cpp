@@ -67,8 +67,8 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
         .accessTokenId = accessTokenId_,
         .uid = uid_,
         .appIndex = 0,
+        .bundleName = bundleName,
         .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-        .bundleName = bundleName
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
