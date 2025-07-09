@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,19 +14,15 @@
  */
 
 #include <gtest/gtest.h>
-#include <iremote_proxy.h>
 
 #include "appexecfwk_errors.h"
 #define private public
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "overlay_manager_proxy.h"
-#include "overlay_manager_stub.h"
-#include "overlay_manager_client.h"
+#include "overlay_manager_host.h"
 #undef private
 #include "bundle_overlay_manager_host_impl.h"
 #include "bundle_mgr_service.h"
-#include "bundle_memory_guard.h"
-#include "ioverlay_manager.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -43,44 +39,42 @@ const std::u16string TEST_HOST_DESCRIPTOR = u"ohos.bundleManager.OverlayManager.
 const int32_t TEST_PRIORITY = 50;
 const int32_t TEST_STATE = 0;
 const int32_t TEST_USER_ID = 100;
-const int32_t UNSPECIFIED_USERID = -2;
 const int32_t TEST_CODE = 100;
 const int32_t OVERLAY_INFO_SIZE = 1;
 } // namespace
 
-class OverlayManagerHostMock : public OverlayManagerStub {
+class OverlayManagerHostMock : public OverlayManagerHost {
 public:
     OverlayManagerHostMock() = default;
     virtual ~OverlayManagerHostMock() = default;
 
     virtual ErrCode GetAllOverlayModuleInfo(const std::string &bundleName,
-        int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t &funcResult) override;
+        std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
-        int32_t userId, OverlayModuleInfo &overlayModuleInfo, int32_t &funcResult) override;
-    virtual ErrCode GetOverlayModuleInfo(const std::string &moduleName,
-        int32_t userId, OverlayModuleInfo &overlayModuleInfo, int32_t &funcResult) override;
+        OverlayModuleInfo &overlayModuleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode GetOverlayModuleInfo(const std::string &moduleName, OverlayModuleInfo &overlayModuleInfo,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetTargetOverlayModuleInfo(const std::string &targetModuleName,
-        int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t &funcResult) override;
+        std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetOverlayModuleInfoByBundleName(const std::string &bundleName, const std::string &moduleName,
-        int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t &funcResult) override;
+        std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
-        int32_t userId, std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t &funcResult) override;
+        std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
-        const std::string &targetModuleName, int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfo,
-        int32_t &funcResult) override;
+        const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
-        int32_t userId, int32_t &funcResult) override;
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
-        int32_t userId, int32_t &funcResult) override;
-    virtual int32_t CallbackEnter([[maybe_unused]] uint32_t code) override;
-    virtual int32_t CallbackExit([[maybe_unused]] uint32_t code, [[maybe_unused]] int32_t result) override;
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
 private:
     OverlayModuleInfo CreateOverlayModuleInfo();
     OverlayBundleInfo CreateOverlayBundleInfo();
 };
 
 ErrCode OverlayManagerHostMock::GetAllOverlayModuleInfo(const std::string &bundleName,
-    int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t &funcResult)
+    std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
     OverlayModuleInfo moduleInfo = CreateOverlayModuleInfo();
     overlayModuleInfo.emplace_back(moduleInfo);
@@ -88,21 +82,21 @@ ErrCode OverlayManagerHostMock::GetAllOverlayModuleInfo(const std::string &bundl
 }
 
 ErrCode OverlayManagerHostMock::GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
-    int32_t userId, OverlayModuleInfo &overlayModuleInfo, int32_t &funcResult)
+    OverlayModuleInfo &overlayModuleInfo, int32_t userId)
 {
     overlayModuleInfo = CreateOverlayModuleInfo();
     return ERR_OK;
 }
 
 ErrCode OverlayManagerHostMock::GetOverlayModuleInfo(const std::string &moduleName,
-    int32_t userId, OverlayModuleInfo &overlayModuleInfo, int32_t &funcResult)
+    OverlayModuleInfo &overlayModuleInfo, int32_t userId)
 {
     overlayModuleInfo = CreateOverlayModuleInfo();
     return ERR_OK;
 }
 
 ErrCode OverlayManagerHostMock::GetTargetOverlayModuleInfo(const std::string &targetModuleName,
-    int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t &funcResult)
+    std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
 {
     OverlayModuleInfo moduleInfo = CreateOverlayModuleInfo();
     overlayModuleInfos.emplace_back(moduleInfo);
@@ -110,8 +104,7 @@ ErrCode OverlayManagerHostMock::GetTargetOverlayModuleInfo(const std::string &ta
 }
 
 ErrCode OverlayManagerHostMock::GetOverlayModuleInfoByBundleName(const std::string &bundleName,
-    const std::string &moduleName, int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfos,
-    int32_t &funcResult)
+    const std::string &moduleName, std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
 {
     OverlayModuleInfo moduleInfo = CreateOverlayModuleInfo();
     overlayModuleInfos.emplace_back(moduleInfo);
@@ -119,7 +112,7 @@ ErrCode OverlayManagerHostMock::GetOverlayModuleInfoByBundleName(const std::stri
 }
 
 ErrCode OverlayManagerHostMock::GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
-    int32_t userId, std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t &funcResult)
+    std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId)
 {
     OverlayBundleInfo bundleInfo = CreateOverlayBundleInfo();
     overlayBundleInfo.emplace_back(bundleInfo);
@@ -127,8 +120,7 @@ ErrCode OverlayManagerHostMock::GetOverlayBundleInfoForTarget(const std::string 
 }
 
 ErrCode OverlayManagerHostMock::GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
-    const std::string &targetModuleName, int32_t userId, std::vector<OverlayModuleInfo> &overlayModuleInfo,
-    int32_t &funcResult)
+    const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
     OverlayModuleInfo moduleInfo = CreateOverlayModuleInfo();
     overlayModuleInfo.emplace_back(moduleInfo);
@@ -136,13 +128,13 @@ ErrCode OverlayManagerHostMock::GetOverlayModuleInfoForTarget(const std::string 
 }
 
 ErrCode OverlayManagerHostMock::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
-    bool isEnabled, int32_t userId, int32_t &funcResult)
+    bool isEnabled, int32_t userId)
 {
     return ERR_OK;
 }
 
 ErrCode OverlayManagerHostMock::SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
-    int32_t userId, int32_t &funcResult)
+    int32_t userId)
 {
     return ERR_OK;
 }
@@ -169,17 +161,6 @@ OverlayBundleInfo OverlayManagerHostMock::CreateOverlayBundleInfo()
     return overlayBundleInfo;
 }
 
-int32_t OverlayManagerHostMock::CallbackEnter([[maybe_unused]] uint32_t code)
-{
-    BundleMemoryGuard::SetBundleMemoryGuard();
-    return ERR_NONE;
-}
-
-int32_t OverlayManagerHostMock::CallbackExit([[maybe_unused]] uint32_t code, [[maybe_unused]] int32_t result)
-{
-    BundleMemoryGuard::ClearBundleMemoryGuard();
-    return ERR_NONE;
-}
 class BmsBundleOverlayIpcTest : public testing::Test {
 public:
     BmsBundleOverlayIpcTest();
@@ -278,10 +259,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0100, Function | SmallTest | Le
     EXPECT_NE(overlayProxy, nullptr);
 
     std::vector<OverlayModuleInfo> overlayModuleInfos;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto errCode = overlayProxy->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_USER_ID, overlayModuleInfos,
-        funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+    auto errCode = overlayProxy->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -297,10 +276,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0200, Function | SmallTest | Le
     EXPECT_NE(overlayProxy, nullptr);
 
     OverlayModuleInfo overlayModuleInfo;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto errCode = overlayProxy->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, TEST_USER_ID,
-        overlayModuleInfo, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+    auto errCode = overlayProxy->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfo,
+        TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -316,10 +294,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0300, Function | SmallTest | Le
     EXPECT_NE(overlayProxy, nullptr);
 
     std::vector<OverlayBundleInfo> overlayBundleInfos;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto errCode = overlayProxy->GetOverlayBundleInfoForTarget(TEST_TARGET_BUNDLE_NAME, TEST_USER_ID,
-        overlayBundleInfos, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+    auto errCode = overlayProxy->GetOverlayBundleInfoForTarget(TEST_TARGET_BUNDLE_NAME, overlayBundleInfos,
+        TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -335,10 +312,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0400, Function | SmallTest | Le
     EXPECT_NE(overlayProxy, nullptr);
 
     std::vector<OverlayModuleInfo> overlayModuleInfos;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     auto errCode = overlayProxy->GetOverlayModuleInfoForTarget(TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME,
-        TEST_USER_ID, overlayModuleInfos, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+        overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -352,9 +328,11 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0400, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0500, Function | SmallTest | Level0)
 {
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+
     std::vector<OverlayModuleInfo> overlayModuleInfos;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto errCode = OverlayManagerClient::GetInstance().GetAllOverlayModuleInfo("", overlayModuleInfos, TEST_USER_ID);
+    auto errCode = overlayProxy->GetAllOverlayModuleInfo("", overlayModuleInfos, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 }
 
@@ -369,9 +347,11 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0500, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0600, Function | SmallTest | Level0)
 {
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+
     OverlayModuleInfo overlayModuleInfo;
-    auto errCode = OverlayManagerClient::GetInstance().GetOverlayModuleInfo("", TEST_MODULE_NAME, overlayModuleInfo,
-        TEST_USER_ID);
+    auto errCode = overlayProxy->GetOverlayModuleInfo("", TEST_MODULE_NAME, overlayModuleInfo, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 }
 
@@ -386,9 +366,11 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0600, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0700, Function | SmallTest | Level0)
 {
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+
     OverlayModuleInfo overlayModuleInfo;
-    auto errCode = OverlayManagerClient::GetInstance().GetOverlayModuleInfo(TEST_BUNDLE_NAME, "", overlayModuleInfo,
-        TEST_USER_ID);
+    auto errCode = overlayProxy->GetOverlayModuleInfo(TEST_BUNDLE_NAME, "", overlayModuleInfo, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 }
 
@@ -403,10 +385,11 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0700, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0800, Function | SmallTest | Level0)
 {
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+
     std::vector<OverlayBundleInfo> overlayBundleInfos;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto errCode = OverlayManagerClient::GetInstance().GetOverlayBundleInfoForTarget("",
-        overlayBundleInfos, TEST_USER_ID);
+    auto errCode = overlayProxy->GetOverlayBundleInfoForTarget("", overlayBundleInfos, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 }
 
@@ -421,9 +404,12 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0800, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0900, Function | SmallTest | Level0)
 {
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+
     std::vector<OverlayModuleInfo> overlayModuleInfos;
-    auto errCode = OverlayManagerClient::GetInstance().GetOverlayModuleInfoForTarget("", TEST_TARGET_MODULE_NAME,
-        overlayModuleInfos, TEST_USER_ID);
+    auto errCode = overlayProxy->GetOverlayModuleInfoForTarget("", TEST_TARGET_MODULE_NAME, overlayModuleInfos,
+        TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 }
 
@@ -442,10 +428,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1000, Function | SmallTest | Le
     EXPECT_NE(overlayProxy, nullptr);
 
     std::vector<OverlayModuleInfo> overlayModuleInfos;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto errCode = overlayProxy->GetOverlayModuleInfoForTarget(TEST_TARGET_BUNDLE_NAME, "", TEST_USER_ID,
-        overlayModuleInfos, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+    auto errCode = overlayProxy->GetOverlayModuleInfoForTarget(TEST_TARGET_BUNDLE_NAME, "", overlayModuleInfos,
+        TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -464,9 +449,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1100, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(OverlayManagerStub::GetDescriptor());
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
     auto ret = overlayHost->OnRemoteRequest(
-        static_cast<uint32_t>(IOverlayManagerIpcCode::COMMAND_GET_ALL_OVERLAY_MODULE_INFO), data, reply, option);
+        static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_ALL_OVERLAY_MODULE_INFO), data, reply, option);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = reply.ReadInt32();
@@ -493,9 +478,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1200, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(OverlayManagerStub::GetDescriptor());
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
     auto ret = overlayHost->OnRemoteRequest(
-        static_cast<uint32_t>(IOverlayManagerIpcCode::COMMAND_GET_OVERLAY_MODULE_INFO), data, reply, option);
+        static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO), data, reply, option);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = reply.ReadInt32();
@@ -520,9 +505,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1300, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(OverlayManagerStub::GetDescriptor());
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
     auto ret = overlayHost->OnRemoteRequest(
-        static_cast<uint32_t>(IOverlayManagerIpcCode::COMMAND_GET_OVERLAY_BUNDLE_INFO_FOR_TARGET), data, reply, option);
+        static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_BUNDLE_INFO_FOR_TARGET), data, reply, option);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = reply.ReadInt32();
@@ -549,9 +534,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1400, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(OverlayManagerStub::GetDescriptor());
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
     auto ret = overlayHost->OnRemoteRequest(
-        static_cast<uint32_t>(IOverlayManagerIpcCode::COMMAND_GET_OVERLAY_MODULE_INFO_FOR_TARGET), data, reply, option);
+        static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_FOR_TARGET), data, reply, option);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = reply.ReadInt32();
@@ -581,8 +566,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1500, Function | SmallTest | Le
     MessageOption option;
     data.WriteInterfaceToken(TEST_HOST_DESCRIPTOR);
     auto ret = overlayHost->OnRemoteRequest(
-        static_cast<uint32_t>(IOverlayManagerIpcCode::COMMAND_GET_OVERLAY_MODULE_INFO_FOR_TARGET), data, reply, option);
-    EXPECT_EQ(ret, ERR_TRANSACTION_FAILED);
+        static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_FOR_TARGET), data, reply, option);
+    EXPECT_EQ(ret, OBJECT_NULL);
 }
 
 /**
@@ -602,7 +587,7 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1600, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(OverlayManagerStub::GetDescriptor());
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
     auto ret = overlayHost->OnRemoteRequest(TEST_CODE, data, reply, option);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -619,10 +604,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1700, Function | SmallTest | Le
     auto overlayProxy = GetOverlayProxy();
     EXPECT_NE(overlayProxy, nullptr);
 
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     auto errCode = overlayProxy->SetOverlayEnabled(TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME,
-        true, TEST_USER_ID, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+        true, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -637,10 +621,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1800, Function | SmallTest | Le
     auto overlayProxy = GetOverlayProxy();
     EXPECT_NE(overlayProxy, nullptr);
 
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     auto errCode = overlayProxy->SetOverlayEnabled(TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME,
-        false, TEST_USER_ID, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+        false, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -653,7 +636,10 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1800, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1900, Function | SmallTest | Level0)
 {
-    auto errCode = OverlayManagerClient::GetInstance().SetOverlayEnabled("", TEST_TARGET_MODULE_NAME,
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+
+    auto errCode = overlayProxy->SetOverlayEnabled("", TEST_TARGET_MODULE_NAME,
         true, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
 }
@@ -668,7 +654,10 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1900, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2000, Function | SmallTest | Level0)
 {
-    auto errCode = OverlayManagerClient::GetInstance().SetOverlayEnabled(TEST_TARGET_BUNDLE_NAME, "",
+    auto overlayProxy = GetOverlayProxy();
+    EXPECT_NE(overlayProxy, nullptr);
+
+    auto errCode = overlayProxy->SetOverlayEnabled(TEST_TARGET_BUNDLE_NAME, "",
         true, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
 }
@@ -689,9 +678,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2200, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(OverlayManagerStub::GetDescriptor());
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
     auto ret = overlayHost->OnRemoteRequest(
-        static_cast<uint32_t>(IOverlayManagerIpcCode::COMMAND_SET_OVERLAY_ENABLED), data, reply, option);
+        static_cast<uint32_t>(OverlayManagerInterfaceCode::SET_OVERLAY_ENABLED), data, reply, option);
     EXPECT_EQ(ret, ERR_OK);
     ret = reply.ReadInt32();
     EXPECT_EQ(ret, ERR_OK);
@@ -711,9 +700,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2400, Function | SmallTest | Le
     EXPECT_NE(hostImpl, nullptr);
 
     std::vector<OverlayModuleInfo> vec;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto res = hostImpl->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME,  UNSPECIFIED_USERID, vec, funcResult);
-    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    auto res = hostImpl->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, vec);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
 }
 
 /**
@@ -730,10 +718,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2500, Function | SmallTest | Le
     EXPECT_NE(hostImpl, nullptr);
 
     OverlayModuleInfo info;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto res =
-        hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, UNSPECIFIED_USERID, info, funcResult);
-    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, info);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
 }
 
 /**
@@ -750,9 +736,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2600, Function | SmallTest | Le
     EXPECT_NE(hostImpl, nullptr);
 
     std::vector<OverlayBundleInfo> vec;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto res =hostImpl->GetOverlayBundleInfoForTarget(TEST_TARGET_BUNDLE_NAME, UNSPECIFIED_USERID, vec, funcResult);
-    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    auto res = hostImpl->GetOverlayBundleInfoForTarget(TEST_TARGET_BUNDLE_NAME, vec);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
 }
 
 /**
@@ -769,10 +754,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2700, Function | SmallTest | Le
     EXPECT_NE(hostImpl, nullptr);
 
     std::vector<OverlayModuleInfo> vec;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME,
-        UNSPECIFIED_USERID, vec, funcResult);
-    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME, vec);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
 }
 
 /**
@@ -788,9 +771,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2800, Function | SmallTest | Le
     auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, true, UNSPECIFIED_USERID, funcResult);
-    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, true);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
 }
 
 /**
@@ -806,9 +788,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2900, Function | SmallTest | Le
     auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, false, UNSPECIFIED_USERID, funcResult);
-    EXPECT_EQ(funcResult, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, false);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
 }
 
 /**
@@ -827,9 +808,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3000, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(OverlayManagerStub::GetDescriptor());
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
     auto ret = overlayHost->OnRemoteRequest(
-        static_cast<uint32_t>(IOverlayManagerIpcCode::COMMAND_GET_OVERLAY_MODULE_INFO), data, reply, option);
+        static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_BY_NAME), data, reply, option);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = reply.ReadInt32();
@@ -854,9 +835,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3100, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(OverlayManagerStub::GetDescriptor());
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
     auto ret = overlayHost->OnRemoteRequest(
-        static_cast<uint32_t>(IOverlayManagerIpcCode::COMMAND_GET_TARGET_OVERLAY_MODULE_INFO), data, reply, option);
+        static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_TARGET_OVERLAY_MODULE_INFOS), data, reply, option);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = reply.ReadInt32();
@@ -883,9 +864,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3200, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(OverlayManagerStub::GetDescriptor());
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
     auto ret = overlayHost->OnRemoteRequest(
-        static_cast<uint32_t>(IOverlayManagerIpcCode::COMMAND_GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME),
+        static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME),
         data, reply, option);
     EXPECT_EQ(ret, ERR_OK);
 
@@ -913,9 +894,9 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3300, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    data.WriteInterfaceToken(OverlayManagerStub::GetDescriptor());
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
     auto ret = overlayHost->OnRemoteRequest(
-        static_cast<uint32_t>(IOverlayManagerIpcCode::COMMAND_SET_OVERLAY_ENABLED_FOR_SELF), data, reply, option);
+        static_cast<uint32_t>(OverlayManagerInterfaceCode::SET_OVERLAY_ENABLED_FOR_SELF), data, reply, option);
     EXPECT_EQ(ret, ERR_OK);
     ret = reply.ReadInt32();
     EXPECT_EQ(ret, ERR_OK);
@@ -935,13 +916,13 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3400, Function | SmallTest | Le
     EXPECT_NE(overlayProxy, nullptr);
 
     std::vector<OverlayModuleInfo> overlayModuleInfos;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto errCode = OverlayManagerClient::GetInstance().GetTargetOverlayModuleInfo("", overlayModuleInfos, TEST_USER_ID);
+    auto errCode = overlayProxy->GetTargetOverlayModuleInfo("", overlayModuleInfos,
+        TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
-    errCode = overlayProxy->GetTargetOverlayModuleInfo(TEST_TARGET_BUNDLE_NAME, TEST_USER_ID,
-        overlayModuleInfos, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+    errCode = overlayProxy->GetTargetOverlayModuleInfo(TEST_TARGET_BUNDLE_NAME, overlayModuleInfos,
+        TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -958,14 +939,13 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3500, Function | SmallTest | Le
     EXPECT_NE(overlayProxy, nullptr);
 
     std::vector<OverlayModuleInfo> overlayModuleInfos;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto errCode = OverlayManagerClient::GetInstance().GetOverlayModuleInfoByBundleName("", TEST_MODULE_NAME,
+    auto errCode = overlayProxy->GetOverlayModuleInfoByBundleName("", TEST_MODULE_NAME,
         overlayModuleInfos, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
     errCode = overlayProxy->GetOverlayModuleInfoByBundleName(TEST_BUNDLE_NAME, TEST_MODULE_NAME,
-        TEST_USER_ID, overlayModuleInfos, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+        overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -982,14 +962,13 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3600, Function | SmallTest | Le
     EXPECT_NE(overlayProxy, nullptr);
 
     bool isEnabled = false;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto errCode = OverlayManagerClient::GetInstance().SetOverlayEnabledForSelf("",
+    auto errCode = overlayProxy->SetOverlayEnabledForSelf("",
         isEnabled, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
 
     errCode = overlayProxy->SetOverlayEnabledForSelf(TEST_MODULE_NAME,
-        isEnabled, TEST_USER_ID, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+        isEnabled, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -1002,10 +981,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3700, Function | SmallTest | Le
     auto overlayProxy = GetOverlayProxy();
     ASSERT_NE(overlayProxy, nullptr);
     OverlayModuleInfo info;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto errCode = overlayProxy->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, TEST_USER_ID, info,
-        funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+    auto errCode = overlayProxy->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, info, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -1023,7 +1000,7 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3800, Function | SmallTest | Le
     ASSERT_NE(overlayProxy, nullptr);
 
     OverlayModuleInfo overlayModuleInfo;
-    auto errCode = OverlayManagerClient::GetInstance().GetOverlayModuleInfo("", overlayModuleInfo, TEST_USER_ID);
+    auto errCode = overlayProxy->GetOverlayModuleInfo("", overlayModuleInfo, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 }
 
@@ -1040,9 +1017,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_0390, Function | SmallTest | Le
     ASSERT_NE(overlayProxy, nullptr);
 
     OverlayModuleInfo overlayModuleInfo;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    auto errCode = overlayProxy->GetOverlayModuleInfo(TEST_MODULE_NAME, TEST_USER_ID, overlayModuleInfo, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+    auto errCode = overlayProxy->GetOverlayModuleInfo(TEST_MODULE_NAME, overlayModuleInfo, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
@@ -1058,13 +1034,12 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4000, Function | SmallTest | Le
     ASSERT_NE(overlayProxy, nullptr);
     MessageParcel reply;
     bool isEnabled = false;
-    auto errCode = OverlayManagerClient::GetInstance().SetOverlayEnabledForSelf("", isEnabled, TEST_USER_ID);
+    auto errCode = overlayProxy->SetOverlayEnabledForSelf("", isEnabled, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
 
     std::string moduleName = TEST_MODULE_NAME;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    errCode = overlayProxy->SetOverlayEnabledForSelf(moduleName, isEnabled, TEST_USER_ID, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+    errCode = overlayProxy->SetOverlayEnabledForSelf(moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
     auto res = reply.ReadInt32();
     EXPECT_EQ(res, ERR_OK);
 }
@@ -1082,15 +1057,13 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4010, Function | SmallTest | Le
     ASSERT_NE(overlayProxy, nullptr);
     bool isEnabled = false;
     MessageParcel reply;
-    auto errCode = OverlayManagerClient::GetInstance().SetOverlayEnabled("", TEST_TARGET_BUNDLE_NAME, isEnabled,
-        TEST_USER_ID);
+    auto errCode = overlayProxy->SetOverlayEnabled("", TEST_TARGET_BUNDLE_NAME, isEnabled, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
 
     std::string moduleName = TEST_TARGET_MODULE_NAME;
     std::string bundleName = TEST_TARGET_BUNDLE_NAME;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    errCode = overlayProxy->SetOverlayEnabled(bundleName, moduleName, isEnabled, TEST_USER_ID, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+    errCode = overlayProxy->SetOverlayEnabled(bundleName, moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
     auto res = reply.ReadInt32();
     EXPECT_EQ(res, ERR_OK);
 }
@@ -1108,15 +1081,13 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4020, Function | SmallTest | Le
     ASSERT_NE(overlayProxy, nullptr);
     bool isEnabled = false;
     MessageParcel reply;
-    auto errCode = OverlayManagerClient::GetInstance().SetOverlayEnabled("", TEST_TARGET_BUNDLE_NAME, isEnabled,
-        TEST_USER_ID);
+    auto errCode = overlayProxy->SetOverlayEnabled("", TEST_TARGET_BUNDLE_NAME, isEnabled, TEST_USER_ID);
     EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
 
     std::string bundleName = TEST_TARGET_BUNDLE_NAME;
     std::string moduleName = TEST_TARGET_MODULE_NAME;
-    int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
-    errCode = overlayProxy->SetOverlayEnabled(bundleName, moduleName, isEnabled, TEST_USER_ID, funcResult);
-    EXPECT_EQ(errCode, ERR_INVALID_DATA);
+    errCode = overlayProxy->SetOverlayEnabled(bundleName, moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
     auto res = reply.ReadInt32();
     EXPECT_EQ(res, ERR_OK);
 }

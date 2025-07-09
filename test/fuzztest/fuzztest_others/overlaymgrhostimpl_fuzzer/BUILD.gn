@@ -48,10 +48,7 @@ ohos_fuzztest("OverlayMgrHostImplFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
 
-  deps = [
-    "${core_path}:appexecfwk_core",
-    "${core_path}:overlay_manager_stub",
-  ]
+  deps = [ "${core_path}:appexecfwk_core" ]
   deps += bundle_install_deps
 
   external_deps = [
