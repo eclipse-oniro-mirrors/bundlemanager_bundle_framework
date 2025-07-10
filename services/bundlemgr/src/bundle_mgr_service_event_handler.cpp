@@ -4751,6 +4751,12 @@ bool BMSEventHandler::InnerProcessUninstallForExistPreBundle(const BundleInfo &i
 
 void BMSEventHandler::ProcessAppTmpPath()
 {
+    if (BundleUtil::IsExistDirNoLog(ServiceConstants::BMS_APP_COPY_TEMP_PATH)) {
+        if (!BundleUtil::DeleteDir(ServiceConstants::BMS_APP_COPY_TEMP_PATH)) {
+            LOG_E(BMS_TAG_INSTALLER, "delete app_copy_temp failed %{public}d", errno);
+        }
+        return;
+    }
     if (!BundleUtil::IsExistDirNoLog(ServiceConstants::BMS_APP_TEMP_PATH)) {
         return;
     }

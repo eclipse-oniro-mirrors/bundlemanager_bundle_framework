@@ -3015,4 +3015,18 @@ HWTEST_F(BmsEventHandlerTest, CheckSystemOptimizeShaderCache_0300, Function | Sm
     EXPECT_EQ(ret, ERR_OK);
     setuid(Constants::ROOT_UID);
 }
+
+/**
+ * @tc.number: ProcessAppTmpPath_0100
+ * @tc.name: ProcessAppTmpPath
+ * @tc.desc: test ProcessAppTmpPath
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessAppTmpPath_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_NO_THROW(handler->ProcessAppTmpPath());
+    BundleUtil::CreateDir(ServiceConstants::BMS_APP_COPY_TEMP_PATH);
+    EXPECT_NO_THROW(handler->ProcessAppTmpPath());
+}
 } // OHOS
