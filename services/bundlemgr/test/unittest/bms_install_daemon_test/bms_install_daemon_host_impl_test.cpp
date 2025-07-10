@@ -1358,4 +1358,23 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7800, Function | Sma
     EXPECT_EQ(ret, ERR_OK);
 #endif
 }
+
+/**
+ * @tc.number: InstalldHostImplTest_7900
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling VerifyCodeSignatureForHap of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7900, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    setuid(Constants::FOUNDATION_UID);
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = "modulePath";
+    codeSignatureParam.isPlugin = true;
+    auto ret = hostImpl->VerifyCodeSignatureForHap(codeSignatureParam);
+    setuid(Constants::ROOT_UID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS

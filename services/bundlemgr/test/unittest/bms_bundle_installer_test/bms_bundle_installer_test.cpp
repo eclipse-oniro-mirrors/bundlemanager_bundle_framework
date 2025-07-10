@@ -11357,6 +11357,26 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0066, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: PluginInstaller_0067
+ * @tc.name: test JoinPluginId
+ * @tc.desc: 1.Test JoinPluginId the PluginInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0067, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::vector<std::string> pluginIds;
+    auto ret = installer.ParsePluginId(APP_SERVICES_CAPABILITIES1, pluginIds);
+    EXPECT_EQ(ret, true);
+
+    std::string res = installer.JoinPluginId();
+    EXPECT_EQ(res, Constants::EMPTY_STRING);
+
+    installer.pluginIds_ = pluginIds;
+    res = installer.JoinPluginId();
+    EXPECT_EQ(res, "11111111|22222222");
+}
+
+/**
  * @tc.number: CreateBundleDataDirWithVector_0100
  * @tc.name: test CreateBundleDataDir
  * @tc.desc: test CreateBundleDataDir of InstalldHostImpl
