@@ -675,10 +675,11 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     if (param.needRemoveOld && IsExistFile(path) && !OHOS::RemoveFile(path)) {
         LOG_W(BMS_TAG_INSTALLD, "remove file %{public}s failed", path.c_str());
     }
-    bool ret = extractor.ExtractFile(entryName, path);
-    if (!ret) {
-        LOG_E(BMS_TAG_INSTALLD, "extract file failed, entryName : %{public}s", entryName.c_str());
-        return;
+    if (!extractor.ExtractFile(entryName, path)) {
+        if (!extractor.ExtractFile(entryName, path)) {
+            LOG_E(BMS_TAG_INSTALLD, "extract file failed, retry entryName : %{public}s", entryName.c_str());
+            return;
+        }
     }
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     if (param.extractFileType == ExtractFileType::AP) {
@@ -692,7 +693,6 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     }
     if (!OHOS::ChangeModeFile(path, mode)) {
         LOG_E(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
-        return;
     }
     FsyncFile(path);
     LOG_D(BMS_TAG_INSTALLD, "extract file success, path : %{public}s", path.c_str());
@@ -712,7 +712,9 @@ void InstalldOperator::FsyncFile(const std::string &path)
         return;
     }
     if (fsync(fileFd) != 0) {
-        LOG_E(BMS_TAG_INSTALLER, "fsync %{public}s failed %{public}d", path.c_str(), errno);
+        if (fsync(fileFd) != 0) {
+            LOG_E(BMS_TAG_INSTALLER, "retry fsync %{public}s failed %{public}d", path.c_str(), errno);
+        }
     }
     (void)fclose(fileFp);
 }
