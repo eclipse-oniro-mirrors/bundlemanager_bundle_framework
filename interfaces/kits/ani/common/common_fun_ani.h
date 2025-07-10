@@ -26,10 +26,14 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_resource_info.h"
+#include "clone_param.h"
 #include "enum_util.h"
+#include "install_param.h"
+#include "launcher_ability_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+using Want = OHOS::AAFwk::Want;
 
 #define RETURN_IF_NULL(ptr)          \
     do {                             \
@@ -146,11 +150,35 @@ public:
     }
     static ani_object ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo, int32_t flags);
 
+    static ani_object ConvertAppCloneIdentity(ani_env* env, const std::string& bundleName, const int32_t appIndex);
+
     static ani_object ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo);
+    static ani_object ConvertLauncherAbilityResourceInfo(ani_env* env,
+        const LauncherAbilityResourceInfo& launcherAbilityResourceInfo);
 
     static ani_object ConvertShortcutInfo(ani_env* env, const ShortcutInfo& shortcutInfo);
     static ani_object ConvertShortcutIntent(ani_env* env, const ShortcutIntent& shortcutIntent);
     static ani_object ConvertShortcutIntentParameter(ani_env* env, const std::pair<std::string, std::string>& item);
+
+    static ani_object ConvertLauncherAbilityInfo(ani_env* env, const LauncherAbilityInfo& launcherAbility);
+
+    static ani_object ConvertOverlayModuleInfo(ani_env* env, const OverlayModuleInfo& overlayModuleInfo);
+
+    static ani_object CreateBundleChangedInfo(
+        ani_env* env, const std::string& bundleName, int32_t userId, int32_t appIndex);
+    static ani_object ConvertVersion(ani_env* env, const Version& version);
+    static ani_object ConvertPackageApp(ani_env* env, const PackageApp& packageApp);
+    static ani_object ConvertAbilityFormInfo(ani_env* env, const AbilityFormInfo& abilityFormInfo);
+    static ani_object ConvertModuleAbilityInfo(ani_env* env, const ModuleAbilityInfo& moduleAbilityInfo);
+    static ani_object ConvertModuleDistro(ani_env* env, const ModuleDistro& moduleDistro);
+    static ani_object ConvertApiVersion(ani_env* env, const ApiVersion& apiVersion);
+    static ani_object ConvertExtensionAbilities(ani_env* env, const ExtensionAbilities& extensionAbilities);
+    static ani_object ConvertPackageModule(ani_env* env, const PackageModule& packageModule);
+    static ani_object ConvertSummary(ani_env* env, const Summary& summary);
+    static ani_object ConvertPackages(ani_env* env, const Packages& packages);
+    static ani_object ConvertBundlePackInfo(ani_env* env, const BundlePackInfo& bundlePackInfo);
+    static ani_object CreateDispatchInfo(
+        ani_env* env, const std::string& version, const std::string& dispatchAPIVersion);
 
     // Parse from ets to native
     static bool ParseShortcutInfo(ani_env* env, ani_object object, ShortcutInfo& shortcutInfo);
@@ -175,7 +203,45 @@ public:
             return true;
         });
     }
-    
+    template<typename enumType>
+    static inline bool ParseEnumArray(ani_env* env, ani_object arrayObj, std::vector<enumType>& enums)
+    {
+        return ParseAniArray(env, arrayObj, enums, [](ani_env* env, ani_object aniItem, enumType& nativeItem) {
+            return EnumUtils::EnumETSToNative(env, reinterpret_cast<ani_enum_item>(aniItem), nativeItem);
+        });
+    }
+    static bool ParseInstallParam(ani_env* env, ani_object object, InstallParam& installParam);
+    static bool ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
+    static bool ParsePgoParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);
+    static bool ParseUninstallParam(ani_env* env, ani_object object, UninstallParam& uninstallParam);
+    static bool ParseCreateAppCloneParam(ani_env* env, ani_object object, int32_t& userId, int32_t& appIdx);
+    static bool ParseDestroyAppCloneParam(ani_env* env, ani_object object, DestroyAppCloneParam& destroyAppCloneParam);
+    static bool ParsePluginParam(ani_env* env, ani_object object, InstallPluginParam& installPluginParam);
+    static bool ParseMetadata(ani_env* env, ani_object object, Metadata& metadata);
+    static bool ParseResource(ani_env* env, ani_object object, Resource& resource);
+    static bool ParseMultiAppMode(ani_env* env, ani_object object, MultiAppModeData& multiAppMode);
+    static bool ParseApplicationInfo(ani_env* env, ani_object object, ApplicationInfo& appInfo);
+    static bool ParseWindowSize(ani_env* env, ani_object object, AbilityInfo& abilityInfo);
+    static bool ParseAbilitySkillUriInner(ani_env* env, ani_object object, SkillUri& skillUri, bool isExtension);
+    static inline bool ParseAbilitySkillUri(ani_env* env, ani_object object, SkillUri& skillUri)
+    {
+        return ParseAbilitySkillUriInner(env, object, skillUri, false);
+    }
+    static inline bool ParseExtensionAbilitySkillUri(ani_env* env, ani_object object, SkillUri& skillUri)
+    {
+        return ParseAbilitySkillUriInner(env, object, skillUri, true);
+    }
+    static bool ParseAbilitySkillInner(ani_env* env, ani_object object, Skill& skill, bool isExtension);
+    static inline bool ParseAbilitySkill(ani_env* env, ani_object object, Skill& skill)
+    {
+        return ParseAbilitySkillInner(env, object, skill, false);
+    }
+    static inline bool ParseExtensionAbilitySkill(ani_env* env, ani_object object, Skill& skill)
+    {
+        return ParseAbilitySkillInner(env, object, skill, true);
+    }
+    static bool ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo& abilityInfo);
+
     template<typename toType>
     static bool TryCastDoubleTo(const double fromValue, toType* toValue)
     {
@@ -415,15 +481,14 @@ public:
                 status = env->Object_CallMethodByName_Boolean(
                     reinterpret_cast<ani_object>(ref), "unboxed", ":Z", value);
             } else if constexpr (std::is_same_v<valueType, ani_char>) {
-                status =
-                    env->Object_CallMethodByName_Char(reinterpret_cast<ani_object>(ref), "unboxed", ":C", value);
+                status = env->Object_CallMethodByName_Char(reinterpret_cast<ani_object>(ref), "unboxed", ":C", value);
             } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
                                  std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
                                  std::is_same_v<valueType, ani_long> ||
                                  std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
                 double d = 0;
                 status =
-                    env->Object_CallMethodByName_Double(reinterpret_cast<ani_object>(ref), "doubleValue", nullptr, &d);
+                    env->Object_CallMethodByName_Double(reinterpret_cast<ani_object>(ref), "unboxed", nullptr, &d);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_GetPropertyByName %{public}s failed %{public}d", propertyName, status);
                     return false;

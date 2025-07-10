@@ -25,6 +25,14 @@ namespace AppExecFwk {
 class ResourceHelper {
 public:
     static sptr<IBundleResource> GetBundleResourceMgr();
+    static ErrCode InnerGetBundleResourceInfo(
+        const std::string &bundleName, uint32_t flags, int32_t appIndex, BundleResourceInfo &resourceInfo);
+    static ErrCode InnerGetLauncherAbilityResourceInfo(
+        const std::string &bundleName, uint32_t flags, int32_t appIndex,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo);
+    static ErrCode InnerGetAllBundleResourceInfo(uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
+    static ErrCode InnerGetAllLauncherAbilityResourceInfo(uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
 
 private:
     class BundleResourceMgrDeathRecipient : public IRemoteObject::DeathRecipient {
