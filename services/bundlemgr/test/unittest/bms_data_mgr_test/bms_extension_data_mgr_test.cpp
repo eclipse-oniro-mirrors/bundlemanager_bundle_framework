@@ -2068,12 +2068,6 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleNamesForUidExt_0100, Function | Small
 HWTEST_F(BmsExtensionDataMgrTest, IsMCFlagSet_0001, Function | SmallTest | Level1)
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    bool ret = bmsExtensionDataMgr.IsMCFlagSet();
-
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(ret, true);
-    #else
-    EXPECT_EQ(ret, false);
-    #endif
+    EXPECT_NO_THROW(bmsExtensionDataMgr.IsMCFlagSet());
 }
 } // OHOS

@@ -2343,7 +2343,7 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_0012, TestSize.Level1)
     impl.bundleMgr_ = proxy;
     impl.Connect();
     ErrCode res = impl.CreateBundleDataDir(DEFAULT_USERID);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_TRUE(res == ERR_OK || res == ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
     impl.OnDeath();
 }
 

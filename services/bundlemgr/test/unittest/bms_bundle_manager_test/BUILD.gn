@@ -460,6 +460,9 @@ ohos_unittest("BmsBundleManagerTest3") {
   external_deps += bundle_install_external_deps
 
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_EXTENSION_DATA" ]
+  }
   include_dirs = []
   if (code_signature_enable) {
     sources += [
