@@ -84,6 +84,7 @@ constexpr const char* MULTI_APP_MODE_TYPE = "multiAppModeType";
 constexpr const char* MULTI_APP_MODE = "multiAppMode";
 constexpr const char* ORIENTATION_ID = "orientationId";
 constexpr const char* USER_ID = "userId";
+constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -2752,6 +2753,42 @@ void CommonFunc::ConvertAppCloneIdentity(
     napi_value nAppIndex;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appIndex, &nAppIndex));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nAppCloneIdentity, APP_INDEX, nAppIndex));
+}
+
+void CommonFunc::GetBundleNameAndIndexByName(const std::string& keyName, std::string& bundleName, int32_t& appIndex)
+{
+    bundleName = keyName;
+    appIndex = 0;
+    auto pos = keyName.find(CLONE_BUNDLE_PREFIX);
+    if ((pos == std::string::npos) || (pos == 0)) {
+        return;
+    }
+    std::string index = keyName.substr(0, pos);
+    if (!OHOS::StrToInt(index, appIndex)) {
+        appIndex = 0;
+        return;
+    }
+    bundleName = keyName.substr(pos + strlen(CLONE_BUNDLE_PREFIX));
+}
+
+std::string CommonFunc::GetCloneBundleIdKey(const std::string& bundleName, const int32_t appIndex)
+{
+    return std::to_string(appIndex) + CLONE_BUNDLE_PREFIX + bundleName;
+}
+
+OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> CommonFunc::GetOverlayMgrProxy()
+{
+    auto bundleMgr = GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        return nullptr;
+    }
+    auto overlayMgrProxy = bundleMgr->GetOverlayManagerProxy();
+    if (overlayMgrProxy == nullptr) {
+        APP_LOGE("GetOverlayManagerProxy failed");
+        return nullptr;
+    }
+    return overlayMgrProxy;
 }
 } // AppExecFwk
 } // OHOS

@@ -32,9 +32,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* GET_LAUNCHER_ABILITY_INFO = "GetLauncherAbilityInfo";
-constexpr const char* GET_LAUNCHER_ABILITY_INFO_SYNC = "GetLauncherAbilityInfoSync";
-constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo";
 constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
 constexpr const char* PARSE_REASON_MESSAGE = "parse ReasonMessage failed";
 constexpr const char* START_SHORTCUT_WITH_REASON = "StartShortcutWithReason";

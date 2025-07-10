@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -199,6 +199,12 @@ static void ConvertDynamicIconInfo(napi_env env, const DynamicIconInfo &dynamicI
 
 static void ConvertDynamicIconInfos(napi_env env, const std::vector<DynamicIconInfo> &dynamicIconInfos,
     napi_value value);
+
+static void GetBundleNameAndIndexByName(const std::string& keyName, std::string& bundleName, int32_t& appIndex);
+
+static std::string GetCloneBundleIdKey(const std::string& bundleName, const int32_t appIndex);
+
+static OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> GetOverlayMgrProxy();
 
 class BundleMgrCommonDeathRecipient : public IRemoteObject::DeathRecipient {
     void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;

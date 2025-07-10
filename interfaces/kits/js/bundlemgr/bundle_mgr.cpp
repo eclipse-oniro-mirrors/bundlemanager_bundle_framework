@@ -101,7 +101,6 @@ enum class InstallErrorCode : uint8_t {
 
 const char* IS_SET_APPLICATION_ENABLED = "IsSetApplicationEnabled";
 const char* IS_ABILITY_ENABLED = "IsAbilityEnabled";
-const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 const char* GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const char* GET_ABILITY_ICON = "GetAbilityIcon";
 constexpr const char* NAPI_GET_APPLICATION_INFO = "GetApplicationInfo";
