@@ -1385,8 +1385,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let sharedBundleInfos: Array<SharedBundleInfo> = e as Array<SharedBundleInfo>;
         resolve(sharedBundleInfos);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -1401,8 +1401,8 @@ namespace bundleManager {
     p1.then((e: NullishType) => {
       let sharedBundleInfos: Array<SharedBundleInfo> = e as Array<SharedBundleInfo>;
       callback(null, sharedBundleInfos);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -1416,8 +1416,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let sharedBundleInfos: Array<SharedBundleInfo> = e as Array<SharedBundleInfo>;
         resolve(sharedBundleInfos);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -1433,8 +1433,8 @@ namespace bundleManager {
     p1.then((e: NullishType) => {
       let sharedBundleInfos: Array<SharedBundleInfo> = e as Array<SharedBundleInfo>;
       callback(null, sharedBundleInfos);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -1448,8 +1448,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let extResource: Array<string> = e as Array<string>;
         resolve(extResource);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -1464,8 +1464,8 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -1480,8 +1480,8 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -1495,8 +1495,8 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
       callback(null, undefined);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -1510,8 +1510,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let applicationInfo: Array<RecoverableApplicationInfo> = e as Array<RecoverableApplicationInfo>;
         resolve(applicationInfo);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -1526,8 +1526,8 @@ namespace bundleManager {
     p1.then((e: NullishType) => {
       let applicationInfo: Array<RecoverableApplicationInfo> = e as Array<RecoverableApplicationInfo>;
       callback(null, applicationInfo);
-    }, (err: BusinessError): void => {
-      callback(err, undefined);
+    }, (err: Error): void => {
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -1539,8 +1539,8 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -1558,8 +1558,8 @@ namespace bundleManager {
       p1.then((e: NullishType) => {
         let pluginBundleInfo: Array<PluginBundleInfo> = e as Array<PluginBundleInfo>;
         resolve(pluginBundleInfo);
-      }, (err: BusinessError): void => {
-        reject(err);
+        }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );
@@ -1574,8 +1574,8 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
-      }, (err: BusinessError): void => {
-        reject(err);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
       });
     }
     );

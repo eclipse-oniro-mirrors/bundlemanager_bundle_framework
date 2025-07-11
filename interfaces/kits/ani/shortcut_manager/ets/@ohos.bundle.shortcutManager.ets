@@ -25,13 +25,13 @@ namespace shortcutManager {
   export native function getAllDesktopShortcutInfoNative(userId: number): Array<ShortcutInfo>;
 
   function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void): void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
       let cb = (): NullishType => {
         return shortcutManager.addDesktopShortcutInfoNative(shortcutInfo, userId);
       }
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -40,13 +40,13 @@ namespace shortcutManager {
   }
 
   function deleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void): void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
       let cb = (): NullishType => {
         return shortcutManager.deleteDesktopShortcutInfoNative(shortcutInfo, userId)
       }
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
