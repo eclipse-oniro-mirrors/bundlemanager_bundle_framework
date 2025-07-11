@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2093,5 +2093,234 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckAndParseFiles_0020, Function 
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     auto res = appServiceFwkInstaller.CheckAndParseFiles(hspPaths, installParam, newInfos);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: Uninstall_0001
+ * @tc.name: test UnInstall
+ * @tc.desc: 1.test UnInstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, Uninstall_0001, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    std::string bundleName;
+    std::string moduleName;
+    auto res = appServiceFwkInstaller.UnInstall(bundleName, moduleName);
+    EXPECT_NE(res, ERR_OK);
+
+    bundleName = "testBundle";
+    auto res2 = appServiceFwkInstaller.UnInstall(bundleName, moduleName);
+    EXPECT_NE(res2, ERR_OK);
+
+    moduleName = "testModule";
+    auto res3 = appServiceFwkInstaller.UnInstall(bundleName, moduleName);
+    EXPECT_NE(res3, ERR_OK);
+
+    InnerBundleInfo oldInfo;
+    appServiceFwkInstaller.RemoveModuleDataDir(bundleName, moduleName, oldInfo);
+    auto res4 = appServiceFwkInstaller.UnInstall(bundleName, moduleName, oldInfo);
+    EXPECT_NE(res4, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckNeedUninstallBundle_0001
+ * @tc.name: test CheckNeedUninstallBundle
+ * @tc.desc: 1.test CheckNeedUninstallBundle
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUninstallBundle_0001, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    std::string moduleName = "testModule";
+    InnerBundleInfo info;
+    auto res = appServiceFwkInstaller.CheckNeedUninstallBundle(moduleName, info);
+    EXPECT_TRUE(res);
+    InnerModuleInfo innerModuleInfo1;
+    innerModuleInfo1.moduleName = "testModule";
+    innerModuleInfo1.distro.moduleType = SHARED_MODULE_TYPE;
+    info.innerModuleInfos_.emplace(innerModuleInfo1.moduleName, innerModuleInfo1);
+    auto res1 = appServiceFwkInstaller.CheckNeedUninstallBundle(moduleName, info);
+    EXPECT_TRUE(res1);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    innerModuleInfo.distro.moduleType = SHARED_MODULE_TYPE;
+    info.innerModuleInfos_.emplace(innerModuleInfo.moduleName, innerModuleInfo);
+    auto res2 = appServiceFwkInstaller.CheckNeedUninstallBundle(moduleName, info);
+    EXPECT_FALSE(res2);
+}
+
+/**
+ * @tc.number: BeforeUninstall_0001
+ * @tc.name: test BeforeUninstall
+ * @tc.desc: 1.test BeforeUninstall
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, BeforeUninstall_0001, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    std::string bundleName = "testBundle";
+    auto res = appServiceFwkInstaller.BeforeUninstall(bundleName);
+    EXPECT_NE(res, ERR_OK);
+
+    std::string bundleName2 = "ohos.global.systemres";
+    auto res2 = appServiceFwkInstaller.BeforeUninstall(bundleName2);
+    EXPECT_NE(res2, ERR_OK);
+}
+
+/**
+ * @tc.number: GenerateOdid_0001
+ * @tc.name: test GenerateOdid
+ * @tc.desc: 1.test GenerateOdid
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GenerateOdid_0001, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.emplace(BUNDLE_NAME, InnerBundleInfo());
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    EXPECT_NO_THROW(appServiceFwkInstaller.GenerateOdid(infos, hapVerifyRes));
+}
+
+/**
+ * @tc.number: MarkInstallFinish_0001
+ * @tc.name: test MarkInstallFinish
+ * @tc.desc: 1.test MarkInstallFinish
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MarkInstallFinish_0001, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    EXPECT_NE(appServiceFwkInstaller.MarkInstallFinish(), ERR_OK);
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    appServiceFwkInstaller.bundleName_ = "wrongBundleName";
+    EXPECT_NE(appServiceFwkInstaller.MarkInstallFinish(), ERR_OK);
+
+    appServiceFwkInstaller.bundleName_ = "ohos.global.systemres";
+    EXPECT_NO_THROW(appServiceFwkInstaller.MarkInstallFinish());
+}
+
+/**
+ * @tc.number: CleanBundleDataDirByName_0001
+ * @tc.name: test CleanBundleDataDirByName
+ * @tc.desc: 1.test InstalldClient CleanBundleDataDirByName
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CleanBundleDataDirByName_0001, Function | SmallTest | Level1)
+{
+    std::string bundleName;
+    int userid = Constants::INVALID_USERID;
+    int appIndex = 0;
+    auto ret1 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex);
+    EXPECT_NE(ret1, ERR_OK);
+
+    bundleName = "testBundle";
+    auto ret2 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex);
+    EXPECT_NE(ret2, ERR_OK);
+
+    userid = 100;
+    appIndex = -1;
+    auto ret3 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex);
+    EXPECT_NE(ret3, ERR_OK);
+
+    appIndex = 99999;
+    auto ret4 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex);
+    EXPECT_NE(ret4, ERR_OK);
+
+    appIndex = 1;
+    EXPECT_NO_THROW(InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex));
+}
+
+/**
+ * @tc.number: MoveFiles_0001
+ * @tc.name: test MoveFiles
+ * @tc.desc: 1.test InstalldClient MoveFiles
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveFiles_0001, Function | SmallTest | Level1)
+{
+    std::string srcDir = EMPTY_STRING;
+    std::string desDir = EMPTY_STRING;
+    auto ret1 = InstalldClient::GetInstance()->MoveFiles(srcDir, desDir);
+    EXPECT_NE(ret1, ERR_OK);
+
+    srcDir = "testSrcDir";
+    auto ret2 = InstalldClient::GetInstance()->MoveFiles(srcDir, desDir);
+    EXPECT_NE(ret2, ERR_OK);
+
+    desDir = "testDesDir";
+    EXPECT_NO_THROW(InstalldClient::GetInstance()->MoveFiles(srcDir, desDir));
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_0001
+ * @tc.name: test SetEncryptionPolicy
+ * @tc.desc: 1.test InstalldClient SetEncryptionPolicy & DeleteEncryptionKeyId
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, SetEncryptionPolicy_0001, Function | SmallTest | Level1)
+{
+    EncryptionParam encryptionParam;
+    std::string keyId;
+    auto ret1 = InstalldClient::GetInstance()->SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_NE(ret1, ERR_OK);
+
+    encryptionParam.bundleName = "testBundle";
+    EXPECT_NO_THROW(InstalldClient::GetInstance()->SetEncryptionPolicy(encryptionParam, keyId));
+    EXPECT_NO_THROW(InstalldClient::GetInstance()->DeleteEncryptionKeyId(encryptionParam));
+}
+
+/**
+ * @tc.number: MoveHapToCodeDir_0001
+ * @tc.name: test MoveHapToCodeDir
+ * @tc.desc: 1.test InstalldClient MoveHapToCodeDir
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveHapToCodeDir_0001, Function | SmallTest | Level1)
+{
+    std::string originPath;
+    std::string targetPath;
+    auto ret1 = InstalldClient::GetInstance()->MoveHapToCodeDir(originPath, targetPath);
+    EXPECT_NE(ret1, ERR_OK);
+
+    originPath = "testOriginPath";
+    auto ret2 = InstalldClient::GetInstance()->MoveHapToCodeDir(originPath, targetPath);
+    EXPECT_NE(ret2, ERR_OK);
+
+    targetPath = "testTargetPath";
+    EXPECT_NO_THROW(InstalldClient::GetInstance()->MoveHapToCodeDir(originPath, targetPath));
+}
+
+/**
+ * @tc.number: CreateDataGroupDirs_0001
+ * @tc.name: test CreateDataGroupDirs
+ * @tc.desc: 1.test InstalldClient CreateDataGroupDirs
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CreateDataGroupDirs_0001, Function | SmallTest | Level1)
+{
+    std::vector<CreateDirParam> params;
+    auto ret1 = InstalldClient::GetInstance()->CreateDataGroupDirs(params);
+    EXPECT_NE(ret1, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteDataGroupDirs_0001
+ * @tc.name: test DeleteDataGroupDirs
+ * @tc.desc: 1.test InstalldClient DeleteDataGroupDirs
+ */
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeleteDataGroupDirs_0001, Function | SmallTest | Level1)
+{
+    std::vector<std::string> uuidList;
+    int32_t userId = Constants::INVALID_USERID;
+    auto ret1 = InstalldClient::GetInstance()->DeleteDataGroupDirs(uuidList, userId);
+    EXPECT_NE(ret1, ERR_OK);
+
+    uuidList.push_back("testUuid");
+    auto ret2 = InstalldClient::GetInstance()->DeleteDataGroupDirs(uuidList, userId);
+    EXPECT_NE(ret2, ERR_OK);
+
+    userId = 100;
+    EXPECT_NO_THROW(InstalldClient::GetInstance()->DeleteDataGroupDirs(uuidList, userId));
 }
 }

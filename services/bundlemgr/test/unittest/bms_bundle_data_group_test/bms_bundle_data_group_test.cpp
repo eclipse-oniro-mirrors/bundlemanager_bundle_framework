@@ -2103,4 +2103,16 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0026, Function | SmallTest 
     auto result5 = installer.CheckShellCanInstallPreApp(newInfos);
     EXPECT_EQ(result5, ERR_OK);
 }
+
+/**
+ * @tc.number: DeleteUninstallTmpDirs_0001
+ * @tc.name: test DeleteUninstallTmpDirs
+ * @tc.desc: 1.test InstalldClient DeleteUninstallTmpDirs
+ */
+HWTEST_F(BmsBundleDataGroupTest, DeleteUninstallTmpDirs_0001, Function | SmallTest | Level1)
+{
+    std::vector<std::string> dirs;
+    auto ret = InstalldClient::GetInstance()->DeleteUninstallTmpDirs(dirs);
+    EXPECT_NE(ret, ERR_OK);
+}
 } // OHOS

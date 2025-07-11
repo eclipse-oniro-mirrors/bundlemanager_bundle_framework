@@ -68,6 +68,7 @@ group("unittest") {
       "unittest/bms_bundle_emulator_installers_test:unittest",
       "unittest/bms_bundle_exception_handler_test:unittest",
       "unittest/bms_bundle_hap_verify_test:unittest",
+      "unittest/bms_host_impl_permission_test:unittest",
       "unittest/bms_bundle_hsp_test:unittest",
       "unittest/bms_bundle_installer_manager_test:unittest",
       "unittest/bms_bundle_installer_proxy_test:unittest",

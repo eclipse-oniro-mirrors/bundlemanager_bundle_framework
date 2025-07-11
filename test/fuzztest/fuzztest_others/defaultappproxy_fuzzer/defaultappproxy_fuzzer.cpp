@@ -54,8 +54,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     defaultAppProxy.GetDefaultApplication(userId, type, bundleInfo);
     defaultAppProxy.SetDefaultApplication(userId, type, want);
     defaultAppProxy.ResetDefaultApplication(userId, type);
-    defaultAppProxy.SendRequest(DefaultAppInterfaceCode::IS_DEFAULT_APPLICATION, datas, reply);
-
     return true;
 }
 }
