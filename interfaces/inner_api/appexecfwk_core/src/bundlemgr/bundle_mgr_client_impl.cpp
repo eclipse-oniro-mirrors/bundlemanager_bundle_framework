@@ -463,6 +463,31 @@ bool BundleMgrClientImpl::TransformFileToJsonString(const std::string &resPath, 
     return true;
 }
 
+bool BundleMgrClientImpl::GetProfileFromSharedHap(const HapModuleInfo &hapModuleInfo,
+    const ExtensionAbilityInfo &extensionInfo, std::vector<std::string> &profileInfos, bool includeSysRes) const
+{
+#ifdef GLOBAL_RESMGR_ENABLE
+    bool isCompressed = !hapModuleInfo.hapPath.empty();
+    std::string resourcePath = isCompressed ? hapModuleInfo.hapPath : hapModuleInfo.resourcePath;
+    if (resourcePath.empty()) {
+        APP_LOGE("GetProfileFromSharedHap failed due to empty resourcePath");
+        return false;
+    }
+    std::shared_ptr<ResourceManager> resMgr = InitResMgr(resourcePath, includeSysRes);
+    if (resMgr == nullptr) {
+        APP_LOGE("GetProfileFromSharedHap init resMgr failed");
+        return false;
+    }
+    for (const auto &meta : extensionInfo.metadata) {
+        GetResFromResMgr(meta.resource, resMgr, isCompressed, profileInfos);
+    }
+    return true;
+#else
+    APP_LOGW("GLOBAL_RESMGR_ENABLE is false");
+    return false;
+#endif
+}
+
 ErrCode BundleMgrClientImpl::InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId,
     int32_t &appIndex)
 {
