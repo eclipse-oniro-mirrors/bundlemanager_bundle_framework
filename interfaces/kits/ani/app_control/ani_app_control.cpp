@@ -108,7 +108,7 @@ static ani_object AniGetDisposedStatus(ani_env* env, ani_string aniAppId, ani_bo
         return nullptr;
     }
 
-    return WrapWant(env, want);
+    return AniAppControlCommon::ConvertWantInfo(env, want);
 }
 
 static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_double aniAppIndex, ani_boolean aniIsSync)

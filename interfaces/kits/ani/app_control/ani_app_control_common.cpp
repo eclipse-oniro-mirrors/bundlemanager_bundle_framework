@@ -25,6 +25,7 @@ namespace {
 constexpr const char* CLASSNAME_DISPOSED_RULE_INNER = "L@ohos/bundle/appControl/appControl/DisposedRuleInner;";
 constexpr const char* CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER =
     "L@ohos/bundle/appControl/appControl/UninstallDisposedRuleInner;";
+constexpr const char* CLASSNAME_WANT = "L@ohos/app/ability/Want/Want;";
 constexpr const char* PROPERTYNAME_WANT = "want";
 constexpr const char* PROPERTYNAME_COMPONENTTYPE = "componentType";
 constexpr const char* PROPERTYNAME_DISPOSEDTYPE = "disposedType";
@@ -41,6 +42,53 @@ constexpr const char* PROPERTYNAME_FLAGS = "flags";
 constexpr const char* PROPERTYNAME_ACTION = "action";
 constexpr const char* PROPERTYNAME_ENTITIES = "entities";
 constexpr const char* PROPERTYNAME_MODULENAME = "moduleName";
+}
+
+ani_object AniAppControlCommon::ConvertWantInfo(ani_env* env, const Want& want)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_WANT);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CommonFunAni::CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    // bundleName?: string
+    ani_string string = nullptr;
+    if (CommonFunAni::StringToAniStr(env, want.GetElement().GetBundleName(), string)) {
+        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    }
+
+    // abilityName?: string
+    if (CommonFunAni::StringToAniStr(env, want.GetElement().GetAbilityName(), string)) {
+        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_ABILITYNAME, string));
+    }
+
+    // deviceId?: string
+    if (CommonFunAni::StringToAniStr(env, want.GetElement().GetDeviceID(), string)) {
+        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_DEVICEID, string));
+    }
+
+    // action?: string
+    if (CommonFunAni::StringToAniStr(env, want.GetAction(), string)) {
+        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_ACTION, string));
+    }
+
+    // entities?: Array<string>
+    auto entities = want.GetEntities();
+    if (entities.size() > 0) {
+        ani_object aEntities = CommonFunAni::ConvertAniArrayString(env, entities);
+        RETURN_NULL_IF_NULL(aEntities);
+        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_ENTITIES, aEntities));
+    }
+
+    // moduleName?: string
+    if (CommonFunAni::StringToAniStr(env, want.GetElement().GetModuleName(), string)) {
+        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    }
+
+    return object;
 }
 
 ani_object AniAppControlCommon::ConvertDisposedRule(ani_env* env, const DisposedRule& disposedRule)
