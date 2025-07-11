@@ -27,9 +27,18 @@ namespace {
     constexpr size_t ARGS_ONE = 1;
 }
 
+static std::mutex callbackMutex;
+static std::set<void *> callbackInfos;
+
 void HandleEnvCleanup(void *data)
 {
-    APP_LOGD("HandleEnvCleanup data null? %{public}d", data == nullptr);
+    APP_LOGI("on hook %{public}d", data == nullptr);
+    std::lock_guard<std::mutex> callbackLock(callbackMutex);
+    auto it = callbackInfos.find(data);
+    if (it == callbackInfos.end()) {
+        APP_LOGI("ZlibCallbackInfo destroyed");
+        return;
+    }
     if (data != nullptr) {
         ZlibCallbackInfo *callbackInfo = static_cast<ZlibCallbackInfo *>(data);
         callbackInfo->SetValid(false);
@@ -40,10 +49,17 @@ ZlibCallbackInfo::ZlibCallbackInfo(napi_env env, napi_ref callback, napi_deferre
     : env_(env), callback_(callback), deferred_(deferred), isCallBack_(isCallback)
 {
     napi_status status = napi_add_env_cleanup_hook(env_, HandleEnvCleanup, this);
-    APP_LOGD("ZlibCallbackInfo() status %{public}d", status);
+    APP_LOGI("add hook %{public}d", status);
+    std::lock_guard<std::mutex> callbackLock(callbackMutex);
+    callbackInfos.insert(this);
 }
 
-ZlibCallbackInfo::~ZlibCallbackInfo() {}
+ZlibCallbackInfo::~ZlibCallbackInfo()
+{
+    APP_LOGI("~");
+    std::lock_guard<std::mutex> callbackLock(callbackMutex);
+    callbackInfos.erase(this);
+}
 
 int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
 {
@@ -53,15 +69,18 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
         },
         [](uv_work_t* work, int status) {
             if (work == nullptr) {
+                APP_LOGE("work null");
                 return;
             }
             AsyncCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncCallbackInfo*>(work->data);
             if (asyncCallbackInfo == nullptr) {
+                APP_LOGE("asyncCallbackInfo null");
                 return;
             }
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(asyncCallbackInfo->env, &scope);
             if (scope == nullptr) {
+                APP_LOGE("scope null");
                 return;
             }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -100,7 +119,7 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
             }
             napi_status ret = napi_remove_env_cleanup_hook(asyncCallbackInfo->env, HandleEnvCleanup,
                 asyncCallbackInfo->data);
-            APP_LOGD("rm env hook %{public}d", ret);
+            APP_LOGI("rm hook %{public}d", ret);
             napi_close_handle_scope(asyncCallbackInfo->env, scope);
         });
     return ret;
@@ -108,7 +127,7 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
 
 void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
 {
-    APP_LOGD("OnZipUnZipFinish ret %{public}d", result);
+    APP_LOGI("finish %{public}d", result);
     std::lock_guard<std::mutex> lock(validMutex_);
     if (!valid_) {
         APP_LOGE("module exported object is invalid");
