@@ -262,24 +262,26 @@ public:
     static bool ParseUninstallDisposedRule(ani_env* env,
         ani_object object, UninstallDisposedRule& uninstallDisposedRule);
 
-    template<typename toType>
-    static bool TryCastDoubleTo(const double fromValue, toType* toValue)
+    template<typename fromType, typename toType>
+    static bool TryCastTo(const fromType fromValue, toType* toValue)
     {
         RETURN_FALSE_IF_NULL(toValue);
 
-        if (std::isnan(fromValue)) {
-            APP_LOGE("value is NaN");
-            return false;
+        if constexpr (!std::is_integral_v<fromType>) {
+            if (std::isnan(fromValue)) {
+                APP_LOGE("value is NaN");
+                return false;
+            }
+            if (std::isinf(fromValue)) {
+                APP_LOGE("value is Inf");
+                return false;
+            }
         }
-        if (std::isinf(fromValue)) {
-            APP_LOGE("value is Inf");
-            return false;
-        }
-        if (fromValue > static_cast<double>(std::numeric_limits<toType>::max())) {
+        if (fromValue > static_cast<fromType>(std::numeric_limits<toType>::max())) {
             APP_LOGE("value too large");
             return false;
         }
-        if (fromValue < static_cast<double>(std::numeric_limits<toType>::lowest())) {
+        if (fromValue < static_cast<fromType>(std::numeric_limits<toType>::lowest())) {
             APP_LOGE("value too small");
             return false;
         }
@@ -439,21 +441,41 @@ public:
             status = env->Object_GetPropertyByName_Ref(object, propertyName, reinterpret_cast<ani_ref*>(value));
         } else if constexpr (std::is_same_v<valueType, ani_boolean>) {
             status = env->Object_GetPropertyByName_Boolean(object, propertyName, value);
-        } else if constexpr (std::is_same_v<valueType, ani_char>) {
-            status = env->Object_GetPropertyByName_Char(object, propertyName, value);
-        } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
-                             std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
-                             std::is_same_v<valueType, ani_long> || std::is_same_v<valueType, uint64_t> ||
-                             std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
-            // uint64_t -> BigInt later
+        } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
+                             std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
+            ani_int i = 0;
+            status = env->Object_GetPropertyByName_Int(object, propertyName, &i);
+            if (status != ANI_OK) {
+                APP_LOGE("Object_GetPropertyByName %{public}s failed %{public}d", propertyName, status);
+                return false;
+            }
+            if (!TryCastTo(i, value)) {
+                APP_LOGE("TryCastTo %{public}s failed", propertyName);
+                return false;
+            }
+            return true;
+        } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
+            ani_long l = 0;
+            status = env->Object_GetPropertyByName_Long(object, propertyName, &l);
+            if (status != ANI_OK) {
+                APP_LOGE("Object_GetPropertyByName %{public}s failed %{public}d", propertyName, status);
+                return false;
+            }
+            if (!TryCastTo(l, value)) {
+                APP_LOGE("TryCastTo %{public}s failed", propertyName);
+                return false;
+            }
+            return true;
+        } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
+                             std::is_same_v<valueType, uint64_t>) {
             double d = 0;
             status = env->Object_GetPropertyByName_Double(object, propertyName, &d);
             if (status != ANI_OK) {
                 APP_LOGE("Object_GetPropertyByName %{public}s failed %{public}d", propertyName, status);
                 return false;
             }
-            if (!TryCastDoubleTo(d, value)) {
-                APP_LOGE("TryCastDoubleTo %{public}s failed", propertyName);
+            if (!TryCastTo(d, value)) {
+                APP_LOGE("TryCastTo %{public}s failed", propertyName);
                 return false;
             }
             return true;
@@ -500,22 +522,42 @@ public:
             if constexpr (std::is_same_v<valueType, ani_boolean>) {
                 status = env->Object_CallMethodByName_Boolean(
                     reinterpret_cast<ani_object>(ref), "unboxed", ":Z", value);
-            } else if constexpr (std::is_same_v<valueType, ani_char>) {
-                status = env->Object_CallMethodByName_Char(reinterpret_cast<ani_object>(ref), "unboxed", ":C", value);
-            } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
-                                 std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
-                                 std::is_same_v<valueType, ani_long> ||
-                                 std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
-                double d = 0;
-                status =
-                    env->Object_CallMethodByName_Double(reinterpret_cast<ani_object>(ref), "unboxed", nullptr, &d);
+            } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
+                                 std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
+                ani_int i = 0;
+                status = env->Object_CallMethodByName_Int(reinterpret_cast<ani_object>(ref), "unboxed", ":I", &i);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_GetPropertyByName %{public}s failed %{public}d", propertyName, status);
                     return false;
                 }
-                *value = static_cast<valueType>(d);
-                if (!TryCastDoubleTo(d, value)) {
-                    APP_LOGE("TryCastDoubleTo %{public}s failed", propertyName);
+                *value = static_cast<valueType>(i);
+                if (!TryCastTo(i, value)) {
+                    APP_LOGE("TryCastTo %{public}s failed", propertyName);
+                    return false;
+                }
+                return true;
+            } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
+                ani_long l = 0;
+                status = env->Object_CallMethodByName_Long(reinterpret_cast<ani_object>(ref), "unboxed", ":J", &l);
+                if (status != ANI_OK) {
+                    APP_LOGE("Object_GetPropertyByName %{public}s failed %{public}d", propertyName, status);
+                    return false;
+                }
+                if (!TryCastTo(l, value)) {
+                    APP_LOGE("TryCastTo %{public}s failed", propertyName);
+                    return false;
+                }
+                return true;
+            } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
+                                 std::is_same_v<valueType, uint64_t>) {
+                double d = 0;
+                status = env->Object_CallMethodByName_Double(reinterpret_cast<ani_object>(ref), "unboxed", ":D", &d);
+                if (status != ANI_OK) {
+                    APP_LOGE("Object_GetPropertyByName %{public}s failed %{public}d", propertyName, status);
+                    return false;
+                }
+                if (!TryCastTo(d, value)) {
+                    APP_LOGE("TryCastTo %{public}s failed", propertyName);
                     return false;
                 }
                 return true;
@@ -539,26 +581,26 @@ public:
         RETURN_FALSE_IF_NULL(cls);
         RETURN_FALSE_IF_NULL(object);
 
-        std::string setterName("<set>");
-        setterName.append(propertyName);
-        ani_method setter;
-        ani_status status = env->Class_FindMethod(cls, setterName.c_str(), nullptr, &setter);
-        if (status != ANI_OK) {
-            APP_LOGE("Class_FindMethod %{public}s failed %{public}d", propertyName, status);
+        ani_status status = ANI_OK;
+        if constexpr (std::is_pointer_v<valueType> && std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
+            status = env->Object_SetPropertyByName_Ref(object, propertyName, value);
+        } else if constexpr (std::is_same_v<valueType, ani_boolean>) {
+            status = env->Object_SetPropertyByName_Boolean(object, propertyName, value);
+        } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
+                             std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
+            status = env->Object_SetPropertyByName_Int(object, propertyName, static_cast<ani_int>(value));
+        } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
+            status = env->Object_SetPropertyByName_Long(object, propertyName, static_cast<ani_long>(value));
+        } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
+                             std::is_same_v<valueType, uint64_t>) {
+            status = env->Object_SetPropertyByName_Double(object, propertyName, static_cast<ani_double>(value));
+        } else {
+            APP_LOGE("Object_SetPropertyByName %{public}s Unsupported", propertyName);
             return false;
         }
 
-        if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
-                      std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
-                      std::is_same_v<valueType, ani_long> ||
-                      std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
-            status = env->Object_CallMethod_Void(object, setter, static_cast<double>(value));
-        } else {
-            status = env->Object_CallMethod_Void(object, setter, value);
-        }
-
         if (status != ANI_OK) {
-            APP_LOGE("Object_CallMethod_Void %{public}s failed %{public}d", propertyName, status);
+            APP_LOGE("Object_SetPropertyByName %{public}s failed %{public}d", propertyName, status);
             return false;
         }
 
@@ -616,13 +658,15 @@ public:
         if constexpr (std::is_same_v<valueType, ani_boolean>) {
             valueClassName = "Lstd/core/Boolean;";
             ctorSig = "Z:V";
-        } else if constexpr (std::is_same_v<valueType, ani_char>) {
-            valueClassName = "Lstd/core/Char;";
-            ctorSig = "C:V";
-        } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
-                             std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
-                             std::is_same_v<valueType, ani_long> ||
-                             std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
+        } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
+                             std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
+            valueClassName = "Lstd/core/Int;";
+            ctorSig = "I:V";
+        } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
+            valueClassName = "Lstd/core/Long;";
+            ctorSig = "J:V";
+        } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
+                             std::is_same_v<valueType, uint64_t>) {
             valueClassName = "Lstd/core/Double;";
             ctorSig = "D:V";
         } else {
@@ -645,16 +689,7 @@ public:
         }
 
         ani_object valueObj = nullptr;
-        if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
-                      std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
-                      std::is_same_v<valueType, ani_long> ||
-                      std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
-            status = env->Object_New(valueClass, ctor, &valueObj, static_cast<double>(value));
-        } else {
-            APP_LOGE("Classname %{public}s Unsupported", propertyName);
-            return false;
-        }
-
+        status = env->Object_New(valueClass, ctor, &valueObj, value);
         if (status != ANI_OK) {
             APP_LOGE("Object_New %{public}s failed %{public}d", propertyName, status);
             return false;

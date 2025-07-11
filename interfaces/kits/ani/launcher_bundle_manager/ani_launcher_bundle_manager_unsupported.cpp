@@ -34,7 +34,7 @@ static void AniStartShortcut(ani_env *env, ani_object aniShortcutInfo, ani_objec
 }
 
 static ani_object AniGetShortcutInfo(ani_env *env,
-    ani_string aniBundleName, ani_double aniUserId, ani_boolean aniIsSync)
+    ani_string aniBundleName, ani_int aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
@@ -44,7 +44,7 @@ static ani_object AniGetShortcutInfo(ani_env *env,
 }
 
 static ani_object AniGetLauncherAbilityInfo(ani_env *env,
-    ani_string aniBundleName, ani_double aniUserId, ani_boolean aniIsSync)
+    ani_string aniBundleName, ani_int aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
@@ -53,7 +53,7 @@ static ani_object AniGetLauncherAbilityInfo(ani_env *env,
     return nullptr;
 }
 
-static ani_object AniGetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
+static ani_object AniGetAllLauncherAbilityInfo(ani_env *env, ani_int aniUserId)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ALL_LAUNCHER_ABILITY_INFO, "");

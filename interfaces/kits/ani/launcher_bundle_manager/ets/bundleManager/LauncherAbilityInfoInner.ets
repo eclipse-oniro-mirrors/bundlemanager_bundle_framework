@@ -21,8 +21,8 @@ import { LauncherAbilityInfo } from 'bundleManager.LauncherAbilityInfo';
 export class LauncherAbilityInfoInner implements LauncherAbilityInfo {
   readonly applicationInfo: ApplicationInfo = new ApplicationInfoInner;
   readonly elementName: ElementName = new ElementNameInner;
-  readonly labelId: number;
-  readonly iconId: number;
-  readonly userId: number;
-  readonly installTime: number;
+  readonly labelId: long;
+  readonly iconId: long;
+  readonly userId: int;
+  readonly installTime: long;
 }

@@ -50,6 +50,7 @@ constexpr int32_t GET_REMOTE_ABILITY_INFO_MAX_SIZE = 10;
 
 constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
 constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
+constexpr int32_t EMPTY_USER_ID = -500;
 
 constexpr int32_t ENUM_ONE = 1;
 constexpr int32_t ENUM_TWO = 2;

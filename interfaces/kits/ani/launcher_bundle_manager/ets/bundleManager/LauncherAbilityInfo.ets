@@ -19,8 +19,8 @@ import { ElementName } from 'bundleManager.ElementName';
 export interface LauncherAbilityInfo {
   readonly applicationInfo: ApplicationInfo;
   readonly elementName: ElementName;
-  readonly labelId: number;
-  readonly iconId: number;
-  readonly userId: number;
-  readonly installTime: number;
+  readonly labelId: long;
+  readonly iconId: long;
+  readonly userId: int;
+  readonly installTime: long;
 }

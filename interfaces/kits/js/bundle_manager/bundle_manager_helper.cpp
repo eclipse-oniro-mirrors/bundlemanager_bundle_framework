@@ -413,7 +413,7 @@ ErrCode BundleManagerHelper::InnerVerify(const std::vector<std::string>& abcPath
 {
     auto verifyManager = CommonFunc::GetVerifyManager();
     if (verifyManager == nullptr) {
-        APP_LOGE("iBundleMgr is null");
+        APP_LOGE("verifyManager is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 
@@ -429,7 +429,7 @@ ErrCode BundleManagerHelper::InnerDeleteAbc(const std::string& path)
 {
     auto verifyManager = CommonFunc::GetVerifyManager();
     if (verifyManager == nullptr) {
-        APP_LOGE("iBundleMgr is null");
+        APP_LOGE("verifyManager is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 
@@ -455,7 +455,7 @@ ErrCode BundleManagerHelper::InnerGetRecoverableApplicationInfo(
 }
 
 ErrCode BundleManagerHelper::InnerGetAllPluginInfo(
-    std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos)
+    const std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {

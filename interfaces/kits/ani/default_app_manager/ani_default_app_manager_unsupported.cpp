@@ -36,7 +36,7 @@ static ani_boolean AniIsDefaultApplication(ani_env *env, ani_string aniType, ani
 }
 
 static ani_object AniGetDefaultApplication(ani_env *env,
-    ani_string aniType, ani_double aniUserId, ani_boolean aniIsSync)
+    ani_string aniType, ani_int aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
@@ -46,7 +46,7 @@ static ani_object AniGetDefaultApplication(ani_env *env,
 }
 
 static void AniSetDefaultApplication(ani_env *env,
-    ani_string aniType, ani_object aniElementName, ani_double aniUserId, ani_boolean aniIsSync)
+    ani_string aniType, ani_object aniElementName, ani_int aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
@@ -54,7 +54,7 @@ static void AniSetDefaultApplication(ani_env *env,
         isSync ? SET_DEFAULT_APPLICATION_SYNC : SET_DEFAULT_APPLICATION, "");
 }
 
-static void AniResetDefaultApplication(ani_env *env, ani_string aniType, ani_double aniUserId, ani_boolean aniIsSync)
+static void AniResetDefaultApplication(ani_env *env, ani_string aniType, ani_int aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);

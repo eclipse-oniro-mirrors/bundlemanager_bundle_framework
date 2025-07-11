@@ -71,19 +71,19 @@ export class AbilityFormInfoInner implements AbilityFormInfo {
   public readonly type: string = '';
   public readonly updateEnabled: boolean;
   public readonly scheduledUpdateTime: string = '';
-  public readonly updateDuration: number;
+  public readonly updateDuration: int;
   public readonly supportDimensions: Array<string> = [];
   public readonly defaultDimension: string = '';
 }
 
 export class VersionInner implements Version {
-  public readonly minCompatibleVersionCode: number;
+  public readonly minCompatibleVersionCode: int;
   public readonly name: string = '';
-  public readonly code: number;
+  public readonly code: int;
 }
 
 export class ApiVersionInner implements ApiVersion {
   public readonly releaseType: string = '';
-  public readonly compatible: number;
-  public readonly target: number;
+  public readonly compatible: int;
+  public readonly target: int;
 }
