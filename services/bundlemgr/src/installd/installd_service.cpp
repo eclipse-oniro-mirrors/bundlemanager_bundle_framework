@@ -26,6 +26,7 @@
 #include "bundle_resource/bundle_resource_constants.h"
 #include "bundle_service_constants.h"
 #include "installd/installd_operator.h"
+#include "mem_mgr_client.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 
@@ -39,6 +40,9 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr uint8_t INSTALLD_UMASK = 0000;
+constexpr uint8_t SA_SERVICE = 1;
+constexpr uint8_t SA_START = 1;
+constexpr uint8_t SA_DIED = 0;
 }
 REGISTER_SYSTEM_ABILITY_BY_ID(InstalldService, INSTALLD_SERVICE_ID, true);
 
@@ -121,6 +125,8 @@ void InstalldService::Start()
         return;
     }
     isReady_ = true;
+    Memory::MemMgrClient::GetInstance().NotifyProcessStatus(
+        getpid(), SA_SERVICE, SA_START, INSTALLD_SERVICE_ID);
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service start successfully");
 }
 
@@ -131,6 +137,8 @@ void InstalldService::Stop()
         return;
     }
     isReady_ = false;
+    Memory::MemMgrClient::GetInstance().NotifyProcessStatus(
+        getpid(), SA_SERVICE, SA_DIED, INSTALLD_SERVICE_ID);
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service stop successfully");
 }
 }  // namespace AppExecFwk
