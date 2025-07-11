@@ -7227,9 +7227,9 @@ bool BaseBundleInstaller::AddAppGalleryHapToTempPath(const bool isPreInstall,
         LOG_D(BMS_TAG_INSTALLER, "bundle %{public}s is not appGallery", bundleInfo.GetBundleName().c_str());
         return false;
     }
-    std::string targetPath = BundleUtil::CreateTempDir(ServiceConstants::BMS_APP_TEMP_PATH);
+    std::string targetPath = BundleUtil::CreateTempDir(ServiceConstants::BMS_APP_COPY_TEMP_PATH);
     if (targetPath.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "app temp path create failed %{public}d", errno);
+        LOG_E(BMS_TAG_INSTALLER, "app copy temp path create failed %{public}d", errno);
         return false;
     }
     needDeleteAppTempPath_ = true;
@@ -7241,8 +7241,14 @@ bool BaseBundleInstaller::AddAppGalleryHapToTempPath(const bool isPreInstall,
         }
         if (!BundleUtil::CopyFileFast(item.first, targetPath + item.first.substr(pos), true)) {
             LOG_E(BMS_TAG_INSTALLER, "copy hap %{public}s failed err %{public}d", item.first.c_str(), errno);
+            return false;
         }
     }
+    if (!BundleUtil::RenameFile(targetPath, ServiceConstants::BMS_APP_TEMP_PATH)) {
+        LOG_E(BMS_TAG_INSTALLER, "rename app temp path failed %{public}d", errno);
+        return false;
+    }
+
     LOG_I(BMS_TAG_INSTALLER, "copy hap file to app_temp end");
     return true;
 }
@@ -7254,6 +7260,10 @@ bool BaseBundleInstaller::DeleteAppGalleryHapFromTempPath()
     }
     if (!BundleUtil::DeleteDir(ServiceConstants::BMS_APP_TEMP_PATH)) {
         LOG_E(BMS_TAG_INSTALLER, "delete app_temp failed %{public}d", errno);
+        return false;
+    }
+    if (!BundleUtil::DeleteDir(ServiceConstants::BMS_APP_COPY_TEMP_PATH)) {
+        LOG_E(BMS_TAG_INSTALLER, "delete app_copy_temp failed %{public}d", errno);
         return false;
     }
     LOG_I(BMS_TAG_INSTALLER, "delete app_temp file end");

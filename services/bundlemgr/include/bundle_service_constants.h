@@ -246,6 +246,7 @@ constexpr const char* JSON_SUFFIX = ".json";
 
 // app temp path
 constexpr const char* BMS_APP_TEMP_PATH = "/data/service/el1/public/bms/bundle_manager_service/app_temp";
+constexpr const char* BMS_APP_COPY_TEMP_PATH = "/data/service/el1/public/bms/bundle_manager_service/app_copy_temp";
 
 // time
 constexpr const char* BMS_SYSTEM_TIME_FOR_SHORTCUT = "SystemTimeForShortcut";
