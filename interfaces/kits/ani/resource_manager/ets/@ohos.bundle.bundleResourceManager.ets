@@ -75,11 +75,9 @@ export default namespace bundleResourceManager {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let resultArray: Array<BundleResourceInfo> = e as Array<BundleResourceInfo>;
-      let br: BusinessError = new BusinessError();
-      callback(br, resultArray);
+      callback(null, resultArray);
     }, (err: Error): void => {
-      let resultArray: Array<BundleResourceInfo> = new Array<BundleResourceInfo>;
-      callback(err as BusinessError, resultArray);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -106,11 +104,9 @@ export default namespace bundleResourceManager {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let resultArray: Array<LauncherAbilityResourceInfo> = e as Array<LauncherAbilityResourceInfo>;
-      let br: BusinessError = new BusinessError();
-      callback(br, resultArray);
+      callback(null, resultArray);
     }, (err: Error): void => {
-      let resultArray: Array<LauncherAbilityResourceInfo> = new Array<LauncherAbilityResourceInfo>;
-      callback(err as BusinessError, resultArray);
+      callback(err as BusinessError, undefined);
     });
   }
 

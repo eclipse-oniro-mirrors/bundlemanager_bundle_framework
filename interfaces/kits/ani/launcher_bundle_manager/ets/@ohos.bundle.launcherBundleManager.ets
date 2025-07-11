@@ -62,11 +62,9 @@ export default namespace launcherBundleManager {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let resultShortcutInfo: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
-      let br: BusinessError = new BusinessError();
-      callback(br, resultShortcutInfo);
+      callback(null, resultShortcutInfo);
     }, (err: Error): void => {
-      let resultShortcutInfo: Array<ShortcutInfo> = new Array<ShortcutInfo>;
-      callback(err as BusinessError, resultShortcutInfo);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -93,11 +91,9 @@ export default namespace launcherBundleManager {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
-      let br: BusinessError = new BusinessError();
-      callback(br, resultArray);
+      callback(null, resultArray);
     }, (err: Error): void => {
-      let resultArray: Array<LauncherAbilityInfo> = new Array<LauncherAbilityInfo>;
-      callback(err as BusinessError, resultArray);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -128,11 +124,9 @@ export default namespace launcherBundleManager {
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
       let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
-      let br: BusinessError = new BusinessError();
-      callback(br, resultArray);
+      callback(null, resultArray);
     }, (err: Error): void => {
-      let resultArray: Array<LauncherAbilityInfo> = new Array<LauncherAbilityInfo>;
-      callback(err as BusinessError, resultArray);
+      callback(err as BusinessError, undefined);
     });
   }
 

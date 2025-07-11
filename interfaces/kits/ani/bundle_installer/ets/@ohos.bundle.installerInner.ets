@@ -110,11 +110,9 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   install(hapFilePaths: Array<string>, installParam: installer.InstallParam, callback: AsyncCallback<void>): void {
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.installNative(hapFilePaths, installParam); }
-
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r = new BusinessError();
-              callback(r, undefined);
+              callback(null, undefined);
           }, (err: Error): void => {
               callback(err as BusinessError, undefined);
           });
@@ -125,11 +123,9 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let emptyParam = new InstallParamInner();
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.installNative(hapFilePaths, emptyParam); }
-
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r = new BusinessError();
-              callback(r, undefined);
+              callback(null, undefined);
           }, (err: Error): void => {
               callback(err as BusinessError, undefined);
           });
@@ -154,11 +150,9 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   uninstall(bundleName: string, installParam: installer.InstallParam, callback: AsyncCallback<void>): void {
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.uninstallNative(bundleName, installParam); }
-
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r = new BusinessError();
-              callback(r, undefined);
+              callback(null, undefined);
           }, (err: Error): void => {
               callback(err as BusinessError, undefined);
           });
@@ -169,11 +163,9 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let emptyParam = new InstallParamInner();
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.uninstallNative(bundleName, emptyParam); }
-
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r = new BusinessError();
-              callback(r, undefined);
+              callback(null, undefined);
           }, (err: Error): void => {
               callback(err as BusinessError, undefined);
           });
@@ -198,11 +190,9 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   recover(bundleName: string, installParam: installer.InstallParam, callback: AsyncCallback<void>): void {
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.recoverNative(bundleName, installParam); }
-
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r = new BusinessError();
-              callback(r, undefined);
+              callback(null, undefined);
           }, (err: Error): void => {
               callback(err as BusinessError, undefined);
           });
@@ -215,8 +205,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           let execFun = ():NullishType=>{ this.recoverNative(bundleName, emptyParam); }
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r = new BusinessError();
-              callback(r, undefined);
+              callback(null, undefined);
           }, (err: Error): void => {
               callback(err as BusinessError, undefined);
           });
@@ -241,8 +230,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           let execFun = ():NullishType=>{ this.uninstallByOwnParamNative(uninstallParam); }
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r = new BusinessError();
-              callback(r, undefined);
+              callback(null, undefined);
           }, (err: Error): void => {
               callback(err as BusinessError, undefined);
           });
@@ -269,8 +257,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
           let execFun = ():NullishType=>{ this.updateBundleForSelfNative(hapFilePaths, installParam); }
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r = new BusinessError();
-              callback(r, undefined);
+              callback(null, undefined);
           }, (err: Error): void => {
               callback(err as BusinessError, undefined);
           });
@@ -281,11 +268,9 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let emptyParam = new InstallParamInner();
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.updateBundleForSelfNative(hapFilePaths, emptyParam); }
-
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
-              let r = new BusinessError();
-              callback(r, undefined);
+              callback(null, undefined);
           }, (err: Error): void => {
               callback(err as BusinessError, undefined);
           });
