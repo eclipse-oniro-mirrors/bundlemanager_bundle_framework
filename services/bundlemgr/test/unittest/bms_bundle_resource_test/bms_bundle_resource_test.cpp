@@ -3326,10 +3326,13 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0142, Function | SmallTest
         EXPECT_TRUE(ret);
 
         std::vector<LauncherAbilityResourceInfo> newLauncherAbilityResourceInfos;
+        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+        setuid(currentUserId * Constants::BASE_USER_RANGE);
         ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
             newLauncherAbilityResourceInfos);
+        setuid(Constants::ROOT_UID);
         EXPECT_TRUE(ret);
         EXPECT_FALSE(newLauncherAbilityResourceInfos.empty());
         if (!newLauncherAbilityResourceInfos.empty() && !oldLauncherAbilityResourceInfos.empty()) {
@@ -3441,11 +3444,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0145, Function | SmallTest
         ret = manager->AddCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
         EXPECT_TRUE(ret);
 
+        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+        setuid(currentUserId * Constants::BASE_USER_RANGE);
         std::vector<LauncherAbilityResourceInfo> cloneLauncherAbilityResourceInfos;
         ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
             cloneLauncherAbilityResourceInfos, appIndex);
+        setuid(Constants::ROOT_UID);
         EXPECT_TRUE(ret);
         EXPECT_EQ(launcherAbilityResourceInfos.size(), cloneLauncherAbilityResourceInfos.size());
         if (!launcherAbilityResourceInfos.empty() && !cloneLauncherAbilityResourceInfos.empty()) {
@@ -5288,9 +5294,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0229, Function | SmallTest
     bool ans = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ans);
     std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
     ans = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(bundleName,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY), infos, 0);
     EXPECT_EQ(ans, ERR_OK);
+    setuid(Constants::ROOT_UID);
     ans = manager->bundleResourceRdb_->DeleteResourceInfo(resourceInfo.GetKey());
     EXPECT_TRUE(ans);
 }
@@ -5948,5 +5957,117 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0230, Function | SmallTest
         auto ret = manager->CheckAllAddResourceInfo(THEME_TEST_USERID);
         EXPECT_FALSE(ret);
     }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0240
+ * @tc.name: GetResourceInfoForRequestUser
+ * @tc.desc: 1. test GetResourceInfoForRequestUser
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0240, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    int32_t userId = -1;
+    std::string bundleName = "bundleName";
+    uint32_t flag = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+
+    auto ret = manager->GetResourceInfoForRequestUser(bundleName, userId, flag,
+        0, launcherAbilityResourceInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0250
+ * @tc.name: GetResourceInfoForRequestUser
+ * @tc.desc: 1. test GetResourceInfoForRequestUser
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0250, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    std::string bundleName = "bundleName";
+    uint32_t flag = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+
+    auto ret = manager->GetResourceInfoForRequestUser(BUNDLE_NAME, USERID, flag,
+        0, launcherAbilityResourceInfos);
+    EXPECT_TRUE(ret);
+
+    ret = manager->GetResourceInfoForRequestUser(BUNDLE_NAME, USERID, flag,
+        1, launcherAbilityResourceInfos);
+    EXPECT_FALSE(ret);
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0251
+ * @tc.name: ConvertLauncherAbilityResourceInfo
+ * @tc.desc: 1. test ConvertLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0251, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    ResourceInfo resourceInfo;
+    uint32_t flags = 0;
+    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+    auto ret = manager->ConvertLauncherAbilityResourceInfo(resourceInfo,
+        flags, launcherAbilityResourceInfo);
+    EXPECT_FALSE(ret);
+
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.abilityName_ = "abilityName";
+    ret = manager->ConvertLauncherAbilityResourceInfo(resourceInfo,
+        flags, launcherAbilityResourceInfo);
+    EXPECT_TRUE(ret);
+
+    flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    ret = manager->ConvertLauncherAbilityResourceInfo(resourceInfo,
+        flags, launcherAbilityResourceInfo);
+    EXPECT_TRUE(ret);
+
+    flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON);
+    ret = manager->ConvertLauncherAbilityResourceInfo(resourceInfo,
+        flags, launcherAbilityResourceInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0252
+ * @tc.name: GetLauncherAbilityResourceInfo
+ * @tc.desc: 1. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0252, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
+
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
+    auto ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME, flags,
+        launcherAbilityResourceInfo, 0);
+    EXPECT_TRUE(ret);
+
+    setuid(Constants::ROOT_UID);
+    ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME, flags,
+        launcherAbilityResourceInfo, 0);
+    EXPECT_TRUE(ret);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 } // OHOS

@@ -106,6 +106,12 @@ public:
         const ExtensionAbilityType extensionAbilityType, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0);
 
+    bool GetResourceInfoForRequestUser(const std::string &bundleName, const int32_t userId, const uint32_t flags,
+        const int32_t appIndex, std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo);
+    
+    bool ConvertLauncherAbilityResourceInfo(const ResourceInfo &resourceInfo, const uint32_t flags,
+        LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
+
 private:
     bool AddResourceInfo(const int32_t userId, ResourceInfo &resourceInfo);
 

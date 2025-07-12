@@ -3031,8 +3031,11 @@ HWTEST_F(BmsBundleManagerTest, GetAbilityLabelInfo_0001, Function | MediumTest |
     info.name = resourceInfo.abilityName_;
     info.appIndex = 0;
     abilityInfos.push_back(info);
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    setuid(currentUserId * Constants::BASE_USER_RANGE);
 
     hostImpl->GetAbilityLabelInfo(abilityInfos);
+    setuid(Constants::ROOT_UID);
     EXPECT_EQ(abilityInfos[0].label, resourceInfo.label_);
     resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
 }
