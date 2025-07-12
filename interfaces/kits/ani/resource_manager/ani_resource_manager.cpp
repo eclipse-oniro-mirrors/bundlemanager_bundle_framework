@@ -14,6 +14,7 @@
  */
 #include <ani_signature_builder.h>
 
+#include "ani_resource_manager_common.h"
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
 #include "bundle_resource_info.h"
@@ -63,7 +64,7 @@ static ani_object AniGetBundleResourceInfo(ani_env* env, ani_string aniBundleNam
         return nullptr;
     }
 
-    return CommonFunAni::ConvertBundleResourceInfo(env, bundleResInfo);
+    return AniResourceManagerCommon::ConvertBundleResourceInfo(env, bundleResInfo);
 }
 
 static ani_object AniGetLauncherAbilityResourceInfo(ani_env* env, ani_string aniBundleName,
@@ -96,7 +97,7 @@ static ani_object AniGetLauncherAbilityResourceInfo(ani_env* env, ani_string ani
     }
 
     ani_object launcherAbilityResourceInfosObject = CommonFunAni::ConvertAniArray(
-        env, launcherAbilityResourceInfos, CommonFunAni::ConvertLauncherAbilityResourceInfo);
+        env, launcherAbilityResourceInfos, AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo);
     if (launcherAbilityResourceInfosObject == nullptr) {
         APP_LOGE("nullptr launcherAbilityResourceInfosObject");
     }
@@ -117,7 +118,7 @@ static ani_object AniGetAllBundleResourceInfo(ani_env* env, ani_int aniResFlag)
     }
 
     ani_object bundleResourceInfosObject = CommonFunAni::ConvertAniArray(
-        env, bundleResourceInfos, CommonFunAni::ConvertBundleResourceInfo);
+        env, bundleResourceInfos, AniResourceManagerCommon::ConvertBundleResourceInfo);
     if (bundleResourceInfosObject == nullptr) {
         APP_LOGE("nullptr bundleResourceInfosObject");
     }
@@ -140,7 +141,7 @@ static ani_object AniGetAllLauncherAbilityResourceInfo(ani_env* env, ani_int ani
     }
 
     ani_object launcherAbilityResourceInfosObject = CommonFunAni::ConvertAniArray(
-        env, launcherAbilityResourceInfos, CommonFunAni::ConvertLauncherAbilityResourceInfo);
+        env, launcherAbilityResourceInfos, AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo);
     if (launcherAbilityResourceInfosObject == nullptr) {
         APP_LOGE("nullptr launcherAbilityResourceInfosObject");
     }
