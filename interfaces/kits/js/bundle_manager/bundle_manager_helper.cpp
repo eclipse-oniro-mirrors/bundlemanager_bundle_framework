@@ -463,7 +463,7 @@ ErrCode BundleManagerHelper::InnerGetRecoverableApplicationInfo(
 }
 
 ErrCode BundleManagerHelper::InnerGetAllPluginInfo(
-    std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos)
+    const std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {

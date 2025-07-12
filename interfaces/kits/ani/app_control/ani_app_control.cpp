@@ -111,7 +111,7 @@ static ani_object AniGetDisposedStatus(ani_env* env, ani_string aniAppId, ani_bo
     return WrapWant(env, want);
 }
 
-static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_double aniAppIndex, ani_boolean aniIsSync)
+static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_int aniAppIndex, ani_boolean aniIsSync)
 {
     APP_LOGD("ani DeleteDisposedStatus called");
     std::string appId;
@@ -128,10 +128,6 @@ static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_doubl
             isSync ? "" : PERMISSION_DISPOSED_STATUS);
         return;
     }
-    int32_t appIndex = Constants::MAIN_APP_INDEX;
-    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
-        APP_LOGW("parse appIndex failed");
-    }
 
     auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
@@ -143,10 +139,10 @@ static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_doubl
     }
 
     ErrCode ret = ERR_OK;
-    if (appIndex == Constants::MAIN_APP_INDEX) {
+    if (aniAppIndex == Constants::MAIN_APP_INDEX) {
         ret = appControlProxy->DeleteDisposedStatus(appId);
     } else {
-        ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, appIndex);
+        ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, aniAppIndex);
     }
     if (ret != ERR_OK) {
         APP_LOGE("DeleteDisposedStatusSync failed ret: %{public}d", ret);
@@ -155,7 +151,7 @@ static void AniDeleteDisposedStatus(ani_env* env, ani_string aniAppId, ani_doubl
     }
 }
 
-static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_double aniAppIndex)
+static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int aniAppIndex)
 {
     APP_LOGD("ani GetDisposedRule called");
     std::string appId;
@@ -169,10 +165,6 @@ static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_doub
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPID, GET_DISPOSED_STATUS_SYNC, "");
         return nullptr;
     }
-    int32_t appIndex = Constants::MAIN_APP_INDEX;
-    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
-        APP_LOGW("parse appIndex failed");
-    }
 
     auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
@@ -183,10 +175,10 @@ static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_doub
 
     DisposedRule disposedRule;
     ErrCode ret = ERR_OK;
-    if (appIndex == Constants::MAIN_APP_INDEX) {
+    if (aniAppIndex == Constants::MAIN_APP_INDEX) {
         ret = appControlProxy->GetDisposedRule(appId, disposedRule);
     } else {
-        ret = appControlProxy->GetDisposedRuleForCloneApp(appId, disposedRule, appIndex);
+        ret = appControlProxy->GetDisposedRuleForCloneApp(appId, disposedRule, aniAppIndex);
     }
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedRule failed ret: %{public}d", ret);
@@ -198,7 +190,7 @@ static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_doub
     return AniAppControlCommon::ConvertDisposedRule(env, disposedRule);
 }
 
-static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object aniRule, ani_double aniAppIndex)
+static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object aniRule, ani_int aniAppIndex)
 {
     APP_LOGD("ani SetDisposedRule called");
     std::string appId;
@@ -218,10 +210,6 @@ static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object ani
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
         return;
     }
-    int32_t appIndex = Constants::MAIN_APP_INDEX;
-    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
-        APP_LOGW("parse appIndex failed");
-    }
 
     auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
@@ -231,10 +219,10 @@ static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object ani
     }
 
     ErrCode ret = ERR_OK;
-    if (appIndex == Constants::MAIN_APP_INDEX) {
+    if (aniAppIndex == Constants::MAIN_APP_INDEX) {
         ret = appControlProxy->SetDisposedRule(appId, rule);
     } else {
-        ret = appControlProxy->SetDisposedRuleForCloneApp(appId, rule, appIndex);
+        ret = appControlProxy->SetDisposedRuleForCloneApp(appId, rule, aniAppIndex);
     }
     if (ret != ERR_OK) {
         APP_LOGE("SetDisposedRule failed ret: %{public}d", ret);
@@ -244,7 +232,7 @@ static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object ani
 }
 
 static void AniSetUninstallDisposedRule(ani_env* env,
-    ani_string aniAppIdentifier, ani_object aniRule, ani_double aniAppIndex)
+    ani_string aniAppIdentifier, ani_object aniRule, ani_int aniAppIndex)
 {
     APP_LOGD("ani SetUninstallDisposedRule called");
     std::string appIdentifier;
@@ -265,10 +253,6 @@ static void AniSetUninstallDisposedRule(ani_env* env,
             UNINSTALL_DISPOSED_RULE, UNINSTALL_DISPOSED_RULE_TYPE);
         return;
     }
-    int32_t appIndex = Constants::MAIN_APP_INDEX;
-    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
-        APP_LOGW("parse appIndex failed");
-    }
     int32_t userId = Constants::UNSPECIFIED_USERID;
 
     auto appControlProxy = CommonFunc::GetAppControlProxy();
@@ -278,7 +262,7 @@ static void AniSetUninstallDisposedRule(ani_env* env,
         return;
     }
 
-    ErrCode ret = appControlProxy->SetUninstallDisposedRule(appIdentifier, rule, appIndex, userId);
+    ErrCode ret = appControlProxy->SetUninstallDisposedRule(appIdentifier, rule, aniAppIndex, userId);
     if (ret != ERR_OK) {
         APP_LOGE("SetUninstallDisposedRule failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
@@ -286,7 +270,7 @@ static void AniSetUninstallDisposedRule(ani_env* env,
     }
 }
 
-static ani_object AniGetUninstallDisposedRule(ani_env* env, ani_string aniAppIdentifier, ani_double aniAppIndex)
+static ani_object AniGetUninstallDisposedRule(ani_env* env, ani_string aniAppIdentifier, ani_int aniAppIndex)
 {
     APP_LOGD("ani GetUninstallDisposedRule called");
     std::string appIdentifier;
@@ -300,10 +284,6 @@ static ani_object AniGetUninstallDisposedRule(ani_env* env, ani_string aniAppIde
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPIDENTIFIER, GET_UNINSTALL_DISPOSED_RULE, "");
         return nullptr;
     }
-    int32_t appIndex = Constants::MAIN_APP_INDEX;
-    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
-        APP_LOGW("parse appIndex failed");
-    }
     int32_t userId = Constants::UNSPECIFIED_USERID;
 
     auto appControlProxy = CommonFunc::GetAppControlProxy();
@@ -314,7 +294,7 @@ static ani_object AniGetUninstallDisposedRule(ani_env* env, ani_string aniAppIde
     }
 
     UninstallDisposedRule uninstallDisposedRule;
-    ErrCode ret = appControlProxy->GetUninstallDisposedRule(appIdentifier, appIndex, userId, uninstallDisposedRule);
+    ErrCode ret = appControlProxy->GetUninstallDisposedRule(appIdentifier, aniAppIndex, userId, uninstallDisposedRule);
     if (ret != ERR_OK) {
         APP_LOGE("GetUninstallDisposedRule failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
@@ -325,7 +305,7 @@ static ani_object AniGetUninstallDisposedRule(ani_env* env, ani_string aniAppIde
     return AniAppControlCommon::ConvertUninstallDisposedRule(env, uninstallDisposedRule);
 }
 
-static void AniDeleteUninstallDisposedRule(ani_env* env, ani_string aniAppIdentifier, ani_double aniAppIndex)
+static void AniDeleteUninstallDisposedRule(ani_env* env, ani_string aniAppIdentifier, ani_int aniAppIndex)
 {
     APP_LOGD("ani DeleteUninstallDisposedRule called");
     std::string appIdentifier;
@@ -339,10 +319,6 @@ static void AniDeleteUninstallDisposedRule(ani_env* env, ani_string aniAppIdenti
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPIDENTIFIER, DELETE_UNINSTALL_DISPOSED_RULE, "");
         return;
     }
-    int32_t appIndex = Constants::MAIN_APP_INDEX;
-    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
-        APP_LOGW("parse appIndex failed");
-    }
     int32_t userId = Constants::UNSPECIFIED_USERID;
 
     auto appControlProxy = CommonFunc::GetAppControlProxy();
@@ -352,7 +328,7 @@ static void AniDeleteUninstallDisposedRule(ani_env* env, ani_string aniAppIdenti
         return;
     }
 
-    ErrCode ret = appControlProxy->DeleteUninstallDisposedRule(appIdentifier, appIndex, userId);
+    ErrCode ret = appControlProxy->DeleteUninstallDisposedRule(appIdentifier, aniAppIndex, userId);
     if (ret != ERR_OK) {
         APP_LOGE("DeleteUninstallDisposedRule failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),

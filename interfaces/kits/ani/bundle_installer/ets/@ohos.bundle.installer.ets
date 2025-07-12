@@ -89,11 +89,11 @@ namespace installer {
 
     removeExtResource(bundleName: string, moduleNames: Array<string>): Promise<void>;
 
-    createAppClone(bundleName: string, createAppCloneParam?: CreateAppCloneParam): Promise<number>;
+    createAppClone(bundleName: string, createAppCloneParam?: CreateAppCloneParam): Promise<int>;
 
-    destroyAppClone(bundleName: string, appIndex: number, options?: number | DestroyAppCloneParam): Promise<void>;
+    destroyAppClone(bundleName: string, appIndex: int, options?: int | DestroyAppCloneParam): Promise<void>;
 
-    installPreexistingApp(bundleName: string, userId?: number): Promise<void>;
+    installPreexistingApp(bundleName: string, userId?: int): Promise<void>;
 
     installPlugin(hostBundleName: string, pluginFilePaths: Array<string>, pluginParam?: PluginParam): Promise<void>;
 
@@ -116,11 +116,11 @@ namespace installer {
   }
 
   export interface InstallParam {
-    userId?: number;
-    installFlag?: number;
+    userId?: int;
+    installFlag?: int;
     isKeepData?: boolean;
     hashParams?: Array<HashParam>;
-    crowdtestDeadline?: number;
+    crowdtestDeadline?: long;
     sharedBundleDirPaths?: Array<string>;
     specifiedDistributionType?: string;
     additionalInfo?: string;
@@ -130,21 +130,21 @@ namespace installer {
 
   export interface UninstallParam {
     bundleName: string;
-    versionCode?: number;
+    versionCode?: int;
   }
 
   export interface CreateAppCloneParam {
-    userId?: number;
-    appIndex?: number;
+    userId?: int;
+    appIndex?: int;
   }
 
   export interface DestroyAppCloneParam {
-    userId?: number;
+    userId?: int;
     parameters?: Array<Parameters>;
   }
 
   export interface PluginParam {
-    userId?: number;
+    userId?: int;
     parameters?: Array<Parameters>;
   }
 }

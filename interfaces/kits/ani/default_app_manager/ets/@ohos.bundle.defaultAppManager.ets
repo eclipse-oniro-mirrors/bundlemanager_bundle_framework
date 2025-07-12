@@ -26,7 +26,7 @@ export default namespace defaultAppManager {
 
   loadLibrary("ani_default_app_manager.z");
 
-  const EMPTY_USER_ID: number = -500;
+  const EMPTY_USER_ID: int = -500;
 
   export enum ApplicationType {
     BROWSER = 'Web Browser',
@@ -41,9 +41,9 @@ export default namespace defaultAppManager {
   }
 
   export native function isDefaultApplicationNative(type: string, isSync: boolean): boolean;
-  export native function getDefaultApplicationNative(type: string, userId: number, isSync: boolean): BundleInfo;
-  export native function setDefaultApplicationNative(type: string, elementName: ElementName, userId: number, isSync: boolean): void;
-  export native function resetDefaultApplicationNative(type: string, userId: number, isSync: boolean): void;
+  export native function getDefaultApplicationNative(type: string, userId: int, isSync: boolean): BundleInfo;
+  export native function setDefaultApplicationNative(type: string, elementName: ElementName, userId: int, isSync: boolean): void;
+  export native function resetDefaultApplicationNative(type: string, userId: int, isSync: boolean): void;
 
   function isDefaultApplication(type: string, callback: AsyncCallback<boolean>): void {
     let cb = (): boolean => {
@@ -80,7 +80,7 @@ export default namespace defaultAppManager {
     return defaultAppManager.isDefaultApplicationNative(type, true);
   }
 
-  function getDefaultApplication(type: string, userId: number, callback: AsyncCallback<BundleInfo>): void {
+  function getDefaultApplication(type: string, userId: int, callback: AsyncCallback<BundleInfo>): void {
     let cb = (): BundleInfo => {
       return defaultAppManager.getDefaultApplicationNative(type, userId, false);
     };
@@ -106,8 +106,8 @@ export default namespace defaultAppManager {
     });
   }
 
-  function getDefaultApplication(type: string, userId?: number): Promise<BundleInfo> {
-    let userIdInfo: number = userId ?? EMPTY_USER_ID;
+  function getDefaultApplication(type: string, userId?: int): Promise<BundleInfo> {
+    let userIdInfo: int = userId ?? EMPTY_USER_ID;
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Error) => void) => {
       let cb = (): BundleInfo => {
         return defaultAppManager.getDefaultApplicationNative(type, userIdInfo, false);
@@ -123,12 +123,12 @@ export default namespace defaultAppManager {
     return p;
   }
 
-  function getDefaultApplicationSync(type: string, userId?: number): BundleInfo {
-    let userIdInfo: number = userId ?? EMPTY_USER_ID;
+  function getDefaultApplicationSync(type: string, userId?: int): BundleInfo {
+    let userIdInfo: int = userId ?? EMPTY_USER_ID;
     return defaultAppManager.getDefaultApplicationNative(type, userIdInfo, true);
   }
 
-  function setDefaultApplication(type: string, elementName: ElementName, userId: number, callback: AsyncCallback<void>): void {
+  function setDefaultApplication(type: string, elementName: ElementName, userId: int, callback: AsyncCallback<void>): void {
     let cb = (): void => {
       return defaultAppManager.setDefaultApplicationNative(type, elementName, userId, false);
     };
@@ -152,8 +152,8 @@ export default namespace defaultAppManager {
     });
   }
 
-  function setDefaultApplication(type: string, elementName: ElementName, userId?: number): Promise<void> {
-    let userIdInfo: number = userId ?? EMPTY_USER_ID;
+  function setDefaultApplication(type: string, elementName: ElementName, userId?: int): Promise<void> {
+    let userIdInfo: int = userId ?? EMPTY_USER_ID;
     let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
       let cb = (): void => {
         return defaultAppManager.setDefaultApplicationNative(type, elementName, userIdInfo, false);
@@ -169,12 +169,12 @@ export default namespace defaultAppManager {
     return p;
   }
 
-  function setDefaultApplicationSync(type: string, elementName: ElementName, userId?: number): void {
-    let userIdInfo: number = userId ?? EMPTY_USER_ID;
+  function setDefaultApplicationSync(type: string, elementName: ElementName, userId?: int): void {
+    let userIdInfo: int = userId ?? EMPTY_USER_ID;
     return defaultAppManager.setDefaultApplicationNative(type, elementName, userIdInfo, true);
   }
 
-  function resetDefaultApplication(type: string, userId: number, callback: AsyncCallback<void>): void {
+  function resetDefaultApplication(type: string, userId: int, callback: AsyncCallback<void>): void {
     let cb = (): void => {
       return defaultAppManager.resetDefaultApplicationNative(type, userId, false);
     };
@@ -198,8 +198,8 @@ export default namespace defaultAppManager {
     });
   }
 
-  function resetDefaultApplication(type: string, userId?: number): Promise<void> {
-    let userIdInfo: number = userId ?? EMPTY_USER_ID;
+  function resetDefaultApplication(type: string, userId?: int): Promise<void> {
+    let userIdInfo: int = userId ?? EMPTY_USER_ID;
     let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
       let cb = (): void => {
         return defaultAppManager.resetDefaultApplicationNative(type, userIdInfo, false);
@@ -215,8 +215,8 @@ export default namespace defaultAppManager {
     return p;
   }
 
-  function resetDefaultApplicationSync(type: string, userId?: number): void {
-    let userIdInfo: number = userId ?? EMPTY_USER_ID;
+  function resetDefaultApplicationSync(type: string, userId?: int): void {
+    let userIdInfo: int = userId ?? EMPTY_USER_ID;
     return defaultAppManager.resetDefaultApplicationNative(type, userIdInfo, true);
   }
 }

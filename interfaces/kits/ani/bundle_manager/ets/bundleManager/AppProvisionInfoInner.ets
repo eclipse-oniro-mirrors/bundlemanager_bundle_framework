@@ -16,7 +16,7 @@
 import { AppProvisionInfo, Validity } from 'bundleManager.AppProvisionInfo'
 
 export class AppProvisionInfoInner implements AppProvisionInfo {
-  public readonly versionCode: number;
+  public readonly versionCode: long;
   public readonly versionName: string = '';
   public readonly uuid: string = '';
   public readonly type: string = '';
@@ -31,6 +31,6 @@ export class AppProvisionInfoInner implements AppProvisionInfo {
 }
 
 export class ValidityInner implements Validity {
-  public readonly notBefore: number;
-  public readonly notAfter: number;
+  public readonly notBefore: long;
+  public readonly notAfter: long;
 }

@@ -22,11 +22,11 @@ import { HapModuleInfo, Dependency, PreloadItem, RouterItem, DataItem } from 'bu
 export class HapModuleInfoInner implements HapModuleInfo {
   readonly name: string = "";
   readonly icon: string = "";
-  readonly iconId: number;
+  readonly iconId: long;
   readonly label: string = "";
-  readonly labelId: number;
+  readonly labelId: long;
   readonly description: string = "";
-  readonly descriptionId: number;
+  readonly descriptionId: long;
   readonly mainElementName: string = "";
   readonly abilitiesInfo: Array<AbilityInfo> = new Array<AbilityInfo>;
   readonly extensionAbilitiesInfo: Array<ExtensionAbilityInfo> = new Array<ExtensionAbilityInfo>;
@@ -46,7 +46,7 @@ export class HapModuleInfoInner implements HapModuleInfo {
 export class DependencyInner implements Dependency {
   readonly moduleName: string = "";
   readonly bundleName: string = "";
-  readonly versionCode: number;
+  readonly versionCode: long;
 }
 
 export class PreloadItemInner implements PreloadItem {

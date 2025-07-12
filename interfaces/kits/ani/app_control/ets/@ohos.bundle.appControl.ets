@@ -51,13 +51,13 @@ export default namespace appControl {
     disposedType: DisposedType;
     controlType: ControlType;
     elementList: Array<ElementName>;
-    priority: number;
+    priority: int;
   }
 
   export interface UninstallDisposedRule {
     want: Want;
     uninstallComponentType: UninstallComponentType;
-    priority: number;
+    priority: int;
   }
 
   export class DisposedRuleInner implements DisposedRule {
@@ -66,23 +66,23 @@ export default namespace appControl {
     public disposedType: DisposedType = DisposedType.BLOCK_APPLICATION;
     public controlType: ControlType = ControlType.ALLOWED_LIST;
     public elementList: Array<ElementName>;
-    public priority: number;
+    public priority: int;
   }
 
   export class UninstallDisposedRuleInner implements UninstallDisposedRule {
     public want: Want = {};
     public uninstallComponentType: UninstallComponentType = UninstallComponentType.EXTENSION;
-    public priority: number;
+    public priority: int;
   }
 
   export native function setDisposedStatusNative(appId: string, disposedWant: Want, isSync: boolean): void;
   export native function getDisposedStatusNative(appId: string, isSync: boolean): Want;
-  export native function deleteDisposedStatusNative(appId: string, appIndex: number, isSync: boolean): void;
-  export native function getDisposedRuleNative(appId: string, appIndex: number): DisposedRule;
-  export native function setDisposedRuleNative(appId: string, rule: DisposedRule, appIndex: number): void;
-  export native function setUninstallDisposedRuleNative(appIdentifier: string, rule: UninstallDisposedRule, appIndex: number): void;
-  export native function getUninstallDisposedRuleNative(appIdentifier: string, appIndex: number): UninstallDisposedRule;
-  export native function deleteUninstallDisposedRuleNative(appIdentifier: string, appIndex: number): void;
+  export native function deleteDisposedStatusNative(appId: string, appIndex: int, isSync: boolean): void;
+  export native function getDisposedRuleNative(appId: string, appIndex: int): DisposedRule;
+  export native function setDisposedRuleNative(appId: string, rule: DisposedRule, appIndex: int): void;
+  export native function setUninstallDisposedRuleNative(appIdentifier: string, rule: UninstallDisposedRule, appIndex: int): void;
+  export native function getUninstallDisposedRuleNative(appIdentifier: string, appIndex: int): UninstallDisposedRule;
+  export native function deleteUninstallDisposedRuleNative(appIdentifier: string, appIndex: int): void;
 
 
   function setDisposedStatus(appId: string, disposedWant: Want, callback: AsyncCallback<void>): void {
@@ -178,37 +178,37 @@ export default namespace appControl {
     return p;
   }
 
-  function deleteDisposedStatusSync(appId: string, appIndex?: number): void
+  function deleteDisposedStatusSync(appId: string, appIndex?: int): void
   {
     let appIndexInfo = appIndex ?? 0;
     return appControl.deleteDisposedStatusNative(appId, appIndexInfo, true);
   }
 
-  function getDisposedRule(appId: string, appIndex?: number): DisposedRule
+  function getDisposedRule(appId: string, appIndex?: int): DisposedRule
   {
     let appIndexInfo = appIndex ?? 0;
     return appControl.getDisposedRuleNative(appId, appIndexInfo);
   }
 
-  function setDisposedRule(appId: string, rule: DisposedRule, appIndex?: number): void
+  function setDisposedRule(appId: string, rule: DisposedRule, appIndex?: int): void
   {
     let appIndexInfo = appIndex ?? 0;
     appControl.setDisposedRuleNative(appId, rule, appIndexInfo);
   }
 
-  function setUninstallDisposedRule(appIdentifier: string, rule: UninstallDisposedRule, appIndex?: number): void
+  function setUninstallDisposedRule(appIdentifier: string, rule: UninstallDisposedRule, appIndex?: int): void
   {
     let appIndexInfo = appIndex ?? 0;
     appControl.setUninstallDisposedRuleNative(appIdentifier, rule, appIndexInfo);
   }
 
-  function getUninstallDisposedRule(appIdentifier: string, appIndex?: number): UninstallDisposedRule
+  function getUninstallDisposedRule(appIdentifier: string, appIndex?: int): UninstallDisposedRule
   {
     let appIndexInfo = appIndex ?? 0;
     return appControl.getUninstallDisposedRuleNative(appIdentifier, appIndexInfo);
   }
 
-  function deleteUninstallDisposedRule(appIdentifier: string, appIndex?: number): void
+  function deleteUninstallDisposedRule(appIdentifier: string, appIndex?: int): void
   {
     let appIndexInfo = appIndex ?? 0;
     appControl.deleteUninstallDisposedRuleNative(appIdentifier, appIndexInfo);

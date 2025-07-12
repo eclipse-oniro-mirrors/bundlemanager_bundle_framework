@@ -25,11 +25,11 @@ export class AbilityInfoInner implements AbilityInfo {
   readonly moduleName: string = "";
   readonly name: string = "";
   readonly label: string = "";
-  readonly labelId: number;
+  readonly labelId: long;
   readonly description: string = "";
-  readonly descriptionId: number;
+  readonly descriptionId: long;
   readonly icon: string = "";
-  readonly iconId: number;
+  readonly iconId: long;
   readonly process: string = "";
   readonly exported: boolean;
   readonly orientation: bundleManager.DisplayOrientation = bundleManager.DisplayOrientation.UNSPECIFIED;
@@ -43,15 +43,15 @@ export class AbilityInfoInner implements AbilityInfo {
   readonly windowSize: WindowSize = new WindowSizeInner;
   readonly excludeFromDock: boolean;
   readonly skills: Array<Skill> = new Array<Skill>;
-  readonly appIndex: number;
-  readonly orientationId: number;
+  readonly appIndex: int;
+  readonly orientationId: long;
 }
 
 export class WindowSizeInner implements WindowSize {
-  readonly maxWindowRatio: number;
-  readonly minWindowRatio: number;
-  readonly maxWindowWidth: number;
-  readonly minWindowWidth: number;
-  readonly maxWindowHeight: number;
-  readonly minWindowHeight: number;
+  readonly maxWindowRatio: double;
+  readonly minWindowRatio: double;
+  readonly maxWindowWidth: long;
+  readonly minWindowWidth: long;
+  readonly maxWindowHeight: long;
+  readonly minWindowHeight: long;
 }

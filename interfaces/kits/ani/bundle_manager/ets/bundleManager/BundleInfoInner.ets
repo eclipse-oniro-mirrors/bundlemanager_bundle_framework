@@ -22,27 +22,27 @@ import { ApplicationInfoInner } from './ApplicationInfoInner';
 export class BundleInfoInner implements BundleInfo {
   readonly name: string = "";
   readonly vendor: string = "";
-  readonly versionCode: number;
+  readonly versionCode: long;
   readonly versionName: string = "";
-  readonly minCompatibleVersionCode: number;
-  readonly targetVersion: number;
+  readonly minCompatibleVersionCode: int;
+  readonly targetVersion: int;
   readonly appInfo: ApplicationInfo = new ApplicationInfoInner;
   readonly hapModulesInfo: Array<HapModuleInfo> = new Array<HapModuleInfo>;
   readonly reqPermissionDetails: Array<ReqPermissionDetail> = new Array<ReqPermissionDetail>;
   readonly permissionGrantStates: Array<bundleManager.PermissionGrantState> = new Array<bundleManager.PermissionGrantState>;
   readonly signatureInfo: SignatureInfo = new SignatureInfoInner;
   readonly routerMap: Array<RouterItem> = new Array<RouterItem>;
-  readonly installTime: number;
-  readonly updateTime: number;
-  readonly appIndex: number;
-  readonly firstInstallTime?: number;
+  readonly installTime: long;
+  readonly updateTime: long;
+  readonly appIndex: int;
+  readonly firstInstallTime?: long;
 }
 
 export class ReqPermissionDetailInner implements ReqPermissionDetail {
   name: string = "";
   moduleName: string = "";
   reason: string = "";
-  reasonId: number;
+  reasonId: long;
   usedScene: UsedScene = new UsedSceneInner;
 }
 
@@ -60,5 +60,5 @@ export class SignatureInfoInner implements SignatureInfo {
 
 export class AppCloneIdentityInner implements AppCloneIdentity {
   readonly bundleName: string = "";
-  readonly appIndex: number;
+  readonly appIndex: int;
 }

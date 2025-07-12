@@ -17,17 +17,17 @@ import { PluginBundleInfo, PluginModuleInfo } from 'bundleManager.PluginBundleIn
 
 export class PluginBundleInfoInner implements PluginBundleInfo {
   public readonly label: string = '';
-  public readonly labelId: number;
+  public readonly labelId: long;
   public readonly icon: string = '';
-  public readonly iconId: number;
+  public readonly iconId: long;
   public readonly pluginBundleName: string = '';
-  public readonly versionCode: number;
+  public readonly versionCode: long;
   public readonly versionName: string = '';
   public readonly pluginModuleInfos: Array<PluginModuleInfo> = new Array<PluginModuleInfo>;
 }
 
 export class PluginModuleInfoInner implements PluginModuleInfo {
   public readonly moduleName: string = '';
-  public readonly descriptionId: number;
+  public readonly descriptionId: long;
   public readonly description: string = '';
 }

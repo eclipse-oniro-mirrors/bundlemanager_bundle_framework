@@ -28,14 +28,14 @@ namespace OHOS {
 namespace AppExecFwk {
 
 namespace {
-constexpr int32_t INVALID_INT = -500;
+constexpr int32_t INVALID_VALUE = -500;
 constexpr int32_t DEFAULT_RES_FLAG = 1;
 constexpr int32_t DEFAULT_IDX = 0;
 constexpr const char* NS_NAME_RESOURCEMANAGER = "@ohos.bundle.bundleResourceManager.bundleResourceManager";
 }
 
 static ani_object AniGetBundleResourceInfo(ani_env* env, ani_string aniBundleName,
-    ani_double aniResFlag, ani_double aniAppIndex)
+    ani_int aniResFlag, ani_int aniAppIndex)
 {
     APP_LOGD("ani GetBundleResourceInfo called");
     std::string bundleName;
@@ -44,29 +44,18 @@ static ani_object AniGetBundleResourceInfo(ani_env* env, ani_string aniBundleNam
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    int32_t resFlag = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniResFlag, &resFlag)) {
-        APP_LOGE("Cast aniResFlag failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
-        return nullptr;
-    }
-    int32_t appIndex = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
-        APP_LOGE("Cast aniAppIndex failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
-        return nullptr;
+
+    if (aniResFlag == INVALID_VALUE) {
+        aniResFlag = DEFAULT_RES_FLAG;
     }
 
-    if (resFlag == INVALID_INT) {
-        resFlag = DEFAULT_RES_FLAG;
-    }
-
-    if (appIndex == INVALID_INT) {
-        appIndex = DEFAULT_IDX;
+    if (aniAppIndex == INVALID_VALUE) {
+        aniAppIndex = DEFAULT_IDX;
     }
 
     BundleResourceInfo bundleResInfo;
-    int32_t ret = ResourceHelper::InnerGetBundleResourceInfo(bundleName, resFlag, appIndex, bundleResInfo);
+    int32_t ret = ResourceHelper::InnerGetBundleResourceInfo(
+        bundleName, static_cast<uint32_t>(aniResFlag), aniAppIndex, bundleResInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleResourceInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(
@@ -78,7 +67,7 @@ static ani_object AniGetBundleResourceInfo(ani_env* env, ani_string aniBundleNam
 }
 
 static ani_object AniGetLauncherAbilityResourceInfo(ani_env* env, ani_string aniBundleName,
-    ani_double aniResFlag, ani_double aniAppIndex)
+    ani_int aniResFlag, ani_int aniAppIndex)
 {
     APP_LOGD("ani GetLauncherAbilityResourceInfo called");
     std::string bundleName;
@@ -87,30 +76,18 @@ static ani_object AniGetLauncherAbilityResourceInfo(ani_env* env, ani_string ani
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    int32_t resFlag = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniResFlag, &resFlag)) {
-        APP_LOGE("Cast aniResFlag failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
-        return nullptr;
-    }
-    int32_t appIndex = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
-        APP_LOGE("Cast aniAppIndex failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
-        return nullptr;
+
+    if (aniResFlag == INVALID_VALUE) {
+        aniResFlag = DEFAULT_RES_FLAG;
     }
 
-    if (resFlag == INVALID_INT) {
-        resFlag = DEFAULT_RES_FLAG;
-    }
-
-    if (appIndex == INVALID_INT) {
-        appIndex = DEFAULT_IDX;
+    if (aniAppIndex == INVALID_VALUE) {
+        aniAppIndex = DEFAULT_IDX;
     }
 
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
     int32_t ret = ResourceHelper::InnerGetLauncherAbilityResourceInfo(
-        bundleName, resFlag, appIndex, launcherAbilityResourceInfos);
+        bundleName, static_cast<uint32_t>(aniResFlag), aniAppIndex, launcherAbilityResourceInfos);
     if (ret != ERR_OK) {
         APP_LOGE("GetLauncherAbilityResourceInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, ret,
@@ -127,18 +104,12 @@ static ani_object AniGetLauncherAbilityResourceInfo(ani_env* env, ani_string ani
     return launcherAbilityResourceInfosObject;
 }
 
-static ani_object AniGetAllBundleResourceInfo(ani_env* env, ani_double aniResFlag)
+static ani_object AniGetAllBundleResourceInfo(ani_env* env, ani_int aniResFlag)
 {
     APP_LOGD("ani GetAllBundleResourceInfo called");
-    int32_t resFlag = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniResFlag, &resFlag)) {
-        APP_LOGE("Cast aniResFlag failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
-        return nullptr;
-    }
 
     std::vector<BundleResourceInfo> bundleResourceInfos;
-    int32_t ret = ResourceHelper::InnerGetAllBundleResourceInfo(resFlag, bundleResourceInfos);
+    int32_t ret = ResourceHelper::InnerGetAllBundleResourceInfo(static_cast<uint32_t>(aniResFlag), bundleResourceInfos);
     if (ret != ERR_OK) {
         APP_LOGE("GetLauncherAbilityResourceInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, ret, GET_ALL_BUNDLE_RESOURCE_INFO, PERMISSION_GET_ALL_BUNDLE_RESOURCES);
@@ -154,18 +125,13 @@ static ani_object AniGetAllBundleResourceInfo(ani_env* env, ani_double aniResFla
     return bundleResourceInfosObject;
 }
 
-static ani_object AniGetAllLauncherAbilityResourceInfo(ani_env* env, ani_double aniResFlag)
+static ani_object AniGetAllLauncherAbilityResourceInfo(ani_env* env, ani_int aniResFlag)
 {
     APP_LOGD("ani GetAllLauncherAbilityResourceInfo called");
-    int32_t resFlag = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniResFlag, &resFlag)) {
-        APP_LOGE("Cast aniResFlag failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
-        return nullptr;
-    }
 
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    int32_t ret = ResourceHelper::InnerGetAllLauncherAbilityResourceInfo(resFlag, launcherAbilityResourceInfos);
+    int32_t ret = ResourceHelper::InnerGetAllLauncherAbilityResourceInfo(
+        static_cast<uint32_t>(aniResFlag), launcherAbilityResourceInfos);
     if (ret != ERR_OK) {
         APP_LOGE("GetLauncherAbilityResourceInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, ret,

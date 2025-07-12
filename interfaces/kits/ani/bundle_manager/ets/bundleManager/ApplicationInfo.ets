@@ -20,19 +20,19 @@ import bundleManager from '@ohos.bundle.bundleManager';
 export interface ApplicationInfo {
   readonly name: string;
   readonly description: string;
-  readonly descriptionId: number;
+  readonly descriptionId: long;
   readonly enabled: boolean;
   readonly label: string;
-  readonly labelId: number;
+  readonly labelId: long;
   readonly icon: string;
-  readonly iconId: number;
+  readonly iconId: long;
   readonly process: string;
   readonly permissions: Array<string>;
   readonly codePath: string;
   readonly metadataArray: Array<ModuleMetadata>;
   readonly removable: boolean;
-  readonly accessTokenId: number;
-  readonly uid: number;
+  readonly accessTokenId: long;
+  readonly uid: int;
   readonly iconResource: Resource;
   readonly labelResource: Resource;
   readonly descriptionResource: Resource;
@@ -44,11 +44,11 @@ export interface ApplicationInfo {
   readonly dataUnclearable: boolean;
   readonly nativeLibraryPath: string;
   readonly multiAppMode: MultiAppMode;
-  readonly appIndex: number;
+  readonly appIndex: int;
   readonly installSource: string;
   readonly releaseType: string;
   readonly cloudFileSyncEnabled: boolean;
-  readonly flags?: number;
+  readonly flags?: int;
 }
 
 export interface ModuleMetadata {
@@ -58,12 +58,12 @@ export interface ModuleMetadata {
 
 export interface MultiAppMode {
   readonly multiAppModeType: bundleManager.MultiAppModeType;
-  readonly maxCount: number;
+  readonly maxCount: int;
 }
 
 export interface PreinstalledApplicationInfo {
   readonly bundleName: string;
   readonly moduleName: string;
-  readonly iconId: number;
-  readonly labelId: number;
+  readonly iconId: long;
+  readonly labelId: long;
 }

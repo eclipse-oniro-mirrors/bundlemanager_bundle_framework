@@ -20,11 +20,11 @@ namespace shortcutManager {
 
   loadLibrary("ani_shortcut_manager.z");
 
-  export native function addDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;
-  export native function deleteDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;
-  export native function getAllDesktopShortcutInfoNative(userId: number): Array<ShortcutInfo>;
+  export native function addDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: int): void;
+  export native function deleteDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: int): void;
+  export native function getAllDesktopShortcutInfoNative(userId: int): Array<ShortcutInfo>;
 
-  function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
+  function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
       let cb = (): NullishType => {
         return shortcutManager.addDesktopShortcutInfoNative(shortcutInfo, userId);
@@ -39,7 +39,7 @@ namespace shortcutManager {
     return p;
   }
 
-  function deleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
+  function deleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
       let cb = (): NullishType => {
         return shortcutManager.deleteDesktopShortcutInfoNative(shortcutInfo, userId)
@@ -54,7 +54,7 @@ namespace shortcutManager {
     return p;
   }
 
-  function getAllDesktopShortcutInfo(userId: number): Promise<Array<ShortcutInfo>> {
+  function getAllDesktopShortcutInfo(userId: int): Promise<Array<ShortcutInfo>> {
     let p = new Promise<Array<ShortcutInfo>>((resolve: (arrShortcutInfo: Array<ShortcutInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<ShortcutInfo>) => {
         return shortcutManager.getAllDesktopShortcutInfoNative(userId);

@@ -27,7 +27,6 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 namespace {
-constexpr int32_t EMPTY_USER_ID = -500;
 constexpr const char* NS_NAME_DEFAULTAPPMANAGER = "@ohos.bundle.defaultAppManager.defaultAppManager";
 } // namespace
 
@@ -75,7 +74,7 @@ static ani_boolean AniIsDefaultApplication(ani_env *env, ani_string aniType, ani
 }
 
 static ani_object AniGetDefaultApplication(ani_env *env,
-    ani_string aniType, ani_double aniUserId, ani_boolean aniIsSync)
+    ani_string aniType, ani_int aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGD("ani GetDefaultApplication called");
     std::string type;
@@ -84,12 +83,8 @@ static ani_object AniGetDefaultApplication(ani_env *env,
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TYPE_CHECK, TYPE_STRING);
         return nullptr;
     }
-    int32_t userId = EMPTY_USER_ID;
-    if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
-        APP_LOGW("Parse userId failed, set this parameter to the caller userId");
-    }
-    if (userId == EMPTY_USER_ID) {
-        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    if (aniUserId == EMPTY_USER_ID) {
+        aniUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
@@ -102,7 +97,7 @@ static ani_object AniGetDefaultApplication(ani_env *env,
     }
 
     BundleInfo bundleInfo;
-    ErrCode ret = defaultAppProxy->GetDefaultApplication(userId, type, bundleInfo);
+    ErrCode ret = defaultAppProxy->GetDefaultApplication(aniUserId, type, bundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GetDefaultApplication failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
@@ -115,7 +110,7 @@ static ani_object AniGetDefaultApplication(ani_env *env,
 }
 
 static void AniSetDefaultApplication(ani_env *env,
-    ani_string aniType, ani_object aniElementName, ani_double aniUserId, ani_boolean aniIsSync)
+    ani_string aniType, ani_object aniElementName, ani_int aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGD("ani SetDefaultApplication called");
     std::string type;
@@ -132,12 +127,8 @@ static void AniSetDefaultApplication(ani_env *env,
     }
     Want want;
     want.SetElement(elementName);
-    int32_t userId = EMPTY_USER_ID;
-    if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
-        APP_LOGW("Parse userId failed, set this parameter to the caller userId");
-    }
-    if (userId == EMPTY_USER_ID) {
-        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    if (aniUserId == EMPTY_USER_ID) {
+        aniUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
@@ -149,7 +140,7 @@ static void AniSetDefaultApplication(ani_env *env,
         return;
     }
 
-    ErrCode ret = defaultAppProxy->SetDefaultApplication(userId, type, want);
+    ErrCode ret = defaultAppProxy->SetDefaultApplication(aniUserId, type, want);
     if (ret != ERR_OK) {
         APP_LOGE("SetDefaultApplication failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
@@ -158,7 +149,7 @@ static void AniSetDefaultApplication(ani_env *env,
     }
 }
 
-static void AniResetDefaultApplication(ani_env *env, ani_string aniType, ani_double aniUserId, ani_boolean aniIsSync)
+static void AniResetDefaultApplication(ani_env *env, ani_string aniType, ani_int aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGD("ani ResetDefaultApplication called");
     std::string type;
@@ -167,12 +158,8 @@ static void AniResetDefaultApplication(ani_env *env, ani_string aniType, ani_dou
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TYPE_CHECK, TYPE_STRING);
         return;
     }
-    int32_t userId = EMPTY_USER_ID;
-    if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
-        APP_LOGW("Parse userId failed, set this parameter to the caller userId");
-    }
-    if (userId == EMPTY_USER_ID) {
-        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    if (aniUserId == EMPTY_USER_ID) {
+        aniUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
@@ -184,7 +171,7 @@ static void AniResetDefaultApplication(ani_env *env, ani_string aniType, ani_dou
         return;
     }
 
-    ErrCode ret = defaultAppProxy->ResetDefaultApplication(userId, type);
+    ErrCode ret = defaultAppProxy->ResetDefaultApplication(aniUserId, type);
     if (ret != ERR_OK) {
         APP_LOGE("ResetDefaultApplication failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),

@@ -19,5 +19,5 @@ export interface LauncherAbilityResourceInfo {
   readonly abilityName: string;
   readonly icon: string;
   readonly label: string;
-  readonly appIndex: number;
+  readonly appIndex: int;
 }

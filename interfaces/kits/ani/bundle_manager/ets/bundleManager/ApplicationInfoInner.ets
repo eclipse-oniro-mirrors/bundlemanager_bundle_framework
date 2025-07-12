@@ -22,19 +22,19 @@ import { ResourceInner } from 'global.resourceInner';
 export class ApplicationInfoInner implements ApplicationInfo {
   readonly name: string = "";
   readonly description: string = "";
-  readonly descriptionId: number;
+  readonly descriptionId: long;
   readonly enabled: boolean;
   readonly label: string = "";
-  readonly labelId: number;
+  readonly labelId: long;
   readonly icon: string = "";
-  readonly iconId: number;
+  readonly iconId: long;
   readonly process: string = "";
   readonly permissions: Array<string> = new Array<string>;
   readonly codePath: string = "";
   readonly metadataArray: Array<ModuleMetadata> = new Array<ModuleMetadata>;
   readonly removable: boolean;
-  readonly accessTokenId: number;
-  readonly uid: number;
+  readonly accessTokenId: long;
+  readonly uid: int;
   readonly iconResource: Resource = new ResourceInner;
   readonly labelResource: Resource = new ResourceInner;
   readonly descriptionResource: Resource = new ResourceInner;
@@ -46,11 +46,11 @@ export class ApplicationInfoInner implements ApplicationInfo {
   readonly dataUnclearable: boolean;
   readonly nativeLibraryPath: string = "";
   readonly multiAppMode: MultiAppMode = new MultiAppModeInner;
-  readonly appIndex: number;
+  readonly appIndex: int;
   readonly installSource: string = "";
   readonly releaseType: string = "";
   readonly cloudFileSyncEnabled: boolean;
-  readonly flags?: number|undefined;
+  readonly flags?: int|undefined;
 }
 
 export class ModuleMetadataInner implements ModuleMetadata {
@@ -60,12 +60,12 @@ export class ModuleMetadataInner implements ModuleMetadata {
 
 export class MultiAppModeInner implements MultiAppMode {
   readonly multiAppModeType: bundleManager.MultiAppModeType = bundleManager.MultiAppModeType.UNSPECIFIED;
-  readonly maxCount: number;
+  readonly maxCount: int;
 }
 
 export class PreinstalledApplicationInfoInner implements PreinstalledApplicationInfo {
   readonly bundleName: string = "";
   readonly moduleName: string = "";
-  readonly iconId: number;
-  readonly labelId: number;
+  readonly iconId: long;
+  readonly labelId: long;
 }

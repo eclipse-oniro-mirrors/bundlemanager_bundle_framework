@@ -17,7 +17,7 @@ import { PermissionDef } from 'bundleManager.PermissionDef'
 
 export class PermissionDefInner implements PermissionDef {
   public readonly permissionName: string = '';
-  public readonly grantMode: number;
-  public readonly labelId: number;
-  public readonly descriptionId: number;
+  public readonly grantMode: int;
+  public readonly labelId: long;
+  public readonly descriptionId: long;
 }
