@@ -1285,11 +1285,6 @@ private:
 
     template <typename T>
     ErrCode GetParcelableInfoWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo);
-
-    template <typename T>
-    ErrCode GetParcelableInfoWithErrCodeReply(
-        BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply, T &parcelableInfo);
-
     /**
      * @brief Send a command message and then get a vector of parcelable information objects from the reply.
      * @param code Indicates the message code to be sent.
