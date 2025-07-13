@@ -47,7 +47,6 @@ ohos_unittest("BundleMgrProxyTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

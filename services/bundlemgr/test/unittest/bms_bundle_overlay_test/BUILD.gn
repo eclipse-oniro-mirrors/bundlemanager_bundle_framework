@@ -82,7 +82,6 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "ipc:ipc_core",
     "ipc:ipc_single",
     "jsoncpp:jsoncpp",
-    "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
