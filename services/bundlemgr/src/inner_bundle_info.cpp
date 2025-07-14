@@ -2074,6 +2074,7 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
     baseSharedBundleInfo.versionCode = innerModuleInfo.versionCode;
     baseSharedBundleInfo.nativeLibraryPath = innerModuleInfo.nativeLibraryPath;
     baseSharedBundleInfo.hapPath = innerModuleInfo.hapPath;
+    baseSharedBundleInfo.codeLanguage = innerModuleInfo.codeLanguage;
     baseSharedBundleInfo.compressNativeLibs = innerModuleInfo.compressNativeLibs;
     baseSharedBundleInfo.nativeLibraryFileNames = innerModuleInfo.nativeLibraryFileNames;
     return true;
@@ -2103,6 +2104,7 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
             baseSharedBundleInfo.versionCode = item.versionCode;
             baseSharedBundleInfo.nativeLibraryPath = item.nativeLibraryPath;
             baseSharedBundleInfo.hapPath = item.hapPath;
+            baseSharedBundleInfo.codeLanguage = item.codeLanguage;
             baseSharedBundleInfo.compressNativeLibs = item.compressNativeLibs;
             baseSharedBundleInfo.nativeLibraryFileNames = item.nativeLibraryFileNames;
             return true;
@@ -4127,6 +4129,7 @@ void InnerBundleInfo::UpdateSharedModuleInfo()
     for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end(); ++iter) {
         if (iter->versionCode == moduleInfoIter->second.versionCode) {
             iter->hapPath = moduleInfoIter->second.hapPath;
+            iter->codeLanguage = moduleInfoIter->second.codeLanguage;
             iter->compressNativeLibs = moduleInfoIter->second.compressNativeLibs;
             iter->cpuAbi = moduleInfoIter->second.cpuAbi;
             iter->nativeLibraryPath = moduleInfoIter->second.nativeLibraryPath;
