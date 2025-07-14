@@ -19,6 +19,7 @@
 #include <ani.h>
 #include "appexecfwk_errors.h"
 #include "bundle_errors.h"
+#include <string>
 
 namespace OHOS {
 namespace AppExecFwk {

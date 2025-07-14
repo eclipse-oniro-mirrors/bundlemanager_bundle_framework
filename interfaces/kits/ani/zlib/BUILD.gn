@@ -35,10 +35,12 @@ ohos_shared_library("ani_zlib") {
   include_dirs = [
     "${inner_api_path}/appexecfwk_core/include",
     "${kits_path}/ani/zlib",
+    "${kits_path}/ani/zlib/common",
     "${kits_path}/ani/common",
     "${kits_path}/js/common",
     "${kits_path}/js/zip/include",
     "${kits_path}/js/zip/napi",
+    "${kits_path}/js/zip/napi/common",
   ]
 
   sources = [
@@ -49,6 +51,8 @@ ohos_shared_library("ani_zlib") {
     "${kits_path}/js/zip/src/zip_utils.cpp",
     "${kits_path}/js/zip/src/zip_writer.cpp",
     "ani_zlib.cpp",
+    "checksum/ani_checksum.cpp",
+    "gzip/ani_gzip.cpp",
   ]
 
   cflags = [

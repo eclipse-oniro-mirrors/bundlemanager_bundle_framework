@@ -50,6 +50,7 @@ constexpr const char* CLASSNAME_BUNDLE_LAUNCHMODE = "L@ohos/bundle/bundle/Launch
 constexpr const char* CLASSNAME_ZLIB_COMPRESSLEVEL = "L@ohos/zlib/zlib/CompressLevel;";
 constexpr const char* CLASSNAME_ZLIB_MEMLEVEL = "L@ohos/zlib/zlib/MemLevel;";
 constexpr const char* CLASSNAME_ZLIB_COMPRESSSTRATEGY = "L@ohos/zlib/zlib/CompressStrategy;";
+constexpr const char* CLASSNAME_ZLIB_RETURNSTATUS = "L@ohos/zlib/zlib/ReturnStatus;";
 constexpr const char* CLASSNAME_APPCONTROL_COMPONENTTYPE = "L@ohos/bundle/appControl/appControl/ComponentType;";
 constexpr const char* CLASSNAME_APPCONTROL_DISPOSEDTYPE = "L@ohos/bundle/appControl/appControl/DisposedType;";
 constexpr const char* CLASSNAME_APPCONTROL_CONTROLTYPE = "L@ohos/bundle/appControl/appControl/ControlType;";
@@ -456,11 +457,22 @@ public:
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_ZLIB_COMPRESSSTRATEGY, value, 0);
     }
 
-    /* appControl.ComponentType
-    enum ComponentType {
-        UI_ABILITY = 1,
-        UI_EXTENSION = 2
-    } */
+    // zlib.ReturnStatus
+    // enum ReturnStatus {
+    //     OK = 0,
+    //     STREAM_END = 1,
+    //     NEED_DICT = 2,
+    // }
+    static inline ani_enum_item EnumNativeToETS_Zlib_ReturnStatus(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_ZLIB_RETURNSTATUS, value, 0);
+    }
+
+    // appControl.ComponentType
+    // enum ComponentType {
+    //     UI_ABILITY = 1,
+    //     UI_EXTENSION = 2
+    // }
     static inline ani_enum_item EnumNativeToETS_AppControl_ComponentType(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_APPCONTROL_COMPONENTTYPE, value, 1);

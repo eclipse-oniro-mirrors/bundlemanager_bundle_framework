@@ -54,6 +54,7 @@ constexpr const char* TYPE_OBJECT = "object";
 constexpr const char* TYPE_BOOLEAN = "boolean";
 constexpr const char* TYPE_FUNCTION = "function";
 constexpr const char* TYPE_ARRAY = "array";
+constexpr const char* TYPE_ARRAYBUFFER = "ArrayBuffer";
 
 constexpr const char* UID = "uid";
 constexpr const char* USER_ID = "userId";
