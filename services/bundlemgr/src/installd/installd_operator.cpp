@@ -376,24 +376,26 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
         LOG_D(BMS_TAG_INSTALLD, "ExtractFiles no so files to extract");
         return true;
     }
-
+    bool extractSoResult = true;
     std::vector<ffrt::dependence> handles;
     for_each(soEntryFiles.begin(), soEntryFiles.end(),
-        [&extractor, &targetSoPath, &cpuAbi, &handles](const auto &entry) {
+        [&extractor, &targetSoPath, &cpuAbi, &handles, &extractSoResult](const auto &entry) {
         ExtractParam param;
         param.targetPath = targetSoPath;
         param.cpuAbi = cpuAbi;
         param.extractFileType = ExtractFileType::SO;
-        ffrt::task_handle handle = ffrt::submit_h([&extractor, entry, param] () {
+        ffrt::task_handle handle = ffrt::submit_h([&extractor, entry, param, &extractSoResult] () {
             LOG_D(BMS_TAG_INSTALLD, "Extracting file %{private}s", entry.c_str());
-            ExtractTargetFile(extractor, entry, param);
+            if (!ExtractTargetFile(extractor, entry, param)) {
+                extractSoResult = false;
+            }
             }, {}, {});
         handles.push_back(std::move(handle));
     });
     ffrt::wait(handles);
 
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles end");
-    return true;
+    return extractSoResult;
 }
 
 bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
@@ -643,21 +645,21 @@ bool InstalldOperator::ProcessBundleUnInstallNative(const std::string &userId, c
     return true;
 }
 
-void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
+bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
     const ExtractParam &param)
 {
     // create dir if not exist
     if (!IsExistDir(param.targetPath)) {
         if (!MkRecursiveDir(param.targetPath, true)) {
             LOG_E(BMS_TAG_INSTALLD, "create targetPath %{public}s failed", param.targetPath.c_str());
-            return;
+            return false;
         }
     }
 
     std::string prefix;
     if (!DeterminePrefix(param.extractFileType, param.cpuAbi, prefix)) {
         LOG_E(BMS_TAG_INSTALLD, "determine prefix failed");
-        return;
+        return false;
     }
     std::string targetName = entryName.substr(prefix.length());
     std::string path = param.targetPath;
@@ -669,7 +671,7 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         std::string dir = GetPathDir(path);
         if (!IsExistDir(dir) && !MkRecursiveDir(dir, true)) {
             LOG_E(BMS_TAG_INSTALLD, "create dir %{public}s failed", dir.c_str());
-            return;
+            return false;
         }
     }
     if (param.needRemoveOld && IsExistFile(path) && !OHOS::RemoveFile(path)) {
@@ -678,7 +680,7 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     if (!extractor.ExtractFile(entryName, path)) {
         if (!extractor.ExtractFile(entryName, path)) {
             LOG_E(BMS_TAG_INSTALLD, "extract file failed, retry entryName : %{public}s", entryName.c_str());
-            return;
+            return false;
         }
     }
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
@@ -686,16 +688,16 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         struct stat buf = {};
         if (stat(param.targetPath.c_str(), &buf) != 0) {
             LOG_E(BMS_TAG_INSTALLD, "fail to stat errno:%{public}d", errno);
-            return;
+            return false;
         }
         ChangeFileAttr(path, buf.st_uid, buf.st_gid);
         mode = (buf.st_uid == buf.st_gid) ? (S_IRUSR | S_IWUSR) : (S_IRUSR | S_IWUSR | S_IRGRP);
     }
     if (!OHOS::ChangeModeFile(path, mode)) {
-        LOG_E(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
+        LOG_W(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
     }
     FsyncFile(path);
-    LOG_D(BMS_TAG_INSTALLD, "extract file success, path : %{public}s", path.c_str());
+    return true;
 }
 
 void InstalldOperator::FsyncFile(const std::string &path)

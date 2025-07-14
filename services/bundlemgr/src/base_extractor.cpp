@@ -91,8 +91,12 @@ bool BaseExtractor::ExtractFile(const std::string &fileName, const std::string &
     std::ofstream fileStream;
     fileStream.open(targetPath, std::ios_base::out | std::ios_base::binary);
     if (!fileStream.is_open()) {
-        APP_LOGE("fail to open %{private}s file to write, errno:%{public}d", targetPath.c_str(), errno);
-        return false;
+        (void)remove(targetPath.c_str());
+        fileStream.open(targetPath, std::ios_base::out | std::ios_base::binary);
+        if (!fileStream.is_open()) {
+            APP_LOGE("fail to open %{private}s file to write, errno:%{public}d", targetPath.c_str(), errno);
+            return false;
+        }
     }
     if ((!ExtractByName(fileName, fileStream)) || (!fileStream.good())) {
         APP_LOGE("extract %{public}s failed, errno:%{public}d failbit:%{public}d badbit:%{public}d eofbit:%{public}d",
