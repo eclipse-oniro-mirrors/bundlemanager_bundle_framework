@@ -35,6 +35,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 using Want = OHOS::AAFwk::Want;
+namespace CommonFunAniNS {
+constexpr const char* PROPERTYNAME_UNBOXED = "unboxed";
+} // namespace CommonFunAniNS
 
 #define RETURN_IF_NULL(ptr)          \
     do {                             \
@@ -521,16 +524,16 @@ public:
             status = ANI_ERROR;
             if constexpr (std::is_same_v<valueType, ani_boolean>) {
                 status = env->Object_CallMethodByName_Boolean(
-                    reinterpret_cast<ani_object>(ref), "unboxed", ":Z", value);
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":Z", value);
             } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
                                  std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
                 ani_int i = 0;
-                status = env->Object_CallMethodByName_Int(reinterpret_cast<ani_object>(ref), "unboxed", ":I", &i);
+                status = env->Object_CallMethodByName_Int(
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":I", &i);
                 if (status != ANI_OK) {
-                    APP_LOGE("Object_GetPropertyByName %{public}s failed %{public}d", propertyName, status);
+                    APP_LOGE("Object_CallMethodByName_Int %{public}s failed %{public}d", propertyName, status);
                     return false;
                 }
-                *value = static_cast<valueType>(i);
                 if (!TryCastTo(i, value)) {
                     APP_LOGE("TryCastTo %{public}s failed", propertyName);
                     return false;
@@ -538,9 +541,10 @@ public:
                 return true;
             } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
                 ani_long l = 0;
-                status = env->Object_CallMethodByName_Long(reinterpret_cast<ani_object>(ref), "unboxed", ":J", &l);
+                status = env->Object_CallMethodByName_Long(
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":J", &l);
                 if (status != ANI_OK) {
-                    APP_LOGE("Object_GetPropertyByName %{public}s failed %{public}d", propertyName, status);
+                    APP_LOGE("Object_CallMethodByName_Long %{public}s failed %{public}d", propertyName, status);
                     return false;
                 }
                 if (!TryCastTo(l, value)) {
@@ -551,9 +555,10 @@ public:
             } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
                                  std::is_same_v<valueType, uint64_t>) {
                 double d = 0;
-                status = env->Object_CallMethodByName_Double(reinterpret_cast<ani_object>(ref), "unboxed", ":D", &d);
+                status = env->Object_CallMethodByName_Double(
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":D", &d);
                 if (status != ANI_OK) {
-                    APP_LOGE("Object_GetPropertyByName %{public}s failed %{public}d", propertyName, status);
+                    APP_LOGE("Object_CallMethodByName_Double %{public}s failed %{public}d", propertyName, status);
                     return false;
                 }
                 if (!TryCastTo(d, value)) {
