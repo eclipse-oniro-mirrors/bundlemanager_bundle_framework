@@ -463,13 +463,22 @@ ani_object CommonFunAni::ConvertDefaultAppAbilityInfo(ani_env* env, const Abilit
     RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.label, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
 
+    // labelId: long
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, abilityInfo.labelId));
+
     // description: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.description, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string));
 
+    // descriptionId: long
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, abilityInfo.descriptionId));
+
     // icon: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.iconPath, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICON, string));
+
+    // iconId: long
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, abilityInfo.iconId));
 
     // process: string
     RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_PROCESS));
@@ -536,6 +545,15 @@ ani_object CommonFunAni::ConvertDefaultAppExtensionInfo(ani_env* env, const Exte
     // name: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.name, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+
+    // labelId: long
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, extensionInfo.labelId));
+
+    // descriptionId: long
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, extensionInfo.descriptionId));
+
+    // iconId: long
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, extensionInfo.iconId));
 
     // exported: boolean
     RETURN_NULL_IF_FALSE(CallSetterNull(env, cls, object, PROPERTYNAME_EXPORTED));
