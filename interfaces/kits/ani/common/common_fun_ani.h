@@ -165,9 +165,6 @@ public:
         ani_env* env, const PreinstalledApplicationInfo& reinstalledApplicationInfo);
     static ani_object ConvertPluginBundleInfo(ani_env* env, const PluginBundleInfo& pluginBundleInfo);
     static ani_object ConvertPluginModuleInfo(ani_env* env, const PluginModuleInfo& pluginModuleInfo);
-    static ani_object ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo);
-    static ani_object ConvertLauncherAbilityResourceInfo(ani_env* env,
-        const LauncherAbilityResourceInfo& launcherAbilityResourceInfo);
 
     static ani_object ConvertShortcutInfo(ani_env* env, const ShortcutInfo& shortcutInfo);
     static ani_object ConvertShortcutIntent(ani_env* env, const ShortcutIntent& shortcutIntent);

@@ -13,11 +13,14 @@
  * limitations under the License.
  */
 
+import { DrawableDescriptor } from '@ohos.arkui.drawableDescriptor';
+
 export interface LauncherAbilityResourceInfo {
   readonly bundleName: string;
   readonly moduleName: string;
   readonly abilityName: string;
   readonly icon: string;
   readonly label: string;
+  readonly drawableDescriptor: DrawableDescriptor;
   readonly appIndex: int;
 }

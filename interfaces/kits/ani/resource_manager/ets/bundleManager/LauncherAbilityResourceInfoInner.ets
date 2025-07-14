@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { DrawableDescriptor } from '@ohos.arkui.drawableDescriptor';
 import { LauncherAbilityResourceInfo } from 'bundleManager.LauncherAbilityResourceInfo';
 
 export class LauncherAbilityResourceInfoInner implements LauncherAbilityResourceInfo {
@@ -21,5 +22,6 @@ export class LauncherAbilityResourceInfoInner implements LauncherAbilityResource
     readonly abilityName: string = '';
     readonly icon: string = '';
     readonly label: string = '';
+    readonly drawableDescriptor: DrawableDescriptor = new DrawableDescriptor;
     readonly appIndex: int;
 }

@@ -56,9 +56,6 @@ constexpr const char* CLASSNAME_ELEMENTNAME = "LbundleManager/ElementNameInner/E
 constexpr const char* CLASSNAME_CUSTOMIZEDATA = "LbundleManager/customizeDataInner/CustomizeDataInner;";
 constexpr const char* CLASSNAME_SKILL = "LbundleManager/SkillInner/SkillInner;";
 constexpr const char* CLASSNAME_SKILLURI = "LbundleManager/SkillInner/SkillUriInner;";
-constexpr const char* CLASSNAME_BUNDLERESINFO = "LbundleManager/BundleResourceInfoInner/BundleResourceInfoInner;";
-constexpr const char* CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER =
-    "LbundleManager/LauncherAbilityResourceInfoInner/LauncherAbilityResourceInfoInner;";
 constexpr const char* CLASSNAME_SHORTCUTINFO = "LbundleManager/ShortcutInfo/ShortcutInfoInner;";
 constexpr const char* CLASSNAME_SHORTCUTWANT = "LbundleManager/ShortcutInfo/ShortcutWantInner;";
 constexpr const char* CLASSNAME_SHORTCUT_PARAMETERITEM = "LbundleManager/ShortcutInfo/ParameterItemInner;";
@@ -1985,79 +1982,6 @@ ani_object CommonFunAni::ConvertPluginModuleInfo(ani_env* env, const PluginModul
     // description: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginModuleInfo.description, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string));
-
-    return object;
-}
-
-ani_object CommonFunAni::ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo)
-{
-    RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLERESINFO);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
-    // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleResInfo.bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
-
-    // icon: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleResInfo.icon, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICON, string));
-
-    // label: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleResInfo.label, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
-
-    // drawableDescriptor: DrawableDescriptor
-
-    // appIndex: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, bundleResInfo.appIndex));
-
-    return object;
-}
-
-ani_object CommonFunAni::ConvertLauncherAbilityResourceInfo(
-    ani_env* env, const LauncherAbilityResourceInfo& launcherAbilityResourceInfo)
-{
-    RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
-    // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, launcherAbilityResourceInfo.bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
-
-    // moduleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, launcherAbilityResourceInfo.moduleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
-
-    // abilityName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, launcherAbilityResourceInfo.abilityName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ABILITYNAME, string));
-
-    // icon: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, launcherAbilityResourceInfo.icon, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICON, string));
-
-    // label: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, launcherAbilityResourceInfo.label, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
-
-    // drawableDescriptor: DrawableDescriptor;
-
-    // appIndex: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, launcherAbilityResourceInfo.appIndex));
 
     return object;
 }
