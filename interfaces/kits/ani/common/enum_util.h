@@ -50,10 +50,11 @@ constexpr const char* CLASSNAME_BUNDLE_LAUNCHMODE = "L@ohos/bundle/bundle/Launch
 constexpr const char* CLASSNAME_ZLIB_COMPRESSLEVEL = "L@ohos/zlib/zlib/CompressLevel;";
 constexpr const char* CLASSNAME_ZLIB_MEMLEVEL = "L@ohos/zlib/zlib/MemLevel;";
 constexpr const char* CLASSNAME_ZLIB_COMPRESSSTRATEGY = "L@ohos/zlib/zlib/CompressStrategy;";
-constexpr const char* CLASSNAME_APPCONTROL_COMPONENTTYPE = "L@ohos/bundle/appControl/ComponentType";
-constexpr const char* CLASSNAME_APPCONTROL_DISPOSEDTYPE = "L@ohos/bundle/appControl/DisposedType";
-constexpr const char* CLASSNAME_APPCONTROL_CONTROLTYPE = "L@ohos/bundle/appControl/ControlType";
-constexpr const char* CLASSNAME_APPCONTROL_UNINSTALLCOMPONENTTYPE = "L@ohos/bundle/appControl/UninstallComponentType";
+constexpr const char* CLASSNAME_APPCONTROL_COMPONENTTYPE = "L@ohos/bundle/appControl/appControl/ComponentType;";
+constexpr const char* CLASSNAME_APPCONTROL_DISPOSEDTYPE = "L@ohos/bundle/appControl/appControl/DisposedType;";
+constexpr const char* CLASSNAME_APPCONTROL_CONTROLTYPE = "L@ohos/bundle/appControl/appControl/ControlType;";
+constexpr const char* CLASSNAME_APPCONTROL_UNINSTALLCOMPONENTTYPE =
+    "L@ohos/bundle/appControl/appControl/UninstallComponentType;";
 } // namespace CommonFunAniNS
 class EnumUtils {
 private:
