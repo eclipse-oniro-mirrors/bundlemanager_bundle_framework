@@ -21,12 +21,12 @@ import StartOptions from '@ohos.app.ability.StartOptions';
 export default namespace launcherBundleManager {
   loadLibrary("ani_launcher_bundle_manager.z");
 
-  const EMPTY_USER_ID: number = -500;
+  const EMPTY_USER_ID: int = -500;
 
   export native function startShortcutNative(shortcutInfo: ShortcutInfo, options: StartOptions): void;
-  export native function getShortcutInfoNative(bundleName: string, userId: number, isSync: boolean): Array<ShortcutInfo>;
-  export native function getLauncherAbilityInfoNative(bundleName: string, userId: number, isSync: boolean): Array<LauncherAbilityInfo>;
-  export native function getAllLauncherAbilityInfoNative(userId: number): Array<LauncherAbilityInfo>;
+  export native function getShortcutInfoNative(bundleName: string, userId: int, isSync: boolean): Array<ShortcutInfo>;
+  export native function getLauncherAbilityInfoNative(bundleName: string, userId: int, isSync: boolean): Array<LauncherAbilityInfo>;
+  export native function getAllLauncherAbilityInfoNative(userId: int): Array<LauncherAbilityInfo>;
 
   function startShortcut(shortcutInfo: ShortcutInfo, options?: StartOptions): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void): void => {
@@ -51,7 +51,7 @@ export default namespace launcherBundleManager {
     return launcherBundleManager.getShortcutInfoNative(bundleName, EMPTY_USER_ID, true);
   }
 
-  function getShortcutInfoSync(bundleName: string, userId: number): Array<ShortcutInfo> {
+  function getShortcutInfoSync(bundleName: string, userId: int): Array<ShortcutInfo> {
     return launcherBundleManager.getShortcutInfoNative(bundleName, userId, true);
   }
 
@@ -84,7 +84,7 @@ export default namespace launcherBundleManager {
     return p;
   }
 
-  function getLauncherAbilityInfo(bundleName: string, userId: number, callback: AsyncCallback<Array<LauncherAbilityInfo>, void>): void {
+  function getLauncherAbilityInfo(bundleName: string, userId: int, callback: AsyncCallback<Array<LauncherAbilityInfo>, void>): void {
     let cb = (): (Array<LauncherAbilityInfo>) => {
       return launcherBundleManager.getLauncherAbilityInfoNative(bundleName, userId, false);
     };
@@ -97,7 +97,7 @@ export default namespace launcherBundleManager {
     });
   }
 
-  function getLauncherAbilityInfo(bundleName: string, userId: number): Promise<Array<LauncherAbilityInfo>> {
+  function getLauncherAbilityInfo(bundleName: string, userId: int): Promise<Array<LauncherAbilityInfo>> {
     let p = new Promise<Array<LauncherAbilityInfo>>((resolve: (arrLauncherAbilityInfo: Array<LauncherAbilityInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<LauncherAbilityInfo>) => {
         return launcherBundleManager.getLauncherAbilityInfoNative(bundleName, userId, false);
@@ -113,11 +113,11 @@ export default namespace launcherBundleManager {
     return p;
   }
 
-  function getLauncherAbilityInfoSync(bundleName: string, userId: number): Array<LauncherAbilityInfo> {
+  function getLauncherAbilityInfoSync(bundleName: string, userId: int): Array<LauncherAbilityInfo> {
     return launcherBundleManager.getLauncherAbilityInfoNative(bundleName, userId, true);
   }
 
-  function getAllLauncherAbilityInfo(userId: number, callback: AsyncCallback<Array<LauncherAbilityInfo>, void>): void {
+  function getAllLauncherAbilityInfo(userId: int, callback: AsyncCallback<Array<LauncherAbilityInfo>, void>): void {
     let cb = (): (Array<LauncherAbilityInfo>) => {
       return launcherBundleManager.getAllLauncherAbilityInfoNative(userId);
     };
@@ -130,7 +130,7 @@ export default namespace launcherBundleManager {
     });
   }
 
-  function getAllLauncherAbilityInfo(userId: number): Promise<Array<LauncherAbilityInfo>>{
+  function getAllLauncherAbilityInfo(userId: int): Promise<Array<LauncherAbilityInfo>>{
     let p = new Promise<Array<LauncherAbilityInfo>>((resolve: (arrLauncherAbilityInfo: Array<LauncherAbilityInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<LauncherAbilityInfo>) => {
         return launcherBundleManager.getAllLauncherAbilityInfoNative(userId);

@@ -24,6 +24,6 @@ export class OverlayModuleInfoInner implements OverlayModuleInfo {
     public readonly bundleName: string = '';
     public readonly moduleName: string = '';
     public readonly targetModuleName: string = '';
-    public readonly priority: number;
-    public readonly state: number;
+    public readonly priority: int;
+    public readonly state: int;
 }

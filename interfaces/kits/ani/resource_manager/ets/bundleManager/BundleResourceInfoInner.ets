@@ -19,5 +19,5 @@ export class BundleResourceInfoInner implements BundleResourceInfo {
     readonly bundleName: string = '';
     readonly icon: string = '';
     readonly label: string = '';
-    readonly appIndex: number;
+    readonly appIndex: int;
 }

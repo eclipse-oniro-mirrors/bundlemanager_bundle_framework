@@ -14,7 +14,7 @@
  */
 
 export interface AppProvisionInfo {
-  readonly versionCode: number;
+  readonly versionCode: long;
   readonly versionName: string;
   readonly uuid: string;
   readonly type: string;
@@ -29,6 +29,6 @@ export interface AppProvisionInfo {
 }
 
 export interface Validity {
-  readonly notBefore: number;
-  readonly notAfter: number;
+  readonly notBefore: long;
+  readonly notAfter: long;
 }

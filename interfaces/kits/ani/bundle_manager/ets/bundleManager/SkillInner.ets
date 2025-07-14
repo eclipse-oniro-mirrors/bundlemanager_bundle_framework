@@ -25,12 +25,12 @@ export class SkillInner implements Skill {
 export class SkillUriInner implements SkillUri {
     readonly scheme: string = "";
     readonly host: string = "";
-    readonly port: number;
+    readonly port: int;
     readonly path: string = "";
     readonly pathStartWith: string = "";
     readonly pathRegex: string = "";
     readonly type: string = "";
     readonly utd: string = "";
-    readonly maxFileSupported: number;
+    readonly maxFileSupported: int;
     readonly linkFeature: string = "";
 }

@@ -80,7 +80,7 @@ ani_object AniAppControlCommon::ConvertDisposedRule(ani_env* env, const Disposed
     RETURN_NULL_IF_NULL(aElementList);
     RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_ELEMENTLIST, aElementList));
 
-    // priority: number
+    // priority: int
     RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_PRIORITY, disposedRule.priority));
 
     return object;
@@ -111,7 +111,7 @@ ani_object AniAppControlCommon::ConvertUninstallDisposedRule(ani_env* env,
         EnumUtils::EnumNativeToETS_AppControl_UninstallComponentType(
             env, static_cast<int32_t>(uninstallDisposedRule.uninstallComponentType))));
 
-    // priority: number
+    // priority: int
     RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(
         env, cls, object, PROPERTYNAME_PRIORITY, uninstallDisposedRule.priority));
 
@@ -124,7 +124,7 @@ bool AniAppControlCommon::ParseWantWithoutVerification(ani_env* env, ani_object 
     RETURN_FALSE_IF_NULL(object);
 
     ani_string string = nullptr;
-    ani_int intValue = 0;
+    ani_double doubleValue = 0;
     ani_array array = nullptr;
 
     // bundleName?: string
@@ -159,8 +159,8 @@ bool AniAppControlCommon::ParseWantWithoutVerification(ani_env* env, ani_object 
 
     // flags?: number
     int32_t flags = 0;
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_FLAGS, &intValue)) {
-        CommonFunAni::TryCastDoubleTo(intValue, &flags);
+    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_FLAGS, &doubleValue)) {
+        CommonFunAni::TryCastTo(doubleValue, &flags);
     }
 
     // action?: string
@@ -232,7 +232,7 @@ bool AniAppControlCommon::ParseDisposedRule(ani_env* env, ani_object object, Dis
     RETURN_FALSE_IF_FALSE(CommonFunAni::ParseAniArray(
         env, array, disposedRule.elementList, CommonFunAni::ParseElementName));
 
-    // priority: number
+    // priority: int
     RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_PRIORITY, &intValue));
     disposedRule.priority = intValue;
 
@@ -262,7 +262,7 @@ bool AniAppControlCommon::ParseUninstallDisposedRule(ani_env* env,
     RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_UNINSTALLCOMPONENTTYPE, &enumItem));
     RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, uninstallDisposedRule.uninstallComponentType));
 
-    // priority: number
+    // priority: int
     RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_PRIORITY, &intValue));
     uninstallDisposedRule.priority = intValue;
 

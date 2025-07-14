@@ -18,8 +18,8 @@ import bundleManager from '@ohos.bundle.bundleManager';
 export interface RecoverableApplicationInfo {
   readonly bundleName: string;
   readonly moduleName: string;
-  readonly labelId: number;
-  readonly iconId: number;
+  readonly labelId: long;
+  readonly iconId: long;
   readonly systemApp: boolean;
   readonly bundleType: bundleManager.BundleType;
   readonly codePaths: Array<string>; 

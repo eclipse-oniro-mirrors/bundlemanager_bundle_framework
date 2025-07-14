@@ -21,5 +21,5 @@ export class LauncherAbilityResourceInfoInner implements LauncherAbilityResource
     readonly abilityName: string = '';
     readonly icon: string = '';
     readonly label: string = '';
-    readonly appIndex: number;
+    readonly appIndex: int;
 }
