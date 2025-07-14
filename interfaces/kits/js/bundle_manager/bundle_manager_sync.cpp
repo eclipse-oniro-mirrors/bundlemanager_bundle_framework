@@ -50,7 +50,7 @@ const char* GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
 const char* QUERY_EXTENSION_INFOS_SYNC = "QueryExtensionInfosSync";
 const char* GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
 const char* GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
-const char* GET_SIGNATURE_INFO_SYNC = "GetSignatureInfoSync";
+const char* GET_SIGNATURE_INFO = "GetSignatureInfo";
 const char* GET_SANDBOX_DATA_DIR_SYNC = "GetSandboxDataDirSync";
 const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
 const char* PERMISSION_NAME = "permissionName";
@@ -995,7 +995,7 @@ napi_value GetSignatureInfoSync(napi_env env, napi_callback_info info)
     if (ret != NO_ERROR) {
         APP_LOGE("call GetSignatureInfoByUid failed, uid is %{public}d", uid);
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_SIGNATURE_INFO_SYNC, GET_SIGNATURE_INFO_PERMISSIONS);
+            env, ret, GET_SIGNATURE_INFO, GET_SIGNATURE_INFO_PERMISSIONS);
         napi_throw(env, businessError);
         return nullptr;
     }
