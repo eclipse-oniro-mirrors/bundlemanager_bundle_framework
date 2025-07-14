@@ -78,7 +78,6 @@ const char* JSON_KEY_APP_FORM_VISIBLE_NOTIFY = "appFormVisibleNotify";
 const char* JSON_KEY_FUN_INTERACTION_PARAMS = "funInteractionParams";
 const char* JSON_KEY_SCENE_ANIMATION_PARAMS = "sceneAnimationParams";
 const char* JSON_KEY_ABILITY_NAME = "abilityName";
-const char* JSON_KEY_IS_ALWAYS_ACTIVE = "isAlwaysActive";
 const char* JSON_KEY_DISABLED_DESKTOP_BEHAVIORS = "disabledDesktopBehaviors";
 const char* JSON_KEY_TARGET_BUNDLE_NAME = "targetBundleName";
 const char* JSON_KEY_SUB_BUNDLE_NAME = "subBundleName";
@@ -131,7 +130,6 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     funInteractionParams.subBundleName = formInfo.funInteractionParams.subBundleName;
     funInteractionParams.keepStateDuration = formInfo.funInteractionParams.keepStateDuration;
     sceneAnimationParams.abilityName = formInfo.sceneAnimationParams.abilityName;
-    sceneAnimationParams.isAlwaysActive = formInfo.sceneAnimationParams.isAlwaysActive;
     sceneAnimationParams.disabledDesktopBehaviors = formInfo.sceneAnimationParams.disabledDesktopBehaviors;
     SetInfoByFormExt(formInfo);
 }
@@ -288,7 +286,6 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     funInteractionParams.subBundleName = Str16ToStr8(parcel.ReadString16());
     funInteractionParams.keepStateDuration = parcel.ReadInt32();
     sceneAnimationParams.abilityName = Str16ToStr8(parcel.ReadString16());
-    sceneAnimationParams.isAlwaysActive = parcel.ReadBool();
     sceneAnimationParams.disabledDesktopBehaviors = Str16ToStr8(parcel.ReadString16());
     resizable = parcel.ReadBool();
     groupId = Str16ToStr8(parcel.ReadString16());
@@ -393,7 +390,6 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(funInteractionParams.subBundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, funInteractionParams.keepStateDuration);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.abilityName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, sceneAnimationParams.isAlwaysActive);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.disabledDesktopBehaviors));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, resizable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(groupId));
@@ -434,7 +430,6 @@ void to_json(nlohmann::json &jsonObject, const FormFunInteractionParams &funInte
 void to_json(nlohmann::json &jsonObject, const FormSceneAnimationParams &sceneAnimationParams)
 {
     jsonObject[JSON_KEY_ABILITY_NAME] = sceneAnimationParams.abilityName,
-    jsonObject[JSON_KEY_IS_ALWAYS_ACTIVE] = sceneAnimationParams.isAlwaysActive,
     jsonObject[JSON_KEY_DISABLED_DESKTOP_BEHAVIORS] = sceneAnimationParams.disabledDesktopBehaviors;
 }
 
@@ -579,12 +574,6 @@ void from_json(const nlohmann::json &jsonObject, FormSceneAnimationParams &scene
         jsonObjectEnd,
         JSON_KEY_ABILITY_NAME,
         sceneAnimationParams.abilityName,
-        false,
-        parseResult);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        JSON_KEY_IS_ALWAYS_ACTIVE,
-        sceneAnimationParams.isAlwaysActive,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,

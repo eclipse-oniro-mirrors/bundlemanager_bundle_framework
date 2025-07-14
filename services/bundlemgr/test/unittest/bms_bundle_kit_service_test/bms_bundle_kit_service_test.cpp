@@ -893,7 +893,6 @@ FormInfo BmsBundleKitServiceTest::MockFormInfo(
     formInfo.funInteractionParams.subBundleName = FORM_SUB_BUNDLE_NAME;
     formInfo.funInteractionParams.keepStateDuration = FORM_KEEP_STATE_DURATION;
     formInfo.sceneAnimationParams.abilityName = FORM_ABILITY_NAME;
-    formInfo.sceneAnimationParams.isAlwaysActive = false;
     formInfo.sceneAnimationParams.disabledDesktopBehaviors = FORM_DISABLED_DESKTOP_BEHAVIORS;
     return formInfo;
 }
@@ -1439,7 +1438,6 @@ void BmsBundleKitServiceTest::CheckFormInfoTest(const std::vector<FormInfo> &for
         EXPECT_EQ(formInfo.funInteractionParams.subBundleName, FORM_SUB_BUNDLE_NAME);
         EXPECT_EQ(formInfo.funInteractionParams.keepStateDuration, FORM_KEEP_STATE_DURATION);
         EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, FORM_ABILITY_NAME);
-        EXPECT_EQ(formInfo.sceneAnimationParams.isAlwaysActive, false);
         EXPECT_EQ(formInfo.sceneAnimationParams.disabledDesktopBehaviors, FORM_DISABLED_DESKTOP_BEHAVIORS);
     }
 }
@@ -1478,7 +1476,6 @@ void BmsBundleKitServiceTest::CheckFormInfoDemo(const std::vector<FormInfo> &for
         EXPECT_EQ(formInfo.funInteractionParams.subBundleName, FORM_SUB_BUNDLE_NAME);
         EXPECT_EQ(formInfo.funInteractionParams.keepStateDuration, FORM_KEEP_STATE_DURATION);
         EXPECT_EQ(formInfo.sceneAnimationParams.abilityName, FORM_ABILITY_NAME);
-        EXPECT_EQ(formInfo.sceneAnimationParams.isAlwaysActive, false);
         EXPECT_EQ(formInfo.sceneAnimationParams.disabledDesktopBehaviors, FORM_DISABLED_DESKTOP_BEHAVIORS);
     }
 }

@@ -133,7 +133,6 @@ struct FormFunInteractionParams {
 
 struct FormSceneAnimationParams {
     std::string abilityName;
-    bool isAlwaysActive = false;
     std::vector<std::string> disabledDesktopBehaviors;
 };
 
@@ -214,12 +213,6 @@ void from_json(const nlohmann::json &jsonObject, FormSceneAnimationParams &scene
         jsonObjectEnd,
         ExtensionFormProfileReader::ABILITY_NAME,
         sceneAnimationParams.abilityName,
-        false,
-        g_parseResult);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        ExtensionFormProfileReader::IS_ALWAYS_ACTIVE,
-        sceneAnimationParams.isAlwaysActive,
         false,
         g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
@@ -659,7 +652,6 @@ void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormI
     info.funInteractionParams.subBundleName = form.funInteractionParams.subBundleName;
     info.funInteractionParams.keepStateDuration = form.funInteractionParams.keepStateDuration;
     info.sceneAnimationParams.abilityName = form.sceneAnimationParams.abilityName;
-    info.sceneAnimationParams.isAlwaysActive = form.sceneAnimationParams.isAlwaysActive;
     info.resizable = form.resizable;
     info.groupId = form.groupId;
 }

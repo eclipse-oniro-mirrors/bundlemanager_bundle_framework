@@ -60,7 +60,6 @@ constexpr const char* ENABLE_BLUR_BACKGROUND = "enableBlurBackground";
 constexpr const char* FUN_INTERACTION_PARAMS = "funInteractionParams";
 constexpr const char* SCENE_ANIMATION_PARAMS = "sceneAnimationParams";
 constexpr const char* ABILITY_NAME = "abilityName";
-constexpr const char* IS_ALWAYS_ACTIVE = "isAlwaysActive";
 constexpr const char* DISABLED_DESKTOP_BEHAVIORS = "disabledDesktopBehaviors";
 constexpr const char* TARGET_BUNDLE_NAME = "targetBundleName";
 constexpr const char* SUB_BUNDLE_NAME = "subBundleName";
