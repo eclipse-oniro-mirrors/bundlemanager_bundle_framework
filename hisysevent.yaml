@@ -87,6 +87,8 @@ BUNDLE_CLEAN_CACHE_EXCEPTION:
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   CLEAN_TYPE: {type: STRING, desc: clean cache or clean data}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
 
 ################################################################################
 #                                 BEHAVIOR EVENT                               #
@@ -191,6 +193,8 @@ BUNDLE_CLEAN_CACHE:
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   CLEAN_TYPE: {type: STRING, desc: clean cache or clean data}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
 
 GET_REMOTE_ABILITY_INFO:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: get remote abilityInfo}

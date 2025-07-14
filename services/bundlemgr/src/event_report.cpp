@@ -140,12 +140,15 @@ void EventReport::SendComponentStateSysEvent(const std::string &bundleName, cons
 }
 
 void EventReport::SendCleanCacheSysEvent(
-    const std::string &bundleName, int32_t userId, bool isCleanCache, bool exception)
+    const std::string &bundleName, int32_t userId, bool isCleanCache, bool exception,
+    int32_t callingUid, const std::string &callingBundleName)
 {
     EventInfo eventInfo;
     eventInfo.bundleName = bundleName;
     eventInfo.userId = userId;
     eventInfo.isCleanCache = isCleanCache;
+    eventInfo.callingUid = callingUid;
+    eventInfo.callingBundleName = callingBundleName;
     BMSEventType bmsEventType;
     if (exception) {
         bmsEventType = BMSEventType::BUNDLE_CLEAN_CACHE_EXCEPTION;
@@ -157,13 +160,16 @@ void EventReport::SendCleanCacheSysEvent(
 }
 
 void EventReport::SendCleanCacheSysEventWithIndex(
-    const std::string &bundleName, int32_t userId, int32_t appIndex, bool isCleanCache, bool exception)
+    const std::string &bundleName, int32_t userId, int32_t appIndex, bool isCleanCache, bool exception,
+    int32_t callingUid, const std::string &callingBundleName)
 {
     EventInfo eventInfo;
     eventInfo.bundleName = bundleName;
     eventInfo.userId = userId;
     eventInfo.appIndex = appIndex;
     eventInfo.isCleanCache = isCleanCache;
+    eventInfo.callingUid = callingUid;
+    eventInfo.callingBundleName = callingBundleName;
     BMSEventType bmsEventType;
     if (exception) {
         bmsEventType = BMSEventType::BUNDLE_CLEAN_CACHE_EXCEPTION;

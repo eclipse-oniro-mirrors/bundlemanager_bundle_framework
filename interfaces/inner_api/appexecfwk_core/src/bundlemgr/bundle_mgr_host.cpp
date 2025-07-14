@@ -1846,8 +1846,9 @@ ErrCode BundleMgrHost::HandleCleanBundleDataFiles(MessageParcel &data, MessagePa
     std::string bundleName = data.ReadString();
     int userId = data.ReadInt32();
     int appIndex = data.ReadInt32();
+    int callerUid = data.ReadInt32();
 
-    bool ret = CleanBundleDataFiles(bundleName, userId, appIndex);
+    bool ret = CleanBundleDataFiles(bundleName, userId, appIndex, callerUid);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

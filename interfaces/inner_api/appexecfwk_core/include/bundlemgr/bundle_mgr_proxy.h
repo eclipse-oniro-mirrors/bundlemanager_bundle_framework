@@ -579,8 +579,8 @@ public:
      * @param appIndex Indicates the app index.
      * @return Returns true if the data cleared successfully; returns false otherwise.
      */
-    virtual bool CleanBundleDataFiles(const std::string &bundleName, const int userId = 0,
-        const int appIndex = 0) override;
+    virtual bool CleanBundleDataFiles(const std::string &bundleName,
+        const int userId = 0, const int appIndex = 0, const int callerUid = -1) override;
     /**
      * @brief Register the specific bundle status callback through the proxy object.
      * @param bundleStatusCallback Indicates the callback to be invoked for returning the bundle status changed result.

@@ -24,6 +24,7 @@
 
 #include "ability_manager_client.h"
 #include "ability_info.h"
+#include "aging/aging_handler.h"
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
 #include "bundle_cache_mgr.h"
@@ -9475,7 +9476,9 @@ HWTEST_F(BmsBundleKitServiceTest, ClearCache_0100, Function | SmallTest | Level1
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
     sptr<ICleanCacheCallback> cleanCacheCallback = new (std::nothrow) ICleanCacheCallbackTest();
-    ErrCode ret = hostImpl->ClearCache(BUNDLE_NAME_DEMO, cleanCacheCallback, DEFAULT_USERID);
+    int32_t uid = 0;
+    std::string callingBundleName;
+    ErrCode ret = hostImpl->ClearCache(BUNDLE_NAME_DEMO, cleanCacheCallback, DEFAULT_USERID, uid, callingBundleName);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -14247,7 +14250,8 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheTaskGetCleanSize_0100, Functio
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
     uint64_t cacheSize = 1;
-    hostImpl->CleanBundleCacheTaskGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cacheSize);
+    uint64_t uid = 1;
+    hostImpl->CleanBundleCacheTaskGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cacheSize, uid, BUNDLE_NAME_TEST);
     EXPECT_FALSE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.empty());
 }
 
@@ -14950,4 +14954,23 @@ HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetAllShortcutInfoForSelf_0100, Func
     auto ret = bundleMgrProxy->GetAllShortcutInfoForSelf(shortcutInfos);
     EXPECT_NE(ret, ERR_OK);
 }
+
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+/**
+ * @tc.number: AginTest_0014
+ * @tc.name: test RecentlyUnuseBundleAgingHandler of CleanCache
+ * @tc.desc: CleanCache is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0014, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+    bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    EXPECT_NE(bundleMgrService_, nullptr);
+    bundleMgrService_->dataMgr_ = nullptr;
+    AgingBundleInfo agingBundle;
+    bool ret = bundleAgingMgr.CleanCache(agingBundle);
+    EXPECT_FALSE(ret);
+    bundleMgrService_->InitBundleDataMgr();
+}
+#endif
 }
