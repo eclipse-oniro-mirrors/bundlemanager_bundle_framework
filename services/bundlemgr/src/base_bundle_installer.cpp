@@ -2529,7 +2529,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         LOG_E(BMS_TAG_INSTALLER, "install module failed %{public}d", result);
         return result;
     }
-    (void)bundleInstallChecker_->DetermineCloneApp(newInfo);
     LOG_D(BMS_TAG_INSTALLER, "finish to call ProcessBundleUpdateStatus");
     return ERR_OK;
 }
@@ -6993,6 +6992,7 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
         LOG_W(BMS_TAG_INSTALLER, "mark finish failed");
         return ERR_APPEXECFWK_GET_INSTALL_TEMP_BUNDLE_ERROR;
     }
+    (void)bundleInstallChecker_->DetermineCloneApp(info);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!InitDataMgr()) {
