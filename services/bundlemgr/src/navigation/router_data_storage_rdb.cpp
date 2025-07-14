@@ -80,7 +80,7 @@ bool RouterDataStorageRdb::GetRouterInfo(const std::string &bundleName, const st
     std::vector<RouterItem> &routerInfos)
 {
     if (rdbDataManager_ == nullptr) {
-        APP_LOGE("rdbDataManager is null");
+        APP_LOGE("null");
         return false;
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(ROUTER_RDB_TABLE_NAME);
