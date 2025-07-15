@@ -71,6 +71,7 @@ ohos_shared_library("ani_app_control") {
     "ability_runtime:runtime",
     "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_single",
     "napi:ace_napi",
     "runtime_core:ani",
     "runtime_core:ani_helpers",

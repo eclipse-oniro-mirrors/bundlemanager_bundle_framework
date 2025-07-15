@@ -36,7 +36,7 @@ static void AniAddDesktopShortcutInfo(ani_env* env, ani_object info, ani_int ani
     ShortcutInfo shortcutInfo;
     if (!CommonFunAni::ParseShortcutInfo(env, info, shortcutInfo) ||
         !CommonFunc::CheckShortcutInfo(shortcutInfo)) {
-        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
         APP_LOGE("Parse shortcutInfo err. userId:%{public}d", aniUserId);
         return;
     }
@@ -62,7 +62,7 @@ static void AniDeleteDesktopShortcutInfo(ani_env* env, ani_object info, ani_int 
     if (!CommonFunAni::ParseShortcutInfo(env, info, shortcutInfo) ||
         !CommonFunc::CheckShortcutInfo(shortcutInfo)) {
         APP_LOGE("Parse shortcutInfo err. userId:%{public}d", aniUserId);
-        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
         return;
     }
 
@@ -107,6 +107,57 @@ static ani_ref AniGetAllDesktopShortcutInfo(ani_env* env, ani_int aniUserId)
     return shortcutInfosRef;
 }
 
+static void SetShortcutVisibleForSelfNative(ani_env* env, ani_string aniId, ani_boolean aniVisible)
+{
+    APP_LOGD("ani SetShortcutVisibleForSelf called");
+    std::string shortcutId;
+    if (!CommonFunAni::ParseString(env, aniId, shortcutId)) {
+        APP_LOGE("parse shortcutId failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, SHORTCUT_ID, TYPE_STRING);
+        return;
+    }
+    bool visible = CommonFunAni::AniBooleanToBool(aniVisible);
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowCommonError(
+            env, CommonFunc::ConvertErrCode(ERR_APPEXECFWK_SERVICE_NOT_READY), SET_SHORTCUT_VISIBLE, "");
+        return;
+    }
+    ErrCode ret = iBundleMgr->SetShortcutVisibleForSelf(shortcutId, visible);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetShortcutVisibleForSelf failed ret:%{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), SET_SHORTCUT_VISIBLE, "");
+    }
+}
+
+static ani_object GetAllShortcutInfoForSelfNative(ani_env* env)
+{
+    APP_LOGD("ani GetAllShortcutInfoForSelf called");
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowCommonError(
+            env, CommonFunc::ConvertErrCode(ERR_APPEXECFWK_NULL_PTR), GET_ALL_SHORTCUT_INFO_FOR_SELF, "");
+        return nullptr;
+    }
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = iBundleMgr->GetAllShortcutInfoForSelf(shortcutInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllShortcutInfoForSelf failed ret:%{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), GET_ALL_SHORTCUT_INFO_FOR_SELF, "");
+        return nullptr;
+    }
+    ani_object shortcutInfosObject =
+        CommonFunAni::ConvertAniArray(env, shortcutInfos, CommonFunAni::ConvertShortcutInfo);
+    if (shortcutInfosObject == nullptr) {
+        APP_LOGE("nullptr shortcutInfosRef");
+    }
+
+    return shortcutInfosObject;
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -130,6 +181,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(AniDeleteDesktopShortcutInfo) },
         ani_native_function { "getAllDesktopShortcutInfoNative", nullptr,
             reinterpret_cast<void*>(AniGetAllDesktopShortcutInfo) },
+        ani_native_function { "setShortcutVisibleForSelfNative", nullptr,
+            reinterpret_cast<void*>(SetShortcutVisibleForSelfNative) },
+        ani_native_function { "getAllShortcutInfoForSelfNative", nullptr,
+            reinterpret_cast<void*>(GetAllShortcutInfoForSelfNative) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

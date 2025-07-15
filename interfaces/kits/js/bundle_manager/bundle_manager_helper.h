@@ -32,7 +32,8 @@ public:
     static ErrCode InnerIsAbilityEnabled(const AbilityInfo& abilityInfo, bool& isEnable, int32_t appIndex);
     static ErrCode InnerSetAbilityEnabled(const AbilityInfo& abilityInfo, bool& isEnable, int32_t appIndex);
     static ErrCode InnerSetApplicationEnabled(const std::string& bundleName, bool& isEnable, int32_t appIndex);
-    static ErrCode InnerEnableDynamicIcon(const std::string& bundleName, const std::string& moduleName);
+    static ErrCode InnerEnableDynamicIcon(
+        const std::string& bundleName, const std::string& moduleName, int32_t appIndex, int32_t userId, bool isDefault);
     static ErrCode InnerGetAppCloneIdentity(int32_t uid, std::string& bundleName, int32_t& appIndex);
     static ErrCode InnerGetBundleArchiveInfo(std::string& hapFilePath, int32_t flags, BundleInfo& bundleInfo);
     static ErrCode GetAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
@@ -54,12 +55,17 @@ public:
     static ErrCode InnerGetSharedBundleInfo(
         const std::string& bundleName, const std::string& moduleName, std::vector<SharedBundleInfo>& sharedBundles);
     static ErrCode InnerGetExtResource(const std::string& bundleName, std::vector<std::string>& moduleNames);
-    static ErrCode InnerDisableDynamicIcon(const std::string& bundleName);
+    static ErrCode InnerDisableDynamicIcon(
+        const std::string& bundleName, int32_t appIndex, int32_t userId, bool isDefault);
+    static ErrCode InnerGetDynamicIconInfo(
+        const std::string& bundleName, std::vector<DynamicIconInfo>& dynamicIconInfos);
+    static ErrCode InnerGetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo>& dynamicIconInfos);
     static ErrCode InnerVerify(const std::vector<std::string>& abcPaths, bool flag);
     static ErrCode InnerDeleteAbc(const std::string& path);
     static ErrCode InnerGetRecoverableApplicationInfo(std::vector<RecoverableApplicationInfo>& recoverableApplications);
     static ErrCode InnerGetAllPluginInfo(
-        const std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos);
+    const std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos);
+    static ErrCode InnerGetAbilityInfos(const std::string& uri, uint32_t flags, std::vector<AbilityInfo>& abilityInfos);
 };
 } // AppExecFwk
 } // OHOS

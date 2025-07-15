@@ -32,8 +32,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* PARSE_REASON_MESSAGE = "parse ReasonMessage failed";
-constexpr const char* START_SHORTCUT_WITH_REASON = "StartShortcutWithReason";
 
 const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
     {ERR_OK, ERR_OK},
@@ -392,7 +390,7 @@ bool ParseGetShortcutInfoAppIndex(napi_env env, napi_value args, int32_t &appInd
 {
     if (!CommonFunc::ParseInt(env, args, appIndex)) {
         APP_LOGE("parse appIndex failed");
-        BusinessError::ThrowParameterTypeError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
         return false;
     }
     if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
@@ -414,7 +412,7 @@ napi_value GetShortcutInfoByAppIndex(napi_env env, napi_callback_info info)
     }
     std::string bundleName;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
 
@@ -426,7 +424,7 @@ napi_value GetShortcutInfoByAppIndex(napi_env env, napi_callback_info info)
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_SHORTCUT_INFO_SYNC,
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_SHORTCUT_INFO_BY_APPINDEX,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
         return nullptr;
@@ -437,14 +435,14 @@ napi_value GetShortcutInfoByAppIndex(napi_env env, napi_callback_info info)
     if (ret != SUCCESS) {
         APP_LOGE("failed, ret %{public}d", ret);
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_SHORTCUT_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            env, ret, GET_SHORTCUT_INFO_BY_APPINDEX, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
         return nullptr;
     }
     napi_value nShortcutInfos = nullptr;
     NAPI_CALL(env, napi_create_array(env, &nShortcutInfos));
     CommonFunc::ConvertShortCutInfos(env, shortcutInfos, nShortcutInfos);
-    APP_LOGI_NOFUNC("call GetShortcutInfoSync done");
+    APP_LOGI_NOFUNC("call GetShortcutInfoByAppIndex done");
     return nShortcutInfos;
 }
 

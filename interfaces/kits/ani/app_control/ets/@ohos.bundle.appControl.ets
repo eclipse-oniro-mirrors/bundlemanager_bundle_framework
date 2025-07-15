@@ -60,6 +60,12 @@ export default namespace appControl {
     priority: int;
   }
 
+  export interface DisposedRuleConfiguration {
+    appId: string;
+    appIndex: int;
+    disposedRule: DisposedRule;
+  }
+
   export class DisposedRuleInner implements DisposedRule {
     public want: Want = {};
     public componentType: ComponentType = ComponentType.UI_ABILITY;
@@ -75,6 +81,12 @@ export default namespace appControl {
     public priority: int;
   }
 
+  export class DisposedRuleConfigurationInner implements DisposedRuleConfiguration {
+    public appId: string = '';
+    public appIndex: int;
+    public disposedRule: DisposedRule = new DisposedRuleInner;
+  }
+
   export native function setDisposedStatusNative(appId: string, disposedWant: Want, isSync: boolean): void;
   export native function getDisposedStatusNative(appId: string, isSync: boolean): Want;
   export native function deleteDisposedStatusNative(appId: string, appIndex: int, isSync: boolean): void;
@@ -83,6 +95,7 @@ export default namespace appControl {
   export native function setUninstallDisposedRuleNative(appIdentifier: string, rule: UninstallDisposedRule, appIndex: int): void;
   export native function getUninstallDisposedRuleNative(appIdentifier: string, appIndex: int): UninstallDisposedRule;
   export native function deleteUninstallDisposedRuleNative(appIdentifier: string, appIndex: int): void;
+  export native function setDisposedRules(disposedRuleConfigurations: Array<DisposedRuleConfiguration>): void;
 
 
   function setDisposedStatus(appId: string, disposedWant: Want, callback: AsyncCallback<void>): void {

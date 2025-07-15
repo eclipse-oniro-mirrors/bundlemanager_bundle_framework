@@ -16,7 +16,8 @@
 import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { HapModuleInfo, RouterItem } from 'bundleManager.HapModuleInfo';
 import bundleManager from '@ohos.bundle.bundleManager';
-import { BundleInfo, ReqPermissionDetail, UsedScene, SignatureInfo, AppCloneIdentity } from 'bundleManager.BundleInfo';
+import { BundleInfo, ReqPermissionDetail, UsedScene, SignatureInfo, AppCloneIdentity, DynamicIconInfo,
+  BundleOptions} from 'bundleManager.BundleInfo';
 import { ApplicationInfoInner } from './ApplicationInfoInner';
 
 export class BundleInfoInner implements BundleInfo {
@@ -61,4 +62,16 @@ export class SignatureInfoInner implements SignatureInfo {
 export class AppCloneIdentityInner implements AppCloneIdentity {
   readonly bundleName: string = "";
   readonly appIndex: int;
+}
+
+export class DynamicIconInfoInner implements DynamicIconInfo {
+  public readonly bundleName: string = '';
+  public readonly moduleName: string = '';
+  public readonly userId: int;
+  public readonly appIndex: int;
+}
+
+export class BundleOptionsInner implements BundleOptions {
+  public userId?: int | undefined;
+  public appIndex?: int | undefined;
 }

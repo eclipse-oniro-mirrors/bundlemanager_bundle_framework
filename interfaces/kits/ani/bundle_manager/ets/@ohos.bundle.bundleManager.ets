@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import { BundleInfo, AppCloneIdentity, SignatureInfo } from 'bundleManager.BundleInfo';
+import { BundleInfo, AppCloneIdentity, SignatureInfo, BundleOptions, DynamicIconInfo } from 'bundleManager.BundleInfo';
 import { AsyncCallback, BusinessError } from '@ohos.base';
 import { PreinstalledApplicationInfo, ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { AbilityInfo } from 'bundleManager.AbilityInfo';
@@ -24,6 +24,7 @@ import { AppProvisionInfo } from 'bundleManager.AppProvisionInfo'
 import { RecoverableApplicationInfo } from 'bundleManager.RecoverableApplicationInfo'
 import { PluginBundleInfo } from 'bundleManager.PluginBundleInfo';
 import Want from '@ohos.app.ability.Want';
+import { BundleOptionsInner } from './bundleManager/BundleInfoInner';
 
 namespace bundleManager {
 
@@ -230,7 +231,7 @@ namespace bundleManager {
   export native function queryExAbilityInfoSyncWithoutWantNative(extensionAbilityType: string, extensionAbilityFlags: int,
     userId: int): Array<ExtensionAbilityInfo>;
 
-  export native function enableDynamicIconNative(bundleName: string, moduleName: string): void;
+  export native function enableDynamicIconNative(bundleName: string, moduleName: string, option: BundleOptions): void;
 
   function getBundleInfoForSelfSync(bundleFlags: int): BundleInfo {
     return bundleManager.getBundleInfoForSelfNative(bundleFlags, true);
@@ -284,7 +285,11 @@ namespace bundleManager {
 
   export native function getExtResourceNative(bundleName: string): Array<string>;
 
-  export native function disableDynamicIconNative(bundleName: string): void;
+  export native function disableDynamicIconNative(bundleName: string, option: BundleOptions): void;
+  
+  export native function getDynamicIconInfoNative(bundleName: string): Array<DynamicIconInfo>;
+
+  export native function getAllDynamicIconInfoNative(userId: int): Array<DynamicIconInfo>;
 
   export native function verifyAbcNative(abcPaths: Array<string>, deleteOriginalFiles: boolean): void;
 
@@ -299,6 +304,12 @@ namespace bundleManager {
   export native function getAllPluginInfoNative(hostBundleName: string, userId: int): Array<PluginBundleInfo>;
   
   export native function migrateDataNative(sourcePaths: Array<string>, destinationPath: string): void;
+
+  export native function getSandboxDataDir(bundleName: string, appIndex: int): string;
+
+  export native function getAppCloneIdentityBySandboxDataDir(sandboxDataDir: string): AppCloneIdentity;
+
+  export native function getAbilityInfoNative(uri: string, abilityFlags: int): Array<AbilityInfo>;
   
   function isApplicationEnabledSync(bundleName: string): boolean {
     return bundleManager.isApplicationEnabledNative(bundleName, 0, true);
@@ -1072,8 +1083,26 @@ namespace bundleManager {
 
   function enableDynamicIcon(bundleName: string, moduleName: string): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let bundleOptions = new BundleOptionsInner();
       let execFun = (): void => {
-        return bundleManager.enableDynamicIconNative(bundleName, moduleName);
+        return bundleManager.enableDynamicIconNative(bundleName, moduleName, bundleOptions);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function enableDynamicIcon(bundleName: string, moduleName: string, option?: BundleOptions): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let bundleOptions = option ?? new BundleOptionsInner();
+      let execFun = (): void => {
+        return bundleManager.enableDynamicIconNative(bundleName, moduleName, bundleOptions);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -1458,12 +1487,67 @@ namespace bundleManager {
 
   function disableDynamicIcon(bundleName: string): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let bundleOptions = new BundleOptionsInner();
       let execFun = (): void => {
-        return bundleManager.disableDynamicIconNative(bundleName);
+        return bundleManager.disableDynamicIconNative(bundleName, bundleOptions);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function disableDynamicIcon(bundleName: string, option?: BundleOptions): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let bundleOptions = option ?? new BundleOptionsInner();
+      let execFun = (): void => {
+        return bundleManager.disableDynamicIconNative(bundleName, bundleOptions);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getDynamicIconInfo(bundleName: string): Promise<Array<DynamicIconInfo>> {
+    let p = new Promise<Array<DynamicIconInfo>>((resolve: (dynamicIconInfos: Array<DynamicIconInfo>)
+      => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): Array<DynamicIconInfo> => {
+        return bundleManager.getDynamicIconInfoNative(bundleName);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let dynamicIconInfos: Array<DynamicIconInfo> = e as Array<DynamicIconInfo>;
+        resolve(dynamicIconInfos);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAllDynamicIconInfo(userId?: int): Promise<Array<DynamicIconInfo>> {
+    let p = new Promise<Array<DynamicIconInfo>>((resolve: (dynamicIconInfos: Array<DynamicIconInfo>)
+      => void, reject: (error: BusinessError) => void) => {
+      let userIdInfo: int = userId ?? EMPTY_USER_ID;
+      let execFun = (): Array<DynamicIconInfo> => {
+        return bundleManager.getAllDynamicIconInfoNative(userIdInfo);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let dynamicIconInfos: Array<DynamicIconInfo> = e as Array<DynamicIconInfo>;
+        resolve(dynamicIconInfos);
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1550,7 +1634,7 @@ namespace bundleManager {
   function getAllPluginInfo(hostBundleName: string, userId?: int): Promise<Array<PluginBundleInfo>> {
     let p = new Promise<Array<PluginBundleInfo>>((resolve: (pluginBundleInfo: Array<PluginBundleInfo>)
       => void, reject: (error: BusinessError) => void) => {
-      let userIdInfo: int = userId ?? -500;
+      let userIdInfo: int = userId ?? EMPTY_USER_ID;
       let execFun = (): Array<PluginBundleInfo> => {
         return bundleManager.getAllPluginInfoNative(hostBundleName, userIdInfo);
       };
@@ -1574,6 +1658,24 @@ namespace bundleManager {
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
         resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function getAbilityInfo(uri: string, abilityFlags: int): Promise<Array<AbilityInfo>> {
+    let p = new Promise<Array<AbilityInfo>>((resolve: (abilityInfos: Array<AbilityInfo>)
+      => void, reject: (error: BusinessError) => void) => {
+      let execFun = (): Array<AbilityInfo> => {
+        return bundleManager.getAbilityInfoNative(uri, abilityFlags);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let abilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
+        resolve(abilityInfos);
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

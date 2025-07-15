@@ -60,3 +60,15 @@ export interface AppCloneIdentity {
   readonly bundleName: string;
   readonly appIndex: int;
 }
+
+export interface DynamicIconInfo {
+  readonly bundleName: string;
+  readonly moduleName: string;
+  readonly userId: int;
+  readonly appIndex: int;
+}
+
+export interface BundleOptions {
+  userId?: int;
+  appIndex?: int;
+}

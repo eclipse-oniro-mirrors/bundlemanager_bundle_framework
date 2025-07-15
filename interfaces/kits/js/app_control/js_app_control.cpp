@@ -810,14 +810,14 @@ napi_value SetDisposedRules(napi_env env, napi_callback_info info)
     std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
     if (!ParseDisposedRuleConfigurationArray(env, args[ARGS_POS_ZERO], disposedRuleConfigurations)) {
         APP_LOGE("disposedRuleConfigurations invalid!");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
         return nRet;
     }
     auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-            GET_DISPOSED_STATUS_SYNC);
+            SET_DISPOSED_RULES);
         napi_throw(env, error);
         return nullptr;
     }
@@ -827,7 +827,7 @@ napi_value SetDisposedRules(napi_env env, napi_callback_info info)
     if (ret != ERR_OK) {
         APP_LOGE("SetDisposedRules failed");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+            env, ret, SET_DISPOSED_RULES, PERMISSION_DISPOSED_STATUS);
         napi_throw(env, businessError);
         return nullptr;
     }

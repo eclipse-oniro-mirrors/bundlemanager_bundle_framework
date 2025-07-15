@@ -34,6 +34,7 @@ constexpr const char* CLASSNAME_PERMISSION = "LbundleManager/BundleInfoInner/Req
 constexpr const char* CLASSNAME_USEDSCENE = "LbundleManager/BundleInfoInner/UsedSceneInner;";
 constexpr const char* CLASSNAME_SIGNATUREINFO = "LbundleManager/BundleInfoInner/SignatureInfoInner;";
 constexpr const char* CLASSNAME_APPCLONEIDENTITY = "LbundleManager/BundleInfoInner/AppCloneIdentityInner;";
+constexpr const char* CLASSNAME_DYNAMICICONINFO = "LbundleManager/BundleInfoInner/DynamicIconInfoInner;";
 constexpr const char* CLASSNAME_PERMISSIONDEF = "LbundleManager/PermissionDefInner/PermissionDefInner;";
 constexpr const char* CLASSNAME_SHAREDBUNDLEINFO = "LbundleManager/SharedBundleInfoInner/SharedBundleInfoInner;";
 constexpr const char* CLASSNAME_SHAREDMODULEINFO = "LbundleManager/SharedBundleInfoInner/SharedModuleInfoInner;";
@@ -251,6 +252,7 @@ constexpr const char* PROPERTYNAME_ORGANIZATION = "organization";
 constexpr const char* PROPERTYNAME_CODEPATHS = "codePaths";
 constexpr const char* PROPERTYNAME_PLUGINBUNDLENAME = "pluginBundleName";
 constexpr const char* PROPERTYNAME_PLUGINMODULEINFOS = "pluginModuleInfos";
+constexpr const char* PROPERTYNAME_VISIBLE = "visible";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
@@ -1091,7 +1093,7 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, extensionInfo.iconId));
 
     // exported: boolean
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_EXPORTED, extensionInfo.visible));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_EXPORTED, BoolToAniBoolean(extensionInfo.visible)));
 
     // extensionAbilityType: bundleManager.ExtensionAbilityType
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_EXTENSIONABILITYTYPE,
@@ -1117,7 +1119,7 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_METADATA, aMetadataObject));
 
     // enabled: boolean
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ENABLED, extensionInfo.enabled));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ENABLED, BoolToAniBoolean(extensionInfo.enabled)));
 
     // readPermission: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.readPermission, string));
@@ -2043,6 +2045,10 @@ ani_object CommonFunAni::ConvertShortcutInfo(ani_env* env, const ShortcutInfo& s
     // sourceType: int
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SOURCETYPE, shortcutInfo.sourceType));
 
+    // visible?: boolean
+    RETURN_NULL_IF_FALSE(CallSetterOptional(
+        env, cls, object, PROPERTYNAME_VISIBLE, BoolToAniBoolean(shortcutInfo.visible)));
+
     return object;
 }
 
@@ -2533,6 +2539,61 @@ ani_object CommonFunAni::CreateDispatchInfo(
     return object;
 }
 
+ani_object CommonFunAni::ConvertDynamicIconInfo(ani_env* env, const DynamicIconInfo& dynamicIconInfo)
+{
+    RETURN_NULL_IF_NULL(env);
+
+    ani_class cls = CreateClassByName(env, CLASSNAME_DYNAMICICONINFO);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_object object = CreateNewObjectByClass(env, cls);
+    RETURN_NULL_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // bundleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, dynamicIconInfo.bundleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+
+    // moduleName: string
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, dynamicIconInfo.moduleName, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+
+    // userId: int
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_USERID, dynamicIconInfo.userId));
+
+    // appIndex: int
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, dynamicIconInfo.appIndex));
+
+    return object;
+}
+
+bool CommonFunAni::ParseBundleOptions(ani_env* env, ani_object object, int32_t& appIndex, int32_t& userId)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_int intValue = 0;
+    bool isDefault = true;
+
+    // userId?: int
+    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+        if (intValue < 0) {
+            intValue = Constants::INVALID_USERID;
+        }
+        userId = intValue;
+        isDefault = false;
+    }
+
+    // appIndex?: int
+    if (CallGetterOptional(env, object, PROPERTYNAME_APPINDEX, &intValue)) {
+        appIndex = intValue;
+        isDefault = false;
+    }
+
+    return isDefault;
+}
+
 bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutInfo& shortcutInfo)
 {
     RETURN_FALSE_IF_NULL(env);
@@ -2593,6 +2654,12 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
     // sourceType: int
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SOURCETYPE, &intValue));
     shortcutInfo.sourceType = intValue;
+
+    ani_boolean boolValue = false;
+    // visible?: boolean
+    if (CallGetterOptional(env, object, PROPERTYNAME_VISIBLE, &boolValue)) {
+        shortcutInfo.visible = boolValue;
+    }
 
     return true;
 }

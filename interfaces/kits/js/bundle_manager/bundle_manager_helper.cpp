@@ -102,17 +102,22 @@ ErrCode BundleManagerHelper::InnerSetApplicationEnabled(const std::string& bundl
     return CommonFunc::ConvertErrCode(ret);
 }
 
-ErrCode BundleManagerHelper::InnerEnableDynamicIcon(const std::string& bundleName, const std::string& moduleName)
+ErrCode BundleManagerHelper::InnerEnableDynamicIcon(
+    const std::string& bundleName, const std::string& moduleName, int32_t appIndex, int32_t userId, bool isDefault)
 {
     auto extResourceManager = CommonFunc::GetExtendResourceManager();
     if (extResourceManager == nullptr) {
         APP_LOGE("extResourceManager is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-
-    ErrCode ret = extResourceManager->EnableDynamicIcon(bundleName, moduleName);
+    ErrCode ret = ERR_OK;
+    if (isDefault) {
+        ret = extResourceManager->EnableDynamicIcon(bundleName, moduleName);
+    } else {
+        ret = extResourceManager->EnableDynamicIcon(bundleName, moduleName, userId, appIndex);
+    }
     if (ret != ERR_OK) {
-        APP_LOGE("EnableDynamicIcon failed");
+        APP_LOGE("EnableDynamicIcon failed %{public}d", ret);
     }
 
     return CommonFunc::ConvertErrCode(ret);
@@ -401,7 +406,8 @@ ErrCode BundleManagerHelper::InnerGetExtResource(const std::string& bundleName, 
     return CommonFunc::ConvertErrCode(ret);
 }
 
-ErrCode BundleManagerHelper::InnerDisableDynamicIcon(const std::string& bundleName)
+ErrCode BundleManagerHelper::InnerDisableDynamicIcon(
+    const std::string& bundleName, int32_t appIndex, int32_t userId, bool isDefault)
 {
     auto extResourceManager = CommonFunc::GetExtendResourceManager();
     if (extResourceManager == nullptr) {
@@ -409,11 +415,47 @@ ErrCode BundleManagerHelper::InnerDisableDynamicIcon(const std::string& bundleNa
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 
-    ErrCode ret = extResourceManager->DisableDynamicIcon(bundleName);
-    if (ret != ERR_OK) {
-        APP_LOGE("DisableDynamicIcon failed");
+    ErrCode ret = ERR_OK;
+    if (isDefault) {
+        ret = extResourceManager->DisableDynamicIcon(bundleName);
+    } else {
+        ret = extResourceManager->DisableDynamicIcon(bundleName, userId, appIndex);
     }
-    APP_LOGD("DisableDynamicIcon ErrCode : %{public}d", ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("DisableDynamicIcon failed %{public}d", ret);
+    }
+
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetDynamicIconInfo(
+    const std::string& bundleName, std::vector<DynamicIconInfo>& dynamicIconInfos)
+{
+    auto extResourceManager = CommonFunc::GetExtendResourceManager();
+    if (extResourceManager == nullptr) {
+        APP_LOGE("extResourceManager is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = extResourceManager->GetDynamicIconInfo(bundleName, dynamicIconInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("-n %{public}s GetDynamicIcon failed %{public}d", bundleName.c_str(), ret);
+    }
+
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetAllDynamicIconInfo(
+    const int32_t userId, std::vector<DynamicIconInfo>& dynamicIconInfos)
+{
+    auto extResourceManager = CommonFunc::GetExtendResourceManager();
+    if (extResourceManager == nullptr) {
+        APP_LOGE("extResourceManager is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = extResourceManager->GetAllDynamicIconInfo(userId, dynamicIconInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("GetDynamicIcon failed %{public}d", ret);
+    }
     return CommonFunc::ConvertErrCode(ret);
 }
 
@@ -472,6 +514,19 @@ ErrCode BundleManagerHelper::InnerGetAllPluginInfo(
     }
     ErrCode ret = iBundleMgr->GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
     APP_LOGD("GetAllPluginInfo ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode BundleManagerHelper::InnerGetAbilityInfos(
+    const std::string& uri, uint32_t flags, std::vector<AbilityInfo>& abilityInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAbilityInfos(uri, flags, abilityInfos);
+    APP_LOGD("GetAbilityInfos ErrCode : %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }
 } // AppExecFwk
