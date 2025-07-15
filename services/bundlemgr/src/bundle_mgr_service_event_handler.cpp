@@ -2180,8 +2180,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 if (!updateSelinuxLabel) {
                     UpdateAppDataSelinuxLabel(bundleName, hasInstalledInfo.applicationInfo.appPrivilegeLevel,
                         hasInstalledInfo.isPreInstallApp,
-                        hasInstalledInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG,
-                        Constants::ROOT_UID);
+                        hasInstalledInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
                     updateSelinuxLabel = true;
                 }
                 // Used to judge whether the module has been installed.
@@ -4006,7 +4005,7 @@ void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleNam
 }
 
 void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
-    bool isPreInstall, bool debug, int32_t uid)
+    bool isPreInstall, bool debug)
 {
     LOG_D(BMS_TAG_DEFAULT, "UpdateAppDataSelinuxLabel bundleName: %{public}s start", bundleName.c_str());
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -4034,6 +4033,7 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
                 // Can see UserUnlockedEventSubscriber::UpdateAppDataDirSelinuxLabel
                 continue;
             }
+            int32_t uid = dataMgr->GetUidByBundleName(bundleName, userId, 0);
             result = InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleName, apl, isPreInstall, debug, uid);
             if (result != ERR_OK) {
                 LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s, fail to SetDirApl baseDataDir dir, error is %{public}d",
