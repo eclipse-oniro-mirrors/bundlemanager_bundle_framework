@@ -298,7 +298,7 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
         if (InstalldClient::GetInstance()->SetDirApl(baseDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
             bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG,
-            Constants::ROOT_UID) != ERR_OK) {
+            bundleInfo.uid) != ERR_OK) {
             APP_LOGW_NOFUNC("failed to SetDirApl baseDir dir");
             continue;
         }
@@ -306,7 +306,7 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
         if (InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
             bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG,
-            Constants::ROOT_UID) != ERR_OK) {
+            bundleInfo.uid) != ERR_OK) {
             APP_LOGW_NOFUNC("failed to SetDirApl baseDataDir dir");
         }
     }

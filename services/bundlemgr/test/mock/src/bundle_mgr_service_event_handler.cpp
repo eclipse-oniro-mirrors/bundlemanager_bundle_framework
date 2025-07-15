@@ -658,7 +658,7 @@ void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string& bundleNam
 }
 
 void BMSEventHandler::UpdateAppDataSelinuxLabel(
-    const std::string& bundleName, const std::string& apl, bool isPreInstall, bool debug, int32_t uid)
+    const std::string& bundleName, const std::string& apl, bool isPreInstall, bool debug)
 {}
 
 void BMSEventHandler::HandleSceneBoard() const {}
