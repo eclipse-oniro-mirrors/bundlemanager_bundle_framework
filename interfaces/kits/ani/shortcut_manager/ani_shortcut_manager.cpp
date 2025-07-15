@@ -27,7 +27,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
 constexpr const char* NS_NAME_SHORTCUTMANAGER = "@ohos.bundle.shortcutManager.shortcutManager";
 }
 
@@ -45,7 +44,7 @@ static void AniAddDesktopShortcutInfo(ani_env* env, ani_object info, ani_double 
     ShortcutInfo shortcutInfo;
     if (!CommonFunAni::ParseShortcutInfo(env, info, shortcutInfo) ||
         !CommonFunc::CheckShortcutInfo(shortcutInfo)) {
-        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
         APP_LOGE("Parse shortcutInfo err. userId:%{public}d", userId);
         return;
     }
@@ -79,7 +78,7 @@ static void AniDeleteDesktopShortcutInfo(ani_env* env, ani_object info, ani_doub
     if (!CommonFunAni::ParseShortcutInfo(env, info, shortcutInfo) ||
         !CommonFunc::CheckShortcutInfo(shortcutInfo)) {
         APP_LOGE("Parse shortcutInfo err. userId:%{public}d", userId);
-        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
         return;
     }
 

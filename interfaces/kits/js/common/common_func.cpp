@@ -74,6 +74,9 @@ constexpr const char* CODE_PATH = "codePath";
 const std::string PATH_PREFIX = "/data/app/el1/bundle/public";
 const std::string CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
 const std::string CONTEXT_DATA_STORAGE_BUNDLE("/data/storage/el1/bundle/");
+const std::string ATOMIC_SERVICE_DIR_PREFIX = "+auid-";
+const std::string CLONE_APP_DIR_PREFIX = "+clone-";
+const std::string PLUS = "+";
 constexpr const char* SYSTEM_APP = "systemApp";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* CODE_PATHS = "codePaths";
@@ -2776,6 +2779,46 @@ std::string CommonFunc::GetCloneBundleIdKey(const std::string& bundleName, const
     return std::to_string(appIndex) + CLONE_BUNDLE_PREFIX + bundleName;
 }
 
+void CommonFunc::GetBundleNameAndIndexBySandboxDataDir(
+    const std::string& keyName, std::string& bundleName, int32_t& appIndex)
+{
+    bundleName = keyName;
+    appIndex = 0;
+    bool isApp = true;
+    // for clone bundle name
+    auto pos = keyName.find(CLONE_APP_DIR_PREFIX);
+    if (pos == std::string::npos || pos != 0) {
+        // for atomic service
+        pos = keyName.find(ATOMIC_SERVICE_DIR_PREFIX);
+        if (pos == std::string::npos || pos != 0) {
+            return;
+        }
+        isApp = false;
+    }
+
+    size_t indexBegin = 0;
+    if (isApp) {
+        indexBegin = pos + CLONE_APP_DIR_PREFIX.size();
+    } else {
+        indexBegin = pos + ATOMIC_SERVICE_DIR_PREFIX.size();
+    }
+
+    auto plus = keyName.find(PLUS, indexBegin);
+    if ((plus == std::string::npos) || (plus <= indexBegin)) {
+        return;
+    }
+
+    if (isApp) {
+        std::string index = keyName.substr(indexBegin, plus - indexBegin);
+        if (!OHOS::StrToInt(index, appIndex)) {
+            appIndex = 0;
+            return;
+        }
+    }
+
+    bundleName = keyName.substr(plus + PLUS.size());
+}
+
 OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> CommonFunc::GetOverlayMgrProxy()
 {
     auto bundleMgr = GetBundleMgr();
@@ -2789,6 +2832,36 @@ OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> CommonFunc::GetOverlayMgrProxy()
         return nullptr;
     }
     return overlayMgrProxy;
+}
+
+OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> CommonFunc::GetAppControlProxy()
+{
+    auto bundleMgr = GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        return nullptr;
+    }
+    auto appControlProxy = bundleMgr->GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("GetAppControlProxy failed");
+        return nullptr;
+    }
+    return appControlProxy;
+}
+
+OHOS::sptr<OHOS::AppExecFwk::IDefaultApp> CommonFunc::GetDefaultAppProxy()
+{
+    auto bundleMgr = GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        return nullptr;
+    }
+    auto defaultAppProxy = bundleMgr->GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        APP_LOGE("GetDefaultAppProxy failed");
+        return nullptr;
+    }
+    return defaultAppProxy;
 }
 } // AppExecFwk
 } // OHOS

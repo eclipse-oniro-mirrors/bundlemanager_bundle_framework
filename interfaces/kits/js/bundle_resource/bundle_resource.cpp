@@ -37,7 +37,6 @@ namespace {
 constexpr const char* LABEL = "label";
 constexpr const char* ICON = "icon";
 constexpr const char* DRAWABLE_DESCRIPTOR = "drawableDescriptor";
-constexpr const char* GET_EXTENSION_ABILITY_RESOURCE_INFO = "GetExtensionAbilityResourceInfo";
 constexpr const char* GET_RESOURCE_INFO_ALL = "GET_RESOURCE_INFO_ALL";
 constexpr const char* GET_RESOURCE_INFO_WITH_LABEL = "GET_RESOURCE_INFO_WITH_LABEL";
 constexpr const char* GET_RESOURCE_INFO_WITH_ICON = "GET_RESOURCE_INFO_WITH_ICON";
@@ -440,24 +439,6 @@ void CreateBundleResourceFlagObject(napi_env env, napi_value value)
         GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY, nGetMainAbility));
 }
 
-static ErrCode InnerGetExtensionAbilityResourceInfo(
-    const std::string &bundleName, ExtensionAbilityType extensionAbilityType, uint32_t flags, int32_t appIndex,
-    std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfos)
-{
-    APP_LOGD("InnerGetExtensionAbilityResourceInfo start");
-    auto bundleResourceProxy = ResourceHelper::GetBundleResourceMgr();
-    if (bundleResourceProxy == nullptr) {
-        APP_LOGE("bundleResourceProxy is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = bundleResourceProxy->GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType,
-        flags, extensionAbilityResourceInfos, appIndex);
-    if (ret != ERR_OK) {
-        APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
-    }
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 napi_value GetExtensionAbilityResourceInfo(napi_env env, napi_callback_info info)
 {
     APP_LOGD("GetExtensionAbilityResourceInfo start");
@@ -502,7 +483,7 @@ napi_value GetExtensionAbilityResourceInfo(napi_env env, napi_callback_info info
         }
     }
     std::vector<LauncherAbilityResourceInfo> entensionAbilityResourceInfos;
-    auto ret = InnerGetExtensionAbilityResourceInfo(bundleName,
+    auto ret = ResourceHelper::InnerGetExtensionAbilityResourceInfo(bundleName,
         static_cast<ExtensionAbilityType>(extensionAbilityType), flags, appIndex, entensionAbilityResourceInfos);
     if (ret != ERR_OK) {
         napi_value businessError = BusinessError::CreateCommonError(

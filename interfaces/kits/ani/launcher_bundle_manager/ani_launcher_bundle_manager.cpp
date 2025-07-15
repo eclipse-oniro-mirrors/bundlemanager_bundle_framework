@@ -34,7 +34,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int32_t EMPTY_USER_ID = -500;
-constexpr const char* PARSE_SHORTCUT_INFO = "parse ShortcutInfo failed";
 constexpr const char* NS_NAME_LAUNCHERMANAGER = "@ohos.bundle.launcherBundleManager.launcherBundleManager";
 
 const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
@@ -50,7 +49,7 @@ static void AniStartShortcut(ani_env *env, ani_object aniShortcutInfo, ani_objec
     ShortcutInfo shortcutInfo;
     if (!CommonFunAni::ParseShortcutInfo(env, aniShortcutInfo, shortcutInfo)) {
         APP_LOGE("parse shortcutInfo failed");
-        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO_FAILED);
         return;
     }
     if (shortcutInfo.intents.empty()) {
@@ -77,7 +76,7 @@ static void AniStartShortcut(ani_env *env, ani_object aniShortcutInfo, ani_objec
     if (aniStartOptions != nullptr) {
         if (!UnwrapStartOptions(env, aniStartOptions, startOptions)) {
             APP_LOGE("ParseStartOptions error");
-            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS);
+            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS_FAILED);
             return;
         }
     }
@@ -103,7 +102,7 @@ static ani_object AniGetShortcutInfo(ani_env *env,
     }
     int32_t userId = EMPTY_USER_ID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
-        APP_LOGW("try cast userId falied");
+        APP_LOGW("try cast userId failed");
     }
     if (userId == EMPTY_USER_ID) {
         userId = Constants::UNSPECIFIED_USERID;

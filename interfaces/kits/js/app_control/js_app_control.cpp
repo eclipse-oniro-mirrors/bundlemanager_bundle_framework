@@ -34,46 +34,12 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 namespace {
-const char* TYPE_WANT = "want";
-const char* PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
-const char* SET_DISPOSED_STATUS = "SetDisposedStatus";
-const char* GET_DISPOSED_STATUS = "GetDisposedStatus";
-const char* DELETE_DISPOSED_STATUS = "DeleteDisposedStatus";
-const char* SET_DISPOSED_STATUS_SYNC = "SetDisposedStatusSync";
-const char* DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
-const char* GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
-const char* APP_ID = "appId";
-const char* APP_IDENTIFIER = "appIdentifier";
-const char* DISPOSED_WANT = "disposedWant";
-const char* DISPOSED_RULE = "disposedRule";
-const char* DISPOSED_RULE_TYPE = "DisposedRule";
-const char* UNINSTALL_DISPOSED_RULE = "uninstallDisposedRule";
-const char* UNINSTALL_DISPOSED_RULE_TYPE = "UninstallDisposedRule";
-const char* SET_UNINSTALL_DISPOSED_RULE = "SetUninstallDisposedRule";
-const char* DELETE_UNINSTALL_DISPOSED_RULE = "DeleteUninstallDisposedRule";
-const char* GET_UNINSTALL_DISPOSED_RULE = "GetUninstallDisposedRule";
-const char* SET_DISPOSED_RULES = "SetDisposedRules";
 const char* PARAM_LENGTH_ERROR = "parameter length invalid";
 const int16_t MAX_VECTOR_NUM = 1000;
 }
-static OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> GetAppControlProxy()
-{
-    auto bundleMgr = CommonFunc::GetBundleMgr();
-    if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed");
-        return nullptr;
-    }
-    auto appControlProxy = bundleMgr->GetAppControlProxy();
-    if (appControlProxy == nullptr) {
-        APP_LOGE("GetAppControlProxy failed");
-        return nullptr;
-    }
-    return appControlProxy;
-}
-
 static ErrCode InnerGetDisposedStatus(napi_env, const std::string& appId, Want& disposedWant)
 {
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
@@ -84,7 +50,7 @@ static ErrCode InnerGetDisposedStatus(napi_env, const std::string& appId, Want& 
 
 static ErrCode InnerSetDisposedStatus(napi_env, const std::string& appId, Want& disposedWant)
 {
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
@@ -95,7 +61,7 @@ static ErrCode InnerSetDisposedStatus(napi_env, const std::string& appId, Want& 
 
 static ErrCode InnerDeleteDisposedStatus(napi_env, const std::string& appId)
 {
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
@@ -215,7 +181,7 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_WANT, TYPE_WANT);
         return nRet;
     }
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
@@ -322,7 +288,7 @@ static napi_value InnerDeleteDisposedStatusSync(napi_env env, std::string &appId
         napi_throw(env, businessError);
         return nullptr;
     }
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
@@ -480,7 +446,7 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
         return nullptr;
     }
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
@@ -714,7 +680,7 @@ static napi_value InnerGetDisposedRule(napi_env env, std::string &appId, int32_t
         napi_throw(env, businessError);
         return nullptr;
     }
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
@@ -777,7 +743,7 @@ static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, Dispose
 {
     napi_value nRet;
     napi_get_undefined(env, &nRet);
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null.");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
@@ -861,7 +827,7 @@ napi_value SetDisposedRules(napi_env env, napi_callback_info info)
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
         return nRet;
     }
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
@@ -945,7 +911,7 @@ static napi_value InnerGetUninstallDisposedRule(napi_env env, std::string &appId
         napi_throw(env, businessError);
         return nullptr;
     }
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("null appControlProxy");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
@@ -1006,7 +972,7 @@ static napi_value InnerSetUninstallDisposedRule(napi_env env, std::string &appId
 {
     napi_value nRet;
     napi_get_undefined(env, &nRet);
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("null appControlProxy");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
@@ -1084,7 +1050,7 @@ static napi_value InnerDeleteUninstallDisposedRule(napi_env env, std::string &ap
         napi_throw(env, businessError);
         return nullptr;
     }
-    auto appControlProxy = GetAppControlProxy();
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("null appControlProxy");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
