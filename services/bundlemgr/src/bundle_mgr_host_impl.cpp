@@ -1584,53 +1584,55 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesGetCleanSize(const std::string &
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-
+    auto dataMgr = GetDataMgrFromService();
+    int32_t callingUid =  IPCSkeleton::GetCallingUid();
+    std::string callingBundleName;
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
     if (userId < 0) {
         APP_LOGE("userId is invalid");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     if (bundleName.empty()) {
         APP_LOGE("the bundleName empty");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     ApplicationInfo applicationInfo;
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
 
     auto ret = dataMgr->GetApplicationInfoWithResponseId(bundleName,
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
     if (ret != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
         return ret;
     }
 
     if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean cacheFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
     }
 
-    CleanBundleCacheTaskGetCleanSize(bundleName, userId, cleanCacheSize);
+    CleanBundleCacheTaskGetCleanSize(bundleName, userId, cleanCacheSize, callingUid, callingBundleName);
     return ERR_OK;
 }
 
 void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,
-    int32_t userId, uint64_t &cleanCacheSize)
+    int32_t userId, uint64_t &cleanCacheSize, int32_t callingUid, const std::string &callingBundleName)
 {
     InnerBundleInfo info;
     auto dataMgr = GetDataMgrFromService();
     if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
         APP_LOGE("can not get bundleinfo of %{public}s", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
         return;
     }
     std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
@@ -1642,13 +1644,13 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
     auto ret = BundleCacheMgr().CleanBundleCache(validBundles, userId);
     if (ret != ERR_OK) {
         APP_LOGE("can not get CleanBundleCache of %{public}s", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
         return;
     }
     cleanCacheSize = cleanSize;
     bool succeed = true;
 
-    EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed);
+    EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed, callingUid, callingBundleName);
     APP_LOGI("CleanBundleCacheFiles with succeed %{public}d", succeed);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!this->GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
@@ -1701,10 +1703,21 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
+    auto dataMgr = GetDataMgrFromService();
+    int32_t callingUid =  IPCSkeleton::GetCallingUid();
+    std::string callingBundleName;
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
+            callingUid, callingBundleName);
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName, appIndex)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
+            callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
@@ -1713,43 +1726,42 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     }
     if (userId < 0) {
         APP_LOGE("userId is invalid");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
+            callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     if (bundleName.empty() || !cleanCacheCallback) {
         APP_LOGE("the cleanCacheCallback is nullptr or bundleName empty");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
+            callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
-        return ClearCache(bundleName, cleanCacheCallback, userId);
+        return ClearCache(bundleName, cleanCacheCallback, userId, callingUid, callingBundleName);
     }
 
     ApplicationInfo applicationInfo;
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
 
     auto ret = dataMgr->GetApplicationInfoWithResponseId(bundleName,
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
     if (ret != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
+            callingUid, callingBundleName);
         return ret;
     }
 
     if (!CheckAppIndex(bundleName, userId, appIndex)) {
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
+            callingUid, callingBundleName);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
 
     if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean cacheFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
+            callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
     }
 
@@ -1765,9 +1777,13 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     std::vector<std::string> rootDir;
     std::vector<std::string> moduleNameList;
     dataMgr->GetBundleModuleNames(bundleName, moduleNameList);
+    int32_t callingUid =  IPCSkeleton::GetCallingUid();
+    std::string callingBundleName;
+    (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
     rootDir = BundleCacheMgr().GetBundleCachePath(bundleName, userId, appIndex, moduleNameList);
     auto traceId = HiviewDFX::HiTraceChain::GetId();
-    auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, appIndex, traceId, this]() {
+    auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, appIndex, traceId,
+        this, callingUid, callingBundleName]() {
         BUNDLE_MANAGER_TASK_CHAIN_ID(traceId);
         std::vector<std::string> caches = rootDir;
         std::string shaderCachePath;
@@ -1784,7 +1800,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             }
         }
 
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed);
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed, callingUid, callingBundleName);
         APP_LOGD("CleanBundleCacheFiles with succeed %{public}d", succeed);
         cleanCacheCallback->OnCleanCacheFinished(succeed);
         InnerBundleUserInfo innerBundleUserInfo;
@@ -1825,73 +1841,96 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     ffrt::submit(cleanCache);
 }
 
-bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId, const int appIndex)
+bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId,
+    const int appIndex, const int callerUid)
 {
     APP_LOGI("start CleanBundleDataFiles, bundleName : %{public}s, userId:%{public}d, appIndex:%{public}d",
         bundleName.c_str(), userId, appIndex);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    int32_t callingUid = callerUid;
+    if (callerUid == -1) {
+        callingUid =  IPCSkeleton::GetCallingUid();
+    }
+    std::string callingBundleName;
+    (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES system api denied");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
+            callingUid, callingBundleName);
         return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
+            callingUid, callingBundleName);
         return false;
     }
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
         LOG_E(BMS_TAG_INSTALLER, "check shell user fail");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
+            callingUid, callingBundleName);
         return false;
     }
     if (bundleName.empty() || userId < 0) {
         APP_LOGE("the  bundleName empty or invalid userid");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
+            callingUid, callingBundleName);
         return false;
     }
     if (!CheckAppIndex(bundleName, userId, appIndex)) {
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
+            callingUid, callingBundleName);
         return false;
     }
     if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         ErrCode ret = bmsExtensionClient->ClearData(bundleName, userId);
         APP_LOGI("ret : %{public}d", ret);
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, ret != ERR_OK);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, ret != ERR_OK,
+            callingUid, callingBundleName);
         return ret == ERR_OK;
     }
     ApplicationInfo applicationInfo;
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr || dataMgr->GetApplicationInfoV9(bundleName,
+    if (dataMgr->GetApplicationInfoV9(bundleName,
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE),
         userId, applicationInfo, appIndex) != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
+            callingUid, callingBundleName);
         return false;
     }
 
     if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean dataFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
+            callingUid, callingBundleName);
         return false;
     }
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("%{public}s, userId:%{public}d, GetBundleUserInfo failed", bundleName.c_str(), userId);
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
+            callingUid, callingBundleName);
         return false;
     }
     if (BundlePermissionMgr::ClearUserGrantedPermissionState(applicationInfo.accessTokenId)) {
         APP_LOGE("%{public}s, ClearUserGrantedPermissionState failed", bundleName.c_str());
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
+            callingUid, callingBundleName);
         return false;
     }
     if (InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userId, appIndex) != ERR_OK) {
         APP_LOGE("%{public}s, CleanBundleDataDirByName failed", bundleName.c_str());
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
+            callingUid, callingBundleName);
         return false;
     }
-    EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, false);
+    EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, false,
+        callingUid, callingBundleName);
     return true;
 }
 
@@ -4736,7 +4775,8 @@ bool BundleMgrHostImpl::IsBundleExist(const std::string &bundleName)
 }
 
 ErrCode BundleMgrHostImpl::ClearCache(const std::string &bundleName,
-    const sptr<ICleanCacheCallback> cleanCacheCallback, int32_t userId)
+    const sptr<ICleanCacheCallback> cleanCacheCallback, int32_t userId,
+    int32_t callingUid, const std::string &callingBundleName)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     ErrCode ret = bmsExtensionClient->ClearCache(bundleName, cleanCacheCallback->AsObject(), userId);
@@ -4744,7 +4784,7 @@ ErrCode BundleMgrHostImpl::ClearCache(const std::string &bundleName,
     if (ret != ERR_OK) {
         ret = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    EventReport::SendCleanCacheSysEvent(bundleName, userId, true, ret != ERR_OK);
+    EventReport::SendCleanCacheSysEvent(bundleName, userId, true, ret != ERR_OK, callingUid, callingBundleName);
     return ret;
 }
 

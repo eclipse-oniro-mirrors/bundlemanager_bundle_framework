@@ -125,10 +125,18 @@ bool RecentlyUnuseBundleAgingHandler::AgingClean(
 bool RecentlyUnuseBundleAgingHandler::CleanCache(const AgingBundleInfo &agingBundle) const
 {
     std::vector<std::string> caches;
+    auto dataMgr = OHOS::DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    int32_t callingUid =  IPCSkeleton::GetCallingUid();
+    std::string callingBundleName;
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+    } else {
+        (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
+    }
     if (!GetCachePath(agingBundle, caches)) {
         APP_LOGW("Get cache path failed: %{public}s", agingBundle.GetBundleName().c_str());
         EventReport::SendCleanCacheSysEvent(
-            agingBundle.GetBundleName(), Constants::ALL_USERID, true, true);
+            agingBundle.GetBundleName(), Constants::ALL_USERID, true, true, callingUid, callingBundleName);
         return false;
     }
 
@@ -145,7 +153,7 @@ bool RecentlyUnuseBundleAgingHandler::CleanCache(const AgingBundleInfo &agingBun
     }
 
     EventReport::SendCleanCacheSysEvent(
-        agingBundle.GetBundleName(), Constants::ALL_USERID, true, !hasCleanCache);
+        agingBundle.GetBundleName(), Constants::ALL_USERID, true, !hasCleanCache, callingUid, callingBundleName);
     return hasCleanCache;
 }
 

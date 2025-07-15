@@ -292,7 +292,8 @@ public:
      * @param exception Indicates the exception.
      */
     static void SendCleanCacheSysEvent(
-        const std::string &bundleName, int32_t userId, bool isCleanCache, bool exception);
+        const std::string &bundleName, int32_t userId, bool isCleanCache, bool exception,
+        int32_t callingUid, const std::string &callingBundleName);
     /**
      * @brief Send clean cache system events.
      * @param bundleName Indicates the bundleName.
@@ -302,7 +303,8 @@ public:
      * @param exception Indicates the exception.
      */
     static void SendCleanCacheSysEventWithIndex(
-        const std::string &bundleName, int32_t userId, int32_t appIndex, bool isCleanCache, bool exception);
+        const std::string &bundleName, int32_t userId, int32_t appIndex, bool isCleanCache, bool exception,
+        int32_t callingUid, const std::string &callingBundleName);
     /**
      * @brief Send system events.
      * @param eventType Indicates the bms eventInfo.

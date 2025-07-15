@@ -788,7 +788,8 @@ public:
      * @param appIndex Indicates the app index.
      * @return Returns true if the data cleared successfully; returns false otherwise.
      */
-    virtual bool CleanBundleDataFiles(const std::string &bundleName, const int userId = 0, const int appIndex = 0)
+    virtual bool CleanBundleDataFiles(const std::string &bundleName,
+        const int userId = 0, const int appIndex = 0, const int callerUid = -1)
     {
         return false;
     }

@@ -1116,10 +1116,11 @@ HWTEST_F(BmsBundleMgrProxyTest, CleanBundleDataFiles_0100, Function | MediumTest
     std::string bundleName = "";
     int32_t userId = 100;
     int32_t appIndex = 1;
-    auto res = bundleMgrProxy.CleanBundleDataFiles(bundleName, userId, appIndex);
+    int32_t callerUid = 1001;
+    auto res = bundleMgrProxy.CleanBundleDataFiles(bundleName, userId, appIndex, callerUid);
     EXPECT_FALSE(res);
     bundleName = "com.example.bundleName.test";
-    res = bundleMgrProxy.CleanBundleDataFiles(bundleName, userId, appIndex);
+    res = bundleMgrProxy.CleanBundleDataFiles(bundleName, userId, appIndex, callerUid);
     EXPECT_FALSE(res);
 }
 

@@ -549,7 +549,7 @@ public:
      * @return Returns true if the data cleared successfully; returns false otherwise.
      */
     virtual bool CleanBundleDataFiles(const std::string &bundleName,
-        const int userId = Constants::UNSPECIFIED_USERID, const int appIndex = 0) override;
+        const int userId = Constants::UNSPECIFIED_USERID, const int appIndex = 0, const int callerUid = -1) override;
     /**
      * @brief Register the specific bundle status callback.
      * @param bundleStatusCallback Indicates the callback to be invoked for returning the bundle status changed result.
@@ -1176,7 +1176,7 @@ private:
     ErrCode CleanBundleCacheFilesGetCleanSize(const std::string &bundleName,
         int32_t userId, uint64_t &cleanCacheSize);
     void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,
-        int32_t userId, uint64_t &cleanCacheSize);
+        int32_t userId, uint64_t &cleanCacheSize, int32_t callingUid, const std::string &callingBundleName);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
@@ -1185,7 +1185,7 @@ private:
         BundleInfo &bundleInfo);
     bool IsBundleExist(const std::string &bundleName);
     ErrCode ClearCache(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
-        int32_t userId);
+        int32_t userId, int32_t callingUid, const std::string &callingBundleName);
     void FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos);
     void SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info);
     bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex);

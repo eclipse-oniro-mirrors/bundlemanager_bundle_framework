@@ -1808,7 +1808,8 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     return reply.ReadInt32();
 }
 
-bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName, const int userId, const int appIndex)
+bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName,
+    const int userId, const int appIndex, const int callerUid)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin to CleanBundleDataFiles of %{public}s, userId:%{public}d, appIndex:%{public}d",
@@ -1833,6 +1834,10 @@ bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName, const i
     }
     if (!data.WriteInt32(appIndex)) {
         APP_LOGE("fail to CleanBundleDataFiles due to write appIndex fail");
+        return false;
+    }
+    if (!data.WriteInt32(callerUid)) {
+        APP_LOGE("fail to CleanBundleDataFiles due to write callerUid fail");
         return false;
     }
 

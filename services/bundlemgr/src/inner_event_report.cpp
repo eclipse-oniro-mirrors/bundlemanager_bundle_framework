@@ -434,7 +434,9 @@ void InnerEventReport::InnerSendBundleCleanCacheExceptionEvent(const EventInfo& 
         EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
-        EVENT_PARAM_CLEAN_TYPE, cleanType);
+        EVENT_PARAM_CLEAN_TYPE, cleanType,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName);
 }
 
 void InnerEventReport::InnerSendBootScanStartEvent(const EventInfo& eventInfo)
@@ -570,7 +572,9 @@ void InnerEventReport::InnerSendBundleCleanCacheEvent(const EventInfo& eventInfo
         EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
-        EVENT_PARAM_CLEAN_TYPE, cleanType);
+        EVENT_PARAM_CLEAN_TYPE, cleanType,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName);
 }
 
 void InnerEventReport::InnerSendUserEvent(const EventInfo& eventInfo)
