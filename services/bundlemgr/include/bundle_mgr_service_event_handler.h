@@ -595,7 +595,7 @@ private:
 
     static void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
-        bool isPreInstall, bool debug, int32_t uid);
+        bool isPreInstall, bool debug);
     static bool IsQuickfixPatchApp(const std::string &bundleName, uint32_t versionCode);
     bool HotPatchAppProcessing(const std::string &bundleName, uint32_t hasInstallVersionCode, uint32_t hapVersionCode,
         std::vector<int32_t> &userIds);
