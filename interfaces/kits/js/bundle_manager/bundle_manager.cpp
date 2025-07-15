@@ -5603,7 +5603,7 @@ void GetAllAppCloneBundleInfoComplete(napi_env env, napi_status status, void *da
         CloneAppBundleInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfos, asyncCallbackInfo->bundleFlags);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_ALL_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO);
+            GET_ALL_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     CommonFunc::NapiReturnDeferred<CloneAppBundleInfosCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
