@@ -18,6 +18,10 @@
 #include <gtest/gtest.h>
 
 #include "bundle_mgr_host_impl.h"
+#include "bundle_mgr_service.h"
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+#include "bundle_resource_host_impl.h"
+#endif
 
 using namespace testing;
 using namespace testing::ext;
@@ -815,4 +819,152 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0045, TestSize.Leve
     auto ret = localBundleMgrHostImpl->GetPluginInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
+
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+/**
+ * @tc.number: BundleResourceHostImpl_0001
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetBundleResourceInfo SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0001, TestSize.Level1)
+{
+    std::shared_ptr<BundleResourceHostImpl> localBundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(localBundleResourceHostImpl, nullptr);
+
+    std::string bundleName = "com.example.test"; // Example bundle name
+    uint32_t flags = 0; // Example flags
+    BundleResourceInfo bundleResourceInfo;
+    int32_t appIndex = 0; // Example app index
+    auto ret = localBundleResourceHostImpl->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BundleResourceHostImpl_0002
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetLauncherAbilityResourceInfo SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0002, TestSize.Level1)
+{
+    std::shared_ptr<BundleResourceHostImpl> localBundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(localBundleResourceHostImpl, nullptr);
+
+    std::string bundleName = "com.example.test"; // Example bundle name
+    uint32_t flags = 0; // Example flags
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
+    int32_t appIndex = 0; // Example app index
+    auto ret = localBundleResourceHostImpl->GetLauncherAbilityResourceInfo(
+        bundleName, flags, launcherAbilityResourceInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BundleResourceHostImpl_0003
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetAllBundleResourceInfo SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0003, TestSize.Level1)
+{
+    std::shared_ptr<BundleResourceHostImpl> localBundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(localBundleResourceHostImpl, nullptr);
+
+    uint32_t flags = 0; // Example flags
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    auto ret = localBundleResourceHostImpl->GetAllBundleResourceInfo(flags, bundleResourceInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BundleResourceHostImpl_0004
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetAllLauncherAbilityResourceInfo SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0004, TestSize.Level1)
+{
+    std::shared_ptr<BundleResourceHostImpl> localBundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(localBundleResourceHostImpl, nullptr);
+
+    uint32_t flags = 0; // Example flags
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    auto ret = localBundleResourceHostImpl->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BundleResourceHostImpl_0005
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: AddResourceInfoByBundleName SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0005, TestSize.Level1)
+{
+    std::shared_ptr<BundleResourceHostImpl> localBundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(localBundleResourceHostImpl, nullptr);
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(bundleMgrService, nullptr);
+    bundleMgrService->dataMgr_ = std::make_shared<BundleDataMgr>();
+    bundleMgrService->dataMgr_->AddUserId(100);
+
+    std::string bundleName = "com.example.test";
+    int32_t userId = 100;
+    auto ret = localBundleResourceHostImpl->AddResourceInfoByBundleName(bundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BundleResourceHostImpl_0006
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: AddResourceInfoByAbility SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0006, TestSize.Level1)
+{
+    std::shared_ptr<BundleResourceHostImpl> localBundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(localBundleResourceHostImpl, nullptr);
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    ASSERT_NE(bundleMgrService, nullptr);
+    bundleMgrService->dataMgr_ = std::make_shared<BundleDataMgr>();
+    bundleMgrService->dataMgr_->AddUserId(100);
+
+    std::string bundleName = "com.example.test"; // Example bundle name
+    std::string moduleName = "exampleModule"; // Example module name
+    std::string abilityName = "exampleAbility"; // Example ability name
+    int32_t userId = 100; // Example user ID
+    auto ret = localBundleResourceHostImpl->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BundleResourceHostImpl_0007
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: DeleteResourceInfo SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0007, TestSize.Level1)
+{
+    std::shared_ptr<BundleResourceHostImpl> localBundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(localBundleResourceHostImpl, nullptr);
+
+    std::string key = "exampleKey"; // Example key
+    auto ret = localBundleResourceHostImpl->DeleteResourceInfo(key);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BundleResourceHostImpl_0009
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetExtensionAbilityResourceInfo SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0009, TestSize.Level1)
+{
+    std::shared_ptr<BundleResourceHostImpl> localBundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(localBundleResourceHostImpl, nullptr);
+
+    std::string bundleName = "com.example.test"; // Example bundle name
+    ExtensionAbilityType extensionAbilityType = ExtensionAbilityType::INPUTMETHOD; // Example type
+    uint32_t flags = 0; // Example flags
+    std::vector<LauncherAbilityResourceInfo> extensionAbilityResourceInfo;
+    int32_t appIndex = 0; // Example app index
+    auto ret = localBundleResourceHostImpl->GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType, flags,
+        extensionAbilityResourceInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+#endif
 }  // namespace OHOS

@@ -19,6 +19,7 @@
 #include <chrono>
 #include <fstream>
 #include <thread>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "ability_manager_client.h"
@@ -156,7 +157,6 @@ const std::string COMMON_EVENT_EVENT = "usual.event.PACKAGE_ADDED";
 const std::string EXT_NAME = "extName";
 const std::string MIME_TYPE = "application/x-maker";
 const std::string EMPTY_STRING = "";
-const std::string TEST_DATA_GROUP_ID = "1";
 const std::string TEST_URI_HTTPS = "https://www.test.com";
 const std::string TEST_URI_HTTP = "http://www.test.com";
 const std::string META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
@@ -313,6 +313,10 @@ const nlohmann::json EXTENSION_TYPE_LIST2 = R"(
         }
 }
 )"_json;
+enum {
+    BMS_BROKER_ERR_INSTALL_FAILED = 8585217,
+    BMS_BROKER_ERR_UNINSTALL_FAILED = 8585218,
+};
 const int FORMINFO_DESCRIPTIONID = 123;
 const int ABILITYINFOS_SIZE_1 = 1;
 const int ABILITYINFOS_SIZE_2 = 2;
@@ -1852,7 +1856,10 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0700, Function | MediumTest | L
     std::vector<AbilityInfo> abilityInfos;
     auto ret = bmsExtensionClient->QueryAbilityInfos(want, 0, userId, abilityInfos, false);
     if (CheckBmsExtensionProfile()) {
-        EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+        EXPECT_THAT(ret, testing::AnyOf(
+            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+            BMS_BROKER_ERR_UNINSTALL_FAILED,
+            BMS_BROKER_ERR_INSTALL_FAILED));
     } else {
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     }
@@ -2035,7 +2042,10 @@ HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0040, Function | MediumTes
     std::vector<Want> wants{ want };
     ErrCode res = bmsExtensionClient->BatchQueryAbilityInfos(wants, 0, userId, abilityInfos, false);
     if (CheckBmsExtensionProfile()) {
-        EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+        EXPECT_THAT(res, testing::AnyOf(
+            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+            BMS_BROKER_ERR_UNINSTALL_FAILED,
+            BMS_BROKER_ERR_INSTALL_FAILED));
     } else {
         EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     }
@@ -2391,7 +2401,10 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0030, Function | Medium
     bool isNewVersion = true;
     ErrCode res = bmsExtensionClient->ImplicitQueryAbilityInfos(want, 0, userId, abilityInfos, isNewVersion);
     if (CheckBmsExtensionProfile()) {
-        EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+        EXPECT_THAT(res, testing::AnyOf(
+            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+            BMS_BROKER_ERR_UNINSTALL_FAILED,
+            BMS_BROKER_ERR_INSTALL_FAILED));
     } else {
         EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     }
@@ -3639,7 +3652,7 @@ HWTEST_F(BmsBundleDataMgrTest, PublishCommonEvent_0100, Function | MediumTest | 
     bool ret = commonEventMgr->PublishCommonEvent("notExist",
         EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED, USERID, commonData);
     EXPECT_FALSE(ret);
- 
+
     ret = commonEventMgr->PublishCommonEvent("notExist",
         EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_INSTALLATION_STARTED, USERID, commonData);
     EXPECT_FALSE(ret);

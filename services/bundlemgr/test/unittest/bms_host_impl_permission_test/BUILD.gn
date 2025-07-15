@@ -158,6 +158,23 @@ ohos_unittest("BmsSystemAppPermissionDeniedTest") {
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
   }
 
+  if (global_i18n_enable) {
+    defines += [ "GLOBAL_I18_ENABLE" ]
+    external_deps += [ "i18n:intl_util" ]
+  }
+  if (bundle_framework_bundle_resource) {
+    defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
+    external_deps += [ "ability_base:configuration" ]
+    if (bundle_framework_graphics) {
+      defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
+      external_deps += [
+        "ace_engine:drawable_descriptor",
+        "image_framework:image_native",
+      ]
+    }
+    sources += bundle_resource
+  }
+
   if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]
@@ -299,6 +316,22 @@ ohos_unittest("VerifyCallingPermissionsForAllDeniedTest") {
   }
   if (current_cpu == "arm64") {
     defines += [ "USE_BUNDLE_EXTENSION" ]
+  }
+  if (global_i18n_enable) {
+    defines += [ "GLOBAL_I18_ENABLE" ]
+    external_deps += [ "i18n:intl_util" ]
+  }
+  if (bundle_framework_bundle_resource) {
+    defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
+    external_deps += [ "ability_base:configuration" ]
+    if (bundle_framework_graphics) {
+      defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
+      external_deps += [
+        "ace_engine:drawable_descriptor",
+        "image_framework:image_native",
+      ]
+    }
+    sources += bundle_resource
   }
 
   if (build_selinux) {

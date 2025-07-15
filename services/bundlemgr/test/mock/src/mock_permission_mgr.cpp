@@ -248,10 +248,17 @@ void BundlePermissionMgr::AddPermissionUsedRecord(
 {
 }
 
+#ifdef VERIFY_CALLING_BUNDLE_SDK_VERSION_RETURN_TRUE
+bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
+{
+    return true;
+}
+#else
 bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
 {
     return false;
 }
+#endif
 
 Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(const InnerBundleInfo &innerBundleInfo,
     const int32_t userId, const int32_t dlpType)

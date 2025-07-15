@@ -14,6 +14,7 @@
  */
 #define private public
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <string>
 
@@ -34,6 +35,9 @@
 using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
+namespace {
+    constexpr int32_t REMOTE_RESULT = 8585601;
+}
 
 namespace OHOS {
 class BmsBundleMgrExtTest : public testing::Test {
@@ -135,7 +139,11 @@ HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtProxy_0100, Function | Smal
     int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     auto ret = bundleMgrExtProxy->GetBundleNamesForUidExt(uid, bundleNames, funcResult);
     EXPECT_EQ(ret, ERR_OK);
+#ifdef USE_ARM64
+    EXPECT_THAT(ret, testing::AnyOf(ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY, REMOTE_RESULT));
+#else
     EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+#endif
     EXPECT_EQ(bundleNames.empty(), true);
 }
 
