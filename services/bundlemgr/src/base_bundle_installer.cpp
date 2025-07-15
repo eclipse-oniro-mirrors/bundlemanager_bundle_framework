@@ -6678,6 +6678,7 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
         LOG_W(BMS_TAG_INSTALLER, "mark finish failed");
         return ERR_APPEXECFWK_GET_INSTALL_TEMP_BUNDLE_ERROR;
     }
+    (void)bundleInstallChecker_->DetermineCloneApp(info);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     info.SetInstallMark(bundleName_, info.GetCurModuleName(), InstallExceptionStatus::INSTALL_FINISH);
     if (!InitDataMgr()) {
