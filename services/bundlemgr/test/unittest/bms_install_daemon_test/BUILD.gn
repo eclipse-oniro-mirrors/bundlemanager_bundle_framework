@@ -16,6 +16,7 @@ import("../../../../../appexecfwk.gni")
 import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = "bundle_framework/bundle_framework"
+bundle_so_test_path = "${bundle_framework_path}/test/sceneProject/unittest/bundle_so"
 
 ohos_unittest("BmsInstallDaemonTest") {
   use_exceptions = true
@@ -286,6 +287,8 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_so_test_path}/compressNativeLibsFalse:compressNativeLibsFalse01",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${services_path}/bundlemgr:bundle_parser",
