@@ -1447,7 +1447,7 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
     hapFileInfo.packageName = bundleName;
     hapFileInfo.flags = SELINUX_HAP_RESTORECON_RECURSE;
     hapFileInfo.hapFlags = hapFlags;
-    hapFileInfo.uid = uid;
+    hapFileInfo.uid = static_cast<uint32_t>(uid);
     HapContext hapContext;
     int ret = hapContext.HapFileRestorecon(hapFileInfo);
     if (ret != 0) {
