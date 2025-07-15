@@ -25,7 +25,7 @@ namespace installer {
       return installer.getBundleInstallerNative(false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let installer: BundleInstaller = e as BundleInstaller;
       callback(null, installer);
     }, (err: Object): void => {
@@ -38,7 +38,7 @@ namespace installer {
         return installer.getBundleInstallerNative(false);
       };
       let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let installer: BundleInstaller = e as BundleInstaller;
           resolve(installer);
         }, (err: Error): void => {

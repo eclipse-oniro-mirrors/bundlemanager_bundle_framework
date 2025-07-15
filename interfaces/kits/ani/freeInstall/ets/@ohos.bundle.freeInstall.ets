@@ -74,7 +74,7 @@ namespace freeInstall {
       return freeInstall.isHapModuleRemovableNative(bundleName, moduleName);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: boolean = e as boolean;
       callback(null, result);
     }, (err: Error): void => {
@@ -88,7 +88,7 @@ namespace freeInstall {
         return freeInstall.isHapModuleRemovableNative(bundleName, moduleName);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: boolean = e as boolean;
         resolve(result);
       }, (err: Error): void => {
@@ -103,7 +103,7 @@ namespace freeInstall {
       return freeInstall.getBundlePackInfoNative(bundleName, bundlePackFlag);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: BundlePackInfo = e as BundlePackInfo;
       callback(null, result);
     }, (err: Error): void => {
@@ -117,7 +117,7 @@ namespace freeInstall {
         return freeInstall.getBundlePackInfoNative(bundleName, bundlePackFlag);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: BundlePackInfo = e as BundlePackInfo;
         resolve(result);
       }, (err: Error): void => {
@@ -132,7 +132,7 @@ namespace freeInstall {
       return freeInstall.getDispatchInfoNative();
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: DispatchInfo = e as DispatchInfo;
       callback(null, result);
     }, (err: Error): void => {
@@ -146,7 +146,7 @@ namespace freeInstall {
         return freeInstall.getDispatchInfoNative();
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: DispatchInfo = e as DispatchInfo;
         resolve(result);
       }, (err: Error): void => {

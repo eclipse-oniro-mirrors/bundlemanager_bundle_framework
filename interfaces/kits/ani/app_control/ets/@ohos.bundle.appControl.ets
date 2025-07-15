@@ -172,7 +172,7 @@ export default namespace appControl {
       return appControl.getDisposedStatusNative(appId, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: Want = e as Want;
       callback(null, result);
     }, (err: Error): void => {
@@ -186,7 +186,7 @@ export default namespace appControl {
         return appControl.getDisposedStatusNative(appId, false);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: Want = e as Want;
         resolve(result);
       }, (err: Error): void => {
