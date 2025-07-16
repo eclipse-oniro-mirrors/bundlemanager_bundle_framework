@@ -42,22 +42,22 @@ export interface ParameterItem {
 export class ShortcutInfoInner implements ShortcutInfo {
     id: string = "";
     bundleName: string = "";
-    moduleName?: string | undefined = "";
-    hostAbility?: string | undefined = "";
-    icon?: string | undefined = "";
+    moduleName?: string | undefined;
+    hostAbility?: string | undefined;
+    icon?: string | undefined;
     iconId?: number | undefined;
-    label?: string | undefined = "";
+    label?: string | undefined;
     labelId?: number | undefined;
-    wants?: Array<ShortcutWant> | undefined = new Array<ShortcutWant>;
+    wants?: Array<ShortcutWant> | undefined;
     appIndex: number;
     sourceType: number;
 }
 
 class ShortcutWantInner implements ShortcutWant {
     targetBundle: string = "";
-    targetModule?: string | undefined = "";
+    targetModule?: string | undefined;
     targetAbility: string = "";
-    parameters?: Array<ParameterItem> | undefined = new Array<ParameterItem>;
+    parameters?: Array<ParameterItem> | undefined;
 }
 
 class ParameterItemInner implements ParameterItem {

@@ -638,7 +638,7 @@ static ani_object GetLaunchWantForBundleNative(ani_env* env,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
-    return WrapWant(env, want);
+    return CommonFunAni::ConvertWantInfo(env, want);
 }
 
 static ani_object GetAppCloneBundleInfoNative(ani_env* env, ani_string aniBundleName,
