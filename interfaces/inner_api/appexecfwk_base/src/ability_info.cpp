@@ -142,7 +142,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     launchMode = static_cast<LaunchMode>(parcel.ReadInt32());
     srcPath = Str16ToStr8(parcel.ReadString16());
     srcLanguage = Str16ToStr8(parcel.ReadString16());
-    codeLanguage = parcel.ReadString();
+    arkTSMode = parcel.ReadString();
 
     int32_t permissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
@@ -379,7 +379,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(launchMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(srcLanguage));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, arkTSMode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissions.size());
     for (auto &permission : permissions) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(permission));
@@ -655,7 +655,7 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_LAUNCH_MODE, abilityInfo.launchMode},
         {JSON_KEY_SRC_PATH, abilityInfo.srcPath},
         {JSON_KEY_SRC_LANGUAGE, abilityInfo.srcLanguage},
-        {Constants::CODE_LANGUAGE, abilityInfo.codeLanguage},
+        {Constants::ARKTS_MODE, abilityInfo.arkTSMode},
         {JSON_KEY_PERMISSIONS, abilityInfo.permissions},
         {JSON_KEY_PROCESS, abilityInfo.process},
         {JSON_KEY_DEVICE_TYPES, abilityInfo.deviceTypes},
@@ -923,8 +923,8 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        Constants::CODE_LANGUAGE,
-        abilityInfo.codeLanguage,
+        Constants::ARKTS_MODE,
+        abilityInfo.arkTSMode,
         false,
         parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,

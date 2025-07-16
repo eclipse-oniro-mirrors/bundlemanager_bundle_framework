@@ -511,8 +511,8 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     appStartup = Str16ToStr8(parcel.ReadString16());
     formExtensionModule = Str16ToStr8(parcel.ReadString16());
     formWidgetModule = Str16ToStr8(parcel.ReadString16());
-    codeLanguage = parcel.ReadString();
-    abilityStageCodeLanguage = parcel.ReadString();
+    moduleArkTSMode = parcel.ReadString();
+    arkTSMode = parcel.ReadString();
 
     int32_t reqCapabilitiesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqCapabilitiesSize);
@@ -725,8 +725,8 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appStartup));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(formExtensionModule));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(formWidgetModule));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, abilityStageCodeLanguage);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, moduleArkTSMode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, arkTSMode);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqCapabilities.size());
     for (auto &reqCapability : reqCapabilities) {
@@ -896,8 +896,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_FORM_EXTENSION_MODULE, hapModuleInfo.formExtensionModule},
         {HAP_MODULE_INFO_FORM_WIDGET_MODULE, hapModuleInfo.formWidgetModule},
         {HAP_MODULE_INFO_HAS_INTENT, hapModuleInfo.hasIntent},
-        {Constants::CODE_LANGUAGE, hapModuleInfo.codeLanguage},
-        {Constants::ABILITY_STAGE_CODE_LANGUAGE, hapModuleInfo.abilityStageCodeLanguage}
+        {Constants::MODULE_ARKTS_MODE, hapModuleInfo.moduleArkTSMode},
+        {Constants::ARKTS_MODE, hapModuleInfo.arkTSMode}
     };
 }
 
@@ -1353,14 +1353,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        Constants::CODE_LANGUAGE,
-        hapModuleInfo.codeLanguage,
+        Constants::MODULE_ARKTS_MODE,
+        hapModuleInfo.moduleArkTSMode,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        Constants::ABILITY_STAGE_CODE_LANGUAGE,
-        hapModuleInfo.abilityStageCodeLanguage,
+        Constants::ARKTS_MODE,
+        hapModuleInfo.arkTSMode,
         false,
         parseResult);
     if (parseResult != ERR_OK) {
