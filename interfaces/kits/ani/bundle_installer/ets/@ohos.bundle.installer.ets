@@ -32,8 +32,7 @@ namespace installer {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let installer: BundleInstaller = e as BundleInstaller;
-      let r: BusinessError = { code: 0, name: "noerror", message: "noerror", data: undefined };
-      callback(r, installer);
+      callback(null, installer);
     }, (err: Object): void => {
     });
   }

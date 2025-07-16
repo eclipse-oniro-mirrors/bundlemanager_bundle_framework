@@ -19,8 +19,6 @@ import { ApplicationInfo } from 'bundleManager.ApplicationInfo';
 import { AbilityInfo } from 'bundleManager.AbilityInfo';
 import { ExtensionAbilityInfo } from 'bundleManager.ExtensionAbilityInfo';
 import Want from '@ohos.app.ability.Want';
-import { BundleInfoInner } from './bundleManager/BundleInfoInner';
-import { ApplicationInfoInner } from './bundleManager/ApplicationInfoInner';
 
 namespace bundleManager {
 
@@ -295,11 +293,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
-      let r = new BusinessError();
-      callback(r, resultBundleInfo);
+      callback(null, resultBundleInfo);
     }, (err: Error): void => {
-      let resultBundleInfo = new BundleInfoInner();
-      callback(err as BusinessError, resultBundleInfo);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -353,11 +349,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
-      let r = new BusinessError();
-      callback(r, resultBundleInfo);
+      callback(null, resultBundleInfo);
     },(err: Error): void => {
-      let resultBundleInfo = new BundleInfoInner();
-      callback(err as BusinessError, resultBundleInfo);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -368,11 +362,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
-      let r = new BusinessError();
-      callback(r, resultBundleInfo);
+      callback(null, resultBundleInfo);
     },(err: Error): void => {
-      let resultBundleInfo = new BundleInfoInner();
-      callback(err as BusinessError, resultBundleInfo);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -410,11 +402,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
-      let r = new BusinessError();
-      callback(r, resultBundleInfos);
+      callback(null, resultBundleInfos);
     }, (err: Error): void => {
-      let resultBundleInfos = new Array<BundleInfo>;
-      callback(err as BusinessError, resultBundleInfos);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -425,11 +415,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
-      let r = new BusinessError();
-      callback(r, resultBundleInfos);
+      callback(null, resultBundleInfos);
     }, (err: Error): void => {
-      let resultBundleInfos = new Array<BundleInfo>;
-      callback(err as BusinessError, resultBundleInfos);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -459,11 +447,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultApplicationInfos: Array<ApplicationInfo> = e as Array<ApplicationInfo>;
-      let r = new BusinessError();
-      callback(r, resultApplicationInfos);
+      callback(null, resultApplicationInfos);
     }, (err: Error): void => {
-      let resultApplicationInfos = new Array<ApplicationInfo>;
-      callback(err as BusinessError, resultApplicationInfos);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -475,11 +461,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultApplicationInfos: Array<ApplicationInfo> = e as Array<ApplicationInfo>;
-      let r = new BusinessError();
-      callback(r, resultApplicationInfos);
+      callback(null, resultApplicationInfos);
     }, (err: Error): void => {
-      let resultApplicationInfos = new Array<ApplicationInfo>;
-      callback(err as BusinessError, resultApplicationInfos);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -524,10 +508,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let isEnabled: boolean = e as boolean;
-      let r = new BusinessError();
-      callback(r, isEnabled);
+      callback(null, isEnabled);
     }, (err: Error): void => {
-      callback(err as BusinessError, false);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -557,11 +540,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultAbilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
-      let r = new BusinessError();
-      callback(r, resultAbilityInfos);
+      callback(null, resultAbilityInfos);
     }, (err: Error): void => {
-      let resultAbilityInfos = new Array<AbilityInfo>;
-      callback(err as BusinessError, resultAbilityInfos);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -573,11 +554,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultAbilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
-      let r = new BusinessError();
-      callback(r, resultAbilityInfos);
+      callback(null, resultAbilityInfos);
     }, (err: Error): void => {
-      let resultAbilityInfos = new Array<AbilityInfo>;
-      callback(err as BusinessError, resultAbilityInfos);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -607,11 +586,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultApplicationInfo: ApplicationInfo = e as ApplicationInfo;
-      let r = new BusinessError();
-      callback(r, resultApplicationInfo);
+      callback(null, resultApplicationInfo);
     },(err: Error): void => {
-      let resultApplicationInfo = new ApplicationInfoInner();
-      callback(err as BusinessError, resultApplicationInfo);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -623,11 +600,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let resultApplicationInfo: ApplicationInfo = e as ApplicationInfo;
-      let r = new BusinessError();
-      callback(r, resultApplicationInfo);
+      callback(null, resultApplicationInfo);
     },(err: Error): void => {
-      let resultApplicationInfo = new ApplicationInfoInner();
-      callback(err as BusinessError, resultApplicationInfo);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -675,10 +650,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let label: string = e as string;
-      let r = new BusinessError();
-      callback(r, label);
+      callback(null, label);
     },(err: Error): void => {
-      callback(err as BusinessError, "");
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -708,11 +682,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let want: Want = e as Want;
-      let r = new BusinessError();
-      callback(r, want);
+      callback(null, want);
     },(err: Error): void => {
-      let want : Want = {};
-      callback(err as BusinessError, want);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -723,11 +695,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let want: Want = e as Want;
-      let r = new BusinessError();
-      callback(r, want);
+      callback(null, want);
     },(err: Error): void => {
-      let want : Want = {};
-      callback(err as BusinessError, want);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -758,10 +728,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let result: string = e as string;
-      let r = new BusinessError();
-      callback(r, result);
+      callback(null, result);
     }).catch((err: Error): void => {
-      callback(err as BusinessError, "");
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -791,11 +760,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let extensionAbilityInfos: Array<ExtensionAbilityInfo> = e as Array<ExtensionAbilityInfo>;
-      let r = new BusinessError();
-      callback(r, extensionAbilityInfos);
+      callback(null, extensionAbilityInfos);
     },(err: Error): void => {
-      let extensionAbilityInfos = new Array<ExtensionAbilityInfo>;
-      callback(err as BusinessError, extensionAbilityInfos);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -808,11 +775,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let extensionAbilityInfos: Array<ExtensionAbilityInfo> = e as Array<ExtensionAbilityInfo>;
-      let r = new BusinessError();
-      callback(r, extensionAbilityInfos);
+      callback(null, extensionAbilityInfos);
     },(err: Error): void => {
-      let extensionAbilityInfos = new Array<ExtensionAbilityInfo>;
-      callback(err as BusinessError, extensionAbilityInfos);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -879,10 +844,9 @@ namespace bundleManager {
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
       let isEnabled: boolean = e as boolean;
-      let r = new BusinessError();
-      callback(r, isEnabled);
+      callback(null, isEnabled);
     }, (err: Error): void => {
-      callback(err as BusinessError, false);
+      callback(err as BusinessError, undefined);
     });
   }
 
@@ -924,8 +888,7 @@ namespace bundleManager {
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
-      let r = new BusinessError();
-      callback(r, undefined);
+      callback(null, undefined);
     }, (err: Error): void => {
       callback(err as BusinessError, undefined);
     });
@@ -969,8 +932,7 @@ namespace bundleManager {
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
-      let r = new BusinessError();
-      callback(r, undefined);
+      callback(null, undefined);
     }, (err: Error): void => {
       callback(err as BusinessError, undefined);
     });

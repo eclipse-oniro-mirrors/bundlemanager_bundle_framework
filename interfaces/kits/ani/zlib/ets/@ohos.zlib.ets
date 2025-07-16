@@ -63,15 +63,14 @@ export default namespace zlib {
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
-      let r = new BusinessError();
-      callback(r, undefined);
+      callback(null, undefined);
     }).catch((err: Error): void => {
       callback(err as BusinessError, undefined);
     });
   }
 
   export function compressFile(inFile: string, outFile: string, options: Options): Promise<void> {
-    let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Object) => void) : void => {
+    let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
         zlib.CompressFile(inFile, outFile, options);
       };
@@ -93,8 +92,7 @@ export default namespace zlib {
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
-      let r = new BusinessError();
-      callback(r, undefined);
+      callback(null, undefined);
     }).catch((err: Error): void => {
       callback(err as BusinessError, undefined);
     });
@@ -106,8 +104,7 @@ export default namespace zlib {
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
-      let r = new BusinessError();
-      callback(r, undefined);
+      callback(null, undefined);
     }).catch((err: Error): void => {
       callback(err as BusinessError, undefined);
     });
@@ -115,7 +112,7 @@ export default namespace zlib {
 
   export function decompressFile(inFile: string, outFile: string, options?: Options): Promise<void> {
     let optionsParam = options ?? new OptionsInner();
-    let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Object) => void) : void => {
+    let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
         zlib.DecompressFile(inFile, outFile, optionsParam);
       };
