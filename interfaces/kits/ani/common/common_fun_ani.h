@@ -81,12 +81,12 @@ constexpr const char* PROPERTYNAME_UNBOXED = "unboxed";
         }                                     \
     } while (0)
 namespace CommonFunAniNS {
-constexpr const char* CLASSNAME_BOOLEAN = "Lstd/core/Boolean;";
-constexpr const char* CLASSNAME_INT = "Lstd/core/Int;";
-constexpr const char* CLASSNAME_LONG = "Lstd/core/Long;";
-constexpr const char* CLASSNAME_DOUBLE = "Lstd/core/Double;";
-constexpr const char* CLASSNAME_ARRAY = "Lescompat/Array;";
-constexpr const char* CLASSNAME_STRING = "Lstd/core/String;";
+constexpr const char* CLASSNAME_BOOLEAN = "C{std.core.Boolean}";
+constexpr const char* CLASSNAME_INT = "C{std.core.Int}";
+constexpr const char* CLASSNAME_LONG = "C{std.core.Long}";
+constexpr const char* CLASSNAME_DOUBLE = "C{std.core.Double}";
+constexpr const char* CLASSNAME_ARRAY = "C{escompat.Array}";
+constexpr const char* CLASSNAME_STRING = "C{std.core.String}";
 } // namespace CommonFunAniNS
 class CommonFunAni {
 public:
@@ -311,7 +311,7 @@ public:
 
         ani_size length = cArray.size();
         ani_value arg = { .i = static_cast<ani_int>(length) };
-        ani_object arrayObj = CreateNewObjectByClassV2(env, arrayCls, "I:V", &arg);
+        ani_object arrayObj = CreateNewObjectByClassV2(env, arrayCls, "i:", &arg);
         RETURN_NULL_IF_NULL(arrayObj);
 
         ani_status status = ANI_OK;
@@ -322,7 +322,7 @@ public:
                     APP_LOGE("convert failed");
                     return nullptr;
                 }
-                status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, item);
+                status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, item);
                 env->Reference_Delete(item);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_CallMethodByName_Void failed %{public}d", status);
@@ -346,7 +346,7 @@ public:
 
         ani_size length = nativeArray.size();
         ani_value arg = { .i = static_cast<ani_int>(length) };
-        ani_object arrayObj = CreateNewObjectByClassV2(env, arrayCls, "I:V", &arg);
+        ani_object arrayObj = CreateNewObjectByClassV2(env, arrayCls, "i:", &arg);
         RETURN_NULL_IF_NULL(arrayObj);
 
         ani_status status = ANI_OK;
@@ -354,7 +354,7 @@ public:
         for (const auto& iter : nativeArray) {
             ani_object item = converter(env, iter, std::forward<Args>(args)...);
             RETURN_NULL_IF_NULL(item);
-            status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "ILstd/core/Object;:V", i, item);
+            status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, item);
             env->Reference_Delete(item);
             if (status != ANI_OK) {
                 APP_LOGE("Object_CallMethodByName_Void failed %{public}d", status);
@@ -380,7 +380,7 @@ public:
         }
         for (ani_int i = 0; i < static_cast<ani_int>(length); ++i) {
             ani_ref ref;
-            status = env->Object_CallMethodByName_Ref(aniArray, "$_get", "I:Lstd/core/Object;", &ref, i);
+            status = env->Object_CallMethodByName_Ref(aniArray, "$_get", "i:C{std.core.Object}", &ref, i);
             if (status != ANI_OK) {
                 APP_LOGE("Object_CallMethodByName_Ref failed %{public}d", status);
                 return false;
@@ -505,12 +505,12 @@ public:
             status = ANI_ERROR;
             if constexpr (std::is_same_v<valueType, ani_boolean>) {
                 status = env->Object_CallMethodByName_Boolean(
-                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":Z", value);
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":z", value);
             } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
                                  std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
                 ani_int i = 0;
                 status = env->Object_CallMethodByName_Int(
-                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":I", &i);
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":i", &i);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_CallMethodByName_Int %{public}s failed %{public}d", propertyName, status);
                     return false;
@@ -523,7 +523,7 @@ public:
             } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
                 ani_long l = 0;
                 status = env->Object_CallMethodByName_Long(
-                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":J", &l);
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":l", &l);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_CallMethodByName_Long %{public}s failed %{public}d", propertyName, status);
                     return false;
@@ -537,7 +537,7 @@ public:
                                  std::is_same_v<valueType, uint64_t>) {
                 double d = 0;
                 status = env->Object_CallMethodByName_Double(
-                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":D", &d);
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":d", &d);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_CallMethodByName_Double %{public}s failed %{public}d", propertyName, status);
                     return false;
@@ -571,18 +571,18 @@ public:
         std::string setterSig;
         ani_value setterParam { };
         if constexpr (std::is_same_v<valueType, ani_boolean>) {
-            setterSig = "Z:V";
+            setterSig = "z:";
             setterParam.z = value;
         } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
                              std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
-            setterSig = "I:V";
+            setterSig = "i:";
             setterParam.i = static_cast<ani_int>(value);
         } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
-            setterSig = "J:V";
+            setterSig = "l:";
             setterParam.l = static_cast<ani_long>(value);
         } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
                              std::is_same_v<valueType, uint64_t>) {
-            setterSig = "D:V";
+            setterSig = "d:";
             setterParam.d = static_cast<ani_double>(value);
         } else if constexpr (std::is_pointer_v<valueType> &&
                              std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
@@ -591,7 +591,7 @@ public:
             }
             if (valueClassName != nullptr) {
                 setterSig = valueClassName;
-                setterSig.append(":V");
+                setterSig.append(":");
             }
             setterParam.r = value;
         } else {
@@ -664,21 +664,21 @@ public:
         ani_value ctorParam { };
         if constexpr (std::is_same_v<valueType, ani_boolean>) {
             valueClassName = CommonFunAniNS::CLASSNAME_BOOLEAN;
-            ctorSig = "Z:V";
+            ctorSig = "z:";
             ctorParam.z = value;
         } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
                              std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
             valueClassName = CommonFunAniNS::CLASSNAME_INT;
-            ctorSig = "I:V";
+            ctorSig = "i:";
             ctorParam.i = static_cast<ani_int>(value);
         } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
             valueClassName = CommonFunAniNS::CLASSNAME_LONG;
-            ctorSig = "J:V";
+            ctorSig = "l:";
             ctorParam.l = static_cast<ani_long>(value);
         } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
                              std::is_same_v<valueType, uint64_t>) {
             valueClassName = CommonFunAniNS::CLASSNAME_DOUBLE;
-            ctorSig = "D:V";
+            ctorSig = "d:";
             ctorParam.d = static_cast<ani_double>(value);
         } else {
             APP_LOGE("Type Unsupported");
