@@ -208,6 +208,19 @@ HWTEST_F(BmsEventHandlerTest, AfterBmsStart_0300, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: AfterBmsStart_0400
+ * @tc.name: AfterBmsStart
+ * @tc.desc: test AfterBmsStart with true needNotifyBundleScanStatus_
+ */
+HWTEST_F(BmsEventHandlerTest, AfterBmsStart_0400, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    handler->needNotifyBundleScanStatus_ = true;
+    handler->AfterBmsStart();
+    EXPECT_FALSE(handler->hasLoadAllPreInstallBundleInfosFromDb_);
+}
+
+/**
  * @tc.number: GetPreInstallDirFromLoadProFile_0100
  * @tc.name: GetPreInstallDirFromLoadProFile
  * @tc.desc: test GetPreInstallDirFromLoadProFile success

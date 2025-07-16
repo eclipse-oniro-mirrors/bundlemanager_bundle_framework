@@ -309,6 +309,8 @@ void BMSEventHandler::AfterBmsStart()
     HandleSceneBoard();
     CleanTempDir();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
+    BundleResourceHelper::RegisterCommonEventSubscriber();
+    BundleResourceHelper::RegisterConfigurationObserver();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
     if (SetParameter(BUNDLE_SCAN_PARAM, BUNDLE_SCAN_FINISH) != 0) {
         LOG_E(BMS_TAG_DEFAULT, "set bms.scanning_apps.status 1 failed");
@@ -321,8 +323,6 @@ void BMSEventHandler::AfterBmsStart()
     bmsExtensionDataMgr.RegisterPreInstallWithCard();
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
-    BundleResourceHelper::RegisterCommonEventSubscriber();
-    BundleResourceHelper::RegisterConfigurationObserver();
     ProcessCheckAppEl1Dir();
     ProcessCheckSystemOptimizeDir();
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
