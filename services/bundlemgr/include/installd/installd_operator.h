@@ -101,7 +101,7 @@ public:
 
     static bool ExtractFiles(const ExtractParam &extractParam);
     static bool ExtractFiles(const std::string hnpPackageInfo, const ExtractParam &extractParam);
-    static void ExtractTargetFile(
+    static bool ExtractTargetFile(
         const BundleExtractor &extractor,
         const std::string &entryName,
         const ExtractParam &param);

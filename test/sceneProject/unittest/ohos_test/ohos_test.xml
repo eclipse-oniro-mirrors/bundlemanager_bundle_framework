@@ -507,4 +507,9 @@
       <option name="push" value="test_bundle/resourceManagerTest.hap -> /data/test/resource/bms/resource_manager/" src="res" />
     </preparer>
   </target>
+    <target name="BmsInstallDaemonOperatorTest">
+    <preparer>
+      <option name="push" value="bundle_so/compressNativeLibsFalse01.hap -> /data/test/resource/bms/install_operator/compressNativeLibsFalse01.hap" src="res" />
+    </preparer>
+  </target>
 </configuration>

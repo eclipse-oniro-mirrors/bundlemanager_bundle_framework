@@ -67,6 +67,9 @@ const std::string TEST_MODULE_PATH = "/system/app/ShellAssistant/ShellAssistant_
 const std::string TEST_V8A_CPU_ABI = "arm64-v8a";
 const std::string TEST_TARGET_SO_PATH = "/data/app/el1/bundle/public/libs/arm64/";
 const std::string TEST_APP_IDENTIFIER = "5765880207854632823";
+const std::string HAP_COMPRESS_NATIVE_LIBS_FALSE_01 =
+    "/data/test/resource/bms/install_operator/compressNativeLibsFalse01.hap";
+const std::string HAP_SO_LIBS = "libs/libhello.z.so";
 }; // namespace
 class BmsInstallDaemonOperatorTest : public testing::Test {
 public:
@@ -1027,6 +1030,42 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6100, Function | Sma
     InstalldOperator::ExtractTargetFile(extractor, "", param);
     auto ret = InstalldOperator::ExtractDiffFiles(
         TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_PATH, TEST_CPU_ABI);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ExtractTargetFile_0001
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractTargetFile of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ExtractTargetFile_0001, Function | SmallTest | Level0)
+{
+    BundleExtractor extractor(HAP_COMPRESS_NATIVE_LIBS_FALSE_01);
+    ExtractParam param;
+    param.targetPath = "/data/test/install_operator";
+    param.cpuAbi = TEST_CPU_ABI;
+    param.extractFileType = ExtractFileType::ALL;
+    bool ret = InstalldOperator::ExtractTargetFile(extractor, TEST_DIFF_LIB_STRING, param);
+    EXPECT_FALSE(ret);
+
+    param.extractFileType = ExtractFileType::AP;
+    ret = InstalldOperator::ExtractTargetFile(extractor, TEST_DIFF_LIB_STRING, param);
+    EXPECT_FALSE(ret);
+
+    param.extractFileType = ExtractFileType::SO;
+    ret = InstalldOperator::ExtractTargetFile(extractor, HAP_SO_LIBS, param);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ExtractTargetFile_0002
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractTargetFile of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, ExtractTargetFile_0002, Function | SmallTest | Level0)
+{
+    BundleExtractor extractor(HAP_COMPRESS_NATIVE_LIBS_FALSE_01);
+    bool ret = extractor.ExtractFile("", "");
     EXPECT_FALSE(ret);
 }
 
