@@ -34,8 +34,19 @@ constexpr size_t ARGS_POS_FOUR = 4;
 constexpr size_t NAPI_RETURN_ONE = 1;
 constexpr size_t CALLBACK_PARAM_SIZE = 2;
 
+constexpr int32_t GET_REMOTE_ABILITY_INFO_MAX_SIZE = 10;
+
 constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
 constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
+constexpr uint32_t EXPLICIT_QUERY_RESULT_LEN = 1;
+
+constexpr int32_t ENUM_ONE = 1;
+constexpr int32_t ENUM_TWO = 2;
+constexpr int32_t ENUM_THREE = 3;
+constexpr int32_t ENUM_FOUR = 4;
+constexpr int32_t ENUM_FIVE = 5;
+constexpr int32_t ENUM_SIX = 6;
+constexpr int32_t ENUM_SEVEN = 7;
 
 constexpr const char* TYPE_NUMBER = "number";
 constexpr const char* TYPE_STRING = "string";
@@ -70,7 +81,7 @@ constexpr const char* ABILITY_INFO = "abilityInfo";
 constexpr const char* LINK_FEATURE = "linkFeature";
 constexpr const char* EXTENSION_TYPE_NAME = "extensionTypeName";
 constexpr const char* EXTENSION_ABILITY_TYPE = "extensionAbilityType";
-constexpr const char*  PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
+constexpr const char* PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
     "BusinessError 401: Parameter error.Parameter extensionAbilityType is empty.";
 constexpr const char* INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action, entities, uri, type, or linkFeature) non-empty.";
@@ -99,17 +110,78 @@ constexpr const char* GET_BUNDLE_NAME_BY_UID_SYNC = "GetBundleNameByUidSync";
 constexpr const char* QUERY_EXTENSION_INFOS = "QueryExtensionInfos";
 constexpr const char* SET_ABILITY_ENABLED = "SetAbilityEnabled";
 constexpr const char* SET_APPLICATION_ENABLED = "SetApplicationEnabled";
+constexpr const char* HAP_FILE_PATH = "hapFilePath";
+constexpr const char* PERMISSION_NAME = "permissionName";
+constexpr const char* PROFILE_TYPE = "profileType";
+constexpr const char* ADDITIONAL_INFO = "additionalInfo";
+constexpr const char* DEVELOPER_ID = "developerId";
+constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
+constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
+constexpr const char* HOST_BUNDLE_NAME = "hostBundleName";
+constexpr const char* SOURCE_PATHS = "sourcePaths";
+constexpr const char* DESTINATION_PATH = "destinationPath";
+constexpr const char* LINK = "link";
+constexpr const char* URI = "uri";
+constexpr const char* SANDBOX_DATA_DIR = "sandboxDataDir";
+constexpr const char* ERR_MSG_LAUNCH_WANT_INVALID = "The launch want is not found.";
+constexpr const char* PARAM_BUNDLENAME_EMPTY_ERROR =
+    "BusinessError 401: Parameter error. parameter bundleName is empty";
+constexpr const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
+constexpr const char* PARAM_DEVELOPER_ID_EMPTY_ERROR =
+    "BusinessError 401: Parameter error. parameter developerId is empty";
+constexpr const char* BUNDLE_ENABLE_AND_DISABLE_ALL_DYNAMIC_PERMISSIONS =
+    "ohos.permission.ACCESS_DYNAMIC_ICON and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
+constexpr const char* BUNDLE_GET_ALL_DYNAMIC_PERMISSIONS =
+    "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
+constexpr const char* GET_ABILITYINFO_PERMISSIONS = "ohos.permission.GET_ABILITY_INFO";
+constexpr const char* GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
+constexpr const char* GET_PERMISSION_DEF = "GetPermissionDef";
+constexpr const char* CLEAN_BUNDLE_CACHE_FILES = "cleanBundleCacheFiles";
+constexpr const char* GET_ALL_BUNDLE_CACHE_SIZE = "getAllBundleCacheSize";
+constexpr const char* CLEAN_ALL_BUNDLE_CACHE = "cleanAllBundleCache";
+constexpr const char* GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
+constexpr const char* CAN_OPEN_LINK = "CanOpenLink";
+constexpr const char* GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
+constexpr const char* GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
+constexpr const char* SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
+constexpr const char* GET_SIGNATURE_INFO = "GetSignatureInfo";
+constexpr const char* GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";
+constexpr const char* GET_BUNDLE_ARCHIVE_INFO_SYNC = "GetBundleArchiveInfoSync";
+constexpr const char* GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExtensionAbilitySync";
+constexpr const char* GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
+constexpr const char* GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
+constexpr const char* GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
+constexpr const char* GET_ALL_SHARED_BUNDLE_INFO = "GetAllSharedBundleInfo";
+constexpr const char* GET_SHARED_BUNDLE_INFO = "GetSharedBundleInfo";
+constexpr const char* GET_JSON_PROFILE = "GetJsonProfile";
+constexpr const char* RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
+constexpr const char* GET_EXT_RESOURCE = "GetExtResource";
+constexpr const char* DISABLE_DYNAMIC_ICON = "DisableDynamicIcon";
+constexpr const char* VERIFY_ABC = "VerifyAbc";
+constexpr const char* DELETE_ABC = "DeleteAbc";
+constexpr const char* GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
+constexpr const char* RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
+constexpr const char* GET_DEVELOPER_IDS = "GetDeveloperIds";
+constexpr const char* GET_ALL_PLUGIN_INFO = "GetAllPluginInfo";
+constexpr const char* MIGRATE_DATA = "MigrateData";
+constexpr const char* GET_ALL_DYNAMIC_ICON = "GetAllDynamicIconInfo";
+constexpr const char* GET_SANDBOX_DATA_DIR_SYNC = "GetSandboxDataDirSync";
+constexpr const char* GET_ABILITY_INFOS = "GetAbilityInfos";
+constexpr const char* GET_DYNAMIC_ICON_INFO = "GetDynamicIconInfo";
 
-//launcher_bundle_manager
+// launcher_bundle_manager
 constexpr const char* GET_SHORTCUT_INFO = "GetShortcutInfo";
 constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
 constexpr const char* GET_SHORTCUT_INFO_BY_APPINDEX = "GetShortcutInfoByAppIndex";
 constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
-constexpr const char* PARSE_START_OPTIONS = "parse StartOptions failed";
+constexpr const char* PARSE_SHORTCUT_INFO_FAILED = "parse ShortcutInfo failed";
+constexpr const char* PARSE_START_OPTIONS_FAILED = "parse StartOptions failed";
 constexpr const char* START_SHORTCUT = "StartShortcut";
 constexpr const char* GET_LAUNCHER_ABILITY_INFO = "GetLauncherAbilityInfo";
 constexpr const char* GET_LAUNCHER_ABILITY_INFO_SYNC = "GetLauncherAbilityInfoSync";
 constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo";
+constexpr const char* PARSE_REASON_MESSAGE = "parse ReasonMessage failed";
+constexpr const char* START_SHORTCUT_WITH_REASON = "StartShortcutWithReason";
 
 // resource_manager
 constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
@@ -120,11 +192,17 @@ constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
 constexpr const char* GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = "GetAllLauncherAbilityResourceInfo";
+constexpr const char* GET_EXTENSION_ABILITY_RESOURCE_INFO = "GetExtensionAbilityResourceInfo";
 
-//shortcut_manager
+// shortcut_manager
 constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
 constexpr const char* DELETE_DESKTOP_SHORTCUT_INFO = "DeleteDesktopShortcutInfo";
 constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo";
+constexpr const char* SET_SHORTCUT_VISIBLE = "SetShortcutVisibleForSelf";
+constexpr const char* GET_ALL_SHORTCUT_INFO_FOR_SELF = "GetAllShortcutInfoForSelf";
+constexpr const char* SHORTCUT_ID = "shortcutId";
+constexpr const char* INVALID_SHORTCUT_INFO_ERROR =
+    "invalid ShortcutInfo: parameter type error, or appIndex is less than 0";
 
 // free_install
 constexpr const char* RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE = "isHapModuleRemovable";
@@ -177,6 +255,55 @@ constexpr const char* INSTALL_PREEXISTING_APP = "installPreexistingApp";
 constexpr const char* INSTALL_PLUGIN = "InstallPlugin";
 constexpr const char* UNINSTALL_PLUGIN = "UninstallPlugin";
 constexpr const char* PLUGIN_BUNDLE_NAME = "pluginBundleName";
+
+// app_control
+constexpr const char* TYPE_WANT = "want";
+constexpr const char* PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
+constexpr const char* SET_DISPOSED_STATUS = "SetDisposedStatus";
+constexpr const char* GET_DISPOSED_STATUS = "GetDisposedStatus";
+constexpr const char* DELETE_DISPOSED_STATUS = "DeleteDisposedStatus";
+constexpr const char* SET_DISPOSED_STATUS_SYNC = "SetDisposedStatusSync";
+constexpr const char* DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
+constexpr const char* GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
+constexpr const char* APP_ID = "appId";
+constexpr const char* APP_IDENTIFIER = "appIdentifier";
+constexpr const char* DISPOSED_WANT = "disposedWant";
+constexpr const char* DISPOSED_RULE = "disposedRule";
+constexpr const char* DISPOSED_RULE_TYPE = "DisposedRule";
+constexpr const char* UNINSTALL_DISPOSED_RULE = "uninstallDisposedRule";
+constexpr const char* UNINSTALL_DISPOSED_RULE_TYPE = "UninstallDisposedRule";
+constexpr const char* SET_UNINSTALL_DISPOSED_RULE = "SetUninstallDisposedRule";
+constexpr const char* DELETE_UNINSTALL_DISPOSED_RULE = "DeleteUninstallDisposedRule";
+constexpr const char* GET_UNINSTALL_DISPOSED_RULE = "GetUninstallDisposedRule";
+constexpr const char* SET_DISPOSED_RULES = "SetDisposedRules";
+
+// default_app_manager
+const std::unordered_map<std::string, std::string> TYPE_MAPPING = {
+    {"Web Browser", "BROWSER"},
+    {"Image Gallery", "IMAGE"},
+    {"Audio Player", "AUDIO"},
+    {"Video Player", "VIDEO"},
+    {"PDF Viewer", "PDF"},
+    {"Word Viewer", "WORD"},
+    {"Excel Viewer", "EXCEL"},
+    {"PPT Viewer", "PPT"},
+    {"Email", "EMAIL"}
+};
+constexpr const char* IS_DEFAULT_APPLICATION = "IsDefaultApplication";
+constexpr const char* IS_DEFAULT_APPLICATION_SYNC = "IsDefaultApplicationSync";
+constexpr const char* GET_DEFAULT_APPLICATION = "GetDefaultApplication";
+constexpr const char* GET_DEFAULT_APPLICATION_SYNC = "GetDefaultApplicationSync";
+constexpr const char* SET_DEFAULT_APPLICATION = "SetDefaultApplication";
+constexpr const char* SET_DEFAULT_APPLICATION_SYNC = "SetDefaultApplicationSync";
+constexpr const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
+constexpr const char* RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
+constexpr const char* TYPE_CHECK = "type";
+constexpr const char* WANT_CHECK = "want";
+
+// distributed_bundle_manager
+constexpr const char* RESOURCE_NAME_GET_REMOTE_ABILITY_INFO = "GetRemoteAbilityInfo";
+constexpr const char* PARAMETER_ELEMENT_NAME = "elementName";
+constexpr const char* PARAMETER_LOCALE = "locale";
 }
 }
 }

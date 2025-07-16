@@ -123,5 +123,23 @@ ErrCode ResourceHelper::InnerGetAllLauncherAbilityResourceInfo(uint32_t flags,
     }
     return CommonFunc::ConvertErrCode(ret);
 }
+
+ErrCode ResourceHelper::InnerGetExtensionAbilityResourceInfo(const std::string& bundleName,
+    ExtensionAbilityType extensionAbilityType, uint32_t flags, int32_t appIndex,
+    std::vector<LauncherAbilityResourceInfo>& extensionAbilityResourceInfos)
+{
+    APP_LOGD("InnerGetExtensionAbilityResourceInfo start");
+    auto bundleResourceProxy = ResourceHelper::GetBundleResourceMgr();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetExtensionAbilityResourceInfo(
+        bundleName, extensionAbilityType, flags, extensionAbilityResourceInfos, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
+}
 } // AppExecFwk
 } // OHOS

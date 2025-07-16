@@ -79,8 +79,7 @@ static void CheckInfoCache(ani_env* env, const ANIQuery& query,
         return;
     }
 
-    uint32_t explicitQueryResultLen = 1;
-    if (infos.size() != explicitQueryResultLen || infos[0].uid != IPCSkeleton::GetCallingUid()) {
+    if (infos.size() != EXPLICIT_QUERY_RESULT_LEN || infos[0].uid != IPCSkeleton::GetCallingUid()) {
         return;
     }
 
@@ -1086,7 +1085,7 @@ static void EnableDynamicIconNative(ani_env* env, ani_string aniBundleName, ani_
         return;
     }
     
-    ErrCode ret = BundleManagerHelper::InnerEnableDynamicIcon(bundleName, moduleName);
+    ErrCode ret = BundleManagerHelper::InnerEnableDynamicIcon(bundleName, moduleName, 0, 0, true);
     if (ret != ERR_OK) {
         APP_LOGE("EnableDynamicIcon failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, ret,

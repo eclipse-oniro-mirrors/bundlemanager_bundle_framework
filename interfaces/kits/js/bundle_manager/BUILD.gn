@@ -27,7 +27,10 @@ ohos_shared_library("bundle_manager_common") {
   }
 
   include_dirs = [ "${kits_path}/js/common" ]
-  sources = [ "bundle_manager_helper.cpp" ]
+  sources = [
+    "bundle_manager_helper.cpp",
+    "clean_cache_callback.cpp",
+  ]
 
   cflags = [
     "-Os",
@@ -85,7 +88,6 @@ ohos_shared_library("bundlemanager") {
   sources = [
     "bundle_manager.cpp",
     "bundle_manager_sync.cpp",
-    "clean_cache_callback.cpp",
     "native_module.cpp",
   ]
 
