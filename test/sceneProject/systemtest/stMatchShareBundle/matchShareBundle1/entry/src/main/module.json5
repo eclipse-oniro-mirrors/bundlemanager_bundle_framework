@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {
     "module":{
         "name":"entry_phone",
@@ -5,16 +20,14 @@
         "mainElement":"MainAbility",
         "srcEntry":"./ets/Application/AbilityStage.ts",
         "description":"$string:phone_entry_dsc",
-        "descriptionId":16777220,
-        "deviceTypes":[
+        "deviceTypes": [
             "2in1",
             "tablet",
-            "default",
-            "phone"
+            "default"
         ],
         "deliveryWithInstall":true,
         "installationFree":false,
-        "pages":"@profile:main_pages",
+        "pages":"$profile:main_pages",
         "metadata": [
             {
               "name": "meta_info",
@@ -26,11 +39,10 @@
                 "name":"MainAbility",
                 "srcEntry":"./ets/MainAbility/MainAbility.ts",
                 "description":"$string:phone_entry_main",
-                "descriptionId":16777221,
                 "icon":"$media:icon",
-                "iconId":16777225,
                 "label":"$string:entry_label",
-                "labelId":16777218,
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
                 "exported":true,
                 "orientation":"portrait",
                 "metadata":[
@@ -76,6 +88,8 @@
                 "startWindowIcon": "$media:icon",
                 "name": "BROWSER",
                 "icon": "$media:icon",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
                 "visible": true,
                 "skills": [
                   {
@@ -92,7 +106,7 @@
                     ]
                   }
                 ],
-                "srcEntrance": ""
+                "srcEntry": ""
             }
         ],
         "extensionAbilities":[],
