@@ -19,6 +19,7 @@
 #include "bundle_constants.h"
 #include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
+#include "ffrt.h"
 #include "mem_mgr_client.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
@@ -30,6 +31,7 @@ namespace AppExecFwk {
 namespace {
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 constexpr uint16_t MAX_VEC_SIZE = 1024;
+constexpr uint32_t DELAY_SET_CRITICAL_TIME = 3 * 1000 * 1000;    // microseconds
 }
 
 InstalldHost::InstalldHost()
@@ -42,23 +44,37 @@ InstalldHost::~InstalldHost()
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd host destroyed");
 }
 
+void InstalldHost::SetMemMgrStatus(bool started)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    memMgrStarted_ = started;
+}
+
 void InstalldHost::SetCritical(bool critical)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     LOG_D(BMS_TAG_INSTALLD, "critical: %{public}d, %{public}d", critical, counter_);
     if (critical) {
         counter_++;
-        if (counter_ == 1) {
+        if (counter_ == 1 && memMgrStarted_) {
             Memory::MemMgrClient::GetInstance().SetCritical(
                 getpid(), critical, INSTALLD_SERVICE_ID);
         }
     } else {
         counter_--;
-        if (counter_ == 0) {
+        if (counter_ == 0 && memMgrStarted_) {
             Memory::MemMgrClient::GetInstance().SetCritical(
                 getpid(), critical, INSTALLD_SERVICE_ID);
         }
     }
+}
+
+void InstalldHost::SetCriticalDelayed(bool critical)
+{
+    auto delayTask = [critical, this]() {
+        this->SetCritical(critical);
+    };
+    ffrt::submit(delayTask, ffrt::task_attr().delay(DELAY_SET_CRITICAL_TIME));
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -261,11 +277,11 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
-            SetCritical(false);
+            SetCriticalDelayed(false);
             return ret;
     }
     LOG_D(BMS_TAG_INSTALLD, "installd host finish to process message from client");
-    SetCritical(false);
+    SetCriticalDelayed(false);
     return result ? NO_ERROR : OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
 }
 

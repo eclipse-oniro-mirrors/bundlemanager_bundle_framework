@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -129,6 +129,11 @@ void InstalldService::Stop()
     SystemAbilityHelper::RemoveSystemAbility(INSTALLD_SERVICE_ID);
     isReady_ = false;
     APP_LOGI("installd service stop successfully");
+}
+
+void InstalldService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
+{
+    APP_LOGI("OnAddSystemAbility: %{public}d", systemAbilityId);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

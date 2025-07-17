@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -125,8 +125,7 @@ void InstalldService::Start()
         return;
     }
     isReady_ = true;
-    Memory::MemMgrClient::GetInstance().NotifyProcessStatus(
-        getpid(), SA_SERVICE, SA_START, INSTALLD_SERVICE_ID);
+    AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service start successfully");
 }
 
@@ -140,6 +139,18 @@ void InstalldService::Stop()
     Memory::MemMgrClient::GetInstance().NotifyProcessStatus(
         getpid(), SA_SERVICE, SA_DIED, INSTALLD_SERVICE_ID);
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service stop successfully");
+}
+
+void InstalldService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
+{
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "OnAddSystemAbility: %{public}d", systemAbilityId);
+    if (MEMORY_MANAGER_SA_ID == systemAbilityId) {
+        auto ret = Memory::MemMgrClient::GetInstance().NotifyProcessStatus(
+            getpid(), SA_SERVICE, SA_START, INSTALLD_SERVICE_ID);
+        if (ret == 0 && hostImpl_ != nullptr) {
+            hostImpl_->SetMemMgrStatus(true);
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
