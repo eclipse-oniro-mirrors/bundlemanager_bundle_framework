@@ -66,6 +66,7 @@ constexpr const char* TYPE_OBJECT = "object";
 constexpr const char* TYPE_BOOLEAN = "boolean";
 constexpr const char* TYPE_FUNCTION = "function";
 constexpr const char* TYPE_ARRAY = "array";
+constexpr const char* TYPE_ARRAYBUFFER = "ArrayBuffer";
 constexpr const char* FLAGS = "flags";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* ABILITY_FLAGS = "abilityFlags";
