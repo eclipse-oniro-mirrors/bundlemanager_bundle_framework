@@ -330,7 +330,7 @@ struct ApplicationInfo : public Parcelable {
 
     std::string installSource;
     std::string configuration;
-    std::string codeLanguage;
+    std::string arkTSMode;
     Resource iconResource;
     Resource labelResource;
     Resource descriptionResource;

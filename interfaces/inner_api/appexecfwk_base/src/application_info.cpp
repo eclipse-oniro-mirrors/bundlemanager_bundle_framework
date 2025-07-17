@@ -602,7 +602,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     installSource = Str16ToStr8(parcel.ReadString16());
 
     configuration = Str16ToStr8(parcel.ReadString16());
-    codeLanguage = parcel.ReadString();
+    arkTSMode = parcel.ReadString();
     cloudFileSyncEnabled = parcel.ReadBool();
     cloudStructuredDataSyncEnabled = parcel.ReadBool();
     applicationFlags = parcel.ReadInt32();
@@ -790,7 +790,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(installSource));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(configuration));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, arkTSMode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, cloudFileSyncEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, cloudStructuredDataSyncEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, applicationFlags);
@@ -1048,7 +1048,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_APP_INDEX, applicationInfo.appIndex},
         {APPLICATION_INSTALL_SOURCE, applicationInfo.installSource},
         {APPLICATION_CONFIGURATION, applicationInfo.configuration},
-        {Constants::CODE_LANGUAGE, applicationInfo.codeLanguage},
+        {Constants::ARKTS_MODE, applicationInfo.arkTSMode},
         {APPLICATION_CLOUD_FILE_SYNC_ENABLED, applicationInfo.cloudFileSyncEnabled},
         {APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED, applicationInfo.cloudStructuredDataSyncEnabled},
         {APPLICATION_APPLICATION_FLAGS, applicationInfo.applicationFlags},
@@ -1265,8 +1265,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.hwasanEnabled, false, parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CONFIGURATION,
         applicationInfo.configuration, false, parseResult);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, Constants::CODE_LANGUAGE,
-        applicationInfo.codeLanguage, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd, Constants::ARKTS_MODE,
+        applicationInfo.arkTSMode, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_FILE_SYNC_ENABLED,
         applicationInfo.cloudFileSyncEnabled, false, parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_STRUCTURED_DATA_SYNC_ENABLED,

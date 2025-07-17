@@ -37,7 +37,7 @@ bool HspInfo::ReadFromParcel(Parcel &parcel)
     hapPath = Str16ToStr8(hapPathVal);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, offset);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, length);
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, moduleArkTSMode);
     return true;
 }
 
@@ -49,7 +49,7 @@ bool HspInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, offset);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, length);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, moduleArkTSMode);
     return true;
 }
 
@@ -72,7 +72,7 @@ std::string HspInfo::ToString() const
             + ", hapPath = " + hapPath
             + ", offset = " + std::to_string(offset)
             + ", length = " + std::to_string(length)
-            + ", codeLanguage = " + codeLanguage + "]";
+            + ", moduleArkTSMode = " + moduleArkTSMode + "]";
 }
 
 bool AOTArgs::ReadFromParcel(Parcel &parcel)
@@ -125,7 +125,7 @@ bool AOTArgs::ReadFromParcel(Parcel &parcel)
     optBCRangeList = Str16ToStr8(optBCRangeVal);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isScreenOff);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEnableBaselinePgo);
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, moduleArkTSMode);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSysComp);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, sysCompPath);
     return true;
@@ -154,7 +154,7 @@ bool AOTArgs::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(optBCRangeList));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isScreenOff);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEnableBaselinePgo);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, moduleArkTSMode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSysComp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, sysCompPath);
     return true;
@@ -190,7 +190,7 @@ std::string AOTArgs::ToString() const
         + ", optBCRangeList = " + optBCRangeList
         + ", isScreenOff = " + std::to_string(isScreenOff)
         + ", isEnableBaselinePgo = " + std::to_string(isEnableBaselinePgo)
-        + ", codeLanguage = " + codeLanguage
+        + ", moduleArkTSMode = " + moduleArkTSMode
         + ", isSysComp = " + (isSysComp ? "true" : "false")
         + ", sysCompPath = " + sysCompPath + "]";
     ret.append(" hspVector = ");

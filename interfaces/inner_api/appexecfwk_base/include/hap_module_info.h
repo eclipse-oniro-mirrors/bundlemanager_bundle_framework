@@ -168,8 +168,8 @@ struct HapModuleInfo : public Parcelable {
     std::string appStartup;
     std::string formExtensionModule;
     std::string formWidgetModule;
-    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
-    std::string abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
 
     // quick fix hqf info
     HqfInfo hqfInfo;

@@ -255,7 +255,7 @@ struct AbilityInfo : public Parcelable {
     std::string extensionTypeName;
     std::string srcPath;
     std::string srcLanguage = "js";
-    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
 
     std::string process;
     std::string uri;

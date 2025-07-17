@@ -149,7 +149,7 @@ HspInfo BmsAOTMgrTest::CreateHspInfo() const
     hspInfo.hapPath = "hapPath";
     hspInfo.offset = OFFSET;
     hspInfo.length = LENGTH;
-    hspInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    hspInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
     return hspInfo;
 }
 
@@ -161,7 +161,7 @@ void BmsAOTMgrTest::CheckHspInfo(HspInfo &sourceHspInfo, HspInfo &targetHspInfo)
     EXPECT_EQ(sourceHspInfo.hapPath, targetHspInfo.hapPath);
     EXPECT_EQ(sourceHspInfo.offset, targetHspInfo.offset);
     EXPECT_EQ(sourceHspInfo.length, targetHspInfo.length);
-    EXPECT_EQ(sourceHspInfo.codeLanguage, targetHspInfo.codeLanguage);
+    EXPECT_EQ(sourceHspInfo.moduleArkTSMode, targetHspInfo.moduleArkTSMode);
 }
 
 void BmsAOTMgrTest::ClearDataMgr()
@@ -760,7 +760,7 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0200, Function | SmallTest | Level1)
     aotArgs.length = LENGTH;
     aotArgs.hspVector.emplace_back(CreateHspInfo());
     aotArgs.hspVector.emplace_back(CreateHspInfo());
-    aotArgs.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    aotArgs.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
     aotArgs.isSysComp = true;
     aotArgs.sysCompPath = "sysCompPath";
 
@@ -783,7 +783,7 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0200, Function | SmallTest | Level1)
     for (size_t i = 0; i < aotArgsPtr->hspVector.size(); ++i) {
         CheckHspInfo(aotArgsPtr->hspVector[i], aotArgs.hspVector[i]);
     }
-    EXPECT_EQ(aotArgsPtr->codeLanguage, aotArgs.codeLanguage);
+    EXPECT_EQ(aotArgsPtr->moduleArkTSMode, aotArgs.moduleArkTSMode);
     EXPECT_EQ(aotArgsPtr->isSysComp, aotArgs.isSysComp);
     EXPECT_EQ(aotArgsPtr->sysCompPath, aotArgs.sysCompPath);
     APP_LOGI("AOTArgs_0200 end");
@@ -1343,10 +1343,10 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1700, Function | SmallTest | Level0)
     std::string hapPath = "";
     uint32_t offset = OFFSET;
     uint32_t length = LENGTH;
-    bool result = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, Constants::CODE_LANGUAGE_1_1, offset, length);
+    bool result = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, Constants::ARKTS_MODE_DYNAMIC, offset, length);
     EXPECT_FALSE(result);
     hapPath = HAP_PATH;
-    result = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, Constants::CODE_LANGUAGE_1_1, offset, length);
+    result = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, Constants::ARKTS_MODE_DYNAMIC, offset, length);
     EXPECT_FALSE(result);
 }
 
@@ -1415,8 +1415,8 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_2100, Function | SmallTest | Level0)
  */
 HWTEST_F(BmsAOTMgrTest, AOTExecutor_2200, Function | SmallTest | Level0)
 {
-    EXPECT_EQ(AOTExecutor::GetInstance().GetAbcRelativePath(Constants::CODE_LANGUAGE_1_1), ABC_RELATIVE_PATH);
-    EXPECT_EQ(AOTExecutor::GetInstance().GetAbcRelativePath(Constants::CODE_LANGUAGE_1_2), STATIC_ABC_RELATIVE_PATH);
+    EXPECT_EQ(AOTExecutor::GetInstance().GetAbcRelativePath(Constants::ARKTS_MODE_DYNAMIC), ABC_RELATIVE_PATH);
+    EXPECT_EQ(AOTExecutor::GetInstance().GetAbcRelativePath(Constants::ARKTS_MODE_STATIC), STATIC_ABC_RELATIVE_PATH);
     EXPECT_EQ(AOTExecutor::GetInstance().GetAbcRelativePath(Constants::EMPTY_STRING), Constants::EMPTY_STRING);
 }
 

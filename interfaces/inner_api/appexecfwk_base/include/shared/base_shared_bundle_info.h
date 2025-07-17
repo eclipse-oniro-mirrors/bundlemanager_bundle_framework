@@ -31,7 +31,7 @@ struct BaseSharedBundleInfo : public Parcelable {
     std::string moduleName;
     std::string nativeLibraryPath;
     std::string hapPath;
-    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     std::vector<std::string> nativeLibraryFileNames;
 
     bool ReadFromParcel(Parcel &parcel);

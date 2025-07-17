@@ -100,19 +100,19 @@ bool AOTExecutor::CheckArgs(const AOTArgs &aotArgs) const
     return true;
 }
 
-std::string AOTExecutor::GetAbcRelativePath(const std::string &codeLanguage) const
+std::string AOTExecutor::GetAbcRelativePath(const std::string &moduleArkTSMode) const
 {
-    if (codeLanguage == Constants::CODE_LANGUAGE_1_1) {
+    if (moduleArkTSMode == Constants::ARKTS_MODE_DYNAMIC) {
         return ABC_RELATIVE_PATH;
     }
-    if (codeLanguage == Constants::CODE_LANGUAGE_1_2 || codeLanguage == Constants::CODE_LANGUAGE_HYBRID) {
+    if (moduleArkTSMode == Constants::ARKTS_MODE_STATIC || moduleArkTSMode == Constants::ARKTS_MODE_HYBRID) {
         return STATIC_ABC_RELATIVE_PATH;
     }
-    APP_LOGW("invalid codeLanguage : %{public}s", codeLanguage.c_str());
+    APP_LOGW("invalid moduleArkTSMode : %{public}s", moduleArkTSMode.c_str());
     return Constants::EMPTY_STRING;
 }
 
-bool AOTExecutor::GetAbcFileInfo(const std::string &hapPath, const std::string &codeLanguage,
+bool AOTExecutor::GetAbcFileInfo(const std::string &hapPath, const std::string &moduleArkTSMode,
     uint32_t &offset, uint32_t &length) const
 {
     BundleExtractor extractor(hapPath);
@@ -120,7 +120,7 @@ bool AOTExecutor::GetAbcFileInfo(const std::string &hapPath, const std::string &
         APP_LOGE("init BundleExtractor failed");
         return false;
     }
-    std::string abcRelativePath = GetAbcRelativePath(codeLanguage);
+    std::string abcRelativePath = GetAbcRelativePath(moduleArkTSMode);
     if (abcRelativePath.empty()) {
         APP_LOGE("abcRelativePath empty");
         return false;
@@ -146,14 +146,14 @@ ErrCode AOTExecutor::PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) 
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     completeArgs = aotArgs;
-    if (!GetAbcFileInfo(completeArgs.hapPath, completeArgs.codeLanguage,
+    if (!GetAbcFileInfo(completeArgs.hapPath, completeArgs.moduleArkTSMode,
         completeArgs.offset, completeArgs.length)) {
         APP_LOGE("GetAbcFileInfo failed");
         return ERR_APPEXECFWK_INSTALLD_AOT_ABC_NOT_EXIST;
     }
     // handle hsp
     for (auto &hspInfo : completeArgs.hspVector) {
-        (void)GetAbcFileInfo(hspInfo.hapPath, hspInfo.codeLanguage, hspInfo.offset, hspInfo.length);
+        (void)GetAbcFileInfo(hspInfo.hapPath, hspInfo.moduleArkTSMode, hspInfo.offset, hspInfo.length);
     }
     APP_LOGD("PrepareArgs success");
     return ERR_OK;
@@ -169,7 +169,7 @@ nlohmann::json AOTExecutor::GetSubjectInfo(const AOTArgs &aotArgs) const
     subject[BUNDLE_NAME] = aotArgs.bundleName;
     subject[MODULE_NAME] = aotArgs.moduleName;
     subject[PKG_PATH] = aotArgs.hapPath;
-    subject[ABC_NAME] = GetAbcRelativePath(aotArgs.codeLanguage);
+    subject[ABC_NAME] = GetAbcRelativePath(aotArgs.moduleArkTSMode);
     subject[ABC_OFFSET] = DecToHex(aotArgs.offset);
     subject[ABC_SIZE] = DecToHex(aotArgs.length);
     subject[PROCESS_UID] = DecToHex(currentProcessUid);
@@ -206,8 +206,8 @@ void AOTExecutor::MapHapArgs(const AOTArgs &aotArgs, std::unordered_map<std::str
         object[BUNDLE_NAME] = hspInfo.bundleName;
         object[MODULE_NAME] = hspInfo.moduleName;
         object[PKG_PATH] = hspInfo.hapPath;
-        object[ABC_NAME] = GetAbcRelativePath(hspInfo.codeLanguage);
-        object[Constants::CODE_LANGUAGE] = hspInfo.codeLanguage;
+        object[ABC_NAME] = GetAbcRelativePath(hspInfo.moduleArkTSMode);
+        object[Constants::MODULE_ARKTS_MODE] = hspInfo.moduleArkTSMode;
         object[ABC_OFFSET] = DecToHex(hspInfo.offset);
         object[ABC_SIZE] = DecToHex(hspInfo.length);
         objectArray.push_back(object);
@@ -219,13 +219,14 @@ void AOTExecutor::MapHapArgs(const AOTArgs &aotArgs, std::unordered_map<std::str
     argsMap.emplace("compiler-opt-bc-range", aotArgs.optBCRangeList);
     argsMap.emplace("compiler-device-state", std::to_string(aotArgs.isScreenOff));
     argsMap.emplace("compiler-baseline-pgo", std::to_string(aotArgs.isEnableBaselinePgo));
-    std::string abcPath = aotArgs.hapPath + ServiceConstants::PATH_SEPARATOR + GetAbcRelativePath(aotArgs.codeLanguage);
+    std::string abcPath =
+        aotArgs.hapPath + ServiceConstants::PATH_SEPARATOR + GetAbcRelativePath(aotArgs.moduleArkTSMode);
     argsMap.emplace(ABC_PATH, abcPath);
     argsMap.emplace("BundleUid", std::to_string(aotArgs.bundleUid));
     argsMap.emplace("BundleGid", std::to_string(aotArgs.bundleGid));
     argsMap.emplace(AN_FILE_NAME, aotArgs.anFileName);
     argsMap.emplace("appIdentifier", aotArgs.appIdentifier);
-    argsMap.emplace(Constants::CODE_LANGUAGE, aotArgs.codeLanguage);
+    argsMap.emplace(Constants::MODULE_ARKTS_MODE, aotArgs.moduleArkTSMode);
     argsMap.emplace(IS_SYS_COMP, IS_SYS_COMP_FALSE);
 
     for (const auto &arg : argsMap) {
