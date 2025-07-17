@@ -169,7 +169,6 @@ const nlohmann::json CONFIG_JSON = R"(
                         },
                         "sceneAnimationParams": {
                             "abilityName": "GameLoaderExtensionAbility",
-                            "isAlwaysActive": false,
                             "disabledDesktopBehaviors": "PULL_DOWN_SEARCH|LONG_CLICK"
                         }
                         }

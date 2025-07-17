@@ -51,7 +51,6 @@ struct FormFunInteractionParams {
 
 struct FormSceneAnimationParams {
     std::string abilityName;
-    bool isAlwaysActive = false;
     std::string disabledDesktopBehaviors;
 };
 
