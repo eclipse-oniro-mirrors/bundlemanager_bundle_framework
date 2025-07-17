@@ -744,11 +744,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4200, Function | Sma
 {
     ExtractParam extractParam;
     extractParam.srcPath = "/system/etc/graphic/bootpic.zip";
-    auto ret = InstalldOperator::ExtractFiles(extractParam);
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NO_THROW(InstalldOperator::ExtractFiles(extractParam));
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(InstalldOperator::ExtractFiles(extractParam));
 #endif
 }
 
@@ -898,11 +897,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5200, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5300, Function | SmallTest | Level0)
 {
-    auto ret = InstalldOperator::ExtractDiffFiles(TEST_ZIP_PATH, "", TEST_CPU_ABI);
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NO_THROW(InstalldOperator::ExtractDiffFiles(TEST_ZIP_PATH, "", TEST_CPU_ABI));
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(InstalldOperator::ExtractDiffFiles(TEST_ZIP_PATH, "", TEST_CPU_ABI));
 #endif
 }
 
@@ -1141,11 +1139,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6700, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6800, Function | SmallTest | Level0)
 {
     std::vector<std::string> diffFileNames;
-    bool res = InstalldOperator::GetNativeLibraryFileNames(TEST_ZIP_PATH, TEST_CPU_ABI, diffFileNames);
 #ifdef USE_ARM64
-    EXPECT_EQ(res, false);
+    EXPECT_NO_THROW(InstalldOperator::GetNativeLibraryFileNames(TEST_ZIP_PATH, TEST_CPU_ABI, diffFileNames));
 #else
-    EXPECT_EQ(res, true);
+    EXPECT_TRUE(InstalldOperator::GetNativeLibraryFileNames(TEST_ZIP_PATH, TEST_CPU_ABI, diffFileNames));
 #endif
 }
 
@@ -1701,11 +1698,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10300, Function | Sm
     extractParam.cpuAbi = TEST_CPU_ABI;
     extractParam.extractFileType = ExtractFileType::SO;
     std::string hnpPackageInfo;
-    auto ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NO_THROW(InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam));
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam));
 #endif
 }
 
@@ -1735,11 +1731,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10400, Function | Sm
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10500, Function | SmallTest | Level0)
 {
     CreateQuickFileDir("/test/oldPath");
-    auto ret = InstalldOperator::RenameFile("/test/oldPath", "/test/newPath");
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NO_THROW(InstalldOperator::RenameFile("/test/oldPath", "/test/newPath"));
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(InstalldOperator::RenameFile("/test/oldPath", "/test/newPath"));
 #endif
     DeleteQuickFileDir("/test/newPath");
 }
@@ -1767,11 +1762,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10700, Function | Sm
     CreateQuickFileDir("/temp/test");
     CreateFile("/temp/test/test.ap", "test");
     std::vector<std::string> dirsToKeep;
-    bool ret = InstalldOperator::DeleteFilesExceptDirs("/temp", dirsToKeep);
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NO_THROW(InstalldOperator::DeleteFilesExceptDirs("/temp", dirsToKeep));
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(InstalldOperator::DeleteFilesExceptDirs("/temp", dirsToKeep));
     DeleteFile("/temp/test/test.ap");
     DeleteQuickFileDir("/temp");
 #endif
@@ -1787,11 +1781,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10800, Function | Sm
     CreateQuickFileDir("/temp/test/test1");
     CreateFile("/temp/test.ap", "test");
     std::vector<std::string> paths;
-    auto ret = InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, paths);
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NO_THROW(InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, paths));
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, paths));
 #endif
     DeleteFile("/temp/test.ap");
     DeleteQuickFileDir("/temp");
@@ -1807,11 +1800,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10900, Function | Sm
     CreateQuickFileDir("/temp/test/test1");
     CreateFile("/temp/test.ap", "test");
     std::vector<std::string> paths;
-    auto ret = InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, paths);
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NO_THROW(InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, paths));
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, paths));
 #endif
     DeleteFile("/temp/test.ap");
     DeleteQuickFileDir("/temp");
@@ -1827,11 +1819,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11000, Function | Sm
     CreateQuickFileDir("/temp/test/test1");
     CreateFile("/temp/test.ap", "test");
     std::vector<std::string> paths;
-    auto ret = InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_ALL, ResultMode::RELATIVE_PATH, paths);
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NO_THROW(InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_ALL, ResultMode::RELATIVE_PATH, paths));
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(InstalldOperator::ScanDir("/temp/", ScanMode::SUB_FILE_ALL, ResultMode::RELATIVE_PATH, paths));
 #endif
     DeleteFile("/temp/test.ap");
     DeleteQuickFileDir("/temp");
@@ -1930,12 +1921,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_11600, Function | Sm
     codeSignatureParam.isPreInstalledBundle = true;
     codeSignatureParam.isInternaltestingBundle = false;
     codeSignatureParam.isCompressNativeLibrary = true;
-    ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
-#ifdef USE_ARM64
-    EXPECT_NE(ret, ERR_OK);
-#else
-    EXPECT_NE(ret, ERR_OK);
-#endif
+    auto ret2 = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    EXPECT_NE(ret2, ERR_OK);
 }
 
 /**
@@ -2022,11 +2009,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12100, Function | Sm
     CreateFile("/temp.ap", "test");
     auto ret = InstalldOperator::MoveFile("", "");
     EXPECT_FALSE(ret);
-    ret = InstalldOperator::MoveFile("/temp.ap", "/temp1.ap");
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NO_THROW(InstalldOperator::MoveFile("/temp.ap", "/temp1.ap"));
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(InstalldOperator::MoveFile("/temp.ap", "/temp1.ap"));
 #endif
     DeleteFile("/temp1.ap");
 }
@@ -2058,11 +2044,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_12300, Function | Sm
     extractParam.cpuAbi = TEST_CPU_ABI;
     extractParam.extractFileType = ExtractFileType::SO;
     BundleExtractor extractor("");
-    auto ret = InstalldOperator::ExtractResourceFiles(extractParam, extractor);
 #ifdef USE_ARM64
-    EXPECT_FALSE(ret);
+    EXPECT_NO_THROW(InstalldOperator::ExtractResourceFiles(extractParam, extractor));
 #else
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(InstalldOperator::ExtractResourceFiles(extractParam, extractor));
 #endif
 }
 

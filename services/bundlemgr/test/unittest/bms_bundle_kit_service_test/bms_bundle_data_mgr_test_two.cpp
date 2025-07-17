@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -69,7 +69,6 @@ namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
 const std::string MODULE_NAME_TEST = "com.example.bundlekit.test.entry";
-const std::string MODULE_NAME_TEST1 = "com.example.bundlekit.test.entry1";
 const std::string ABILITY_NAME_TEST = ".Reading";
 const std::string BUNDLE_TEST1 = "bundleName1";
 const std::string BUNDLE_TEST2 = "bundleName2";
