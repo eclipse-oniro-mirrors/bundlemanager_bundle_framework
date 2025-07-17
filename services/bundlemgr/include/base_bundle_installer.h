@@ -857,6 +857,7 @@ private:
         const InstallParam &installParam, int32_t &uid);
     void PrintStartWindowIconId(const InnerBundleInfo &info);
     bool ProcessExtProfile(const InstallParam &installParam);
+    void SetHybridSpawn();
     bool IsBundleCrossAppSharedConfig(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode ProcessDynamicIconFileWhenUpdate(const InnerBundleInfo &oldInfo, const std::string &oldPath,
         const std::string &newPath);
