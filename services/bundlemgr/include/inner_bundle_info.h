@@ -2183,6 +2183,7 @@ public:
     void UpdateArkNativeAttrs(const ApplicationInfo &applicationInfo);
     bool IsLibIsolated(const std::string &moduleName) const;
     std::vector<std::string> GetDeviceType(const std::string &packageName) const;
+    std::map<std::string, std::vector<std::string>> GetRequiredDeviceFeatures(const std::string &packageName) const;
     int64_t GetLastInstallationTime() const;
     void UpdateAppDetailAbilityAttrs();
     bool IsHideDesktopIcon() const;

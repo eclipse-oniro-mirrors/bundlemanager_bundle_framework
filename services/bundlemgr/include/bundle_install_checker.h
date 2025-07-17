@@ -163,6 +163,10 @@ public:
 
     ErrCode CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
+    bool IsSubSet(const std::vector<std::string> &mainSet, const std::vector<std::string> &subSet) const;
+
+    ErrCode CheckRequiredDeviceFeatures(std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+
     AppProvisionInfo ConvertToAppProvisionInfo(const Security::Verify::ProvisionInfo &provisionInfo) const;
 
     ErrCode CheckProxyDatas(const InnerBundleInfo &info) const;
