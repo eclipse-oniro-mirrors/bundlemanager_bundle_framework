@@ -1506,7 +1506,6 @@ void BmsBundleKitServiceTest::CheckShortcutInfoTest(std::vector<ShortcutInfo> &s
 void BmsBundleKitServiceTest::CheckCommonEventInfoTest(std::vector<CommonEventInfo> &commonEventInfos) const
 {
     for (const auto &commonEventInfo : commonEventInfos) {
-
         EXPECT_EQ(commonEventInfo.name, COMMON_EVENT_NAME);
         EXPECT_EQ(commonEventInfo.bundleName, BUNDLE_NAME_TEST);
         EXPECT_EQ(commonEventInfo.permission, COMMON_EVENT_PERMISSION);
@@ -14607,7 +14606,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAbilityInfoByName_2000, Function | SmallTes
     PluginBundleInfo pluginBundleInfo;
     AbilityInfo info;
     info.name = "abilityName1";
-    pluginBundleInfo.abilityInfos.emplace("abilityName1", info);   
+    pluginBundleInfo.abilityInfos.emplace("abilityName1", info);
     const std::string moduleName = "";
     const std::string abilityName = "abilityName1";
     bool result = pluginBundleInfo.GetAbilityInfoByName(abilityName, moduleName, info);
@@ -14625,7 +14624,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAbilityInfoByName_3000, Function | SmallTes
     AbilityInfo info;
     info.name = "abilityName1";
     info.moduleName = "moduleName1";
-    pluginBundleInfo.abilityInfos.emplace("abilityName1", info);   
+    pluginBundleInfo.abilityInfos.emplace("abilityName1", info);
     const std::string moduleName = "moduleName1";
     const std::string abilityName = "abilityName1";
     bool result = pluginBundleInfo.GetAbilityInfoByName(abilityName, moduleName, info);
@@ -14676,7 +14675,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetHapModuleInfo_3000, Function | SmallTest | 
     AbilityInfo info;
     info.name = "abilityName";
     info.moduleName = "moduleName";
-    pluginBundleInfo.abilityInfos.emplace("abilityName.moduleName.", info);  
+    pluginBundleInfo.abilityInfos.emplace("abilityName.moduleName.", info);
     HapModuleInfo hapInfo;
     bool result = pluginBundleInfo.GetHapModuleInfo("moduleName", hapInfo);
     EXPECT_TRUE(result);
