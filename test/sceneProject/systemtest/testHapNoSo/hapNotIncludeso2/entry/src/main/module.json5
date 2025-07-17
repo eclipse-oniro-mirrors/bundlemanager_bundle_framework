@@ -1,13 +1,27 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {
     "module": {
         "abilities": [
             {
                 "description": "$string:MainAbility_desc",
-                "descriptionId": 16777218,
                 "icon": "$media:icon",
-                "iconId": 16777221,
                 "label": "$string:MainAbility_label",
-                "labelId": 16777219,
+                "startWindowIcon": "$media:startIcon",
+                "startWindowBackground": "$color:start_window_background",
                 "name": "MainAbility",
                 "skills": [
                     {
@@ -25,7 +39,6 @@
         ],
         "deliveryWithInstall": true,
         "description": "$string:entry_desc",
-        "descriptionId": 16777220,
         "deviceTypes": [
             "2in1",
             "tablet",
@@ -35,7 +48,6 @@
         "mainElement": "MainAbility",
         "name": "entry_A",
         "pages": "$profile:main_pages",
-        "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "feature",
         "virtualMachine": "ark",
         "compressNativeLibs": true,
