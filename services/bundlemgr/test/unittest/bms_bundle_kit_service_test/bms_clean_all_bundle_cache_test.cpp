@@ -516,7 +516,6 @@ FormInfo BmsCleanAllBundleCacheTest::MockFormInfo(
     formInfo.funInteractionParams.subBundleName = FORM_SUB_BUNDLE_NAME;
     formInfo.funInteractionParams.keepStateDuration = FORM_KEEP_STATE_DURATION;
     formInfo.sceneAnimationParams.abilityName = FORM_ABILITY_NAME;
-    formInfo.sceneAnimationParams.isAlwaysActive = false;
     formInfo.sceneAnimationParams.disabledDesktopBehaviors = FORM_DISABLED_DESKTOP_BEHAVIORS;
     return formInfo;
 }
