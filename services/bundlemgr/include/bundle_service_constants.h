@@ -184,6 +184,7 @@ constexpr const char* BMS_DATA_PRELOAD = "persist.bms.data.preload";
 constexpr const char* IS_SUPPORT_PLUGIN = "const.bms.support_plugin";
 constexpr const char* IS_DRIVER_FOR_ALL_USERS = "const.bms.driverForAllUsers";
 constexpr const char* ARK_WHITE_LIST = "persist.ark.enable.static.runtime.whitelist";
+constexpr const char* HYBRID_SPAWN_ENABLE = "persist.hybridspawn.enable";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config
