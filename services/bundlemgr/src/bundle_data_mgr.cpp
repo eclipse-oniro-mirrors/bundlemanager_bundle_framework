@@ -2005,7 +2005,9 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         APP_LOGD("bundleName %{public}s exist mainAbility", info.GetBundleName().c_str());
         info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
             responseUserId, mainAbilityInfo.applicationInfo);
-        if (mainAbilityInfo.applicationInfo.removable && info.IsNeedSendNotify()) {
+        BmsExtensionDataMgr bmsExtensionDataMgr;
+        if (mainAbilityInfo.applicationInfo.removable &&
+            !bmsExtensionDataMgr.IsTargetApp(info.GetBundleName(), info.GetAppIdentifier())) {
             mainAbilityInfo.applicationInfo.removable = info.GetUninstallState();
         }
         mainAbilityInfo.installTime = installTime;

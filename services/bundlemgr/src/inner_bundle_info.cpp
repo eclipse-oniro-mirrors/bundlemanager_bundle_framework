@@ -2573,6 +2573,11 @@ void InnerBundleInfo::ProcessBundleFlags(
             GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId,
                 bundleInfo.applicationInfo, appIndex);
         }
+        BmsExtensionDataMgr bmsExtensionDataMgr;
+        if (bundleInfo.applicationInfo.removable &&
+            !bmsExtensionDataMgr.IsTargetApp(GetBundleName(), GetAppIdentifier())) {
+            bundleInfo.applicationInfo.removable = GetUninstallState();
+        }
     }
     bundleInfo.applicationInfo.appIndex = appIndex;
     GetBundleWithReqPermissionsV9(flags, userId, bundleInfo, appIndex);
