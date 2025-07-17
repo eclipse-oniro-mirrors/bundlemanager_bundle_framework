@@ -1158,8 +1158,8 @@ ani_object CommonFunAni::ConvertResource(ani_env* env, const Resource& resource)
     RETURN_NULL_IF_FALSE(StringToAniStr(env, resource.moduleName, string));
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
 
-    // id: number
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ID, static_cast<ani_double>(resource.id)));
+    // id: long
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ID, resource.id));
 
     return object;
 }
