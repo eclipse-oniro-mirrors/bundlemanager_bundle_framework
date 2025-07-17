@@ -553,8 +553,8 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
 {
     int32_t size = 0;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, data, size);
-    if (size > MAX_BATCH_QUERY_BUNDLE_SIZE) {
-        LOG_E(BMS_TAG_INSTALLD, "size too large");
+    if (size < 0 || size > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "size out of range");
         return false;
     }
     std::vector<std::string> bundleNames;
