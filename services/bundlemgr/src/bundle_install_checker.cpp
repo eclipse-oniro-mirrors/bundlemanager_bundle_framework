@@ -61,6 +61,7 @@ constexpr const char* VALUE_FALSE = "false";
 constexpr const char* NONISOLATION_ONLY = "nonisolationOnly";
 constexpr const char* ISOLATION_ONLY = "isolationOnly";
 constexpr const char* SUPPORT_APP_TYPES = "const.bms.supportAppTypes";
+constexpr const char* PROVIDED_DEVICE_FEATURES = "const.product.providedDeviceFeatures";
 constexpr const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
 constexpr int8_t SLAH_OFFSET = 2;
 constexpr int8_t THRESHOLD_VAL_LEN = 40;
@@ -1475,6 +1476,47 @@ ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, In
 
         if (find(devVec.begin(), devVec.end(), deviceType) == devVec.end()) {
             LOG_NOFUNC_E(BMS_TAG_INSTALLER, "%{public}s is not supported", deviceType.c_str());
+            return CheckRequiredDeviceFeatures(infos);
+        }
+    }
+    return ERR_OK;
+}
+
+bool BundleInstallChecker::IsSubSet(
+    const std::vector<std::string> &mainSet, const std::vector<std::string> &subSet) const
+{
+    for (std::string item : subSet) {
+        if (std::find(mainSet.begin(), mainSet.end(), item) == mainSet.end()) {
+            LOG_NOFUNC_D(BMS_TAG_INSTALLER, "not SubSet: %{public}s", item.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
+ErrCode BundleInstallChecker::CheckRequiredDeviceFeatures(
+    std::unordered_map<std::string, InnerBundleInfo> &infos) const
+{
+    std::string providedDeviceFeaturesValue = OHOS::system::GetParameter(PROVIDED_DEVICE_FEATURES, "");
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "providedDeviceFeatures: %{public}s", providedDeviceFeaturesValue.c_str());
+    if (providedDeviceFeaturesValue.empty()) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "providedDeviceFeatures empty");
+        return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
+    }
+    std::vector<std::string> providedDeviceFeatures;
+    OHOS::SplitStr(providedDeviceFeaturesValue, SUPPORT_APP_TYPES_SEPARATOR, providedDeviceFeatures);
+
+    std::string deviceType = GetDeviceType();
+    LOG_D(BMS_TAG_INSTALLER, "deviceType is %{public}s", deviceType.c_str());
+    for (const auto &info : infos) {
+        auto requiredDeviceFeatures = info.second.GetRequiredDeviceFeatures(info.second.GetCurrentModulePackage());
+        auto it = requiredDeviceFeatures.find(deviceType);
+        if (it == requiredDeviceFeatures.end()) {
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "requiredDeviceFeatures not support: %{public}s", deviceType.c_str());
+            return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
+        }
+        if (!IsSubSet(providedDeviceFeatures, it->second)) {
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "requiredDeviceFeatures not in provided");
             return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
         }
     }
