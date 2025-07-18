@@ -34,8 +34,6 @@ constexpr size_t ARGS_POS_FOUR = 4;
 constexpr size_t NAPI_RETURN_ONE = 1;
 constexpr size_t CALLBACK_PARAM_SIZE = 2;
 
-constexpr int32_t GET_REMOTE_ABILITY_INFO_MAX_SIZE = 10;
-
 constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
 constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
 constexpr int32_t EMPTY_USER_ID = -500;
@@ -280,11 +278,6 @@ constexpr const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
 constexpr const char* RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
 constexpr const char* TYPE_CHECK = "type";
 constexpr const char* WANT_CHECK = "want";
-
-// distributed_bundle_manager
-constexpr const char* RESOURCE_NAME_GET_REMOTE_ABILITY_INFO = "GetRemoteAbilityInfo";
-constexpr const char* PARAMETER_ELEMENT_NAME = "elementName";
-constexpr const char* PARAMETER_LOCALE = "locale";
 }
 }
 }
