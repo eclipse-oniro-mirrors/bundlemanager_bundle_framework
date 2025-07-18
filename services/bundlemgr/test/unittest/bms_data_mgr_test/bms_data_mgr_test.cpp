@@ -2425,8 +2425,8 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionInfos_0100, Function | SmallTest | Level
     int32_t appIndex = 0;
     dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), true);
-    ExtensionAbilityInfo extensionAbilityInfo;
-    info.InsertExtensionInfo("", extensionAbilityInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    info.InsertExtensionInfo("", innerExtensionInfo);
     dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), false);
     flags = 1;
@@ -2451,8 +2451,8 @@ HWTEST_F(BmsDataMgrTest, GetOneExtensionInfosByExtensionTypeName_0100, Function 
     std::string typeName = "";
     dataMgr->GetOneExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), true);
-    ExtensionAbilityInfo extensionAbilityInfo;
-    info.InsertExtensionInfo("", extensionAbilityInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    info.InsertExtensionInfo("", innerExtensionInfo);
     dataMgr->GetOneExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), false);
     flags = 1;
@@ -4225,9 +4225,9 @@ HWTEST_F(BmsDataMgrTest, GetExtensionAbilityInfoByTypeName_0001, TestSize.Level1
     bundleDataMgr.AddInnerBundleInfo(bundleName, info);
     bundleDataMgr.GetExtensionAbilityInfoByTypeName(flags, userId, infos, typeName);
 
-    ExtensionAbilityInfo extensionInfo;
-    extensionInfo.name = "test_extensionInfo";
-    info.InsertExtensionInfo("test_key", extensionInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.name = "test_innerExtensionInfo";
+    info.InsertExtensionInfo("test_key", innerExtensionInfo);
     bundleDataMgr.GetExtensionAbilityInfoByTypeName(flags, userId, infos, typeName);
     EXPECT_FALSE(bundleDataMgr.bundleInfos_.empty());
 }
@@ -6019,9 +6019,9 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionBundleNames_0002, Function | MediumTest 
 {
     // Create test data
     InnerBundleInfo info;
-    ExtensionAbilityInfo extensionInfo;
-    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
-    info.InsertExtensionInfo("test.extension", extensionInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    info.InsertExtensionInfo("test.extension", innerExtensionInfo);
     std::shared_lock<std::shared_mutex> lock(dataMgr_->bundleInfoMutex_);
     dataMgr_->bundleInfos_.emplace("test.bundle", info);
     std::vector<ExtensionAbilityType> types = {

@@ -1712,9 +1712,9 @@ HWTEST_F(BmsBundleManagerTest3, GetBundleNamesForNewUser_0200, Function | SmallT
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     InnerBundleInfo info;
-    ExtensionAbilityInfo abilityInfo;
-    abilityInfo.type = ExtensionAbilityType::DRIVER;
-    info.InsertExtensionInfo("key", abilityInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    info.InsertExtensionInfo("key", innerExtensionInfo);
     dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
     std::vector<std::string> ret = dataMgr->GetBundleNamesForNewUser();
     EXPECT_EQ(ret.size(), 1);

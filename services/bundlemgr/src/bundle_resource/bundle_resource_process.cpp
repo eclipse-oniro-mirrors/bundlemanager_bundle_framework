@@ -519,7 +519,7 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
     for (const auto &item : abilityInfos) {
         resourceInfos.emplace_back(ConvertToLauncherAbilityResourceInfo(item.second));
     }
-    std::map<std::string, ExtensionAbilityInfo> extensionAbilityInfos = innerBundleInfo.GetInnerExtensionInfos();
+    std::map<std::string, InnerExtensionInfo> extensionAbilityInfos = innerBundleInfo.GetInnerExtensionInfos();
     for (const auto &item : extensionAbilityInfos) {
         if (item.second.type != ExtensionAbilityType::INPUTMETHOD &&
             item.second.type != ExtensionAbilityType::SHARE &&
@@ -527,7 +527,8 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
             APP_LOGD("skip extension type %{public}d", item.second.type);
             continue;
         }
-        resourceInfos.emplace_back(ConvertToExtensionAbilityResourceInfo(item.second));
+        ExtensionAbilityInfo extensionInfo = InnerExtensionInfo::ConvertToExtensionInfo(item.second);
+        resourceInfos.emplace_back(ConvertToExtensionAbilityResourceInfo(extensionInfo));
     }
     // process overlay hap paths
     size_t size = resourceInfos.size();

@@ -1852,16 +1852,16 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0081, Function | SmallTest
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0082, Function | SmallTest | Level0)
 {
     InnerBundleInfo innerBundleInfo;
-    ExtensionAbilityInfo extensionAbilityInfo;
+    InnerExtensionInfo innerExtensionInfo;
 
-    extensionAbilityInfo.type = ExtensionAbilityType::INPUTMETHOD;
-    innerBundleInfo.baseExtensionInfos_.emplace("inputmethod_key", extensionAbilityInfo);
-    extensionAbilityInfo.type = ExtensionAbilityType::SHARE;
-    innerBundleInfo.baseExtensionInfos_.emplace("share_key", extensionAbilityInfo);
-    extensionAbilityInfo.type = ExtensionAbilityType::ACTION;
-    innerBundleInfo.baseExtensionInfos_.emplace("action_key", extensionAbilityInfo);
-    extensionAbilityInfo.type = ExtensionAbilityType::DRIVER;
-    innerBundleInfo.baseExtensionInfos_.emplace("driver_key", extensionAbilityInfo);
+    innerExtensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    innerBundleInfo.baseExtensionInfos_.emplace("inputmethod_key", innerExtensionInfo);
+    innerExtensionInfo.type = ExtensionAbilityType::SHARE;
+    innerBundleInfo.baseExtensionInfos_.emplace("share_key", innerExtensionInfo);
+    innerExtensionInfo.type = ExtensionAbilityType::ACTION;
+    innerBundleInfo.baseExtensionInfos_.emplace("action_key", innerExtensionInfo);
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    innerBundleInfo.baseExtensionInfos_.emplace("driver_key", innerExtensionInfo);
 
     ApplicationInfo applicationInfo;
     applicationInfo.bundleName = BUNDLE_NAME;

@@ -309,7 +309,7 @@ public:
     void MockUninstallBundle(const std::string &bundleName) const;
     AbilityInfo MockAbilityInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
-    ExtensionAbilityInfo MockExtensionInfo(
+    InnerExtensionInfo MockExtensionInfo(
         const std::string &bundleName, const std::string &module, const std::string &extensionName) const;
     InnerModuleInfo MockModuleInfo(const std::string &moduleName) const;
     FormInfo MockFormInfo(
@@ -732,11 +732,11 @@ void BmsBundleKitServiceTest::MockInstallExtension(const std::string &bundleName
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + extensionName;
     std::string keyName02 = bundleName + "." + moduleName + "." + extensionName + "02";
-    ExtensionAbilityInfo extensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
-    ExtensionAbilityInfo extensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
+    InnerExtensionInfo innerExtensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
+    InnerExtensionInfo innerExtensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertExtensionInfo(keyName, extensionInfo);
-    innerBundleInfo.InsertExtensionInfo(keyName02, extensionInfo02);
+    innerBundleInfo.InsertExtensionInfo(keyName, innerExtensionInfo);
+    innerBundleInfo.InsertExtensionInfo(keyName02, innerExtensionInfo02);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
@@ -754,11 +754,11 @@ void BmsBundleKitServiceTest::MockInstallExtensionWithUri(const std::string &bun
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + extensionName;
     std::string keyName02 = bundleName + "." + moduleName + "." + extensionName + "02";
-    ExtensionAbilityInfo extensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
-    ExtensionAbilityInfo extensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
+    InnerExtensionInfo innerExtensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
+    InnerExtensionInfo innerExtensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertExtensionInfo(keyName, extensionInfo);
-    innerBundleInfo.InsertExtensionInfo(keyName02, extensionInfo02);
+    innerBundleInfo.InsertExtensionInfo(keyName, innerExtensionInfo);
+    innerBundleInfo.InsertExtensionInfo(keyName02, innerExtensionInfo02);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill = MockExtensionSkillInfo();
     std::vector<Skill> skills;
@@ -1063,10 +1063,10 @@ AbilityInfo BmsBundleKitServiceTest::MockAbilityInfo(
     return abilityInfo;
 }
 
-ExtensionAbilityInfo BmsBundleKitServiceTest::MockExtensionInfo(
+InnerExtensionInfo BmsBundleKitServiceTest::MockExtensionInfo(
     const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const
 {
-    ExtensionAbilityInfo extensionInfo;
+    InnerExtensionInfo extensionInfo;
     extensionInfo.name = extensionName;
     extensionInfo.bundleName = bundleName;
     extensionInfo.moduleName = moduleName;

@@ -1826,25 +1826,25 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6700, Function | SmallTest | 
 {
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     InnerBundleInfo info;
-    ExtensionAbilityInfo extensionAbilityInfo;
-    extensionAbilityInfo.moduleName = MODULE_NAME_FEATURE6;
-    info.baseExtensionInfos_.emplace("1", extensionAbilityInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.moduleName = MODULE_NAME_FEATURE6;
+    info.baseExtensionInfos_.emplace("1", innerExtensionInfo);
     driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE10, false);
 
-    info.baseExtensionInfos_.emplace("2", extensionAbilityInfo);
+    info.baseExtensionInfos_.emplace("2", innerExtensionInfo);
     driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE6, false);
     driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
 
-    extensionAbilityInfo.moduleName = EMPTY_STRING;
-    info.baseExtensionInfos_.emplace("3", extensionAbilityInfo);
+    innerExtensionInfo.moduleName = EMPTY_STRING;
+    info.baseExtensionInfos_.emplace("3", innerExtensionInfo);
     driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
 
-    extensionAbilityInfo.type = ExtensionAbilityType::DRIVER;
-    info.baseExtensionInfos_.emplace("4", extensionAbilityInfo);
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    info.baseExtensionInfos_.emplace("4", innerExtensionInfo);
     driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
 
-    extensionAbilityInfo.moduleName = MODULE_NAME_FEATURE6;
-    info.baseExtensionInfos_.emplace("5", extensionAbilityInfo);
+    innerExtensionInfo.moduleName = MODULE_NAME_FEATURE6;
+    info.baseExtensionInfos_.emplace("5", innerExtensionInfo);
     driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE10, false);
     driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE6, false);
     driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
@@ -1871,32 +1871,32 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6800, Function | SmallTest | 
 {
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     InnerBundleInfo info;
-    ExtensionAbilityInfo extensionAbilityInfo;
-    extensionAbilityInfo.moduleName = MODULE_NAME_FEATURE6;
-    extensionAbilityInfo.type = ExtensionAbilityType::DRIVER;
-    info.baseExtensionInfos_.emplace("1", extensionAbilityInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.moduleName = MODULE_NAME_FEATURE6;
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    info.baseExtensionInfos_.emplace("1", innerExtensionInfo);
     driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE10, false);
     driverInstaller->RenameDriverFile(info);
 
     Metadata metadata;
     metadata.name = "file";
-    extensionAbilityInfo.metadata.push_back(metadata);
-    info.baseExtensionInfos_.emplace("2", extensionAbilityInfo);
+    innerExtensionInfo.metadata.push_back(metadata);
+    info.baseExtensionInfos_.emplace("2", innerExtensionInfo);
     driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE6, false);
     driverInstaller->RenameDriverFile(info);
 
     metadata.name = "cupsFilter";
     metadata.resource = "/";
-    extensionAbilityInfo.metadata.push_back(metadata);
-    info.baseExtensionInfos_.emplace("3", extensionAbilityInfo);
+    innerExtensionInfo.metadata.push_back(metadata);
+    info.baseExtensionInfos_.emplace("3", innerExtensionInfo);
     driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
     driverInstaller->RenameDriverFile(info);
 
     metadata.name = "cupsFilter";
     metadata.resource = "../test";
-    extensionAbilityInfo.metadata.push_back(metadata);
-    extensionAbilityInfo.moduleName = EMPTY_STRING;
-    info.baseExtensionInfos_.emplace("4", extensionAbilityInfo);
+    innerExtensionInfo.metadata.push_back(metadata);
+    innerExtensionInfo.moduleName = EMPTY_STRING;
+    info.baseExtensionInfos_.emplace("4", innerExtensionInfo);
     driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
     driverInstaller->RenameDriverFile(info);
 
@@ -1993,16 +1993,16 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7200, Function | SmallTest | 
 {
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     InnerBundleInfo info;
-    ExtensionAbilityInfo extensionAbilityInfo;
-    extensionAbilityInfo.type = ExtensionAbilityType::DRIVER;
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
     Metadata metadata;
     metadata.name = "cupsFilter";
     metadata.resource = "./";
     metadata.value = "./";
-    extensionAbilityInfo.metadata.push_back(metadata);
-    extensionAbilityInfo.moduleName = MODULE_NAME_FEATURE6;
+    innerExtensionInfo.metadata.push_back(metadata);
+    innerExtensionInfo.moduleName = MODULE_NAME_FEATURE6;
 
-    info.baseExtensionInfos_.insert(std::make_pair("1", extensionAbilityInfo));
+    info.baseExtensionInfos_.insert(std::make_pair("1", innerExtensionInfo));
     auto res = driverInstaller->CopyDriverSoFile(info, RESOURCE_ROOT_PATH, false);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
 }

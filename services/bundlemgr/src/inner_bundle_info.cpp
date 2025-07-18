@@ -27,6 +27,7 @@
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
+#include "common_json_converter.h"
 #include "free_install_params.h"
 #include "installd_client.h"
 
@@ -176,6 +177,16 @@ const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t user
     return bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
 }
 }  // namespace
+
+void from_json(const nlohmann::json &jsonObject, InnerExtensionInfo &extensionInfo)
+{
+    ExtensionFromJson(jsonObject, extensionInfo);
+}
+
+void to_json(nlohmann::json &jsonObject, const InnerExtensionInfo &extensionInfo)
+{
+    ExtensionToJson(jsonObject, extensionInfo);
+}
 
 void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResourceInfo)
 {
@@ -1418,7 +1429,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         isNewVersion_,
         false,
         parseResult);
-    GetValueIfFindKey<std::map<std::string, ExtensionAbilityInfo>>(jsonObject,
+    GetValueIfFindKey<std::map<std::string, InnerExtensionInfo>>(jsonObject,
         jsonObjectEnd,
         BUNDLE_BASE_EXTENSION_INFOS,
         baseExtensionInfos_,
@@ -1621,7 +1632,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     key.append(".").append(modulePackage).append(".");
     for (const auto &extension : baseExtensionInfos_) {
         if ((extension.first.find(key) != std::string::npos) && (extension.second.moduleName == hapInfo.moduleName)) {
-            hapInfo.extensionInfos.emplace_back(extension.second);
+            hapInfo.extensionInfos.emplace_back(InnerExtensionInfo::ConvertToExtensionInfo(extension.second));
         }
     }
     hapInfo.metadata = it->second.metadata;
@@ -1773,25 +1784,11 @@ std::optional<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfo(
     for (const auto &extension : baseExtensionInfos_) {
         if ((extension.second.name == extensionName) &&
             (moduleName.empty() || (extension.second.moduleName == moduleName))) {
-            return extension.second;
+            return InnerExtensionInfo::ConvertToExtensionInfo(extension.second);
         }
     }
 
     return std::nullopt;
-}
-
-std::optional<std::vector<ExtensionAbilityInfo>> InnerBundleInfo::FindExtensionInfos() const
-{
-    std::vector<ExtensionAbilityInfo> extensions;
-    for (const auto &extension : baseExtensionInfos_) {
-        extensions.emplace_back(extension.second);
-    }
-
-    if (extensions.empty()) {
-        return std::nullopt;
-    }
-
-    return extensions;
 }
 
 bool InnerBundleInfo::AddModuleInfo(const InnerBundleInfo &newInfo)
@@ -2731,7 +2728,7 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(
         if (extensionInfo.second.moduleName != hapModuleInfo.moduleName || !extensionInfo.second.enabled) {
             continue;
         }
-        ExtensionAbilityInfo info = extensionInfo.second;
+        ExtensionAbilityInfo info = InnerExtensionInfo::ConvertToExtensionInfo(extensionInfo.second);
         info.appIndex = appIndex;
 
         if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
@@ -2780,7 +2777,7 @@ void InnerBundleInfo::GetBundleWithExtension(
             if (!extensionInfo.second.enabled) {
                 continue;
             }
-            ExtensionAbilityInfo info = extensionInfo.second;
+            ExtensionAbilityInfo info = InnerExtensionInfo::ConvertToExtensionInfo(extensionInfo.second);
             if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_SKILL) != GET_BUNDLE_WITH_SKILL) {
                 info.skills.clear();
             }

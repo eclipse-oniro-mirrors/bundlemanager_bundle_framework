@@ -2445,7 +2445,7 @@ void ToAbilitySkills(const std::vector<Skill> &skills, AbilityInfo &abilityInfo)
     }
 }
 
-void ToExtensionAbilitySkills(const std::vector<Skill> &skills, ExtensionAbilityInfo &extensionInfo)
+void ToExtensionAbilitySkills(const std::vector<Skill> &skills, InnerExtensionInfo &extensionInfo)
 {
     for (const Skill &skill : skills) {
         extensionInfo.skills.push_back(skill);
@@ -2456,9 +2456,9 @@ void ToExtensionInfo(
     const Profile::ModuleJson &moduleJson,
     const Profile::Extension &extension,
     const TransformParam &transformParam,
-    ExtensionAbilityInfo &extensionInfo)
+    InnerExtensionInfo &extensionInfo)
 {
-    APP_LOGD("transform ModuleJson to ExtensionAbilityInfo");
+    APP_LOGD("transform ModuleJson to InnerExtensionInfo");
     extensionInfo.type = ConvertToExtensionAbilityType(extension.type);
     extensionInfo.extensionTypeName = extension.type;
     extensionInfo.name = extension.name;
@@ -2749,7 +2749,7 @@ bool ToInnerBundleInfo(
 
     // handle extensionAbilities
     for (const Profile::Extension &extension : moduleJson.module.extensionAbilities) {
-        ExtensionAbilityInfo extensionInfo;
+        InnerExtensionInfo extensionInfo;
         ToExtensionInfo(moduleJson, extension, transformParam, extensionInfo);
 
         if (innerModuleInfo.mainAbility == extensionInfo.name) {
