@@ -271,7 +271,7 @@ bool BundlePermissionMgr::GetRequestPermissionStates(
     }
     for (auto &req : requestPermission) {
         auto iter = std::find_if(allPermissionState.begin(), allPermissionState.end(),
-            [&req](const auto &perm) {
+            [req](const auto &perm) {
                 return perm.permissionName == req;
             });
         if (iter != allPermissionState.end()) {
