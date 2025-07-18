@@ -1169,6 +1169,7 @@ public:
     void UpdateDesktopShortcutInfo(const std::string &bundleName);
     ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo);
+    bool SetBundleUserInfoRemovable(const std::string bundleName, int32_t userId, bool removable);
 
 private:
     /**
