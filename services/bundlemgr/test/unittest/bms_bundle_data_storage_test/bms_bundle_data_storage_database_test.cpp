@@ -854,7 +854,7 @@ protected:
                     "applicationName": "com.ohos.launcher",
                     "backgroundModes": 0,
                     "bundleName": "com.ohos.launcher",
-                    "codeLanguage": "1.1",
+                    "arkTSMode": "dynamic",
                     "codePath": "",
                     "compileMode": 0,
                     "configChanges": [
@@ -1111,7 +1111,7 @@ protected:
                 "asanLogPath": "",
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
-                "codeLanguage": "1.1",
+                "arkTSMode": "dynamic",
                 "codePath": "/data/app/el1/bundle/public/com.ohos.launcher",
                 "compileSdkType":"OpenHarmony",
                 "compileSdkVersion":"",
@@ -5097,25 +5097,25 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0002, Function 
 }
 
 /**
- * @tc.number: GetModuleCodeLanguage_0001
- * @tc.name: test GetModuleCodeLanguage
- * @tc.desc: 1. test GetModuleCodeLanguage of InnerBundleInfo
+ * @tc.number: GetModuleArkTSMode_0001
+ * @tc.name: test GetModuleArkTSMode
+ * @tc.desc: 1. test GetModuleArkTSMode of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, GetModuleCodeLanguage_0001, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetModuleArkTSMode_0001, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
 
     for (int32_t i = 0; i < INFO_COUNT; ++i) {
         InnerModuleInfo innerModuleInfo;
-        innerModuleInfo.codeLanguage = i % 3 == 0 ? Constants::CODE_LANGUAGE_1_2 : Constants::CODE_LANGUAGE_1_1;
+        innerModuleInfo.moduleArkTSMode = i % 3 == 0 ? Constants::ARKTS_MODE_STATIC : Constants::ARKTS_MODE_DYNAMIC;
         innerBundleInfo.innerModuleInfos_.insert(std::make_pair(std::to_string(i), innerModuleInfo));
     }
 
-    std::string result = innerBundleInfo.GetModuleCodeLanguage(std::to_string(INFO_COUNT));
+    std::string result = innerBundleInfo.GetModuleArkTSMode(std::to_string(INFO_COUNT));
     EXPECT_EQ(result, Constants::EMPTY_STRING);
     for (int32_t i = 0; i < INFO_COUNT; ++i) {
-        result = innerBundleInfo.GetModuleCodeLanguage(std::to_string(i));
-        EXPECT_EQ(result, i % 3 == 0 ? Constants::CODE_LANGUAGE_1_2 : Constants::CODE_LANGUAGE_1_1);
+        result = innerBundleInfo.GetModuleArkTSMode(std::to_string(i));
+        EXPECT_EQ(result, i % 3 == 0 ? Constants::ARKTS_MODE_STATIC : Constants::ARKTS_MODE_DYNAMIC);
     }
 }
 
@@ -5146,69 +5146,69 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13200, Function | Sma
 }
 
 /**
- * @tc.number: GetApplicationCodeLanguage_0001
- * @tc.name: test GetApplicationCodeLanguage
- * @tc.desc: 1. test GetApplicationCodeLanguage of InnerBundleInfo on empty innerModuleInfos_
+ * @tc.number: GetApplicationArkTSMode_0001
+ * @tc.name: test GetApplicationArkTSMode
+ * @tc.desc: 1. test GetApplicationArkTSMode of InnerBundleInfo on empty innerModuleInfos_
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationCodeLanguage_0001, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationArkTSMode_0001, Function | SmallTest | Level1)
 
 {
     InnerBundleInfo innerBundleInfo;
-    EXPECT_EQ(innerBundleInfo.GetApplicationCodeLanguage(), Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(innerBundleInfo.GetApplicationArkTSMode(), Constants::ARKTS_MODE_DYNAMIC);
 }
 
 /**
- * @tc.number: GetApplicationCodeLanguage_0002
- * @tc.name: test GetApplicationCodeLanguage
- * @tc.desc: 1. test GetApplicationCodeLanguage of InnerBundleInfo
+ * @tc.number: GetApplicationArkTSMode_0002
+ * @tc.name: test GetApplicationArkTSMode
+ * @tc.desc: 1. test GetApplicationArkTSMode of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationCodeLanguage_0002, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationArkTSMode_0002, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
 
     for (int32_t i = 0; i < INFO_COUNT; ++i) {
         InnerModuleInfo innerModuleInfo;
-        innerModuleInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+        innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
         innerBundleInfo.innerModuleInfos_.insert(std::make_pair(std::to_string(i), innerModuleInfo));
     }
 
-    EXPECT_EQ(innerBundleInfo.GetApplicationCodeLanguage(), Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(innerBundleInfo.GetApplicationArkTSMode(), Constants::ARKTS_MODE_DYNAMIC);
 }
 
 /**
- * @tc.number: GetApplicationCodeLanguage_0003
- * @tc.name: test GetApplicationCodeLanguage
- * @tc.desc: 1. test GetApplicationCodeLanguage of InnerBundleInfo
+ * @tc.number: GetApplicationArkTSMode_0003
+ * @tc.name: test GetApplicationArkTSMode
+ * @tc.desc: 1. test GetApplicationArkTSMode of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationCodeLanguage_0003, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationArkTSMode_0003, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
 
     for (int32_t i = 0; i < INFO_COUNT; ++i) {
         InnerModuleInfo innerModuleInfo;
-        innerModuleInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+        innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
         innerBundleInfo.innerModuleInfos_.insert(std::make_pair(std::to_string(i), innerModuleInfo));
     }
 
-    EXPECT_EQ(innerBundleInfo.GetApplicationCodeLanguage(), Constants::CODE_LANGUAGE_1_2);
+    EXPECT_EQ(innerBundleInfo.GetApplicationArkTSMode(), Constants::ARKTS_MODE_STATIC);
 }
 
 /**
- * @tc.number: GetApplicationCodeLanguage_0004
- * @tc.name: test GetApplicationCodeLanguage
- * @tc.desc: 1. test GetApplicationCodeLanguage of InnerBundleInfo
+ * @tc.number: GetApplicationArkTSMode_0004
+ * @tc.name: test GetApplicationArkTSMode
+ * @tc.desc: 1. test GetApplicationArkTSMode of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationCodeLanguage_0004, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetApplicationArkTSMode_0004, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
 
     for (int32_t i = 0; i < INFO_COUNT; ++i) {
         InnerModuleInfo innerModuleInfo;
-        innerModuleInfo.codeLanguage = i % 3 == 0 ? Constants::CODE_LANGUAGE_1_2 : Constants::CODE_LANGUAGE_1_1;
+        innerModuleInfo.moduleArkTSMode = i % 3 == 0 ? Constants::ARKTS_MODE_STATIC : Constants::ARKTS_MODE_DYNAMIC;
         innerBundleInfo.innerModuleInfos_.insert(std::make_pair(std::to_string(i), innerModuleInfo));
     }
 
-    EXPECT_EQ(innerBundleInfo.GetApplicationCodeLanguage(), Constants::CODE_LANGUAGE_HYBRID);
+    EXPECT_EQ(innerBundleInfo.GetApplicationArkTSMode(), Constants::ARKTS_MODE_HYBRID);
 }
 
 /**
@@ -5221,17 +5221,17 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfo_0001, Function | SmallTes
     AbilityInfo sourceInfo;
     nlohmann::json jsonObject = sourceInfo;
     AbilityInfo fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(fromJsonInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     jsonObject = sourceInfo;
     fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(fromJsonInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_STATIC;
     jsonObject = sourceInfo;
     fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+    EXPECT_EQ(fromJsonInfo.arkTSMode, Constants::ARKTS_MODE_STATIC);
 }
 
 /**
@@ -5248,21 +5248,21 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfo_0002, Function | SmallTes
     AbilityInfo targetInfo;
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
     
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     ret = sourceInfo.Marshalling(parcel);
     EXPECT_EQ(ret, true);
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_STATIC;
     ret = sourceInfo.Marshalling(parcel);
     EXPECT_EQ(ret, true);
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_STATIC);
 }
 
 /**
@@ -5275,17 +5275,17 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ExtensionAbilityInfo_0001, Function |
     ExtensionAbilityInfo sourceInfo;
     nlohmann::json jsonObject = sourceInfo;
     ExtensionAbilityInfo fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(fromJsonInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     jsonObject = sourceInfo;
     fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(fromJsonInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_STATIC;
     jsonObject = sourceInfo;
     fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+    EXPECT_EQ(fromJsonInfo.arkTSMode, Constants::ARKTS_MODE_STATIC);
 }
 
 /**
@@ -5302,21 +5302,21 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ExtensionAbilityInfo_0002, Function |
     ExtensionAbilityInfo targetInfo;
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
     
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     ret = sourceInfo.Marshalling(parcel);
     EXPECT_EQ(ret, true);
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_STATIC;
     ret = sourceInfo.Marshalling(parcel);
     EXPECT_EQ(ret, true);
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_STATIC);
 }
 
 /**
@@ -5329,21 +5329,21 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, HapModuleInfo_0001, Function | SmallT
     HapModuleInfo sourceInfo;
     nlohmann::json jsonObject = sourceInfo;
     HapModuleInfo fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(fromJsonInfo.moduleArkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
-    sourceInfo.abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
+    sourceInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     jsonObject = sourceInfo;
     fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
-    EXPECT_EQ(fromJsonInfo.abilityStageCodeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(fromJsonInfo.moduleArkTSMode, Constants::ARKTS_MODE_DYNAMIC);
+    EXPECT_EQ(fromJsonInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
-    sourceInfo.abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_2;
+    sourceInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_STATIC;
     jsonObject = sourceInfo;
     fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
-    EXPECT_EQ(fromJsonInfo.abilityStageCodeLanguage, Constants::CODE_LANGUAGE_1_2);
+    EXPECT_EQ(fromJsonInfo.moduleArkTSMode, Constants::ARKTS_MODE_STATIC);
+    EXPECT_EQ(fromJsonInfo.arkTSMode, Constants::ARKTS_MODE_STATIC);
 }
 
 /**
@@ -5360,26 +5360,26 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, HapModuleInfo_0002, Function | SmallT
     HapModuleInfo targetInfo;
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
-    EXPECT_EQ(targetInfo.abilityStageCodeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(targetInfo.moduleArkTSMode, Constants::ARKTS_MODE_DYNAMIC);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
     
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
-    sourceInfo.abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_2;
+    sourceInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_STATIC;
     ret = sourceInfo.Marshalling(parcel);
     EXPECT_EQ(ret, true);
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
-    EXPECT_EQ(targetInfo.abilityStageCodeLanguage, Constants::CODE_LANGUAGE_1_2);
+    EXPECT_EQ(targetInfo.moduleArkTSMode, Constants::ARKTS_MODE_DYNAMIC);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_STATIC);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
-    sourceInfo.abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
+    sourceInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     ret = sourceInfo.Marshalling(parcel);
     EXPECT_EQ(ret, true);
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
-    EXPECT_EQ(targetInfo.abilityStageCodeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(targetInfo.moduleArkTSMode, Constants::ARKTS_MODE_STATIC);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 }
 
 /**
@@ -5392,17 +5392,17 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfo_0001, Function | Smal
     ApplicationInfo sourceInfo;
     nlohmann::json jsonObject = sourceInfo;
     ApplicationInfo fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::EMPTY_STRING);
+    EXPECT_EQ(fromJsonInfo.arkTSMode, Constants::EMPTY_STRING);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     jsonObject = sourceInfo;
     fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(fromJsonInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_STATIC;
     jsonObject = sourceInfo;
     fromJsonInfo = jsonObject;
-    EXPECT_EQ(fromJsonInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+    EXPECT_EQ(fromJsonInfo.arkTSMode, Constants::ARKTS_MODE_STATIC);
 }
 
 /**
@@ -5419,20 +5419,20 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfo_0002, Function | Smal
     ApplicationInfo targetInfo;
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::EMPTY_STRING);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::EMPTY_STRING);
     
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     ret = sourceInfo.Marshalling(parcel);
     EXPECT_EQ(ret, true);
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_1);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 
-    sourceInfo.codeLanguage = Constants::CODE_LANGUAGE_1_2;
+    sourceInfo.arkTSMode = Constants::ARKTS_MODE_STATIC;
     ret = sourceInfo.Marshalling(parcel);
     EXPECT_EQ(ret, true);
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(targetInfo.codeLanguage, Constants::CODE_LANGUAGE_1_2);
+    EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_STATIC);
 }
 } // OHOS

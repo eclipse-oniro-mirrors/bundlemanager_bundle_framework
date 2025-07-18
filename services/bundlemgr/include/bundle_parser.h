@@ -24,6 +24,7 @@
 #include "appexecfwk_errors.h"
 #include "default_permission.h"
 #include "inner_bundle_info.h"
+#include "module_test_runner.h"
 #include "pre_scan_info.h"
 
 namespace OHOS {
@@ -132,6 +133,8 @@ public:
      */
     static ErrCode ParseArkStartupCacheConfig(const std::string &configFile,
         std::unordered_set<std::string> &bundleNames);
+
+    ErrCode ParseTestRunner(const std::string &hapPath, ModuleTestRunner &testRunner) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

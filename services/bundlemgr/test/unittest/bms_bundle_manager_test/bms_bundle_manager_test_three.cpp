@@ -39,6 +39,7 @@
 #include "inner_bundle_info.h"
 #include "mime_type_mgr.h"
 #include "mock_status_receiver.h"
+#include "module_test_runner.h"
 #include "parameters.h"
 #include "preinstall_data_storage_rdb.h"
 #include "scope_guard.h"
@@ -2025,5 +2026,23 @@ HWTEST_F(BmsBundleManagerTest3, SetAppDistributionTypes_0001, Function | MediumT
     
     retCode = hostImpl->SetAppDistributionTypes(appDistributionTypeEnums);
     EXPECT_EQ(retCode, ERR_OK);
+}
+
+/**
+* @tc.number: GetTestRunner_0100
+* @tc.name: GetTestRunner_0100
+* @tc.desc: test GetTestRunner
+*/
+HWTEST_F(BmsBundleManagerTest3, GetTestRunner_0100, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    ModuleTestRunner testRunner;
+    ErrCode ret = GetBundleDataMgr()->GetTestRunner(BUNDLE_BACKUP_NAME, MODULE_NAME, testRunner);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 } // OHOS

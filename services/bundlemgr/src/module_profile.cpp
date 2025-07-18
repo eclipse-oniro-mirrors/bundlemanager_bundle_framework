@@ -209,7 +209,7 @@ struct Ability {
     std::vector<std::string> continueType;
     std::vector<std::string> continueBundleNames;
     std::string process;
-    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
 };
 
 struct Extension {
@@ -235,12 +235,18 @@ struct Extension {
     std::string extensionProcessMode;
     std::vector<std::string> dataGroupIds;
     std::string customProcess;
-    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
 };
 
 struct MultiAppMode {
     std::string multiAppModeType;
     int32_t maxCount = 0;
+};
+
+struct TestRunner {
+    std::string name;
+    std::string srcPath;
+    std::string arkTSMode;
 };
 
 struct App {
@@ -333,14 +339,42 @@ struct Module {
     std::string appStartup;
     std::string formExtensionModule;
     std::string formWidgetModule;
-    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
-    std::string abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
 };
 
 struct ModuleJson {
     App app;
     Module module;
 };
+
+void from_json(const nlohmann::json &jsonObject, TestRunner &testRunner)
+{
+    APP_LOGD("read testRunnerfrom module.json");
+    int32_t parseResult = ERR_OK;
+    const auto &jsonObjectEnd = jsonObject.end();
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        TEST_RUNNER_NAME,
+        testRunner.name,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        TEST_RUNNER_SRC_PATH,
+        testRunner.srcPath,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        TEST_RUNNER_ARKTS_MODE,
+        testRunner.arkTSMode,
+        false,
+        parseResult);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read testRunner error %{public}d", parseResult);
+    }
+}
 
 void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
 {
@@ -689,8 +723,8 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        Constants::CODE_LANGUAGE,
-        ability.codeLanguage,
+        Constants::ARKTS_MODE,
+        ability.arkTSMode,
         false,
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
@@ -882,8 +916,8 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        Constants::CODE_LANGUAGE,
-        extension.codeLanguage,
+        Constants::ARKTS_MODE,
+        extension.arkTSMode,
         false,
         g_parseResult);
 }
@@ -1672,14 +1706,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        Constants::CODE_LANGUAGE,
-        module.codeLanguage,
+        Constants::MODULE_ARKTS_MODE,
+        module.moduleArkTSMode,
         false,
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        Constants::ABILITY_STAGE_CODE_LANGUAGE,
-        module.abilityStageCodeLanguage,
+        Constants::ARKTS_MODE,
+        module.arkTSMode,
         false,
         g_parseResult);
 }
@@ -2424,7 +2458,7 @@ bool ToAbilityInfo(
     }
     abilityInfo.orientationId = ability.orientationId;
     abilityInfo.process = ability.process;
-    abilityInfo.codeLanguage = ability.codeLanguage;
+    abilityInfo.arkTSMode = ability.arkTSMode;
     APP_LOGI("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d", abilityInfo.bundleName.c_str(),
         abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(), abilityInfo.startWindowIconId);
     return true;
@@ -2488,7 +2522,7 @@ void ToExtensionInfo(
         extensionInfo.dataGroupIds.emplace_back(dataGroup);
     }
     extensionInfo.customProcess = extension.customProcess;
-    extensionInfo.codeLanguage = extension.codeLanguage;
+    extensionInfo.arkTSMode = extension.arkTSMode;
 }
 
 bool GetPermissions(
@@ -2609,8 +2643,8 @@ bool ToInnerModuleInfo(
     innerModuleInfo.appStartup = moduleJson.module.appStartup;
     innerModuleInfo.formExtensionModule = moduleJson.module.formExtensionModule;
     innerModuleInfo.formWidgetModule = moduleJson.module.formWidgetModule;
-    innerModuleInfo.codeLanguage = moduleJson.module.codeLanguage;
-    innerModuleInfo.abilityStageCodeLanguage = moduleJson.module.abilityStageCodeLanguage;
+    innerModuleInfo.moduleArkTSMode = moduleJson.module.moduleArkTSMode;
+    innerModuleInfo.arkTSMode = moduleJson.module.arkTSMode;
     innerModuleInfo.debug = moduleJson.app.debug;
     innerModuleInfo.abilitySrcEntryDelegator = moduleJson.module.abilitySrcEntryDelegator;
     innerModuleInfo.abilityStageSrcEntryDelegator = moduleJson.module.abilityStageSrcEntryDelegator;
@@ -2917,6 +2951,51 @@ ErrCode ModuleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_AN_FAILED;
 #endif
         APP_LOGW("Parser ark native file failed");
+    }
+    return ERR_OK;
+}
+
+ErrCode ModuleProfile::TransformToTestRunner(
+    const std::ostringstream &source,
+    ModuleTestRunner &moduleTestRunner) const
+{
+    APP_LOGD("transform module.json stream to TestRunner");
+    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
+    if (jsonObject.is_discarded()) {
+        APP_LOGE("bad profile");
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+    if (!jsonObject.contains(Profile::MODULE)) {
+        APP_LOGE("TransformToTestRunner failed due to bad module.json");
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+    nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
+    if (!moduleJson.contains(Profile::TEST_RUNNER)) {
+        APP_LOGE("module.json not have testRunner");
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+    nlohmann::json testRunnerObj = moduleJson.at(Profile::TEST_RUNNER);
+    if (!testRunnerObj.is_object()) {
+        APP_LOGE("testRunnerObj is not object");
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+    if (testRunnerObj.contains(Profile::TEST_RUNNER_NAME)) {
+        if (testRunnerObj.at(Profile::TEST_RUNNER_NAME).is_string()) {
+            moduleTestRunner.name = testRunnerObj.at(Profile::TEST_RUNNER_NAME);
+        }
+        APP_LOGW("name is not string");
+    }
+    if (testRunnerObj.contains(Profile::TEST_RUNNER_SRC_PATH)) {
+        if (testRunnerObj.at(Profile::TEST_RUNNER_SRC_PATH).is_string()) {
+            moduleTestRunner.srcPath = testRunnerObj.at(Profile::TEST_RUNNER_SRC_PATH);
+        }
+        APP_LOGW("srcPath is not string");
+    }
+    if (testRunnerObj.contains(Profile::TEST_RUNNER_ARKTS_MODE)) {
+        if (testRunnerObj.at(Profile::TEST_RUNNER_ARKTS_MODE).is_string()) {
+            moduleTestRunner.arkTSMode = testRunnerObj.at(Profile::TEST_RUNNER_ARKTS_MODE);
+        }
+        APP_LOGW("arkTSMode is not string");
     }
     return ERR_OK;
 }

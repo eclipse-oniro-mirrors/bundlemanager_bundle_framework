@@ -38,6 +38,12 @@ public:
      * @return Returns true if the file is successfully extracted; returns false otherwise.
      */
     bool ExtractPackFile(std::ostream &dest) const;
+    /**
+     * @brief Extract the module.json of a hap to dest stream.
+     * @param dest Indicates the obtained std::ostream object.
+     * @return Returns true if the Profile is successfully extracted; returns false otherwise.
+     */
+    bool ExtractModuleProfile(std::ostream &dest) const;
 };
 
 class BundleParallelExtractor : public BundleExtractor {

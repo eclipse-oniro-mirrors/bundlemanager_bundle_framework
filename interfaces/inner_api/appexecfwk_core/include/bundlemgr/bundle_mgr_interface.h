@@ -46,6 +46,7 @@
 #include "distributed_bundle_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
+#include "module_test_runner.h"
 #include "permission_define.h"
 #include "preinstalled_application_info.h"
 #include "process_cache_callback_interface.h"
@@ -1824,6 +1825,12 @@ public:
     }
 
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName,
+        ModuleTestRunner &testRunner)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

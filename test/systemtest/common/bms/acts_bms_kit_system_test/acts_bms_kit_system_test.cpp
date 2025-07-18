@@ -10719,5 +10719,45 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0001, Function | MediumTest
     EXPECT_EQ(ret, ERR_OK);
     std::cout << "END GetAllBundleCacheStat_0001" << std::endl;
 }
+
+/**
+ * @tc.number: GetTestRunner_0001
+ * @tc.name: test GetTestRunner interface
+ * @tc.desc: 1. call GetTestRunner
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetTestRunner_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetTestRunner_0001" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        ModuleTestRunner testRunner;
+        std::string bundleName;
+        std::string moduleName = "moduleName";
+        ErrCode ret =bundleMgrProxy->GetTestRunner(bundleName, moduleName, testRunner);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    }
+    std::cout << "END GetTestRunner_0001" << std::endl;
+}
+
+/**
+ * @tc.number: GetTestRunner_0002
+ * @tc.name: test GetTestRunner interface
+ * @tc.desc: 1. call GetTestRunner
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetTestRunner_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START GetTestRunner_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        ModuleTestRunner testRunner;
+        std::string bundleName = "bundleName";
+        std::string moduleName;
+        ErrCode ret =bundleMgrProxy->GetTestRunner(bundleName, moduleName, testRunner);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    }
+    std::cout << "END GetTestRunner_0002" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

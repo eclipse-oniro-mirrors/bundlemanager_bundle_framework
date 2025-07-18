@@ -132,8 +132,8 @@ struct InnerModuleInfo {
     std::string crossAppSharedConfig;
     std::string abilitySrcEntryDelegator;
     std::string abilityStageSrcEntryDelegator;
-    std::string codeLanguage = Constants::CODE_LANGUAGE_1_1;
-    std::string abilityStageCodeLanguage = Constants::CODE_LANGUAGE_1_1;
+    std::string moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     Distro distro;
     // all user's value of isRemovable
     // key:userId
@@ -2319,7 +2319,7 @@ public:
         const InnerModuleInfo &moduleInfo) const;
     void CheckSoEncryption(const CheckEncryptionParam &checkEncryptionParam, const std::string &requestPackage,
         const InnerModuleInfo &moduleInfo) const;
-    std::string GetModuleCodeLanguage(const std::string &moduleName) const;
+    std::string GetModuleArkTSMode(const std::string &moduleName) const;
 
     void SetMultiAppMode(MultiAppModeData multiAppMode)
     {
@@ -2338,7 +2338,7 @@ public:
     bool UpdatePluginBundleInfo(const PluginBundleInfo &pluginBundleInfo);
     bool RemovePluginFromUserInfo(const std::string &pluginBundleName, const int32_t userId);
     void GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos) const;
-    std::string GetApplicationCodeLanguage() const;
+    std::string GetApplicationArkTSMode() const;
 
 private:
     bool IsExistLauncherAbility() const;

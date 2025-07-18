@@ -270,7 +270,7 @@ void InnerBundleInfo::GetInternalDependentHspInfo(
         hspInfo.bundleName = baseApplicationInfo_->bundleName;
         hspInfo.moduleName = item->second.moduleName;
         hspInfo.hapPath = item->second.hapPath;
-        hspInfo.codeLanguage = item->second.codeLanguage;
+        hspInfo.moduleArkTSMode = item->second.moduleArkTSMode;
         hspInfoVector.emplace_back(hspInfo);
     }
 }
@@ -392,8 +392,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_METADATA, info.metaData},
         {MODULE_COLOR_MODE, info.colorMode},
         {MODULE_DISTRO, info.distro},
-        {Constants::CODE_LANGUAGE, info.codeLanguage},
-        {Constants::ABILITY_STAGE_CODE_LANGUAGE, info.abilityStageCodeLanguage},
+        {Constants::MODULE_ARKTS_MODE, info.moduleArkTSMode},
+        {Constants::ARKTS_MODE, info.arkTSMode},
         {MODULE_DESCRIPTION, info.description},
         {MODULE_DESCRIPTION_ID, info.descriptionId},
         {MODULE_ICON, info.icon},
@@ -599,14 +599,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        Constants::CODE_LANGUAGE,
-        info.codeLanguage,
+        Constants::MODULE_ARKTS_MODE,
+        info.moduleArkTSMode,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        Constants::ABILITY_STAGE_CODE_LANGUAGE,
-        info.abilityStageCodeLanguage,
+        Constants::ARKTS_MODE,
+        info.arkTSMode,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
@@ -1664,8 +1664,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.crossAppSharedConfig = it->second.crossAppSharedConfig;
     hapInfo.abilitySrcEntryDelegator = it->second.abilitySrcEntryDelegator;
     hapInfo.abilityStageSrcEntryDelegator = it->second.abilityStageSrcEntryDelegator;
-    hapInfo.codeLanguage = it->second.codeLanguage;
-    hapInfo.abilityStageCodeLanguage = it->second.abilityStageCodeLanguage;
+    hapInfo.moduleArkTSMode = it->second.moduleArkTSMode;
+    hapInfo.arkTSMode = it->second.arkTSMode;
     return hapInfo;
 }
 
@@ -2072,7 +2072,7 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
     baseSharedBundleInfo.versionCode = innerModuleInfo.versionCode;
     baseSharedBundleInfo.nativeLibraryPath = innerModuleInfo.nativeLibraryPath;
     baseSharedBundleInfo.hapPath = innerModuleInfo.hapPath;
-    baseSharedBundleInfo.codeLanguage = innerModuleInfo.codeLanguage;
+    baseSharedBundleInfo.moduleArkTSMode = innerModuleInfo.moduleArkTSMode;
     baseSharedBundleInfo.compressNativeLibs = innerModuleInfo.compressNativeLibs;
     baseSharedBundleInfo.nativeLibraryFileNames = innerModuleInfo.nativeLibraryFileNames;
     return true;
@@ -2102,7 +2102,7 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
             baseSharedBundleInfo.versionCode = item.versionCode;
             baseSharedBundleInfo.nativeLibraryPath = item.nativeLibraryPath;
             baseSharedBundleInfo.hapPath = item.hapPath;
-            baseSharedBundleInfo.codeLanguage = item.codeLanguage;
+            baseSharedBundleInfo.moduleArkTSMode = item.moduleArkTSMode;
             baseSharedBundleInfo.compressNativeLibs = item.compressNativeLibs;
             baseSharedBundleInfo.nativeLibraryFileNames = item.nativeLibraryFileNames;
             return true;
@@ -2330,7 +2330,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
     appInfo = *baseApplicationInfo_;
-    appInfo.codeLanguage = GetApplicationCodeLanguage();
+    appInfo.arkTSMode = GetApplicationArkTSMode();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return;
     }
@@ -2392,7 +2392,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
-    appInfo.codeLanguage = GetApplicationCodeLanguage();
+    appInfo.arkTSMode = GetApplicationArkTSMode();
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -2554,7 +2554,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo)
     bundleInfo = *baseBundleInfo_;
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, Constants::ALL_USERID);
     bundleInfo.applicationInfo = *baseApplicationInfo_;
-    bundleInfo.applicationInfo.codeLanguage = GetApplicationCodeLanguage();
+    bundleInfo.applicationInfo.arkTSMode = GetApplicationArkTSMode();
     return true;
 }
 
@@ -4122,7 +4122,8 @@ void InnerBundleInfo::UpdateSharedModuleInfo()
     for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end(); ++iter) {
         if (iter->versionCode == moduleInfoIter->second.versionCode) {
             iter->hapPath = moduleInfoIter->second.hapPath;
-            iter->codeLanguage = moduleInfoIter->second.codeLanguage;
+            iter->arkTSMode = moduleInfoIter->second.arkTSMode;
+            iter->moduleArkTSMode = moduleInfoIter->second.moduleArkTSMode;
             iter->compressNativeLibs = moduleInfoIter->second.compressNativeLibs;
             iter->cpuAbi = moduleInfoIter->second.cpuAbi;
             iter->nativeLibraryPath = moduleInfoIter->second.nativeLibraryPath;
@@ -4223,7 +4224,7 @@ ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
     }
     bundleInfo = *baseBundleInfo_;
     bundleInfo.applicationInfo = *baseApplicationInfo_;
-    bundleInfo.applicationInfo.codeLanguage = GetApplicationCodeLanguage();
+    bundleInfo.applicationInfo.arkTSMode = GetApplicationArkTSMode();
     for (const auto &info : innerModuleInfos_) {
         if (info.second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
             auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, Constants::ALL_USERID);
@@ -5042,7 +5043,7 @@ bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
         baseApplicationInfo_->nativeLibraryPath;
     pluginBundleInfo.abilityInfos.insert(baseAbilityInfos_.begin(), baseAbilityInfos_.end());
     pluginBundleInfo.appInfo = *baseApplicationInfo_;
-    pluginBundleInfo.appInfo.codeLanguage = GetApplicationCodeLanguage();
+    pluginBundleInfo.appInfo.arkTSMode = GetApplicationArkTSMode();
     for (const auto &info : innerModuleInfos_) {
         PluginModuleInfo pluginModuleInfo;
         pluginModuleInfo.moduleName = info.second.name;
@@ -5257,37 +5258,37 @@ bool InnerBundleInfo::SetInnerModuleAtomicResizeable(const std::string &moduleNa
     return true;
 }
 
-std::string InnerBundleInfo::GetApplicationCodeLanguage() const
+std::string InnerBundleInfo::GetApplicationArkTSMode() const
 {
-    size_t language1_1_cnt = 0;
-    size_t language1_2_cnt = 0;
+    size_t dynamicCnt = 0;
+    size_t staticCnt = 0;
     for (const auto& [moduleName, innerModuleInfo] : innerModuleInfos_) {
-        if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_1) {
-            language1_1_cnt++;
+        if (innerModuleInfo.moduleArkTSMode == Constants::ARKTS_MODE_DYNAMIC) {
+            dynamicCnt++;
         }
-        if (innerModuleInfo.codeLanguage == Constants::CODE_LANGUAGE_1_2) {
-            language1_2_cnt++;
+        if (innerModuleInfo.moduleArkTSMode == Constants::ARKTS_MODE_STATIC) {
+            staticCnt++;
         }
     }
 
     size_t moduleSize = innerModuleInfos_.size();
-    if (language1_1_cnt == moduleSize) {
-        return Constants::CODE_LANGUAGE_1_1;
+    if (dynamicCnt == moduleSize) {
+        return Constants::ARKTS_MODE_DYNAMIC;
     }
-    if (language1_2_cnt == moduleSize) {
-        return Constants::CODE_LANGUAGE_1_2;
+    if (staticCnt == moduleSize) {
+        return Constants::ARKTS_MODE_STATIC;
     }
-    return Constants::CODE_LANGUAGE_HYBRID;
+    return Constants::ARKTS_MODE_HYBRID;
 }
 
-std::string InnerBundleInfo::GetModuleCodeLanguage(const std::string &moduleName) const
+std::string InnerBundleInfo::GetModuleArkTSMode(const std::string &moduleName) const
 {
     auto item = innerModuleInfos_.find(moduleName);
     if (item == innerModuleInfos_.end()) {
         APP_LOGW_NOFUNC("moduleName %{public}s not exist", moduleName.c_str());
         return Constants::EMPTY_STRING;
     }
-    return item->second.codeLanguage;
+    return item->second.moduleArkTSMode;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

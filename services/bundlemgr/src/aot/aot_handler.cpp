@@ -217,9 +217,9 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, con
     aotArgs.isScreenOff = static_cast<uint32_t>(deviceIsScreenOff);
 
     aotArgs.isEnableBaselinePgo = static_cast<uint32_t>(isEnableBaselinePgo);
-    aotArgs.codeLanguage = installedInfo.GetModuleCodeLanguage(moduleName);
-    if (aotArgs.codeLanguage.empty()) {
-        APP_LOGE("codeLanguage empty");
+    aotArgs.moduleArkTSMode = installedInfo.GetModuleArkTSMode(moduleName);
+    if (aotArgs.moduleArkTSMode.empty()) {
+        APP_LOGE("moduleArkTSMode empty");
         return std::nullopt;
     }
     APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());

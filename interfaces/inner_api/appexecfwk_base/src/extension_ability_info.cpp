@@ -278,7 +278,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
         dataGroupIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     customProcess = Str16ToStr8(parcel.ReadString16());
-    codeLanguage = parcel.ReadString();
+    arkTSMode = parcel.ReadString();
     return true;
 }
 
@@ -369,7 +369,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(customProcess));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, codeLanguage);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, arkTSMode);
     return true;
 }
 
@@ -411,7 +411,7 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds},
         {JSON_KEY_CUSTOM_PROCESS, extensionInfo.customProcess},
         {JSON_KEY_ISOLATION_PROCESS, extensionInfo.isolationProcess},
-        {Constants::CODE_LANGUAGE, extensionInfo.codeLanguage}
+        {Constants::ARKTS_MODE, extensionInfo.arkTSMode}
     };
 }
 
@@ -656,8 +656,8 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        Constants::CODE_LANGUAGE,
-        extensionInfo.codeLanguage,
+        Constants::ARKTS_MODE,
+        extensionInfo.arkTSMode,
         false,
         parseResult);
 
