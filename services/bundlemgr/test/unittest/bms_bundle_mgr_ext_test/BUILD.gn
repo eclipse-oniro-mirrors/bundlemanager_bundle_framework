@@ -48,6 +48,7 @@ ohos_unittest("BmsBundleMgrExtTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
+  defines = []
   if (current_cpu == "arm64") {
     defines += [ "USE_ARM64" ]
   }
