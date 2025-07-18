@@ -536,6 +536,35 @@ HWTEST_F(BmsExtendResourceManagerTest, ProcessAddExtResource_0100, Function | Sm
 }
 
 /**
+ * @tc.number: ProcessAddExtResource_0200
+ * @tc.name: Test ProcessAddExtResource
+ * @tc.desc: 1.ProcessAddExtResource
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ProcessAddExtResource_0200, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::vector<std::string> filePaths;
+    auto ret = impl.ProcessAddExtResource(TEST_MODULE, filePaths);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: ProcessAddExtResource_0300
+ * @tc.name: Test ProcessAddExtResource
+ * @tc.desc: 1.ProcessAddExtResource
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ProcessAddExtResource_0300, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::vector<std::string> filePaths;
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    auto ret = impl.ProcessAddExtResource(TEST_MODULE, filePaths);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    bundleMgrService_->RegisterDataMgr(savedDataMgr);
+}
+
+/**
  * @tc.number: CheckModuleExist_0100
  * @tc.name: Test CheckModuleExist
  * @tc.desc: 1.CheckModuleExist

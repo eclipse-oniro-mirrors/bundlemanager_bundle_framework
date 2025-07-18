@@ -158,11 +158,17 @@ bool ExtendResourceManagerHostImpl::CheckFileParam(const std::string &filePath)
 ErrCode ExtendResourceManagerHostImpl::ProcessAddExtResource(
     const std::string &bundleName, const std::vector<std::string> &filePaths)
 {
-    InnerBundleInfo info;
-    if (!GetInnerBundleInfo(bundleName, info)) {
-        APP_LOGE("GetInnerBundleInfo failed %{public}s", bundleName.c_str());
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    if (!dataMgr->IsBundleExist(bundleName)) {
+        APP_LOGE("-n %{public}s not exist, add ext resource failed", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto &mutex = dataMgr->GetBundleMutex(bundleName);
+    std::lock_guard lock {mutex};
 
     std::vector<std::string> newFilePaths;
     ErrCode ret = CopyToTempDir(bundleName, filePaths, newFilePaths);
