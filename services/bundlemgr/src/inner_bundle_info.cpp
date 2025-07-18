@@ -3984,6 +3984,17 @@ std::vector<std::string> InnerBundleInfo::GetDeviceType(const std::string &packa
     return innerModuleInfos_.at(packageName).deviceTypes;
 }
 
+std::map<std::string, std::vector<std::string>> InnerBundleInfo::GetRequiredDeviceFeatures(
+    const std::string &packageName) const
+{
+    auto it = innerModuleInfos_.find(packageName);
+    if (it == innerModuleInfos_.end()) {
+        APP_LOGW("%{public}s not existed", packageName.c_str());
+        return {};
+    }
+    return innerModuleInfos_.at(packageName).requiredDeviceFeatures;
+}
+
 void InnerBundleInfo::AddApplyQuickFixFrequency()
 {
     ++applyQuickFixFrequency_;
