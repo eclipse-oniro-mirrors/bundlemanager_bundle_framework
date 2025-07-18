@@ -24,11 +24,11 @@ export interface BundleInfo {
   readonly versionName: string;
   readonly minCompatibleVersionCode: int;
   readonly targetVersion: int;
-  readonly appInfo: ApplicationInfo;
+  readonly appInfo: ApplicationInfo | null;
   readonly hapModulesInfo: Array<HapModuleInfo>;
   readonly reqPermissionDetails: Array<ReqPermissionDetail>;
   readonly permissionGrantStates: Array<bundleManager.PermissionGrantState>;
-  readonly signatureInfo: SignatureInfo;
+  readonly signatureInfo: SignatureInfo | null;
   readonly installTime: long;
   readonly updateTime: long;
   readonly routerMap: Array<RouterItem>;

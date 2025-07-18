@@ -36,7 +36,7 @@ export class AbilityInfoInner implements AbilityInfo {
   readonly launchType: bundleManager.LaunchType = bundleManager.LaunchType.SINGLETON;
   readonly permissions: Array<string> = new Array<string>;
   readonly deviceTypes: Array<string> = new Array<string>;
-  readonly applicationInfo: ApplicationInfo = new ApplicationInfoInner;
+  readonly applicationInfo: ApplicationInfo | null = null;
   readonly metadata: Array<Metadata> = new Array<Metadata>;
   readonly enabled: boolean;
   readonly supportWindowModes: Array<bundleManager.SupportWindowMode> = new Array<bundleManager.SupportWindowMode>;

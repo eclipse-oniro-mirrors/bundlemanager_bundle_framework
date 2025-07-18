@@ -22,6 +22,6 @@ export class LauncherAbilityResourceInfoInner implements LauncherAbilityResource
     readonly abilityName: string = '';
     readonly icon: string = '';
     readonly label: string = '';
-    readonly drawableDescriptor: DrawableDescriptor = new DrawableDescriptor;
+    readonly drawableDescriptor: DrawableDescriptor | null = null;
     readonly appIndex: int;
 }

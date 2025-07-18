@@ -31,7 +31,7 @@ export class ExtensionAbilityInfoInner implements ExtensionAbilityInfo {
   readonly extensionAbilityType: bundleManager.ExtensionAbilityType = bundleManager.ExtensionAbilityType.UNSPECIFIED;
   readonly extensionAbilityTypeName: string = "";
   readonly permissions: Array<string> = new Array<string>;
-  readonly applicationInfo: ApplicationInfo = new ApplicationInfoInner;
+  readonly applicationInfo: ApplicationInfo | null = null;
   readonly metadata: Array<Metadata> = new Array<Metadata>;
   readonly enabled: boolean;
   readonly readPermission: string = "";

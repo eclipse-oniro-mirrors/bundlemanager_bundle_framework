@@ -29,7 +29,7 @@ export interface ExtensionAbilityInfo {
   readonly extensionAbilityType: bundleManager.ExtensionAbilityType;
   readonly extensionAbilityTypeName: string;
   readonly permissions: Array<string>;
-  readonly applicationInfo: ApplicationInfo;
+  readonly applicationInfo: ApplicationInfo | null;
   readonly metadata: Array<Metadata>;
   readonly enabled: boolean;
   readonly readPermission: string;

@@ -16,10 +16,10 @@
 import { ElementName } from 'bundleManager.ElementName';
 
 export class ElementNameInner implements ElementName {
-  deviceId?: string | undefined = "";
+  deviceId?: string | undefined;
   bundleName: string = "";
-  moduleName?: string | undefined = "";
+  moduleName?: string | undefined;
   abilityName: string = "";
-  uri?: string | undefined = "";
-  shortName?: string | undefined = "";
+  uri?: string | undefined;
+  shortName?: string | undefined;
 }

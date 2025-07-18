@@ -62,6 +62,8 @@ static std::map<int32_t, std::string> appDistributionTypeMap = {
     { ENUM_SIX, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
     { ENUM_SEVEN, Constants::APP_DISTRIBUTION_TYPE_NONE },
 };
+constexpr int32_t EMPTY_VALUE = -500;
+constexpr const char* EMPTY_STRING = "ani empty string";
 } // namespace
 
 static void CheckToCache(
@@ -574,7 +576,7 @@ static ani_object GetLaunchWantForBundleNative(ani_env* env,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
-    return WrapWant(env, want);
+    return CommonFunAni::ConvertWantInfo(env, want);
 }
 
 static ani_object GetAppCloneBundleInfoNative(ani_env* env, ani_string aniBundleName,
@@ -1012,7 +1014,7 @@ static ani_object GetLaunchWant(ani_env* env)
         return nullptr;
     }
 
-    return WrapWant(env, want);
+    return CommonFunAni::ConvertWantInfo(env, want);
 }
 
 static ani_object GetProfileByAbilityNative(ani_env* env, ani_string aniModuleName, ani_string aniAbilityName,
@@ -1466,6 +1468,9 @@ static ani_string GetJsonProfileNative(ani_env* env, ani_enum_item aniProfileTyp
         BusinessErrorAni::ThrowCommonError(env, ERROR_MODULE_NOT_EXIST, GET_JSON_PROFILE, BUNDLE_PERMISSIONS);
         return nullptr;
     }
+    if (moduleName == EMPTY_STRING) {
+        moduleName = "";
+    }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("GetBundleMgr failed");
@@ -1651,10 +1656,11 @@ static void SetAdditionalInfo(ani_env* env, ani_string aniBundleName, ani_string
 static ani_object GetDeveloperIdsNative(ani_env* env, ani_int aniAppDistributionType)
 {
     APP_LOGD("ani GetDeveloperIdsNative called");
-    if (appDistributionTypeMap.find(aniAppDistributionType) == appDistributionTypeMap.end()) {
-        APP_LOGE("request error, type %{public}d is invalid", aniAppDistributionType);
-        BusinessErrorAni::ThrowEnumError(env, APP_DISTRIBUTION_TYPE, APP_DISTRIBUTION_TYPE_ENUM);
-        return nullptr;
+    if (aniAppDistributionType != EMPTY_VALUE &&
+        appDistributionTypeMap.find(aniAppDistributionType) == appDistributionTypeMap.end()) {
+            APP_LOGE("request error, type %{public}d is invalid", aniAppDistributionType);
+            BusinessErrorAni::ThrowEnumError(env, APP_DISTRIBUTION_TYPE, APP_DISTRIBUTION_TYPE_ENUM);
+            return nullptr;
     }
     std::string distributionType = std::string { appDistributionTypeMap[aniAppDistributionType] };
     auto iBundleMgr = CommonFunc::GetBundleMgr();

@@ -30,7 +30,8 @@ namespace bundleManager {
 
   loadLibrary("ani_bundle_manager.z");
 
-  const EMPTY_USER_ID: int = -500;
+  const EMPTY_VALUE: int = -500;
+  const EMPTY_STRING: string = "ani empty string";
 
   enum BundleFlag {
     GET_BUNDLE_INFO_DEFAULT = 0x00000000,
@@ -316,12 +317,12 @@ namespace bundleManager {
   }
 
   function queryAbilityInfoSync(want: Want, abilityFlags: int, userId?: int): Array<AbilityInfo> {
-    let userIdInfo: int = userId ?? EMPTY_USER_ID;
+    let userIdInfo: int = userId ?? EMPTY_VALUE;
     return bundleManager.queryAbilityInfoSyncNative(want, abilityFlags, userIdInfo, true);
   }
 
   function getLaunchWantForBundleSync(bundleName: string, userId?: int): Want {
-    let userIdInfo: int = userId ?? EMPTY_USER_ID;
+    let userIdInfo: int = userId ?? EMPTY_VALUE;
     return bundleManager.getLaunchWantForBundleNative(bundleName, userIdInfo, true);
   }
 
@@ -339,21 +340,21 @@ namespace bundleManager {
 
   function queryExtensionAbilityInfoSync(want: Want, extensionAbilityType: ExtensionAbilityType,
     extensionAbilityFlags: int, userId?: int): Array<ExtensionAbilityInfo> {
-    let userIdInfo: int = userId ?? EMPTY_USER_ID;
+    let userIdInfo: int = userId ?? EMPTY_VALUE;
     return bundleManager.queryExtensionAbilityInfoNative(
       want, extensionAbilityType, "", extensionAbilityFlags, userIdInfo, false, true);
   }
 
   function queryExtensionAbilityInfoSync(want: Want, extensionAbilityType: string, extensionAbilityFlags: int,
     userId?: int): Array<ExtensionAbilityInfo> {
-    let userIdInfo: int = userId ?? EMPTY_USER_ID;
+    let userIdInfo: int = userId ?? EMPTY_VALUE;
     return bundleManager.queryExtensionAbilityInfoNative(
       want, ExtensionAbilityType.UNSPECIFIED, extensionAbilityType, extensionAbilityFlags, userIdInfo, true, true);
   }
 
   function queryExtensionAbilityInfoSync(extensionAbilityType: string, extensionAbilityFlags: int,
     userId?: int): Array<ExtensionAbilityInfo> {
-    let userIdInfo: int = userId ?? EMPTY_USER_ID;
+    let userIdInfo: int = userId ?? EMPTY_VALUE;
     return bundleManager.queryExAbilityInfoSyncWithoutWantNative(extensionAbilityType, extensionAbilityFlags, userIdInfo);
   }
 
@@ -377,18 +378,18 @@ namespace bundleManager {
   }
   
   function getAppProvisionInfoSync(bundleName: string, userId?: int): AppProvisionInfo {
-    let userIdInfo: int = userId ?? EMPTY_USER_ID;
+    let userIdInfo: int = userId ?? EMPTY_VALUE;
     return bundleManager.getAppProvisionInfoNative(bundleName, userIdInfo, true);
   }
 
   function getJsonProfile(profileType: ProfileType, bundleName: string, moduleName?: string, userId?: int): string {
     let userIdInfo: int = userId ?? -2;
-    let moduleNameInfo: string = moduleName ?? "";
+    let moduleNameInfo: string = moduleName ?? EMPTY_STRING;
     return bundleManager.getJsonProfileNative(profileType, bundleName, moduleNameInfo, userIdInfo);
   }
 
   function getDeveloperIds(appDistributionType?: int): Array<string> {
-    let appDistributionTypeInfo: int = appDistributionType ?? 0;
+    let appDistributionTypeInfo: int = appDistributionType ?? EMPTY_VALUE;
     return bundleManager.getDeveloperIdsNative(appDistributionTypeInfo);
   }
 
@@ -427,12 +428,12 @@ namespace bundleManager {
   }
 
   function getBundleInfoSync(bundleName: string, bundleFlags: int): BundleInfo {
-    return bundleManager.getBundleInfoNative(bundleName, bundleFlags, EMPTY_USER_ID, true);
+    return bundleManager.getBundleInfoNative(bundleName, bundleFlags, EMPTY_VALUE, true);
   }
 
   function getBundleInfo(bundleName: string, bundleFlags: int, userId?: int): Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: BusinessError) => void) => {
-      let userIdInfo: int = userId ?? EMPTY_USER_ID;
+      let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): BundleInfo => {
         return bundleManager.getBundleInfoNative(bundleName, bundleFlags, userIdInfo, false);
       };
@@ -450,7 +451,7 @@ namespace bundleManager {
 
   function getBundleInfo(bundleName: string, bundleFlags: int, callback: AsyncCallback<BundleInfo>): void {
     let execFun = (): BundleInfo => {
-      return bundleManager.getBundleInfoNative(bundleName, bundleFlags, EMPTY_USER_ID, false);
+      return bundleManager.getBundleInfoNative(bundleName, bundleFlags, EMPTY_VALUE, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -475,7 +476,7 @@ namespace bundleManager {
   }
 
   function getApplicationInfoSync(bundleName: string, applicationFlags: int): ApplicationInfo {
-    return bundleManager.getApplicationInfoNative(bundleName, applicationFlags, EMPTY_USER_ID, true);
+    return bundleManager.getApplicationInfoNative(bundleName, applicationFlags, EMPTY_VALUE, true);
   }
 
   function getApplicationInfoSync(bundleName: string, applicationFlags: int, userId: int): ApplicationInfo {
@@ -485,7 +486,7 @@ namespace bundleManager {
   function getAllBundleInfo(bundleFlags: int, userId?: int): Promise<Array<BundleInfo>> {
     let p = new Promise<Array<BundleInfo>>((resolve: (bundleInfos: Array<BundleInfo>)
       => void, reject: (error: BusinessError) => void) => {
-      let userIdInfo: int = userId ?? EMPTY_USER_ID;
+      let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): Array<BundleInfo> => {
         return bundleManager.getAllBundleInfoNative(bundleFlags, userIdInfo);
       };
@@ -503,7 +504,7 @@ namespace bundleManager {
 
   function getAllBundleInfo(bundleFlags: int, callback: AsyncCallback<Array<BundleInfo>>): void {
     let execFun = (): Array<BundleInfo> => {
-      return bundleManager.getAllBundleInfoNative(bundleFlags, EMPTY_USER_ID);
+      return bundleManager.getAllBundleInfoNative(bundleFlags, EMPTY_VALUE);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -530,7 +531,7 @@ namespace bundleManager {
   function getAllApplicationInfo(appFlags: int, userId?: int): Promise<Array<ApplicationInfo>> {
     let p = new Promise<Array<ApplicationInfo>>((resolve: (applicationInfos: Array<ApplicationInfo>)
       => void, reject: (error: BusinessError) => void) => {
-      let userIdInfo: int = userId ?? EMPTY_USER_ID;
+      let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): Array<ApplicationInfo> => {
         return bundleManager.getAllApplicationInfoNative(appFlags, userIdInfo);
       };
@@ -548,7 +549,7 @@ namespace bundleManager {
 
   function getAllApplicationInfo(appFlags: int, callback: AsyncCallback<Array<ApplicationInfo>>): void {
     let execFun = (): Array<ApplicationInfo> => {
-      return bundleManager.getAllApplicationInfoNative(appFlags, EMPTY_USER_ID);
+      return bundleManager.getAllApplicationInfoNative(appFlags, EMPTY_VALUE);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -623,7 +624,7 @@ namespace bundleManager {
   function queryAbilityInfo(want: Want, abilityFlags: int, userId?: int): Promise<Array<AbilityInfo>> {
     let p = new Promise<Array<AbilityInfo>>((resolve: (abilityInfos: Array<AbilityInfo>)
       => void, reject: (error: BusinessError) => void) => {
-        let userIdInfo: int = userId ?? EMPTY_USER_ID;
+        let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): Array<AbilityInfo> => {
         return bundleManager.queryAbilityInfoSyncNative(want, abilityFlags, userIdInfo, false);
       };
@@ -641,7 +642,7 @@ namespace bundleManager {
 
   function queryAbilityInfo(want: Want, abilityFlags: int, callback: AsyncCallback<Array<AbilityInfo>>): void {
     let execFun = (): Array<AbilityInfo> => {
-      return bundleManager.queryAbilityInfoSyncNative(want, abilityFlags, EMPTY_USER_ID, false);
+      return bundleManager.queryAbilityInfoSyncNative(want, abilityFlags, EMPTY_VALUE, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -669,7 +670,7 @@ namespace bundleManager {
   function getApplicationInfo(bundleName: string, appFlags: int, userId?: int): Promise<ApplicationInfo> {
     let p = new Promise<ApplicationInfo>((
       resolve: (applicationInfo: ApplicationInfo) => void, reject: (error: BusinessError) => void) => {
-      let userIdInfo: int = userId ?? EMPTY_USER_ID;
+      let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): ApplicationInfo => {
         return bundleManager.getApplicationInfoNative(bundleName, appFlags, userIdInfo, false);
       };
@@ -687,7 +688,7 @@ namespace bundleManager {
 
   function getApplicationInfo(bundleName: string, appFlags: int, callback: AsyncCallback<ApplicationInfo>): void {
     let execFun = (): ApplicationInfo => {
-      return bundleManager.getApplicationInfoNative(bundleName, appFlags, EMPTY_USER_ID, false);
+      return bundleManager.getApplicationInfoNative(bundleName, appFlags, EMPTY_VALUE, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -765,7 +766,7 @@ namespace bundleManager {
   function getLaunchWantForBundle(bundleName: string, userId?: int): Promise<Want> {
     let p = new Promise<Want>((
       resolve: (want: Want) => void, reject: (error: BusinessError) => void) => {
-      let userIdInfo: int = userId ?? EMPTY_USER_ID;
+      let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): Want => {
         return bundleManager.getLaunchWantForBundleNative(bundleName, userIdInfo, false);
       };
@@ -796,7 +797,7 @@ namespace bundleManager {
 
   function getLaunchWantForBundle(bundleName: string, callback: AsyncCallback<Want>): void {
     let execFun = (): Want => {
-      return bundleManager.getLaunchWantForBundleNative(bundleName, EMPTY_USER_ID, false);
+      return bundleManager.getLaunchWantForBundleNative(bundleName, EMPTY_VALUE, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -811,7 +812,7 @@ namespace bundleManager {
     bundleFlags: int, userId?: int): Promise<BundleInfo> {
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void,
       reject: (error: BusinessError) => void) => {
-      let userIdInfo: int = userId ?? EMPTY_USER_ID;
+      let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): BundleInfo => {
         return bundleManager.getAppCloneBundleInfoNative(bundleName, appIndex, bundleFlags, userIdInfo);
       };
@@ -861,7 +862,7 @@ namespace bundleManager {
     extensionAbilityFlags: int, callback: AsyncCallback<Array<ExtensionAbilityInfo>>): void {
     let execFun = (): Array<ExtensionAbilityInfo> => {
       return bundleManager.queryExtensionAbilityInfoNative(
-        want, extensionAbilityType, "", extensionAbilityFlags, EMPTY_USER_ID, false, false);
+        want, extensionAbilityType, "", extensionAbilityFlags, EMPTY_VALUE, false, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -892,7 +893,7 @@ namespace bundleManager {
     let p = new Promise<Array<ExtensionAbilityInfo>>((
       resolve: (extensionAbilityInfos: Array<ExtensionAbilityInfo>) => void,
       reject: (error: BusinessError) => void) => {
-      let userIdInfo: int = userId ?? EMPTY_USER_ID;
+      let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): Array<ExtensionAbilityInfo> => {
         return bundleManager.queryExtensionAbilityInfoNative(
           want, extensionAbilityType, "", extensionAbilityFlags, userIdInfo, false, false);
@@ -1065,7 +1066,7 @@ namespace bundleManager {
   function queryAbilityInfo(wants: Array<Want>, abilityFlags: int, userId?: int): Promise<Array<AbilityInfo>> {
     let p = new Promise<Array<AbilityInfo>>((resolve: (abilityInfos: Array<AbilityInfo>)
       => void, reject: (error: BusinessError) => void) => {
-        let userIdInfo: int = userId ?? EMPTY_USER_ID;
+        let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): Array<AbilityInfo> => {
         return bundleManager.queryAbilityInfoWithWantsNative(wants, abilityFlags, userIdInfo);
       };
@@ -1324,7 +1325,7 @@ namespace bundleManager {
   function getAppProvisionInfo(bundleName: string, userId?: int): Promise<AppProvisionInfo> {
     let p = new Promise<AppProvisionInfo>((resolve: (appProvisionInfo: AppProvisionInfo)
       => void, reject: (error: Error) => void) => {
-      let userIdInfo: int = userId ?? EMPTY_USER_ID;
+      let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): AppProvisionInfo => {
         return bundleManager.getAppProvisionInfoNative(bundleName, userIdInfo, false);
       };
@@ -1355,7 +1356,7 @@ namespace bundleManager {
 
   function getAppProvisionInfo(bundleName: string, callback: AsyncCallback<AppProvisionInfo>): void {
     let execFun = (): AppProvisionInfo => {
-      return bundleManager.getAppProvisionInfoNative(bundleName, EMPTY_USER_ID, false);
+      return bundleManager.getAppProvisionInfoNative(bundleName, EMPTY_VALUE, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -1540,7 +1541,7 @@ namespace bundleManager {
   function getAllDynamicIconInfo(userId?: int): Promise<Array<DynamicIconInfo>> {
     let p = new Promise<Array<DynamicIconInfo>>((resolve: (dynamicIconInfos: Array<DynamicIconInfo>)
       => void, reject: (error: BusinessError) => void) => {
-      let userIdInfo: int = userId ?? EMPTY_USER_ID;
+      let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): Array<DynamicIconInfo> => {
         return bundleManager.getAllDynamicIconInfoNative(userIdInfo);
       };
@@ -1634,7 +1635,7 @@ namespace bundleManager {
   function getAllPluginInfo(hostBundleName: string, userId?: int): Promise<Array<PluginBundleInfo>> {
     let p = new Promise<Array<PluginBundleInfo>>((resolve: (pluginBundleInfo: Array<PluginBundleInfo>)
       => void, reject: (error: BusinessError) => void) => {
-      let userIdInfo: int = userId ?? EMPTY_USER_ID;
+      let userIdInfo: int = userId ?? EMPTY_VALUE;
       let execFun = (): Array<PluginBundleInfo> => {
         return bundleManager.getAllPluginInfoNative(hostBundleName, userIdInfo);
       };

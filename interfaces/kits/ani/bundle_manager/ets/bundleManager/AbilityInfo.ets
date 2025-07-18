@@ -34,7 +34,7 @@ export interface AbilityInfo {
   readonly launchType: bundleManager.LaunchType;
   readonly permissions: Array<string>;
   readonly deviceTypes: Array<string>;
-  readonly applicationInfo: ApplicationInfo;
+  readonly applicationInfo: ApplicationInfo | null;
   readonly metadata: Array<Metadata>;
   readonly enabled: boolean;
   readonly supportWindowModes: Array<bundleManager.SupportWindowMode>;
