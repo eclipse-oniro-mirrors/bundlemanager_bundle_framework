@@ -848,4 +848,42 @@ HWTEST_F(BmsInstalldHostTest, SetCritical_0100, Function | SmallTest | Level1)
     installdHost.SetCritical(false);
     EXPECT_EQ(installdHost.counter_, 0);
 }
+
+/**
+ * @tc.number: SetCriticalDelayed_0100
+ * @tc.name: test SetCriticalDelayed_0100
+ * @tc.desc: SetCriticalDelayed_0100
+ */
+HWTEST_F(BmsInstalldHostTest, SetCriticalDelayed_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    EXPECT_EQ(installdHost.counter_, 0);
+    installdHost.SetCriticalDelayed(true);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    EXPECT_EQ(installdHost.counter_, 1);
+    installdHost.SetCriticalDelayed(true);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    EXPECT_EQ(installdHost.counter_, 2);
+    installdHost.SetCriticalDelayed(false);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    EXPECT_EQ(installdHost.counter_, 1);
+    installdHost.SetCriticalDelayed(false);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    EXPECT_EQ(installdHost.counter_, 0);
+}
+
+/**
+ * @tc.number: SetMemMgrStatus_0100
+ * @tc.name: test SetMemMgrStatus_0100
+ * @tc.desc: SetMemMgrStatus_0100
+ */
+HWTEST_F(BmsInstalldHostTest, SetMemMgrStatus_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    EXPECT_FALSE(installdHost.memMgrStarted_);
+    installdHost.SetMemMgrStatus(true);
+    EXPECT_TRUE(installdHost.memMgrStarted_);
+    installdHost.SetMemMgrStatus(false);
+    EXPECT_FALSE(installdHost.memMgrStarted_);
+}
 } // OHOS

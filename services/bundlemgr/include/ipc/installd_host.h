@@ -34,6 +34,7 @@ public:
     virtual int OnRemoteRequest(
         uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
+    void SetMemMgrStatus(bool started);
 private:
     /**
      * @brief Handles the CreateBundleDir function called from a IInstalld proxy object.
@@ -247,8 +248,11 @@ private:
 
     void SetCritical(bool critical);
 
+    void SetCriticalDelayed(bool critical);
+
     std::mutex mutex_;
     int32_t counter_ = 0;
+    bool memMgrStarted_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
