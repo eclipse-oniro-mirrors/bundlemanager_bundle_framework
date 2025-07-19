@@ -4094,8 +4094,18 @@ void GetSharedBundleInfoComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
         CommonFunc::ConvertAllSharedBundleInfo(env, result[ARGS_POS_ONE], asyncCallbackInfo->sharedBundles);
     } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_SHARED_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        if (asyncCallbackInfo->bundleName.empty()) {
+            APP_LOGE("bundleName is empty");
+            result[ARGS_POS_ZERO] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR,
+                PARAM_BUNDLENAME_EMPTY_ERROR);
+        } else if (asyncCallbackInfo->moduleName.empty()) {
+            APP_LOGE("moduleName is empty");
+            result[ARGS_POS_ZERO] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR,
+                PARAM_MODULENAME_EMPTY_ERROR);
+        } else {
+            result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+                GET_SHARED_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        }
     }
     CommonFunc::NapiReturnDeferred<SharedBundleCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
