@@ -80,6 +80,7 @@ const nlohmann::json MODULE_JSON = R"(
         "mainElement": "MainAbility",
         "pages": "$profile:main_pages",
         "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "crossAppSharedConfig": "$profile:shared_config",
         "type": "entry",
         "virtualMachine": "ark0.0.0.3"
     }
@@ -132,6 +133,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoMarshallingTest_0100, Func
     HapModuleInfo info;
     info.abilitySrcEntryDelegator = "abilitySrcEntryDelegator";
     info.abilityStageSrcEntryDelegator = "abilityStageSrcEntryDelegator";
+    info.requiredDeviceFeatures = {{"phone", {"large_screen"}}};
     Parcel parcel{};
     auto ret = info.Marshalling(parcel);
     EXPECT_TRUE(ret);
@@ -141,6 +143,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoMarshallingTest_0100, Func
     EXPECT_TRUE(ret);
     EXPECT_EQ(info2.abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(info2.abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(info2.requiredDeviceFeatures.size(), 1);
 }
 
 /**
@@ -153,13 +156,19 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoFromJsonTest_0100, Functio
     nlohmann::json json = R"(
         {
             "abilitySrcEntryDelegator": "abilitySrcEntryDelegator",
-            "abilityStageSrcEntryDelegator": "abilityStageSrcEntryDelegator"
+            "abilityStageSrcEntryDelegator": "abilityStageSrcEntryDelegator",
+            "requiredDeviceFeatures": {
+                "phone": [
+                    "large_screen"
+                ]
+            }
         }
     )"_json;
     HapModuleInfo info;
     from_json(json, info);
     EXPECT_EQ(info.abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(info.abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(info.requiredDeviceFeatures.size(), 1);
 }
 
 /**
@@ -172,6 +181,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoToJsonTest_0100, Function 
     HapModuleInfo info;
     info.abilitySrcEntryDelegator = "abilitySrcEntryDelegator";
     info.abilityStageSrcEntryDelegator = "abilityStageSrcEntryDelegator";
+    info.requiredDeviceFeatures = {{"phone", {"large_screen"}}};
     nlohmann::json json;
     to_json(json, info);
 
@@ -179,6 +189,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, HapModuleInfoToJsonTest_0100, Function 
     from_json(json, info2);
     EXPECT_EQ(info.abilitySrcEntryDelegator, info2.abilitySrcEntryDelegator);
     EXPECT_EQ(info.abilityStageSrcEntryDelegator, info2.abilityStageSrcEntryDelegator);
+    EXPECT_EQ(info.requiredDeviceFeatures.size(), info2.requiredDeviceFeatures.size());
 }
 
 /**
@@ -204,6 +215,7 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, ModuleProfileToInnerModuleInfoTest_0100
     EXPECT_NE(innerModuleInfo, std::nullopt);
     EXPECT_EQ(innerModuleInfo->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(innerModuleInfo->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(innerModuleInfo->requiredDeviceFeatures.size(), 0);
 }
 
 /**
@@ -229,5 +241,6 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, FindHapModuleInfoTest_0100, Function | 
     EXPECT_NE(hapModule, std::nullopt);
     EXPECT_EQ(hapModule->abilitySrcEntryDelegator, "abilitySrcEntryDelegator");
     EXPECT_EQ(hapModule->abilityStageSrcEntryDelegator, "abilityStageSrcEntryDelegator");
+    EXPECT_EQ(hapModule->requiredDeviceFeatures.size(), 0);
 }
 } // OHOS
