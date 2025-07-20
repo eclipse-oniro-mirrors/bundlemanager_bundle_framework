@@ -89,5 +89,11 @@ int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName)
     return FAILED;
 #endif
 }
+
+int32_t AbilityManagerHelper::QueryRunningSharedBundles(
+    const pid_t pid, std::map<std::string, uint32_t> &shareBundles)
+{
+    return 0;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
