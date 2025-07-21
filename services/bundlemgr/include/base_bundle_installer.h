@@ -860,6 +860,7 @@ private:
     ErrCode ProcessDynamicIconFileWhenUpdate(const InnerBundleInfo &oldInfo, const std::string &oldPath,
         const std::string &newPath);
     void ProcessUpdateShortcut();
+    ErrCode CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

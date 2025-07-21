@@ -1273,6 +1273,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
+
+    result = CheckArkTSMode(newInfos);
+    CHECK_RESULT(result, "check arkTS mode failed %{public}d");
+
     bool onDemandInstall = OnDemandInstallDataMgr::GetInstance().IsOnDemandInstall(installParam);
     if (!onDemandInstall) {
         if (userId_ == Constants::DEFAULT_USERID && installParam.isDataPreloadHap &&
@@ -4126,6 +4130,31 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     SetAppDistributionType(infos);
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
     return ret;
+}
+
+ErrCode BaseBundleInstaller::CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    if (newInfos.empty()) {
+        LOG_W(BMS_TAG_INSTALLER, "newInfos is empty");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    if (newInfos.begin()->second.GetApplicationBundleType() != BundleType::ATOMIC_SERVICE) {
+        return ERR_OK;
+    }
+    auto needControl = std::any_of(newInfos.begin(), newInfos.end(),
+        [](const auto &item) {
+            return std::any_of(item.second.GetInnerModuleInfos().begin(),
+                item.second.GetInnerModuleInfos().end(),
+                [](const auto &moduleItem) {
+                    return moduleItem.second.moduleArkTSMode != Constants::ARKTS_MODE_DYNAMIC;
+                });
+        });
+    if (needControl) {
+        LOG_W(BMS_TAG_INSTALLER, "atomicService is not dynamic -n:%{public}s",
+            newInfos.begin()->second.GetBundleName().c_str());
+        return ERR_APPEXECFWK_INSTALL_NOT_SUPPORT_STATIC_ATOMIC_SERVICE;
+    }
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
