@@ -203,6 +203,104 @@ static ani_object AniGetAllLauncherAbilityInfo(ani_env *env, ani_int aniUserId)
     return launcherAbilityInfosObject;
 }
 
+static ani_object GetShortcutInfoByAppIndex(ani_env* env, ani_string aniBundleName, ani_int aniAppIndex)
+{
+    APP_LOGD("ani GetShortcutInfoByAppIndex called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("appIndex: %{public}d not in valid range", aniAppIndex);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, APP_INDEX, TYPE_NUMBER);
+        return nullptr;
+    }
+    auto launcherService = JSLauncherService::GetLauncherService();
+    if (launcherService == nullptr) {
+        APP_LOGE("launcherService is nullptr");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_SHORTCUT_INFO_BY_APPINDEX,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = launcherService->GetShortcutInfoByAppIndex(bundleName, aniAppIndex, shortcutInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetShortcutInfoByAppIndex failed, ret %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), GET_SHORTCUT_INFO_BY_APPINDEX,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+    ani_object shortcutInfosObject =
+        CommonFunAni::ConvertAniArray(env, shortcutInfos, CommonFunAni::ConvertShortcutInfo);
+    if (shortcutInfosObject == nullptr) {
+        APP_LOGE("nullptr shortcutInfosObject");
+        return nullptr;
+    }
+    return shortcutInfosObject;
+}
+
+static ErrCode InnerStartShortcutWithReason(const OHOS::AppExecFwk::ShortcutInfo &shortcutInfo,
+    std::string &startReason, const OHOS::AAFwk::StartOptions &startOptions)
+{
+    if (shortcutInfo.intents.empty()) {
+        APP_LOGW("intents is empty");
+        return ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED;
+    }
+    AAFwk::Want want;
+    ElementName element;
+    element.SetBundleName(shortcutInfo.intents[0].targetBundle);
+    element.SetModuleName(shortcutInfo.intents[0].targetModule);
+    element.SetAbilityName(shortcutInfo.intents[0].targetClass);
+    want.SetElement(element);
+    for (const auto &item : shortcutInfo.intents[0].parameters) {
+        want.SetParam(item.first, item.second);
+    }
+    want.SetParam(AAFwk::Want::PARM_LAUNCH_REASON_MESSAGE, startReason);
+    want.SetParam(AAFwk::Want::PARAM_APP_CLONE_INDEX_KEY, shortcutInfo.appIndex);
+    auto res = AAFwk::AbilityManagerClient::GetInstance()->StartShortcut(want, startOptions);
+    auto it = START_SHORTCUT_RES_MAP.find(res);
+    if (it == START_SHORTCUT_RES_MAP.end()) {
+        APP_LOGE("call AbilityManagerClient StartShortcut failed, res : %{public}d", res);
+        return ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED;
+    }
+    return it->second;
+}
+
+static void StartShortcutWithReasonNative(
+    ani_env* env, ani_object aniShortcutInfo, ani_string aniStartReason, ani_object aniStartOptions)
+{
+    APP_LOGD("ani StartShortcutWithReason called");
+    ShortcutInfo shortcutInfo;
+    if (!CommonFunAni::ParseShortcutInfo(env, aniShortcutInfo, shortcutInfo)) {
+        APP_LOGE("parse shortcutInfo failed");
+        BusinessErrorAni::ThrowError(env, ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED, PARSE_SHORTCUT_INFO_FAILED);
+        return;
+    }
+    std::string reasonMessage;
+    if (!CommonFunAni::ParseString(env, aniStartReason, reasonMessage)) {
+        APP_LOGE("parse reasonMessage failed");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_REASON_MESSAGE);
+        return;
+    }
+    StartOptions startOptions;
+    if (aniStartOptions != nullptr) {
+        if (!UnwrapStartOptions(env, aniStartOptions, startOptions)) {
+            APP_LOGE("ParseStartOptions error");
+            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS_FAILED);
+            return;
+        }
+    }
+    ErrCode result = InnerStartShortcutWithReason(shortcutInfo, reasonMessage, startOptions);
+    if (result != ERR_OK) {
+        APP_LOGE("StartShortcutWithReason failed, result: %{public}d", result);
+        BusinessErrorAni::ThrowCommonError(
+            env, CommonFunc::ConvertErrCode(result), START_SHORTCUT_WITH_REASON, Constants::PERMISSION_START_SHORTCUT);
+    }
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
 {
@@ -226,6 +324,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
             reinterpret_cast<void*>(AniGetLauncherAbilityInfo) },
         ani_native_function { "getAllLauncherAbilityInfoNative", nullptr,
             reinterpret_cast<void*>(AniGetAllLauncherAbilityInfo) },
+        ani_native_function { "getShortcutInfoByAppIndex", nullptr,
+            reinterpret_cast<void*>(GetShortcutInfoByAppIndex) },
+        ani_native_function { "startShortcutWithReasonNative", nullptr,
+            reinterpret_cast<void*>(StartShortcutWithReasonNative) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

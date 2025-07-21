@@ -47,20 +47,10 @@ constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* LABEL_ID = "labelId";
 constexpr const char* STATE = "state";
-constexpr const char* DESTINATION_PATH = "destinationPath";
-constexpr const char* URI = "uri";
 const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
-const std::string GET_ALL_DYNAMIC_ICON = "GetAllDynamicIconInfo";
-const std::string GET_DYNAMIC_ICON_INFO = "GetDynamicIconInfo";
-const std::string GET_ABILITY_INFOS = "GetAbilityInfos";
-const std::string GET_ABILITYINFO_PERMISSIONS = "ohos.permission.GET_ABILITY_INFO";
 constexpr const char* UNSPECIFIED = "UNSPECIFIED";
 constexpr const char* MULTI_INSTANCE = "MULTI_INSTANCE";
 constexpr const char* APP_CLONE = "APP_CLONE";
-constexpr const char* BUNDLE_GET_ALL_DYNAMIC_PERMISSIONS =
-    "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
-constexpr const char* BUNDLE_ENABLE_AND_DISABLE_ALL_DYNAMIC_PERMISSIONS =
-    "ohos.permission.ACCESS_DYNAMIC_ICON and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -2439,27 +2429,6 @@ napi_value GetExtResource(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerEnableDynamicIcon(
-    const std::string &bundleName, const std::string &moduleName, const BundleOption &option)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = ERR_OK;
-    if (option.isDefault) {
-        ret = extResourceManager->EnableDynamicIcon(bundleName, moduleName);
-    } else {
-        ret = extResourceManager->EnableDynamicIcon(bundleName, moduleName, option.userId, option.appIndex);
-    }
-    if (ret != ERR_OK) {
-        APP_LOGE("EnableDynamicIcon failed");
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void EnableDynamicIconExec(napi_env env, void *data)
 {
     DynamicIconCallbackInfo *asyncCallbackInfo = reinterpret_cast<DynamicIconCallbackInfo *>(data);
@@ -2467,8 +2436,9 @@ void EnableDynamicIconExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerEnableDynamicIcon(
-        asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleName, asyncCallbackInfo->option);
+    asyncCallbackInfo->err = BundleManagerHelper::InnerEnableDynamicIcon(
+        asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleName,
+        asyncCallbackInfo->option.appIndex, asyncCallbackInfo->option.userId, asyncCallbackInfo->option.isDefault);
 }
 
 void EnableDynamicIconComplete(napi_env env, napi_status status, void *data)
@@ -2538,27 +2508,6 @@ napi_value EnableDynamicIcon(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerDisableDynamicIcon(const std::string &bundleName, const BundleOption &option)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    ErrCode ret = ERR_OK;
-    if (option.isDefault) {
-        ret = extResourceManager->DisableDynamicIcon(bundleName);
-    } else {
-        ret = extResourceManager->DisableDynamicIcon(bundleName, option.userId, option.appIndex);
-    }
-    if (ret != ERR_OK) {
-        APP_LOGE("DisableDynamicIcon failed");
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void DisableDynamicIconExec(napi_env env, void *data)
 {
     DynamicIconCallbackInfo *asyncCallbackInfo = reinterpret_cast<DynamicIconCallbackInfo *>(data);
@@ -2566,7 +2515,8 @@ void DisableDynamicIconExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerDisableDynamicIcon(asyncCallbackInfo->bundleName, asyncCallbackInfo->option);
+    asyncCallbackInfo->err = BundleManagerHelper::InnerDisableDynamicIcon(asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->option.appIndex, asyncCallbackInfo->option.userId, asyncCallbackInfo->option.isDefault);
 }
 
 void DisableDynamicIconComplete(napi_env env, napi_status status, void *data)
@@ -5379,21 +5329,6 @@ napi_value MigrateData(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerGetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = extResourceManager->GetAllDynamicIconInfo(userId, dynamicIconInfos);
-    if (ret != ERR_OK) {
-        APP_LOGE_NOFUNC("GetDynamicIcon failed %{public}d", ret);
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void GetAllDynamicIconInfoExec(napi_env env, void *data)
 {
     DynamicIconInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<DynamicIconInfoCallbackInfo *>(data);
@@ -5401,7 +5336,7 @@ void GetAllDynamicIconInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerGetAllDynamicIconInfo(
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetAllDynamicIconInfo(
         asyncCallbackInfo->userId, asyncCallbackInfo->dynamicIconInfos);
 }
 
@@ -5461,21 +5396,6 @@ napi_value GetAllDynamicIconInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
-ErrCode InnerGetDynamicIconInfo(const std::string &bundleName, std::vector<DynamicIconInfo> &dynamicIconInfos)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = extResourceManager->GetDynamicIconInfo(bundleName, dynamicIconInfos);
-    if (ret != ERR_OK) {
-        APP_LOGE_NOFUNC("-n %{public}s GetDynamicIcon failed %{public}d", bundleName.c_str(), ret);
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void GetDynamicIconInfoExec(napi_env env, void *data)
 {
     DynamicIconInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<DynamicIconInfoCallbackInfo *>(data);
@@ -5483,7 +5403,7 @@ void GetDynamicIconInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    asyncCallbackInfo->err = InnerGetDynamicIconInfo(
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetDynamicIconInfo(
         asyncCallbackInfo->bundleName, asyncCallbackInfo->dynamicIconInfos);
 }
 
@@ -5539,19 +5459,6 @@ napi_value GetDynamicIconInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerGetAbilityInfos(const std::string &uri,
-    uint32_t flags, std::vector<AbilityInfo> &abilityInfos)
-{
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = iBundleMgr->GetAbilityInfos(uri, flags, abilityInfos);
-    APP_LOGD("GetAbilityInfos ErrCode : %{public}d", ret);
-    return CommonFunc::ConvertErrCode(ret);
-}
-
 void GetAbilityInfosExec(napi_env env, void *data)
 {
     GetAbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetAbilityCallbackInfo *>(data);
@@ -5570,8 +5477,8 @@ void GetAbilityInfosExec(napi_env env, void *data)
             return;
         }
     }
-    asyncCallbackInfo->err = InnerGetAbilityInfos(asyncCallbackInfo->uri, asyncCallbackInfo->flags,
-        asyncCallbackInfo->abilityInfos);
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetAbilityInfos(
+        asyncCallbackInfo->uri, asyncCallbackInfo->flags, asyncCallbackInfo->abilityInfos);
 }
 
 void GetAbilityInfosComplete(napi_env env, napi_status status, void *data)

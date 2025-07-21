@@ -190,10 +190,12 @@ public:
     static ani_object ConvertSummary(ani_env* env, const Summary& summary);
     static ani_object ConvertPackages(ani_env* env, const Packages& packages);
     static ani_object ConvertBundlePackInfo(ani_env* env, const BundlePackInfo& bundlePackInfo);
+    static ani_object ConvertDynamicIconInfo(ani_env* env, const DynamicIconInfo& dynamicIconInfo);
     static ani_object CreateDispatchInfo(
         ani_env* env, const std::string& version, const std::string& dispatchAPIVersion);
 
     // Parse from ets to native
+    static bool ParseBundleOptions(ani_env* env, ani_object object, int32_t& appIndex, int32_t& userId);
     static bool ParseShortcutInfo(ani_env* env, ani_object object, ShortcutInfo& shortcutInfo);
     static bool ParseShortcutIntent(ani_env* env, ani_object object, ShortcutIntent& shortcutIntent);
     static bool ParseKeyValuePair(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair);

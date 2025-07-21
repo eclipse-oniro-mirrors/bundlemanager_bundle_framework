@@ -90,8 +90,7 @@ static void CheckInfoCache(ani_env* env, const ANIQuery& query,
         return;
     }
 
-    uint32_t explicitQueryResultLen = 1;
-    if (infos.size() != explicitQueryResultLen || infos[0].uid != IPCSkeleton::GetCallingUid()) {
+    if (infos.size() != EXPLICIT_QUERY_RESULT_LEN || infos[0].uid != IPCSkeleton::GetCallingUid()) {
         return;
     }
 
@@ -935,7 +934,8 @@ static ani_object QueryExAbilityInfoSyncWithoutWant(ani_env* env, ani_string ani
     return CommonFunAni::ConvertAniArray(env, extensionInfos, CommonFunAni::ConvertExtensionInfo);
 }
 
-static void EnableDynamicIconNative(ani_env* env, ani_string aniBundleName, ani_string aniModuleName)
+static void EnableDynamicIconNative(
+    ani_env* env, ani_string aniBundleName, ani_string aniModuleName, ani_object aniBundleOptions)
 {
     APP_LOGD("ani EnableDynamicIcon called");
     std::string bundleName;
@@ -950,12 +950,15 @@ static void EnableDynamicIconNative(ani_env* env, ani_string aniBundleName, ani_
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return;
     }
-    
-    ErrCode ret = BundleManagerHelper::InnerEnableDynamicIcon(bundleName, moduleName);
+    int32_t appIndex = 0;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    bool isDefault = CommonFunAni::ParseBundleOptions(env, aniBundleOptions, appIndex, userId);
+
+    ErrCode ret = BundleManagerHelper::InnerEnableDynamicIcon(bundleName, moduleName, appIndex, userId, isDefault);
     if (ret != ERR_OK) {
         APP_LOGE("EnableDynamicIcon failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, ret,
-            ENABLE_DYNAMIC_ICON, Constants::PERMISSION_ACCESS_DYNAMIC_ICON);
+        BusinessErrorAni::ThrowCommonError(env, ret, ENABLE_DYNAMIC_ICON,
+            isDefault ? Constants::PERMISSION_ACCESS_DYNAMIC_ICON : BUNDLE_ENABLE_AND_DISABLE_ALL_DYNAMIC_PERMISSIONS);
     }
 }
 
@@ -1320,7 +1323,7 @@ static ani_object GetSignatureInfo(ani_env* env, ani_int aniUid)
     if (ret != ERR_OK) {
         APP_LOGE("GetSignatureInfoByUid failed ret: %{public}d, uid is %{public}d", ret, aniUid);
         BusinessErrorAni::ThrowCommonError(
-            env, CommonFunc::ConvertErrCode(ret), GET_SIGNATURE_INFO_SYNC, GET_SIGNATURE_INFO_PERMISSIONS);
+            env, CommonFunc::ConvertErrCode(ret), GET_SIGNATURE_INFO, GET_SIGNATURE_INFO_PERMISSIONS);
         return nullptr;
     }
     return CommonFunAni::ConvertSignatureInfo(env, signatureInfo);
@@ -1342,7 +1345,7 @@ static ani_object GetAllAppCloneBundleInfoNative(
     if (ret != ERR_OK) {
         APP_LOGE("InnerGetAllAppCloneBundleInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(
-            env, ret, GET_ALL_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO);
+            env, ret, GET_ALL_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
     APP_LOGI("GetAllAppCloneBundleInfoNative bundleInfos size: %{public}d", bundleInfos.size());
@@ -1432,6 +1435,7 @@ static ani_string GetAdditionalInfo(ani_env* env, ani_string aniBundleName)
 static ani_string GetJsonProfileNative(ani_env* env, ani_enum_item aniProfileType, ani_string aniBundleName,
     ani_string aniModuleName, ani_int aniUserId)
 {
+    APP_LOGD("ani GetJsonProfileNative called");
     ProfileType profileType = ProfileType::INTENT_PROFILE;
     if (!EnumUtils::EnumETSToNative(env, aniProfileType, profileType)) {
         APP_LOGE("Parse profileType failed");
@@ -1485,6 +1489,7 @@ static ani_string GetJsonProfileNative(ani_env* env, ani_enum_item aniProfileTyp
 
 static ani_object GetExtResourceNative(ani_env* env, ani_string aniBundleName)
 {
+    APP_LOGD("ani GetExtResourceNative called");
     std::string bundleName;
     if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
         APP_LOGE("bundleName parse failed");
@@ -1502,23 +1507,65 @@ static ani_object GetExtResourceNative(ani_env* env, ani_string aniBundleName)
     return CommonFunAni::ConvertAniArrayString(env, moduleNames);
 }
 
-static void DisableDynamicIconNative(ani_env* env, ani_string aniBundleName)
+static void DisableDynamicIconNative(ani_env* env, ani_string aniBundleName, ani_object aniBundleOptions)
 {
+    APP_LOGD("ani DisableDynamicIconNative called");
     std::string bundleName;
     if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
         APP_LOGE("bundleName parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, TYPE_STRING);
         return;
     }
-    ErrCode ret = BundleManagerHelper::InnerDisableDynamicIcon(bundleName);
+    int32_t appIndex = 0;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    bool isDefault = CommonFunAni::ParseBundleOptions(env, aniBundleOptions, appIndex, userId);
+
+    ErrCode ret = BundleManagerHelper::InnerDisableDynamicIcon(bundleName, appIndex, userId, isDefault);
     if (ret != ERR_OK) {
         APP_LOGE("InnerDisableDynamicIcon failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, ret, DISABLE_DYNAMIC_ICON, Constants::PERMISSION_ACCESS_DYNAMIC_ICON);
+        BusinessErrorAni::ThrowCommonError(env, ret, DISABLE_DYNAMIC_ICON,
+            isDefault ? Constants::PERMISSION_ACCESS_DYNAMIC_ICON : BUNDLE_ENABLE_AND_DISABLE_ALL_DYNAMIC_PERMISSIONS);
     }
+}
+
+static ani_object GetDynamicIconInfoNative(ani_env* env, ani_string aniBundleName)
+{
+    APP_LOGD("ani GetDynamicIconInfoNative called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("bundleName parse failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+
+    std::vector<DynamicIconInfo> dynamicIconInfos;
+    ErrCode ret = BundleManagerHelper::InnerGetDynamicIconInfo(bundleName, dynamicIconInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetDynamicIconInfo failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, GET_DYNAMIC_ICON_INFO, BUNDLE_GET_ALL_DYNAMIC_PERMISSIONS);
+        return nullptr;
+    }
+    return CommonFunAni::ConvertAniArray(env, dynamicIconInfos, CommonFunAni::ConvertDynamicIconInfo);
+}
+
+static ani_object GetAllDynamicIconInfoNative(ani_env* env, ani_int aniUserId)
+{
+    APP_LOGD("ani GetAllDynamicIconInfoNative called");
+    aniUserId = (aniUserId == EMPTY_USER_ID) ? Constants::UNSPECIFIED_USERID
+        : (aniUserId < 0) ? Constants::INVALID_USERID : aniUserId;
+    std::vector<DynamicIconInfo> dynamicIconInfos;
+    ErrCode ret = BundleManagerHelper::InnerGetAllDynamicIconInfo(aniUserId, dynamicIconInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetAllDynamicIconInfo failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, GET_ALL_DYNAMIC_ICON, BUNDLE_GET_ALL_DYNAMIC_PERMISSIONS);
+        return nullptr;
+    }
+    return CommonFunAni::ConvertAniArray(env, dynamicIconInfos, CommonFunAni::ConvertDynamicIconInfo);
 }
 
 static void VerifyAbcNative(ani_env* env, ani_object aniAbcPaths, ani_boolean aniDeleteOriginalFiles)
 {
+    APP_LOGD("ani VerifyAbcNative called");
     std::vector<std::string> abcPaths;
     if (!CommonFunAni::ParseStrArray(env, aniAbcPaths, abcPaths)) {
         APP_LOGE("ParseStrArray failed");
@@ -1536,6 +1583,7 @@ static void VerifyAbcNative(ani_env* env, ani_object aniAbcPaths, ani_boolean an
 
 static void DeleteAbcNative(ani_env* env, ani_string aniAbcPath)
 {
+    APP_LOGD("ani DeleteAbcNative called");
     std::string deletePath;
     if (!CommonFunAni::ParseString(env, aniAbcPath, deletePath)) {
         APP_LOGE("deletePath parse failed");
@@ -1552,6 +1600,7 @@ static void DeleteAbcNative(ani_env* env, ani_string aniAbcPath)
 
 static ani_object GetRecoverableApplicationInfoNative(ani_env* env)
 {
+    APP_LOGD("ani GetRecoverableApplicationInfoNative called");
     std::vector<RecoverableApplicationInfo> recoverableApplicationInfos;
     ErrCode ret = BundleManagerHelper::InnerGetRecoverableApplicationInfo(recoverableApplicationInfos);
     if (ret != ERR_OK) {
@@ -1567,6 +1616,7 @@ static ani_object GetRecoverableApplicationInfoNative(ani_env* env)
 
 static void SetAdditionalInfo(ani_env* env, ani_string aniBundleName, ani_string aniAdditionalInfo)
 {
+    APP_LOGD("ani SetAdditionalInfo called");
     std::string bundleName;
     if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
         APP_LOGE("bundleName parse failed");
@@ -1600,6 +1650,7 @@ static void SetAdditionalInfo(ani_env* env, ani_string aniBundleName, ani_string
 
 static ani_object GetDeveloperIdsNative(ani_env* env, ani_int aniAppDistributionType)
 {
+    APP_LOGD("ani GetDeveloperIdsNative called");
     if (appDistributionTypeMap.find(aniAppDistributionType) == appDistributionTypeMap.end()) {
         APP_LOGE("request error, type %{public}d is invalid", aniAppDistributionType);
         BusinessErrorAni::ThrowEnumError(env, APP_DISTRIBUTION_TYPE, APP_DISTRIBUTION_TYPE_ENUM);
@@ -1627,6 +1678,7 @@ static ani_object GetDeveloperIdsNative(ani_env* env, ani_int aniAppDistribution
 
 static ani_object GetAllPluginInfoNative(ani_env* env, ani_string aniHostBundleName, ani_int aniUserId)
 {
+    APP_LOGD("ani GetAllPluginInfoNative called");
     std::string hostBundleName;
     if (!CommonFunAni::ParseString(env, aniHostBundleName, hostBundleName)) {
         APP_LOGE("Plugin bundleName parse failed");
@@ -1650,6 +1702,7 @@ static ani_object GetAllPluginInfoNative(ani_env* env, ani_string aniHostBundleN
 
 static void MigrateDataNative(ani_env* env, ani_object aniSourcePaths, ani_string aniDestinationPath)
 {
+    APP_LOGD("ani MigrateDataNative called");
     std::vector<std::string> sourcePaths;
     if (!CommonFunAni::ParseStrArray(env, aniSourcePaths, sourcePaths)) {
         APP_LOGE("ParseStrArray failed");
@@ -1658,8 +1711,8 @@ static void MigrateDataNative(ani_env* env, ani_object aniSourcePaths, ani_strin
     }
     std::string destinationPath;
     if (!CommonFunAni::ParseString(env, aniDestinationPath, destinationPath)) {
-        APP_LOGE("DestinationPath is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, DESTINATION_PATHS, TYPE_STRING);
+        APP_LOGE("DestinationPath parse failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, DESTINATION_PATH, TYPE_STRING);
         return;
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -1675,6 +1728,100 @@ static void MigrateDataNative(ani_env* env, ani_object aniSourcePaths, ani_strin
         BusinessErrorAni::ThrowCommonError(env,
             CommonFunc::ConvertErrCode(ret), MIGRATE_DATA, Constants::PERMISSION_MIGRATE_DATA);
     }
+}
+
+static ani_string GetSandboxDataDir(ani_env* env, ani_string aniBundleName, ani_int aniAppIndex)
+{
+    APP_LOGD("ani GetSandboxDataDir called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("bundleName parse failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (aniAppIndex < Constants::MAIN_APP_INDEX || aniAppIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("appIndex: %{public}d not in valid range", aniAppIndex);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, Constants::APP_INDEX, TYPE_NUMBER);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_SANDBOX_DATA_DIR_SYNC,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+    std::string sandboxDataDir;
+    ErrCode ret = iBundleMgr->GetSandboxDataDir(bundleName, aniAppIndex, sandboxDataDir);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetSandboxDataDirSync failed ret %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret), GET_SANDBOX_DATA_DIR_SYNC,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+
+    ani_string aniSandboxDataDir = nullptr;
+    if (!CommonFunAni::StringToAniStr(env, sandboxDataDir, aniSandboxDataDir)) {
+        APP_LOGE("StringToAniStr failed");
+        return nullptr;
+    }
+    return aniSandboxDataDir;
+}
+
+static ani_object GetAppCloneIdentityBySandboxDataDir(ani_env* env, ani_string aniSandboxDataDir)
+{
+    APP_LOGD("ani GetAppCloneIdentityBySandboxDataDir called");
+    std::string sandboxDataDir;
+    if (!CommonFunAni::ParseString(env, aniSandboxDataDir, sandboxDataDir)) {
+        APP_LOGE("sandboxDataDir parse failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, SANDBOX_DATA_DIR, TYPE_STRING);
+        return nullptr;
+    }
+    std::string bundleName;
+    int32_t appIndex = 0;
+    CommonFunc::GetBundleNameAndIndexBySandboxDataDir(sandboxDataDir, bundleName, appIndex);
+
+    return CommonFunAni::ConvertAppCloneIdentity(env, bundleName, appIndex);
+}
+
+static ani_object GetAbilityInfoNative(ani_env* env, ani_string aniUri, ani_int aniAbilityFlags)
+{
+    APP_LOGD("ani GetAbilityInfoNative called");
+    std::string uri;
+    if (!CommonFunAni::ParseString(env, aniUri, uri)) {
+        APP_LOGE("uri parse failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, URI, TYPE_STRING);
+        return nullptr;
+    }
+    if (uri.empty()) {
+        APP_LOGE("uri empty");
+        BusinessErrorAni::ThrowCommonError(
+            env, ERROR_ABILITY_NOT_EXIST, GET_ABILITY_INFOS, GET_ABILITYINFO_PERMISSIONS);
+        return nullptr;
+    }
+    uint32_t flags = static_cast<uint32_t>(aniAbilityFlags);
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    const ANIQuery query(uri, GET_ABILITY_INFOS, flags, userId);
+    {
+        std::shared_lock<std::shared_mutex> lock(g_aniCacheMutex);
+        auto item = g_aniCache.find(query);
+        if (item != g_aniCache.end()) {
+            APP_LOGD("has cache, no need to query from host");
+            return reinterpret_cast<ani_object>(item->second);
+        }
+    }
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = BundleManagerHelper::InnerGetAbilityInfos(uri, flags, abilityInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetAbilityInfos failed ret %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, GET_ABILITY_INFOS, GET_ABILITYINFO_PERMISSIONS);
+        return nullptr;
+    }
+    ani_object aniAbilityInfos = CommonFunAni::ConvertAniArray(env, abilityInfos, CommonFunAni::ConvertAbilityInfo);
+    if (abilityInfos.size() == EXPLICIT_QUERY_RESULT_LEN) {
+        CheckToCache(env, abilityInfos[0].uid, IPCSkeleton::GetCallingUid(), query, aniAbilityInfos);
+    }
+    return aniAbilityInfos;
 }
 
 extern "C" {
@@ -1757,6 +1904,9 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getJsonProfileNative", nullptr, reinterpret_cast<void*>(GetJsonProfileNative) },
         ani_native_function { "getExtResourceNative", nullptr, reinterpret_cast<void*>(GetExtResourceNative) },
         ani_native_function { "disableDynamicIconNative", nullptr, reinterpret_cast<void*>(DisableDynamicIconNative) },
+        ani_native_function { "getDynamicIconInfoNative", nullptr, reinterpret_cast<void*>(GetDynamicIconInfoNative) },
+        ani_native_function { "getAllDynamicIconInfoNative", nullptr,
+            reinterpret_cast<void*>(GetAllDynamicIconInfoNative) },
         ani_native_function { "verifyAbcNative", nullptr, reinterpret_cast<void*>(VerifyAbcNative) },
         ani_native_function { "deleteAbcNative", nullptr, reinterpret_cast<void*>(DeleteAbcNative) },
         ani_native_function { "getRecoverableApplicationInfoNative", nullptr,
@@ -1765,6 +1915,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getDeveloperIdsNative", nullptr, reinterpret_cast<void*>(GetDeveloperIdsNative) },
         ani_native_function { "getAllPluginInfoNative", nullptr, reinterpret_cast<void*>(GetAllPluginInfoNative) },
         ani_native_function { "migrateDataNative", nullptr, reinterpret_cast<void*>(MigrateDataNative) },
+        ani_native_function { "getSandboxDataDir", nullptr, reinterpret_cast<void*>(GetSandboxDataDir) },
+        ani_native_function { "getAppCloneIdentityBySandboxDataDir", nullptr,
+            reinterpret_cast<void*>(GetAppCloneIdentityBySandboxDataDir) },
+        ani_native_function { "getAbilityInfoNative", nullptr, reinterpret_cast<void*>(GetAbilityInfoNative) },
     };
 
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

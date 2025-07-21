@@ -21,6 +21,7 @@
 import { AsyncCallback, BusinessError } from '@ohos.base';
 import { BundleResourceInfo } from 'bundleManager.BundleResourceInfo';
 import { LauncherAbilityResourceInfo } from 'bundleManager.LauncherAbilityResourceInfo';
+import bundleManager from '@ohos.bundle.bundleManager';
 
 export default namespace bundleResourceManager {
 
@@ -41,6 +42,7 @@ export default namespace bundleResourceManager {
   export native function getLauncherAbilityResourceInfoNative(bundleName: string, resourceFlags: int, appIndex: int): Array<LauncherAbilityResourceInfo>;
   export native function getAllBundleResourceInfoNative(resourceFlags: int): Array<BundleResourceInfo>;
   export native function getAllLauncherAbilityResourceInfoNative(resourceFlags: int): Array<LauncherAbilityResourceInfo>;
+  export native function getExtensionAbilityResourceInfoNative(bundleName: string, extensionAbilityType: bundleManager.ExtensionAbilityType, resourceFlags: int, appIndex: int): Array<LauncherAbilityResourceInfo>;
 
   function getBundleResourceInfo(bundleName: string, resourceFlags?: int): BundleResourceInfo
   {
@@ -66,6 +68,11 @@ export default namespace bundleResourceManager {
     let resFlag = resourceFlags ?? INVALID_VALUE;
     let appIdx = appIndex ?? INVALID_VALUE;
     return bundleResourceManager.getLauncherAbilityResourceInfoNative(bundleName, resFlag, appIdx);
+  }
+
+  function getExtensionAbilityResourceInfo(bundleName: string, extensionAbilityType: bundleManager.ExtensionAbilityType, resourceFlags: int, appIndex?: int): Array<LauncherAbilityResourceInfo> {
+    let appIdx = appIndex ?? INVALID_VALUE;
+    return getExtensionAbilityResourceInfoNative(bundleName, extensionAbilityType, resourceFlags, appIdx);
   }
 
   function getAllBundleResourceInfo(resourceFlags: int, callback: AsyncCallback<Array<BundleResourceInfo>>): void {

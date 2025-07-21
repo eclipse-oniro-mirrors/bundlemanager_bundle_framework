@@ -39,6 +39,7 @@ constexpr int32_t GET_REMOTE_ABILITY_INFO_MAX_SIZE = 10;
 constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
 constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
 constexpr int32_t EMPTY_USER_ID = -500;
+constexpr uint32_t EXPLICIT_QUERY_RESULT_LEN = 1;
 
 constexpr int32_t ENUM_ONE = 1;
 constexpr int32_t ENUM_TWO = 2;
@@ -120,14 +121,21 @@ constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
 constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
 constexpr const char* HOST_BUNDLE_NAME = "hostBundleName";
 constexpr const char* SOURCE_PATHS = "sourcePaths";
-constexpr const char* DESTINATION_PATHS = "destinationPath";
+constexpr const char* DESTINATION_PATH = "destinationPath";
 constexpr const char* LINK = "link";
+constexpr const char* URI = "uri";
+constexpr const char* SANDBOX_DATA_DIR = "sandboxDataDir";
 constexpr const char* ERR_MSG_LAUNCH_WANT_INVALID = "The launch want is not found.";
 constexpr const char* PARAM_BUNDLENAME_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter bundleName is empty";
 constexpr const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
 constexpr const char* PARAM_DEVELOPER_ID_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter developerId is empty";
+constexpr const char* BUNDLE_ENABLE_AND_DISABLE_ALL_DYNAMIC_PERMISSIONS =
+    "ohos.permission.ACCESS_DYNAMIC_ICON and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
+constexpr const char* BUNDLE_GET_ALL_DYNAMIC_PERMISSIONS =
+    "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
+constexpr const char* GET_ABILITYINFO_PERMISSIONS = "ohos.permission.GET_ABILITY_INFO";
 constexpr const char* GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 constexpr const char* GET_PERMISSION_DEF = "GetPermissionDef";
 constexpr const char* CLEAN_BUNDLE_CACHE_FILES = "cleanBundleCacheFiles";
@@ -138,7 +146,7 @@ constexpr const char* CAN_OPEN_LINK = "CanOpenLink";
 constexpr const char* GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
 constexpr const char* GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
 constexpr const char* SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
-constexpr const char* GET_SIGNATURE_INFO_SYNC = "GetSignatureInfoSync";
+constexpr const char* GET_SIGNATURE_INFO = "GetSignatureInfo";
 constexpr const char* GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";
 constexpr const char* GET_BUNDLE_ARCHIVE_INFO_SYNC = "GetBundleArchiveInfoSync";
 constexpr const char* GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExtensionAbilitySync";
@@ -158,10 +166,15 @@ constexpr const char* RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo"
 constexpr const char* GET_DEVELOPER_IDS = "GetDeveloperIds";
 constexpr const char* GET_ALL_PLUGIN_INFO = "GetAllPluginInfo";
 constexpr const char* MIGRATE_DATA = "MigrateData";
+constexpr const char* GET_ALL_DYNAMIC_ICON = "GetAllDynamicIconInfo";
+constexpr const char* GET_SANDBOX_DATA_DIR_SYNC = "GetSandboxDataDirSync";
+constexpr const char* GET_ABILITY_INFOS = "GetAbilityInfos";
+constexpr const char* GET_DYNAMIC_ICON_INFO = "GetDynamicIconInfo";
 
 // launcher_bundle_manager
 constexpr const char* GET_SHORTCUT_INFO = "GetShortcutInfo";
 constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
+constexpr const char* GET_SHORTCUT_INFO_BY_APPINDEX = "GetShortcutInfoByAppIndex";
 constexpr const char* ERROR_EMPTY_WANT = "want in ShortcutInfo cannot be empty";
 constexpr const char* PARSE_SHORTCUT_INFO_FAILED = "parse ShortcutInfo failed";
 constexpr const char* PARSE_START_OPTIONS_FAILED = "parse StartOptions failed";
@@ -169,6 +182,8 @@ constexpr const char* START_SHORTCUT = "StartShortcut";
 constexpr const char* GET_LAUNCHER_ABILITY_INFO = "GetLauncherAbilityInfo";
 constexpr const char* GET_LAUNCHER_ABILITY_INFO_SYNC = "GetLauncherAbilityInfoSync";
 constexpr const char* GET_ALL_LAUNCHER_ABILITY_INFO = "GetAllLauncherAbilityInfo";
+constexpr const char* PARSE_REASON_MESSAGE = "parse ReasonMessage failed";
+constexpr const char* START_SHORTCUT_WITH_REASON = "StartShortcutWithReason";
 
 // resource_manager
 constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
@@ -179,12 +194,17 @@ constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
 constexpr const char* GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = "GetAllLauncherAbilityResourceInfo";
+constexpr const char* GET_EXTENSION_ABILITY_RESOURCE_INFO = "GetExtensionAbilityResourceInfo";
 
 // shortcut_manager
-constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
 constexpr const char* ADD_DESKTOP_SHORTCUT_INFO = "AddDesktopShortcutInfo";
 constexpr const char* DELETE_DESKTOP_SHORTCUT_INFO = "DeleteDesktopShortcutInfo";
 constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo";
+constexpr const char* SET_SHORTCUT_VISIBLE = "SetShortcutVisibleForSelf";
+constexpr const char* GET_ALL_SHORTCUT_INFO_FOR_SELF = "GetAllShortcutInfoForSelf";
+constexpr const char* SHORTCUT_ID = "shortcutId";
+constexpr const char* INVALID_SHORTCUT_INFO_ERROR =
+    "invalid ShortcutInfo: parameter type error, or appIndex is less than 0";
 
 // free_install
 constexpr const char* RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE = "isHapModuleRemovable";
@@ -257,6 +277,7 @@ constexpr const char* UNINSTALL_DISPOSED_RULE_TYPE = "UninstallDisposedRule";
 constexpr const char* SET_UNINSTALL_DISPOSED_RULE = "SetUninstallDisposedRule";
 constexpr const char* DELETE_UNINSTALL_DISPOSED_RULE = "DeleteUninstallDisposedRule";
 constexpr const char* GET_UNINSTALL_DISPOSED_RULE = "GetUninstallDisposedRule";
+constexpr const char* SET_DISPOSED_RULES = "SetDisposedRules";
 
 // default_app_manager
 const std::unordered_map<std::string, std::string> TYPE_MAPPING = {

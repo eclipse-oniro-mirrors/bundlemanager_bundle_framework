@@ -56,6 +56,14 @@ static ani_object AniGetAllLauncherAbilityResourceInfo(ani_env* env, ani_long an
     return nullptr;
 }
 
+static ani_object GetExtensionAbilityResourceInfoNative(ani_env* env, ani_string aniBundleName,
+    ani_enum_item aniExtensionAbilityType, ani_int aniResourceFlags, ani_int aniAppIndex)
+{
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_EXTENSION_ABILITY_RESOURCE_INFO, "");
+    return nullptr;
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -80,7 +88,9 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getAllBundleResourceInfoNative", nullptr,
             reinterpret_cast<void*>(AniGetAllBundleResourceInfo) },
         ani_native_function { "getAllLauncherAbilityResourceInfoNative", nullptr,
-            reinterpret_cast<void*>(AniGetAllLauncherAbilityResourceInfo) }
+            reinterpret_cast<void*>(AniGetAllLauncherAbilityResourceInfo) },
+        ani_native_function { "getExtensionAbilityResourceInfoNative", nullptr,
+            reinterpret_cast<void*>(GetExtensionAbilityResourceInfoNative) }
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

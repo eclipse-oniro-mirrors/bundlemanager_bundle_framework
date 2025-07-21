@@ -27,6 +27,8 @@ export default namespace launcherBundleManager {
   export native function getShortcutInfoNative(bundleName: string, userId: int, isSync: boolean): Array<ShortcutInfo>;
   export native function getLauncherAbilityInfoNative(bundleName: string, userId: int, isSync: boolean): Array<LauncherAbilityInfo>;
   export native function getAllLauncherAbilityInfoNative(userId: int): Array<LauncherAbilityInfo>;
+  export native function getShortcutInfoByAppIndex(bundleName: string, appIndex: int): Array<ShortcutInfo>;
+  export native function startShortcutWithReasonNative(shortcutInfo: ShortcutInfo, startReason: string, options: StartOptions): void;
 
   function startShortcut(shortcutInfo: ShortcutInfo, options?: StartOptions): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void): void => {
@@ -139,6 +141,25 @@ export default namespace launcherBundleManager {
       p1.then((e: NullishType) => {
         let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
         resolve(resultArray);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function startShortcutWithReason(shortcutInfo: ShortcutInfo, startReason: string, options?: StartOptions): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void): void => {
+      let startOptions : StartOptions = {};
+      if (options != undefined) {
+        startOptions = options;
+      }
+      let cb = (): NullishType => {
+        launcherBundleManager.startShortcutWithReasonNative(shortcutInfo, startReason, startOptions);
+      }
+      let p1 = taskpool.execute(cb);
+      p1.then((): void => {
+        resolve(undefined);
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

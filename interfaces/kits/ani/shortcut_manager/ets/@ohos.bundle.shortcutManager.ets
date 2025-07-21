@@ -23,6 +23,8 @@ namespace shortcutManager {
   export native function addDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: int): void;
   export native function deleteDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: int): void;
   export native function getAllDesktopShortcutInfoNative(userId: int): Array<ShortcutInfo>;
+  export native function setShortcutVisibleForSelfNative(id: string, visible: boolean): void;
+  export native function getAllShortcutInfoForSelfNative(): Array<ShortcutInfo>;
 
   function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
@@ -58,6 +60,37 @@ namespace shortcutManager {
     let p = new Promise<Array<ShortcutInfo>>((resolve: (arrShortcutInfo: Array<ShortcutInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<ShortcutInfo>) => {
         return shortcutManager.getAllDesktopShortcutInfoNative(userId);
+      };
+      let p1 = taskpool.execute(cb);
+      p1.then((e: NullishType) => {
+        let result: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
+        resolve(result);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function setShortcutVisibleForSelf(id: string, visible: boolean): Promise<void> {
+    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void): void => {
+      let cb = (): NullishType => {
+        return shortcutManager.setShortcutVisibleForSelfNative(id, visible);
+      }
+      let p1 = taskpool.execute(cb);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function getAllShortcutInfoForSelf(): Promise<Array<ShortcutInfo>> {
+    let p = new Promise<Array<ShortcutInfo>>((resolve: (arrShortcutInfo: Array<ShortcutInfo>) => void, reject: (error: BusinessError) => void) => {
+      let cb = (): (Array<ShortcutInfo>) => {
+        return shortcutManager.getAllShortcutInfoForSelfNative();
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {

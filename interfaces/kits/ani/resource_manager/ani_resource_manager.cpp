@@ -149,6 +149,52 @@ static ani_object AniGetAllLauncherAbilityResourceInfo(ani_env* env, ani_int ani
     return launcherAbilityResourceInfosObject;
 }
 
+static ani_object GetExtensionAbilityResourceInfoNative(ani_env* env, ani_string aniBundleName,
+    ani_enum_item aniExtensionAbilityType, ani_int aniResourceFlags, ani_int aniAppIndex)
+{
+    APP_LOGD("ani GetExtensionAbilityResourceInfo called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName empty");
+        BusinessErrorAni::ThrowCommonError(
+            env, ERROR_BUNDLE_NOT_EXIST, GET_EXTENSION_ABILITY_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+        return nullptr;
+    }
+    ExtensionAbilityType extensionAbilityType = ExtensionAbilityType::UNSPECIFIED;
+    if (!EnumUtils::EnumETSToNative(env, aniExtensionAbilityType, extensionAbilityType)) {
+        APP_LOGE("Parse extensionAbilityType failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, EXTENSION_ABILITY_TYPE, TYPE_NUMBER);
+        return nullptr;
+    }
+    if (aniResourceFlags <= 0) {
+        aniResourceFlags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    }
+    if (aniAppIndex == INVALID_VALUE) {
+        aniAppIndex = DEFAULT_IDX;
+    }
+
+    std::vector<LauncherAbilityResourceInfo> extensionAbilityResourceInfos;
+    ErrCode ret = ResourceHelper::InnerGetExtensionAbilityResourceInfo(
+        bundleName, extensionAbilityType, aniResourceFlags, aniAppIndex, extensionAbilityResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("QueryExtensionAbilityInfo failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(
+            env, ret, GET_EXTENSION_ABILITY_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+        return nullptr;
+    }
+    ani_object launcherAbilityResourceInfosObject = CommonFunAni::ConvertAniArray(
+        env, extensionAbilityResourceInfos, AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo);
+    if (launcherAbilityResourceInfosObject == nullptr) {
+        APP_LOGE("nullptr launcherAbilityResourceInfosObject");
+    }
+    return launcherAbilityResourceInfosObject;
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -173,7 +219,9 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getAllBundleResourceInfoNative", nullptr,
             reinterpret_cast<void*>(AniGetAllBundleResourceInfo) },
         ani_native_function { "getAllLauncherAbilityResourceInfoNative", nullptr,
-            reinterpret_cast<void*>(AniGetAllLauncherAbilityResourceInfo) }
+            reinterpret_cast<void*>(AniGetAllLauncherAbilityResourceInfo) },
+        ani_native_function { "getExtensionAbilityResourceInfoNative", nullptr,
+            reinterpret_cast<void*>(GetExtensionAbilityResourceInfoNative) }
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

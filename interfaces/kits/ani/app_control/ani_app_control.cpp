@@ -22,6 +22,7 @@
 #include "business_error_ani.h"
 #include "common_fun_ani.h"
 #include "common_func.h"
+#include "ipc_skeleton.h"
 #include "napi_constants.h"
 
 namespace OHOS {
@@ -336,6 +337,32 @@ static void AniDeleteUninstallDisposedRule(ani_env* env, ani_string aniAppIdenti
     }
 }
 
+static void SetDisposedRules(ani_env* env, ani_object aniDisposedRuleConfigurations)
+{
+    APP_LOGD("ani SetDisposedRules called");
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    if (!CommonFunAni::ParseAniArray(env, aniDisposedRuleConfigurations, disposedRuleConfigurations,
+        AniAppControlCommon::ParseDisposedRuleConfiguration)) {
+        APP_LOGE("Parse disposedRuleConfigurations invalid");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return;
+    }
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("appControlProxy is null");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_DISPOSED_RULES, "");
+        return;
+    }
+
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode ret = appControlProxy->SetDisposedRules(disposedRuleConfigurations, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetDisposedRules failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(
+            env, CommonFunc::ConvertErrCode(ret), SET_DISPOSED_RULES, PERMISSION_DISPOSED_STATUS);
+    }
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -364,7 +391,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getUninstallDisposedRuleNative", nullptr,
             reinterpret_cast<void*>(AniGetUninstallDisposedRule) },
         ani_native_function { "deleteUninstallDisposedRuleNative", nullptr,
-            reinterpret_cast<void*>(AniDeleteUninstallDisposedRule) }
+            reinterpret_cast<void*>(AniDeleteUninstallDisposedRule) },
+        ani_native_function { "setDisposedRules", nullptr, reinterpret_cast<void*>(SetDisposedRules) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

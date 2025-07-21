@@ -32,12 +32,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 constexpr const char* IS_ENABLE = "isEnable";
-constexpr const char* SANDBOX_DATA_DIR = "sandboxDataDir";
 constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
-const char* GET_SANDBOX_DATA_DIR_SYNC = "GetSandboxDataDirSync";
-const std::string ATOMIC_SERVICE_DIR_PREFIX = "+auid-";
-const std::string CLONE_APP_DIR_PREFIX = "+clone-";
-const std::string PLUS = "+";
 bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
 {
     napi_valuetype valueType;
@@ -971,7 +966,7 @@ napi_value GetSignatureInfoSync(napi_env env, napi_callback_info info)
     if (ret != NO_ERROR) {
         APP_LOGE("call GetSignatureInfoByUid failed, uid is %{public}d", uid);
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_SIGNATURE_INFO_SYNC, GET_SIGNATURE_INFO_PERMISSIONS);
+            env, ret, GET_SIGNATURE_INFO, GET_SIGNATURE_INFO_PERMISSIONS);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -1032,46 +1027,6 @@ napi_value GetSandboxDataDirSync(napi_env env, napi_callback_info info)
     return nSandboxDataDir;
 }
 
-void GetBundleNameAndIndexBySandboxDataDir(
-    const std::string &keyName, std::string &bundleName, int32_t &appIndex)
-{
-    bundleName = keyName;
-    appIndex = 0;
-    bool isApp = true;
-    // for clone bundle name
-    auto pos = keyName.find(CLONE_APP_DIR_PREFIX);
-    if (pos == std::string::npos || pos != 0) {
-        //for atomic service
-        pos = keyName.find(ATOMIC_SERVICE_DIR_PREFIX);
-        if (pos == std::string::npos || pos != 0) {
-            return;
-        }
-        isApp = false;
-    }
-
-    size_t indexBegin = 0;
-    if (isApp) {
-        indexBegin = pos + CLONE_APP_DIR_PREFIX.size();
-    } else {
-        indexBegin = pos + ATOMIC_SERVICE_DIR_PREFIX.size();
-    }
-
-    auto plus = keyName.find(PLUS, indexBegin);
-    if ((plus == std::string::npos) || (plus <= indexBegin)) {
-        return;
-    }
-
-    if (isApp) {
-        std::string index = keyName.substr(indexBegin, plus - indexBegin);
-        if (!OHOS::StrToInt(index, appIndex)) {
-            appIndex = 0;
-            return;
-        }
-    }
-
-    bundleName = keyName.substr(plus + PLUS.size());
-}
-
 napi_value GetAppCloneIdentityBySandboxDataDirSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI GetAppCloneIdentityBySandboxDataDirSync called");
@@ -1088,7 +1043,7 @@ napi_value GetAppCloneIdentityBySandboxDataDirSync(napi_env env, napi_callback_i
     }
     std::string bundleName;
     int32_t appIndex;
-    GetBundleNameAndIndexBySandboxDataDir(sandboxDataDir, bundleName, appIndex);
+    CommonFunc::GetBundleNameAndIndexBySandboxDataDir(sandboxDataDir, bundleName, appIndex);
 
     napi_value nAppCloneIdentity = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nAppCloneIdentity));

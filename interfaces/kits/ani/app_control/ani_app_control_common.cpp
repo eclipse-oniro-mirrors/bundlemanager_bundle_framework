@@ -42,6 +42,9 @@ constexpr const char* PROPERTYNAME_FLAGS = "flags";
 constexpr const char* PROPERTYNAME_ACTION = "action";
 constexpr const char* PROPERTYNAME_ENTITIES = "entities";
 constexpr const char* PROPERTYNAME_MODULENAME = "moduleName";
+constexpr const char* PROPERTYNAME_APPID = "appId";
+constexpr const char* PROPERTYNAME_APPINDEX = "appIndex";
+constexpr const char* PROPERTYNAME_DISPOSEDRULE = "disposedRule";
 }
 
 ani_object AniAppControlCommon::ConvertWantInfo(ani_env* env, const Want& want)
@@ -313,6 +316,41 @@ bool AniAppControlCommon::ParseUninstallDisposedRule(ani_env* env,
     // priority: int
     RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_PRIORITY, &intValue));
     uninstallDisposedRule.priority = intValue;
+
+    return true;
+}
+
+bool AniAppControlCommon::ParseDisposedRuleConfiguration(ani_env* env,
+    ani_object object, DisposedRuleConfiguration& disposedRuleConfiguration)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_string string = nullptr;
+
+    // appId: string
+    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_APPID, &string));
+    disposedRuleConfiguration.appId = CommonFunAni::AniStrToString(env, string);
+    if (disposedRuleConfiguration.appId.empty()) {
+        APP_LOGE("appId empty");
+        return false;
+    }
+
+    ani_int intValue = 0;
+
+    // appIndex: int
+    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_APPINDEX, &intValue));
+    if (intValue < Constants::MAIN_APP_INDEX || intValue > Constants::CLONE_APP_INDEX_MAX) {
+        return false;
+    }
+    disposedRuleConfiguration.appIndex = intValue;
+
+    ani_object objectValue = nullptr;
+
+    // disposedRule: DisposedRule
+
+    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_DISPOSEDRULE, &objectValue));
+    RETURN_FALSE_IF_FALSE(ParseDisposedRule(env, objectValue, disposedRuleConfiguration.disposedRule));
 
     return true;
 }
