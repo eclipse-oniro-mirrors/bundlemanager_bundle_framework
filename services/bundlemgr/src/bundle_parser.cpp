@@ -39,6 +39,8 @@ static constexpr const char* ROUTER_ITEM_KEY_CUSTOM_DATA = "customData";
 static constexpr const uint16_t DATA_MAX_LENGTH = 4096;
 constexpr const char* NO_DISABLING_CONFIG_KEY = "residentProcessInExtremeMemory";
 constexpr const char* NO_DISABLING_KEY_BUNDLE_NAME = "bundleName";
+constexpr const char* STATIC_RUNTIME_ENABLE_LIST = "static_runtime_enable_list";
+constexpr const char* APP_SIGNATURE = "app_signature";
 
 bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std::string> &sysCaps)
 {
@@ -458,6 +460,57 @@ ErrCode BundleParser::ParseTestRunner(
     }
     ModuleProfile moduleProfile;
     return moduleProfile.TransformToTestRunner(outStream, testRunner);
+}
+
+ErrCode BundleParser::ParseAppStaticRuntimeEnableList(const std::string &filePath,
+    std::unordered_map<std::string, std::vector<std::string>> &enableList) const
+{
+    APP_LOGD("Parse enableList from %{public}s", filePath.c_str());
+    nlohmann::json jsonBuf;
+    if (!ReadFileIntoJson(filePath, jsonBuf)) {
+        return ERR_APPEXECFWK_PARSE_FILE_FAILED;
+    }
+    if (jsonBuf.find(STATIC_RUNTIME_ENABLE_LIST) == jsonBuf.end()) {
+        APP_LOGE("not have static_runtime_enable_list");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+    auto jsonObject = jsonBuf.at(STATIC_RUNTIME_ENABLE_LIST);
+    ErrCode result = ERR_OK;
+    if (jsonObject.is_discarded() || !jsonObject.is_array()) {
+        APP_LOGE("not array");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+    int32_t parseResult = ERR_OK;
+    for (const auto &object : jsonObject) {
+        if (!object.is_object()) {
+            APP_LOGE("not object");
+            return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+        }
+        std::string bundleName;
+        std::vector<std::string> appSignature;
+        const auto &objectEnd = object.end();
+        BMSJsonUtil::GetStrValueIfFindKey(object, objectEnd,
+            NO_DISABLING_KEY_BUNDLE_NAME,
+            bundleName,
+            true, parseResult);
+
+        GetValueIfFindKey<std::vector<std::string>>(object, objectEnd,
+            APP_SIGNATURE,
+            appSignature,
+            JsonType::ARRAY,
+            false, parseResult, ArrayType::STRING);
+
+        if (parseResult != ERR_OK) {
+            APP_LOGE("parse enableList failed, parseResult is %{public}d, bundleName:%{public}s",
+                parseResult, bundleName.c_str());
+            result = parseResult;
+            // need recover parse result to ERR_OK
+            parseResult = ERR_OK;
+            continue;
+        }
+        enableList.emplace(bundleName, appSignature);
+    }
+    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

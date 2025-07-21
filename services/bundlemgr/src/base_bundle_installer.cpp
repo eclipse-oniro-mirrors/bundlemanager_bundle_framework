@@ -1258,6 +1258,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
+
+    result = CheckArkTSMode(newInfos);
+    CHECK_RESULT(result, "check arkTS mode failed %{public}d");
+
     bool onDemandInstall = OnDemandInstallDataMgr::GetInstance().IsOnDemandInstall(installParam);
     if (!onDemandInstall) {
         if (userId_ == Constants::DEFAULT_USERID && installParam.isDataPreloadHap &&
@@ -4084,6 +4088,46 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     SetAppDistributionType(infos);
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
     return ret;
+}
+
+ErrCode BaseBundleInstaller::CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::ARK_WHITE_LIST, false)) {
+        return ERR_OK;
+    }
+    if (newInfos.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "newInfos is empty");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    auto needCheckWhiteList = std::any_of(newInfos.begin(), newInfos.end(),
+        [](const auto &item) {
+            return std::any_of(item.second.GetInnerModuleInfos().begin(),
+                item.second.GetInnerModuleInfos().end(),
+                [](const auto &moduleItem) {
+                    return moduleItem.second.moduleArkTSMode != Constants::ARKTS_MODE_DYNAMIC;
+                });
+        });
+    if (!needCheckWhiteList) {
+        return ERR_OK;
+    }
+    std::string bundleName = newInfos.begin()->second.GetBundleName();
+    std::string appIdentifier = newInfos.begin()->second.GetAppIdentifier();
+    std::string appId = newInfos.begin()->second.GetAppId();
+    BundleParser bundleParser;
+    std::unordered_map<std::string, std::vector<std::string>> enableList;
+    bundleParser.ParseAppStaticRuntimeEnableList(ServiceConstants::ARK_WHITE_LIST_CONF, enableList);
+    auto iter = enableList.find(bundleName);
+    if (iter == enableList.end()) {
+        LOG_E(BMS_TAG_INSTALLER, "arkWhiteList not have bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_ARK_RUNTIME_NOT_IN_ARK_WHITE_LIST;
+    }
+    std::vector<std::string> appSignature = iter->second;
+    if (std::find(appSignature.begin(), appSignature.end(), appIdentifier) == appSignature.end()
+        && std::find(appSignature.begin(), appSignature.end(), appId) == appSignature.end()) {
+        LOG_E(BMS_TAG_INSTALLER, "arkWhiteList appSignature not match -n:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_ARK_RUNTIME_SIGNATURE_NOT_MATCH;
+    }
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,

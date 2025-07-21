@@ -183,6 +183,7 @@ constexpr const char* DEVELOPERMODE_STATE = "const.security.developermode.state"
 constexpr const char* BMS_DATA_PRELOAD = "persist.bms.data.preload";
 constexpr const char* IS_SUPPORT_PLUGIN = "const.bms.support_plugin";
 constexpr const char* IS_DRIVER_FOR_ALL_USERS = "const.bms.driverForAllUsers";
+constexpr const char* ARK_WHITE_LIST = "persist.ark.enable.static.runtime.whitelist";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config
@@ -260,6 +261,9 @@ constexpr const char* UPDATE_PERMISSIONS_FLAG_UPDATED = "updated";
 constexpr const char* EXT_PROFILE = "ext_profile";
 constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
 constexpr const char* MANIFEST_JSON = "manifest.json";
+
+// ark white list
+constexpr const char* ARK_WHITE_LIST_CONF = "/etc/ark/app_static_runtime_enable_list.conf";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS
