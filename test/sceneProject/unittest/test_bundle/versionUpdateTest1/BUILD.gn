@@ -29,4 +29,3 @@ ohos_app("versionUpdateTest1") {
   build_level = "module"
   build_modules = [ "entry" ]
 }
-
