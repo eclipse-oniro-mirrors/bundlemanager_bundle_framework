@@ -99,9 +99,9 @@ int32_t AbilityManagerHelper::QueryRunningSharedBundles(
         return FAILED;
     }
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    // int32_t ret = appMgrProxy->QueryRunningSharedBundles(pid, shareBundles);
+    int32_t ret = appMgrProxy->QueryRunningSharedBundles(pid, shareBundles);
     IPCSkeleton::SetCallingIdentity(identity);
-    return 0;
+    return ret;
 #else
     APP_LOGI("ABILITY_RUNTIME_ENABLE is false");
     return FAILED;

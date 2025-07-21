@@ -117,7 +117,7 @@ HWTEST_F(BmsBundleDataMgrSharedTest, GetAdaptBaseShareBundleInfo_0001, Function 
     innerBundleInfo.innerSharedModuleInfos_[MODULE_TEST].push_back(innerModuleInfo);
     ret = GetBundleDataMgr()->GetAdaptBaseShareBundleInfo(innerBundleInfo, dependency, baseSharedBundleInfo);
     EXPECT_FALSE(ret);
-
+    dependency.bundleName = MODULE_TEST;
     dependency.moduleName = MODULE_TEST;
     ret = GetBundleDataMgr()->GetAdaptBaseShareBundleInfo(innerBundleInfo, dependency, baseSharedBundleInfo);
     EXPECT_TRUE(ret);
