@@ -442,19 +442,12 @@ void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId,
     }
     auto bundleInfos = dataMgr_->GetAllInnerBundleInfos();
     for (const auto &info : bundleInfos) {
-        InnerBundleUserInfo userInfo;
-        if (!info.second.GetInnerBundleUserInfo(userId, userInfo)) {
-            LOG_W(BMS_TAG_DEFAULT, "current bundle (%{public}s) is not installed at current userId (%{public}d)",
-                info.first.c_str(), userId);
-            continue;
-        }
         auto iterator = std::find(appIds.begin(), appIds.end(), info.second.GetAppId());
         bool isRemovable = (iterator != appIds.end()) ? false : true;
-        if (userInfo.isRemovable != isRemovable) {
-            LOG_I(BMS_TAG_DEFAULT, "current bundle (%{public}s) change removable at userId (%{public}d)",
-                info.first.c_str(), userId);
-            userInfo.isRemovable = isRemovable;
-            dataMgr_->AddInnerBundleUserInfo(info.first, userInfo);
+        if (!dataMgr_->SetBundleUserInfoRemovable(info.first, userId, isRemovable)) {
+            LOG_W(BMS_TAG_DEFAULT, "UpdateAppControlledInfo fail -n %{public}s -u %{public}d removable:%{public}d",
+                info.first.c_str(), userId, isRemovable);
+            continue;
         }
         auto modifyAppIdsIterator = std::find(modifyAppIds.begin(), modifyAppIds.end(), info.second.GetAppId());
         if (modifyAppIdsIterator != modifyAppIds.end()) {
