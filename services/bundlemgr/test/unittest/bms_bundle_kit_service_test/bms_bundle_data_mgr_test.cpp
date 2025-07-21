@@ -1583,6 +1583,35 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfos_0100, Function | SmallTest | Level
 }
 
 /**
+ * @tc.number: GetAdaptBaseShareBundleInfo_0100
+ * @tc.name: test GetAdaptBaseShareBundleInfo
+ * @tc.desc: 1.system run normally
+ *           2.check GetAdaptBaseShareBundleInfo failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAdaptBaseShareBundleInfo_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    Dependency dependency;
+    BaseSharedBundleInfo baseSharedBundleInfo;
+    bool ret = GetBundleDataMgr()->GetAdaptBaseShareBundleInfo(innerBundleInfo, dependency, baseSharedBundleInfo);
+    EXPECT_FALSE(ret);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.bundleType = BundleType::SHARED;
+    innerModuleInfo.versionCode = 200;
+    innerBundleInfo.innerSharedModuleInfos_[MODULE_TEST].push_back(innerModuleInfo);
+    ret = GetBundleDataMgr()->GetAdaptBaseShareBundleInfo(innerBundleInfo, dependency, baseSharedBundleInfo);
+    EXPECT_FALSE(ret);
+
+    dependency.moduleName = MODULE_TEST;
+    innerModuleInfo.versionCode = 100;
+    innerBundleInfo.innerSharedModuleInfos_[MODULE_TEST].push_back(innerModuleInfo);
+    ret = GetBundleDataMgr()->GetAdaptBaseShareBundleInfo(innerBundleInfo, dependency, baseSharedBundleInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(baseSharedBundleInfo.versionCode, 200);
+}
+
+/**
  * @tc.number: GetAllBundleInfos_0100
  * @tc.name: test GetAllBundleInfos
  * @tc.desc: 1.system run normally

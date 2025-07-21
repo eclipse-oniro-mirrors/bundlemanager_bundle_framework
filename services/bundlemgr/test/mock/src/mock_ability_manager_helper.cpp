@@ -93,6 +93,7 @@ int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName)
 int32_t AbilityManagerHelper::QueryRunningSharedBundles(
     const pid_t pid, std::map<std::string, uint32_t> &shareBundles)
 {
+    shareBundles["moduleNameTest"] = 1;
     return 0;
 }
 }  // namespace AppExecFwk
