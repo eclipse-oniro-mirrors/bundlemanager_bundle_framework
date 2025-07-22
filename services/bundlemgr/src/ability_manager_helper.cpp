@@ -83,7 +83,7 @@ int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName)
 
     return NOT_RUNNING;
 #else
-APP_LOGI("BUNDLE_FRAMEWORK_FREE_INSTALL is false");
+    APP_LOGI("BUNDLE_FRAMEWORK_FREE_INSTALL is false");
     return FAILED;
 #endif
 }
