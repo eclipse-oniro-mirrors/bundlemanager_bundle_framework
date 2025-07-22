@@ -31,6 +31,7 @@
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#include "on_demand_install_data_mgr.h"
 #include "system_ability_helper.h"
 #include "inner_bundle_clone_common.h"
 #ifdef DEVICE_USAGE_STATISTICS_ENABLED
@@ -4425,12 +4426,12 @@ ErrCode BundleMgrHostImpl::GetAllPreinstalledApplicationInfos(
     }
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
     for (auto &preInstallBundleInfo: preInstallBundleInfos) {
-        PreinstalledApplicationInfo preinstalledApplicationInfo;
-        preinstalledApplicationInfo.bundleName = preInstallBundleInfo.GetBundleName();
-        preinstalledApplicationInfo.moduleName = preInstallBundleInfo.GetModuleName();
-        preinstalledApplicationInfo.labelId = preInstallBundleInfo.GetLabelId();
-        preinstalledApplicationInfo.iconId = preInstallBundleInfo.GetIconId();
-        preinstalledApplicationInfos.emplace_back(preinstalledApplicationInfo);
+        AddPreinstalledApplicationInfo(preInstallBundleInfo, preinstalledApplicationInfos);
+    }
+    std::vector<PreInstallBundleInfo> onDemandBundleInfos;
+    OnDemandInstallDataMgr::GetInstance().GetAllOnDemandInstallBundleInfos(onDemandBundleInfos);
+    for (auto &onDemandBundleInfo: onDemandBundleInfos) {
+        AddPreinstalledApplicationInfo(onDemandBundleInfo, preinstalledApplicationInfos);
     }
     return ERR_OK;
 }
@@ -5144,6 +5145,17 @@ void BundleMgrHostImpl::CallAbilityManager(
     if (callBack->SendRequest(ERR_OK, data, reply, option) != ERR_OK) {
         APP_LOGE("SendRequest failed");
     }
+}
+
+void BundleMgrHostImpl::AddPreinstalledApplicationInfo(PreInstallBundleInfo &preInstallBundleInfo,
+    std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+{
+    PreinstalledApplicationInfo preinstalledApplicationInfo;
+    preinstalledApplicationInfo.bundleName = preInstallBundleInfo.GetBundleName();
+    preinstalledApplicationInfo.moduleName = preInstallBundleInfo.GetModuleName();
+    preinstalledApplicationInfo.labelId = preInstallBundleInfo.GetLabelId();
+    preinstalledApplicationInfo.iconId = preInstallBundleInfo.GetIconId();
+    preinstalledApplicationInfos.emplace_back(preinstalledApplicationInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -3232,7 +3232,8 @@ HWTEST_F(BmsBundleParserTest, BundleParser_2200, Function | MediumTest | Level1)
 
     std::string configFile;
     std::set<PreScanInfo> scanInfos;
-    ErrCode ret = bundleParser.ParsePreAppListConfig(configFile, scanInfos);
+    std::set<PreScanInfo> scanOnDemandInfos;
+    ErrCode ret = bundleParser.ParsePreAppListConfig(configFile, scanInfos, scanOnDemandInfos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
 }
 
@@ -3247,7 +3248,8 @@ HWTEST_F(BmsBundleParserTest, BundleParser_2300, Function | MediumTest | Level1)
 
     std::string configFile = "config.cfg";
     std::set<PreScanInfo> scanInfos;
-    ErrCode ret = bundleParser.ParsePreAppListConfig(configFile, scanInfos);
+    std::set<PreScanInfo> scanOnDemandInfos;
+    ErrCode ret = bundleParser.ParsePreAppListConfig(configFile, scanInfos, scanOnDemandInfos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
 }
 

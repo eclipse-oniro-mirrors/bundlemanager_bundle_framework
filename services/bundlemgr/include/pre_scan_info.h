@@ -104,6 +104,7 @@ struct PreScanInfo {
     int32_t priority = 0;
     std::string bundleDir;
     std::string appIdentifier;
+    bool onDemandInstall = false;
 
     bool operator < (const PreScanInfo &preScanInfo) const
     {
@@ -126,6 +127,7 @@ struct PreScanInfo {
         priority = 0;
         appIdentifier.clear();
         isDataPreloadHap = false;
+        onDemandInstall = false;
     }
 
     std::string ToString() const
