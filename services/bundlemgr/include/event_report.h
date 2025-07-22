@@ -54,6 +54,7 @@ enum class BMSEventType : uint8_t {
     DB_ERROR,
     DATA_PARTITION_USAGE_EVENT,
     DEFAULT_APP,
+    QUERY_BUNDLE_INFO,
 };
 
 enum class BundleEventType : uint8_t {
@@ -166,6 +167,7 @@ struct EventInfo {
     int64_t freeSize = 0;
     int32_t errorCode = 0;
     int32_t rebuildType = 0;
+    int64_t lastReportEventTime = 0;
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
@@ -193,6 +195,15 @@ struct EventInfo {
     bool isIntercepted = false;
     std::vector<uint64_t> fileSize;
     std::vector<uint64_t> partitionSize;
+    std::vector<int32_t> funcIdList;
+    std::vector<int32_t> uidList;
+    std::vector<int32_t> userIdList;
+    std::vector<int32_t> appIndexList;
+    std::vector<int32_t> callingUidList;
+    std::vector<int32_t> flagList;
+    std::vector<std::string> bundleNameList;
+    std::vector<std::string> callingAppIdList;
+    std::vector<std::string> callingBundleNameList;
     
     std::string want;
     std::string utd;
@@ -248,6 +259,15 @@ struct EventInfo {
         rebuildType = 0;
         want.clear();
         utd.clear();
+        funcIdList.clear();
+        uidList.clear();
+        userIdList.clear();
+        appIndexList.clear();
+        callingUidList.clear();
+        flagList.clear();
+        bundleNameList.clear();
+        callingAppIdList.clear();
+        callingBundleNameList.clear();
     }
 };
 

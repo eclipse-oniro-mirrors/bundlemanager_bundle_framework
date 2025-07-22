@@ -61,6 +61,13 @@
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
 
+namespace OHOS {
+namespace AppExecFwk {
+    void ClearGlobalQueryEventInfo();
+    EventInfo GetQueryEventInfo(ErrCode error);
+}
+}
+
 using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
@@ -68,6 +75,11 @@ using OHOS::AAFwk::Want;
 
 namespace OHOS {
 namespace {
+const int32_t TEST_QUERY_EVENT_UID = 20013998;
+const int32_t TEST_QUERY_EVENT_BUNDLE_ID = 13998;
+const int32_t TEST_QUERY_EVENT_UID2 = 20013999;
+const int32_t TEST_QUERY_EVENT_BUNDLE_ID2 = 13999;
+const int32_t MAX_QUERY_EVENT_REPORT_ONCE = 101;
 const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
 const std::string MODULE_NAME_TEST = "com.example.bundlekit.test.entry";
 const std::string MODULE_NAME_TEST1 = "com.example.bundlekit.test.entry1";
@@ -4282,6 +4294,215 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostHandleBatchGetBundleStats_0100, Func
 
     auto ret = localBundleMgrHost->HandleBatchGetBundleStats(data, reply);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckNeedAddEvent_0100
+ * @tc.name: test CheckNeedAddEvent
+ * @tc.desc: 1.Test the CheckNeedAddEvent by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, CheckNeedAddEvent_0100, Function | SmallTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    ClearGlobalQueryEventInfo();
+    size_t maxEvent = 7;
+    EventInfo test;
+    test.errCode = ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    test.funcIdList = {1};
+    test.userIdList = {100};
+    test.uidList = {1};
+    test.appIndexList = {0};
+    test.flagList = {BundleFlag::GET_BUNDLE_DEFAULT};
+    test.bundleNameList = {"test.CheckNeedAddEvent_0100"};
+    test.callingUidList = {1001};
+    test.callingBundleNameList = {"com.test.CheckNeedAddEvent_0100"};
+    test.callingAppIdList = {"123asdf"};
+    bool res = bundleMgrHostImpl_->CheckNeedAddEvent(test, maxEvent);
+    EXPECT_EQ(res, true);
+
+    res = bundleMgrHostImpl_->CheckNeedAddEvent(test, maxEvent);
+    EXPECT_EQ(res, false);
+
+    test.funcIdList = {2};
+    res = bundleMgrHostImpl_->CheckNeedAddEvent(test, maxEvent);
+    EXPECT_EQ(res, true);
+
+    test.userIdList = {2};
+    res = bundleMgrHostImpl_->CheckNeedAddEvent(test, maxEvent);
+    EXPECT_EQ(res, true);
+
+    test.appIndexList = {2};
+    res = bundleMgrHostImpl_->CheckNeedAddEvent(test, maxEvent);
+    EXPECT_EQ(res, true);
+
+    test.flagList = {BundleFlag::GET_BUNDLE_WITH_ABILITIES};
+    res = bundleMgrHostImpl_->CheckNeedAddEvent(test, maxEvent);
+    EXPECT_EQ(res, true);
+
+    test.bundleNameList = {"com.test.CheckNeedAddEvent_0100_2"};
+    res = bundleMgrHostImpl_->CheckNeedAddEvent(test, maxEvent);
+    EXPECT_EQ(res, true);
+
+    test.callingUidList = {1002};
+    res = bundleMgrHostImpl_->CheckNeedAddEvent(test, maxEvent);
+    EXPECT_EQ(res, true);
+
+    test.callingUidList = {1002};
+    res = bundleMgrHostImpl_->CheckNeedAddEvent(test, maxEvent);
+    EXPECT_EQ(res, false);
+    ClearGlobalQueryEventInfo();
+}
+
+/**
+ * @tc.number: GetCallingInfo_0100
+ * @tc.name: test GetCallingInfo
+ * @tc.desc: 1.Test the GetCallingInfo by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetCallingInfo_0100, Function | SmallTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    auto dataMgr = bundleMgrHostImpl_->GetDataMgrFromService();
+    ASSERT_NE(dataMgr, nullptr);
+    int32_t callingUid = 0;
+    std::string callingBundleName;
+    std::string callingAppId;
+    bool ret = bundleMgrHostImpl_->GetCallingInfo(callingUid, callingBundleName, callingAppId);
+    EXPECT_EQ(ret, false);
+    callingUid = TEST_QUERY_EVENT_UID;
+    ret = bundleMgrHostImpl_->GetCallingInfo(callingUid, callingBundleName, callingAppId);
+    EXPECT_EQ(ret, false);
+
+    std::string bundleName = "com.GetCallingInfo_0100.test";
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = bundleName;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    info.SetAppIdentifier("appIdentifier");
+    info.SetProvisionId("appId");
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = TEST_QUERY_EVENT_UID;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = 100;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(bundleName, info);
+
+    int32_t testBundleId = TEST_QUERY_EVENT_BUNDLE_ID;
+    dataMgr->bundleIdMap_.insert(std::pair<int32_t, std::string>(testBundleId, bundleName));
+    ret = bundleMgrHostImpl_->GetCallingInfo(callingUid, callingBundleName, callingAppId);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(callingBundleName, bundleName);
+}
+
+/**
+ * @tc.number: SendQueryBundleInfoEvent_0100
+ * @tc.name: test SendQueryBundleInfoEvent
+ * @tc.desc: 1.Test the SendQueryBundleInfoEvent by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, SendQueryBundleInfoEvent_0100, Function | SmallTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    auto dataMgr = bundleMgrHostImpl_->GetDataMgrFromService();
+    ASSERT_NE(dataMgr, nullptr);
+    ClearGlobalQueryEventInfo();
+    size_t maxEvent = 7;
+    EventInfo test;
+    test.errCode = ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    test.funcIdList = {1};
+    test.userIdList = {100};
+    test.uidList = {1};
+    test.appIndexList = {0};
+    test.flagList = {BundleFlag::GET_BUNDLE_DEFAULT};
+    for (int32_t i = 0; i <= MAX_QUERY_EVENT_REPORT_ONCE; i++) {
+        test.bundleNameList.push_back("test.SendQueryBundleInfoEvent_0100_" + std::to_string(i));
+    }
+    test.callingUidList = {1001};
+    test.callingBundleNameList = {"com.test.SendQueryBundleInfoEvent_0100"};
+    test.callingAppIdList = {"123asdf"};
+    test.lastReportEventTime = 0;
+
+    // test no need report errcode
+    test.errCode = ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    bool ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, 0, true);
+    EXPECT_EQ(ret, false);
+ 
+    // test reportNow is true
+    test.errCode = ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, 0, true);
+    EXPECT_EQ(ret, true);
+    
+    // test reportNow is false and CheckNeedAddEvent is true
+    ClearGlobalQueryEventInfo();
+    ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, 0, false);
+    EXPECT_EQ(ret, false);
+
+    // test reportNow is false and CheckNeedAddEvent is false
+    ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, 0, false);
+    EXPECT_EQ(ret, true);
+    EventInfo test2 = GetQueryEventInfo(ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(test2.bundleNameList.empty(), true);
+ 
+    // test reportNow is false and wait for more than intervalTime
+    ClearGlobalQueryEventInfo();
+    test.bundleNameList = {"test.SendQueryBundleInfoEvent_0100"};
+    ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, 0, false);
+    EXPECT_EQ(ret, false);
+    ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, 0, false);
+    EXPECT_EQ(ret, true);
+ 
+    // test reportNow is false, not ready to report
+    ClearGlobalQueryEventInfo();
+    test.bundleNameList = {"test.SendQueryBundleInfoEvent_0100"};
+    ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, BundleUtil::GetCurrentTime(), false);
+    EXPECT_EQ(ret, false);
+    ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, BundleUtil::GetCurrentTime(), false);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetBundleNameForUid_0100
+ * @tc.name: test GetBundleNameForUid
+ * @tc.desc: 1.Test the GetBundleNameForUid by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleNameForUid_0100, Function | SmallTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    auto dataMgr = bundleMgrHostImpl_->GetDataMgrFromService();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string testResult;
+    bool testRet = bundleMgrHostImpl_->GetBundleNameForUid(1, testResult);
+    EXPECT_FALSE(testRet);
+
+    std::string bundleName = "com.GetBundleNameForUid_0100.test";
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    bundleInfo.applicationInfo.name = bundleName;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = TEST_QUERY_EVENT_UID2;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = 100;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(bundleName, info);
+
+    int32_t testBundleId = TEST_QUERY_EVENT_BUNDLE_ID2;
+    dataMgr->bundleIdMap_.insert(std::pair<int32_t, std::string>(testBundleId, bundleName));
+    
+    testRet = bundleMgrHostImpl_->GetBundleNameForUid(TEST_QUERY_EVENT_UID2, testResult);
+    EXPECT_TRUE(testRet);
 }
 
 /**

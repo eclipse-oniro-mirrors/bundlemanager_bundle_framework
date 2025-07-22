@@ -1450,6 +1450,22 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, RdbDataManager_0004, Function | MediumTest
 }
 
 /**
+ * @tc.number: GetCallingInfo_0001
+ * @tc.name: GetCallingInfo
+ * @tc.desc: test GetCallingInfo of BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, GetCallingInfo_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    int32_t callingUid = 0;
+    std::string callingBundleName;
+    std::string callingAppId;
+    bool ret = localBundleMgrHostImpl->GetCallingInfo(callingUid, callingBundleName, callingAppId);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: GetRdbRestoreMutex_0010
  * @tc.name: Test GetRdbRestoreMutex
  * @tc.desc: 1.GetRdbRestoreMutex
