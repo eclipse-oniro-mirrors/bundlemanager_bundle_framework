@@ -79,6 +79,14 @@ constexpr const char* PROPERTYNAME_UNBOXED = "unboxed";
             return res;                       \
         }                                     \
     } while (0)
+namespace CommonFunAniNS {
+constexpr const char* CLASSNAME_BOOLEAN = "Lstd/core/Boolean;";
+constexpr const char* CLASSNAME_INT = "Lstd/core/Int;";
+constexpr const char* CLASSNAME_LONG = "Lstd/core/Long;";
+constexpr const char* CLASSNAME_DOUBLE = "Lstd/core/Double;";
+constexpr const char* CLASSNAME_ARRAY = "Lescompat/Array;";
+constexpr const char* CLASSNAME_STRING = "Lstd/core/String;";
+} // namespace CommonFunAniNS
 class CommonFunAni {
 public:
     // Data conversion.
@@ -124,7 +132,9 @@ public:
     static ani_object ConvertSignatureInfo(ani_env* env, const SignatureInfo& signatureInfo);
 
     static ani_object ConvertKeyValuePair(
-        ani_env* env, const std::pair<std::string, std::string>& item, const char* className);
+        ani_env* env, const std::pair<std::string, std::string>& item, const std::string& className);
+    static ani_object ConvertKeyValuePairV2(
+        ani_env* env, const std::pair<std::string, std::string>& item, const std::string& className);
     static ani_object ConvertDataItem(ani_env* env, const std::pair<std::string, std::string>& item);
     static ani_object ConvertRouterItem(ani_env* env, const RouterItem& routerItem);
 
@@ -204,6 +214,8 @@ public:
 
     static ani_class CreateClassByName(ani_env* env, const std::string& className);
     static ani_object CreateNewObjectByClass(ani_env* env, ani_class cls);
+    static ani_object CreateNewObjectByClassV2(
+        ani_env* env, ani_class cls, const std::string& ctorSig, const ani_value* args);
     static inline ani_object ConvertAniArrayString(ani_env* env, const std::vector<std::string>& strings)
     {
         return ConvertAniArray(env, strings, [](ani_env* env, const std::string& nativeStr) {
@@ -293,27 +305,15 @@ public:
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
 
-        ani_class arrayCls = nullptr;
-        ani_status status = env->FindClass("Lescompat/Array;", &arrayCls);
-        if (status != ANI_OK) {
-            APP_LOGE("FindClass failed %{public}d", status);
-            return nullptr;
-        }
+        ani_class arrayCls = CreateClassByName(env, CommonFunAniNS::CLASSNAME_ARRAY);
+        RETURN_NULL_IF_NULL(arrayCls);
 
-        ani_method arrayCtor;
-        status = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
-        if (status != ANI_OK) {
-            APP_LOGE("Class_FindMethod failed %{public}d", status);
-            return nullptr;
-        }
-
-        ani_object arrayObj;
         ani_size length = cArray.size();
-        status = env->Object_New(arrayCls, arrayCtor, &arrayObj, length);
-        if (status != ANI_OK) {
-            APP_LOGE("Object_New failed %{public}d", status);
-            return nullptr;
-        }
+        ani_value arg = { .i = static_cast<ani_int>(length) };
+        ani_object arrayObj = CreateNewObjectByClassV2(env, arrayCls, "I:V", &arg);
+        RETURN_NULL_IF_NULL(arrayObj);
+
+        ani_status status = ANI_OK;
         if (length > 0) {
             for (ani_size i = 0; i < length; ++i) {
                 ani_enum_item item = converter(env, static_cast<int32_t>(cArray[i]));
@@ -340,28 +340,15 @@ public:
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
 
-        ani_class arrayCls = nullptr;
-        ani_status status = env->FindClass("Lescompat/Array;", &arrayCls);
-        if (status != ANI_OK) {
-            APP_LOGE("FindClass failed %{public}d", status);
-            return nullptr;
-        }
-
-        ani_method arrayCtor;
-        status = env->Class_FindMethod(arrayCls, "<ctor>", "I:V", &arrayCtor);
-        if (status != ANI_OK) {
-            APP_LOGE("Class_FindMethod failed %{public}d", status);
-            return nullptr;
-        }
+        ani_class arrayCls = CreateClassByName(env, CommonFunAniNS::CLASSNAME_ARRAY);
+        RETURN_NULL_IF_NULL(arrayCls);
 
         ani_size length = nativeArray.size();
-        ani_object arrayObj;
-        status = env->Object_New(arrayCls, arrayCtor, &arrayObj, length);
-        if (status != ANI_OK) {
-            APP_LOGE("Object_New failed %{public}d", status);
-            return nullptr;
-        }
+        ani_value arg = { .i = static_cast<ani_int>(length) };
+        ani_object arrayObj = CreateNewObjectByClassV2(env, arrayCls, "I:V", &arg);
+        RETURN_NULL_IF_NULL(arrayObj);
 
+        ani_status status = ANI_OK;
         ani_size i = 0;
         for (const auto& iter : nativeArray) {
             ani_object item = converter(env, iter, std::forward<Args>(args)...);
@@ -573,32 +560,57 @@ public:
     }
 
     template<typename valueType>
-    static bool CallSetter(ani_env* env, ani_class cls, ani_object object, const char* propertyName, valueType value)
+    static bool CallSetter(ani_env* env, ani_class cls, ani_object object, const char* propertyName, valueType value,
+        const char* valueClassName = nullptr)
     {
         RETURN_FALSE_IF_NULL(env);
         RETURN_FALSE_IF_NULL(cls);
         RETURN_FALSE_IF_NULL(object);
 
-        ani_status status = ANI_OK;
-        if constexpr (std::is_pointer_v<valueType> && std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
-            status = env->Object_SetPropertyByName_Ref(object, propertyName, value);
-        } else if constexpr (std::is_same_v<valueType, ani_boolean>) {
-            status = env->Object_SetPropertyByName_Boolean(object, propertyName, value);
+        std::string setterSig;
+        ani_value setterParam { };
+        if constexpr (std::is_same_v<valueType, ani_boolean>) {
+            setterSig = "Z:V";
+            setterParam.z = value;
         } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
                              std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
-            status = env->Object_SetPropertyByName_Int(object, propertyName, static_cast<ani_int>(value));
+            setterSig = "I:V";
+            setterParam.i = static_cast<ani_int>(value);
         } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
-            status = env->Object_SetPropertyByName_Long(object, propertyName, static_cast<ani_long>(value));
+            setterSig = "J:V";
+            setterParam.l = static_cast<ani_long>(value);
         } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
                              std::is_same_v<valueType, uint64_t>) {
-            status = env->Object_SetPropertyByName_Double(object, propertyName, static_cast<ani_double>(value));
+            setterSig = "D:V";
+            setterParam.d = static_cast<ani_double>(value);
+        } else if constexpr (std::is_pointer_v<valueType> &&
+                             std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
+            if constexpr (std::is_same_v<valueType, ani_string>) {
+                valueClassName = CommonFunAniNS::CLASSNAME_STRING;
+            }
+            if (valueClassName != nullptr) {
+                setterSig = valueClassName;
+                setterSig.append(":V");
+            }
+            setterParam.r = value;
         } else {
-            APP_LOGE("Object_SetPropertyByName %{public}s Unsupported", propertyName);
+            APP_LOGE("Classname %{public}s Unsupported", propertyName);
             return false;
         }
 
+        std::string setterName("<set>");
+        setterName.append(propertyName);
+        ani_method setter;
+        ani_status status =
+            env->Class_FindMethod(cls, setterName.c_str(), setterSig.empty() ? nullptr : setterSig.c_str(), &setter);
         if (status != ANI_OK) {
-            APP_LOGE("Object_SetPropertyByName %{public}s failed %{public}d", propertyName, status);
+            APP_LOGE("Class_FindMethod %{public}s failed %{public}d", propertyName, status);
+            return false;
+        }
+
+        status = env->Object_CallMethod_Void_A(object, setter, &setterParam);
+        if (status != ANI_OK) {
+            APP_LOGE("Object_CallMethod_Void_A %{public}s failed %{public}d", propertyName, status);
             return false;
         }
 
@@ -606,7 +618,8 @@ public:
     }
 
     // sets property to null
-    static bool CallSetterNull(ani_env* env, ani_class cls, ani_object object, const char* propertyName)
+    static bool CallSetterNull(ani_env* env, ani_class cls, ani_object object, const char* propertyName,
+        const char* valueClassName = nullptr)
     {
         RETURN_FALSE_IF_NULL(env);
         RETURN_FALSE_IF_NULL(cls);
@@ -619,11 +632,12 @@ public:
             return false;
         }
 
-        return CallSetter(env, cls, object, propertyName, nullRef);
+        return CallSetter(env, cls, object, propertyName, nullRef, valueClassName);
     }
 
     // sets optional property to undefined
-    static bool CallSetterOptionalUndefined(ani_env* env, ani_class cls, ani_object object, const char* propertyName)
+    static bool CallSetterOptionalUndefined(ani_env* env, ani_class cls, ani_object object, const char* propertyName,
+        const char* valueClassName = nullptr)
     {
         RETURN_FALSE_IF_NULL(env);
         RETURN_FALSE_IF_NULL(cls);
@@ -636,69 +650,80 @@ public:
             return false;
         }
 
-        return CallSetter(env, cls, object, propertyName, undefined);
+        return CallSetter(env, cls, object, propertyName, undefined, valueClassName);
     }
 
     template<typename valueType>
-    static bool CallSetterOptional(
-        ani_env* env, ani_class cls, ani_object object, const char* propertyName, valueType value)
+    static ani_object BoxValue(ani_env* env, valueType value, const char** pValueClassName = nullptr)
+    {
+        RETURN_NULL_IF_NULL(env);
+
+        const char* valueClassName = nullptr;
+        std::string ctorSig;
+        ani_value ctorParam { };
+        if constexpr (std::is_same_v<valueType, ani_boolean>) {
+            valueClassName = CommonFunAniNS::CLASSNAME_BOOLEAN;
+            ctorSig = "Z:V";
+            ctorParam.z = value;
+        } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
+                             std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
+            valueClassName = CommonFunAniNS::CLASSNAME_INT;
+            ctorSig = "I:V";
+            ctorParam.i = static_cast<ani_int>(value);
+        } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
+            valueClassName = CommonFunAniNS::CLASSNAME_LONG;
+            ctorSig = "J:V";
+            ctorParam.l = static_cast<ani_long>(value);
+        } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
+                             std::is_same_v<valueType, uint64_t>) {
+            valueClassName = CommonFunAniNS::CLASSNAME_DOUBLE;
+            ctorSig = "D:V";
+            ctorParam.d = static_cast<ani_double>(value);
+        } else {
+            APP_LOGE("Type Unsupported");
+            return nullptr;
+        }
+        if (pValueClassName != nullptr) {
+            *pValueClassName = valueClassName;
+        }
+
+        ani_class valueClass = CreateClassByName(env, valueClassName);
+        RETURN_NULL_IF_NULL(valueClass);
+
+        ani_method ctor = nullptr;
+        ani_status status =
+            env->Class_FindMethod(valueClass, "<ctor>", ctorSig.empty() ? nullptr : ctorSig.c_str(), &ctor);
+        if (status != ANI_OK) {
+            APP_LOGE("Class_FindMethod <ctor> failed %{public}d", status);
+            return nullptr;
+        }
+
+        ani_object valueObj = nullptr;
+        status = env->Object_New_A(valueClass, ctor, &valueObj, &ctorParam);
+        if (status != ANI_OK) {
+            APP_LOGE("Object_New failed %{public}d", status);
+            return nullptr;
+        }
+
+        return valueObj;
+    }
+
+    template<typename valueType>
+    static bool CallSetterOptional(ani_env* env, ani_class cls, ani_object object, const char* propertyName,
+        valueType value, const char* valueClassName = nullptr)
     {
         RETURN_FALSE_IF_NULL(env);
         RETURN_FALSE_IF_NULL(cls);
         RETURN_FALSE_IF_NULL(object);
 
         if constexpr (std::is_pointer_v<valueType> && std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
-            return CallSetter(env, cls, object, propertyName, value);
+            return CallSetter(env, cls, object, propertyName, value, valueClassName);
         }
 
-        const char* valueClassName = nullptr;
-        const char* ctorSig = nullptr;
-        ani_value ctorArg { };
-        if constexpr (std::is_same_v<valueType, ani_boolean>) {
-            valueClassName = "Lstd/core/Boolean;";
-            ctorSig = "Z:V";
-            ctorArg.z = value;
-        } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
-                             std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
-            valueClassName = "Lstd/core/Int;";
-            ctorSig = "I:V";
-            ctorArg.i = static_cast<ani_int>(value);
-        } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
-            valueClassName = "Lstd/core/Long;";
-            ctorSig = "J:V";
-            ctorArg.l = static_cast<ani_long>(value);
-        } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
-                             std::is_same_v<valueType, uint64_t>) {
-            valueClassName = "Lstd/core/Double;";
-            ctorSig = "D:V";
-            ctorArg.d = static_cast<ani_double>(value);
-        } else {
-            APP_LOGE("Classname %{public}s Unsupported", propertyName);
-            return false;
-        }
+        ani_object valueObj = BoxValue(env, value, &valueClassName);
+        RETURN_FALSE_IF_NULL(valueObj);
 
-        ani_class valueClass = nullptr;
-        ani_status status = env->FindClass(valueClassName, &valueClass);
-        if (status != ANI_OK) {
-            APP_LOGE("FindClass %{public}s %{public}s failed %{public}d", propertyName, valueClassName, status);
-            return false;
-        }
-
-        ani_method ctor = nullptr;
-        status = env->Class_FindMethod(valueClass, "<ctor>", ctorSig, &ctor);
-        if (status != ANI_OK) {
-            APP_LOGE("Class_FindMethod <ctor> %{public}s failed %{public}d", propertyName, status);
-            return false;
-        }
-
-        ani_object valueObj = nullptr;
-        status = env->Object_New_A(valueClass, ctor, &valueObj, &ctorArg);
-        if (status != ANI_OK) {
-            APP_LOGE("Object_New %{public}s failed %{public}d", propertyName, status);
-            return false;
-        }
-
-        return CallSetter(env, cls, object, propertyName, valueObj);
+        return CallSetter(env, cls, object, propertyName, valueObj, valueClassName);
     }
 };
 } // namespace AppExecFwk

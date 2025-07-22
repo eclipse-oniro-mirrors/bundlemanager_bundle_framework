@@ -51,16 +51,93 @@ export class ApplicationInfoInner implements ApplicationInfo {
   readonly releaseType: string = "";
   readonly cloudFileSyncEnabled: boolean;
   readonly flags?: int|undefined;
+
+  constructor() { }
+  constructor(name: string,
+    description: string,
+    descriptionId: long,
+    enabled: boolean,
+    label: string,
+    labelId: long,
+    icon: string,
+    iconId: long,
+    process: string,
+    permissions: Array<string>,
+    codePath: string,
+    metadataArray: Array<ModuleMetadata>,
+    removable: boolean,
+    accessTokenId: long,
+    uid: int,
+    iconResource: Resource,
+    labelResource: Resource,
+    descriptionResource: Resource,
+    appDistributionType: string,
+    appProvisionType: string,
+    systemApp: boolean,
+    bundleType: bundleManager.BundleType,
+    debug: boolean,
+    dataUnclearable: boolean,
+    nativeLibraryPath: string,
+    multiAppMode: MultiAppMode,
+    appIndex: int,
+    installSource: string,
+    releaseType: string,
+    cloudFileSyncEnabled: boolean,
+    flags?: int) {
+      this.name = name;
+      this.description = description;
+      this.descriptionId = descriptionId;
+      this.enabled = enabled;
+      this.label = label;
+      this.labelId = labelId;
+      this.icon = icon;
+      this.iconId = iconId;
+      this.process = process;
+      this.permissions = permissions;
+      this.codePath = codePath;
+      this.metadataArray = metadataArray;
+      this.removable = removable;
+      this.accessTokenId = accessTokenId;
+      this.uid = uid;
+      this.iconResource = iconResource;
+      this.labelResource = labelResource;
+      this.descriptionResource = descriptionResource;
+      this.appDistributionType = appDistributionType;
+      this.appProvisionType = appProvisionType;
+      this.systemApp = systemApp;
+      this.bundleType = bundleType;
+      this.debug = debug;
+      this.dataUnclearable = dataUnclearable;
+      this.nativeLibraryPath = nativeLibraryPath;
+      this.multiAppMode = multiAppMode;
+      this.appIndex = appIndex;
+      this.installSource = installSource;
+      this.releaseType = releaseType;
+      this.cloudFileSyncEnabled = cloudFileSyncEnabled;
+      this.flags = flags;
+  }
 }
 
 export class ModuleMetadataInner implements ModuleMetadata {
   readonly moduleName: string = "";
   readonly metadata: Array<Metadata> = new Array<Metadata>;
+
+  constructor() { }
+  constructor(moduleName: string, metadata: Array<Metadata>) {
+    this.moduleName = moduleName;
+    this.metadata = metadata;
+  }
 }
 
 export class MultiAppModeInner implements MultiAppMode {
   readonly multiAppModeType: bundleManager.MultiAppModeType = bundleManager.MultiAppModeType.UNSPECIFIED;
   readonly maxCount: int;
+
+  constructor() { }
+  constructor(multiAppModeType: bundleManager.MultiAppModeType, maxCount: int) {
+    this.multiAppModeType = multiAppModeType;
+    this.maxCount = maxCount;
+  }
 }
 
 export class PreinstalledApplicationInfoInner implements PreinstalledApplicationInfo {

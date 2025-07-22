@@ -20,4 +20,12 @@ export class MetadataInner implements Metadata {
   value: string = "";
   resource: string = "";
   readonly valueId?: long;
+
+  constructor() { }
+  constructor(name: string, value: string, resource: string, valueId?: long) {
+    this.name = name;
+    this.value = value;
+    this.resource = resource;
+    this.valueId = valueId;
+  }
 }
