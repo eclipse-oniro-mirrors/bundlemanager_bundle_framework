@@ -23,6 +23,7 @@
 #include "os_account_info.h"
 #endif
 #endif
+#include "ability_manager_helper.h"
 #include "accesstoken_kit.h"
 #include "account_helper.h"
 #include "app_log_tag_wrapper.h"
@@ -3233,7 +3234,7 @@ bool BundleDataMgr::GetBaseSharedBundleInfo(const Dependency &dependency,
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-        innerBundleInfo.GetMaxVerBaseSharedBundleInfo(dependency.moduleName, baseSharedBundleInfo);
+        (void)GetAdaptBaseShareBundleInfo(innerBundleInfo, dependency, baseSharedBundleInfo);
     } else {
         APP_LOGW("GetBaseSharedBundleInfo failed, can not find bundleType %{public}d",
             innerBundleInfo.GetApplicationBundleType());
@@ -3241,6 +3242,29 @@ bool BundleDataMgr::GetBaseSharedBundleInfo(const Dependency &dependency,
     }
     APP_LOGD("GetBaseSharedBundleInfo(%{public}s) successfully)", dependency.bundleName.c_str());
     return true;
+}
+
+bool BundleDataMgr::GetAdaptBaseShareBundleInfo(
+    const InnerBundleInfo &innerBundleInfo,
+    const Dependency &dependency,
+    BaseSharedBundleInfo &baseSharedBundleInfo) const
+{
+    // check cross hsp size and calling token
+    if ((innerBundleInfo.GetAllHspVersion().size() <= 1) || (BundlePermissionMgr::IsNativeTokenType())) {
+        return innerBundleInfo.GetMaxVerBaseSharedBundleInfo(dependency.moduleName, baseSharedBundleInfo);
+    }
+    // get running app hsp versionCode
+    std::map<std::string, uint32_t> shareBundles;
+    if ((AbilityManagerHelper::QueryRunningSharedBundles(IPCSkeleton::GetCallingPid(), shareBundles) == ERR_OK)) {
+        auto item = shareBundles.find(dependency.bundleName);
+        if ((item != shareBundles.end()) && innerBundleInfo.GetBaseSharedBundleInfo(dependency.moduleName,
+            item->second, baseSharedBundleInfo)) {
+            APP_LOGI("get share bundle by pid -n %{public}s -v %{public}u succeed",
+                dependency.bundleName.c_str(), item->second);
+            return true;
+        }
+    }
+    return innerBundleInfo.GetMaxVerBaseSharedBundleInfo(dependency.moduleName, baseSharedBundleInfo);
 }
 
 bool BundleDataMgr::DeleteSharedBundleInfo(const std::string &bundleName)

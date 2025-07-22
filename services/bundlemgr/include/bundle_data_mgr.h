@@ -1386,6 +1386,8 @@ private:
     bool InnerProcessShortcutId(const int64_t updateTime, const std::string &hapPath,
         std::vector<ShortcutInfo> &shortcutInfos) const;
     void GetPreBundleSize(const std::string &name, std::vector<BundleStorageStats> &bundleStats) const;
+    bool GetAdaptBaseShareBundleInfo(const InnerBundleInfo &innerBundleInfo, const Dependency &dependency,
+        BaseSharedBundleInfo &baseSharedBundleInfo) const;
 
 private:
     bool initialUserFlag_ = false;
