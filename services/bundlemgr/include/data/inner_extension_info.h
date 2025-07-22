@@ -57,7 +57,6 @@ struct InnerExtensionInfo {
     std::vector<Skill> skills;
     std::vector<std::string> dataGroupIds;
     std::vector<std::string> validDataGroupIds;
-    std::shared_ptr<ApplicationInfo> appInfoPtr = nullptr;
 
     static ExtensionAbilityInfo ConvertToExtensionInfo(const InnerExtensionInfo &innerExtensionInfo);
 };
