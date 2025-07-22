@@ -4369,12 +4369,12 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0600, Function | MediumTest | Level1)
  */
 HWTEST_F(BmsBundleParserTest, ParseArkStartupCacheConfig_0100, Function | MediumTest | Level1)
 {
-    std::string configFile = ServiceConstants::APP_STARTUP_CACHE_CONG;
+    std::string configFile = "config.config";
     std::unordered_set<std::string> arkStartupCacheList;
     ErrCode ret = BundleParser::ParseArkStartupCacheConfig(configFile, arkStartupCacheList);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
     WriteToConfigFile("com.123");
-    ret = BundleParser::ParseArkStartupCacheConfig(configFile, arkStartupCacheList);
+    ret = BundleParser::ParseArkStartupCacheConfig(ServiceConstants::APP_STARTUP_CACHE_CONG, arkStartupCacheList);
     EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS
