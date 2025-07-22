@@ -391,7 +391,7 @@ public:
     void MockUninstallBundle(const std::string &bundleName) const;
     AbilityInfo MockAbilityInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
-    ExtensionAbilityInfo MockExtensionInfo(
+    InnerExtensionInfo MockExtensionInfo(
         const std::string &bundleName, const std::string &module, const std::string &extensionName) const;
     InnerModuleInfo MockModuleInfo(const std::string &moduleName) const;
     FormInfo MockFormInfo(
@@ -600,11 +600,11 @@ void BmsBundleDataMgrTest3::MockInstallExtension(const std::string &bundleName,
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + extensionName;
     std::string keyName02 = bundleName + "." + moduleName + "." + extensionName + "02";
-    ExtensionAbilityInfo extensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
-    ExtensionAbilityInfo extensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
+    InnerExtensionInfo innerExtensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
+    InnerExtensionInfo innerExtensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertExtensionInfo(keyName, extensionInfo);
-    innerBundleInfo.InsertExtensionInfo(keyName02, extensionInfo02);
+    innerBundleInfo.InsertExtensionInfo(keyName, innerExtensionInfo);
+    innerBundleInfo.InsertExtensionInfo(keyName02, innerExtensionInfo02);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
@@ -861,14 +861,14 @@ AbilityInfo BmsBundleDataMgrTest3::MockAbilityInfo(
     return abilityInfo;
 }
 
-ExtensionAbilityInfo BmsBundleDataMgrTest3::MockExtensionInfo(
+InnerExtensionInfo BmsBundleDataMgrTest3::MockExtensionInfo(
     const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const
 {
-    ExtensionAbilityInfo extensionInfo;
-    extensionInfo.name = extensionName;
-    extensionInfo.bundleName = bundleName;
-    extensionInfo.moduleName = moduleName;
-    return extensionInfo;
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.name = extensionName;
+    innerExtensionInfo.bundleName = bundleName;
+    innerExtensionInfo.moduleName = moduleName;
+    return innerExtensionInfo;
 }
 
 void BmsBundleDataMgrTest3::MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -3232,7 +3232,7 @@ HWTEST_F(BmsBundleDataMgrTest3, GetAdditionalBundleInfos_0100, Function | SmallT
     auto dataMgr = bundleUserMgrHostImpl_->GetDataMgrFromService();
     ASSERT_NE(dataMgr, nullptr);
     InnerBundleInfo innerBundleInfo;
-    ExtensionAbilityInfo info;
+    InnerExtensionInfo info;
     info.type = ExtensionAbilityType::DRIVER;
     innerBundleInfo.baseExtensionInfos_.emplace(BUNDLE_TEST2, info);
     dataMgr->bundleInfos_[BUNDLE_TEST1] = innerBundleInfo;

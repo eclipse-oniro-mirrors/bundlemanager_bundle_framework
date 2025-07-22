@@ -1483,9 +1483,9 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0002, Function | SmallTest 
     ASSERT_NE(dataMgr, nullptr);
     installer.dataMgr_ = dataMgr;
     InnerBundleInfo innerBundleInfo;
-    ExtensionAbilityInfo extensionAbilityInfo;
-    extensionAbilityInfo.type = ExtensionAbilityType::DRIVER;
-    innerBundleInfo.baseExtensionInfos_["testExt"] = extensionAbilityInfo;
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    innerBundleInfo.baseExtensionInfos_["testExt"] = innerExtensionInfo;
     dataMgr->bundleInfos_["test.bundleName"] = innerBundleInfo;
 
     InstallParam installParam;

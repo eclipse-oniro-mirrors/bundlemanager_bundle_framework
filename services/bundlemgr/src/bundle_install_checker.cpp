@@ -1377,8 +1377,8 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
 #endif
     }
     // process ExtensionAbility
-    auto &extensionAbilityInfos = innerBundleInfo.FetchInnerExtensionInfos();
-    for (auto iter = extensionAbilityInfos.begin(); iter != extensionAbilityInfos.end(); ++iter) {
+    auto &innerExtensionInfos = innerBundleInfo.FetchInnerExtensionInfos();
+    for (auto iter = innerExtensionInfos.begin(); iter != innerExtensionInfos.end(); ++iter) {
         bool privilegeType = IsPrivilegeExtensionAbilityType(iter->second.type);
         if (privilegeType && !appPrivilegeCapability.allowUsePrivilegeExtension) {
             LOG_E(BMS_TAG_INSTALLER, "not allow use privilege extension");

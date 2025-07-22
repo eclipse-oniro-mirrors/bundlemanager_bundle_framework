@@ -27,6 +27,7 @@
 #include "common_event_info.h"
 #include "common_profile.h"
 #include "data_group_info.h"
+#include "data/inner_extension_info.h"
 #include "distributed_bundle_info.h"
 #include "dynamic_icon_info.h"
 #include "extension_ability_info.h"
@@ -295,12 +296,6 @@ public:
     std::optional<ExtensionAbilityInfo> FindExtensionInfo(
         const std::string &moduleName, const std::string &extensionName) const;
     /**
-     * @brief Find extensionInfos by bundle name.
-     * @param bundleName Indicates the bundle name.
-     * @return Returns the ExtensionAbilityInfo array if find it; returns null otherwise.
-     */
-    std::optional<std::vector<ExtensionAbilityInfo>> FindExtensionInfos() const;
-    /**
      * @brief Transform the InnerBundleInfo object to string.
      * @return Returns the string object
      */
@@ -317,7 +312,7 @@ public:
         }
     }
 
-    void AddModuleExtensionInfos(const std::map<std::string, ExtensionAbilityInfo> &extensionInfos)
+    void AddModuleExtensionInfos(const std::map<std::string, InnerExtensionInfo> &extensionInfos)
     {
         for (const auto &extensionInfo : extensionInfos) {
             baseExtensionInfos_.try_emplace(extensionInfo.first, extensionInfo.second);
@@ -585,11 +580,11 @@ public:
         baseAbilityInfos_.emplace(key, abilityInfo);
     }
     /**
-     * @brief Insert ExtensionAbilityInfo.
+     * @brief Insert InnerExtensionInfo.
      * @param key bundleName.moduleName.extensionName
      * @param extensionInfo value.
      */
-    void InsertExtensionInfo(const std::string &key, const ExtensionAbilityInfo &extensionInfo)
+    void InsertExtensionInfo(const std::string &key, const InnerExtensionInfo &extensionInfo)
     {
         baseExtensionInfos_.emplace(key, extensionInfo);
     }
@@ -639,7 +634,7 @@ public:
     {
         for (const auto &item : baseExtensionInfos_) {
             if (uri == item.second.uri) {
-                extensionAbilityInfo = item.second;
+                extensionAbilityInfo = InnerExtensionInfo::ConvertToExtensionInfo(item.second);
                 APP_LOGD("find target extension, bundleName : %{public}s, moduleName : %{public}s, name : %{public}s",
                     extensionAbilityInfo.bundleName.c_str(), extensionAbilityInfo.moduleName.c_str(),
                     extensionAbilityInfo.name.c_str());
@@ -1325,14 +1320,14 @@ public:
     /**
      * @brief Fetch all extensionAbilityInfos, can be modify.
      */
-    std::map<std::string, ExtensionAbilityInfo> &FetchInnerExtensionInfos()
+    std::map<std::string, InnerExtensionInfo> &FetchInnerExtensionInfos()
     {
         return baseExtensionInfos_;
     }
     /**
-     * @brief Obtains all extensionAbilityInfos.
+     * @brief Obtains all innerExtensionInfos.
      */
-    const std::map<std::string, ExtensionAbilityInfo> &GetInnerExtensionInfos() const
+    const std::map<std::string, InnerExtensionInfo> &GetInnerExtensionInfos() const
     {
         return baseExtensionInfos_;
     }
@@ -2440,7 +2435,7 @@ private:
     std::map<std::string, std::vector<Skill>> skillInfos_;
 
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos_;
-    std::map<std::string, ExtensionAbilityInfo> baseExtensionInfos_;
+    std::map<std::string, InnerExtensionInfo> baseExtensionInfos_;
     std::map<std::string, std::vector<Skill>> extensionSkillInfos_;
 
     // shared module info

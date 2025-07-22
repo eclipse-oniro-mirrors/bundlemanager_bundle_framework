@@ -69,18 +69,18 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     installer.FilterDriverSoFile(newInfo1, metaData, dirMap, isModuleExisted);
 
     installer.RemoveDriverSoFile(newInfo1, newInfo1.GetCurrentModulePackage(), isModuleExisted);
-    ExtensionAbilityInfo extensionInfo;
-    extensionInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    extensionInfo.bundleName = newInfo1.GetBundleName();
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    innerExtensionInfo.bundleName = newInfo1.GetBundleName();
     std::string extensionKey = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-    newInfo1.InsertExtensionInfo(extensionKey, extensionInfo);
-    installer.RemoveDriverSoFile(newInfo1, extensionInfo.moduleName, isModuleExisted);
-    extensionInfo.type = ExtensionAbilityType::DRIVER;
-    newInfo1.InsertExtensionInfo(extensionKey, extensionInfo);
-    installer.RemoveDriverSoFile(newInfo1, extensionInfo.moduleName, isModuleExisted);
-    extensionInfo.metadata.push_back(metaData);
-    newInfo1.InsertExtensionInfo(extensionKey, extensionInfo);
-    installer.RemoveDriverSoFile(newInfo1, extensionInfo.moduleName, isModuleExisted);
+    newInfo1.InsertExtensionInfo(extensionKey, innerExtensionInfo);
+    installer.RemoveDriverSoFile(newInfo1, innerExtensionInfo.moduleName, isModuleExisted);
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    newInfo1.InsertExtensionInfo(extensionKey, innerExtensionInfo);
+    installer.RemoveDriverSoFile(newInfo1, innerExtensionInfo.moduleName, isModuleExisted);
+    innerExtensionInfo.metadata.push_back(metaData);
+    newInfo1.InsertExtensionInfo(extensionKey, innerExtensionInfo);
+    installer.RemoveDriverSoFile(newInfo1, innerExtensionInfo.moduleName, isModuleExisted);
 
     installer.CreateDriverSoDestinedDir("", "", "", "", isModuleExisted);
     std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);

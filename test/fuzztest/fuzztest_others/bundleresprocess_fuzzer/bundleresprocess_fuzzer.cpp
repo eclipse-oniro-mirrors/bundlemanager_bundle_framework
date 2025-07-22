@@ -122,7 +122,7 @@ bool DoSomethingInterestingWithMyAPITwo(const uint8_t* data, size_t size)
 bool DoSomethingInterestingWithMyAPIThree(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
-    ExtensionAbilityInfo extensionAbilityInfo;
+    InnerExtensionInfo innerExtensionInfo;
     ApplicationInfo applicationInfo;
     BMSFuzzTestUtil::GenerateApplicationInfo(fdp, applicationInfo);
     applicationInfo.bundleName = "";
@@ -161,7 +161,7 @@ bool DoSomethingInterestingWithMyAPIThree(const uint8_t* data, size_t size)
     applicationInfo.bundleType = BundleType::APP;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, userId, resourceInfos);
-    bundleInfo.InsertExtensionInfo("key", extensionAbilityInfo);
+    bundleInfo.InsertExtensionInfo("key", innerExtensionInfo);
     BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, userId, resourceInfos);
     BundleResourceProcess::GetAppIndexByBundleName(ABILITY_NAME);
     BundleResourceProcess::GetCurDynamicIconModule(ABILITY_NAME, userId, state);

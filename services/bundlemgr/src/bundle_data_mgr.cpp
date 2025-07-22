@@ -6061,12 +6061,12 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosByExtensionTypeName(const std::
 void BundleDataMgr::GetOneExtensionInfosByExtensionTypeName(const std::string &typeName, uint32_t flags, int32_t userId,
     const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
-    auto extensionInfos = info.GetInnerExtensionInfos();
-    for (const auto &extensionAbilityInfo : extensionInfos) {
-        if (typeName != extensionAbilityInfo.second.extensionTypeName) {
+    auto innerExtensionInfos = info.GetInnerExtensionInfos();
+    for (const auto &item : innerExtensionInfos) {
+        if (typeName != item.second.extensionTypeName) {
             continue;
         }
-        infos.emplace_back(extensionAbilityInfo.second);
+        infos.emplace_back(InnerExtensionInfo::ConvertToExtensionInfo(item.second));
         return;
     }
 }
@@ -6602,7 +6602,7 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     auto extensionSkillInfos = info.GetExtensionSkillInfos();
-    auto extensionInfos = info.GetInnerExtensionInfos();
+    auto innerExtensionInfos = info.GetInnerExtensionInfos();
     for (const auto &skillInfos : extensionSkillInfos) {
         for (size_t skillIndex = 0; skillIndex < skillInfos.second.size(); ++skillIndex) {
             const Skill &skill = skillInfos.second[skillIndex];
@@ -6610,12 +6610,13 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
             if (!skill.Match(want, matchUriIndex)) {
                 continue;
             }
-            if (extensionInfos.find(skillInfos.first) == extensionInfos.end()) {
+            if (innerExtensionInfos.find(skillInfos.first) == innerExtensionInfos.end()) {
                 LOG_W(BMS_TAG_QUERY, "cannot find the extension info with %{public}s",
                     skillInfos.first.c_str());
                 break;
             }
-            ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
+            ExtensionAbilityInfo extensionInfo =
+                InnerExtensionInfo::ConvertToExtensionInfo(innerExtensionInfos[skillInfos.first]);
             if ((static_cast<uint32_t>(flags) & GET_EXTENSION_INFO_WITH_APPLICATION) ==
                 GET_EXTENSION_INFO_WITH_APPLICATION) {
                 info.GetApplicationInfo(
@@ -6683,18 +6684,19 @@ void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, in
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     auto extensionSkillInfos = info.GetExtensionSkillInfos();
-    auto extensionInfos = info.GetInnerExtensionInfos();
+    auto innerExtensionInfos = info.GetInnerExtensionInfos();
     for (const auto &skillInfos : extensionSkillInfos) {
         if (want.GetAction() == SHARE_ACTION) {
             if (!MatchShare(want, skillInfos.second)) {
                 continue;
             }
-            if (extensionInfos.find(skillInfos.first) == extensionInfos.end()) {
+            if (innerExtensionInfos.find(skillInfos.first) == innerExtensionInfos.end()) {
                 LOG_W(BMS_TAG_QUERY, "cannot find the extension info with %{public}s",
                     skillInfos.first.c_str());
                 continue;
             }
-            ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
+            ExtensionAbilityInfo extensionInfo =
+                InnerExtensionInfo::ConvertToExtensionInfo(innerExtensionInfos[skillInfos.first]);
             EmplaceExtensionInfo(info, skillInfos.second, extensionInfo, flags, userId, infos,
                 std::nullopt, std::nullopt, appIndex);
             continue;
@@ -6705,12 +6707,13 @@ void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, in
             if (!skill.Match(want, matchUriIndex)) {
                 continue;
             }
-            if (extensionInfos.find(skillInfos.first) == extensionInfos.end()) {
+            if (innerExtensionInfos.find(skillInfos.first) == innerExtensionInfos.end()) {
                 LOG_W(BMS_TAG_QUERY, "cannot find the extension info with %{public}s",
                     skillInfos.first.c_str());
                 break;
             }
-            ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
+            ExtensionAbilityInfo extensionInfo =
+                InnerExtensionInfo::ConvertToExtensionInfo(innerExtensionInfos[skillInfos.first]);
             EmplaceExtensionInfo(info, skillInfos.second, extensionInfo, flags, userId, infos,
                 skillIndex, matchUriIndex, appIndex);
             break;
@@ -6721,9 +6724,9 @@ void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, in
 void BundleDataMgr::GetAllExtensionInfos(uint32_t flags, int32_t userId,
     const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
-    auto extensionInfos = info.GetInnerExtensionInfos();
-    for (const auto &extensionAbilityInfo : extensionInfos) {
-        ExtensionAbilityInfo extensionInfo = extensionAbilityInfo.second;
+    auto innerExtensionInfos = info.GetInnerExtensionInfos();
+    for (const auto &item : innerExtensionInfos) {
+        ExtensionAbilityInfo extensionInfo = InnerExtensionInfo::ConvertToExtensionInfo(item.second);
         if ((flags &
             static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) ==
             static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) {
@@ -6768,7 +6771,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const ExtensionAbilityType &exten
         auto innerExtensionInfos = innerBundleInfo.GetInnerExtensionInfos();
         for (const auto &info : innerExtensionInfos) {
             if (info.second.type == extensionType) {
-                ExtensionAbilityInfo extensionAbilityInfo = info.second;
+                ExtensionAbilityInfo extensionAbilityInfo = InnerExtensionInfo::ConvertToExtensionInfo(info.second);
                 innerBundleInfo.GetApplicationInfo(
                     ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
                     extensionAbilityInfo.applicationInfo);
