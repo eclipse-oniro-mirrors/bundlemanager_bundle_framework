@@ -787,7 +787,7 @@ bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &
         return false;
     }
     if (access(oldPath.c_str(), F_OK) != 0 && access(newPath.c_str(), F_OK) == 0) {
-        LOG_E(BMS_TAG_INSTALLD, "fail to access file errno:%{public}d", errno);
+        LOG_E(BMS_TAG_INSTALLD, "fail to access %{public}s errno:%{public}d", oldPath.c_str(), errno);
         return true;
     }
     std::string realOldPath;
