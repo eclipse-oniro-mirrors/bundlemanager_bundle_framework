@@ -45,6 +45,57 @@ export class AbilityInfoInner implements AbilityInfo {
   readonly skills: Array<Skill> = new Array<Skill>;
   readonly appIndex: int;
   readonly orientationId: long;
+
+  constructor() { }
+  constructor(bundleName: string,
+    moduleName: string,
+    name: string,
+    label: string,
+    labelId: long,
+    description: string,
+    descriptionId: long,
+    icon: string,
+    iconId: long,
+    process: string,
+    exported: boolean,
+    orientation: bundleManager.DisplayOrientation,
+    launchType: bundleManager.LaunchType,
+    permissions: Array<string>,
+    deviceTypes: Array<string>,
+    applicationInfo: ApplicationInfo,
+    metadata: Array<Metadata>,
+    enabled: boolean,
+    supportWindowModes: Array<bundleManager.SupportWindowMode>,
+    windowSize: WindowSize,
+    excludeFromDock: boolean,
+    skills: Array<Skill>,
+    appIndex: int,
+    orientationId: long) {
+      this.bundleName = bundleName;
+      this.moduleName = moduleName;
+      this.name = name;
+      this.label = label;
+      this.labelId = labelId;
+      this.description = description;
+      this.descriptionId = descriptionId;
+      this.icon = icon;
+      this.iconId = iconId;
+      this.process = process;
+      this.exported = exported;
+      this.orientation = orientation;
+      this.launchType = launchType;
+      this.permissions = permissions;
+      this.deviceTypes = deviceTypes;
+      this.applicationInfo = applicationInfo;
+      this.metadata = metadata;
+      this.enabled = enabled;
+      this.supportWindowModes = supportWindowModes;
+      this.windowSize = windowSize;
+      this.excludeFromDock = excludeFromDock;
+      this.skills = skills;
+      this.appIndex = appIndex;
+      this.orientationId = orientationId;
+  }
 }
 
 export class WindowSizeInner implements WindowSize {
@@ -54,4 +105,19 @@ export class WindowSizeInner implements WindowSize {
   readonly minWindowWidth: long;
   readonly maxWindowHeight: long;
   readonly minWindowHeight: long;
+
+  constructor() { }
+  constructor(maxWindowRatio: double,
+    minWindowRatio: double,
+    maxWindowWidth: long,
+    minWindowWidth: long,
+    maxWindowHeight: long,
+    minWindowHeight: long) {
+      this.maxWindowRatio = maxWindowRatio;
+      this.minWindowRatio = minWindowRatio;
+      this.maxWindowWidth = maxWindowWidth;
+      this.minWindowWidth = minWindowWidth;
+      this.maxWindowHeight = maxWindowHeight;
+      this.minWindowHeight = minWindowHeight;
+  }
 }

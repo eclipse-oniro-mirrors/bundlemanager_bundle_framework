@@ -68,6 +68,7 @@ ohos_shared_library("bms_ani_common") {
     "hilog:libhilog",
     "ipc:ipc_core",
     "runtime_core:ani",
+    "runtime_core:ani_helpers",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

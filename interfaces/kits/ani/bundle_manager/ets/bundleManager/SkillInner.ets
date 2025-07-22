@@ -20,6 +20,14 @@ export class SkillInner implements Skill {
     readonly entities: Array<string> = new Array<string>;
     readonly uris: Array<SkillUri> = new Array<SkillUri>;
     readonly domainVerify: boolean;
+
+    constructor() { }
+    constructor(actions: Array<string>, entities: Array<string>, uris: Array<SkillUri>, domainVerify: boolean) {
+        this.actions = actions;
+        this.entities = entities;
+        this.uris = uris;
+        this.domainVerify = domainVerify;
+    }
 }
   
 export class SkillUriInner implements SkillUri {
@@ -33,4 +41,27 @@ export class SkillUriInner implements SkillUri {
     readonly utd: string = "";
     readonly maxFileSupported: int;
     readonly linkFeature: string = "";
+
+    constructor() { }
+    constructor(scheme: string,
+        host: string,
+        port: int,
+        path: string,
+        pathStartWith: string,
+        pathRegex: string,
+        type: string,
+        utd: string,
+        maxFileSupported: int,
+        linkFeature: string) {
+            this.scheme = scheme;
+            this.host = host;
+            this.port = port;
+            this.path = path;
+            this.pathStartWith = pathStartWith;
+            this.pathRegex = pathRegex;
+            this.type = type;
+            this.utd = utd;
+            this.maxFileSupported = maxFileSupported;
+            this.linkFeature = linkFeature;
+    }
 }

@@ -41,16 +41,73 @@ export class HapModuleInfoInner implements HapModuleInfo {
   readonly routerMap: Array<RouterItem> = new Array<RouterItem>;
   readonly nativeLibraryPath: string = "";
   readonly codePath: string = "";
+
+  constructor() { }
+  constructor(name: string,
+    icon: string,
+    iconId: long,
+    label: string,
+    labelId: long,
+    description: string,
+    descriptionId: long,
+    mainElementName: string,
+    abilitiesInfo: Array<AbilityInfo>,
+    extensionAbilitiesInfo: Array<ExtensionAbilityInfo>,
+    metadata: Array<Metadata>,
+    deviceTypes: Array<string>,
+    installationFree: boolean,
+    hashValue: string,
+    type: bundleManager.ModuleType,
+    dependencies: Array<Dependency>,
+    preloads: Array<PreloadItem>,
+    fileContextMenuConfig: string,
+    routerMap: Array<RouterItem>,
+    nativeLibraryPath: string,
+    codePath: string) {
+      this.name = name;
+      this.icon = icon;
+      this.iconId = iconId;
+      this.label = label;
+      this.labelId = labelId;
+      this.description = description;
+      this.descriptionId = descriptionId;
+      this.mainElementName = mainElementName;
+      this.abilitiesInfo = abilitiesInfo;
+      this.extensionAbilitiesInfo = extensionAbilitiesInfo;
+      this.metadata = metadata;
+      this.deviceTypes = deviceTypes;
+      this.installationFree = installationFree;
+      this.hashValue = hashValue;
+      this.type = type;
+      this.dependencies = dependencies;
+      this.preloads = preloads;
+      this.fileContextMenuConfig = fileContextMenuConfig;
+      this.routerMap = routerMap;
+      this.nativeLibraryPath = nativeLibraryPath;
+      this.codePath = codePath;
+  }
 }
 
 export class DependencyInner implements Dependency {
   readonly moduleName: string = "";
   readonly bundleName: string = "";
   readonly versionCode: long;
+
+  constructor() { }
+  constructor(moduleName: string, bundleName: string, versionCode: long) {
+    this.moduleName = moduleName;
+    this.bundleName = bundleName;
+    this.versionCode = versionCode;
+  }
 }
 
 export class PreloadItemInner implements PreloadItem {
   readonly moduleName: string = "";
+
+  constructor() { }
+  constructor(moduleName: string) {
+    this.moduleName = moduleName;
+  }
 }
 
 export class RouterItemInner implements RouterItem {
@@ -59,9 +116,24 @@ export class RouterItemInner implements RouterItem {
   readonly buildFunction: string = "";
   readonly customData: string = "";
   readonly data: Array<DataItem> = new Array<DataItem>;
+
+  constructor() { }
+  constructor(name: string, pageSourceFile: string, buildFunction: string, customData: string, data: Array<DataItem>) {
+    this.name = name;
+    this.pageSourceFile = pageSourceFile;
+    this.buildFunction = buildFunction;
+    this.customData = customData;
+    this.data = data;
+  }
 }
 
 export class DataItemInner implements DataItem {
   readonly key: string = "";
   readonly value: string = "";
+
+  constructor() { }
+  constructor(key: string, value: string) {
+    this.key = key;
+    this.value = value;
+  }
 }
