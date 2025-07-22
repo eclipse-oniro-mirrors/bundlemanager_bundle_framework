@@ -10306,5 +10306,34 @@ std::string BundleDataMgr::GenerateUuidByKey(const std::string &key) const
     std::string message = key + deviceUdid;
     return OHOS::Security::Verify::GenerateUuidByKey(message);
 }
+
+bool BundleDataMgr::SetBundleUserInfoRemovable(const std::string bundleName, int32_t userId, bool removable)
+{
+    APP_LOGD("SetBundleUserInfoRemovable: %{public}s", bundleName.c_str());
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("%{public}s bundle info not exist", bundleName.c_str());
+        return false;
+    }
+    auto& info = bundleInfos_.at(bundleName);
+    InnerBundleUserInfo userInfo;
+    if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
+        LOG_W(BMS_TAG_DEFAULT, "-n %{public}s is not installed at -u %{public}d", bundleName.c_str(), userId);
+        return false;
+    }
+    if (userInfo.isRemovable == removable) {
+        APP_LOGI("-n %{public}s -u %{public}d no need to change", bundleName.c_str(), userId);
+        return true;
+    }
+    userInfo.isRemovable = removable;
+    info.AddInnerBundleUserInfo(userInfo);
+    info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    if (!dataStorage_->SaveStorageBundleInfo(info)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

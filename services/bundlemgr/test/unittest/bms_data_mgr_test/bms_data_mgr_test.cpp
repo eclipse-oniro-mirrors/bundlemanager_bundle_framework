@@ -3172,4 +3172,34 @@ HWTEST_F(BmsDataMgrTest, GenerateUuid_0001, TestSize.Level1)
     EXPECT_EQ(uuid5.size(), 36);
     EXPECT_NE(uuid3, uuid5);
 }
+
+/**
+ * @tc.number: SetBundleUserInfoRemovable_0001
+ * @tc.name: SetBundleUserInfoRemovable
+ * @tc.desc: test BundleDataMgr::SetBundleUserInfoRemovable
+ */
+HWTEST_F(BmsDataMgrTest, SetBundleUserInfoRemovable_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.test.bundleName";
+    int32_t userId = 100;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = bundleName;
+    InnerBundleUserInfo innerUserInfo;
+    BundleUserInfo userInfo;
+    userInfo.userId = userId;
+    innerUserInfo.bundleUserInfo = userInfo;
+    innerUserInfo.bundleName = bundleName;
+    innerUserInfo.isRemovable = true;
+    info.AddInnerBundleUserInfo(innerUserInfo);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, info);
+    bundleDataMgr.AddUserId(userId);
+
+    bool ret = bundleDataMgr.SetBundleUserInfoRemovable(bundleName, userId, false);
+    EXPECT_TRUE(ret);
+
+    InnerBundleUserInfo getUserInfo;
+    bundleDataMgr.GetInnerBundleUserInfoByUserId(bundleName, userId, getUserInfo);
+    EXPECT_FALSE(getUserInfo.isRemovable);
+}
 } // OHOS

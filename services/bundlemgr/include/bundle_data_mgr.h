@@ -1094,6 +1094,7 @@ public:
         const int32_t userId);
     bool GetPluginBundleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         PluginBundleInfo &pluginBundleInfo, const int32_t userId = Constants::ALL_USERID);
+    bool SetBundleUserInfoRemovable(const std::string bundleName, int32_t userId, bool removable);
 
 private:
     /**
