@@ -3032,8 +3032,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0100, Function | MediumTest | Le
         bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, USERID, hapModuleInfo);
         EXPECT_TRUE(queryResult);
 
-        EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle1");
-        EXPECT_EQ(hapModuleInfo.moduleName, BASE_MODULE_NAME);
+        EXPECT_EQ(hapModuleInfo.name, "com.third.hiworld.example.h1");
+        EXPECT_EQ(hapModuleInfo.moduleName, "com.third.hiworld.example.h1");
         EXPECT_EQ(hapModuleInfo.description, "");
 
         resvec.clear();
@@ -3082,8 +3082,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0200, Function | MediumTest | Le
 
         bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
         EXPECT_TRUE(queryResult);
-        EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle2");
-        EXPECT_EQ(hapModuleInfo.moduleName, "testability");
+        EXPECT_EQ(hapModuleInfo.name, "com.third.hiworld.example.h1");
+        EXPECT_EQ(hapModuleInfo.moduleName, "com.third.hiworld.example.h1");
         bool isSubStrExist = false;
         for (int i = 1; i <= 2; i++) {
             std::string abilityName = "" + std::to_string(i);
@@ -3142,8 +3142,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0300, Function | MediumTest | Le
 
         bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
         EXPECT_TRUE(queryResult);
-        EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle3");
-        EXPECT_EQ(hapModuleInfo.moduleName, "testability3");
+        EXPECT_EQ(hapModuleInfo.name, "com.third.hiworld.example.h1");
+        EXPECT_EQ(hapModuleInfo.moduleName, "com.third.hiworld.example.h1");
         resvec.clear();
 
         Uninstall(appName, resvec);
@@ -6120,7 +6120,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllDependentModuleNames_0100, Function | Small
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
     std::vector<std::string> dependentModuleName;
-    auto res = bundleMgrProxy->GetAllDependentModuleNames(appName, BASE_MODULE_NAME, dependentModuleName);
+    auto res = bundleMgrProxy->GetAllDependentModuleNames(appName, "com.third.hiworld.example.h1", dependentModuleName);
     EXPECT_TRUE(res);
     EXPECT_TRUE(dependentModuleName.empty());
 
@@ -6172,9 +6172,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetModuleUpgradeFlag_0100, Function | SmallTest |
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
-    auto result = bundleMgrProxy->SetModuleUpgradeFlag(appName, BASE_MODULE_NAME, 1);
+    auto result = bundleMgrProxy->SetModuleUpgradeFlag(appName, "com.third.hiworld.example.h1", 1);
     EXPECT_TRUE(result == ERR_OK);
-    auto res = bundleMgrProxy->GetModuleUpgradeFlag(appName, BASE_MODULE_NAME);
+    auto res = bundleMgrProxy->GetModuleUpgradeFlag(appName, "com.third.hiworld.example.h1");
     EXPECT_TRUE(res);
 
     resvec.clear();
@@ -6395,7 +6395,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetIconById_0100, Function | SmallTest | Level1)
     std::vector<int64_t> bundleStats;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
-    auto res = bundleMgrProxy->GetIconById(appName, BASE_MODULE_NAME, RESID, 0, USERID);
+    auto res = bundleMgrProxy->GetIconById(appName, "com.third.hiworld.example.h1", RESID, 0, USERID);
     EXPECT_NE(res, "");
 
     resvec.clear();
@@ -6544,7 +6544,7 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0100, Function | SmallTest | 
     AbilityInfo abilityInfo;
     abilityInfo.name = BASE_ABILITY_NAME;
     abilityInfo.bundleName = appName;
-    abilityInfo.moduleName = BASE_MODULE_NAME;
+    abilityInfo.moduleName = "com.third.hiworld.example.h1";
     int32_t testRet = bundleMgrProxy->SetAbilityEnabled(abilityInfo, false, USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
