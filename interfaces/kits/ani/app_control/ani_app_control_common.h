@@ -32,8 +32,6 @@ public:
     static bool ParseDisposedRule(ani_env* env, ani_object object, DisposedRule& disposedRule);
     static bool ParseUninstallDisposedRule(ani_env* env,
         ani_object object, UninstallDisposedRule& uninstallDisposedRule);
-    static bool ParseDisposedRuleConfiguration(ani_env* env,
-        ani_object object, DisposedRuleConfiguration& disposedRuleConfiguration);
 };
 } // namespace AppExecFwk
 } // namespace OHOS

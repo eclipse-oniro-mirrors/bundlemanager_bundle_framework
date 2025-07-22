@@ -30,6 +30,9 @@ namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 namespace {
 constexpr const char* NS_NAME_APPCONTROL = "@ohos.bundle.appControl.appControl";
+constexpr const char* PROPERTYNAME_APPID = "appId";
+constexpr const char* PROPERTYNAME_APPINDEX = "appIndex";
+constexpr const char* PROPERTYNAME_DISPOSEDRULE = "disposedRule";
 } // namespace
 
 static void AniSetDisposedStatus(ani_env* env, ani_string aniAppId, ani_object aniWant, ani_boolean aniIsSync)
@@ -337,14 +340,60 @@ static void AniDeleteUninstallDisposedRule(ani_env* env, ani_string aniAppIdenti
     }
 }
 
+static bool ParseDisposedRuleConfiguration(
+    ani_env* env, ani_object object, DisposedRuleConfiguration& disposedRuleConfiguration)
+{
+    if (env == nullptr || object == nullptr) {
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return false;
+    }
+
+    // appId: string
+    ani_string appId = nullptr;
+    if (!CommonFunAni::CallGetter(env, object, PROPERTYNAME_APPID, &appId)) {
+        APP_LOGE("appId invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
+        return false;
+    }
+    disposedRuleConfiguration.appId = CommonFunAni::AniStrToString(env, appId);
+    if (disposedRuleConfiguration.appId.empty()) {
+        APP_LOGE("appId empty");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPID, SET_DISPOSED_RULES, "");
+        return false;
+    }
+
+    // appIndex: int
+    ani_int appIndex = Constants::MAIN_APP_INDEX;
+    if (!CommonFunAni::CallGetter(env, object, PROPERTYNAME_APPINDEX, &appIndex)) {
+        APP_LOGE("appIndex invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        return false;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("appIndex invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPINDEX, SET_DISPOSED_RULES, "");
+        return false;
+    }
+    disposedRuleConfiguration.appIndex = appIndex;
+
+    // disposedRule: DisposedRule
+    ani_object disposedRuleObject = nullptr;
+    if (!CommonFunAni::CallGetter(env, object, PROPERTYNAME_DISPOSEDRULE, &disposedRuleObject) ||
+        !AniAppControlCommon::ParseDisposedRule(env, disposedRuleObject, disposedRuleConfiguration.disposedRule)) {
+        APP_LOGE("disposedRule invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
+        return false;
+    }
+    return true;
+}
+
 static void SetDisposedRules(ani_env* env, ani_object aniDisposedRuleConfigurations)
 {
     APP_LOGD("ani SetDisposedRules called");
     std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
     if (!CommonFunAni::ParseAniArray(env, aniDisposedRuleConfigurations, disposedRuleConfigurations,
-        AniAppControlCommon::ParseDisposedRuleConfiguration)) {
+        ParseDisposedRuleConfiguration)) {
         APP_LOGE("Parse disposedRuleConfigurations invalid");
-        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
         return;
     }
     auto appControlProxy = CommonFunc::GetAppControlProxy();

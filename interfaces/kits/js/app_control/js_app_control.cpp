@@ -596,21 +596,26 @@ bool ParseDisposedRuleConfiguration(napi_env env, napi_value nDisposedRuleConfig
     std::string appId;
     if (!CommonFunc::ParseString(env, prop, appId)) {
         APP_LOGE("appId invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return false;
     }
     if (appId.empty()) {
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_INVALID_APPID, SET_DISPOSED_STATUS_SYNC);
+            env, ERROR_INVALID_APPID, SET_DISPOSED_RULES);
         napi_throw(env, businessError);
         return false;
     }
     disposedRuleConfiguration.appId = appId;
     napi_get_named_property(env, nDisposedRuleConfiguration, "appIndex", &prop);
     int32_t appIndex = Constants::MAIN_APP_INDEX;
-    if (!CommonFunc::ParseInt(env, prop, appIndex)||
-        appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (!CommonFunc::ParseInt(env, prop, appIndex)) {
+        APP_LOGE("appIndex invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        return false;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_INVALID_APPINDEX, SET_DISPOSED_STATUS_SYNC);
+            env, ERROR_INVALID_APPINDEX, SET_DISPOSED_RULES);
         napi_throw(env, businessError);
         return false;
     }
@@ -620,6 +625,7 @@ bool ParseDisposedRuleConfiguration(napi_env env, napi_value nDisposedRuleConfig
     DisposedRule disposedRule;
     if (!ParseDiposedRule(env, prop, disposedRule)) {
         APP_LOGE("disposedRule invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
         return false;
     }
     disposedRuleConfiguration.disposedRule = disposedRule;
