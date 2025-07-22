@@ -6022,7 +6022,7 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionBundleNames_0002, Function | MediumTest 
     InnerExtensionInfo innerExtensionInfo;
     innerExtensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
     info.InsertExtensionInfo("test.extension", innerExtensionInfo);
-    std::shared_lock<std::shared_mutex> lock(dataMgr_->bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(dataMgr_->bundleInfoMutex_);
     dataMgr_->bundleInfos_.emplace("test.bundle", info);
     std::vector<ExtensionAbilityType> types = {
         ExtensionAbilityType::INPUTMETHOD,

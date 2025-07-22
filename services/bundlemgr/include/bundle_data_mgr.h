@@ -536,7 +536,7 @@ public:
      * @param bundleName Indicates the bundle name.
      * @return Returns a reference of mutex that for locing by bundle name.
      */
-    std::mutex &GetBundleMutex(const std::string &bundleName);
+    ffrt::mutex &GetBundleMutex(const std::string &bundleName);
     /**
      * @brief Obtains the provision Id based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
@@ -879,7 +879,7 @@ public:
     ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
         std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId) const;
 
-    std::shared_mutex &GetStatusCallbackMutex();
+    ffrt::shared_mutex &GetStatusCallbackMutex();
 
     std::vector<sptr<IBundleStatusCallback>> GetCallBackList() const;
 
@@ -913,7 +913,7 @@ public:
 
     const std::map<std::string, InnerBundleInfo> GetAllInnerBundleInfos() const
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         return bundleInfos_;
     }
 
@@ -1390,15 +1390,15 @@ private:
 private:
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
-    mutable std::mutex stateMutex_;
-    mutable std::mutex multiUserIdSetMutex_;
-    mutable std::mutex hspBundleNameMutex_;
-    mutable std::mutex pluginCallbackMutex_;
+    mutable ffrt::mutex stateMutex_;
+    mutable ffrt::mutex multiUserIdSetMutex_;
+    mutable ffrt::mutex hspBundleNameMutex_;
+    mutable ffrt::mutex pluginCallbackMutex_;
     mutable ffrt::mutex eventCallbackMutex_;
-    mutable std::shared_mutex bundleInfoMutex_;
-    mutable std::shared_mutex bundleIdMapMutex_;
-    mutable std::shared_mutex callbackMutex_;
-    mutable std::shared_mutex bundleMutex_;
+    mutable ffrt::shared_mutex bundleInfoMutex_;
+    mutable ffrt::shared_mutex bundleIdMapMutex_;
+    mutable ffrt::shared_mutex callbackMutex_;
+    mutable ffrt::shared_mutex bundleMutex_;
     std::shared_ptr<IBundleDataStorage> dataStorage_;
     std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;
@@ -1414,7 +1414,7 @@ private:
     // common event callback
     std::vector<sptr<IBundleEventCallback>> eventCallbackList_;
     // using for locking by bundleName
-    std::unordered_map<std::string, std::mutex> bundleMutexMap_;
+    std::unordered_map<std::string, ffrt::mutex> bundleMutexMap_;
     // using for generating bundleId
     // key:bundleId
     // value:bundleName

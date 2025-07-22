@@ -21,6 +21,7 @@
 #include "bundle_util.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "ffrt.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
@@ -119,7 +120,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     // trigger the status callback for status listening
     if ((dataMgr != nullptr) && (installResult.type != NotifyType::START_INSTALL)) {
         auto &callbackMutex = dataMgr->GetStatusCallbackMutex();
-        std::shared_lock<std::shared_mutex> lock(callbackMutex);
+        std::shared_lock<ffrt::shared_mutex> lock(callbackMutex);
         auto callbackList = dataMgr->GetCallBackList();
         for (const auto& callback : callbackList) {
             int32_t callbackUserId = callback->GetUserId();
