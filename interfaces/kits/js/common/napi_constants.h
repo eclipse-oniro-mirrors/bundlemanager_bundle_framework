@@ -126,6 +126,8 @@ constexpr const char* SANDBOX_DATA_DIR = "sandboxDataDir";
 constexpr const char* ERR_MSG_LAUNCH_WANT_INVALID = "The launch want is not found.";
 constexpr const char* PARAM_BUNDLENAME_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter bundleName is empty";
+constexpr const char* PARAM_MODULENAME_EMPTY_ERROR =
+    "BusinessError 401: Parameter error. parameter moduleName is empty";
 constexpr const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
 constexpr const char* PARAM_DEVELOPER_ID_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter developerId is empty";
