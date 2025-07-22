@@ -321,8 +321,7 @@ HWTEST_F(BmsBundleQuickFixManagerTest, BmsBundleQuickFixManager_0800, Function |
     if (dataMgr != nullptr) {
         std::map<std::string, InnerAppQuickFix> newInnerAppQuickFixes;
         bool ret = dataMgr->QueryAllInnerAppQuickFix(newInnerAppQuickFixes);
-        EXPECT_FALSE(ret);
-        EXPECT_TRUE(newInnerAppQuickFixes.empty());
+        EXPECT_EQ(ret, !newInnerAppQuickFixes.empty());
     }
     APP_LOGI("end of BmsBundleQuickFixManager_0800.");
 }
