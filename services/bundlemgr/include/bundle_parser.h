@@ -135,6 +135,9 @@ public:
         std::unordered_set<std::string> &bundleNames);
 
     ErrCode ParseTestRunner(const std::string &hapPath, ModuleTestRunner &testRunner) const;
+
+    ErrCode ParseAppStaticRuntimeEnableList(const std::string &filePath,
+        std::unordered_map<std::string, std::vector<std::string>> &enableList) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
