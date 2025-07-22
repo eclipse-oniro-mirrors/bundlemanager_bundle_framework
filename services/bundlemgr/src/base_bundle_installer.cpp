@@ -397,7 +397,6 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             NotifyBundleStatus(installRes);
         }
     }
-
     SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, installParam, sysEventInfo_.preBundleScene, result);
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
     LOG_D(BMS_TAG_INSTALLER, "finish to process %{public}s bundle uninstall", bundleName.c_str());
@@ -5356,6 +5355,11 @@ void BaseBundleInstaller::RestoreHaps(const std::vector<std::string> &bundlePath
 void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
     const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode)
 {
+    if (std::find(Constants::EXPECTED_ERROR.begin(), Constants::EXPECTED_ERROR.end(), errCode) !=
+        Constants::EXPECTED_ERROR.end()) {
+        APP_LOGD("No need report for -e:%{public}d", errCode);
+        return;
+    }
     sysEventInfo_.bundleName = bundleName;
     sysEventInfo_.isPreInstallApp = installParam.isPreInstallApp;
     sysEventInfo_.errCode = errCode;
