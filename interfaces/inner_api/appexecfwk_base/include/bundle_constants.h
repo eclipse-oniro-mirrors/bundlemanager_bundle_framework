@@ -184,11 +184,11 @@ constexpr const char* VERIFY_UNINSTALL_RULE_VALUE = "true";
 constexpr const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
 constexpr const char* APP_DISTRIBUTION_TYPE_WHITE_LIST = "appDistributionTypeWhiteList";
 
-constexpr const char* CODE_LANGUAGE = "codeLanguage";
-constexpr const char* ABILITY_STAGE_CODE_LANGUAGE = "abilityStageCodeLanguage";
-constexpr const char* CODE_LANGUAGE_1_1 = "1.1";
-constexpr const char* CODE_LANGUAGE_1_2 = "1.2";
-constexpr const char* CODE_LANGUAGE_HYBRID = "hybrid";
+constexpr const char* ARKTS_MODE = "arkTSMode";
+constexpr const char* MODULE_ARKTS_MODE = "moduleArkTSMode";
+constexpr const char* ARKTS_MODE_DYNAMIC = "dynamic";
+constexpr const char* ARKTS_MODE_STATIC = "static";
+constexpr const char* ARKTS_MODE_HYBRID = "hybrid";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

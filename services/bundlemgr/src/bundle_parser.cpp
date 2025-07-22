@@ -438,5 +438,26 @@ ErrCode BundleParser::ParseArkStartupCacheConfig(
     PreBundleProfile preBundleProfile;
     return preBundleProfile.TransToArkStartupCacheList(jsonBuf, bundleNames);
 }
+
+ErrCode BundleParser::ParseTestRunner(
+    const std::string &hapPath,
+    ModuleTestRunner &testRunner) const
+{
+    APP_LOGD("parse from %{private}s", hapPath.c_str());
+    BundleExtractor bundleExtractor(hapPath);
+    if (!bundleExtractor.Init()) {
+        APP_LOGE("bundle extractor init failed");
+        return ERR_APPEXECFWK_PARSE_UNEXPECTED;
+    }
+
+    // to extract module.json
+    std::ostringstream outStream;
+    if (!bundleExtractor.ExtractModuleProfile(outStream)) {
+        APP_LOGE("extract profile file failed");
+        return ERR_APPEXECFWK_PARSE_NO_PROFILE;
+    }
+    ModuleProfile moduleProfile;
+    return moduleProfile.TransformToTestRunner(outStream, testRunner);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1245,6 +1245,9 @@ public:
 
     virtual bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
         const int32_t minorVersion, const int32_t patchVersion) override;
+
+    virtual ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName,
+        ModuleTestRunner &testRunner) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

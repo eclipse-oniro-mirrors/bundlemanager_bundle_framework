@@ -54,6 +54,7 @@
 #include "ipc/create_dir_param.h"
 #include "uninstall_data_mgr_storage_rdb.h"
 #include "module_info.h"
+#include "module_test_runner.h"
 #include "preinstall_data_storage_interface.h"
 #include "router_data_storage_interface.h"
 #include "shortcut_data_storage_interface.h"
@@ -1167,6 +1168,7 @@ public:
     void FilterShortcutJson(nlohmann::json &jsonResult);
     ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
     void UpdateDesktopShortcutInfo(const std::string &bundleName);
+    ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName, ModuleTestRunner &testRunner);
 
 private:
     /**

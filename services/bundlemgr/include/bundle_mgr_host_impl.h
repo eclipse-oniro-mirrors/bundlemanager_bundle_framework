@@ -1136,6 +1136,8 @@ public:
     virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
     virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
+    virtual ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName,
+        ModuleTestRunner &testRunner) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);

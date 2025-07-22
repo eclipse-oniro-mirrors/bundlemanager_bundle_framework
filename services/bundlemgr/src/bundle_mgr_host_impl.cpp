@@ -5779,5 +5779,22 @@ bool BundleMgrHostImpl::GreatOrEqualTargetAPIVersion(const int32_t platformVersi
     }
     return dataMgr->GreatOrEqualTargetAPIVersion(platformVersion, minorVersion, patchVersion);
 }
+
+ErrCode BundleMgrHostImpl::GetTestRunner(const std::string &bundleName, const std::string &moduleName,
+    ModuleTestRunner &testRunner)
+{
+    APP_LOGD("GetTestRunner -n %{public}s -m %{public}s", bundleName.c_str(), moduleName.c_str());
+    if (!BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        LOG_E(BMS_TAG_DEFAULT, "not self calling");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetTestRunner(bundleName, moduleName, testRunner);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
