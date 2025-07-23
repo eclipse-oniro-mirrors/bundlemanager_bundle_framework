@@ -55,7 +55,7 @@ export class SignatureInfoInner implements SignatureInfo {
   readonly appId: string = "";
   readonly fingerprint: string = "";
   readonly appIdentifier: string = "";
-  readonly certificate?: string | undefined = "";
+  readonly certificate?: string | undefined;
 }
 
 export class AppCloneIdentityInner implements AppCloneIdentity {
