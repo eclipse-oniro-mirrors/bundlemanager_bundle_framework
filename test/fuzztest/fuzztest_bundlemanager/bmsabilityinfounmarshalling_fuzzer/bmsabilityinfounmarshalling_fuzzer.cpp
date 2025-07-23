@@ -32,7 +32,7 @@ namespace OHOS {
 
         AbilityInfo abilityInfo;
         FuzzedDataProvider fdp(data, size);
-        GenerateAbilityInfo(fdp, abilityInfo);
+        GenerateAbilityInfo<AbilityInfo>(fdp, abilityInfo);
         if (!abilityInfo.Marshalling(dataMessageParcel)) {
             return false;
         }

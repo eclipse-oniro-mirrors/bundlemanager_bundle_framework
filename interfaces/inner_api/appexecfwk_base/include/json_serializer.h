@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -166,6 +166,8 @@ void to_json(nlohmann::json &jsonObject, const PluginBundleInfo &pluginBundleInf
 void from_json(const nlohmann::json &jsonObject, PluginBundleInfo &pluginBundleInfo);
 void to_json(nlohmann::json &jsonObject, const PluginModuleInfo &pluginModuleInfo);
 void from_json(const nlohmann::json &jsonObject, PluginModuleInfo &pluginModuleInfo);
+void to_json(nlohmann::json &jsonObject, const StartWindowResource &startWindowResource);
+void from_json(const nlohmann::json &jsonObject, StartWindowResource &startWindowResource);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H

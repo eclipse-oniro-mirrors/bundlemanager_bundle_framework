@@ -515,9 +515,10 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
         APP_LOGW("bundleName:%{public}s is shared bundle, no ability", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
-    std::map<std::string, AbilityInfo> abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
-    for (const auto &item : abilityInfos) {
-        resourceInfos.emplace_back(ConvertToLauncherAbilityResourceInfo(item.second));
+    std::map<std::string, InnerAbilityInfo> innerAbilityInfos = innerBundleInfo.GetInnerAbilityInfos();
+    for (const auto &item : innerAbilityInfos) {
+        AbilityInfo AbilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(item.second);
+        resourceInfos.emplace_back(ConvertToLauncherAbilityResourceInfo(AbilityInfo));
     }
     std::map<std::string, InnerExtensionInfo> extensionAbilityInfos = innerBundleInfo.GetInnerExtensionInfos();
     for (const auto &item : extensionAbilityInfos) {

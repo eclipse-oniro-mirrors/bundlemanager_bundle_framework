@@ -225,7 +225,7 @@ public:
         const std::string &bundleName, const std::vector<std::string> &moduleNameList, const std::string &abilityName,
         bool userDataClearable = true, bool isSystemApp = false) const;
     void MockUninstallBundle(const std::string &bundleName) const;
-    AbilityInfo MockAbilityInfo(
+    InnerAbilityInfo MockAbilityInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
     InnerModuleInfo MockModuleInfo(const std::string &moduleName) const;
     FormInfo MockFormInfo(
@@ -377,9 +377,9 @@ void BmsCleanAllBundleCacheTest::MockInstallBundle(
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     moduleInfo.entryAbilityKey = keyName;
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
@@ -466,8 +466,8 @@ void BmsCleanAllBundleCacheTest::MockInstallBundle(
     for (const auto &moduleName : moduleNameList) {
         InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
         std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-        AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
-        innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+        InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+        innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
         innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
         Skill skill;
         skill.actions = {ACTION};
@@ -588,10 +588,10 @@ Skill BmsCleanAllBundleCacheTest::MockAbilitySkillInfo() const
     return skillForAbility;
 }
 
-AbilityInfo BmsCleanAllBundleCacheTest::MockAbilityInfo(
+InnerAbilityInfo BmsCleanAllBundleCacheTest::MockAbilityInfo(
     const std::string &bundleName, const std::string &moduleName, const std::string &abilityName) const
 {
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo abilityInfo;
     abilityInfo.package = PACKAGE_NAME;
     abilityInfo.name = abilityName;
     abilityInfo.bundleName = bundleName;

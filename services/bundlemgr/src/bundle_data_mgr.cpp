@@ -1683,7 +1683,7 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
             const Skill &skill = skillsPair->second[skillIndex];
             size_t matchUriIndex = 0;
             if (isPrivateType || skill.Match(want, matchUriIndex)) {
-                AbilityInfo abilityinfo = abilityInfoPair.second;
+                AbilityInfo abilityinfo = InnerAbilityInfo::ConvertToAbilityInfo(abilityInfoPair.second);
                 if (abilityinfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
                     continue;
                 }
@@ -1809,7 +1809,7 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags, cons
     }
     const std::map<std::string, std::vector<Skill>> &skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
-        AbilityInfo abilityinfo = abilityInfoPair.second;
+        AbilityInfo abilityinfo = InnerAbilityInfo::ConvertToAbilityInfo(abilityInfoPair.second);
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
         if (skillsPair == skillInfos.end()) {
             continue;
@@ -2048,14 +2048,15 @@ void BundleDataMgr::GetMultiLauncherAbilityInfo(const Want& want,
         for (const Skill& skill : skillsPair->second) {
             if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
                 count++;
-                AbilityInfo abilityInfo = abilityInfoPair.second;
+                AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(abilityInfoPair.second);
+                AbilityInfo tmpInfo = abilityInfo;
                 info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
                     bundleUserInfo.bundleUserInfo.userId, abilityInfo.applicationInfo);
                 abilityInfo.installTime = installTime;
                 // fix labelId or iconId is equal 0
                 ModifyLauncherAbilityInfo(info.GetIsNewVersion(), abilityInfo);
                 abilityInfos.emplace_back(abilityInfo);
-                GetMatchLauncherAbilityInfosForCloneInfos(info, abilityInfoPair.second, bundleUserInfo, abilityInfos);
+                GetMatchLauncherAbilityInfosForCloneInfos(info, tmpInfo, bundleUserInfo, abilityInfos);
                 break;
             }
         }
@@ -2234,7 +2235,7 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesNoLock(const std::string &
 
 void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
 {
-    AbilityInfo appDetailAbility;
+    InnerAbilityInfo appDetailAbility;
     appDetailAbility.name = ServiceConstants::APP_DETAIL_ABILITY;
     appDetailAbility.bundleName = info.GetBundleName();
     appDetailAbility.enabled = true;

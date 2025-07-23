@@ -1338,14 +1338,14 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationInfosV9_0100, Function | MediumTest
 HWTEST_F(BmsBundleManagerTest, FindAbilityInfoV9_0100, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo innerAbilityInfo;
     std::string bundleName = "com.example.test";
     std::string moduleName = "module";
     std::string abilityName = "mainAbility";
-    abilityInfo.bundleName = bundleName;
-    abilityInfo.moduleName = moduleName;
-    abilityInfo.name = abilityName;
-    info.InsertAbilitiesInfo("key", abilityInfo);
+    innerAbilityInfo.bundleName = bundleName;
+    innerAbilityInfo.moduleName = moduleName;
+    innerAbilityInfo.name = abilityName;
+    info.InsertAbilitiesInfo("key", innerAbilityInfo);
     auto ret = info.FindAbilityInfoV9("", "");
     EXPECT_EQ(ret, std::nullopt);
 

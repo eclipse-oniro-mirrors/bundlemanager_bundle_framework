@@ -178,14 +178,24 @@ const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t user
 }
 }  // namespace
 
-void from_json(const nlohmann::json &jsonObject, InnerExtensionInfo &extensionInfo)
+void from_json(const nlohmann::json &jsonObject, InnerAbilityInfo &innerAbilityInfo)
 {
-    ExtensionFromJson(jsonObject, extensionInfo);
+    AbilityFromJson(jsonObject, innerAbilityInfo);
 }
 
-void to_json(nlohmann::json &jsonObject, const InnerExtensionInfo &extensionInfo)
+void to_json(nlohmann::json &jsonObject, const InnerAbilityInfo &innerAbilityInfo)
 {
-    ExtensionToJson(jsonObject, extensionInfo);
+    AbilityToJson(jsonObject, innerAbilityInfo);
+}
+
+void from_json(const nlohmann::json &jsonObject, InnerExtensionInfo &innerExtensionInfo)
+{
+    ExtensionFromJson(jsonObject, innerExtensionInfo);
+}
+
+void to_json(nlohmann::json &jsonObject, const InnerExtensionInfo &innerExtensionInfo)
+{
+    ExtensionToJson(jsonObject, innerExtensionInfo);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResourceInfo)
@@ -1330,7 +1340,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, AbilityInfo>>(jsonObject,
+    GetValueIfFindKey<std::map<std::string, InnerAbilityInfo>>(jsonObject,
         jsonObjectEnd,
         BASE_ABILITY_INFO,
         baseAbilityInfos_,
@@ -1641,10 +1651,11 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
             continue;
         }
         if ((ability.first.find(key) != std::string::npos) && (ability.second.moduleName == hapInfo.moduleName)) {
-            auto &abilityInfo = hapInfo.abilityInfos.emplace_back(ability.second);
+            AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(ability.second);
+            auto &abilityInfoRef = hapInfo.abilityInfos.emplace_back(abilityInfo);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
-                abilityInfo.applicationInfo, appIndex);
+                abilityInfoRef.applicationInfo, appIndex);
         }
     }
     hapInfo.dependencies = it->second.dependencies;
@@ -1686,10 +1697,10 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(
     const std::string &abilityName,
     int32_t userId) const
 {
-    for (const auto &ability : baseAbilityInfos_) {
-        auto abilityInfo = ability.second;
-        if ((abilityInfo.name == abilityName) &&
-            (moduleName.empty() || (abilityInfo.moduleName == moduleName))) {
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if ((innerAbilityInfo.name == abilityName) &&
+            (moduleName.empty() || (innerAbilityInfo.moduleName == moduleName))) {
+            AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
                 abilityInfo.applicationInfo);
@@ -1703,11 +1714,10 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(
 std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoV9(
     const std::string &moduleName, const std::string &abilityName) const
 {
-    for (const auto &ability : baseAbilityInfos_) {
-        auto abilityInfo = ability.second;
-        if ((abilityInfo.name == abilityName) &&
-            (moduleName.empty() || (abilityInfo.moduleName == moduleName))) {
-            return abilityInfo;
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if ((innerAbilityInfo.name == abilityName) &&
+            (moduleName.empty() || (innerAbilityInfo.moduleName == moduleName))) {
+            return InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
         }
     }
     APP_LOGE("bundleName: %{public}s not find moduleName:%{public}s, abilityName:%{public}s",
@@ -1719,12 +1729,11 @@ ErrCode InnerBundleInfo::FindAbilityInfo(
     const std::string &moduleName, const std::string &abilityName, AbilityInfo &info) const
 {
     bool isModuleFind = false;
-    for (const auto &ability : baseAbilityInfos_) {
-        auto abilityInfo = ability.second;
-        if ((abilityInfo.moduleName == moduleName)) {
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if ((innerAbilityInfo.moduleName == moduleName)) {
             isModuleFind = true;
-            if (abilityInfo.name == abilityName) {
-                info = abilityInfo;
+            if (innerAbilityInfo.name == abilityName) {
+                info = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
                 return ERR_OK;
             }
         }
@@ -1745,11 +1754,11 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
     }
 
     std::vector<AbilityInfo> abilitys;
-    for (const auto &ability : baseAbilityInfos_) {
-        if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if (innerAbilityInfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
             continue;
         }
-        auto abilityInfo = ability.second;
+        auto abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
         GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
             ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
             abilityInfo.applicationInfo);
@@ -1764,11 +1773,11 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
 
 std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(const std::string continueType, int32_t userId) const
 {
-    for (const auto &ability : baseAbilityInfos_) {
-        AbilityInfo abilityInfo = ability.second;
-        std::vector<std::string> continueTypes = abilityInfo.continueType;
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        std::vector<std::string> continueTypes = innerAbilityInfo.continueType;
         auto item = std::find(continueTypes.begin(), continueTypes.end(), continueType);
         if (item != continueTypes.end()) {
+            AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
                 abilityInfo.applicationInfo);
@@ -2686,17 +2695,17 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         return;
     }
     APP_LOGD("Get bundleInfo with abilities");
-    for (auto &ability : baseAbilityInfos_) {
-        if ((ability.second.moduleName != hapModuleInfo.moduleName) ||
-            (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY)) {
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if ((innerAbilityInfo.moduleName != hapModuleInfo.moduleName) ||
+            (innerAbilityInfo.name == ServiceConstants::APP_DETAIL_ABILITY)) {
             continue;
         }
-        bool isEnabled = IsAbilityEnabled(ability.second, userId, appIndex);
+        AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
+        bool isEnabled = IsAbilityEnabled(abilityInfo, userId, appIndex);
         if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
             && !isEnabled) {
             continue;
         }
-        AbilityInfo abilityInfo = ability.second;
         abilityInfo.enabled = isEnabled;
         abilityInfo.appIndex = appIndex;
 
@@ -2748,16 +2757,16 @@ void InnerBundleInfo::GetBundleWithAbilities(
 {
     APP_LOGD("bundleName:%{public}s userid:%{public}d", bundleInfo.name.c_str(), userId);
     if (static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_ABILITIES) {
-        for (auto &ability : baseAbilityInfos_) {
-            if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
+        for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+            if (innerAbilityInfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
                 continue;
             }
-            bool isEnabled = IsAbilityEnabled(ability.second, userId);
+            AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
+            bool isEnabled = IsAbilityEnabled(abilityInfo, userId);
             if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
                 && !isEnabled) {
                 continue;
             }
-            AbilityInfo abilityInfo = ability.second;
             abilityInfo.enabled = isEnabled;
             if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_SKILL) != GET_BUNDLE_WITH_SKILL) {
                 abilityInfo.skills.clear();
@@ -3825,7 +3834,7 @@ void InnerBundleInfo::GetMainAbilityInfo(AbilityInfo &abilityInfo) const
     for (const auto& item : innerModuleInfos_) {
         const std::string& key = item.second.entryAbilityKey;
         if (!key.empty() && (baseAbilityInfos_.count(key) != 0)) {
-            abilityInfo = baseAbilityInfos_.at(key);
+            abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(baseAbilityInfos_.at(key));
             if (item.second.isEntry) {
                 return;
             }
@@ -4990,7 +4999,7 @@ void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &application
     for (const auto& item : innerModuleInfos_) {
         const std::string& key = item.second.entryAbilityKey;
         if (!key.empty() && (baseAbilityInfos_.count(key) != 0)) {
-            const AbilityInfo &mainAbilityInfo = baseAbilityInfos_.at(key);
+            const InnerAbilityInfo &mainAbilityInfo = baseAbilityInfos_.at(key);
             if ((mainAbilityInfo.labelId != 0) && (mainAbilityInfo.iconId != 0)) {
                 applicationInfo.labelId = mainAbilityInfo.labelId ;
                 applicationInfo.labelResource.id = mainAbilityInfo.labelId;
@@ -5058,7 +5067,9 @@ bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
     pluginBundleInfo.codePath = baseApplicationInfo_->codePath;
     pluginBundleInfo.nativeLibraryPath = bundleName + ServiceConstants::PATH_SEPARATOR +
         baseApplicationInfo_->nativeLibraryPath;
-    pluginBundleInfo.abilityInfos.insert(baseAbilityInfos_.begin(), baseAbilityInfos_.end());
+    for (const auto &item : baseAbilityInfos_) {
+        pluginBundleInfo.abilityInfos.try_emplace(item.first, InnerAbilityInfo::ConvertToAbilityInfo(item.second));
+    }
     pluginBundleInfo.appInfo = *baseApplicationInfo_;
     pluginBundleInfo.appInfo.arkTSMode = GetApplicationArkTSMode();
     for (const auto &info : innerModuleInfos_) {

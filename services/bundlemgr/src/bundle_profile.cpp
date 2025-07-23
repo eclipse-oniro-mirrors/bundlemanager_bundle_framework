@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2193,7 +2193,7 @@ bool ToAbilityInfo(
     const ProfileReader::ConfigJson &configJson,
     const ProfileReader::Ability &ability,
     const TransformParam &transformParam,
-    AbilityInfo &abilityInfo)
+    InnerAbilityInfo &abilityInfo)
 {
     abilityInfo.name = ability.name;
     if (ability.srcLanguage != "c++" && ability.name.substr(0, 1) == ".") {
@@ -2357,7 +2357,7 @@ bool ToInnerBundleInfo(
     bool find = false;
     bool isExistPageAbility = false;
     for (const auto &ability : configJson.module.abilities) {
-        AbilityInfo abilityInfo;
+        InnerAbilityInfo abilityInfo;
         if (!ToAbilityInfo(configJson, ability, transformParam, abilityInfo)) {
             APP_LOGE("parse to abilityInfo failed");
             return false;

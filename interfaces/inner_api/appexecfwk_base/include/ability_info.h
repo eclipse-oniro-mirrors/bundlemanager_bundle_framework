@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -254,7 +254,7 @@ struct AbilityInfo : public Parcelable {
     std::string kind;  // ability category
     std::string extensionTypeName;
     std::string srcPath;
-    std::string srcLanguage = "js";
+    std::string srcLanguage = Constants::SRC_LANGUAGE_JS;
     std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
 
     std::string process;
@@ -279,7 +279,7 @@ struct AbilityInfo : public Parcelable {
     std::string startWindow;
     std::string startWindowIcon;
     std::string startWindowBackground;
-    std::string preferMultiWindowOrientation = "default";
+    std::string preferMultiWindowOrientation = Constants::PREFER_MULTI_WINDOW_ORIENTATION_DEFAULT;
 
     std::string originalBundleName;
     std::string appName;

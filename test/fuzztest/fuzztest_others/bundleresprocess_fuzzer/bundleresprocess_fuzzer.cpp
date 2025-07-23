@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -113,7 +113,7 @@ bool DoSomethingInterestingWithMyAPITwo(const uint8_t* data, size_t size)
     BundleResourceProcess::ChangeDynamicIcon(resourceInfos, resourceInfo);
     BundleResourceProcess::GetDynamicIcon(bundleInfo, userId, resourceInfo);
     AbilityInfo abilityInfo;
-    BMSFuzzTestUtil::GenerateAbilityInfo(fdp, abilityInfo);
+    BMSFuzzTestUtil::GenerateAbilityInfo<AbilityInfo>(fdp, abilityInfo);
     InnerModuleInfo innerModuleInfo;
     bundleInfo.InsertInnerModuleInfo("moduleinfo", innerModuleInfo);
     BundleResourceProcess::ConvertToBundleResourceInfo(bundleInfo);
@@ -155,9 +155,9 @@ bool DoSomethingInterestingWithMyAPIThree(const uint8_t* data, size_t size)
     applicationInfo.bundleType = BundleType::SHARED;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, userId, resourceInfos);
-    AbilityInfo abilityInfo;
-    BMSFuzzTestUtil::GenerateAbilityInfo(fdp, abilityInfo);
-    bundleInfo.InsertAbilitiesInfo("key", abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    BMSFuzzTestUtil::GenerateAbilityInfo<InnerAbilityInfo>(fdp, innerAbilityInfo);
+    bundleInfo.InsertAbilitiesInfo("key", innerAbilityInfo);
     applicationInfo.bundleType = BundleType::APP;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, userId, resourceInfos);

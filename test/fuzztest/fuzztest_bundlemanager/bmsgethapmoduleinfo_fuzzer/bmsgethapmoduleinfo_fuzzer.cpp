@@ -33,7 +33,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     BundleMgrProxy bundleMgrProxy(object);
     AbilityInfo abilityInfo;
     FuzzedDataProvider fdp(data, size);
-    GenerateAbilityInfo(fdp, abilityInfo);
+    GenerateAbilityInfo<AbilityInfo>(fdp, abilityInfo);
     HapModuleInfo hapModuleInfo;
     bundleMgrProxy.GetHapModuleInfo(abilityInfo, hapModuleInfo);
     int32_t userId = GenerateRandomUser(fdp);
@@ -48,4 +48,4 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     // Run your code on data.
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
-}
+}
