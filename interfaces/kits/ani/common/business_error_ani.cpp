@@ -26,7 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* ERROR_MESSAGE_PLACEHOLDER = "$";
-constexpr const char* BUSINESS_ERROR_CLASS = "L@ohos/base/BusinessError;";
+constexpr const char* BUSINESS_ERROR_CLASS = "@ohos.base.BusinessError";
 } // namespace
     
 void BusinessErrorAni::ThrowError(ani_env *env, int32_t err, const std::string &msg)
@@ -58,12 +58,12 @@ ani_object BusinessErrorAni::WrapError(ani_env *env, const std::string &msg)
     ani_ref undefRef;
     env->GetUndefined(&undefRef);
 
-    ani_status status = env->FindClass("Lescompat/Error;", &cls);
+    ani_status status = env->FindClass("escompat.Error", &cls);
     if (status != ANI_OK) {
         APP_LOGE("FindClass err : %{public}d", status);
         return nullptr;
     }
-    status = env->Class_FindMethod(cls, "<ctor>", "Lstd/core/String;Lescompat/ErrorOptions;:V", &method);
+    status = env->Class_FindMethod(cls, "<ctor>", "C{std.core.String}C{escompat.ErrorOptions}:", &method);
     if (status != ANI_OK) {
         APP_LOGE("Class_FindMethod err : %{public}d", status);
         return nullptr;
@@ -90,7 +90,7 @@ ani_object BusinessErrorAni::CreateError(ani_env *env, int32_t code, const std::
         APP_LOGE("FindClass err : %{public}d", status);
         return nullptr;
     }
-    status = env->Class_FindMethod(cls, "<ctor>", "DLescompat/Error;:V", &method);
+    status = env->Class_FindMethod(cls, "<ctor>", "iC{escompat.Error}:", &method);
     if (status != ANI_OK) {
         APP_LOGE("Class_FindMethod err : %{public}d", status);
         return nullptr;
@@ -100,7 +100,7 @@ ani_object BusinessErrorAni::CreateError(ani_env *env, int32_t code, const std::
         APP_LOGE("WrapError failed");
         return nullptr;
     }
-    ani_double dCode(code);
+    ani_int dCode(code);
     status = env->Object_New(cls, method, &obj, dCode, error);
     if (status != ANI_OK) {
         APP_LOGE("Object_New err : %{public}d", status);
