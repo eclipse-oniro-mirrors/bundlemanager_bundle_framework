@@ -189,6 +189,8 @@ public:
     ErrCode CheckAppDistributionType(const std::string distributionType);
 
     int32_t GetAppDistributionTypeEnum(const std::string distributionType) const;
+
+    bool DetermineCloneApp(InnerBundleInfo &innerBundleInfo);
 private:
 
     ErrCode ParseBundleInfo(
@@ -257,7 +259,6 @@ private:
     bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     std::tuple<bool, std::string, std::string> GetValidReleaseType(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    bool DetermineCloneApp(const InnerBundleInfo &innerBundleInfo, int32_t &cloneNum);
 
     std::string checkResultMsg_ = "";
 };
