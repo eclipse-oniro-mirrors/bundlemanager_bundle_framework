@@ -174,7 +174,7 @@ BundleDataMgr::~BundleDataMgr()
 
 bool BundleDataMgr::LoadDataFromPersistentStorage()
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     // Judge whether bundleState json db exists.
     // If it does not exist, create it and return the judgment result.
     bool bundleStateDbExist = bundleStateStorage_->HasBundleUserInfoJsonDb();
@@ -189,7 +189,7 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
     }
 
     for (const auto &item : bundleInfos_) {
-        std::lock_guard<std::mutex> stateLock(stateMutex_);
+        std::lock_guard<ffrt::mutex> stateLock(stateMutex_);
         installStates_.emplace(item.first, InstallState::INSTALL_SUCCESS);
         AddAppHspBundleName(item.second.GetApplicationBundleType(), item.first);
     }
@@ -272,8 +272,8 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
     }
 
     // always keep lock bundleInfoMutex_ before locking stateMutex_ to avoid deadlock
-    std::unique_lock<std::shared_mutex> lck(bundleInfoMutex_);
-    std::lock_guard<std::mutex> lock(stateMutex_);
+    std::unique_lock<ffrt::shared_mutex> lck(bundleInfoMutex_);
+    std::lock_guard<ffrt::mutex> lock(stateMutex_);
     auto item = installStates_.find(bundleName);
     if (item == installStates_.end()) {
         if (state == InstallState::INSTALL_START) {
@@ -312,13 +312,13 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
         return false;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem != bundleInfos_.end()) {
         APP_LOGW("bundleName: %{public}s : bundle info already exist", bundleName.c_str());
         return false;
     }
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::lock_guard<ffrt::mutex> stateLock(stateMutex_);
     auto statusItem = installStates_.find(bundleName);
     if (statusItem == installStates_.end()) {
         APP_LOGW("save info fail, bundleName:%{public}s is not installed", bundleName.c_str());
@@ -361,13 +361,13 @@ bool BundleDataMgr::AddNewModuleInfo(
     const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
     LOG_I(BMS_TAG_DEFAULT, "addInfo:%{public}s", newInfo.GetCurrentModulePackage().c_str());
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("bundleName: %{public}s : bundle info not exist", bundleName.c_str());
         return false;
     }
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::lock_guard<ffrt::mutex> stateLock(stateMutex_);
     auto statusItem = installStates_.find(bundleName);
     if (statusItem == installStates_.end()) {
         APP_LOGW("save info fail, app:%{public}s is not updated", bundleName.c_str());
@@ -439,13 +439,13 @@ bool BundleDataMgr::RemoveModuleInfo(
     const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo, bool needSaveStorage)
 {
     APP_LOGD("remove module info:%{public}s/%{public}s", bundleName.c_str(), modulePackage.c_str());
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
         return false;
     }
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::lock_guard<ffrt::mutex> stateLock(stateMutex_);
     auto statusItem = installStates_.find(bundleName);
     if (statusItem == installStates_.end()) {
         APP_LOGW("save info fail, app:%{public}s is not updated", bundleName.c_str());
@@ -608,14 +608,14 @@ bool BundleDataMgr::DeleteFirstInstallBundleInfo(int32_t userId)
 
 bool BundleDataMgr::RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundleInfo &info)
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::string bundleName = info.GetBundleName();
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
         return false;
     }
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::lock_guard<ffrt::mutex> stateLock(stateMutex_);
     auto statusItem = installStates_.find(bundleName);
     if (statusItem == installStates_.end()) {
         APP_LOGW("save info fail, app:%{public}s is not updated", bundleName.c_str());
@@ -637,14 +637,14 @@ bool BundleDataMgr::AddInnerBundleUserInfo(
     const std::string &bundleName, const InnerBundleUserInfo& newUserInfo)
 {
     APP_LOGD("AddInnerBundleUserInfo:%{public}s", bundleName.c_str());
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
         return false;
     }
 
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::lock_guard<ffrt::mutex> stateLock(stateMutex_);
     auto& info = bundleInfos_.at(bundleName);
     info.AddInnerBundleUserInfo(newUserInfo);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
@@ -659,14 +659,14 @@ bool BundleDataMgr::RemoveInnerBundleUserInfo(
     const std::string &bundleName, int32_t userId)
 {
     APP_LOGD("RemoveInnerBundleUserInfo:%{public}s", bundleName.c_str());
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
         return false;
     }
 
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::lock_guard<ffrt::mutex> stateLock(stateMutex_);
     auto& info = bundleInfos_.at(bundleName);
     info.RemoveInnerBundleUserInfo(userId);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
@@ -683,13 +683,13 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
     const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
     LOG_I(BMS_TAG_DEFAULT, "updateInfo:%{public}s", bundleName.c_str());
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
         return false;
     }
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::lock_guard<ffrt::mutex> stateLock(stateMutex_);
     auto statusItem = installStates_.find(bundleName);
     if (statusItem == installStates_.end()) {
         APP_LOGW("save info fail, app:%{public}s is not updated", bundleName.c_str());
@@ -1003,7 +1003,7 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     if ((appIndex == 0) && (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId))) {
         LOG_D(BMS_TAG_QUERY, "ExplicitQueryAbilityInfo failed, bundleName:%{public}s", bundleName.c_str());
@@ -1048,7 +1048,7 @@ ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flag
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     if (appIndex == 0) {
         ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
@@ -1115,7 +1115,7 @@ void BundleDataMgr::ImplicitQueryCloneAbilityInfos(
     LOG_D(BMS_TAG_QUERY, "action:%{public}s, uri:%{private}s, type:%{public}s",
         want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
     LOG_D(BMS_TAG_QUERY, "flags:%{public}d, userId:%{public}d", flags, userId);
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ is empty");
         return;
@@ -1156,7 +1156,7 @@ bool BundleDataMgr::ImplicitQueryAbilityInfos(
     LOG_D(BMS_TAG_QUERY, "action:%{public}s, uri:%{private}s, type:%{public}s",
         want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
     LOG_D(BMS_TAG_QUERY, "flags:%{public}d, userId:%{public}d", flags, userId);
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ is empty");
         return false;
@@ -1198,7 +1198,7 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosV9(
     LOG_D(BMS_TAG_QUERY, "action:%{public}s uri:%{private}s type:%{public}s",
         want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
     LOG_D(BMS_TAG_QUERY, "flags:%{public}d userId:%{public}d", flags, userId);
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -1242,7 +1242,7 @@ void BundleDataMgr::ImplicitQueryCloneAbilityInfosV9(
         want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
     LOG_D(BMS_TAG_QUERY, "flags:%{public}d userId:%{public}d", flags, userId);
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ is empty");
         return;
@@ -1321,7 +1321,7 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
 
 ErrCode BundleDataMgr::IsSystemApp(const std::string &bundleName, bool &isSystemApp)
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto bundleInfoItem = bundleInfos_.find(bundleName);
     if (bundleInfoItem == bundleInfos_.end()) {
         APP_LOGW("%{public}s not found", bundleName.c_str());
@@ -2163,7 +2163,7 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundle
     if (requestUserId == Constants::INVALID_USERID) {
         return cloneAppIndexes;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         LOG_W(BMS_TAG_QUERY, "no bundleName %{public}s found", bundleName.c_str());
@@ -2188,7 +2188,7 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundle
 std::set<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundleName) const
 {
     std::set<int32_t> cloneAppIndexes;
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         LOG_W(BMS_TAG_QUERY, "no bundleName %{public}s found", bundleName.c_str());
@@ -2361,7 +2361,7 @@ ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
         LOG_E(BMS_TAG_QUERY, "request user id is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -2390,7 +2390,7 @@ ErrCode BundleDataMgr::GetLauncherAbilityInfoSync(const Want &want, const int32_
         LOG_E(BMS_TAG_QUERY, "request user id is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
     const auto &item = bundleInfos_.find(bundleName);
@@ -2445,7 +2445,7 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
     if (abilityUri.find(ServiceConstants::DATA_ABILITY_URI_PREFIX) == std::string::npos) {
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ data is empty");
         return false;
@@ -2499,7 +2499,7 @@ bool BundleDataMgr::QueryAbilityInfosByUri(const std::string &abilityUri, std::v
     if (abilityUri.find(ServiceConstants::DATA_ABILITY_URI_PREFIX) == std::string::npos) {
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ data is empty");
         return false;
@@ -2541,7 +2541,7 @@ bool BundleDataMgr::GetApplicationInfo(
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(appName, flags, innerBundleInfo, requestUserId)) {
         LOG_D(BMS_TAG_QUERY, "GetApplicationInfo failed, bundleName:%{public}s", appName.c_str());
@@ -2562,7 +2562,7 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     int32_t flag = 0;
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
@@ -2594,7 +2594,7 @@ ErrCode BundleDataMgr::GetApplicationInfoWithResponseId(
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     int32_t flag = 0;
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
@@ -2649,7 +2649,7 @@ bool BundleDataMgr::GetApplicationInfos(
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ data is empty");
         return false;
@@ -2682,7 +2682,7 @@ bool BundleDataMgr::UpateExtResources(const std::string &bundleName,
         return false;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -2708,7 +2708,7 @@ bool BundleDataMgr::RemoveExtResources(const std::string &bundleName,
         return false;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -2734,7 +2734,7 @@ bool BundleDataMgr::UpateCurDynamicIconModule(
         return false;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -2781,7 +2781,7 @@ ErrCode BundleDataMgr::GetApplicationInfosV9(
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -2824,7 +2824,7 @@ bool BundleDataMgr::GetBundleInfo(
     if (requestUserId == Constants::INVALID_USERID) {
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId)) {
         LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfo failed -n %{public}s -u %{public}d",
@@ -2876,7 +2876,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
 
     int32_t originalUserId = requestUserId;
     PreProcessAnyUserFlag(bundleName, flags, requestUserId);
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 
     auto ret = GetInnerBundleInfoWithBundleFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
@@ -3049,7 +3049,7 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
     }
     std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
         if (infoItem == bundleInfos_.end()) {
             APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
@@ -3176,8 +3176,8 @@ ErrCode BundleDataMgr::GetBaseSharedBundleInfos(const std::string &bundleName,
     if ((flag == GetDependentBundleInfoFlag::GET_APP_SERVICE_HSP_BUNDLE_INFO) ||
         (flag == GetDependentBundleInfoFlag::GET_ALL_DEPENDENT_BUNDLE_INFO)) {
         // for app service hsp
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        std::lock_guard<std::mutex> hspLock(hspBundleNameMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
+        std::lock_guard<ffrt::mutex> hspLock(hspBundleNameMutex_);
         for (const std::string &hspName : appServiceHspBundleName_) {
             APP_LOGD("get hspBundleName: %{public}s", hspName.c_str());
             auto infoItem = bundleInfos_.find(hspName);
@@ -3190,7 +3190,7 @@ ErrCode BundleDataMgr::GetBaseSharedBundleInfos(const std::string &bundleName,
     }
     if (flag == GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO ||
         flag == GetDependentBundleInfoFlag::GET_ALL_DEPENDENT_BUNDLE_INFO) {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         auto infoItem = bundleInfos_.find(bundleName);
         if (infoItem == bundleInfos_.end()) {
             APP_LOGW("GetBaseSharedBundleInfos get bundleInfo failed, bundleName:%{public}s", bundleName.c_str());
@@ -3212,7 +3212,7 @@ ErrCode BundleDataMgr::GetBaseSharedBundleInfos(const std::string &bundleName,
 
 bool BundleDataMgr::GetBundleType(const std::string &bundleName, BundleType &bundleType)const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -3269,7 +3269,7 @@ bool BundleDataMgr::GetAdaptBaseShareBundleInfo(
 
 bool BundleDataMgr::DeleteSharedBundleInfo(const std::string &bundleName)
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem != bundleInfos_.end()) {
         APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
@@ -3299,7 +3299,7 @@ ErrCode BundleDataMgr::GetBundlePackInfo(
         APP_LOGW("getBundlePackInfo userId is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId)) {
         APP_LOGW("GetBundlePackInfo failed, bundleName:%{public}s", bundleName.c_str());
@@ -3331,7 +3331,7 @@ bool BundleDataMgr::GetBundleInfosByMetaData(
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return false;
@@ -3365,7 +3365,7 @@ bool BundleDataMgr::GetBundleList(
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return false;
@@ -3395,7 +3395,7 @@ bool BundleDataMgr::GetDebugBundleList(std::vector<std::string> &bundleNames, in
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGE("bundleInfos_ data is empty");
         return false;
@@ -3432,7 +3432,7 @@ bool BundleDataMgr::GetBundleInfos(
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ data is empty");
         return false;
@@ -3595,7 +3595,7 @@ ErrCode BundleDataMgr::CheckBundleAndAbilityDisabled(
 
 bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return false;
@@ -3633,7 +3633,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -3699,7 +3699,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
 
 ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -3790,7 +3790,7 @@ ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bun
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
 
-    std::shared_lock<std::shared_mutex> bundleIdLock(bundleIdMapMutex_);
+    std::shared_lock<ffrt::shared_mutex> bundleIdLock(bundleIdMapMutex_);
     auto bundleIdIter = bundleIdMap_.find(bundleId);
     if (bundleIdIter == bundleIdMap_.end()) {
         APP_LOGW_NOFUNC("bundleId %{public}d is not existed", bundleId);
@@ -3841,7 +3841,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
 
     std::string keyName;
     {
-        std::shared_lock<std::shared_mutex> bundleIdLock(bundleIdMapMutex_);
+        std::shared_lock<ffrt::shared_mutex> bundleIdLock(bundleIdMapMutex_);
         auto bundleIdIter = bundleIdMap_.find(bundleId);
         if (bundleIdIter == bundleIdMap_.end()) {
             APP_LOGW_NOFUNC("uid %{public}d is not existed", uid);
@@ -3852,7 +3852,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
     std::string bundleName = keyName;
     GetBundleNameAndIndexByName(keyName, bundleName, appIndex);
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto bundleInfoIter = bundleInfos_.find(bundleName);
     if (bundleInfoIter == bundleInfos_.end()) {
         APP_LOGE("bundleName %{public}s is not existed in bundleInfos_", bundleName.c_str());
@@ -3895,7 +3895,7 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
         if (BundleUserMgrHostImpl::SkipThirdPreloadAppInstallation(userId, preInstallBundleInfo)) {
             continue;
         }
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         auto infoItem = bundleInfos_.find(preInstallBundleInfo.GetBundleName());
         if (infoItem == bundleInfos_.end()) {
             recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
@@ -3916,14 +3916,14 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
 
 bool BundleDataMgr::IsBundleExist(const std::string &bundleName) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     return bundleInfos_.find(bundleName) != bundleInfos_.end();
 }
 
 bool BundleDataMgr::HasUserInstallInBundle(
     const std::string &bundleName, const int32_t userId) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         return false;
@@ -4017,7 +4017,7 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     int32_t uid = -1;
     std::vector<std::string> moduleNameList;
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
         if (infoItem == bundleInfos_.end()) {
             return false;
@@ -4033,7 +4033,7 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
         return false;
     }
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
         if (infoItem == bundleInfos_.end()) {
             return false;
@@ -4063,7 +4063,7 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         for (auto bundleName = bundleNameList.begin(); bundleName != bundleNameList.end();) {
             const auto infoItem = bundleInfos_.find(*bundleName);
             InnerBundleUserInfo userInfo;
@@ -4105,7 +4105,7 @@ void BundleDataMgr::GetPreBundleSize(const std::string &name, std::vector<Bundle
     std::string hapPath;
     bool getPreBundleSize = false;
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(name);
         if (infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
             for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
@@ -4125,7 +4125,7 @@ void BundleDataMgr::GetPreBundleSize(const std::string &name, std::vector<Bundle
 void BundleDataMgr::GetBundleModuleNames(const std::string &bundleName,
     std::vector<std::string> &moduleNameList) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     const auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("No modules of: %{public}s", bundleName.c_str());
@@ -4144,7 +4144,7 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
         return false;
     }
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         for (const auto &item : bundleInfos_) {
             const InnerBundleInfo &info = item.second;
             std::string bundleName = info.GetBundleName();
@@ -4239,7 +4239,7 @@ int64_t BundleDataMgr::GetAllFreeInstallBundleSpaceSize() const
 bool BundleDataMgr::GetFreeInstallModules(
     std::map<std::string, std::vector<std::string>> &freeInstallModules) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ is data is empty");
         return false;
@@ -4291,7 +4291,7 @@ ErrCode BundleDataMgr::GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,
         APP_LOGE("accessTokenId %{public}d not exist", accessTokenId);
         return ERR_BUNDLE_MANAGER_ACCESS_TOKENID_NOT_EXIST;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     const auto infoItem = bundleInfos_.find(tokenInfo.bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("bundleName %{public}s not exist", tokenInfo.bundleName.c_str());
@@ -4343,7 +4343,7 @@ bool BundleDataMgr::GetBundleGidsByUid(
 
 bool BundleDataMgr::QueryKeepAliveBundleInfos(std::vector<BundleInfo> &bundleInfos) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return false;
@@ -4372,7 +4372,7 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
     const std::string &abilityName, std::string &label) const
 {
 #ifdef GLOBAL_RESMGR_ENABLE
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     int32_t requestUserId = GetUserId();
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -4425,7 +4425,7 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
 bool BundleDataMgr::GetHapModuleInfo(
     const AbilityInfo &abilityInfo, HapModuleInfo &hapModuleInfo, int32_t userId) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return false;
@@ -4462,7 +4462,7 @@ bool BundleDataMgr::GetHapModuleInfo(
 ErrCode BundleDataMgr::GetLaunchWantForBundle(
     const std::string &bundleName, Want &want, int32_t userId) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     ErrCode ret = GetInnerBundleInfoWithFlagsV9(
         bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, userId);
@@ -4571,7 +4571,7 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
         APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
     }
     bundleInfos_.erase(bundleName);
-    std::lock_guard<std::mutex> hspLock(hspBundleNameMutex_);
+    std::lock_guard<ffrt::mutex> hspLock(hspBundleNameMutex_);
     if (appServiceHspBundleName_.find(bundleName) != appServiceHspBundleName_.end()) {
         appServiceHspBundleName_.erase(bundleName);
     }
@@ -4653,7 +4653,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
 bool BundleDataMgr::GetInnerBundleInfoWithBundleFlagsAndLock(const std::string &bundleName,
     const int32_t flags, InnerBundleInfo &info, int32_t userId) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     bool res = GetInnerBundleInfoWithFlags(bundleName, flags, info, userId);
     if (!res) {
         APP_LOGD("GetInnerBundleInfoWithBundleFlagsAndLock: bundleName %{public}s not find", bundleName.c_str());
@@ -4758,7 +4758,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithDisable(const std::string &bundleName,
         return false;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -4778,7 +4778,7 @@ bool BundleDataMgr::DisableBundle(const std::string &bundleName)
         return false;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -4796,7 +4796,7 @@ bool BundleDataMgr::EnableBundle(const std::string &bundleName)
         return false;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -4810,7 +4810,7 @@ ErrCode BundleDataMgr::IsApplicationEnabled(
     const std::string &bundleName, int32_t appIndex, bool &isEnabled, int32_t userId) const
 {
     APP_LOGD("IsApplicationEnabled %{public}s", bundleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -4843,7 +4843,7 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
     int32_t appIndex, bool isEnable, const std::string &caller, int32_t userId)
 {
     APP_LOGD("SetApplicationEnabled %{public}s", bundleName.c_str());
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGW("Request userId %{public}d is invalid, bundleName:%{public}s", userId, bundleName.c_str());
@@ -4902,7 +4902,7 @@ bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std:
     }
     APP_LOGD("bundleName:%{public}s, moduleName:%{public}s, userId:%{public}d",
         bundleName.c_str(), moduleName.c_str(), userId);
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -4942,7 +4942,7 @@ ErrCode BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const st
     }
     APP_LOGD("bundleName:%{public}s, moduleName:%{public}s, userId:%{public}d",
         bundleName.c_str(), moduleName.c_str(), userId);
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -4954,7 +4954,7 @@ ErrCode BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const st
 
 ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool &isEnable) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(abilityInfo.bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", abilityInfo.bundleName.c_str());
@@ -4980,7 +4980,7 @@ ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t 
 ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex,
     bool isEnabled, int32_t userId)
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGW("Request userId is invalid, bundleName:%{public}s, abilityName:%{public}s",
@@ -5037,7 +5037,7 @@ std::shared_ptr<BundleSandboxAppHelper> BundleDataMgr::GetSandboxAppHelper() con
 bool BundleDataMgr::RegisterBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
     APP_LOGD("RegisterBundleStatusCallback %{public}s", bundleStatusCallback->GetBundleName().c_str());
-    std::unique_lock<std::shared_mutex> lock(callbackMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(callbackMutex_);
     callbackList_.emplace_back(bundleStatusCallback);
     if (bundleStatusCallback->AsObject() != nullptr) {
         sptr<BundleStatusCallbackDeathRecipient> deathRecipient =
@@ -5103,7 +5103,7 @@ void BundleDataMgr::NotifyBundleEventCallback(const EventFwk::CommonEventData &e
 bool BundleDataMgr::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
     APP_LOGD("ClearBundleStatusCallback %{public}s", bundleStatusCallback->GetBundleName().c_str());
-    std::unique_lock<std::shared_mutex> lock(callbackMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(callbackMutex_);
     callbackList_.erase(std::remove_if(callbackList_.begin(),
         callbackList_.end(),
         [&](const sptr<IBundleStatusCallback> &callback) {
@@ -5115,7 +5115,7 @@ bool BundleDataMgr::ClearBundleStatusCallback(const sptr<IBundleStatusCallback> 
 
 bool BundleDataMgr::UnregisterBundleStatusCallback()
 {
-    std::unique_lock<std::shared_mutex> lock(callbackMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(callbackMutex_);
     callbackList_.clear();
     return true;
 }
@@ -5141,7 +5141,7 @@ bool BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInfo)
 
 bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bundleId)
 {
-    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleIdMapMutex_);
     if (bundleIdMap_.empty()) {
         APP_LOGD("first app install");
         bundleId = baseAppUid_;
@@ -5187,7 +5187,7 @@ ErrCode BundleDataMgr::SetModuleUpgradeFlag(const std::string &bundleName,
         APP_LOGW("bundleName or moduleName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -5211,7 +5211,7 @@ int32_t BundleDataMgr::GetModuleUpgradeFlag(const std::string &bundleName, const
         APP_LOGW("bundleName or moduleName is empty");
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -5232,7 +5232,7 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
     auto innerBundleUserInfo = userInfos.begin()->second;
     int32_t bundleId = innerBundleUserInfo.uid -
         innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
-    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleIdMapMutex_);
     auto infoItem = bundleIdMap_.find(bundleId);
     if (infoItem == bundleIdMap_.end()) {
         return;
@@ -5258,7 +5258,7 @@ bool BundleDataMgr::RestoreUidAndGid()
                 onlyInsertOne = true;
                 int32_t bundleId = innerBundleUserInfo.uid -
                     innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
-                std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+                std::unique_lock<ffrt::shared_mutex> lock(bundleIdMapMutex_);
                 auto item = bundleIdMap_.find(bundleId);
                 if (item == bundleIdMap_.end()) {
                     bundleIdMap_.emplace(bundleId, innerBundleUserInfo.bundleName);
@@ -5279,7 +5279,7 @@ bool BundleDataMgr::RestoreUidAndGid()
                 int32_t bundleId = cloneInfo.uid - cloneInfo.userId * Constants::BASE_USER_RANGE;
                 std::string cloneBundleName =
                     BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, cloneInfo.appIndex);
-                std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+                std::unique_lock<ffrt::shared_mutex> lock(bundleIdMapMutex_);
                 auto item = bundleIdMap_.find(bundleId);
                 if (item == bundleIdMap_.end()) {
                     bundleIdMap_.emplace(bundleId, cloneBundleName);
@@ -5301,12 +5301,12 @@ bool BundleDataMgr::RestoreUidAndGid()
 void BundleDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap)
 {
     if (sandboxAppHelper_ != nullptr) {
-        std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+        std::unique_lock<ffrt::shared_mutex> lock(bundleIdMapMutex_);
         sandboxAppHelper_->RestoreSandboxUidAndGid(bundleIdMap);
     }
 }
 
-std::mutex &BundleDataMgr::GetBundleMutex(const std::string &bundleName)
+ffrt::mutex &BundleDataMgr::GetBundleMutex(const std::string &bundleName)
 {
     bundleMutex_.lock_shared();
     auto it = bundleMutexMap_.find(bundleName);
@@ -5326,7 +5326,7 @@ bool BundleDataMgr::GetProvisionId(const std::string &bundleName, std::string &p
         APP_LOGW("bundleName empty");
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -5343,7 +5343,7 @@ bool BundleDataMgr::GetAppFeature(const std::string &bundleName, std::string &ap
         APP_LOGW("bundleName empty");
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -5370,7 +5370,7 @@ std::shared_ptr<IBundleDataStorage> BundleDataMgr::GetDataStorage() const
 
 bool BundleDataMgr::GetAllFormsInfo(std::vector<FormInfo> &formInfos) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return false;
@@ -5395,7 +5395,7 @@ bool BundleDataMgr::GetFormsInfoByModule(
         APP_LOGW("bundle name is empty");
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return false;
@@ -5423,7 +5423,7 @@ bool BundleDataMgr::GetFormsInfoByApp(const std::string &bundleName, std::vector
         APP_LOGW("bundle name is empty");
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return false;
@@ -5451,7 +5451,7 @@ bool BundleDataMgr::GetShortcutInfos(
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     if (!GetInnerBundleInfoWithFlags(
         bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, requestUserId)) {
@@ -5636,7 +5636,7 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
         APP_LOGW("input invalid userid, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName,
         BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, requestUserId);
@@ -5666,7 +5666,7 @@ ErrCode BundleDataMgr::GetShortcutInfoByAppIndex(const std::string &bundleName, 
         APP_LOGW("input invalid userid, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), requestUserId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     int32_t flag = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE);
     ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flag, innerBundleInfo, requestUserId, appIndex);
@@ -5691,7 +5691,7 @@ bool BundleDataMgr::GetAllCommonEventInfo(const std::string &eventKey,
         APP_LOGW("event key is empty");
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return false;
@@ -5802,7 +5802,7 @@ bool BundleDataMgr::GetInnerBundleUserInfoByUserId(const std::string &bundleName
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos data is empty, bundleName:%{public}s", bundleName.c_str());
         return false;
@@ -5842,7 +5842,7 @@ int32_t BundleDataMgr::GetUserIdByUid(int32_t uid) const
 
 void BundleDataMgr::AddUserId(int32_t userId)
 {
-    std::lock_guard<std::mutex> lock(multiUserIdSetMutex_);
+    std::lock_guard<ffrt::mutex> lock(multiUserIdSetMutex_);
     auto item = multiUserIdsSet_.find(userId);
     if (item != multiUserIdsSet_.end()) {
         return;
@@ -5853,7 +5853,7 @@ void BundleDataMgr::AddUserId(int32_t userId)
 
 void BundleDataMgr::RemoveUserId(int32_t userId)
 {
-    std::lock_guard<std::mutex> lock(multiUserIdSetMutex_);
+    std::lock_guard<ffrt::mutex> lock(multiUserIdSetMutex_);
     auto item = multiUserIdsSet_.find(userId);
     if (item == multiUserIdsSet_.end()) {
         return;
@@ -5864,7 +5864,7 @@ void BundleDataMgr::RemoveUserId(int32_t userId)
 
 bool BundleDataMgr::HasUserId(int32_t userId) const
 {
-    std::lock_guard<std::mutex> lock(multiUserIdSetMutex_);
+    std::lock_guard<ffrt::mutex> lock(multiUserIdSetMutex_);
     return multiUserIdsSet_.find(userId) != multiUserIdsSet_.end();
 }
 
@@ -5875,7 +5875,7 @@ int32_t BundleDataMgr::GetUserIdByCallingUid() const
 
 std::set<int32_t> BundleDataMgr::GetAllUser() const
 {
-    std::lock_guard<std::mutex> lock(multiUserIdSetMutex_);
+    std::lock_guard<ffrt::mutex> lock(multiUserIdSetMutex_);
     return multiUserIdsSet_;
 }
 
@@ -5919,7 +5919,7 @@ bool BundleDataMgr::GetInnerBundleUserInfos(
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos data is empty, bundleName:%{public}s", bundleName.c_str());
         return false;
@@ -5941,7 +5941,7 @@ bool BundleDataMgr::GetInnerBundleUserInfos(
 std::string BundleDataMgr::GetAppPrivilegeLevel(const std::string &bundleName, int32_t userId)
 {
     APP_LOGD("GetAppPrivilegeLevel:%{public}s, userId:%{public}d", bundleName.c_str(), userId);
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo info;
     if (!GetInnerBundleInfoWithFlags(bundleName, 0, info, userId)) {
         return Constants::EMPTY_STRING;
@@ -6044,7 +6044,7 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfos(uint32_t flags, int32_t userId
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     ErrCode ret = ImplicitQueryAllExtensionInfos(flags, requestUserId, extensionInfos, appIndex);
     if (ret != ERR_OK) {
         LOG_D(BMS_TAG_QUERY, "ImplicitQueryAllExtensionInfos error: %{public}d", ret);
@@ -6067,7 +6067,7 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosByExtensionTypeName(const std::
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     ErrCode ret = ImplicitQueryAllExtensionInfos(
         flags, requestUserId, extensionInfos, appIndex, typeName);
     if (ret != ERR_OK) {
@@ -6107,7 +6107,7 @@ bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, 
     if (requestUserId == Constants::INVALID_USERID) {
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     if ((appIndex == 0) && (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId))) {
         LOG_W(BMS_TAG_QUERY, "ExplicitQueryExtensionInfo failed");
@@ -6183,7 +6183,7 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     if (appIndex == 0) {
         ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
@@ -6286,7 +6286,7 @@ bool BundleDataMgr::ImplicitQueryExtensionInfos(const Want &want, int32_t flags,
     if (requestUserId == Constants::INVALID_USERID) {
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::string bundleName = want.GetElement().GetBundleName();
     if (!bundleName.empty()) {
         // query in current bundle
@@ -6324,7 +6324,7 @@ ErrCode BundleDataMgr::ImplicitQueryExtensionInfosV9(const Want &want, int32_t f
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::string bundleName = want.GetElement().GetBundleName();
     if (!bundleName.empty()) {
         // query in current bundle
@@ -6785,7 +6785,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const ExtensionAbilityType &exten
         LOG_E(BMS_TAG_QUERY, "invalid userId, userId:%{public}d", requestUserId);
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
@@ -6836,7 +6836,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
             return false;
         }
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ data is empty, uri:%{public}s", uri.c_str());
         return false;
@@ -6871,7 +6871,7 @@ std::string BundleDataMgr::GetStringById(const std::string &bundleName, const st
 {
     APP_LOGD("GetStringById:%{public}s , %{public}s, %{public}d", bundleName.c_str(), moduleName.c_str(), resId);
 #ifdef GLOBAL_RESMGR_ENABLE
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
         GetResourceManager(bundleName, moduleName, userId);
     if (resourceManager == nullptr) {
@@ -6897,7 +6897,7 @@ std::string BundleDataMgr::GetIconById(
     APP_LOGI("GetIconById bundleName:%{public}s, moduleName:%{public}s, resId:%{public}d, density:%{public}d",
         bundleName.c_str(), moduleName.c_str(), resId, density);
 #ifdef GLOBAL_RESMGR_ENABLE
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
         GetResourceManager(bundleName, moduleName, userId);
     if (resourceManager == nullptr) {
@@ -7068,7 +7068,7 @@ bool BundleDataMgr::GetAllDependentModuleNames(const std::string &bundleName, co
 {
     APP_LOGD("GetAllDependentModuleNames bundleName: %{public}s, moduleName: %{public}s",
         bundleName.c_str(), moduleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW("GetAllDependentModuleNames: bundleName:%{public}s not find", bundleName.c_str());
@@ -7087,7 +7087,7 @@ void BundleDataMgr::UpdateRemovable(
         return;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -7109,7 +7109,7 @@ void BundleDataMgr::UpdatePrivilegeCapability(
         return;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -7128,7 +7128,7 @@ bool BundleDataMgr::FetchInnerBundleInfo(
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("FetchInnerBundleInfo not found %{public}s", bundleName.c_str());
@@ -7197,7 +7197,7 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
     }
 
     // get skills info
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ is empty");
         return false;
@@ -7291,7 +7291,7 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
 {
     APP_LOGI("begin");
 #ifdef GLOBAL_RESMGR_ENABLE
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -7335,7 +7335,7 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
 #endif
 }
 
-std::shared_mutex &BundleDataMgr::GetStatusCallbackMutex()
+ffrt::shared_mutex &BundleDataMgr::GetStatusCallbackMutex()
 {
     return callbackMutex_;
 }
@@ -7354,7 +7354,7 @@ bool BundleDataMgr::UpdateQuickFixInnerBundleInfo(const std::string &bundleName,
         return false;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("bundle:%{public}s info is not existed", bundleName.c_str());
@@ -7377,7 +7377,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo
         return false;
     }
     APP_LOGD("UpdateInnerBundleInfo:%{public}s", bundleName.c_str());
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("bundle:%{public}s info is not existed", bundleName.c_str());
@@ -7395,7 +7395,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo
 bool BundleDataMgr::QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
 {
     APP_LOGD("start to query overlay innerBundleInfo");
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.find(bundleName) != bundleInfos_.end()) {
         info = bundleInfos_.at(bundleName);
         return true;
@@ -7407,7 +7407,7 @@ bool BundleDataMgr::QueryOverlayInnerBundleInfo(const std::string &bundleName, I
 
 void BundleDataMgr::SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
@@ -7423,7 +7423,7 @@ ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_
         APP_LOGW("GetAppProvisionInfo user is not existed. bundleName:%{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("-n %{public}s not exist", bundleName.c_str());
@@ -7452,7 +7452,7 @@ ErrCode BundleDataMgr::GetProvisionMetadata(const std::string &bundleName, int32
 ErrCode BundleDataMgr::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) const
 {
     APP_LOGD("GetAllSharedBundleInfo");
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
 
     for (const auto& [key, innerBundleInfo] : bundleInfos_) {
         if (innerBundleInfo.GetApplicationBundleType() != BundleType::SHARED) {
@@ -7500,7 +7500,7 @@ ErrCode BundleDataMgr::GetSharedBundleInfo(const std::string &bundleName, const 
 ErrCode BundleDataMgr::GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo)
 {
     APP_LOGD("GetSharedBundleInfoBySelf bundleName: %{public}s", bundleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("GetSharedBundleInfoBySelf failed, can not find bundle %{public}s",
@@ -7523,7 +7523,7 @@ ErrCode BundleDataMgr::GetSharedDependencies(const std::string &bundleName, cons
 {
     APP_LOGD("GetSharedDependencies bundleName: %{public}s, moduleName: %{public}s",
         bundleName.c_str(), moduleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW("GetSharedDependencies failed, can not find bundle %{public}s", bundleName.c_str());
@@ -7541,7 +7541,7 @@ ErrCode BundleDataMgr::GetSharedDependencies(const std::string &bundleName, cons
 
 bool BundleDataMgr::CheckHspVersionIsRelied(int32_t versionCode, const InnerBundleInfo &info) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::string hspBundleName = info.GetBundleName();
     if (versionCode == Constants::ALL_VERSIONCODE) {
         // uninstall hsp bundle, check other bundle denpendency
@@ -7594,7 +7594,7 @@ ErrCode BundleDataMgr::GetSharedBundleInfo(const std::string &bundleName, int32_
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -7608,7 +7608,7 @@ ErrCode BundleDataMgr::GetSharedBundleInfo(const std::string &bundleName, int32_
 bool BundleDataMgr::IsPreInstallApp(const std::string &bundleName)
 {
     APP_LOGD("IsPreInstallApp bundleName: %{public}s", bundleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW("IsPreInstallApp failed, can not find bundle %{public}s",
@@ -7621,7 +7621,7 @@ bool BundleDataMgr::IsPreInstallApp(const std::string &bundleName)
 ErrCode BundleDataMgr::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
     int32_t userId, std::vector<ProxyData> &proxyDatas) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo info;
     auto ret = GetInnerBundleInfoWithBundleFlagsV9(
         bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE), info, userId);
@@ -7652,7 +7652,7 @@ ErrCode BundleDataMgr::GetAllProxyDataInfos(int32_t userId, std::vector<ProxyDat
 
 std::string BundleDataMgr::GetBundleNameByAppId(const std::string &appId) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto it = std::find_if(bundleInfos_.cbegin(), bundleInfos_.cend(), [&appId](const auto &pair) {
         return appId == pair.second.GetAppId();
     });
@@ -7668,7 +7668,7 @@ void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std
 {
     APP_LOGD("SetAOTCompileStatus, bundleName : %{public}s, moduleName : %{public}s, aotCompileStatus : %{public}d",
         bundleName.c_str(), moduleName.c_str(), aotCompileStatus);
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW("bundleName %{public}s not exist", bundleName.c_str());
@@ -7697,7 +7697,7 @@ void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std
 void BundleDataMgr::ResetAOTFlags()
 {
     APP_LOGI("ResetAOTFlags begin");
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::for_each(bundleInfos_.begin(), bundleInfos_.end(), [this](auto &item) {
         item.second.ResetAOTFlags();
         if (!dataStorage_->SaveStorageBundleInfo(item.second)) {
@@ -7710,7 +7710,7 @@ void BundleDataMgr::ResetAOTFlags()
 void BundleDataMgr::ResetAOTFlagsCommand(const std::string &bundleName)
 {
     APP_LOGI("ResetAOTFlagsCommand begin");
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
@@ -7728,7 +7728,7 @@ ErrCode BundleDataMgr::ResetAOTCompileStatus(const std::string &bundleName, cons
     int32_t triggerMode)
 {
     APP_LOGI("ResetAOTCompileStatus begin");
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
@@ -7749,7 +7749,7 @@ ErrCode BundleDataMgr::ResetAOTCompileStatus(const std::string &bundleName, cons
 std::vector<std::string> BundleDataMgr::GetAllBundleName() const
 {
     APP_LOGD("GetAllBundleName begin");
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::vector<std::string> bundleNames;
     bundleNames.reserve(bundleInfos_.size());
     std::transform(bundleInfos_.cbegin(), bundleInfos_.cend(), std::back_inserter(bundleNames), [](const auto &item) {
@@ -7761,7 +7761,7 @@ std::vector<std::string> BundleDataMgr::GetAllBundleName() const
 std::vector<std::string> BundleDataMgr::GetAllSystemHspCodePaths() const
 {
     std::vector<std::string> systemHspCodePaths;
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
         if (item.second.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
             std::string installPath = item.second.GetAppCodePath();
@@ -7776,7 +7776,7 @@ std::vector<std::string> BundleDataMgr::GetAllSystemHspCodePaths() const
 std::vector<std::string> BundleDataMgr::GetAllExtensionBundleNames(const std::vector<ExtensionAbilityType> &types) const
 {
     APP_LOGD("GetAllExtensionBundleNames begin");
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::vector<std::string> bundleNames;
     for (const auto &[bundleName, innerBundleInfo] : bundleInfos_) {
         const auto extensionAbilityInfos = innerBundleInfo.GetInnerExtensionInfos();
@@ -7797,7 +7797,7 @@ std::vector<std::tuple<std::string, int32_t, int32_t>> BundleDataMgr::GetAllLite
         APP_LOGW("invalid userId");
         return {};
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::vector<std::tuple<std::string, int32_t, int32_t>> bundles;
     for (const auto &[bundleName, innerBundleInfo] : bundleInfos_) {
         auto installedUsers = innerBundleInfo.GetUsers();
@@ -7812,7 +7812,7 @@ std::vector<std::tuple<std::string, int32_t, int32_t>> BundleDataMgr::GetAllLite
 std::vector<std::string> BundleDataMgr::GetBundleNamesForNewUser() const
 {
     APP_LOGD("begin");
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::vector<std::string> bundleNames;
     for (const auto &item : bundleInfos_) {
         if (item.second.GetApplicationBundleType() == BundleType::SHARED ||
@@ -7848,7 +7848,7 @@ std::vector<std::string> BundleDataMgr::GetBundleNamesForNewUser() const
 bool BundleDataMgr::QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const
 {
     APP_LOGD("QueryInnerBundleInfo begin, bundleName : %{public}s", bundleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("QueryInnerBundleInfo not find %{public}s", bundleName.c_str());
@@ -7861,7 +7861,7 @@ bool BundleDataMgr::QueryInnerBundleInfo(const std::string &bundleName, InnerBun
 std::vector<int32_t> BundleDataMgr::GetUserIds(const std::string &bundleName) const
 {
     APP_LOGD("GetUserIds begin, bundleName : %{public}s", bundleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::vector<int32_t> userIds;
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
@@ -7877,7 +7877,7 @@ std::vector<int32_t> BundleDataMgr::GetUserIds(const std::string &bundleName) co
 
 void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId)
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto bundleInfoItem = bundleInfos_.find(bundleName);
     if (bundleInfoItem == bundleInfos_.end()) {
         APP_LOGW("%{public}s not found", bundleName.c_str());
@@ -7924,7 +7924,7 @@ bool BundleDataMgr::CreateAppGroupDir(const InnerBundleInfo &info, int32_t userI
 
 bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t userId)
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto bundleInfoItem = bundleInfos_.find(bundleName);
     if (bundleInfoItem == bundleInfos_.end()) {
         APP_LOGW("%{public}s not found", bundleName.c_str());
@@ -8003,7 +8003,7 @@ ErrCode BundleDataMgr::GetSpecifiedDistributionType(
     const std::string &bundleName, std::string &specifiedDistributionType)
 {
     APP_LOGD("GetSpecifiedDistributionType bundleName: %{public}s", bundleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("-n %{public}s does not exist", bundleName.c_str());
@@ -8029,7 +8029,7 @@ ErrCode BundleDataMgr::GetAdditionalInfo(
     const std::string &bundleName, std::string &additionalInfo)
 {
     APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("%{public}s not exist", bundleName.c_str());
@@ -8055,7 +8055,7 @@ ErrCode BundleDataMgr::GetAdditionalInfoForAllUser(
     const std::string &bundleName, std::string &additionalInfo)
 {
     APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("%{public}s not exist", bundleName.c_str());
@@ -8072,7 +8072,7 @@ ErrCode BundleDataMgr::GetAdditionalInfoForAllUser(
 ErrCode BundleDataMgr::SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, const std::string &extName, const std::string &mimeType)
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW("bundleName %{public}s not exist", bundleName.c_str());
@@ -8103,7 +8103,7 @@ ErrCode BundleDataMgr::SetExtNameOrMIMEToApp(const std::string &bundleName, cons
 ErrCode BundleDataMgr::DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, const std::string &extName, const std::string &mimeType)
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW("bundleName %{public}s not exist", bundleName.c_str());
@@ -8213,7 +8213,7 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
         return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
     }
     std::string profilePath = mapItem->second;
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     const auto &item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("bundleName: %{public}s is not found", bundleName.c_str());
@@ -8278,7 +8278,7 @@ ErrCode __attribute__((no_sanitize("cfi"))) BundleDataMgr::GetJsonProfileByExtra
 bool BundleDataMgr::QueryDataGroupInfos(const std::string &bundleName, int32_t userId,
     std::vector<DataGroupInfo> &infos) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("bundleName: %{public}s is not existed", bundleName.c_str());
@@ -8305,7 +8305,7 @@ bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir
     std::string uuid;
     if (BundlePermissionMgr::IsSystemApp() &&
         BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         for (const auto &item : bundleInfos_) {
             const auto &dataGroupInfos = item.second.GetDataGroupInfos();
             auto dataGroupInfosIter = dataGroupInfos.find(dataGroupId);
@@ -8411,7 +8411,7 @@ void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
     const std::unordered_set<std::string> &dataGroupIdList, int32_t userId, bool needSaveStorage)
 {
     APP_LOGD("called for user: %{public}d", userId);
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto bundleInfoItem = bundleInfos_.find(bundleName);
     if (bundleInfoItem == bundleInfos_.end()) {
         APP_LOGW("%{public}s not found", bundleName.c_str());
@@ -8457,7 +8457,7 @@ void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
 void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName, int32_t userId)
 {
     APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto bundleInfoItem = bundleInfos_.find(bundleName);
     if (bundleInfoItem == bundleInfos_.end()) {
         APP_LOGW("%{public}s not found", bundleName.c_str());
@@ -8487,7 +8487,7 @@ void BundleDataMgr::GenerateNewUserDataGroupInfos(const std::string &bundleName,
 void BundleDataMgr::DeleteUserDataGroupInfos(const std::string &bundleName, int32_t userId, bool keepData)
 {
     APP_LOGD("called for -b %{public}s, -u %{public}d", bundleName.c_str(), userId);
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto bundleInfoItem = bundleInfos_.find(bundleName);
     if (bundleInfoItem == bundleInfos_.end()) {
         APP_LOGW("%{public}s not found", bundleName.c_str());
@@ -8586,7 +8586,7 @@ bool BundleDataMgr::IsDataGroupIdExistNoLock(const std::string &dataGroupId, int
 void BundleDataMgr::DeleteGroupDirsForException(const InnerBundleInfo &oldInfo, int32_t userId) const
 {
     //find ids existed in newInfo, but not in oldInfo when there is no others share this id
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     const auto bundleInfoItem = bundleInfos_.find(oldInfo.GetBundleName());
     if (bundleInfoItem == bundleInfos_.end()) {
         APP_LOGE("find bundle %{public}s failed", oldInfo.GetBundleName().c_str());
@@ -8645,7 +8645,7 @@ bool BundleDataMgr::HasAppOrAtomicServiceInUser(const std::string &bundleName, i
         APP_LOGW("param -n %{public}s error", bundleName.c_str());
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto iter = bundleInfos_.find(bundleName);
     if (iter == bundleInfos_.end()) {
         APP_LOGW("bundle %{public}s not found", bundleName.c_str());
@@ -8665,7 +8665,7 @@ bool BundleDataMgr::GetAllAppAndAtomicServiceInUser(int32_t userId, std::vector<
         APP_LOGW("param -u %{public}d error", userId);
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
         BundleType bundleType = item.second.GetApplicationBundleType();
         if (bundleType != BundleType::APP && bundleType != BundleType::ATOMIC_SERVICE) {
@@ -8688,7 +8688,7 @@ void BundleDataMgr::ScanAllBundleGroupInfo()
     std::map<std::string, std::set<std::string>> needProcessGroupInfoBundleNames;
     // invalid GroupId
     std::set<std::string> errorGroupIds;
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &info : bundleInfos_) {
         std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos = info.second.GetDataGroupInfos();
         if (dataGroupInfos.empty()) {
@@ -8960,7 +8960,7 @@ bool BundleDataMgr::GetOldAppIds(const std::string &bundleName, std::vector<std:
         APP_LOGE("bundleName is empty");
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto innerBundleInfo = bundleInfos_.find(bundleName);
     if (innerBundleInfo == bundleInfos_.end()) {
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
@@ -8986,7 +8986,7 @@ std::string BundleDataMgr::GetModuleNameByBundleAndAbility(
         APP_LOGE("bundleName or abilityName is empty");
         return std::string();
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto innerBundleInfo = bundleInfos_.find(bundleName);
     if (innerBundleInfo == bundleInfos_.end()) {
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
@@ -9004,7 +9004,7 @@ std::string BundleDataMgr::GetModuleNameByBundleAndAbility(
 ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const
 {
     APP_LOGD("Called. BundleName: %{public}s", bundleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
@@ -9049,7 +9049,7 @@ ErrCode BundleDataMgr::GetAppServiceHspBundleInfo(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
@@ -9092,7 +9092,7 @@ void BundleDataMgr::AddAppHspBundleName(const BundleType type, const std::string
 {
     if (type == BundleType::APP_SERVICE_FWK) {
         APP_LOGD("add app hsp bundleName:%{public}s", bundleName.c_str());
-        std::lock_guard<std::mutex> hspLock(hspBundleNameMutex_);
+        std::lock_guard<ffrt::mutex> hspLock(hspBundleNameMutex_);
         appServiceHspBundleName_.insert(bundleName);
     }
 }
@@ -9100,7 +9100,7 @@ void BundleDataMgr::AddAppHspBundleName(const BundleType type, const std::string
 ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId)
 {
     APP_LOGI("with -u %{public}d begin", userId);
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::vector<CreateDirParam> createDirParams;
     std::vector<CreateDirParam> el5Params;
     for (const auto &item : bundleInfos_) {
@@ -9145,7 +9145,7 @@ ErrCode BundleDataMgr::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl
     APP_LOGI("with -u %{public}d -el %{public}d begin", userId, static_cast<uint8_t>(dirEl));
     std::vector<CreateDirParam> createDirParams;
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         for (const auto &item : bundleInfos_) {
             const InnerBundleInfo &info = item.second;
             if (!info.HasInnerBundleUserInfo(userId)) {
@@ -9209,7 +9209,7 @@ int32_t BundleDataMgr::GetUidByBundleName(const std::string &bundleName, int32_t
         return Constants::INVALID_UID;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("FetchInnerBundleInfo not found %{public}s", bundleName.c_str());
@@ -9338,7 +9338,7 @@ void BundleDataMgr::GenerateOdid(const std::string &developerId, std::string &od
         return;
     }
     std::string groupId = BundleUtil::ExtractGroupIdByDevelopId(developerId);
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
         std::string developerIdExist;
         std::string odidExist;
@@ -9377,7 +9377,7 @@ ErrCode BundleDataMgr::GetOdidByBundleName(const std::string &bundleName, std::s
 {
     APP_LOGI_NOFUNC("start GetOdidByBundleName -n %{public}s", bundleName.c_str());
     InnerBundleInfo innerBundleInfo;
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     const auto &item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("bundleName: %{public}s is not found", bundleName.c_str());
@@ -9397,7 +9397,7 @@ void BundleDataMgr::HandleOTACodeEncryption()
     std::vector<std::string> withoutKeyBundles;
     std::vector<std::string> withKeyBundles;
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         for (const auto &item : bundleInfos_) {
             item.second.HandleOTACodeEncryption(withoutKeyBundles, withKeyBundles);
         }
@@ -9429,7 +9429,7 @@ ErrCode BundleDataMgr::GetAllBundleInfoByDeveloperId(const std::string &develope
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -9481,7 +9481,7 @@ ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -9522,7 +9522,7 @@ ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
 ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const bool &state,
     const bool isNeedSendNotify, bool &stateChange)
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
@@ -9549,7 +9549,7 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
 
 ErrCode BundleDataMgr::AddCloneBundle(const std::string &bundleName, const InnerBundleCloneInfo &attr)
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
@@ -9639,7 +9639,7 @@ bool BundleDataMgr::HasAppLinkingFlag(uint32_t flags)
 
 ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex)
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
@@ -9676,7 +9676,7 @@ ErrCode BundleDataMgr::QueryAbilityInfoByContinueType(const std::string &bundleN
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -9730,7 +9730,7 @@ ErrCode BundleDataMgr::QueryCloneAbilityInfo(const ElementName &element, int32_t
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 
     ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
@@ -9763,7 +9763,7 @@ ErrCode BundleDataMgr::ExplicitQueryCloneAbilityInfo(const ElementName &element,
     if (requestUserId == Constants::INVALID_USERID) {
         return false;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 
     bool ret = GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
@@ -9796,7 +9796,7 @@ ErrCode BundleDataMgr::ExplicitQueryCloneAbilityInfoV9(const ElementName &elemen
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 
     ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
@@ -9831,7 +9831,7 @@ ErrCode BundleDataMgr::GetCloneBundleInfo(
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 
     auto ret = GetInnerBundleInfoWithBundleFlagsV9(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
@@ -9936,7 +9936,7 @@ bool BundleDataMgr::ImplicitQueryCurCloneExtensionAbilityInfos(const Want &want,
     LOG_D(BMS_TAG_QUERY, "begin ImplicitQueryCurCloneExtensionAbilityInfos");
     std::string bundleName = want.GetElement().GetBundleName();
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     bool ret = GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, userId);
     if (!ret) {
@@ -9968,7 +9968,7 @@ ErrCode BundleDataMgr::ImplicitQueryCurCloneExtensionAbilityInfosV9(const Want &
     LOG_D(BMS_TAG_QUERY, "begin ImplicitQueryCurCloneExtensionAbilityInfosV9");
     std::string bundleName = want.GetElement().GetBundleName();
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
     ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, userId);
     if (ret != ERR_OK) {
@@ -9997,7 +9997,7 @@ ErrCode BundleDataMgr::ImplicitQueryCurCloneExtensionAbilityInfosV9(const Want &
 bool BundleDataMgr::ImplicitQueryAllCloneExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &infos) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(innerBundleInfo.GetBundleName(), userId);
@@ -10023,7 +10023,7 @@ bool BundleDataMgr::ImplicitQueryAllCloneExtensionAbilityInfos(const Want &want,
 ErrCode BundleDataMgr::ImplicitQueryAllCloneExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &infos) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(innerBundleInfo.GetBundleName(), userId);
@@ -10050,7 +10050,7 @@ ErrCode BundleDataMgr::GetAppIdByBundleName(
     const std::string &bundleName, std::string &appId) const
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -10063,7 +10063,7 @@ ErrCode BundleDataMgr::GetAppIdByBundleName(
 ErrCode BundleDataMgr::GetAppIdAndAppIdentifierByBundleName(
     const std::string &bundleName, std::string &appId, std::string &appIdentifier) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -10080,7 +10080,7 @@ std::string BundleDataMgr::AppIdAndAppIdentifierTransform(const std::string appI
         APP_LOGW("appIdOrAppIdentifier is empty");
         return Constants::EMPTY_STRING;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto it = std::find_if(bundleInfos_.cbegin(), bundleInfos_.cend(), [&appIdOrAppIdentifier](const auto &pair) {
         return (appIdOrAppIdentifier == pair.second.GetAppId() ||
             appIdOrAppIdentifier == pair.second.GetAppIdentifier());
@@ -10097,7 +10097,7 @@ std::string BundleDataMgr::AppIdAndAppIdentifierTransform(const std::string appI
 
 ErrCode BundleDataMgr::GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         LOG_E(BMS_TAG_DEFAULT, "%{public}s not exist", bundleName.c_str());
@@ -10134,7 +10134,7 @@ ErrCode BundleDataMgr::GetSignatureInfoByUid(const int32_t uid, SignatureInfo &s
 ErrCode BundleDataMgr::UpdateAppEncryptedStatus(
     const std::string &bundleName, bool isExisted, int32_t appIndex, bool needSaveStorage)
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -10273,7 +10273,7 @@ ErrCode BundleDataMgr::GetContinueBundleNames(
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &[key, innerInfo] : bundleInfos_) {
         if (CheckInnerBundleInfoWithFlags(
             innerInfo, BundleFlag::GET_BUNDLE_WITH_ABILITIES, innerInfo.GetResponseUserId(requestUserId)) != ERR_OK) {
@@ -10303,7 +10303,7 @@ ErrCode BundleDataMgr::IsBundleInstalled(const std::string &bundleName, int32_t 
         APP_LOGE("name %{public}s invalid appIndex :%{public}d", bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         isInstalled = false;
@@ -10349,7 +10349,7 @@ void BundleDataMgr::UpdateIsPreInstallApp(const std::string &bundleName, bool is
         return;
     }
 
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -10369,7 +10369,7 @@ ErrCode BundleDataMgr::GetBundleNameByAppId(const std::string &appId, std::strin
         APP_LOGW("appId is empty");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &[key, innerInfo] : bundleInfos_) {
         if (innerInfo.GetAppId() == appId || innerInfo.GetAppIdentifier() == appId) {
             bundleName = key;
@@ -10493,7 +10493,7 @@ ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     AccountSA::OhosAccountInfo accountInfo;
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         std::string bundleName = info.GetBundleName();
@@ -10528,7 +10528,7 @@ ErrCode BundleDataMgr::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &
 
 void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
 {
-    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleIdMapMutex_);
     std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
     if (!GetAllUninstallBundleInfo(uninstallBundleInfos)) {
         return;
@@ -10562,7 +10562,7 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
 ErrCode BundleDataMgr::GetAssetAccessGroups(const std::string &bundleName,
     std::vector<std::string> &assetAccessGroups) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("%{public}s not exist", bundleName.c_str());
@@ -10574,7 +10574,7 @@ ErrCode BundleDataMgr::GetAssetAccessGroups(const std::string &bundleName,
 
 ErrCode BundleDataMgr::GetDeveloperId(const std::string &bundleName, std::string &developerId) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("%{public}s not exist", bundleName.c_str());
@@ -10595,7 +10595,7 @@ bool BundleDataMgr::IsObtainAbilityInfo(const Want &want, int32_t userId, Abilit
         return false;
     }
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
         if (infoItem == bundleInfos_.end()) {
             APP_LOGE("%{public}s not found", bundleName.c_str());
@@ -10618,7 +10618,7 @@ ErrCode BundleDataMgr::GetAllPluginInfo(const std::string &hostBundleName, int32
         APP_LOGE("invalid userid :%{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(hostBundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("hostBundleName: %{public}s does not exist", hostBundleName.c_str());
@@ -10647,7 +10647,7 @@ ErrCode BundleDataMgr::AddPluginInfo(const std::string &bundleName,
     const PluginBundleInfo &pluginBundleInfo, const int32_t userId)
 {
     APP_LOGD("start AddPluginInfo");
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("%{public}s not exist", bundleName.c_str());
@@ -10670,7 +10670,7 @@ ErrCode BundleDataMgr::RemovePluginInfo(const std::string &bundleName,
     const std::string &pluginBundleName, const int32_t userId)
 {
     APP_LOGD("start RemovePluginInfo");
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("%{public}s not exist", bundleName.c_str());
@@ -10698,7 +10698,7 @@ bool BundleDataMgr::GetPluginBundleInfo(const std::string &hostBundleName, const
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(hostBundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("%{public}s GetPluginBundleInfo not found %{public}s", hostBundleName.c_str(),
@@ -10730,7 +10730,7 @@ bool BundleDataMgr::FetchPluginBundleInfo(const std::string &hostBundleName, con
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(hostBundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("%{public}s FetchPluginBundleInfo not found %{public}s", hostBundleName.c_str(),
@@ -10753,7 +10753,7 @@ ErrCode BundleDataMgr::UpdatePluginBundleInfo(const std::string &hostBundleName,
 {
     APP_LOGD("hostBundleName:%{public}s start UpdatePluginBundleInfo, plugin:%{public}s",
         hostBundleName.c_str(), pluginBundleInfo.pluginBundleName.c_str());
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(hostBundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("%{public}s not exist", hostBundleName.c_str());
@@ -10778,7 +10778,7 @@ ErrCode BundleDataMgr::RemovePluginFromUserInfo(const std::string &hostBundleNam
 {
     APP_LOGD("hostBundleName:%{public}s start RemovePluginFromUserInfo, plugin:%{public}s",
         hostBundleName.c_str(), pluginBundleName.c_str());
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(hostBundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("%{public}s not exist", hostBundleName.c_str());
@@ -10803,7 +10803,7 @@ ErrCode BundleDataMgr::GetPluginAbilityInfo(const std::string &hostBundleName, c
 {
     APP_LOGD("bundleName:%{public}s start GetPluginAbilityInfo, plugin:%{public}s, abilityName:%{public}s",
         hostBundleName.c_str(), pluginBundleName.c_str(), pluginAbilityName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(hostBundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("%{public}s not exist", hostBundleName.c_str());
@@ -10834,7 +10834,7 @@ ErrCode BundleDataMgr::GetPluginHapModuleInfo(const std::string &hostBundleName,
 {
     APP_LOGD("bundleName:%{public}s start GetPluginHapModuleInfo, plugin:%{public}s, moduleName:%{public}s",
         hostBundleName.c_str(), pluginBundleName.c_str(), pluginModuleName.c_str());
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGE("invalid userid :%{public}d", userId);
@@ -10924,7 +10924,7 @@ ErrCode BundleDataMgr::GetAllDynamicIconInfo(const int32_t userId, std::vector<D
             return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
         }
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
         item.second.GetAllDynamicIconInfo(userId, dynamicIconInfos);
     }
@@ -10936,7 +10936,7 @@ void BundleDataMgr::ProcessDynamicIconForOta()
     std::map<std::string, std::string> bundleNames;
     {
         // process all old curDynamicIconModule when first ota
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         for (const auto &item : bundleInfos_) {
             if (!item.second.GetCurDynamicIconModule().empty()) {
                 bundleNames[item.first] = item.second.GetCurDynamicIconModule();
@@ -10954,7 +10954,7 @@ void BundleDataMgr::ProcessDynamicIconForOta()
 ErrCode BundleDataMgr::GetDynamicIconInfo(const std::string &bundleName,
     std::vector<DynamicIconInfo> &dynamicIconInfos)
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW("bundleName: %{public}s not exist", bundleName.c_str());
@@ -10967,7 +10967,7 @@ ErrCode BundleDataMgr::GetDynamicIconInfo(const std::string &bundleName,
 std::string BundleDataMgr::GetCurDynamicIconModule(
     const std::string &bundleName, const int32_t userId, const int32_t appIndex)
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         return Constants::EMPTY_STRING;
@@ -10989,7 +10989,7 @@ ErrCode BundleDataMgr::SetShortcutVisibleForSelf(const std::string &shortcutId, 
     int32_t userId = GetUserIdByCallingUid();
     std::vector<ShortcutInfo> shortcutInfos;
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         auto iter = bundleInfos_.find(bundleName);
         if (iter != bundleInfos_.end()) {
             GetShortcutInfosByInnerBundleInfo(iter->second, shortcutInfos);
@@ -11044,7 +11044,7 @@ ErrCode BundleDataMgr::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shor
     }
     int32_t userId = GetUserIdByCallingUid();
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         auto iter = bundleInfos_.find(bundleName);
         if (iter != bundleInfos_.end()) {
             GetShortcutInfosByInnerBundleInfo(iter->second, shortcutInfos);
@@ -11139,7 +11139,7 @@ std::string BundleDataMgr::GenerateUuidByKey(const std::string &key) const
 ErrCode BundleDataMgr::GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32_t userId,
     std::unordered_map<std::string, std::vector<std::pair<int32_t, int32_t>>> &cloneInfos) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGW("bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -11198,7 +11198,7 @@ void BundleDataMgr::UpdateDesktopShortcutInfo(const std::string &bundleName)
     APP_LOGD("UpdateDesktopShortcutInfo begin");
     std::vector<ShortcutInfo> shortcutInfos;
     {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
         auto iter = bundleInfos_.find(bundleName);
         if (iter != bundleInfos_.end()) {
             GetShortcutInfosByInnerBundleInfo(iter->second, shortcutInfos);
@@ -11222,7 +11222,7 @@ ErrCode BundleDataMgr::GetPluginInfo(const std::string &hostBundleName, const st
         APP_LOGE("invalid userid :%{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(hostBundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("-n %{public}s does not exist", hostBundleName.c_str());
@@ -11250,7 +11250,7 @@ ErrCode BundleDataMgr::GetPluginInfo(const std::string &hostBundleName, const st
 bool BundleDataMgr::SetBundleUserInfoRemovable(const std::string bundleName, int32_t userId, bool removable)
 {
     APP_LOGD("SetBundleUserInfoRemovable: %{public}s", bundleName.c_str());
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("%{public}s bundle info not exist", bundleName.c_str());

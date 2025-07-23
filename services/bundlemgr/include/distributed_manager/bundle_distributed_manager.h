@@ -18,6 +18,7 @@
 
 #include <shared_mutex>
 
+#include "ffrt.h"
 #include "iremote_broker.h"
 #include "query_rpc_id_params.h"
 #include "rpc_id_result.h"
@@ -50,7 +51,7 @@ private:
         return transactId_.load();
     }
     mutable std::atomic<int> transactId_ = 0;
-    std::shared_mutex mutex_;
+    ffrt::shared_mutex mutex_;
 
     std::shared_ptr<SerialQueue> serialQueue_;
     std::map<std::string, QueryRpcIdParams> queryAbilityParamsMap_;

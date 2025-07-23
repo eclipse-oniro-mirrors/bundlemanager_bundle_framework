@@ -228,7 +228,7 @@ void BundleAgingMgr::Process(const std::shared_ptr<BundleDataMgr> &dataMgr)
     }
 
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         running_ = false;
     }
 
@@ -250,7 +250,7 @@ void BundleAgingMgr::Start(AgingTriggertype type)
     }
 
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         if (running_) {
             APP_LOGD("BundleAgingMgr is running, no need to start is again");
             return;
@@ -265,7 +265,7 @@ void BundleAgingMgr::Start(AgingTriggertype type)
     ffrt::task_handle task_handle = ffrt::submit_h(task);
     if (task_handle == nullptr) {
         APP_LOGE("submit_h return null, execute Process failed");
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         running_ = false;
     }
 }

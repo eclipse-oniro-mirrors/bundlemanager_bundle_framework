@@ -40,8 +40,8 @@ constexpr const char* INTEGRITY_CHECK = "PRAGMA integrity_check";
 constexpr const char* CHECK_OK = "ok";
 }
 
-std::mutex RdbDataManager::restoreRdbMapMutex_;
-std::unordered_map<std::string, std::mutex> RdbDataManager::restoreRdbMap_;
+ffrt::mutex RdbDataManager::restoreRdbMapMutex_;
+std::unordered_map<std::string, ffrt::mutex> RdbDataManager::restoreRdbMap_;
 
 RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)
     : bmsRdbConfig_(bmsRdbConfig)
@@ -59,9 +59,9 @@ void RdbDataManager::ClearCache()
     NativeRdb::RdbHelper::ClearCache();
 }
 
-std::mutex &RdbDataManager::GetRdbRestoreMutex(const std::string &dbName)
+ffrt::mutex &RdbDataManager::GetRdbRestoreMutex(const std::string &dbName)
 {
-    std::lock_guard<std::mutex> restoreLock(restoreRdbMapMutex_);
+    std::lock_guard<ffrt::mutex> restoreLock(restoreRdbMapMutex_);
     if (!isInitial_) {
         isInitial_ = restoreRdbMap_.find(dbName) != restoreRdbMap_.end();
     }
@@ -71,7 +71,7 @@ std::mutex &RdbDataManager::GetRdbRestoreMutex(const std::string &dbName)
 void RdbDataManager::GetRdbStoreFromNative()
 {
     auto &mutex = GetRdbRestoreMutex(bmsRdbConfig_.dbName);
-    std::lock_guard<std::mutex> restoreLock(mutex);
+    std::lock_guard<ffrt::mutex> restoreLock(mutex);
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
@@ -114,7 +114,7 @@ void RdbDataManager::GetRdbStoreFromNative()
 
 std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
 {
-    std::lock_guard<std::mutex> lock(rdbMutex_);
+    std::lock_guard<ffrt::mutex> lock(rdbMutex_);
     if (rdbStore_ == nullptr) {
         GetRdbStoreFromNative();
     }
@@ -423,7 +423,7 @@ void RdbDataManager::DelayCloseRdbStore()
         if (sharedPtr == nullptr) {
             return;
         }
-        std::lock_guard<std::mutex> lock(sharedPtr->rdbMutex_);
+        std::lock_guard<ffrt::mutex> lock(sharedPtr->rdbMutex_);
         sharedPtr->rdbStore_ = nullptr;
         APP_LOGD("DelayCloseRdbStore of %{public}s thread end", sharedPtr->bmsRdbConfig_.tableName.c_str());
     };
