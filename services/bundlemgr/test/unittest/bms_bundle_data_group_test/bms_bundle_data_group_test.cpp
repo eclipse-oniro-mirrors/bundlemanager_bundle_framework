@@ -2103,4 +2103,64 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0026, Function | SmallTest 
     auto result5 = installer.CheckShellCanInstallPreApp(newInfos);
     EXPECT_EQ(result5, ERR_OK);
 }
+
+/**
+ * @tc.number: SetHybridSpawn_0001
+ * @tc.name: test SetHybridSpawn
+ * @tc.desc: 1.Test SetHybridSpawn
+*/
+HWTEST_F(BmsBundleDataGroupTest, SetHybridSpawn_0001, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = "test";
+    installer.SetHybridSpawn();
+    InnerBundleInfo info;
+    bool isExist = false;
+    bool res = installer.GetInnerBundleInfoWithDisable(info, isExist);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: SetHybridSpawn_0002
+ * @tc.name: test SetHybridSpawn
+ * @tc.desc: 1.Test SetHybridSpawn
+*/
+HWTEST_F(BmsBundleDataGroupTest, SetHybridSpawn_0002, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = "test";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test";
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    info.innerModuleInfos_.try_emplace("entry", innerModuleInfo);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.emplace("test", info);
+    installer.SetHybridSpawn();
+    EXPECT_EQ(info.GetApplicationArkTSMode(), Constants::ARKTS_MODE_DYNAMIC);
+    dataMgr->bundleInfos_.erase("test");
+}
+
+/**
+ * @tc.number: SetHybridSpawn_0003
+ * @tc.name: test SetHybridSpawn
+ * @tc.desc: 1.Test SetHybridSpawn
+*/
+HWTEST_F(BmsBundleDataGroupTest, SetHybridSpawn_0003, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = "test";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test";
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    info.innerModuleInfos_.try_emplace("entry", innerModuleInfo);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.emplace("test", info);
+    installer.SetHybridSpawn();
+    EXPECT_EQ(info.GetApplicationArkTSMode(), Constants::ARKTS_MODE_STATIC);
+    dataMgr->bundleInfos_.erase("test");
+}
 } // OHOS

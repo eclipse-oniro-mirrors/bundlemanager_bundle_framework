@@ -1502,6 +1502,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!ProcessExtProfile(installParam)) {
         LOG_W(BMS_TAG_INSTALLER, "ProcessExtProfile failed");
     }
+    SetHybridSpawn();
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     return result;
@@ -2268,6 +2269,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                     return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
                 }
             }
+            SetHybridSpawn();
             UtdHandler::InstallUtdAsync(bundleName, userId_);
             GenerateNewUserDataGroupInfos(oldInfo);
             isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
@@ -7835,6 +7837,21 @@ bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
         return false;
     }
     return true;
+}
+
+void BaseBundleInstaller::SetHybridSpawn()
+{
+    InnerBundleInfo info;
+    bool isExist = false;
+    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
+        LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed when set hybrid spawn");
+        return;
+    }
+    std::string arkTSMode = info.GetApplicationArkTSMode();
+    if (arkTSMode == Constants::ARKTS_MODE_STATIC || arkTSMode == Constants::ARKTS_MODE_HYBRID) {
+        LOG_I(BMS_TAG_INSTALLER, "set persist.bms.data.preload true");
+        OHOS::system::SetParameter(ServiceConstants::HYBRID_SPAWN_ENABLE, BMS_TRUE);
+    }
 }
 
 bool BaseBundleInstaller::IsBundleCrossAppSharedConfig(const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
