@@ -39,7 +39,7 @@ ohos_shared_library("ani_app_control") {
     "LOG_DOMAIN = 0xD001120",
   ]
 
-  if (bundle_framework_bundle_resource) {
+  if (bundle_framework_app_control) {
     sources = [
       "ani_app_control.cpp",
       "ani_app_control_common.cpp",

@@ -33,6 +33,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+using Want = OHOS::AAFwk::Want;
 namespace CommonFunAniNS {
 constexpr const char* PROPERTYNAME_UNBOXED = "unboxed";
 } // namespace CommonFunAniNS
@@ -140,8 +141,6 @@ public:
 
     static ani_object ConvertElementName(ani_env* env, const ElementName& elementName);
 
-    static ani_object ConvertCustomizeData(ani_env* env, const CustomizeData& customizeData);
-
     static ani_object ConvertAbilitySkillUriInner(ani_env* env, const SkillUri& skillUri, bool isExtension);
     static inline ani_object ConvertAbilitySkillUri(ani_env* env, const SkillUri& skillUri)
     {
@@ -197,12 +196,14 @@ public:
     static ani_object ConvertApiVersion(ani_env* env, const ApiVersion& apiVersion);
     static ani_object ConvertExtensionAbilities(ani_env* env, const ExtensionAbilities& extensionAbilities);
     static ani_object ConvertPackageModule(ani_env* env, const PackageModule& packageModule);
-    static ani_object ConvertSummary(ani_env* env, const Summary& summary);
+    static ani_object ConvertSummary(ani_env* env, const Summary& summary, bool withApp);
     static ani_object ConvertPackages(ani_env* env, const Packages& packages);
-    static ani_object ConvertBundlePackInfo(ani_env* env, const BundlePackInfo& bundlePackInfo);
+    static ani_object ConvertBundlePackInfo(ani_env* env, const BundlePackInfo& bundlePackInfo, const uint32_t flag);
     static ani_object ConvertDynamicIconInfo(ani_env* env, const DynamicIconInfo& dynamicIconInfo);
     static ani_object CreateDispatchInfo(
         ani_env* env, const std::string& version, const std::string& dispatchAPIVersion);
+
+    static ani_object ConvertWantInfo(ani_env* env, const Want& want);
 
     // Parse from ets to native
     static bool ParseBundleOptions(ani_env* env, ani_object object, int32_t& appIndex, int32_t& userId);

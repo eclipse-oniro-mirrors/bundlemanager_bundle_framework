@@ -19,6 +19,6 @@ export interface BundleResourceInfo {
   readonly bundleName: string;
   readonly icon: string;
   readonly label: string;
-  readonly drawableDescriptor: DrawableDescriptor;
+  readonly drawableDescriptor: DrawableDescriptor | null;
   readonly appIndex: int;
 }

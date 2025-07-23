@@ -77,9 +77,9 @@ export default namespace zlib {
   }
 
   class OptionsInner implements Options {
-    level?: CompressLevel | undefined = CompressLevel.COMPRESS_LEVEL_DEFAULT_COMPRESSION;
-    memLevel?: MemLevel | undefined = MemLevel.MEM_LEVEL_DEFAULT;
-    strategy?: CompressStrategy | undefined = CompressStrategy.COMPRESS_STRATEGY_DEFAULT_STRATEGY;
+    level?: CompressLevel | undefined;
+    memLevel?: MemLevel | undefined;
+    strategy?: CompressStrategy | undefined;
   }
 
   export interface GzErrorOutputInfo {

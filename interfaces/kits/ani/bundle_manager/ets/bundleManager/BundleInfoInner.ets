@@ -27,11 +27,11 @@ export class BundleInfoInner implements BundleInfo {
   readonly versionName: string = "";
   readonly minCompatibleVersionCode: int;
   readonly targetVersion: int;
-  readonly appInfo: ApplicationInfo = new ApplicationInfoInner;
+  readonly appInfo: ApplicationInfo | null = null;
   readonly hapModulesInfo: Array<HapModuleInfo> = new Array<HapModuleInfo>;
   readonly reqPermissionDetails: Array<ReqPermissionDetail> = new Array<ReqPermissionDetail>;
   readonly permissionGrantStates: Array<bundleManager.PermissionGrantState> = new Array<bundleManager.PermissionGrantState>;
-  readonly signatureInfo: SignatureInfo = new SignatureInfoInner;
+  readonly signatureInfo: SignatureInfo | null = null;
   readonly installTime: long;
   readonly updateTime: long;
   readonly routerMap: Array<RouterItem> = new Array<RouterItem>;
@@ -106,7 +106,7 @@ export class SignatureInfoInner implements SignatureInfo {
   readonly appId: string = "";
   readonly fingerprint: string = "";
   readonly appIdentifier: string = "";
-  readonly certificate?: string | undefined = "";
+  readonly certificate?: string | undefined;
 
   constructor() { }
   constructor(appId: string, fingerprint: string, appIdentifier: string, certificate: string | undefined) {

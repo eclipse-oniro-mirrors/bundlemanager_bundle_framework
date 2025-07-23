@@ -20,6 +20,6 @@ export class BundleResourceInfoInner implements BundleResourceInfo {
     readonly bundleName: string = '';
     readonly icon: string = '';
     readonly label: string = '';
-    readonly drawableDescriptor: DrawableDescriptor = new DrawableDescriptor;
+    readonly drawableDescriptor: DrawableDescriptor | null = null;
     readonly appIndex: int;
 }
