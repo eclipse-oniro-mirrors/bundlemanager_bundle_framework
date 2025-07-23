@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2023-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,47 +14,35 @@
 import("//build/ohos.gni")
 import("../../../../../../appexecfwk.gni")
 
-ohos_hap("hspASystemtestFeature3") {
-  hap_profile = "src/main/module.json"
+ohos_app("hspASystemtestFeature3") {
+  certificate_profile = "../signature/com.example.hspsotest.p7b"
   hap_name = "hspASystemtestFeature3"
+  hap_out_dir = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/bundle_hsp"
+
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/bundle_hsp/${hap_name}.hsp"
-  testonly = true
-  deps = [
-    ":hjs_demo_js_assets",
-    ":hjs_demo_resources",
-  ]
-  shared_libraries = [
+  part_name = "bundle_framework"
+
+  js_build_mode = "release"
+  sdk_home = "//prebuilts/ohos-sdk/linux"
+  sdk_type_name = [ "sdk.dir" ]
+  assemble_type = "assembleHsp"
+  build_level = "module"
+  system_lib_deps = [
     ":hspast31",
     ":hspast32",
   ]
-  certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.hspsotest.p7b"
-}
-
-ohos_app_scope("bmsstagedemoone_app_profile") {
-  app_profile = "../AppScope/app.json"
-  sources = [ "../AppScope/resources" ]
-}
-
-ohos_resources("hjs_demo_resources") {
-  sources = [ "src/main/resources" ]
-  deps = [ ":bmsstagedemoone_app_profile" ]
-  hap_profile = "src/main/module.json"
-}
-
-ohos_js_assets("hjs_demo_js_assets") {
-  source_dir = "src/main/ets"
+  module_libs_dir = "feature3"
 }
 
 ohos_shared_library("hspast31") {
-  sources = [ "src/main/cpp/hspast31.cpp" ]
+  sources = [ "feature3/src/main/cpp/hspast31.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
 
 ohos_shared_library("hspast32") {
-  sources = [ "src/main/cpp/hspast32.cpp" ]
+  sources = [ "feature3/src/main/cpp/hspast32.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

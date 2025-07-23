@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import Ability from '@ohos.application.Ability'
+import Ability from '@ohos.app.ability.UIAbility'
 
 export default class MainAbility extends Ability {
     onCreate(want,launchParam){
@@ -31,7 +31,7 @@ export default class MainAbility extends Ability {
         // Main window is created, set main page for this ability
         console.log("[Demo] MainAbility onWindowStageCreate")
         globalThis.abilityContext = this.context
-        windowStage.setUIContent(this.context, "pages/index/index", null)
+        windowStage.setUIContent(this.context, "pages/index", null)
     }
 
     onWindowStageDestroy() {
