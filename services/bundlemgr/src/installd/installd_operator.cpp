@@ -136,6 +136,19 @@ static bool EndsWith(const std::string &sourceString, const std::string &targetS
 #define HMFS_MONITOR_FL 0x00000002
 #define HMF_IOCTL_HW_GET_FLAGS _IOR(0xf5, 70, unsigned int)
 #define HMF_IOCTL_HW_SET_FLAGS _IOR(0xf5, 71, unsigned int)
+#define FS_IOC_FSGETXATTR _IOR('X', 31, struct fsxattr)
+#define FS_IOC_FSSETXATTR _IOW('X', 32, struct fsxattr)
+#define FS_XFLAG_PROJINHERIT 0x00000200
+#define PRJQUOTA 2
+
+struct fsxattr {
+    __u32 fsx_xflags;
+    __u32 fsx_extsize;
+    __u32 fsx_nextents;
+    __u32 fsx_projid;
+    __u32 fsx_cowextsize;
+    unsigned char fsx_pad[8];
+};
 
 struct fscrypt_asdp_policy {
     char version;
@@ -218,6 +231,26 @@ bool InstalldOperator::IsExistDir(const std::string &path)
 bool InstalldOperator::IsDirEmpty(const std::string &dir)
 {
     return OHOS::IsEmptyFolder(dir);
+}
+
+bool InstalldOperator::IsDirEmptyFast(const std::string &path)
+{
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "opendir failed, path: %{public}s, errno :%{public}d", path.c_str(), errno);
+        return false;
+    }
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        std::string name = ptr->d_name;
+        if (name == "." || name == "..") {
+            continue;
+        }
+        closedir(dir);
+        return false;
+    }
+    closedir(dir);
+    return true;
 }
 
 bool InstalldOperator::MkRecursiveDir(const std::string &path, bool isReadByOthers)
@@ -1189,6 +1222,60 @@ int64_t InstalldOperator::GetDiskUsageFromQuota(const int32_t uid)
     }
     LOG_D(BMS_TAG_INSTALLD, "get disk usage from quota, uid: %{public}d, usage: %{public}llu",
         uid, static_cast<unsigned long long>(dq.dqb_curspace));
+    return dq.dqb_curspace;
+}
+
+bool InstalldOperator::SetProjectIdForDir(const std::string &path, uint32_t projectId)
+{
+    LOG_I(BMS_TAG_INSTALLD, "path: %{public}s, projectId: %{public}u", path.c_str(), projectId);
+    int32_t fd = open(path.c_str(), O_RDONLY | O_DIRECTORY);
+    if (fd < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Failed to open directory: %{public}s, errno: %{public}d", path.c_str(), errno);
+        return false;
+    }
+
+    struct fsxattr fsx;
+    if (ioctl(fd, FS_IOC_FSGETXATTR, &fsx) < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Failed to get fsxattr, errno: %{public}d", errno);
+        close(fd);
+        return false;
+    }
+
+    fsx.fsx_projid = projectId;
+    fsx.fsx_xflags |= FS_XFLAG_PROJINHERIT;
+
+    if (ioctl(fd, FS_IOC_FSSETXATTR, &fsx) < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Failed to set fsxattr, errno: %{public}d", errno);
+        close(fd);
+        return false;
+    }
+
+    close(fd);
+    return true;
+}
+
+int64_t InstalldOperator::GetProjectUsage(uint32_t projectId)
+{
+    std::lock_guard<std::recursive_mutex> lock(mMountsLock);
+    std::string device = "";
+    if (mQuotaReverseMounts.find(QUOTA_DEVICE_DATA_PATH) == mQuotaReverseMounts.end()) {
+        if (!InitialiseQuotaMounts()) {
+            LOG_E(BMS_TAG_INSTALLD, "Failed to initialise quota mounts");
+            return 0;
+        }
+    }
+    device = mQuotaReverseMounts[QUOTA_DEVICE_DATA_PATH];
+    if (device.empty()) {
+        LOG_W(BMS_TAG_INSTALLD, "skip when device no quotas present");
+        return 0;
+    }
+    struct dqblk dq;
+    if (quotactl(QCMD(Q_GETQUOTA, PRJQUOTA), device.c_str(), projectId, reinterpret_cast<char*>(&dq)) < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Failed to get quotactl, errno: %{public}d", errno);
+        return 0;
+    }
+    LOG_I(BMS_TAG_INSTALLD, "projectId: %{public}d, usage: %{public}llu",
+        projectId, static_cast<unsigned long long>(dq.dqb_curspace));
     return dq.dqb_curspace;
 }
 

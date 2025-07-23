@@ -296,6 +296,8 @@ private:
         const std::vector<std::string> &extensionDirs, bool setAccess, bool setDefault);
     int64_t GetAppCacheSize(const std::string &bundleName, const int32_t userId,
         const int32_t appIndex, const std::vector<std::string> &moduleNames = {});
+    int64_t GetEl2CacheSize(const int32_t projectId, const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex);
     ErrCode CreateDataGroupDir(const CreateDirParam &param);
     ErrCode DeleteEl5DataGroupDirs(const std::vector<std::string> &uuidList, int32_t userId);
     ErrCode CreateBundleDataDirWithEl(const CreateDirParam &createDirParam);

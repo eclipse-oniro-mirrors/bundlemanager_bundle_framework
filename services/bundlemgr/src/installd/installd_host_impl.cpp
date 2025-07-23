@@ -87,6 +87,7 @@ constexpr int32_t APP_DATA_SIZE_INDEX = 0;
 constexpr int32_t BUNDLE_DATA_SIZE_INDEX = 1;
 constexpr uint64_t VECTOR_SIZE_MAX = 200;
 constexpr int32_t INSTALLS_UID = 3060;
+constexpr int64_t EMPTY_FILE_SIZE = 4 * 1024;
 enum class DirType : uint8_t {
     DIR_EL1,
     DIR_EL2,
@@ -602,6 +603,11 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                         errno);
                     return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
                 }
+            }
+            std::string el2CacheDir = bundleDataDir + BUNDLE_DATA_DIR[0];
+            if (!InstalldOperator::SetProjectIdForDir(el2CacheDir, static_cast<uint32_t>(createDirParam.uid))) {
+                LOG_E(BMS_TAG_INSTALLD, "SetProjectIdForDir failed, dir %{public}s, errno: %{public}d",
+                    el2CacheDir.c_str(), errno);
             }
             std::string logParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::LOG;
             std::string logDir = logParentDir + createDirParam.bundleName;
@@ -1277,12 +1283,13 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
     std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
     elPath.push_back(ServiceConstants::DIR_EL5);
     for (const auto &el : elPath) {
-        cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
-            bundleNameDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
         if (ServiceConstants::BUNDLE_EL[1] == el) {
             cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
                 ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES +
+                bundleNameDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
+        } else {
+            cachePaths.push_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
                 bundleNameDir + ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR);
         }
         for (const auto &moduleName : moduleNameList) {
@@ -1301,6 +1308,28 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
         }
     }
     return InstalldOperator::GetDiskUsageFromPath(cachePaths);
+}
+
+int64_t InstalldHostImpl::GetEl2CacheSize(const int32_t projectId, const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
+{
+    std::string bundleNameDir = bundleName;
+    if (appIndex > 0) {
+        bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+    std::string cachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + ServiceConstants::DIR_EL2 +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir +
+        ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
+    if (InstalldOperator::IsDirEmptyFast(cachePath)) {
+        LOG_I(BMS_TAG_INSTALLD, "%{public}s el2 cache dir empty", bundleNameDir.c_str());
+        return 0;
+    }
+    // quota result contains the size of base dir
+    int64_t projectQuotaSize = InstalldOperator::GetProjectUsage(projectId) - EMPTY_FILE_SIZE;
+    if (projectQuotaSize >= 0) {
+        return projectQuotaSize;
+    }
+    return InstalldOperator::GetDiskUsage(cachePath);
 }
 
 ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const int32_t userId,
@@ -1335,7 +1364,8 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     }
     if ((statFlag & OHOS::AppExecFwk::Constants::GET_BUNDLE_WITHOUT_CACHE_SIZE) !=
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE) {
-        bundleCacheSize = GetAppCacheSize(bundleName, userId, appIndex, moduleNameList);
+        bundleCacheSize = GetAppCacheSize(bundleName, userId, appIndex, moduleNameList) +
+            GetEl2CacheSize(uid, bundleName, userId, appIndex);
     }
     // index 0 : bundle data size
     bundleStats[0] = appDataSize;
