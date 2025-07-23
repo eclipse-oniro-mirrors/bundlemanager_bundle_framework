@@ -1058,7 +1058,7 @@ HWTEST_F(BmsBundleDataMgrTest3, ImplicitQueryAbilityInfos_0300, Function | Mediu
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, true);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(ret == ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED || ret == ERR_OK);
+    EXPECT_TRUE(res == ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED || res == ERR_OK);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif

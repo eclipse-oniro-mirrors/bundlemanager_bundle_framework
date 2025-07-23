@@ -22,7 +22,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
-#include <filesystem> 
+#include <filesystem>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -661,7 +661,7 @@ void BmsBundleInstallerTest::GetExistedEntries(const std::string &filename,
             if (endPos == std::string::npos) {
                 endPos = line.length();
             }
-            
+
             std::string bundleName = line.substr(0, endPos);
             if (!bundleName.empty()) {
                 existingEntries.insert(bundleName);
@@ -9260,7 +9260,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPlugin_0100, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7200, Function | SmallTest | Level0)
 {
-    
+
     std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
     ErrCode installResult = InstallThirdPartyBundle(bundleFile);
     EXPECT_EQ(installResult, ERR_OK);
@@ -9586,7 +9586,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_7500, Function | SmallTest 
     baseBundleInstaller.sysEventInfo_.callingUid = ServiceConstants::SHELL_UID;
     auto ret = baseBundleInstaller.CheckShellInstall(hapVerifyRes);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(ret, ERR_OK);
     #else
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASE_BUNDLE_NOT_ALLOWED_FOR_SHELL);
     #endif
@@ -12004,7 +12004,7 @@ HWTEST_F(BmsBundleInstallerTest, GetConfirmUserId_0002, Function | SmallTest | L
     auto res = installer.GetConfirmUserId(TEST_U100, infos);
     EXPECT_EQ(res, TEST_U1);
 }
- 
+
 /**
  * @tc.number: CleanArkStartupCache_0010
  * @tc.name: test CleanArkStartupCache
@@ -12019,7 +12019,7 @@ HWTEST_F(BmsBundleInstallerTest, CleanArkStartupCache_0010, Function | SmallTest
     ErrCode ret = installer.CleanArkStartupCache(cacheDir, bundleName, 100);
     EXPECT_EQ(ret, ERR_OK);
 }
- 
+
 /**
  * @tc.number: DeleteArkStartupCache_0010
  * @tc.name: test DeleteArkStartupCache
@@ -12034,7 +12034,7 @@ HWTEST_F(BmsBundleInstallerTest, DeleteArkStartupCache_0010, Function | SmallTes
     ErrCode ret = installer.DeleteArkStartupCache(cacheDir, bundleName, 100);
     EXPECT_EQ(ret, ERR_OK);
 }
- 
+
 /**
  * @tc.number: CreateArkStartupCache_0010
  * @tc.name: test CreateArkStartupCache
@@ -12054,7 +12054,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0010, Function | SmallTes
     ErrCode ret = installer1.CreateArkStartupCache(ceateArk);
     EXPECT_EQ(ret, ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_APP_OR_ATOMIC);
 }
- 
+
 /**
  * @tc.number: CreateArkStartupCache_0020
  * @tc.name: test CreateArkStartupCache
@@ -12069,17 +12069,17 @@ HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0020, Function | SmallTes
     ceateArk.mode = ServiceConstants::SYSTEM_OPTIMIZE_MODE;
     ceateArk.uid = 0;
     ceateArk.gid = 0;
- 
+
     // test bundlename is not in white list, bundleType is APP or ATOMIC
     BaseBundleInstaller installer2;
     ErrCode ret = installer2.CreateArkStartupCache(ceateArk);
     EXPECT_EQ(ret, ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST);
- 
+
     ceateArk.bundleType = BundleType::ATOMIC_SERVICE;
     ret = installer2.CreateArkStartupCache(ceateArk);
     EXPECT_EQ(ret, ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST);
 }
- 
+
 /**
  * @tc.number: CreateArkStartupCache_0030
  * @tc.name: test CreateArkStartupCache
@@ -12095,20 +12095,20 @@ HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0030, Function | SmallTes
     ceateArk.uid = 0;
     ceateArk.gid = 0;
     WriteToConfigFile("com.test2");
- 
+
     // test bundlename in white list
     BaseBundleInstaller installer3;
     ErrCode ret = installer3.CreateArkStartupCache(ceateArk);
     EXPECT_EQ(ret, ERR_OK);
- 
+
     ret = installer3.CleanArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, "com.test2", 100);
     EXPECT_EQ(ret, ERR_OK);
- 
+
     ret = installer3.DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, "com.test2", 101);
     EXPECT_EQ(ret, ERR_OK);
     setuid(Constants::ROOT_UID);
 }
- 
+
 /**
  * @tc.number: CreateArkStartupCacheDir_0100
  * @tc.name: test CreateArkStartupCacheDir
@@ -12120,7 +12120,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCacheDir_0100, Function | Mediu
     ErrCode ret = host.CreateArkStartupCacheDir(103);
     EXPECT_EQ(ret, ERR_OK);
 }
- 
+
 /**
  * @tc.number: RemoveSystemOptimizeDir_0100
  * @tc.name: test RemoveSystemOptimizeDir
@@ -12132,7 +12132,7 @@ HWTEST_F(BmsBundleInstallerTest, RemoveSystemOptimizeDir_0100, Function | Medium
     ErrCode ret = host.RemoveSystemOptimizeDir(103);
     EXPECT_EQ(ret, ERR_OK);
 }
- 
+
 /**
  * @tc.number: SetArkStartupCacheApl_0100
  * @tc.name: test SetArkStartupCacheApl
@@ -12143,7 +12143,7 @@ HWTEST_F(BmsBundleInstallerTest, SetArkStartupCacheApl_0100, Function | SmallTes
     InstalldHostImpl impl;
     auto ret = impl.SetArkStartupCacheApl("");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
- 
+
     ret = impl.SetArkStartupCacheApl(BUNDLE_DATA_DIR);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
 }
@@ -12280,15 +12280,15 @@ HWTEST_F(BmsBundleInstallerTest, ProcessArkStartupCache_0010, Function | SmallTe
     ceateArk.uid = 0;
     ceateArk.gid = 0;
     WriteToConfigFile(testBudnleName);
- 
+
     // test bundlename in white list
     BaseBundleInstaller installer3;
     ErrCode ret = installer3.ProcessArkStartupCache(ceateArk, 1, 100);
     EXPECT_EQ(ret, ERR_OK);
- 
+
     ret = installer3.CleanArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, testBudnleName, 100);
     EXPECT_EQ(ret, ERR_OK);
- 
+
     ret = installer3.DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, testBudnleName, 101);
     EXPECT_EQ(ret, ERR_OK);
 
