@@ -913,6 +913,10 @@ bool InstalldOperator::RenameFile(const std::string &oldPath, const std::string 
         LOG_E(BMS_TAG_INSTALLD, "old path or new path is empty");
         return false;
     }
+    if (oldPath == newPath) {
+        LOG_W(BMS_TAG_INSTALLD, "old path %{public}s is same as new path", oldPath.c_str());
+        return true;
+    }
     if (!DeleteDir(newPath)) {
         return false;
     }
