@@ -8195,6 +8195,27 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelfWithOutCache_0100, Function |
     EXPECT_TRUE(getInfoResult);
 }
 
+/**
+ * @tc.number: GetBundleInfoForSelfWithCache_0100
+ * @tc.name: get bundle info for self
+ * @tc.desc: 1.system run normally
+ *           2.get bundle info for self success
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelfWithCache_0100, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    int32_t flags = BundleFlag::GET_BUNDLE_DEFAULT;
+    bundleMgrProxy->GetBundleInfoForSelfWithCache(flags, bundleInfo);
+    bundleMgrProxy->GetBundleInfoForSelfWithCache(flags, bundleInfo);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+    bool getInfoResult = bundleMgrProxy->GetBundleInfoForSelfWithCache(flags, bundleInfo);
+    EXPECT_TRUE(getInfoResult);
+}
+
+
 
 /**
  * @tc.number: VerifySystemApi_0100

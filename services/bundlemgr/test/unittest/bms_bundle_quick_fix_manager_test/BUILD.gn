@@ -79,6 +79,7 @@ ohos_unittest("BmsBundleQuickFixManagerTest") {
     "init:libbegetutil",
     "json:nlohmann_json_static",
     "jsoncpp:jsoncpp",
+    "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
