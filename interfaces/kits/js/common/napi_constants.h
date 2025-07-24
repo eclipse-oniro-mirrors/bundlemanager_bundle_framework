@@ -277,6 +277,7 @@ constexpr const char* UNINSTALL_DISPOSED_RULE_TYPE = "UninstallDisposedRule";
 constexpr const char* SET_UNINSTALL_DISPOSED_RULE = "SetUninstallDisposedRule";
 constexpr const char* DELETE_UNINSTALL_DISPOSED_RULE = "DeleteUninstallDisposedRule";
 constexpr const char* GET_UNINSTALL_DISPOSED_RULE = "GetUninstallDisposedRule";
+constexpr const char* SET_DISPOSED_RULE = "SetDisposedRule";
 constexpr const char* SET_DISPOSED_RULES = "SetDisposedRules";
 
 // default_app_manager
