@@ -40,8 +40,6 @@ public:
         const std::string& moduleName, AbilityInfo& targetAbilityInfo);
     static ErrCode GetExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
         const std::string& moduleName, ExtensionAbilityInfo& targetExtensionInfo);
-    static ErrCode CommonInnerGetProfile(const std::string& moduleName, const std::string& abilityName,
-        const std::string& metadataName, bool isExtensionProfile, std::vector<std::string>& profileVec);
     static ErrCode InnerGetPermissionDef(const std::string& permissionName, PermissionDef& permissionDef);
     static ErrCode InnerCleanBundleCacheCallback(
         const std::string &bundleName, int32_t appIndex, const OHOS::sptr<CleanCacheCallback> cleanCacheCallback);
