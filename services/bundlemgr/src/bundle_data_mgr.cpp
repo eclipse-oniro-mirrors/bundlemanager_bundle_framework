@@ -1150,7 +1150,7 @@ bool BundleDataMgr::ImplicitQueryAbilityInfos(
 
     if (want.GetAction().empty() && want.GetEntities().empty()
         && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
-        LOG_E(BMS_TAG_QUERY, "param invalid");
+        LOG_W(BMS_TAG_QUERY, "param invalid");
         return false;
     }
     LOG_D(BMS_TAG_QUERY, "action:%{public}s, uri:%{private}s, type:%{public}s",
@@ -2925,11 +2925,11 @@ ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInf
     InnerBundleInfo innerBundleInfo;
     if (GetInnerBundleInfoAndIndexByUid(uid, innerBundleInfo, appIndex) != ERR_OK) {
         if (sandboxAppHelper_ == nullptr) {
-            LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleNameForUid failed uid:%{public}d", uid);
+            LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoForSelf failed uid:%{public}d", uid);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleNameForUid failed uid:%{public}d", uid);
+            LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoForSelf failed uid:%{public}d", uid);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
@@ -4596,7 +4596,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     APP_LOGD("GetInnerBundleInfoWithFlags: %{public}s", bundleName.c_str());
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        LOG_NOFUNC_E(BMS_TAG_COMMON, "bundle not exist -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "bundle not exist -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
             bundleName.c_str(), userId, appIndex, flags);
         return false;
     }
@@ -4679,7 +4679,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
         bundleName.c_str(), flags, userId, appIndex);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        LOG_NOFUNC_E(BMS_TAG_COMMON, "bundle not exist -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "bundle not exist -n %{public}s -u %{public}d -i %{public}d -f %{public}d",
             bundleName.c_str(), userId, appIndex, flags);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
