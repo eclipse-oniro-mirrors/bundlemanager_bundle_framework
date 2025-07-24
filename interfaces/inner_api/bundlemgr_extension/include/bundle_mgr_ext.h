@@ -153,7 +153,12 @@ public:
     {
         return;
     }
-    
+
+    virtual bool IsTargetApp(const std::string &bundleName, const std::string &appIdentifier)
+    {
+        return false;
+    }
+
     virtual bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum)
     {
         return false;
