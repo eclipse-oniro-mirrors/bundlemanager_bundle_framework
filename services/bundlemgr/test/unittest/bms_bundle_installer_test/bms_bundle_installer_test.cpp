@@ -929,7 +929,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallPreInstallBundle_0200, Function | Smal
     EXPECT_TRUE(isForceUninstall);
 
     // test GetRecoverablePreInstallBundleInfos
-    dataMgr->GetRecoverablePreInstallBundleInfos();
+    dataMgr->GetRecoverablePreInstallBundleInfos(USERID);
 
     // test recover failed and succeed
     ErrCode recoverRes = RecoverBundle(BUNDLE_NAME, installParam);

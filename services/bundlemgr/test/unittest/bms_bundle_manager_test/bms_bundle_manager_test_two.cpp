@@ -1660,7 +1660,7 @@ HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0010, Function | SmallTest
 {
     bool isRemovable;
     ErrCode testRet = GetBundleDataMgr()->IsModuleRemovable(
-        TEST_BUNDLE_NAME, MODULE_NAME, isRemovable);
+        TEST_BUNDLE_NAME, MODULE_NAME, isRemovable, USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 

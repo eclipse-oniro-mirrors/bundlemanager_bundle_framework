@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -290,7 +290,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0001, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         bool isRemovable = false;
-        ErrCode ret = bundleMgr->IsModuleRemovable("", "", isRemovable);
+        ErrCode ret = bundleMgr->IsModuleRemovable("", "", isRemovable, USERID);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
         EXPECT_FALSE(isRemovable);
     }
@@ -310,7 +310,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0002, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         bool isRemovable = false;
-        ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME_DEMO, MODULE_NAME_TEST, isRemovable);
+        ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME_DEMO, MODULE_NAME_TEST, isRemovable, USERID);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
         EXPECT_FALSE(isRemovable);
     }
@@ -332,7 +332,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0003, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         bool isRemovable = false;
-        ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_NOT_EXIST, isRemovable);
+        ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_NOT_EXIST, isRemovable, USERID);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
         EXPECT_FALSE(isRemovable);
     }
@@ -354,7 +354,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0004, Function | Sma
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
         bool isRemovable = false;
-        ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable);
+        ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable, USERID);
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_FALSE(isRemovable);
     }
@@ -375,10 +375,10 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0005, Function | Sma
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
-        bool result = bundleMgr->SetModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, true);
+        bool result = bundleMgr->SetModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, true, USERID);
         EXPECT_TRUE(result);
         bool isRemovable = false;
-        ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable);
+        ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable, USERID);
         EXPECT_EQ(ret, ERR_OK);
         EXPECT_TRUE(isRemovable);
     }

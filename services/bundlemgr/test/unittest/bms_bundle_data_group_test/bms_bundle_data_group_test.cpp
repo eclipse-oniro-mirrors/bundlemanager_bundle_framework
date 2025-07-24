@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -303,7 +303,7 @@ HWTEST_F(BmsBundleDataGroupTest, GetGroupDir_0020, Function | SmallTest | Level0
     setuid(TEST_UID);
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     std::string dir;
-    bool res = dataMgr->GetGroupDir(DATA_GROUP_ID_TEST_ONE, dir, Constants::UNSPECIFIED_USERID);
+    bool res = dataMgr->GetGroupDir(DATA_GROUP_ID_TEST_ONE, dir, USERID);
     EXPECT_TRUE(res);
     EXPECT_FALSE(dir.empty());
 }
@@ -328,7 +328,7 @@ HWTEST_F(BmsBundleDataGroupTest, GetGroupDir_0030, Function | SmallTest | Level0
     setuid(TEST_UID);
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     std::string dir;
-    bool res = dataMgr->GetGroupDir(DATA_GROUP_ID_TEST_ONE, dir, Constants::UNSPECIFIED_USERID);
+    bool res = dataMgr->GetGroupDir(DATA_GROUP_ID_TEST_ONE, dir, USERID);
     EXPECT_FALSE(res);
     EXPECT_TRUE(dir.empty());
 }
@@ -346,7 +346,7 @@ HWTEST_F(BmsBundleDataGroupTest, GetGroupDir_0040, Function | SmallTest | Level0
     setuid(TEST_UID);
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     std::string dir;
-    bool res = dataMgr->GetGroupDir(DATA_GROUP_ID_TEST_ONE, dir, Constants::UNSPECIFIED_USERID);
+    bool res = dataMgr->GetGroupDir(DATA_GROUP_ID_TEST_ONE, dir, USERID);
     EXPECT_FALSE(res);
     EXPECT_TRUE(dir.empty());
 }
