@@ -35,7 +35,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* APP_TYPE = "appType";
-constexpr const char* BUNDLE_STATUS = "bundleStatus";
 constexpr const char* BASE_APPLICATION_INFO = "baseApplicationInfo";
 constexpr const char* BASE_BUNDLE_INFO = "baseBundleInfo";
 constexpr const char* BASE_ABILITY_INFO = "baseAbilityInfos";
@@ -494,7 +493,6 @@ void to_json(nlohmann::json &jsonObject, const InstallMark &installMark)
 void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
 {
     jsonObject[APP_TYPE] = appType_;
-    jsonObject[BUNDLE_STATUS] = bundleStatus_;
     jsonObject[ALLOWED_ACLS] = allowedAcls_;
     jsonObject[BASE_APPLICATION_INFO] = *baseApplicationInfo_;
     jsonObject[BASE_BUNDLE_INFO] = *baseBundleInfo_;
@@ -1306,14 +1304,6 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<BundleStatus>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_STATUS,
-        bundleStatus_,
-        JsonType::NUMBER,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<BundleInfo>(jsonObject,
         jsonObjectEnd,
         BASE_BUNDLE_INFO,
