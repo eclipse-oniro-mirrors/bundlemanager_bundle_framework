@@ -2395,12 +2395,6 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
             LOG_D(BMS_TAG_DEFAULT, "the installed version is up-to-date");
             continue;
         }
-        if (oldBundleInfo.GetVersionCode() == versionCode) {
-            if (!IsNeedToUpdateSharedAppByHash(oldBundleInfo, infos.begin()->second)) {
-                LOG_D(BMS_TAG_DEFAULT, "the installed version is up-to-date");
-                continue;
-            }
-        }
 
         if (!OTAInstallSystemSharedBundle({scanPath}, appType, removable)) {
             LOG_E(BMS_TAG_DEFAULT, "OTA update shared bundle(%{public}s) error", bundleName.c_str());
@@ -2446,14 +2440,6 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
         if (oldBundleInfo.GetVersionCode() > versionCode) {
             LOG_D(BMS_TAG_DEFAULT, "the installed version is up-to-date");
             continue;
-        }
-        if (oldBundleInfo.GetVersionCode() == versionCode) {
-            for (const auto &item : infos) {
-                if (!IsNeedToUpdateSharedHspByHash(oldBundleInfo, item.second)) {
-                    LOG_D(BMS_TAG_DEFAULT, "the installed version is up-to-date");
-                    continue;
-                }
-            }
         }
         SavePreInstallExceptionAppService(scanPath);
         auto ret = OTAInstallSystemHsp({scanPath});
@@ -2617,45 +2603,6 @@ ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &fil
     AppServiceFwkInstaller installer;
 
     return installer.Install(filePaths, installParam);
-}
-
-bool BMSEventHandler::IsNeedToUpdateSharedHspByHash(
-    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
-{
-    std::string moduleName = newInfo.GetCurrentModulePackage();
-    std::string newModuleBuildHash;
-    if (!newInfo.GetModuleBuildHash(moduleName, newModuleBuildHash)) {
-        LOG_E(BMS_TAG_DEFAULT, "internal error, can not find module %{public}s", moduleName.c_str());
-        return false;
-    }
-
-    std::string oldModuleBuildHash;
-    if (!oldInfo.GetModuleBuildHash(moduleName, oldModuleBuildHash) ||
-        newModuleBuildHash != oldModuleBuildHash) {
-        LOG_D(BMS_TAG_DEFAULT, "module %{public}s need to be updated", moduleName.c_str());
-        return true;
-    }
-    return false;
-}
-
-bool BMSEventHandler::IsNeedToUpdateSharedAppByHash(
-    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
-{
-    auto oldSharedModuleMap = oldInfo.GetInnerSharedModuleInfos();
-    auto newSharedModuleMap = newInfo.GetInnerSharedModuleInfos();
-    for (const auto &item : newSharedModuleMap) {
-        auto newModuleName = item.first;
-        auto oldModuleInfos = oldSharedModuleMap[newModuleName];
-        auto newModuleInfos = item.second;
-        if (!oldModuleInfos.empty() && !newModuleInfos.empty()) {
-            auto oldBuildHash = oldModuleInfos[0].buildHash;
-            auto newBuildHash = newModuleInfos[0].buildHash;
-            return oldBuildHash != newBuildHash;
-        } else {
-            return true;
-        }
-    }
-    return false;
 }
 
 void BMSEventHandler::SaveSystemFingerprint()

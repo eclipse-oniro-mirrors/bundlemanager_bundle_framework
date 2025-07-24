@@ -489,13 +489,6 @@ private:
      */
     ErrCode OTAInstallSystemHsp(const std::vector<std::string> &filePaths);
     /**
-     * @brief version is the same, determine whether to update based on the buildHash
-     * @param oldInfo Indicates the old innerBundleInfo.
-     * @param newInfo Indicates the new innerBundleInfo.
-     * @return Returns true if need to update.
-     */
-    bool IsNeedToUpdateSharedHspByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
-    /**
      * @brief Used to determine whether the module has been installed. If the installation has
      *        been uninstalled, OTA install and upgrade will not be allowed.
      * @param bundleName Indicates the bundleName.
@@ -652,7 +645,6 @@ private:
     void HandleSceneBoard() const;
     static void InnerProcessStockBundleProvisionInfo();
     bool UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const;
-    bool IsNeedToUpdateSharedAppByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void CheckALLResourceInfo();
     void InnerProcessAllDynamicIconInfoWhenOta();
     // Used to add bundle resource Info that does not exist in rdb when OTA.
