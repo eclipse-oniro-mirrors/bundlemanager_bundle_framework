@@ -1228,8 +1228,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
 
 bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, BmsExperienceRule &rule)
 {
-    std::shared_ptr<BmsEcologicalRuleMgrServiceClient> instance_ =
-        DelayedSingleton<BmsEcologicalRuleMgrServiceClient>::GetInstance();
+    auto instance_ = BmsEcologicalRuleMgrServiceClient::GetInstance();
     if (instance_ == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "Failed to get instance from erms");
         return false;
