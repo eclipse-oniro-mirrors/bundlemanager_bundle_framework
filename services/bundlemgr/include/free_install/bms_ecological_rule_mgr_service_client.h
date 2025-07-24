@@ -62,6 +62,7 @@ private:
     sptr<IBmsEcologicalRuleMgrService> ConnectService();
     bool CheckConnectService();
 
+    std::mutex proxyMutex_;
     sptr<IBmsEcologicalRuleMgrService> bmsEcologicalRuleMgrServiceProxy_;
     sptr<BmsEcologicalRuleMgrServiceDeathRecipient> deathRecipient_;
 
