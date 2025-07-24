@@ -5135,7 +5135,7 @@ ErrCode BundleMgrHostImpl::GetLaunchWant(Want &want)
     std::string bundleName;
     auto ret = dataMgr->GetBundleNameForUid(uid, bundleName);
     if (!ret) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleNameForUid failed uid:%{public}d", uid);
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleNameForUid failed uid:%{public}d", uid);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(uid);

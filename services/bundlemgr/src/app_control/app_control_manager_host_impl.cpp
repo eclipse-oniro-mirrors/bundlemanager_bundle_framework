@@ -245,7 +245,7 @@ ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(
     const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
     if (bundleName.empty()) {
-        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "GetAppRunningControlRule bundleName is empty");
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "GetAppRunningControlRule bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
