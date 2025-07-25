@@ -14,31 +14,17 @@
 import("//build/ohos.gni")
 import("../../../../../appexecfwk.gni")
 
-ohos_hap("otaUpdateTestBasis2") {
-  hap_profile = "entry/src/main/module.json"
-  hap_name = "otaUpdateTestBasis2"
-  subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/test_bundle/${hap_name}.hap"
-  testonly = true
-  deps = [
-    ":hjs_demo_js_assets",
-    ":hjs_demo_resources",
-  ]
-  shared_libraries = []
+ohos_app("otaUpdateTestBasis2") {
   certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.otaupdatetest.p7b"
-}
+  hap_name = "otaUpdateTestBasis2"
+  hap_out_dir = "$root_out_dir/tests/unittest/bundle_framework/bundle_framework/resource/test_bundle"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
 
-ohos_app_scope("bmsstagedemoone_app_profile") {
-  app_profile = "AppScope/app.json"
-  sources = [ "AppScope/resources" ]
-}
-
-ohos_js_assets("hjs_demo_js_assets") {
-  source_dir = "entry/src/main/ets"
-}
-
-ohos_resources("hjs_demo_resources") {
-  sources = [ "entry/src/main/resources" ]
-  deps = [ ":bmsstagedemoone_app_profile" ]
-  hap_profile = "entry/src/main/module.json"
+  js_build_mode = "release"
+  sdk_home = "//prebuilts/ohos-sdk/linux"
+  sdk_type_name = [ "sdk.dir" ]
+  assemble_type = "assembleHar"
+  build_level = "module"
+  build_modules = [ "entry1" ]
 }
