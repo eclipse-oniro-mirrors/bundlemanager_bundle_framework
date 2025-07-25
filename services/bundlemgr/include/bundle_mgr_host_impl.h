@@ -28,6 +28,7 @@
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_interface.h"
 #endif
+#include "event_report.h"
 #include "inner_bundle_user_info.h"
 
 namespace OHOS {
@@ -1202,6 +1203,9 @@ private:
     bool GetLabelFromCache(const std::string &cacheKey, const std::string &abilityName,
         const std::unordered_map<std::string, std::vector<LauncherAbilityResourceInfo>> &resourceCache,
         std::string &label);
+    bool SendQueryBundleInfoEvent(EventInfo &query, int32_t intervalTime, bool reportNow);
+    bool CheckNeedAddEvent(const EventInfo &query, size_t maxEventSize);
+    bool GetCallingInfo(int32_t callingUid, std::string &callingBundleName, std::string &callingAppId);
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

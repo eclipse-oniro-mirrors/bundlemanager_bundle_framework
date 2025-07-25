@@ -22,3 +22,16 @@ DB_ERROR:
   OPERATION_TYPE: {type: INT32, desc: db operation type}
   ERROR_CODE: {type: INT32, desc: db error code}
   REBUILD_TYPE: {type: INT32, desc: db rebuild type}
+
+QUERY_BUNDLE_INFO:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: query bundle info}
+  FUNC_ID_LIST: {type: INT32, desc: function of query}
+  USERID_LIST: {type: INT32, arrsize: 100, desc: userId of the bundle}
+  BUNDLE_NAME_LIST: {type: STRING, arrsize: 100, desc: bundleName}
+  UID_LIST: {type: INT32, arrsize: 100, desc: uid of bundlename}
+  APP_INDEX_LIST: {type: INT32, arrsize: 100, desc: app index}
+  CALLING_UID_LIST: {type: INT32, arrsize: 100, desc: calling uid}
+  CALLING_APP_ID_LIST: {type: STRING, arrsize: 100, desc: calling appId}
+  CALLING_BUNDLE_NAME_LIST: {type: STRING, arrsize: 100, desc: calling bundleName}
+  GET_BUNDLE_INFO_FLAG_LIST: {type: INT32, arrsize: 100, desc: flag of bundle info}
+  ERROR_CODE: {type: INT32, desc: error code}
