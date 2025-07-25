@@ -655,7 +655,7 @@ public:
         std::vector<AbilityInfo> &abilityInfos,  int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         APP_LOGI("Uri is %{public}s", abilityUri.c_str());
-        for (auto &item : baseAbilityInfos_) {
+        for (const auto &item : baseAbilityInfos_) {
             if (item.second.uri.size() < strlen(ServiceConstants::DATA_ABILITY_URI_PREFIX)) {
                 continue;
             }

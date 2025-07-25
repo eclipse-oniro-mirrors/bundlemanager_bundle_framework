@@ -517,8 +517,8 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
     }
     std::map<std::string, InnerAbilityInfo> innerAbilityInfos = innerBundleInfo.GetInnerAbilityInfos();
     for (const auto &item : innerAbilityInfos) {
-        AbilityInfo AbilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(item.second);
-        resourceInfos.emplace_back(ConvertToLauncherAbilityResourceInfo(AbilityInfo));
+        AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(item.second);
+        resourceInfos.emplace_back(ConvertToLauncherAbilityResourceInfo(abilityInfo));
     }
     std::map<std::string, InnerExtensionInfo> extensionAbilityInfos = innerBundleInfo.GetInnerExtensionInfos();
     for (const auto &item : extensionAbilityInfos) {
