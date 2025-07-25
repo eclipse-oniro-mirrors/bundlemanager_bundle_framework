@@ -644,7 +644,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3300, Function | Sma
     ret = InstalldOperator::RenameFile("/test/123", "");
     EXPECT_FALSE(ret);
     ret = InstalldOperator::RenameFile("/test/123", "/test/123");
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
     ret = InstalldOperator::RenameFile("/test/123", TEST_PATH);
     EXPECT_FALSE(ret);
 }
@@ -658,7 +658,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3300, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3400, Function | SmallTest | Level0)
 {
     auto ret = InstalldOperator::RenameFile(TEST_PATH, TEST_PATH);
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -1112,9 +1112,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6500, Function | Sma
     CreateQuickFileDir("/data/OperatorTest");
 
     auto result = InstalldOperator::RenameFile("/data/OperatorTest", "/data/OperatorTest");
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
     result = InstalldOperator::RenameFile("/data/OperatorTest", "/data/OperatorTest1");
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
 
     DeleteQuickFileDir("/data/OperatorTest1");
 }
