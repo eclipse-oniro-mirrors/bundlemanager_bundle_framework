@@ -724,67 +724,6 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessRebootTest_0200, Function | SmallTest 
 }
 
 /**
- * @tc.number: IsNeedToUpdateSharedAppByHash_0100
- * @tc.name: IsNeedToUpdateSharedAppByHash
- * @tc.desc: test IsNeedToUpdateSharedAppByHash
- */
-HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0100, Function | SmallTest | Level0)
-{
-    InnerBundleInfo oldInnerBundleInfo;
-    InnerModuleInfo oldInnerModuleInfo;
-    oldInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, oldInnerModuleInfo);
-
-    InnerBundleInfo newInnerBundleInfo;
-    InnerModuleInfo newInnerModuleInfo;
-    newInnerModuleInfo.buildHash = BUILD_HASH;
-    newInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, newInnerModuleInfo);
-
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    auto res = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
-    EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: IsNeedToUpdateSharedAppByHash_0200
- * @tc.name: IsNeedToUpdateSharedAppByHash
- * @tc.desc: test IsNeedToUpdateSharedAppByHash
- */
-HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0200, Function | SmallTest | Level0)
-{
-    InnerBundleInfo oldInnerBundleInfo;
-    InnerModuleInfo oldInnerModuleInfo;
-    oldInnerModuleInfo.buildHash = BUILD_HASH;
-    oldInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, oldInnerModuleInfo);
-
-    InnerBundleInfo newInnerBundleInfo;
-    InnerModuleInfo newInnerModuleInfo;
-    newInnerModuleInfo.buildHash = BUILD_HASH;
-    newInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, newInnerModuleInfo);
-
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    auto res = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
-    EXPECT_FALSE(res);
-}
-
-/**
- * @tc.number: IsNeedToUpdateSharedAppByHash_0300
- * @tc.name: IsNeedToUpdateSharedAppByHash
- * @tc.desc: test IsNeedToUpdateSharedAppByHash
- */
-HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0300, Function | SmallTest | Level0)
-{
-    InnerBundleInfo oldInnerBundleInfo;
-
-    InnerBundleInfo newInnerBundleInfo;
-    InnerModuleInfo newInnerModuleInfo;
-    newInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, newInnerModuleInfo);
-
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    auto res = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
-    EXPECT_TRUE(res);
-}
-
-/**
  * @tc.number: ReInstallAllInstallDirApps_0100
  * @tc.name: ReInstallAllInstallDirApps
  * @tc.desc: test ReInstallAllInstallDirApps
@@ -1080,63 +1019,6 @@ HWTEST_F(BmsEventHandlerTest, OTAInstallSystemHsp_0100, Function | SmallTest | L
     #else
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
     #endif
-}
-
-/**
- * @tc.number: IsNeedToUpdateSharedHspByHash_0100
- * @tc.name: IsNeedToUpdateSharedHspByHash
- * @tc.desc: test IsNeedToUpdateSharedHspByHash
- */
-HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-    bool ret = handler->IsNeedToUpdateSharedHspByHash(oldInfo, newInfo);
-    EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: IsNeedToUpdateSharedHspByHash_0200
- * @tc.name: IsNeedToUpdateSharedHspByHash
- * @tc.desc: test IsNeedToUpdateSharedHspByHash
- */
-HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0200, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = BUNDLE_NAME;
-    InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.buildHash = "buildHashTest";
-    newInfo.innerModuleInfos_.emplace(BUNDLE_NAME, innerModuleInfo);
-    oldInfo.innerModuleInfos_.emplace(BUNDLE_NAME, innerModuleInfo);
-    bool ret = handler->IsNeedToUpdateSharedHspByHash(oldInfo, newInfo);
-    EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: IsNeedToUpdateSharedHspByHash_0300
- * @tc.name: IsNeedToUpdateSharedHspByHash
- * @tc.desc: test IsNeedToUpdateSharedHspByHash
- */
-HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0300, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = BUNDLE_NAME;
-    InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.buildHash = "buildHashTest";
-    InnerModuleInfo innerModuleInfo2;
-    innerModuleInfo2.buildHash = "buildHashTest2";
-    newInfo.innerModuleInfos_.emplace(BUNDLE_NAME, innerModuleInfo);
-    oldInfo.innerModuleInfos_.emplace(BUNDLE_NAME, innerModuleInfo2);
-    bool ret = handler->IsNeedToUpdateSharedHspByHash(oldInfo, newInfo);
-    EXPECT_TRUE(ret);
 }
 
 /**
