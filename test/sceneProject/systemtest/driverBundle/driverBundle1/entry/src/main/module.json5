@@ -1,0 +1,84 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "EntryAbility",
+    "deviceTypes": [
+      "2in1",
+      "default",
+      "tablet"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "abilities": [
+      {
+        "name": "EntryAbility",
+        "description": "$string:EntryAbility_desc",
+        "icon": "$media:icon",
+        "label": "$string:EntryAbility_label",
+        "startWindowIcon": "$media:icon",
+        "startWindowBackground": "$color:start_window_background",
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "action.system.home"
+            ]
+          }
+        ],
+        "srcEntry": "./ets/entryability/EntryAbility.ts"
+      }
+    ],
+    "extensionAbilities": [
+      {
+        "exported": true,
+        "metadata": [
+          {
+            "name": "bus",
+            "value": "USB"
+          },
+          {
+            "name": "description",
+            "value": "the sample of driverExtensionAbility V1"
+          },
+          {
+            "name": "vendor",
+            "value": "string"
+          },
+          {
+            "name": "vid",
+            "value": "0x0B57"
+          },
+          {
+            "name": "pid",
+            "value": "0xA13F,0xA150"
+          }
+        ],
+        "srcEntry": "./ets/driverability/driver.ts",
+        "name": "driverExtensionAbility",
+        "icon": "$media:icon",
+        "description": "$string:DriverAbility_desc",
+        "type": "driver"
+      }
+    ]
+  }
+}
