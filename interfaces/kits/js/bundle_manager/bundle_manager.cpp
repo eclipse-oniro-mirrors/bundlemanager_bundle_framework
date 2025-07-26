@@ -2020,8 +2020,12 @@ void IsApplicationEnabledComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->isEnable, &result[ARGS_POS_ONE]));
     } else {
-        APP_LOGE("asyncCallbackInfo is null");
-        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
+        if (asyncCallbackInfo->bundleName.empty()) {
+            APP_LOGW("bundleName is empty");
+            result[0] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        } else {
+            result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
+        }
     }
     CommonFunc::NapiReturnDeferred<ApplicationEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
