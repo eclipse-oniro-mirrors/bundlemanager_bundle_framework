@@ -835,41 +835,37 @@ HWTEST_F(BmsInstalldHostTest, HandleSetArkStartupCacheApl_0100, Function | Small
  * @tc.name: test SetCritical_0100
  * @tc.desc: SetCritical_0100
  */
-HWTEST_F(BmsInstalldHostTest, SetCritical_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsInstalldHostTest, BeforeAfterRequest_0100, Function | SmallTest | Level1)
 {
-    InstalldHost installdHost;
-    EXPECT_EQ(installdHost.counter_, 0);
-    installdHost.SetCritical(true);
-    EXPECT_EQ(installdHost.counter_, 1);
-    installdHost.SetCritical(true);
-    EXPECT_EQ(installdHost.counter_, 2);
-    installdHost.SetCritical(false);
-    EXPECT_EQ(installdHost.counter_, 1);
-    installdHost.SetCritical(false);
-    EXPECT_EQ(installdHost.counter_, 0);
-}
+    CriticalManager criticalManager;
+    criticalManager.SetMemMgrStatus(true);
+    criticalManager.counter_ = 0;
+    criticalManager.critical_ = false;
 
-/**
- * @tc.number: SetCriticalDelayed_0100
- * @tc.name: test SetCriticalDelayed_0100
- * @tc.desc: SetCriticalDelayed_0100
- */
-HWTEST_F(BmsInstalldHostTest, SetCriticalDelayed_0100, Function | SmallTest | Level1)
-{
-    InstalldHost installdHost;
-    EXPECT_EQ(installdHost.counter_, 0);
-    installdHost.SetCriticalDelayed(true);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    EXPECT_EQ(installdHost.counter_, 1);
-    installdHost.SetCriticalDelayed(true);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    EXPECT_EQ(installdHost.counter_, 2);
-    installdHost.SetCriticalDelayed(false);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    EXPECT_EQ(installdHost.counter_, 1);
-    installdHost.SetCriticalDelayed(false);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
-    EXPECT_EQ(installdHost.counter_, 0);
+    criticalManager.BeforeRequest();
+    EXPECT_EQ(criticalManager.counter_, 1);
+    EXPECT_TRUE(criticalManager.critical_);
+
+    criticalManager.BeforeRequest();
+    EXPECT_EQ(criticalManager.counter_, 2);
+    EXPECT_TRUE(criticalManager.critical_);
+
+    criticalManager.BeforeRequest();
+    EXPECT_EQ(criticalManager.counter_, 3);
+    EXPECT_TRUE(criticalManager.critical_);
+
+    criticalManager.AfterRequest();
+    EXPECT_EQ(criticalManager.counter_, 2);
+    EXPECT_TRUE(criticalManager.critical_);
+
+    criticalManager.AfterRequest();
+    EXPECT_EQ(criticalManager.counter_, 1);
+    EXPECT_TRUE(criticalManager.critical_);
+
+    criticalManager.AfterRequest();
+    EXPECT_EQ(criticalManager.counter_, 0);
+    std::this_thread::sleep_for(std::chrono::milliseconds(6000));
+    EXPECT_FALSE(criticalManager.critical_);
 }
 
 /**
@@ -880,10 +876,15 @@ HWTEST_F(BmsInstalldHostTest, SetCriticalDelayed_0100, Function | SmallTest | Le
 HWTEST_F(BmsInstalldHostTest, SetMemMgrStatus_0100, Function | SmallTest | Level1)
 {
     InstalldHost installdHost;
-    EXPECT_FALSE(installdHost.memMgrStarted_);
     installdHost.SetMemMgrStatus(true);
-    EXPECT_TRUE(installdHost.memMgrStarted_);
+    EXPECT_TRUE(installdHost.criticalManager_.memMgrStarted_);
     installdHost.SetMemMgrStatus(false);
-    EXPECT_FALSE(installdHost.memMgrStarted_);
+    EXPECT_FALSE(installdHost.criticalManager_.memMgrStarted_);
+
+    CriticalManager criticalManager;
+    criticalManager.SetMemMgrStatus(true);
+    EXPECT_TRUE(criticalManager.memMgrStarted_);
+    criticalManager.SetMemMgrStatus(false);
+    EXPECT_FALSE(criticalManager.memMgrStarted_);
 }
 } // OHOS
