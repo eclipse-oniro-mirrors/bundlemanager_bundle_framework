@@ -131,7 +131,7 @@ const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
     {"shared", BundleType::SHARED},
     {"appService", BundleType::APP_SERVICE_FWK}
 };
-const size_t MAX_QUERYSCHEMES_LENGTH = 50;
+const size_t MAX_QUERYSCHEMES_LENGTH = 200;
 
 const std::unordered_map<std::string, MultiAppModeType> MULTI_APP_MODE_MAP = {
     {"multiInstance", MultiAppModeType::MULTI_INSTANCE},

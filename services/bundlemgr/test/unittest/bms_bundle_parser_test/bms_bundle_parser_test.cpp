@@ -1292,6 +1292,154 @@ const nlohmann::json MODULE_JSON_13 = R"(
     }
 }
 )"_json;
+
+const nlohmann::json MODULE_JSON_14 = R"(
+{
+    "app": {
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0",
+        "bundleType": "atomicService",
+        "appPreloadPhase": "processCreated"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": [
+            "default"
+        ],
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "name": "entry",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark0.0.0.3",
+        "compressNativeLibs": false,
+        "extractNativeLibs": true,
+        "querySchemes": ["scheme1", "scheme2"]
+    }
+}
+)"_json;
+
+const nlohmann::json MODULE_JSON_15 = R"(
+{
+    "app": {
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0",
+        "bundleType": "atomicService",
+        "appPreloadPhase": "processCreated"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "deviceTypes": [
+            "default"
+        ],
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "name": "entry",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark0.0.0.3",
+        "compressNativeLibs": false,
+        "extractNativeLibs": true,
+        "querySchemes": [
+            "scheme1", "scheme2", "scheme3", "scheme4", "scheme5",
+            "scheme6", "scheme7", "scheme8", "scheme9", "scheme10",
+            "scheme11", "scheme12", "scheme13", "scheme14", "scheme15",
+            "scheme16", "scheme17", "scheme18", "scheme19", "scheme20",
+            "scheme21", "scheme22", "scheme23", "scheme24", "scheme25",
+            "scheme26", "scheme27", "scheme28", "scheme29", "scheme30",
+            "scheme31", "scheme32", "scheme33", "scheme34", "scheme35",
+            "scheme36", "scheme37", "scheme38", "scheme39", "scheme40",
+            "scheme41", "scheme42", "scheme43", "scheme44", "scheme45",
+            "scheme46", "scheme47", "scheme48", "scheme49", "scheme50",
+            "scheme51", "scheme52", "scheme53", "scheme54", "scheme55",
+            "scheme56", "scheme57", "scheme58", "scheme59", "scheme60",
+            "scheme61", "scheme62", "scheme63", "scheme64", "scheme65",
+            "scheme66", "scheme67", "scheme68", "scheme69", "scheme70",
+            "scheme71", "scheme72", "scheme73", "scheme74", "scheme75",
+            "scheme76", "scheme77", "scheme78", "scheme79", "scheme80",
+            "scheme81", "scheme82", "scheme83", "scheme84", "scheme85",
+            "scheme86", "scheme87", "scheme88", "scheme89", "scheme90",
+            "scheme91", "scheme92", "scheme93", "scheme94", "scheme95",
+            "scheme96", "scheme97", "scheme98", "scheme99", "scheme100",
+            "scheme101", "scheme102", "scheme103", "scheme104", "scheme105",
+            "scheme106", "scheme107", "scheme108", "scheme109", "scheme110",
+            "scheme111", "scheme112", "scheme113", "scheme114", "scheme115",
+            "scheme116", "scheme117", "scheme118", "scheme119", "scheme120",
+            "scheme121", "scheme122", "scheme123", "scheme124", "scheme125",
+            "scheme126", "scheme127", "scheme128", "scheme129", "scheme130",
+            "scheme131", "scheme132", "scheme133", "scheme134", "scheme135",
+            "scheme136", "scheme137", "scheme138", "scheme139", "scheme140",
+            "scheme141", "scheme142", "scheme143", "scheme144", "scheme145",
+            "scheme146", "scheme147", "scheme148", "scheme149", "scheme150",
+            "scheme151", "scheme152", "scheme153", "scheme154", "scheme155",
+            "scheme156", "scheme157", "scheme158", "scheme159", "scheme160",
+            "scheme161", "scheme162", "scheme163", "scheme164", "scheme165",
+            "scheme166", "scheme167", "scheme168", "scheme169", "scheme170",
+            "scheme171", "scheme172", "scheme173", "scheme174", "scheme175",
+            "scheme176", "scheme177", "scheme178", "scheme179", "scheme180",
+            "scheme181", "scheme182", "scheme183", "scheme184", "scheme185",
+            "scheme186", "scheme187", "scheme188", "scheme189", "scheme190",
+            "scheme191", "scheme192", "scheme193", "scheme194", "scheme195",
+            "scheme196", "scheme197", "scheme198", "scheme199", "scheme200",
+            "scheme201"
+        ]
+    }
+}
+)"_json;
 }  // namespace
 
 class BmsBundleParserTest : public testing::Test {
@@ -4295,6 +4443,46 @@ HWTEST_F(BmsBundleParserTest, ParseAppPreloadPhase_0300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
     EXPECT_EQ(applicationInfo.appPreloadPhase, AppExecFwk::AppPreloadPhase::DEFAULT);
+}
+
+/**
+ * @tc.number: ParseQuerySchemes_0100
+ * @tc.name: parse querySchemes
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleParserTest, ParseQuerySchemes_0100, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_14;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: ParseQuerySchemes_0200
+ * @tc.name: parse querySchemes
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleParserTest, ParseQuerySchemes_0200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_15;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
 }
 
 /**
