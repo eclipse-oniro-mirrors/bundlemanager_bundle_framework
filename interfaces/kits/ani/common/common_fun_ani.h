@@ -561,6 +561,75 @@ public:
     }
 
     template<typename valueType>
+    static bool CallGetFieldOptional(ani_env *env, ani_object object, const char *name, valueType* value)
+    {
+        RETURN_FALSE_IF_NULL(env);
+        RETURN_FALSE_IF_NULL(object);
+
+        ani_ref ref = nullptr;
+        ani_status status = env->Object_GetFieldByName_Ref(object, name, &ref);
+        if (status != ANI_OK) {
+            APP_LOGE("Class_FindField %{public}s failed %{public}d", name, status);
+            return false;
+        }
+
+        ani_boolean isUndefined;
+        status = env->Reference_IsUndefined(ref, &isUndefined);
+        if (status != ANI_OK) {
+            APP_LOGE("Reference_IsUndefined %{public}s failed %{public}d", name, status);
+            return false;
+        }
+        if (isUndefined) {
+            return false;
+        }
+
+        if constexpr (std::is_pointer_v<valueType> && std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
+            *value = reinterpret_cast<valueType>(ref);
+        } else {
+            status = ANI_ERROR;
+            if constexpr (std::is_same_v<valueType, ani_int>) {
+                ani_int i = 0;
+                status = env->Object_CallMethodByName_Int(
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":I", &i);
+                if (status != ANI_OK) {
+                    APP_LOGE("Object_CallMethodByName_Int %{public}s failed %{public}d", name, status);
+                    return false;
+                }
+                if (!TryCastTo(i, value)) {
+                    APP_LOGE("TryCastTo %{public}s failed", name);
+                    return false;
+                }
+                return true;
+            } else {
+                APP_LOGE("Object_CallMethodByName %{public}s Unsupported", name);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template<typename valueType>
+    static bool CallSetField(ani_env *env, ani_class cls, ani_object object, const char *name, valueType* value)
+    {
+        RETURN_FALSE_IF_NULL(env);
+        RETURN_FALSE_IF_NULL(cls);
+
+        ani_field field = nullptr;
+        ani_status status = env->Class_FindField(cls, name, &field);
+        if (status != ANI_OK) {
+            APP_LOGE("Class_FindField %{public}s failed %{public}d", name, status);
+            return false;
+        }
+        status = env->Object_SetField_Ref(object, field, value);
+        if (status != ANI_OK) {
+            APP_LOGE("Object_SetField_Ref %{public}s failed %{public}d", name, status);
+            return false;
+        }
+        return true;
+    }
+
+    template<typename valueType>
     static bool CallSetter(ani_env* env, ani_class cls, ani_object object, const char* propertyName, valueType value,
         const char* valueClassName = nullptr)
     {

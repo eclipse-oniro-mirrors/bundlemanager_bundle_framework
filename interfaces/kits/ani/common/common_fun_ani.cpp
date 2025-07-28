@@ -2723,44 +2723,44 @@ ani_object CommonFunAni::ConvertWantInfo(ani_env* env, const Want& want)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_WANT);
+    ani_class cls = CreateClassByName(env, CLASSNAME_WANT);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CommonFunAni::CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, cls);
     RETURN_NULL_IF_NULL(object);
 
     // bundleName?: string
     ani_string string = nullptr;
-    if (CommonFunAni::StringToAniStr(env, want.GetElement().GetBundleName(), string)) {
-        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    if (StringToAniStr(env, want.GetElement().GetBundleName(), string)) {
+        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
     }
 
     // abilityName?: string
-    if (CommonFunAni::StringToAniStr(env, want.GetElement().GetAbilityName(), string)) {
-        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_ABILITYNAME, string));
+    if (StringToAniStr(env, want.GetElement().GetAbilityName(), string)) {
+        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_ABILITYNAME, string));
     }
 
     // deviceId?: string
-    if (CommonFunAni::StringToAniStr(env, want.GetElement().GetDeviceID(), string)) {
-        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_DEVICEID, string));
+    if (StringToAniStr(env, want.GetElement().GetDeviceID(), string)) {
+        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_DEVICEID, string));
     }
 
     // action?: string
-    if (CommonFunAni::StringToAniStr(env, want.GetAction(), string)) {
-        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_ACTION, string));
+    if (StringToAniStr(env, want.GetAction(), string)) {
+        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_ACTION, string));
     }
 
     // entities?: Array<string>
     auto entities = want.GetEntities();
     if (entities.size() > 0) {
-        ani_object aEntities = CommonFunAni::ConvertAniArrayString(env, entities);
+        ani_object aEntities = ConvertAniArrayString(env, entities);
         RETURN_NULL_IF_NULL(aEntities);
-        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_ENTITIES, aEntities));
+        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_ENTITIES, aEntities));
     }
 
     // moduleName?: string
-    if (CommonFunAni::StringToAniStr(env, want.GetElement().GetModuleName(), string)) {
-        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterOptional(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    if (StringToAniStr(env, want.GetElement().GetModuleName(), string)) {
+        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_MODULENAME, string));
     }
 
     return object;
@@ -3122,7 +3122,6 @@ bool CommonFunAni::ParseResource(ani_env* env, ani_object object, Resource& reso
     RETURN_FALSE_IF_NULL(object);
 
     ani_string string = nullptr;
-    ani_double doubleValue = 0;
 
     // bundleName: string
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
@@ -3132,12 +3131,10 @@ bool CommonFunAni::ParseResource(ani_env* env, ani_object object, Resource& reso
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MODULENAME, &string));
     resource.moduleName = AniStrToString(env, string);
 
-    // id: number
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ID, &doubleValue));
-    if (!TryCastTo(doubleValue, &resource.id)) {
-        APP_LOGE("Parse id failed");
-        return false;
-    }
+    // id: long
+    ani_long longValue = 0;
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ID, &longValue));
+    resource.id = longValue;
 
     return true;
 }
