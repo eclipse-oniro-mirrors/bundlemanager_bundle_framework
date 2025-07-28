@@ -694,7 +694,7 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGE("appId %{public}s invalid", asyncCallbackInfo->bundleName.c_str());
+                APP_LOGW("appId %{public}s invalid", asyncCallbackInfo->bundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
@@ -3921,7 +3921,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGE("appId %{public}s invalid", asyncCallbackInfo->bundleName.c_str());
+                APP_LOGW("appId %{public}s invalid", asyncCallbackInfo->bundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
@@ -4204,13 +4204,13 @@ napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGE("appId %{public}s invalid", asyncCallbackInfo->bundleName.c_str());
+                APP_LOGW("appId %{public}s invalid", asyncCallbackInfo->bundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->moduleName)) {
-                APP_LOGE("appId %{public}s invalid", asyncCallbackInfo->moduleName.c_str());
+                APP_LOGW("appId %{public}s invalid", asyncCallbackInfo->moduleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
                 return nullptr;
             }

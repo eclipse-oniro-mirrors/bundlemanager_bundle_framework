@@ -699,7 +699,7 @@ ErrCode BundleMgrHostImpl::GetNameAndIndexForUid(const int uid, std::string &bun
         return false;
     }();
     if (!permissionVerify) {
-        APP_LOGE("verify permission failed");
+        APP_LOGW("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -2970,7 +2970,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const int32
     (void)dataMgr->QueryExtensionAbilityInfos(want, flag, userId, extensionInfos);
     dataMgr->QueryAllCloneExtensionInfos(want, flag, userId, extensionInfos);
     if (extensionInfos.empty()) {
-        LOG_E(BMS_TAG_QUERY, "no valid extension info can be inquired");
+        LOG_W(BMS_TAG_QUERY, "no valid extension info can be inquired");
         return false;
     }
     return true;
@@ -3005,7 +3005,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_
             LOG_E(BMS_TAG_QUERY, "query extension ability fail, %{public}d", ret);
             return ret;
         }
-        LOG_E(BMS_TAG_QUERY, "no valid extension info can be inquired");
+        LOG_W(BMS_TAG_QUERY, "no valid extension info can be inquired");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
@@ -3044,7 +3044,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const Exten
         }
     });
     if (extensionInfos.empty()) {
-        LOG_E(BMS_TAG_QUERY, "no valid extension info can be inquired");
+        LOG_W(BMS_TAG_QUERY, "no valid extension info can be inquired");
         return false;
     }
     return true;
@@ -3085,7 +3085,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, const 
             LOG_E(BMS_TAG_QUERY, "query extension ability fail, %{public}d", ret);
             return ret;
         }
-        LOG_E(BMS_TAG_QUERY, "no valid extension info can be inquired");
+        LOG_W(BMS_TAG_QUERY, "no valid extension info can be inquired");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
@@ -3118,7 +3118,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const ExtensionAbilityType &e
     }
 
     if (extensionInfos.empty()) {
-        LOG_E(BMS_TAG_QUERY, "no valid extension info can be inquired");
+        LOG_W(BMS_TAG_QUERY, "no valid extension info can be inquired");
         return false;
     }
     return true;
@@ -4418,7 +4418,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &wa
         });
     }
     if (extensionInfos.empty()) {
-        LOG_E(BMS_TAG_QUERY, "No valid extension info can be inquired");
+        LOG_W(BMS_TAG_QUERY, "No valid extension info can be inquired");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
@@ -4465,7 +4465,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosOnlyWithTypeName(const std:
         }
     });
     if (extensionInfos.empty()) {
-        APP_LOGE("No valid extension info can be inquired");
+        APP_LOGW("No valid extension info can be inquired");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
@@ -5161,7 +5161,7 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
     }
     auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
     if (res != ERR_OK) {
-        APP_LOGE_NOFUNC("GetCloneBundleInfo fail -n %{public}s -u %{public}d -i %{public}d -f %{public}d"
+        APP_LOGW_NOFUNC("GetCloneBundleInfo fail -n %{public}s -u %{public}d -i %{public}d -f %{public}d"
             " err:%{public}d", bundleName.c_str(), userId, appIndex, flags, res);
         return res;
     }

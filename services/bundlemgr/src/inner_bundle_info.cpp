@@ -2319,7 +2319,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
+        LOG_W(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
         return;
     }
 
@@ -2385,7 +2385,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
+        LOG_W(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
@@ -2462,7 +2462,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
+        LOG_W(BMS_TAG_QUERY, "can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
             userId, GetBundleName().c_str());
         return false;
     }
@@ -2524,7 +2524,7 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when GetBundleInfo", userId);
+        LOG_W(BMS_TAG_QUERY, "can not find userId %{public}d when GetBundleInfo", userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
@@ -2619,7 +2619,7 @@ void InnerBundleInfo::GetBundleWithReqPermissionsV9(
         const std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = innerBundleUserInfo.cloneInfos;
         std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
         if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
-            LOG_E(BMS_TAG_QUERY,
+            LOG_W(BMS_TAG_QUERY,
                 "can not find userId %{public}d, appIndex %{public}d when get applicationInfo", userId, appIndex);
             return;
         }
@@ -3117,7 +3117,7 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
         auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
         if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
             != disabledAbilities.end()) {
-            APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+            APP_LOGW_NOFUNC("-n %{public}s -a %{public}s disabled",
                 abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
             return false;
         } else {
@@ -3134,7 +3134,7 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
     auto disabledAbilities = mpCloneInfos.at(appIndexKey).disabledAbilities;
     if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
         != disabledAbilities.end()) {
-        APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+        APP_LOGW_NOFUNC("-n %{public}s -a %{public}s disabled",
             abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
         return false;
     } else {
@@ -3256,7 +3256,7 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
         auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
         if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
             != disabledAbilities.end()) {
-            APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+            APP_LOGW_NOFUNC("-n %{public}s -a %{public}s disabled",
                 abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
             isEnable = false;
         } else {
@@ -3273,7 +3273,7 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
     auto disabledAbilities = mpCloneInfos.at(appIndexKey).disabledAbilities;
     if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
         != disabledAbilities.end()) {
-        APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+        APP_LOGW_NOFUNC("-n %{public}s -a %{public}s disabled",
             abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
         isEnable = false;
     } else {

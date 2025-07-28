@@ -573,7 +573,7 @@ ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, Bu
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
         BundleMgrInterfaceCode::GET_DEPENDENT_BUNDLE_INFO, data, bundleInfo);
     if (res != ERR_OK) {
-        APP_LOGE("GetDependentBundleInfo failed -n %{public}s code: %{public}d", bundleName.c_str(), res);
+        APP_LOGW("GetDependentBundleInfo failed -n %{public}s code: %{public}d", bundleName.c_str(), res);
         return res;
     }
     return ERR_OK;

@@ -122,7 +122,7 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
-                APP_LOGE("appId invalid");
+                APP_LOGW("appId invalid");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
@@ -252,7 +252,7 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
-                APP_LOGE("appId invalid");
+                APP_LOGW("appId invalid");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
@@ -598,7 +598,7 @@ bool ParseDisposedRuleConfiguration(napi_env env, napi_value nDisposedRuleConfig
     napi_get_named_property(env, nDisposedRuleConfiguration, "appId", &prop);
     std::string appId;
     if (!CommonFunc::ParseString(env, prop, appId)) {
-        APP_LOGE("appId invalid");
+        APP_LOGW("appId invalid");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return false;
     }

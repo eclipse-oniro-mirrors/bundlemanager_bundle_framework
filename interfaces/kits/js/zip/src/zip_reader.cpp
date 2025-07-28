@@ -199,7 +199,7 @@ bool ZipReader::ExtractEntry(WriterDelegate *delegate, const unzFile &zipFile, u
     }
     const int openResult = unzOpenCurrentFile(zipFile);
     if (openResult != UNZ_OK) {
-        APP_LOGE("unzOpen err %{public}d", openResult);
+        APP_LOGW("unzOpen err %{public}d", openResult);
         return false;
     }
     auto buf = std::make_unique<char[]>(kZipBufSize);
