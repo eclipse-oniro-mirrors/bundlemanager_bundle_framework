@@ -5992,11 +5992,11 @@ bool BundleMgrHostImpl::GetCallingInfo(int32_t callingUid, std::string &callingB
 bool BundleMgrHostImpl::SendQueryBundleInfoEvent(EventInfo &query, int32_t intervalTime, bool reportNow)
 {
     if (std::find(QUERY_EXPECTED_ERR.begin(), QUERY_EXPECTED_ERR.end(), query.errCode) != QUERY_EXPECTED_ERR.end()) {
-        APP_LOGW("No need report for -e:%{public}d", query.errCode);
+        APP_LOGD("No need report for -e:%{public}d", query.errCode);
         return false;
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    APP_LOGI("start, -f:%{public}d, -c:%{public}d, -e:%{public}d",
+    APP_LOGD("start, -f:%{public}d, -c:%{public}d, -e:%{public}d",
         query.funcIdList.front(), callingUid, query.errCode);
     // get calling bundle info
     std::string callingBundleName = Constants::EMPTY_STRING;
@@ -6008,19 +6008,19 @@ bool BundleMgrHostImpl::SendQueryBundleInfoEvent(EventInfo &query, int32_t inter
     // check report now
     if (reportNow) {
         EventReport::SendSystemEvent(BMSEventType::QUERY_BUNDLE_INFO, query);
-        APP_LOGI("SendSystemEvent now");
+        APP_LOGD("SendSystemEvent now");
         return true;
     }
 
     if (CheckNeedAddEvent(query, MAX_QUERY_EVENT_REPORT_ONCE)) {
-        APP_LOGI("only add record for: %{public}d", query.errCode);
+        APP_LOGD("only add record for: %{public}d", query.errCode);
         return false;
     }
 
     EventInfo reportInfo = GetQueryEventInfo(query.errCode);
     if (reportInfo.bundleNameList.size() >= MAX_QUERY_EVENT_REPORT_ONCE ||
         (BundleUtil::GetCurrentTime() - reportInfo.lastReportEventTime) >= intervalTime) {
-        APP_LOGI("SendSystemEvent for :%{public}d", reportInfo.errCode);
+        APP_LOGD("SendSystemEvent for :%{public}d", reportInfo.errCode);
         EventReport::SendSystemEvent(BMSEventType::QUERY_BUNDLE_INFO, reportInfo);
         EraseQueryEventInfo(reportInfo.errCode);
         return true;
