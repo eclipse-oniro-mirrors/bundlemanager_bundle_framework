@@ -185,7 +185,8 @@ void GenerateSignatureInfo(FuzzedDataProvider& fdp, SignatureInfo &signatureInfo
     signatureInfo.certificate = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
 }
 
-void GenerateAbilityInfo(FuzzedDataProvider& fdp, AbilityInfo &abilityInfo)
+template<typename T>
+void GenerateAbilityInfo(FuzzedDataProvider& fdp, T &abilityInfo)
 {
     abilityInfo.visible = fdp.ConsumeBool();
     abilityInfo.isLauncherAbility = fdp.ConsumeBool();

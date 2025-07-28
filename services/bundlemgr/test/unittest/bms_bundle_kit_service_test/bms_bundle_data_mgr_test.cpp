@@ -408,7 +408,7 @@ public:
         const std::string &bundleName, const std::vector<std::string> &moduleNameList, const std::string &abilityName,
         bool userDataClearable = true, bool isSystemApp = false) const;
     void MockUninstallBundle(const std::string &bundleName) const;
-    AbilityInfo MockAbilityInfo(
+    InnerAbilityInfo MockAbilityInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
     InnerExtensionInfo MockExtensionInfo(
         const std::string &bundleName, const std::string &module, const std::string &extensionName) const;
@@ -601,9 +601,9 @@ void BmsBundleDataMgrTest::MockInstallBundle(
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     moduleInfo.entryAbilityKey = keyName;
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
@@ -712,8 +712,8 @@ void BmsBundleDataMgrTest::MockInstallBundle(
     for (const auto &moduleName : moduleNameList) {
         InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
         std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-        AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
-        innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+        InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+        innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
         innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
         Skill skill;
         skill.actions = {ACTION};
@@ -843,10 +843,10 @@ void BmsBundleDataMgrTest::MockUninstallBundle(const std::string &bundleName) co
     EXPECT_TRUE(finishRet);
 }
 
-AbilityInfo BmsBundleDataMgrTest::MockAbilityInfo(
+InnerAbilityInfo BmsBundleDataMgrTest::MockAbilityInfo(
     const std::string &bundleName, const std::string &moduleName, const std::string &abilityName) const
 {
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo abilityInfo;
     abilityInfo.package = PACKAGE_NAME;
     abilityInfo.name = abilityName;
     abilityInfo.bundleName = bundleName;
@@ -912,9 +912,9 @@ void BmsBundleDataMgrTest::MockInnerBundleInfo(const std::string &bundleName, co
     moduleInfo.description = BUNDLE_DESCRIPTION;
     moduleInfo.dependencies = dependencies;
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
 }
 
@@ -933,9 +933,9 @@ void BmsBundleDataMgrTest::MockInnerBundleInfo(const std::string &bundleName, co
     moduleInfo.description = BUNDLE_DESCRIPTION;
     moduleInfo.distro.moduleType = param.moduleType;
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
 }
 

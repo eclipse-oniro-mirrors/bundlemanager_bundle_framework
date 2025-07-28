@@ -53,7 +53,7 @@ namespace OHOS {
         bundleMgrProxy.SetApplicationEnabled(bundleName, isEnable, userId);
 
         AbilityInfo abilityInfo;
-        GenerateAbilityInfo(fdp, abilityInfo);
+        GenerateAbilityInfo<AbilityInfo>(fdp, abilityInfo);
         bundleMgrProxy.IsAbilityEnabled(abilityInfo, isEnable);
         bundleMgrProxy.SetAbilityEnabled(abilityInfo, isEnable, reinterpret_cast<uintptr_t>(data));
 

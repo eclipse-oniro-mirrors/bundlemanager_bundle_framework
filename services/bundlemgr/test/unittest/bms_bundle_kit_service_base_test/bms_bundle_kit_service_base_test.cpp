@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -117,7 +117,7 @@ public:
         bool userDataClearable, bool isSystemApp) const;
     void MockUninstallBundle(const std::string &bundleName) const;
     InnerModuleInfo MockModuleInfo(const std::string &moduleName) const;
-    AbilityInfo MockAbilityInfo(
+    InnerAbilityInfo MockAbilityInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
     std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     void SaveToDatabase(const std::string &bundleName, InnerBundleInfo &innerBundleInfo,
@@ -172,9 +172,9 @@ void BmsBundleKitServiceBaseTest::MockInstallBundle(
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + PATH_REGEX_002 + moduleName + PATH_REGEX_002 + abilityName;
     moduleInfo.entryAbilityKey = keyName;
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
@@ -185,10 +185,10 @@ void BmsBundleKitServiceBaseTest::MockInstallBundle(
     SaveToDatabase(bundleName, innerBundleInfo, userDataClearable, isSystemApp);
 }
 
-AbilityInfo BmsBundleKitServiceBaseTest::MockAbilityInfo(
+InnerAbilityInfo BmsBundleKitServiceBaseTest::MockAbilityInfo(
     const std::string &bundleName, const std::string &moduleName, const std::string &abilityName) const
 {
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo abilityInfo;
     abilityInfo.package = PACKAGE_NAME;
     abilityInfo.name = abilityName;
     abilityInfo.bundleName = bundleName;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1370,9 +1370,9 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0023, Function | Smal
     auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     InnerBundleInfo innerBundleInfo;
     std::string key = "key";
-    AbilityInfo abilityInfo;
-    abilityInfo.name = "abilityName";
-    innerBundleInfo.InsertAbilitiesInfo(key, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = "abilityName";
+    innerBundleInfo.InsertAbilitiesInfo(key, innerAbilityInfo);
 
     Want want;
     ElementName name;

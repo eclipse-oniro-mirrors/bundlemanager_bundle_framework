@@ -389,7 +389,7 @@ public:
         const std::string &bundleName, const std::vector<std::string> &moduleNameList, const std::string &abilityName,
         bool userDataClearable = true, bool isSystemApp = false) const;
     void MockUninstallBundle(const std::string &bundleName) const;
-    AbilityInfo MockAbilityInfo(
+    InnerAbilityInfo MockAbilityInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
     InnerExtensionInfo MockExtensionInfo(
         const std::string &bundleName, const std::string &module, const std::string &extensionName) const;
@@ -581,9 +581,9 @@ void BmsBundleDataMgrTest3::MockInstallBundle(
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     moduleInfo.entryAbilityKey = keyName;
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
@@ -692,8 +692,8 @@ void BmsBundleDataMgrTest3::MockInstallBundle(
     for (const auto &moduleName : moduleNameList) {
         InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
         std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-        AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
-        innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+        InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+        innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
         innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
         Skill skill;
         skill.actions = {ACTION};
@@ -817,10 +817,10 @@ void BmsBundleDataMgrTest3::MockUninstallBundle(const std::string &bundleName) c
     EXPECT_TRUE(finishRet);
 }
 
-AbilityInfo BmsBundleDataMgrTest3::MockAbilityInfo(
+InnerAbilityInfo BmsBundleDataMgrTest3::MockAbilityInfo(
     const std::string &bundleName, const std::string &moduleName, const std::string &abilityName) const
 {
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo abilityInfo;
     abilityInfo.package = PACKAGE_NAME;
     abilityInfo.name = abilityName;
     abilityInfo.bundleName = bundleName;
@@ -886,9 +886,9 @@ void BmsBundleDataMgrTest3::MockInnerBundleInfo(const std::string &bundleName, c
     moduleInfo.description = BUNDLE_DESCRIPTION;
     moduleInfo.dependencies = dependencies;
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
 }
 
@@ -907,9 +907,9 @@ void BmsBundleDataMgrTest3::MockInnerBundleInfo(const std::string &bundleName, c
     moduleInfo.description = BUNDLE_DESCRIPTION;
     moduleInfo.distro.moduleType = param.moduleType;
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
 }
 
@@ -1296,9 +1296,9 @@ HWTEST_F(BmsBundleDataMgrTest3, GetModuleName_0100, Function | MediumTest | Leve
     std::string abilityName = ABILITY_NAME_TEST;
     want.SetElementName(bundleName, abilityName);
     std::string targetModuleName = MODULE_NAME1;
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, targetModuleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, targetModuleName, abilityName);
     std::string keyName = bundleName + "." + targetModuleName + "." + abilityName;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     res = bundleConnectAbility->GetModuleName(innerBundleInfo, want, moduleName);
     EXPECT_EQ(moduleName, targetModuleName);
     EXPECT_EQ(res, true);
@@ -1395,7 +1395,7 @@ HWTEST_F(BmsBundleDataMgrTest3, ConnectQueryAbilityInfo_0100, Function | MediumT
     std::string bundleName = BUNDLE_NAME_TEST;
     std::string abilityName = ABILITY_NAME_TEST;
     std::string moduleName = MODULE_NAME1;
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    AbilityInfo abilityInfo;
     IBundleEventCallbackTest iBundleEventCallback;
     sptr<IRemoteObject> callBack = iBundleEventCallback.AsObject();
     bool abilityInfoResult = bundleConnectAbility->QueryAbilityInfo(want, flags, USERID, abilityInfo, callBack);
@@ -1425,9 +1425,9 @@ HWTEST_F(BmsBundleDataMgrTest3, GetTargetAbilityInfo_0100, Function | MediumTest
     std::string abilityName = ABILITY_NAME_TEST;
     want.SetElementName(bundleName, abilityName);
     std::string moduleName = MODULE_NAME1;
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     bundleConnectAbility->GetTargetAbilityInfo(want, USERID, innerBundleInfo, targetAbilityInfo);
     EXPECT_EQ(targetAbilityInfo->targetInfo.callingAppType, CALLING_TYPE_HARMONY_VALUE);
 }
@@ -1574,9 +1574,9 @@ HWTEST_F(BmsBundleDataMgrTest3, CheckIsModuleNeedUpdate_0100, Function | MediumT
     std::string abilityName = ABILITY_NAME_TEST;
     want.SetElementName(bundleName, abilityName);
     std::string moduleName = MODULE_NAME1;
-    AbilityInfo abilityInfoExt = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfoExt);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     bool isModuleNeedUpdate = bundleConnectAbility->CheckIsModuleNeedUpdate(innerBundleInfo, want, USERID, callBack);
     EXPECT_EQ(isModuleNeedUpdate, false);
 }

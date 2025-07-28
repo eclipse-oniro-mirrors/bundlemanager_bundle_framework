@@ -306,7 +306,7 @@ public:
         const std::string &bundleName, const std::vector<std::string> &moduleNameList, const std::string &abilityName,
         bool userDataClearable = true, bool isSystemApp = false) const;
     void MockUninstallBundle(const std::string &bundleName) const;
-    AbilityInfo MockAbilityInfo(
+    InnerAbilityInfo MockAbilityInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
     InnerExtensionInfo MockExtensionInfo(
         const std::string &bundleName, const std::string &module, const std::string &extensionName) const;
@@ -712,9 +712,9 @@ void BmsBundleKitServiceTest::MockInstallBundle(
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     moduleInfo.entryAbilityKey = keyName;
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
@@ -843,8 +843,8 @@ void BmsBundleKitServiceTest::MockInstallBundle(
     for (const auto &moduleName : moduleNameList) {
         InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
         std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-        AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
-        innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+        InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+        innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
         innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
         Skill skill;
         skill.actions = {ACTION};
@@ -1015,10 +1015,10 @@ Skill BmsBundleKitServiceTest::MockExtensionSkillInfo() const
     return skillForExtension;
 }
 
-AbilityInfo BmsBundleKitServiceTest::MockAbilityInfo(
+InnerAbilityInfo BmsBundleKitServiceTest::MockAbilityInfo(
     const std::string &bundleName, const std::string &moduleName, const std::string &abilityName) const
 {
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo abilityInfo;
     abilityInfo.package = PACKAGE_NAME;
     abilityInfo.name = abilityName;
     abilityInfo.bundleName = bundleName;
@@ -1090,9 +1090,9 @@ void BmsBundleKitServiceTest::MockInnerBundleInfo(const std::string &bundleName,
     moduleInfo.description = BUNDLE_DESCRIPTION;
     moduleInfo.dependencies = dependencies;
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
 }
 
@@ -3825,9 +3825,9 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0001, Function | S
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = true;
     std::string keyName = ServiceConstants::APP_DETAIL_ABILITY;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
 
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
@@ -3866,9 +3866,9 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0003, Function | S
     std::vector<Skill> skills;
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
-    AbilityInfo abilityInfo;
-    abilityInfo.type = AbilityType::PAGE;
-    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, innerAbilityInfo);
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
@@ -3905,9 +3905,9 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0005, Function | S
     std::vector<Skill> skills;
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
-    AbilityInfo abilityInfo;
-    abilityInfo.type = AbilityType::DATA;
-    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.type = AbilityType::DATA;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, innerAbilityInfo);
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
     EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
@@ -3929,12 +3929,12 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0006, Function | S
     std::vector<Skill> skills;
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
-    AbilityInfo abilityInfo;
-    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, innerAbilityInfo);
 
-    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
-    abilityInfo.type = AbilityType::PAGE;
-    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    innerAbilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    innerAbilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, innerAbilityInfo);
 
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
@@ -3951,12 +3951,12 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0007, Function | S
 {
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->needAppDetail = false;
-    AbilityInfo abilityInfo;
-    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, innerAbilityInfo);
 
-    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
-    abilityInfo.type = AbilityType::PAGE;
-    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    innerAbilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    innerAbilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, innerAbilityInfo);
 
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
@@ -3973,12 +3973,12 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0008, Function | S
 {
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
-    AbilityInfo abilityInfo;
-    innerBundleInfo.InsertAbilitiesInfo(ABILITY_NAME, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerBundleInfo.InsertAbilitiesInfo(ABILITY_NAME, innerAbilityInfo);
 
-    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
-    abilityInfo.type = AbilityType::PAGE;
-    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    innerAbilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    innerAbilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, innerAbilityInfo);
 
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);

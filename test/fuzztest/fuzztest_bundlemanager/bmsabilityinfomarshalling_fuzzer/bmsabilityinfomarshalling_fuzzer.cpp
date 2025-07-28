@@ -29,7 +29,7 @@ namespace OHOS {
         Parcel dataMessageParcel;
         AbilityInfo abilityInfo;
         FuzzedDataProvider fdp(data, size);
-        GenerateAbilityInfo(fdp, abilityInfo);
+        GenerateAbilityInfo<AbilityInfo>(fdp, abilityInfo);
         if (dataMessageParcel.WriteBuffer(data, size)) {
             bool marshallingRes = abilityInfo.Marshalling(dataMessageParcel);
             return marshallingRes;

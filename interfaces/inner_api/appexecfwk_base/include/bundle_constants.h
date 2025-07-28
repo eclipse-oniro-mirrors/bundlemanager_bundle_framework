@@ -220,6 +220,8 @@ inline constexpr const char* DATA_GROUP_IDS = "dataGroupIds";
 inline constexpr const char* VALID_DATA_GROUP_IDS = "validDataGroupIds";
 inline constexpr const char* CUSTOM_PROCESS = "customProcess";
 inline constexpr const char* ISOLATION_PROCESS = "isolationProcess";
+inline constexpr const char* SRC_LANGUAGE_JS = "js";
+inline constexpr const char* PREFER_MULTI_WINDOW_ORIENTATION_DEFAULT = "default";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

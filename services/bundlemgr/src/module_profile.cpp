@@ -2355,7 +2355,7 @@ bool ToAbilityInfo(
     const Profile::ModuleJson &moduleJson,
     const Profile::Ability &ability,
     const TransformParam &transformParam,
-    AbilityInfo &abilityInfo)
+    InnerAbilityInfo &abilityInfo)
 {
     APP_LOGD("transform ModuleJson to AbilityInfo");
     abilityInfo.name = ability.name;
@@ -2438,7 +2438,7 @@ bool ToAbilityInfo(
     return true;
 }
 
-void ToAbilitySkills(const std::vector<Skill> &skills, AbilityInfo &abilityInfo)
+void ToAbilitySkills(const std::vector<Skill> &skills, InnerAbilityInfo &abilityInfo)
 {
     for (const Skill &skill : skills) {
         abilityInfo.skills.push_back(skill);
@@ -2700,7 +2700,7 @@ bool ToInnerBundleInfo(
     };
     bool findEntry = false;
     for (const Profile::Ability &ability : moduleJson.module.abilities) {
-        AbilityInfo abilityInfo;
+        InnerAbilityInfo abilityInfo;
         bool isMainElement = false;
         ToAbilityInfo(moduleJson, ability, transformParam, abilityInfo);
         if (innerModuleInfo.mainAbility == abilityInfo.name) {
