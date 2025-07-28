@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,35 +28,20 @@ export default class MainAbility extends Ability {
         var want1 = {bundleName: 'com.example.otaupdatetest111'};
 
         try {
-            appControl.setDisposedStatusSync(appId, want1)
-                .then(() => {
-                    console.info('[LPCDemo] setDisposedStatusSync success');
-                }).catch((error) => {
-                    console.error('[LPCDemo] setDisposedStatusSync failed ' + error.message);
-                });
+            appControl.setDisposedStatusSync(appId, want1);
         } catch (error) {
             console.error('[LPCDemo] setDisposedStatusSync failed ' + error.message);
         }
 
         try {
-            appControl.deleteDisposedStatusSync(appId)
-                .then(() => {
-                    console.info('[LPCDemo] deleteDisposedStatusSync success');
-                }).catch((error) => {
-                    console.error('[LPCDemo] deleteDisposedStatusSync failed ' + error.message);
-                });
+            appControl.deleteDisposedStatusSync(appId);
         } catch (error) {
             console.error('[LPCDemo] deleteDisposedStatusSync failed ' + error.message);
         }
 
         var data;
         try {
-            appControl.getDisposedStatusSync(appId)
-                .then((data) => {
-                    console.info('[LPCDemo] getDisposedStatusSync success. DisposedStatus: ' + JSON.stringify(data));
-                }).catch((error) => {
-                    console.error('[LPCDemo] getDisposedStatusSync failed ' + error.message);
-                });
+            appControl.getDisposedStatusSync(appId);
         } catch (error) {
             console.error('[LPCDemo] getDisposedStatusSync failed ' + error.message);
         }
