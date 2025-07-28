@@ -552,6 +552,10 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
     int32_t userId = data.ReadInt32();
     std::unordered_map<std::string, int32_t> uidMap;
     int32_t uidMapSize = data.ReadInt32();
+    if (uidMapSize < 0 || uidMapSize > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        LOG_E(BMS_TAG_INSTALLD, "param invalid");
+        return false;
+    }
     for (int32_t i = 0; i < uidMapSize; ++i) {
         std::string bundleName = Str16ToStr8(data.ReadString16());
         int32_t uids = data.ReadInt32();
