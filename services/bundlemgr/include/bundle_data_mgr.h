@@ -142,6 +142,7 @@ public:
     bool UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     void UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
+    bool UpdateEl5KeyId(const CreateDirParam &el5Param, const std::string keyId, bool needSaveStorage = true);
     /**
      * @brief Get an InnerBundleInfo if exist (will change the status to DISABLED).
      * @param bundleName Indicates the bundle name.
@@ -1257,7 +1258,7 @@ private:
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;
     void InnerCreateEl5Dir(const CreateDirParam &el5Param);
     void SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSaveStorage);
-    void SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleInfo &info);
+    void SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleInfo &info, std::string &keyId);
 
     void FilterExtensionAbilityInfosByModuleName(const std::string &moduleName,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;

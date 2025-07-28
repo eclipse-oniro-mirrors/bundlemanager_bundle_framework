@@ -7395,6 +7395,30 @@ bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo
     return true;
 }
 
+bool BundleDataMgr::UpdateEl5KeyId(const CreateDirParam &el5Param, const std::string keyId, bool needSaveStorage)
+{
+    if (el5Param.bundleName.empty()) {
+        APP_LOGW("UpdateEl5KeyId failed, empty bundle name");
+        return false;
+    }
+    APP_LOGD("UpdateEl5KeyId:%{public}s", el5Param.bundleName.c_str());
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(el5Param.bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("bundle:%{public}s info is not existed", el5Param.bundleName.c_str());
+        return false;
+    }
+    std::string oldKeyId = infoItem->second.GetKeyId(el5Param.userId, el5Param.appIndex);
+    infoItem->second.SetkeyId(el5Param.userId, keyId, el5Param.appIndex);
+
+    if (needSaveStorage && !dataStorage_->SaveStorageBundleInfo(infoItem->second)) {
+        APP_LOGE("to update InnerBundleInfo:%{public}s failed", el5Param.bundleName.c_str());
+        infoItem->second.InnerSetKeyId(el5Param.userId, oldKeyId, el5Param.appIndex);
+        return false;
+    }
+    return true;
+}
+
 bool BundleDataMgr::QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
 {
     APP_LOGD("start to query overlay innerBundleInfo");
@@ -9201,7 +9225,9 @@ void BundleDataMgr::CreateEl5DirNoCache(const std::vector<CreateDirParam> &el5Pa
         APP_LOGI("-n %{public}s -u %{public}d -i %{public}d",
             el5Param.bundleName.c_str(), el5Param.userId, el5Param.appIndex);
         InnerCreateEl5Dir(el5Param);
-        SetEl5DirPolicy(el5Param, info);
+        std::string keyId = "";
+        SetEl5DirPolicy(el5Param, info, keyId);
+        info.SetkeyId(el5Param.userId, keyId, el5Param.appIndex);
     }
 }
 
@@ -9266,17 +9292,17 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, bool needSav
         LOG_E(BMS_TAG_INSTALLER, "get bundle %{public}s failed", el5Param.bundleName.c_str());
         return;
     }
-    SetEl5DirPolicy(el5Param, info);
-    if (!UpdateInnerBundleInfo(info, needSaveStorage)) {
+    std::string keyId = "";
+    SetEl5DirPolicy(el5Param, info, keyId);
+    if (!UpdateEl5KeyId(el5Param, keyId, needSaveStorage)) {
         LOG_E(BMS_TAG_INSTALLER, "save keyId failed");
     }
 }
 
-void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleInfo &info)
+void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleInfo &info, std::string &keyId)
 {
     int32_t uid = el5Param.uid;
     std::string bundleName = info.GetBundleName();
-    std::string keyId = "";
     if (el5Param.appIndex > 0) {
         bundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, el5Param.appIndex);
     }
@@ -9286,7 +9312,6 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleI
         LOG_E(BMS_TAG_INSTALLER, "SetEncryptionPolicy failed");
     }
     LOG_D(BMS_TAG_INSTALLER, "%{public}s, keyId: %{public}s", bundleName.c_str(), keyId.c_str());
-    info.SetkeyId(el5Param.userId, keyId, el5Param.appIndex);
 }
 
 ErrCode BundleDataMgr::CanOpenLink(
