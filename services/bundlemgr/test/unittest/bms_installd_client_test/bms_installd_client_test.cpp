@@ -1921,7 +1921,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetArkStartupCacheApl_0100
 }
 
 /**
- * @tc.number: BmsInstalldClientTest_RestoreconForArkweb_0100
+ * @tc.number: BmsInstalldClientTest_RestoreconLibs_0100
  * @tc.name: RestoreconLibs
  * @tc.desc: Test whether RestoreconLibs is called normally.
  */

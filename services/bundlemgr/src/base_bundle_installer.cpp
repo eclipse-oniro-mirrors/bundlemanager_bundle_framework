@@ -1120,11 +1120,9 @@ void BaseBundleInstaller::RestoreconForArkweb()
     if (!IsArkWeb(bundleName_)) {
         return;
     }
-
     const std::string arkwebLibPath = "/data/app/el1/bundle/public/" + bundleName_ + "/libs/arm64/";
     LOG_I(BMS_TAG_INSTALLER, "RestoreconLibs, arkwebLibPath: %{public}s", arkwebLibPath.c_str());
     ErrCode result = InstalldClient::GetInstance()->RestoreconLibs(arkwebLibPath);
-
     if (result == ERR_OK) {
         NWeb::AppFwkUpdateClient::GetInstance().NotifyArkWebInstallSuccess(bundleName_);
     } else {
