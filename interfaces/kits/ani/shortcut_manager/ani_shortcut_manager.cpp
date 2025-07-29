@@ -77,7 +77,7 @@ static void AniDeleteDesktopShortcutInfo(ani_env* env, ani_object info, ani_doub
     ShortcutInfo shortcutInfo;
     if (!CommonFunAni::ParseShortcutInfo(env, info, shortcutInfo) ||
         !CommonFunc::CheckShortcutInfo(shortcutInfo)) {
-        APP_LOGE("Parse shortcutInfo err. userId:%{public}d", userId);
+        APP_LOGE("Parse shortcutInfo failed. userId:%{public}d", userId);
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
         return;
     }
