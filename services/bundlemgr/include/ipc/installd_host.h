@@ -249,7 +249,7 @@ private:
 
     CriticalManager criticalManager_;
 
-    bool HandleRestoreconLibs(MessageParcel &data, MessageParcel &reply);
+    bool HandleRestoreconPath(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

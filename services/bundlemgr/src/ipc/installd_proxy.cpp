@@ -1127,11 +1127,11 @@ ErrCode InstalldProxy::ClearDir(const std::string &dir)
     return TransactInstalldCmd(InstalldInterfaceCode::CLEAR_DIR, data, reply, option);
 }
 
-ErrCode InstalldProxy::RestoreconLibs(const std::string &libPath)
+ErrCode InstalldProxy::RestoreconPath(const std::string &path)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String, libPath);
+    INSTALLD_PARCEL_WRITE(data, String, path);
 
     MessageParcel reply;
     MessageOption option;

@@ -266,7 +266,7 @@ public:
 
     virtual ErrCode ClearDir(const std::string &dir) override;
 
-    virtual ErrCode RestoreconLibs(const std::string &libPath) override;
+    virtual ErrCode RestoreconPath(const std::string &path) override;
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

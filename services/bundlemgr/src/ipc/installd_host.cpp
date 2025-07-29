@@ -245,7 +245,7 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             result = HandleClearDir(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::RESTORE_CON_LIBS):
-            result = HandleRestoreconLibs(data, reply);
+            result = HandleRestoreconPath(data, reply);
             break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
@@ -1117,10 +1117,10 @@ bool InstalldHost::HandleClearDir(MessageParcel &data, MessageParcel &reply)
     return true;
 }
 
-bool InstalldHost::HandleRestoreconLibs(MessageParcel &data, MessageParcel &reply)
+bool InstalldHost::HandleRestoreconPath(MessageParcel &data, MessageParcel &reply)
 {
-    std::string libPath = data.ReadString();
-    ErrCode result = RestoreconLibs(libPath);
+    std::string path = data.ReadString();
+    ErrCode result = RestoreconPath(path);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

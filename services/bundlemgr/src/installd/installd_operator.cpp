@@ -2847,14 +2847,14 @@ bool InstalldOperator::ClearDir(const std::string &dir)
     return true;
 }
 
-bool InstalldOperator::RestoreconLibs(const std::string &libPath)
+bool InstalldOperator::RestoreconPath(const std::string &path)
 {
-    int ret = RestoreconRecurse(libPath.c_str());
+    int ret = RestoreconRecurse(path.c_str());
     if (!ret) {
-        LOG_I(BMS_TAG_INSTALLD, "RestoreconLibs success");
+        LOG_I(BMS_TAG_INSTALLD, "RestoreconPath success");
         return true;
     }
-    LOG_E(BMS_TAG_INSTALLD, "RestoreconLibs failed");
+    LOG_E(BMS_TAG_INSTALLD, "RestoreconPath failed");
     return false;
 }
 }  // namespace AppExecFwk

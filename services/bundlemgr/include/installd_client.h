@@ -271,7 +271,7 @@ public:
 
     ErrCode ClearDir(const std::string &dir);
 
-    ErrCode RestoreconLibs(const std::string &libPath);
+    ErrCode RestoreconPath(const std::string &path);
 
 private:
     sptr<IInstalld> GetInstalldProxy();

@@ -364,7 +364,7 @@ ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RestoreconLibs(const std::string &libPath)
+ErrCode InstalldHostImpl::RestoreconPath(const std::string &path)
 {
     return ERR_OK;
 }
