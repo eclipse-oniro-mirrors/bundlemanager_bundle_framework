@@ -1,0 +1,44 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "label"
+    },
+    {
+      "name": "READ_ALPHA_reason",
+      "value": "use ohos.permission.ALPHA"
+    },
+    {
+      "name": "USE_KEEP_BACKGROUND_RUNNING_reason",
+      "value": "use ohos.permission.KEEP_BACKGROUND_RUNNING"
+    },
+    {
+      "name": "USE_LOCATION_IN_BACKGROUND_reason",
+      "value": "use ohos.permission.LOCATION_IN_BACKGROUND"
+    },
+    {
+      "name": "USE_USE_BLUETOOTH_reason",
+      "value": "use ohos.permission.USE_BLUETOOTH"
+    },
+    {
+      "name": "USE_SYSTEM_FLOAT_WINDOW_reason",
+      "value": "use ohos.permission.SYSTEM_FLOAT_WINDOW"
+    },
+    {
+      "name": "Define_ALPHA_label",
+      "value": "ALPHA label"
+    },
+    {
+      "name": "Define_BETA_label",
+      "value": "BETA label"
+    }
+  ]
+}

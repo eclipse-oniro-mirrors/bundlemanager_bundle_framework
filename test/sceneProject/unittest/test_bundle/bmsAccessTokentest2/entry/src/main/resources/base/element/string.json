@@ -1,0 +1,28 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "label"
+    },
+    {
+      "name": "USE_BLUETOOTH_reason",
+      "value": "use ohos.permission.USE_BLUETOOTH"
+    },
+    {
+      "name": "Define_ALPHA_label",
+      "value": "ALPHA label"
+    },
+    {
+      "name": "Define_BETA_label",
+      "value": "BETA label"
+    }
+  ]
+}
