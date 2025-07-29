@@ -389,9 +389,9 @@ public:
         const std::string &bundleName, const std::vector<std::string> &moduleNameList, const std::string &abilityName,
         bool userDataClearable = true, bool isSystemApp = false) const;
     void MockUninstallBundle(const std::string &bundleName) const;
-    AbilityInfo MockAbilityInfo(
+    InnerAbilityInfo MockAbilityInfo(
         const std::string &bundleName, const std::string &module, const std::string &abilityName) const;
-    ExtensionAbilityInfo MockExtensionInfo(
+    InnerExtensionInfo MockExtensionInfo(
         const std::string &bundleName, const std::string &module, const std::string &extensionName) const;
     InnerModuleInfo MockModuleInfo(const std::string &moduleName) const;
     FormInfo MockFormInfo(
@@ -581,9 +581,9 @@ void BmsBundleDataMgrTest2::MockInstallBundle(
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     moduleInfo.entryAbilityKey = keyName;
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
@@ -600,11 +600,11 @@ void BmsBundleDataMgrTest2::MockInstallExtension(const std::string &bundleName,
     InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
     std::string keyName = bundleName + "." + moduleName + "." + extensionName;
     std::string keyName02 = bundleName + "." + moduleName + "." + extensionName + "02";
-    ExtensionAbilityInfo extensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
-    ExtensionAbilityInfo extensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
+    InnerExtensionInfo innerExtensionInfo = MockExtensionInfo(bundleName, moduleName, extensionName);
+    InnerExtensionInfo innerExtensionInfo02 = MockExtensionInfo(bundleName, moduleName, extensionName + "02");
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.InsertExtensionInfo(keyName, extensionInfo);
-    innerBundleInfo.InsertExtensionInfo(keyName02, extensionInfo02);
+    innerBundleInfo.InsertExtensionInfo(keyName, innerExtensionInfo);
+    innerBundleInfo.InsertExtensionInfo(keyName02, innerExtensionInfo02);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     Skill skill;
     skill.actions = {ACTION};
@@ -692,8 +692,8 @@ void BmsBundleDataMgrTest2::MockInstallBundle(
     for (const auto &moduleName : moduleNameList) {
         InnerModuleInfo moduleInfo = MockModuleInfo(moduleName);
         std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-        AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
-        innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+        InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+        innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
         innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
         Skill skill;
         skill.actions = {ACTION};
@@ -817,10 +817,10 @@ void BmsBundleDataMgrTest2::MockUninstallBundle(const std::string &bundleName) c
     EXPECT_TRUE(finishRet);
 }
 
-AbilityInfo BmsBundleDataMgrTest2::MockAbilityInfo(
+InnerAbilityInfo BmsBundleDataMgrTest2::MockAbilityInfo(
     const std::string &bundleName, const std::string &moduleName, const std::string &abilityName) const
 {
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo abilityInfo;
     abilityInfo.package = PACKAGE_NAME;
     abilityInfo.name = abilityName;
     abilityInfo.bundleName = bundleName;
@@ -861,10 +861,10 @@ AbilityInfo BmsBundleDataMgrTest2::MockAbilityInfo(
     return abilityInfo;
 }
 
-ExtensionAbilityInfo BmsBundleDataMgrTest2::MockExtensionInfo(
+InnerExtensionInfo BmsBundleDataMgrTest2::MockExtensionInfo(
     const std::string &bundleName, const std::string &moduleName, const std::string &extensionName) const
 {
-    ExtensionAbilityInfo extensionInfo;
+    InnerExtensionInfo extensionInfo;
     extensionInfo.name = extensionName;
     extensionInfo.bundleName = bundleName;
     extensionInfo.moduleName = moduleName;
@@ -886,9 +886,9 @@ void BmsBundleDataMgrTest2::MockInnerBundleInfo(const std::string &bundleName, c
     moduleInfo.description = BUNDLE_DESCRIPTION;
     moduleInfo.dependencies = dependencies;
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
 }
 
@@ -907,9 +907,9 @@ void BmsBundleDataMgrTest2::MockInnerBundleInfo(const std::string &bundleName, c
     moduleInfo.description = BUNDLE_DESCRIPTION;
     moduleInfo.distro.moduleType = param.moduleType;
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    InnerAbilityInfo innerAbilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
-    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.InsertAbilitiesInfo(keyName, innerAbilityInfo);
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
 }
 
@@ -1035,11 +1035,11 @@ HWTEST_F(BmsBundleDataMgrTest2, TestFindAbilityInfos_0400, Function | MediumTest
 {
     InnerBundleInfo info;
     InnerModuleInfo moduleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
     moduleInfo.moduleName = MODULE_NAME1;
     info.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
-    info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
+    info.baseAbilityInfos_.try_emplace(MODULE_NAME1, innerAbilityInfo);
     std::optional<std::vector<AbilityInfo>> ret =
         info.FindAbilityInfos(Constants::ALL_USERID);
     EXPECT_EQ(ret, std::nullopt);
@@ -1054,11 +1054,11 @@ HWTEST_F(BmsBundleDataMgrTest2, TestFindAbilityInfos_0500, Function | MediumTest
 {
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = OVERLAY_STATE;
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = OVERLAY_STATE;
     userInfo.bundleName = MODULE_NAME1;
     info.innerBundleUserInfos_.try_emplace(MODULE_NAME1, userInfo);
-    info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
+    info.baseAbilityInfos_.try_emplace(MODULE_NAME1, innerAbilityInfo);
     std::optional<std::vector<AbilityInfo>> ret =
         info.FindAbilityInfos(Constants::ALL_USERID);
     EXPECT_NE(ret, std::nullopt);
@@ -1076,9 +1076,9 @@ HWTEST_F(BmsBundleDataMgrTest2, TestFindAbilityInfos_0600, Function | MediumTest
     moduleInfo.moduleName = MODULE_NAME1;
     info.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
 
-    AbilityInfo abilityInfo;
-    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
-    info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    info.baseAbilityInfos_.try_emplace(MODULE_NAME1, innerAbilityInfo);
     std::optional<std::vector<AbilityInfo>> ret =
         info.FindAbilityInfos(Constants::ALL_USERID);
     EXPECT_EQ(ret, std::nullopt);
@@ -1160,13 +1160,13 @@ HWTEST_F(BmsBundleDataMgrTest2, TestGetShortcutInfos_0200, Function | MediumTest
     info.isNewVersion_ = true;
     info.innerModuleInfos_.clear();
 
-    AbilityInfo abilityInfo;
-    abilityInfo.resourcePath = RESOURCE_PATH;
-    abilityInfo.hapPath = HAP_FILE_PATH;
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.resourcePath = RESOURCE_PATH;
+    innerAbilityInfo.hapPath = HAP_FILE_PATH;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.entryAbilityKey = ABILITY_NAME_TEST;
     info.innerModuleInfos_.insert(std::make_pair(ABILITY_NAME_TEST, innerModuleInfo));
-    info.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME_TEST, abilityInfo));
+    info.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME_TEST, innerAbilityInfo));
     info.GetShortcutInfos(shortcutInfos);
     EXPECT_TRUE(shortcutInfos.empty());
 }
@@ -1183,15 +1183,15 @@ HWTEST_F(BmsBundleDataMgrTest2, TestGetShortcutInfos_0300, Function | MediumTest
     info.isNewVersion_ = true;
     info.innerModuleInfos_.clear();
 
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo innerAbilityInfo;
     Metadata metadata(META_DATA_SHORTCUTS_NAME, BUNDLE_LABEL, MAIN_ENTRY);
-    abilityInfo.metadata.push_back(metadata);
-    abilityInfo.resourcePath = RESOURCE_PATH;
-    abilityInfo.hapPath = HAP_FILE_PATH;
+    innerAbilityInfo.metadata.push_back(metadata);
+    innerAbilityInfo.resourcePath = RESOURCE_PATH;
+    innerAbilityInfo.hapPath = HAP_FILE_PATH;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.entryAbilityKey = ABILITY_NAME_TEST;
     info.innerModuleInfos_.insert(std::make_pair(ABILITY_NAME_TEST, innerModuleInfo));
-    info.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME_TEST, abilityInfo));
+    info.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME_TEST, innerAbilityInfo));
     info.GetShortcutInfos(shortcutInfos);
     EXPECT_TRUE(shortcutInfos.empty());
 }
@@ -2198,9 +2198,9 @@ HWTEST_F(BmsBundleDataMgrTest2, RemoveModuleInfo_0300, Function | SmallTest | Le
     moduleInfo.abilityKeys.push_back("keys");;
     info.innerModuleInfos_.try_emplace(PACKAGE_NAME, moduleInfo);
 
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo innerAbilityInfo;
     std::string key = "key";
-    info.baseAbilityInfos_.try_emplace(key, abilityInfo);
+    info.baseAbilityInfos_.try_emplace(key, innerAbilityInfo);
     info.RemoveModuleInfo(PACKAGE_NAME);
 
     auto abilityItem = info.baseAbilityInfos_.find("keys");
@@ -2244,9 +2244,9 @@ HWTEST_F(BmsBundleDataMgrTest2, RemoveModuleInfo_0500, Function | SmallTest | Le
     moduleInfo.extensionKeys.push_back("keys");;
     info.innerModuleInfos_.try_emplace(PACKAGE_NAME, moduleInfo);
 
-    ExtensionAbilityInfo extensionAbilityInfo;
+    InnerExtensionInfo innerExtensionInfo;
     std::string key = "key";
-    info.baseExtensionInfos_.try_emplace(key, extensionAbilityInfo);
+    info.baseExtensionInfos_.try_emplace(key, innerExtensionInfo);
     info.RemoveModuleInfo(PACKAGE_NAME);
 
     auto extensionItem = info.baseExtensionInfos_.find("keys");

@@ -114,14 +114,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bool isAppExist = false;
     appServiceFwkInstaller.GetInnerBundleInfoWithDisable(emptyInfo, isAppExist);
 
-    appServiceFwkInstaller.versionCode_ = CODE_MAX_TWO;
-    innerBundleInfo.baseBundleInfo_->versionCode = CODE_MAX_THREE;
-    appServiceFwkInstaller.CheckNeedUpdate(newInfo, innerBundleInfo);
-    innerBundleInfo.baseBundleInfo_->versionCode = CODE_MAX_ONE;
-    appServiceFwkInstaller.CheckNeedUpdate(newInfo, innerBundleInfo);
-    innerBundleInfo.baseBundleInfo_->versionCode = CODE_MAX_TWO;
-    appServiceFwkInstaller.CheckNeedUpdate(newInfo, innerBundleInfo);
-
     uint32_t versionCode = fdp.ConsumeIntegral<uint32_t>();
     appServiceFwkInstaller.versionUpgrade_ = true;
     appServiceFwkInstaller.RemoveLowerVersionSoDir(versionCode);

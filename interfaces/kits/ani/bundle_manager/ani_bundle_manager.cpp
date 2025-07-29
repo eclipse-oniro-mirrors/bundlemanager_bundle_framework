@@ -443,6 +443,11 @@ static ani_boolean IsApplicationEnabledNative(ani_env* env,
         BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return isEnable;
     }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return isEnable;
+    }
     ErrCode ret = ERR_OK;
     if (appIndex != 0) {
         ret = iBundleMgr->IsCloneApplicationEnabled(bundleName, appIndex, isEnable);
@@ -638,7 +643,7 @@ static ani_object GetLaunchWantForBundleNative(ani_env* env,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
-    return WrapWant(env, want);
+    return CommonFunAni::ConvertWantInfo(env, want);
 }
 
 static ani_object GetAppCloneBundleInfoNative(ani_env* env, ani_string aniBundleName,

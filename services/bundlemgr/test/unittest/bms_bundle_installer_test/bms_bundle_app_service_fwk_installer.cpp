@@ -85,6 +85,7 @@ public:
     ErrCode InstallSystemBundle(const std::string &filePath, int32_t userId) const;
     ErrCode UnInstallBundle(const std::string &bundleName, int32_t userId) const;
     ErrCode InstallSystemHsp(const std::string &filePath);
+    ErrCode UninstallSystemHsp(const std::string &bundleName);
     bool DeletePreBundleInfo(const std::string &bundleName);
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     const std::shared_ptr<BundleInstallerManager> GetBundleInstallerManager() const;
@@ -125,6 +126,13 @@ ErrCode BmsBundleAppServiceFwkInstallerTest::InstallSystemHsp(const std::string 
     installParam.removable = false;
     std::vector<std::string> hspPaths{ filePath };
     return appServiceFwkInstaller.Install(hspPaths, installParam);
+}
+
+ErrCode BmsBundleAppServiceFwkInstallerTest::UninstallSystemHsp(const std::string &bundleName)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    return appServiceFwkInstaller.UnInstall(bundleName, false);
 }
 
 ErrCode BmsBundleAppServiceFwkInstallerTest::InstallSystemBundle(const std::string &filePath, int32_t userId) const
@@ -555,144 +563,6 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0600, Function | 
 }
 
 /**
- * @tc.number: CheckNeedUpdate_0100
- * @tc.name: test CheckNeedUpdate
- * @tc.desc: 1.Test the CheckNeedUpdate
-*/
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0100, Function | SmallTest | Level0)
-{
-    AppServiceFwkInstaller appServiceFwkInstaller;
-    appServiceFwkInstaller.versionCode_ = VERSION;
-
-    InnerBundleInfo oldInfo;
-    oldInfo.baseBundleInfo_->versionCode = VERSION_HIGH;
-    InnerBundleInfo newInfo;
-
-    bool res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
-    EXPECT_FALSE(res);
-}
-
-/**
- * @tc.number: CheckNeedUpdate_0200
- * @tc.name: test CheckNeedUpdate
- * @tc.desc: 1.Test the CheckNeedUpdate
-*/
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0200, Function | SmallTest | Level0)
-{
-    AppServiceFwkInstaller appServiceFwkInstaller;
-    appServiceFwkInstaller.versionCode_ = VERSION_HIGH;
-
-    InnerBundleInfo oldInfo;
-    oldInfo.baseBundleInfo_->versionCode = VERSION;
-    InnerBundleInfo newInfo;
-
-    bool res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
-    EXPECT_TRUE(appServiceFwkInstaller.versionUpgrade_);
-    EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: CheckNeedUpdate_0300
- * @tc.name: test CheckNeedUpdate
- * @tc.desc: 1.Test the CheckNeedUpdate
-*/
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0300, Function | SmallTest | Level0)
-{
-    AppServiceFwkInstaller appServiceFwkInstaller;
-    appServiceFwkInstaller.versionCode_ = VERSION;
-
-    InnerBundleInfo oldInfo;
-    oldInfo.baseBundleInfo_->versionCode = VERSION;
-    InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = MODULE_NAME_TEST;
-
-    bool res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
-    EXPECT_TRUE(appServiceFwkInstaller.moduleUpdate_);
-    EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: CheckNeedUpdate_0400
- * @tc.name: test CheckNeedUpdate
- * @tc.desc: 1.Test the CheckNeedUpdate
-*/
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0400, Function | SmallTest | Level0)
-{
-    AppServiceFwkInstaller appServiceFwkInstaller;
-    appServiceFwkInstaller.versionCode_ = VERSION;
-
-    InnerBundleInfo oldInfo;
-    oldInfo.baseBundleInfo_->versionCode = VERSION;
-    oldInfo.currentPackage_ = MODULE_NAME_TEST;
-
-    InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAME_TEST;
-    oldInfo.innerModuleInfos_[MODULE_NAME_TEST] = innerModuleInfo;
-    InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = MODULE_NAME_TEST;
-    newInfo.innerModuleInfos_[MODULE_NAME_TEST] = innerModuleInfo;
-
-    bool res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
-    EXPECT_FALSE(appServiceFwkInstaller.moduleUpdate_);
-    EXPECT_FALSE(res);
-}
-
-/**
- * @tc.number: CheckNeedUpdate_0500
- * @tc.name: test CheckNeedUpdate
- * @tc.desc: 1.Test the CheckNeedUpdate
-*/
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0500, Function | SmallTest | Level0)
-{
-    AppServiceFwkInstaller appServiceFwkInstaller;
-    appServiceFwkInstaller.versionCode_ = VERSION;
-
-    InnerBundleInfo oldInfo;
-    oldInfo.baseBundleInfo_->versionCode = VERSION;
-    oldInfo.currentPackage_ = MODULE_NAME_TEST;
-
-    InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAME_TEST;
-    oldInfo.innerModuleInfos_[MODULE_NAME_TEST] = innerModuleInfo;
-
-    InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = MODULE_NAME_TEST;
-    innerModuleInfo.buildHash = BUILD_HASH;
-    newInfo.innerModuleInfos_[MODULE_NAME_TEST] = innerModuleInfo;
-
-    bool res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
-    EXPECT_TRUE(appServiceFwkInstaller.moduleUpdate_);
-    EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: CheckNeedUpdate_0600
- * @tc.name: test CheckNeedUpdate
- * @tc.desc: 1.Test the CheckNeedUpdate
- */
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0600, Function | SmallTest | Level0)
-{
-    AppServiceFwkInstaller appServiceFwkInstaller;
-    appServiceFwkInstaller.versionCode_ = VERSION_LOW;
-
-    InnerBundleInfo oldInfo;
-    oldInfo.baseBundleInfo_->versionCode = VERSION_LOW;
-    oldInfo.currentPackage_ = MODULE_NAME_TEST;
-
-    InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAME_TEST;
-
-    InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = MODULE_NAME_TEST;
-    innerModuleInfo.buildHash = BUILD_HASH;
-    newInfo.innerModuleInfos_[MODULE_NAME_TEST] = innerModuleInfo;
-
-    bool res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
-    EXPECT_TRUE(appServiceFwkInstaller.moduleUpdate_);
-    EXPECT_TRUE(res);
-}
-
-/**
  * @tc.number: GetInnerBundleInfo_0010
  * @tc.name: test GetInnerBundleInfo
  * @tc.desc: 1.Test the GetInnerBundleInfo
@@ -744,6 +614,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0020, Functi
 
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
+    UninstallSystemHsp(BUNDLE_NAME);
 }
 
 /**
@@ -771,6 +642,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0030, Functi
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
     dataMgr->installStates_.erase(BUNDLE_NAME);
+    UninstallSystemHsp(BUNDLE_NAME);
 }
 
 /**
@@ -798,6 +670,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0040, Functi
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
     dataMgr->installStates_.erase(BUNDLE_NAME);
+    UninstallSystemHsp(BUNDLE_NAME);
 }
 
 /**
@@ -828,6 +701,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0050, Functi
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
     dataMgr->installStates_.erase(BUNDLE_NAME);
+    UninstallSystemHsp(BUNDLE_NAME);
 }
 
 /**
@@ -919,6 +793,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessNewModuleInstall_0010, Func
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
     dataMgr->installStates_.erase(BUNDLE_NAME);
+    UninstallSystemHsp(BUNDLE_NAME);
 }
 
 /**
@@ -1211,33 +1086,6 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0010, Function | 
     InnerBundleInfo info;
     infos.emplace(TEST_CREATE_FILE_PATH, info);
     res = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo, isDowngrade);
-    EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: CheckNeedUpdate_0010
- * @tc.name: test CheckNeedUpdate
- * @tc.desc: 1.Test the CheckNeedUpdate
-*/
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0010, Function | SmallTest | Level0)
-{
-    AppServiceFwkInstaller appServiceFwkInstaller;
-    InitAppServiceFwkInstaller(appServiceFwkInstaller);
-
-    InnerBundleInfo newInfo;
-    InnerBundleInfo oldInfo;
-    newInfo.currentPackage_ = MODULE_NAME_TEST;
-    oldInfo.baseBundleInfo_->versionCode = 1;
-    appServiceFwkInstaller.versionCode_ = 0;
-    auto res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
-    EXPECT_FALSE(res);
-
-    appServiceFwkInstaller.versionCode_ = 2;
-    res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
-    EXPECT_TRUE(res);
-
-    appServiceFwkInstaller.versionCode_ = 1;
-    res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
     EXPECT_TRUE(res);
 }
 

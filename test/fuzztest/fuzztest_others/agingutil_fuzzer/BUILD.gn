@@ -61,17 +61,14 @@ ohos_fuzztest("AgingUtilFuzzTest") {
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
-    "battery_manager:batterysrv_client",
     "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
-    "display_manager:displaymgr",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "json:nlohmann_json_static",
     "jsoncpp:jsoncpp",
-    "power_manager:powermgr_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -79,6 +76,9 @@ ohos_fuzztest("AgingUtilFuzzTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  if (bundle_framework_power_mgr_enable) {
+    external_deps += aot_external_deps
+  }
   if (device_usage_statistics_enabled) {
     external_deps += [ "device_usage_statistics:usagestatsinner" ]
     defines += [ "DEVICE_USAGE_STATISTICS_ENABLED" ]

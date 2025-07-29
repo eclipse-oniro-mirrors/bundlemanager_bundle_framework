@@ -644,7 +644,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3300, Function | Sma
     ret = InstalldOperator::RenameFile("/test/123", "");
     EXPECT_FALSE(ret);
     ret = InstalldOperator::RenameFile("/test/123", "/test/123");
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
     ret = InstalldOperator::RenameFile("/test/123", TEST_PATH);
     EXPECT_FALSE(ret);
 }
@@ -658,7 +658,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3300, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3400, Function | SmallTest | Level0)
 {
     auto ret = InstalldOperator::RenameFile(TEST_PATH, TEST_PATH);
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -1112,9 +1112,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6500, Function | Sma
     CreateQuickFileDir("/data/OperatorTest");
 
     auto result = InstalldOperator::RenameFile("/data/OperatorTest", "/data/OperatorTest");
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
     result = InstalldOperator::RenameFile("/data/OperatorTest", "/data/OperatorTest1");
-    EXPECT_FALSE(result);
+    EXPECT_TRUE(result);
 
     DeleteQuickFileDir("/data/OperatorTest1");
 }
@@ -2313,5 +2313,43 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13800, Function | Sm
     bool ret = InstalldOperator::MoveFile(srcPath, dstPath);
     EXPECT_EQ(ret, true);
     DeleteFile(dstPath);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_13900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling IsDirEmptyFast of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13900, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::IsDirEmptyFast("/invalid/path"));
+    EXPECT_FALSE(InstalldOperator::IsDirEmptyFast("/data"));
+    EXPECT_TRUE(InstalldOperator::MkRecursiveDir("/data/InstalldOperatorTest_13900", true));
+    EXPECT_TRUE(InstalldOperator::IsDirEmptyFast("/data/InstalldOperatorTest_13900"));
+    EXPECT_TRUE(InstalldOperator::DeleteDir("/data/InstalldOperatorTest_13900"));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_14000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling SetProjectIdForDir and GetProjectUsage of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14000, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::SetProjectIdForDir("/invalid/path", 14000));
+    EXPECT_EQ(InstalldOperator::GetProjectUsage(14000), 0);
+
+    EXPECT_TRUE(InstalldOperator::MkRecursiveDir("/data/app/el1/100/base/InstalldOperatorTest_14000", true));
+    EXPECT_TRUE(InstalldOperator::SetProjectIdForDir("/data/app/el1/100/base/InstalldOperatorTest_14000", 14000));
+    std::ofstream testFile1("/data/app/el1/100/base/InstalldOperatorTest_14000/test1.txt");
+    EXPECT_TRUE(testFile1.is_open());
+    testFile1 << "test content";
+    testFile1.close();
+    std::ofstream testFile2("/data/app/el1/100/base/InstalldOperatorTest_14000/test2.txt");
+    EXPECT_TRUE(testFile2.is_open());
+    testFile2 << "test content";
+    testFile2.close();
+    EXPECT_NE(InstalldOperator::GetProjectUsage(14000), 0);
+    EXPECT_TRUE(InstalldOperator::DeleteDir("/data/app/el1/100/base/InstalldOperatorTest_14000"));
 }
 } // OHOS

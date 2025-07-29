@@ -34,8 +34,6 @@ constexpr size_t ARGS_POS_FOUR = 4;
 constexpr size_t NAPI_RETURN_ONE = 1;
 constexpr size_t CALLBACK_PARAM_SIZE = 2;
 
-constexpr int32_t GET_REMOTE_ABILITY_INFO_MAX_SIZE = 10;
-
 constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
 constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
 constexpr uint32_t EXPLICIT_QUERY_RESULT_LEN = 1;
@@ -126,6 +124,8 @@ constexpr const char* SANDBOX_DATA_DIR = "sandboxDataDir";
 constexpr const char* ERR_MSG_LAUNCH_WANT_INVALID = "The launch want is not found.";
 constexpr const char* PARAM_BUNDLENAME_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter bundleName is empty";
+constexpr const char* PARAM_MODULENAME_EMPTY_ERROR =
+    "BusinessError 401: Parameter error. parameter moduleName is empty";
 constexpr const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
 constexpr const char* PARAM_DEVELOPER_ID_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter developerId is empty";
@@ -275,6 +275,7 @@ constexpr const char* UNINSTALL_DISPOSED_RULE_TYPE = "UninstallDisposedRule";
 constexpr const char* SET_UNINSTALL_DISPOSED_RULE = "SetUninstallDisposedRule";
 constexpr const char* DELETE_UNINSTALL_DISPOSED_RULE = "DeleteUninstallDisposedRule";
 constexpr const char* GET_UNINSTALL_DISPOSED_RULE = "GetUninstallDisposedRule";
+constexpr const char* SET_DISPOSED_RULE = "SetDisposedRule";
 constexpr const char* SET_DISPOSED_RULES = "SetDisposedRules";
 
 // default_app_manager
@@ -299,11 +300,6 @@ constexpr const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
 constexpr const char* RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
 constexpr const char* TYPE_CHECK = "type";
 constexpr const char* WANT_CHECK = "want";
-
-// distributed_bundle_manager
-constexpr const char* RESOURCE_NAME_GET_REMOTE_ABILITY_INFO = "GetRemoteAbilityInfo";
-constexpr const char* PARAMETER_ELEMENT_NAME = "elementName";
-constexpr const char* PARAMETER_LOCALE = "locale";
 }
 }
 }

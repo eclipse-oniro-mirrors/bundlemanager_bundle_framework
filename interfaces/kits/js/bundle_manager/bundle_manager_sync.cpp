@@ -213,6 +213,11 @@ napi_value IsApplicationEnabledSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return nullptr;
     }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
+    }
     bool isEnable = false;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->IsApplicationEnabled(bundleName, isEnable));
     if (ret != NO_ERROR) {

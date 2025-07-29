@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -160,8 +160,12 @@ void BmsBundleDefaultAppMgrTest::AddInnerBundleInfo(const std::string bundleName
 
     std::map<std::string, InnerModuleInfo> innerModuleInfoMap;
     innerModuleInfoMap[MODULE_NAME] = moduleInfo;
-    std::map<std::string, AbilityInfo> innerAbilityMap;
-    innerAbilityMap[MODULE_NAME] = abilityInfo;
+    std::map<std::string, InnerAbilityInfo> innerAbilityMap;
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ABILITY_NAME;
+    innerAbilityInfo.moduleName = MODULE_NAME;
+    innerAbilityInfo.bundleName = bundleName;
+    innerAbilityMap[MODULE_NAME] = innerAbilityInfo;
 
     InnerBundleUserInfo innerBundleUserInfo;
     innerBundleUserInfo.uid = UID;

@@ -1,0 +1,125 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{
+    "module":{
+        "name":"entry_phone",
+        "type":"entry",
+        "mainElement":"MainAbility",
+        "srcEntry":"./ets/Application/AbilityStage.ts",
+        "description":"$string:phone_entry_dsc",
+        "deviceTypes": [
+            "2in1",
+            "tablet",
+            "default"
+        ],
+        "deliveryWithInstall":true,
+        "installationFree":false,
+        "pages":"$profile:main_pages",
+        "metadata": [
+            {
+              "name": "meta_info",
+              "resource": "$profile:main_pages"
+            }
+          ],
+        "abilities":[
+            {
+                "name":"MainAbility",
+                "srcEntry":"./ets/MainAbility/MainAbility.ts",
+                "description":"$string:phone_entry_main",
+                "icon":"$media:icon",
+                "label":"$string:entry_label",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "exported":true,
+                "orientation":"portrait",
+                "metadata":[
+                    {
+                        "name":"ohos.ability.shortcuts",
+                        "resource":"$profile:shortcuts_config"
+                    }
+                ],
+                "skills":[
+                    {
+                        "actions":[
+                            "action.system.home"
+                        ],
+                        "entities":[
+                            "entity.system.home"
+                        ]
+                    },
+                    {
+                        "actions": [
+                            "ohos.want.action.sendData"
+                        ],
+                        "uris": [
+                            {
+                                "scheme": "file",
+                                "utd": "general.image",
+                                "maxFileSupported": 20
+                            },
+                            {
+                                "scheme": "file",
+                                "utd": "general.png",
+                                "maxFileSupported": 10
+                            },
+                            {
+                                "scheme": "file",
+                                "utd": "general.jpeg",
+                                "maxFileSupported": 15
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "startWindowIcon": "$media:icon",
+                "name": "BROWSER",
+                "icon": "$media:icon",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "visible": true,
+                "skills": [
+                  {
+                    "actions": [
+                      "ohos.want.action.viewData"
+                    ],
+                    "entities": [
+                      "entity.system.browsable"
+                    ],
+                    "uris": [
+                      {
+                        "scheme": "https"
+                      }      
+                    ]
+                  }
+                ],
+                "srcEntry": ""
+            }
+        ],
+        "extensionAbilities":[],
+        "requestPermissions": [],
+        "querySchemes": [
+            "http",
+            "welink"
+        ],
+        "appEnvironments": [
+            {
+                "name": "name",
+                "value": "value"
+            }
+        ]
+    }
+}

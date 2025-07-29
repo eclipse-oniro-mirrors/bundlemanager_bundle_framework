@@ -23,6 +23,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
+#include "common_json_converter.h"
 #include "first_install_bundle_info.h"
 #include "inner_bundle_user_info.h"
 #include "inner_bundle_info.h"
@@ -74,6 +75,138 @@ int32_t userId2 = 2;
 int32_t appIndex = 1;
 const int32_t FLAG = 0;
 const int32_t INFO_COUNT = 16;
+const std::string BUNDLE_NAME_VAL = "com.example.bundle";
+const std::string MODULE_NAME_VAL = "mainModule";
+const std::string NAME_VAL = "MyExtension";
+const std::string SRC_ENTRANCE_VAL = "entry";
+const std::string ICON_VAL = "icon";
+const uint32_t ICON_ID_VAL = 123;
+const std::string LABEL_VAL = "label";
+const uint32_t LABEL_ID_VAL = 456;
+const std::string DESCRIPTION_VAL = "desc";
+const uint32_t DESCRIPTION_ID_VAL = 789;
+const int32_t PRIORITY_VAL = 10;
+const int32_t TYPE_VAL = 1;
+const std::string EXT_TYPE_NAME_VAL = "extType";
+const std::string READ_PERMISSION_VAL = "perm.read";
+const std::string WRITE_PERMISSION_VAL = "perm.write";
+const std::string URI_VAL = "myuri";
+const std::vector<std::string> PERMISSIONS_VAL = {"p1", "p2"};
+const std::vector<std::string> APPID_ALLOW_LIST_VAL = {"id1", "id2"};
+const bool VISIBLE_VAL = true;
+const std::vector<Metadata> METADATA_VAL = {};
+const std::string RESOURCE_PATH_VAL = "/res";
+const std::string HAP_PATH_VAL = "/hap";
+const bool ENABLED_VAL = true;
+const std::string PROCESS_VAL = "proc";
+const int32_t COMPILE_MODE_VAL = 1;
+const int32_t UID_VAL = 1000;
+const int32_t APP_INDEX_VAL = 2;
+const bool NEED_CREATE_SANDBOX_VAL = true;
+const std::vector<std::string> DATA_GROUP_IDS_VAL = {"dg1", "dg2"};
+const std::vector<std::string> VALID_DATA_GROUP_IDS_VAL = {"vdg1", "vdg2"};
+const std::string CUSTOM_PROCESS_VAL = "cp";
+const bool ISOLATION_PROCESS_VAL = true;
+const std::string ARKTS_MODE_VAL = "static";
+const bool ABILITY_VISIBLE = true;
+const bool ABILITY_IS_LAUNCHER_ABILITY = true;
+const bool ABILITY_IS_NATIVE_ABILITY = true;
+const bool ABILITY_ENABLED = true;
+const bool ABILITY_SUPPORT_PIP_MODE = true;
+const bool ABILITY_FORM_ENABLED = true;
+const bool ABILITY_REMOVE_MISSION_AFTER_TERMINATE = true;
+const bool ABILITY_IS_MODULE_JSON = true;
+const bool ABILITY_IS_STAGE_BASED_MODEL = true;
+const bool ABILITY_CONTINUABLE = true;
+const bool ABILITY_EXCLUDE_FROM_MISSIONS = true;
+const bool ABILITY_UNCLEARABLE_MISSION = true;
+const bool ABILITY_EXCLUDE_FROM_DOCK = true;
+const bool ABILITY_RECOVERABLE = true;
+const bool ABILITY_ISOLATION_PROCESS = true;
+const bool ABILITY_MULTI_USER_SHARED = true;
+const bool ABILITY_GRANT_PERMISSION = true;
+const bool ABILITY_DIRECT_LAUNCH = true;
+const LinkType ABILITY_LINK_TYPE = LinkType::DEEP_LINK;
+const uint32_t ABILITY_LABEL_ID = 111;
+const uint32_t ABILITY_DESCRIPTION_ID = 222;
+const uint32_t ABILITY_ICON_ID = 333;
+const uint32_t ABILITY_ORIENTATION_ID = 444;
+const uint32_t ABILITY_FORM_ENTITY = 555;
+const uint32_t ABILITY_BACKGROUND_MODES = 666;
+const uint32_t ABILITY_START_WINDOW_ID = 777;
+const uint32_t ABILITY_START_WINDOW_ICON_ID = 888;
+const uint32_t ABILITY_START_WINDOW_BACKGROUND_ID = 999;
+const uint32_t ABILITY_MAX_WINDOW_WIDTH = 100;
+const uint32_t ABILITY_MIN_WINDOW_WIDTH = 200;
+const uint32_t ABILITY_MAX_WINDOW_HEIGHT = 300;
+const uint32_t ABILITY_MIN_WINDOW_HEIGHT = 400;
+const uint32_t ABILITY_PACKAGE_SIZE = 500;
+const int32_t ABILITY_MIN_FORM_HEIGHT = 600;
+const int32_t ABILITY_DEFAULT_FORM_HEIGHT = 700;
+const int32_t ABILITY_MIN_FORM_WIDTH = 800;
+const int32_t ABILITY_DEFAULT_FORM_WIDTH = 900;
+const int32_t ABILITY_PRIORITY = 10;
+const int32_t ABILITY_APP_INDEX = 2;
+const int32_t ABILITY_UID = 1000;
+const AbilityType ABILITY_TYPE = AbilityType::PAGE;
+const ExtensionAbilityType ABILITY_EXTENSION_ABILITY_TYPE = ExtensionAbilityType::SERVICE;
+const DisplayOrientation ABILITY_ORIENTATION = DisplayOrientation::PORTRAIT;
+const LaunchMode ABILITY_LAUNCH_MODE = LaunchMode::STANDARD;
+const CompileMode ABILITY_COMPILE_MODE = CompileMode::JS_BUNDLE;
+const AbilitySubType ABILITY_SUB_TYPE = AbilitySubType::UNSPECIFIED;
+const int64_t ABILITY_INSTALL_TIME = 123456789;
+const double ABILITY_MAX_WINDOW_RATIO = 1.5;
+const double ABILITY_MIN_WINDOW_RATIO = 0.5;
+const std::string ABILITY_LABEL = "TestLabel";
+const std::string ABILITY_DESCRIPTION = "TestDescription";
+const std::string ABILITY_ICON_PATH = "/icon/path";
+const std::string ABILITY_THEME = "TestTheme";
+const std::string ABILITY_KIND = "TestKind";
+const std::string ABILITY_EXTENSION_TYPE_NAME = "TestExtensionType";
+const std::string ABILITY_SRC_PATH = "/src/path";
+const std::string ABILITY_SRC_LANGUAGE = "js";
+const std::string ABILITY_ARKTS_MODE = "static";
+const std::string ABILITY_PROCESS = "TestProcess";
+const std::string ABILITY_URI = "test://uri";
+const std::string ABILITY_TARGET_ABILITY = "TargetAbility";
+const std::string ABILITY_READ_PERMISSION = "read.permission";
+const std::string ABILITY_WRITE_PERMISSION = "write.permission";
+const std::string ABILITY_PACKAGE = "TestPackage";
+const std::string ABILITY_BUNDLE_NAME = "TestBundle";
+const std::string ABILITY_MODULE_NAME = "TestModule";
+const std::string ABILITY_APPLICATION_NAME = "TestApp";
+const std::string ABILITY_CODE_PATH = "/code/path";
+const std::string ABILITY_RESOURCE_PATH = "/resource/path";
+const std::string ABILITY_HAP_PATH = "/hap/path";
+const std::string ABILITY_SRC_ENTRANCE = "main.js";
+const std::string ABILITY_START_WINDOW = "StartWindow";
+const std::string ABILITY_START_WINDOW_ICON = "StartWindowIcon";
+const std::string ABILITY_START_WINDOW_BACKGROUND = "StartWindowBackground";
+const std::string ABILITY_PREFER_MULTI_WINDOW_ORIENTATION = "landscape";
+const std::string ABILITY_ORIGINAL_BUNDLE_NAME = "OriginalBundle";
+const std::string ABILITY_APP_NAME = "TestAppName";
+const std::string ABILITY_PRIVACY_URL = "http://privacy";
+const std::string ABILITY_PRIVACY_NAME = "PrivacyName";
+const std::string ABILITY_DOWNLOAD_URL = "http://download";
+const std::string ABILITY_VERSION_NAME = "1.0.0";
+const std::string ABILITY_CLASS_NAME = "TestClass";
+const std::string ABILITY_ORIGINAL_CLASS_NAME = "OriginalClass";
+const std::string ABILITY_URI_PERMISSION_MODE = "mode";
+const std::string ABILITY_URI_PERMISSION_PATH = "/uri/path";
+const std::string ABILITY_LIB_PATH = "/lib/path";
+const std::string ABILITY_DEVICE_ID = "device123";
+const std::vector<std::string> ABILITY_PERMISSIONS = {};
+const std::vector<std::string> ABILITY_DEVICE_TYPES = {};
+const std::vector<std::string> ABILITY_DEVICE_CAPABILITIES = {};
+const std::vector<std::string> ABILITY_CONFIG_CHANGES = {};
+const std::vector<SkillUriForAbilityAndExtension> ABILITY_SKILL_URI = {};
+const std::vector<Skill> ABILITY_SKILLS = {};
+const std::vector<Metadata> ABILITY_METADATA = {};
+const std::vector<SupportWindowMode> ABILITY_WINDOW_MODES = {};
+const std::vector<std::string> ABILITY_SUPPORT_EXT_NAMES = {};
+const std::vector<std::string> ABILITY_SUPPORT_MIME_TYPES = {};
+const std::vector<std::string> ABILITY_CONTINUE_TYPE = {};
+const std::unordered_set<std::string> ABILITY_CONTINUE_BUNDLE_NAMES = {};
 const nlohmann::json EXTEND_RESOURCE_INFO_ERROR_JSON = R"(
 {
     "moduleName":[]
@@ -1712,6 +1845,504 @@ void BmsBundleDataStorageDatabaseTest::SetUp()
 void BmsBundleDataStorageDatabaseTest::TearDown()
 {}
 
+template<typename T>
+T MakeExtensionInfo()
+{
+    T info;
+    info.bundleName = BUNDLE_NAME_VAL;
+    info.moduleName = MODULE_NAME_VAL;
+    info.name = NAME_VAL;
+    info.srcEntrance = SRC_ENTRANCE_VAL;
+    info.icon = ICON_VAL;
+    info.iconId = ICON_ID_VAL;
+    info.label = LABEL_VAL;
+    info.labelId = LABEL_ID_VAL;
+    info.description = DESCRIPTION_VAL;
+    info.descriptionId = DESCRIPTION_ID_VAL;
+    info.priority = PRIORITY_VAL;
+    info.type = static_cast<ExtensionAbilityType>(TYPE_VAL);
+    info.extensionTypeName = EXT_TYPE_NAME_VAL;
+    info.readPermission = READ_PERMISSION_VAL;
+    info.writePermission = WRITE_PERMISSION_VAL;
+    info.uri = URI_VAL;
+    info.permissions = PERMISSIONS_VAL;
+    info.appIdentifierAllowList = APPID_ALLOW_LIST_VAL;
+    info.visible = VISIBLE_VAL;
+    info.metadata = METADATA_VAL;
+    info.resourcePath = RESOURCE_PATH_VAL;
+    info.hapPath = HAP_PATH_VAL;
+    info.enabled = ENABLED_VAL;
+    info.process = PROCESS_VAL;
+    info.compileMode = static_cast<CompileMode>(COMPILE_MODE_VAL);
+    info.uid = UID_VAL;
+    info.appIndex = APP_INDEX_VAL;
+    info.needCreateSandbox = NEED_CREATE_SANDBOX_VAL;
+    info.dataGroupIds = DATA_GROUP_IDS_VAL;
+    info.validDataGroupIds = VALID_DATA_GROUP_IDS_VAL;
+    info.customProcess = CUSTOM_PROCESS_VAL;
+    info.isolationProcess = ISOLATION_PROCESS_VAL;
+    info.arkTSMode = ARKTS_MODE_VAL;
+    return info;
+}
+
+nlohmann::json MakeExtensionJson()
+{
+    nlohmann::json jsonObject = {
+        {Constants::BUNDLE_NAME, BUNDLE_NAME_VAL},
+        {Constants::MODULE_NAME, MODULE_NAME_VAL},
+        {Constants::NAME, NAME_VAL},
+        {Constants::SRC_ENTRANCE, SRC_ENTRANCE_VAL},
+        {Constants::ICON, ICON_VAL},
+        {Constants::ICON_ID, ICON_ID_VAL},
+        {Constants::LABEL, LABEL_VAL},
+        {Constants::LABEL_ID, LABEL_ID_VAL},
+        {Constants::DESCRIPTION, DESCRIPTION_VAL},
+        {Constants::DESCRIPTION_ID, DESCRIPTION_ID_VAL},
+        {Constants::PRIORITY, PRIORITY_VAL},
+        {Constants::TYPE, TYPE_VAL},
+        {Constants::EXTENSION_TYPE_NAME, EXT_TYPE_NAME_VAL},
+        {Constants::READ_PERMISSION, READ_PERMISSION_VAL},
+        {Constants::WRITE_PERMISSION, WRITE_PERMISSION_VAL},
+        {Constants::URI, URI_VAL},
+        {Constants::PERMISSIONS, PERMISSIONS_VAL},
+        {Constants::APPIDENTIFIER_ALLOW_LIST, APPID_ALLOW_LIST_VAL},
+        {Constants::VISIBLE, VISIBLE_VAL},
+        {Constants::META_DATA, METADATA_VAL},
+        {Constants::RESOURCE_PATH, RESOURCE_PATH_VAL},
+        {Constants::HAP_PATH, HAP_PATH_VAL},
+        {Constants::ENABLED, ENABLED_VAL},
+        {Constants::PROCESS, PROCESS_VAL},
+        {Constants::COMPILE_MODE, COMPILE_MODE_VAL},
+        {Constants::UID, UID_VAL},
+        {Constants::APP_INDEX, APP_INDEX_VAL},
+        {Constants::NEED_CREATE_SANDBOX, NEED_CREATE_SANDBOX_VAL},
+        {Constants::DATA_GROUP_IDS, DATA_GROUP_IDS_VAL},
+        {Constants::VALID_DATA_GROUP_IDS, VALID_DATA_GROUP_IDS_VAL},
+        {Constants::CUSTOM_PROCESS, CUSTOM_PROCESS_VAL},
+        {Constants::ISOLATION_PROCESS, ISOLATION_PROCESS_VAL},
+        {Constants::ARKTS_MODE, ARKTS_MODE_VAL}
+    };
+    return jsonObject;
+}
+
+template<typename T>
+void CheckExtensionInfo(const T& info)
+{
+    EXPECT_EQ(info.bundleName, BUNDLE_NAME_VAL);
+    EXPECT_EQ(info.moduleName, MODULE_NAME_VAL);
+    EXPECT_EQ(info.name, NAME_VAL);
+    EXPECT_EQ(info.srcEntrance, SRC_ENTRANCE_VAL);
+    EXPECT_EQ(info.icon, ICON_VAL);
+    EXPECT_EQ(info.iconId, ICON_ID_VAL);
+    EXPECT_EQ(info.label, LABEL_VAL);
+    EXPECT_EQ(info.labelId, LABEL_ID_VAL);
+    EXPECT_EQ(info.description, DESCRIPTION_VAL);
+    EXPECT_EQ(info.descriptionId, DESCRIPTION_ID_VAL);
+    EXPECT_EQ(info.priority, PRIORITY_VAL);
+    EXPECT_EQ(static_cast<int32_t>(info.type), TYPE_VAL);
+    EXPECT_EQ(info.extensionTypeName, EXT_TYPE_NAME_VAL);
+    EXPECT_EQ(info.readPermission, READ_PERMISSION_VAL);
+    EXPECT_EQ(info.writePermission, WRITE_PERMISSION_VAL);
+    EXPECT_EQ(info.uri, URI_VAL);
+    EXPECT_EQ(info.permissions, PERMISSIONS_VAL);
+    EXPECT_EQ(info.appIdentifierAllowList, APPID_ALLOW_LIST_VAL);
+    EXPECT_EQ(info.visible, VISIBLE_VAL);
+    EXPECT_EQ(info.enabled, ENABLED_VAL);
+    EXPECT_EQ(info.resourcePath, RESOURCE_PATH_VAL);
+    EXPECT_EQ(info.hapPath, HAP_PATH_VAL);
+    EXPECT_EQ(info.process, PROCESS_VAL);
+    EXPECT_EQ(static_cast<int32_t>(info.compileMode), COMPILE_MODE_VAL);
+    EXPECT_EQ(info.uid, UID_VAL);
+    EXPECT_EQ(info.appIndex, APP_INDEX_VAL);
+    EXPECT_EQ(info.needCreateSandbox, NEED_CREATE_SANDBOX_VAL);
+    EXPECT_EQ(info.dataGroupIds, DATA_GROUP_IDS_VAL);
+    EXPECT_EQ(info.validDataGroupIds, VALID_DATA_GROUP_IDS_VAL);
+    EXPECT_EQ(info.customProcess, CUSTOM_PROCESS_VAL);
+    EXPECT_EQ(info.isolationProcess, ISOLATION_PROCESS_VAL);
+    EXPECT_EQ(info.arkTSMode, ARKTS_MODE_VAL);
+}
+
+void CheckExtensionJson(const nlohmann::json& jsonObject)
+{
+    EXPECT_EQ(jsonObject[Constants::BUNDLE_NAME], BUNDLE_NAME_VAL);
+    EXPECT_EQ(jsonObject[Constants::MODULE_NAME], MODULE_NAME_VAL);
+    EXPECT_EQ(jsonObject[Constants::NAME], NAME_VAL);
+    EXPECT_EQ(jsonObject[Constants::SRC_ENTRANCE], SRC_ENTRANCE_VAL);
+    EXPECT_EQ(jsonObject[Constants::ICON], ICON_VAL);
+    EXPECT_EQ(jsonObject[Constants::ICON_ID], ICON_ID_VAL);
+    EXPECT_EQ(jsonObject[Constants::LABEL], LABEL_VAL);
+    EXPECT_EQ(jsonObject[Constants::LABEL_ID], LABEL_ID_VAL);
+    EXPECT_EQ(jsonObject[Constants::DESCRIPTION], DESCRIPTION_VAL);
+    EXPECT_EQ(jsonObject[Constants::DESCRIPTION_ID], DESCRIPTION_ID_VAL);
+    EXPECT_EQ(jsonObject[Constants::PRIORITY], PRIORITY_VAL);
+    EXPECT_EQ(jsonObject[Constants::TYPE], TYPE_VAL);
+    EXPECT_EQ(jsonObject[Constants::EXTENSION_TYPE_NAME], EXT_TYPE_NAME_VAL);
+    EXPECT_EQ(jsonObject[Constants::READ_PERMISSION], READ_PERMISSION_VAL);
+    EXPECT_EQ(jsonObject[Constants::WRITE_PERMISSION], WRITE_PERMISSION_VAL);
+    EXPECT_EQ(jsonObject[Constants::URI], URI_VAL);
+    EXPECT_EQ(jsonObject[Constants::PERMISSIONS], PERMISSIONS_VAL);
+    EXPECT_EQ(jsonObject[Constants::APPIDENTIFIER_ALLOW_LIST], APPID_ALLOW_LIST_VAL);
+    EXPECT_EQ(jsonObject[Constants::VISIBLE], VISIBLE_VAL);
+    EXPECT_EQ(jsonObject[Constants::META_DATA], METADATA_VAL);
+    EXPECT_EQ(jsonObject[Constants::RESOURCE_PATH], RESOURCE_PATH_VAL);
+    EXPECT_EQ(jsonObject[Constants::HAP_PATH], HAP_PATH_VAL);
+    EXPECT_EQ(jsonObject[Constants::ENABLED], ENABLED_VAL);
+    EXPECT_EQ(jsonObject[Constants::PROCESS], PROCESS_VAL);
+    EXPECT_EQ(jsonObject[Constants::COMPILE_MODE], COMPILE_MODE_VAL);
+    EXPECT_EQ(jsonObject[Constants::UID], UID_VAL);
+    EXPECT_EQ(jsonObject[Constants::APP_INDEX], APP_INDEX_VAL);
+    EXPECT_EQ(jsonObject[Constants::NEED_CREATE_SANDBOX], NEED_CREATE_SANDBOX_VAL);
+    EXPECT_EQ(jsonObject[Constants::DATA_GROUP_IDS], DATA_GROUP_IDS_VAL);
+    EXPECT_EQ(jsonObject[Constants::VALID_DATA_GROUP_IDS], VALID_DATA_GROUP_IDS_VAL);
+    EXPECT_EQ(jsonObject[Constants::CUSTOM_PROCESS], CUSTOM_PROCESS_VAL);
+    EXPECT_EQ(jsonObject[Constants::ISOLATION_PROCESS], ISOLATION_PROCESS_VAL);
+    EXPECT_EQ(jsonObject[Constants::ARKTS_MODE], ARKTS_MODE_VAL);
+}
+
+template<typename T>
+T MakeAbilityInfo()
+{
+    T info;
+    info.name = ABILITY_NAME;
+    info.label = ABILITY_LABEL;
+    info.description = ABILITY_DESCRIPTION;
+    info.iconPath = ABILITY_ICON_PATH;
+    info.labelId = ABILITY_LABEL_ID;
+    info.descriptionId = ABILITY_DESCRIPTION_ID;
+    info.iconId = ABILITY_ICON_ID;
+    info.theme = ABILITY_THEME;
+    info.visible = ABILITY_VISIBLE;
+    info.kind = ABILITY_KIND;
+    info.type = ABILITY_TYPE;
+    info.extensionAbilityType = ABILITY_EXTENSION_ABILITY_TYPE;
+    info.orientation = ABILITY_ORIENTATION;
+    info.launchMode = ABILITY_LAUNCH_MODE;
+    info.srcPath = ABILITY_SRC_PATH;
+    info.srcLanguage = ABILITY_SRC_LANGUAGE;
+    info.arkTSMode = ABILITY_ARKTS_MODE;
+    info.permissions = ABILITY_PERMISSIONS;
+    info.process = ABILITY_PROCESS;
+    info.deviceTypes = ABILITY_DEVICE_TYPES;
+    info.deviceCapabilities = ABILITY_DEVICE_CAPABILITIES;
+    info.uri = ABILITY_URI;
+    info.targetAbility = ABILITY_TARGET_ABILITY;
+    info.isLauncherAbility = ABILITY_IS_LAUNCHER_ABILITY;
+    info.isNativeAbility = ABILITY_IS_NATIVE_ABILITY;
+    info.enabled = ABILITY_ENABLED;
+    info.supportPipMode = ABILITY_SUPPORT_PIP_MODE;
+    info.formEnabled = ABILITY_FORM_ENABLED;
+    info.readPermission = ABILITY_READ_PERMISSION;
+    info.writePermission = ABILITY_WRITE_PERMISSION;
+    info.configChanges = ABILITY_CONFIG_CHANGES;
+    info.formEntity = ABILITY_FORM_ENTITY;
+    info.minFormHeight = ABILITY_MIN_FORM_HEIGHT;
+    info.defaultFormHeight = ABILITY_DEFAULT_FORM_HEIGHT;
+    info.minFormWidth = ABILITY_MIN_FORM_WIDTH;
+    info.defaultFormWidth = ABILITY_DEFAULT_FORM_WIDTH;
+    info.backgroundModes = ABILITY_BACKGROUND_MODES;
+    info.package = ABILITY_PACKAGE;
+    info.bundleName = ABILITY_BUNDLE_NAME;
+    info.moduleName = ABILITY_MODULE_NAME;
+    info.applicationName = ABILITY_APPLICATION_NAME;
+    info.codePath = ABILITY_CODE_PATH;
+    info.resourcePath = ABILITY_RESOURCE_PATH;
+    info.hapPath = ABILITY_HAP_PATH;
+    info.srcEntrance = ABILITY_SRC_ENTRANCE;
+    info.metadata = ABILITY_METADATA;
+    info.isModuleJson = ABILITY_IS_MODULE_JSON;
+    info.isStageBasedModel = ABILITY_IS_STAGE_BASED_MODEL;
+    info.continuable = ABILITY_CONTINUABLE;
+    info.priority = ABILITY_PRIORITY;
+    info.startWindow = ABILITY_START_WINDOW;
+    info.startWindowId = ABILITY_START_WINDOW_ID;
+    info.startWindowIcon = ABILITY_START_WINDOW_ICON;
+    info.startWindowIconId = ABILITY_START_WINDOW_ICON_ID;
+    info.startWindowBackground = ABILITY_START_WINDOW_BACKGROUND;
+    info.startWindowBackgroundId = ABILITY_START_WINDOW_BACKGROUND_ID;
+    info.removeMissionAfterTerminate = ABILITY_REMOVE_MISSION_AFTER_TERMINATE;
+    info.compileMode = ABILITY_COMPILE_MODE;
+    info.windowModes = ABILITY_WINDOW_MODES;
+    info.maxWindowWidth = ABILITY_MAX_WINDOW_WIDTH;
+    info.minWindowWidth = ABILITY_MIN_WINDOW_WIDTH;
+    info.maxWindowHeight = ABILITY_MAX_WINDOW_HEIGHT;
+    info.minWindowHeight = ABILITY_MIN_WINDOW_HEIGHT;
+    info.uid = ABILITY_UID;
+    info.excludeFromMissions = ABILITY_EXCLUDE_FROM_MISSIONS;
+    info.unclearableMission = ABILITY_UNCLEARABLE_MISSION;
+    info.excludeFromDock = ABILITY_EXCLUDE_FROM_DOCK;
+    info.preferMultiWindowOrientation = ABILITY_PREFER_MULTI_WINDOW_ORIENTATION;
+    info.recoverable = ABILITY_RECOVERABLE;
+    info.supportExtNames = ABILITY_SUPPORT_EXT_NAMES;
+    info.supportMimeTypes = ABILITY_SUPPORT_MIME_TYPES;
+    info.isolationProcess = ABILITY_ISOLATION_PROCESS;
+    info.continueType = ABILITY_CONTINUE_TYPE;
+    info.continueBundleNames = ABILITY_CONTINUE_BUNDLE_NAMES;
+    info.skills = ABILITY_SKILLS;
+    info.appIndex = ABILITY_APP_INDEX;
+    info.orientationId = ABILITY_ORIENTATION_ID;
+    info.maxWindowRatio = ABILITY_MAX_WINDOW_RATIO;
+    info.minWindowRatio = ABILITY_MIN_WINDOW_RATIO;
+    return info;
+}
+
+nlohmann::json MakeAbilityJson()
+{
+    nlohmann::json jsonObject = {
+        {Constants::NAME, ABILITY_NAME},
+        {Constants::LABEL, ABILITY_LABEL},
+        {Constants::DESCRIPTION, ABILITY_DESCRIPTION},
+        {JSON_KEY_ICON_PATH, ABILITY_ICON_PATH},
+        {Constants::LABEL_ID, ABILITY_LABEL_ID},
+        {Constants::DESCRIPTION_ID, ABILITY_DESCRIPTION_ID},
+        {Constants::ICON_ID, ABILITY_ICON_ID},
+        {JSON_KEY_THEME, ABILITY_THEME},
+        {Constants::VISIBLE, ABILITY_VISIBLE},
+        {JSON_KEY_KIND, ABILITY_KIND},
+        {Constants::TYPE, ABILITY_TYPE},
+        {JSON_KEY_EXTENSION_ABILITY_TYPE, ABILITY_EXTENSION_ABILITY_TYPE},
+        {JSON_KEY_ORIENTATION, ABILITY_ORIENTATION},
+        {JSON_KEY_LAUNCH_MODE, ABILITY_LAUNCH_MODE},
+        {JSON_KEY_SRC_PATH, ABILITY_SRC_PATH},
+        {JSON_KEY_SRC_LANGUAGE, ABILITY_SRC_LANGUAGE},
+        {Constants::ARKTS_MODE, ABILITY_ARKTS_MODE},
+        {Constants::PERMISSIONS, nlohmann::json::array()},
+        {Constants::PROCESS, ABILITY_PROCESS},
+        {JSON_KEY_DEVICE_TYPES, nlohmann::json::array()},
+        {JSON_KEY_DEVICE_CAPABILITIES, nlohmann::json::array()},
+        {Constants::URI, ABILITY_URI},
+        {JSON_KEY_TARGET_ABILITY, ABILITY_TARGET_ABILITY},
+        {JSON_KEY_IS_LAUNCHER_ABILITY, ABILITY_IS_LAUNCHER_ABILITY},
+        {JSON_KEY_IS_NATIVE_ABILITY, ABILITY_IS_NATIVE_ABILITY},
+        {Constants::ENABLED, ABILITY_ENABLED},
+        {JSON_KEY_SUPPORT_PIP_MODE, ABILITY_SUPPORT_PIP_MODE},
+        {JSON_KEY_FORM_ENABLED, ABILITY_FORM_ENABLED},
+        {Constants::READ_PERMISSION, ABILITY_READ_PERMISSION},
+        {Constants::WRITE_PERMISSION, ABILITY_WRITE_PERMISSION},
+        {JSON_KEY_CONFIG_CHANGES, nlohmann::json::array()},
+        {JSON_KEY_FORM_ENTITY, ABILITY_FORM_ENTITY},
+        {JSON_KEY_MIN_FORM_HEIGHT, ABILITY_MIN_FORM_HEIGHT},
+        {JSON_KEY_DEFAULT_FORM_HEIGHT, ABILITY_DEFAULT_FORM_HEIGHT},
+        {JSON_KEY_MIN_FORM_WIDTH, ABILITY_MIN_FORM_WIDTH},
+        {JSON_KEY_DEFAULT_FORM_WIDTH, ABILITY_DEFAULT_FORM_WIDTH},
+        {JSON_KEY_BACKGROUND_MODES, ABILITY_BACKGROUND_MODES},
+        {JSON_KEY_PACKAGE, ABILITY_PACKAGE},
+        {Constants::BUNDLE_NAME, ABILITY_BUNDLE_NAME},
+        {Constants::MODULE_NAME, ABILITY_MODULE_NAME},
+        {JSON_KEY_APPLICATION_NAME, ABILITY_APPLICATION_NAME},
+        {JSON_KEY_CODE_PATH, ABILITY_CODE_PATH},
+        {Constants::RESOURCE_PATH, ABILITY_RESOURCE_PATH},
+        {Constants::HAP_PATH, ABILITY_HAP_PATH},
+        {Constants::SRC_ENTRANCE, ABILITY_SRC_ENTRANCE},
+        {Constants::META_DATA, nlohmann::json::array()},
+        {JSON_KEY_IS_MODULE_JSON, ABILITY_IS_MODULE_JSON},
+        {JSON_KEY_IS_STAGE_BASED_MODEL, ABILITY_IS_STAGE_BASED_MODEL},
+        {JSON_KEY_IS_CONTINUABLE, ABILITY_CONTINUABLE},
+        {Constants::PRIORITY, ABILITY_PRIORITY},
+        {JSON_KEY_START_WINDOW, ABILITY_START_WINDOW},
+        {JSON_KEY_START_WINDOW_ID, ABILITY_START_WINDOW_ID},
+        {JSON_KEY_START_WINDOW_ICON, ABILITY_START_WINDOW_ICON},
+        {JSON_KEY_START_WINDOW_ICON_ID, ABILITY_START_WINDOW_ICON_ID},
+        {JSON_KEY_START_WINDOW_BACKGROUND, ABILITY_START_WINDOW_BACKGROUND},
+        {JSON_KEY_START_WINDOW_BACKGROUND_ID, ABILITY_START_WINDOW_BACKGROUND_ID},
+        {JSON_KEY_REMOVE_MISSION_AFTER_TERMINATE, ABILITY_REMOVE_MISSION_AFTER_TERMINATE},
+        {Constants::COMPILE_MODE, ABILITY_COMPILE_MODE},
+        {JSON_KEY_SUPPORT_WINDOW_MODE, nlohmann::json::array()},
+        {JSON_KEY_MAX_WINDOW_WIDTH, ABILITY_MAX_WINDOW_WIDTH},
+        {JSON_KEY_MIN_WINDOW_WIDTH, ABILITY_MIN_WINDOW_WIDTH},
+        {JSON_KEY_MAX_WINDOW_HEIGHT, ABILITY_MAX_WINDOW_HEIGHT},
+        {JSON_KEY_MIN_WINDOW_HEIGHT, ABILITY_MIN_WINDOW_HEIGHT},
+        {Constants::UID, ABILITY_UID},
+        {JSON_KEY_EXCLUDE_FROM_MISSIONS, ABILITY_EXCLUDE_FROM_MISSIONS},
+        {JSON_KEY_UNCLEARABLE_MISSION, ABILITY_UNCLEARABLE_MISSION},
+        {JSON_KEY_EXCLUDE_FROM_DOCK_MISSION, ABILITY_EXCLUDE_FROM_DOCK},
+        {JSON_KEY_PREFER_MULTI_WINDOW_ORIENTATION_MISSION, ABILITY_PREFER_MULTI_WINDOW_ORIENTATION},
+        {JSON_KEY_RECOVERABLE, ABILITY_RECOVERABLE},
+        {JSON_KEY_SUPPORT_EXT_NAMES, nlohmann::json::array()},
+        {JSON_KEY_SUPPORT_MIME_TYPES, nlohmann::json::array()},
+        {JSON_KEY_ISOLATION_PROCESS, ABILITY_ISOLATION_PROCESS},
+        {JSON_KEY_CONTINUE_TYPE, nlohmann::json::array()},
+        {JSON_KEY_CONTINUE_BUNDLE_NAME, nlohmann::json::array()},
+        {Constants::SKILLS, nlohmann::json::array()},
+        {Constants::APP_INDEX, ABILITY_APP_INDEX},
+        {JSON_KEY_ORIENTATION_ID, ABILITY_ORIENTATION_ID},
+        {JSON_KEY_MAX_WINDOW_RATIO, ABILITY_MAX_WINDOW_RATIO},
+        {JSON_KEY_MIN_WINDOW_RATIO, ABILITY_MIN_WINDOW_RATIO}
+    };
+    return jsonObject;
+}
+
+template<typename T>
+void CheckAbilityInfo(const T& info)
+{
+    EXPECT_EQ(info.name, ABILITY_NAME);
+    EXPECT_EQ(info.label, ABILITY_LABEL);
+    EXPECT_EQ(info.description, ABILITY_DESCRIPTION);
+    EXPECT_EQ(info.iconPath, ABILITY_ICON_PATH);
+    EXPECT_EQ(info.labelId, ABILITY_LABEL_ID);
+    EXPECT_EQ(info.descriptionId, ABILITY_DESCRIPTION_ID);
+    EXPECT_EQ(info.iconId, ABILITY_ICON_ID);
+    EXPECT_EQ(info.theme, ABILITY_THEME);
+    EXPECT_EQ(info.visible, ABILITY_VISIBLE);
+    EXPECT_EQ(info.kind, ABILITY_KIND);
+    EXPECT_EQ(info.type, ABILITY_TYPE);
+    EXPECT_EQ(info.extensionAbilityType, ABILITY_EXTENSION_ABILITY_TYPE);
+    EXPECT_EQ(info.orientation, ABILITY_ORIENTATION);
+    EXPECT_EQ(info.launchMode, ABILITY_LAUNCH_MODE);
+    EXPECT_EQ(info.srcPath, ABILITY_SRC_PATH);
+    EXPECT_EQ(info.srcLanguage, ABILITY_SRC_LANGUAGE);
+    EXPECT_EQ(info.arkTSMode, ABILITY_ARKTS_MODE);
+    EXPECT_EQ(info.permissions.size(), 0);
+    EXPECT_EQ(info.process, ABILITY_PROCESS);
+    EXPECT_EQ(info.deviceTypes.size(), 0);
+    EXPECT_EQ(info.deviceCapabilities.size(), 0);
+    EXPECT_EQ(info.uri, ABILITY_URI);
+    EXPECT_EQ(info.targetAbility, ABILITY_TARGET_ABILITY);
+    EXPECT_EQ(info.isLauncherAbility, ABILITY_IS_LAUNCHER_ABILITY);
+    EXPECT_EQ(info.isNativeAbility, ABILITY_IS_NATIVE_ABILITY);
+    EXPECT_EQ(info.enabled, ABILITY_ENABLED);
+    EXPECT_EQ(info.supportPipMode, ABILITY_SUPPORT_PIP_MODE);
+    EXPECT_EQ(info.formEnabled, ABILITY_FORM_ENABLED);
+    EXPECT_EQ(info.readPermission, ABILITY_READ_PERMISSION);
+    EXPECT_EQ(info.writePermission, ABILITY_WRITE_PERMISSION);
+    EXPECT_EQ(info.configChanges.size(), 0);
+    EXPECT_EQ(info.formEntity, ABILITY_FORM_ENTITY);
+    EXPECT_EQ(info.minFormHeight, ABILITY_MIN_FORM_HEIGHT);
+    EXPECT_EQ(info.defaultFormHeight, ABILITY_DEFAULT_FORM_HEIGHT);
+    EXPECT_EQ(info.minFormWidth, ABILITY_MIN_FORM_WIDTH);
+    EXPECT_EQ(info.defaultFormWidth, ABILITY_DEFAULT_FORM_WIDTH);
+    EXPECT_EQ(info.backgroundModes, ABILITY_BACKGROUND_MODES);
+    EXPECT_EQ(info.package, ABILITY_PACKAGE);
+    EXPECT_EQ(info.bundleName, ABILITY_BUNDLE_NAME);
+    EXPECT_EQ(info.moduleName, ABILITY_MODULE_NAME);
+    EXPECT_EQ(info.applicationName, ABILITY_APPLICATION_NAME);
+    EXPECT_EQ(info.codePath, ABILITY_CODE_PATH);
+    EXPECT_EQ(info.resourcePath, ABILITY_RESOURCE_PATH);
+    EXPECT_EQ(info.hapPath, ABILITY_HAP_PATH);
+    EXPECT_EQ(info.srcEntrance, ABILITY_SRC_ENTRANCE);
+    EXPECT_EQ(info.metadata.size(), 0);
+    EXPECT_EQ(info.isModuleJson, ABILITY_IS_MODULE_JSON);
+    EXPECT_EQ(info.isStageBasedModel, ABILITY_IS_STAGE_BASED_MODEL);
+    EXPECT_EQ(info.continuable, ABILITY_CONTINUABLE);
+    EXPECT_EQ(info.priority, ABILITY_PRIORITY);
+    EXPECT_EQ(info.startWindow, ABILITY_START_WINDOW);
+    EXPECT_EQ(info.startWindowId, ABILITY_START_WINDOW_ID);
+    EXPECT_EQ(info.startWindowIcon, ABILITY_START_WINDOW_ICON);
+    EXPECT_EQ(info.startWindowIconId, ABILITY_START_WINDOW_ICON_ID);
+    EXPECT_EQ(info.startWindowBackground, ABILITY_START_WINDOW_BACKGROUND);
+    EXPECT_EQ(info.startWindowBackgroundId, ABILITY_START_WINDOW_BACKGROUND_ID);
+    EXPECT_EQ(info.removeMissionAfterTerminate, ABILITY_REMOVE_MISSION_AFTER_TERMINATE);
+    EXPECT_EQ(info.compileMode, ABILITY_COMPILE_MODE);
+    EXPECT_EQ(info.windowModes.size(), 0);
+    EXPECT_EQ(info.maxWindowWidth, ABILITY_MAX_WINDOW_WIDTH);
+    EXPECT_EQ(info.minWindowWidth, ABILITY_MIN_WINDOW_WIDTH);
+    EXPECT_EQ(info.maxWindowHeight, ABILITY_MAX_WINDOW_HEIGHT);
+    EXPECT_EQ(info.minWindowHeight, ABILITY_MIN_WINDOW_HEIGHT);
+    EXPECT_EQ(info.uid, ABILITY_UID);
+    EXPECT_EQ(info.excludeFromMissions, ABILITY_EXCLUDE_FROM_MISSIONS);
+    EXPECT_EQ(info.unclearableMission, ABILITY_UNCLEARABLE_MISSION);
+    EXPECT_EQ(info.excludeFromDock, ABILITY_EXCLUDE_FROM_DOCK);
+    EXPECT_EQ(info.preferMultiWindowOrientation, ABILITY_PREFER_MULTI_WINDOW_ORIENTATION);
+    EXPECT_EQ(info.recoverable, ABILITY_RECOVERABLE);
+    EXPECT_EQ(info.supportExtNames.size(), 0);
+    EXPECT_EQ(info.supportMimeTypes.size(), 0);
+    EXPECT_EQ(info.isolationProcess, ABILITY_ISOLATION_PROCESS);
+    EXPECT_EQ(info.continueType.size(), 0);
+    EXPECT_EQ(info.continueBundleNames.size(), 0);
+    EXPECT_EQ(info.skills.size(), 0);
+    EXPECT_EQ(info.appIndex, ABILITY_APP_INDEX);
+    EXPECT_EQ(info.orientationId, ABILITY_ORIENTATION_ID);
+    EXPECT_EQ(info.maxWindowRatio, ABILITY_MAX_WINDOW_RATIO);
+    EXPECT_EQ(info.minWindowRatio, ABILITY_MIN_WINDOW_RATIO);
+}
+
+void CheckAbilityJson(const nlohmann::json& jsonObject)
+{
+    EXPECT_EQ(jsonObject[Constants::NAME], ABILITY_NAME);
+    EXPECT_EQ(jsonObject[Constants::LABEL], ABILITY_LABEL);
+    EXPECT_EQ(jsonObject[Constants::DESCRIPTION], ABILITY_DESCRIPTION);
+    EXPECT_EQ(jsonObject[JSON_KEY_ICON_PATH], ABILITY_ICON_PATH);
+    EXPECT_EQ(jsonObject[Constants::LABEL_ID], ABILITY_LABEL_ID);
+    EXPECT_EQ(jsonObject[Constants::DESCRIPTION_ID], ABILITY_DESCRIPTION_ID);
+    EXPECT_EQ(jsonObject[Constants::ICON_ID], ABILITY_ICON_ID);
+    EXPECT_EQ(jsonObject[JSON_KEY_THEME], ABILITY_THEME);
+    EXPECT_EQ(jsonObject[Constants::VISIBLE], ABILITY_VISIBLE);
+    EXPECT_EQ(jsonObject[JSON_KEY_KIND], ABILITY_KIND);
+    EXPECT_EQ(jsonObject[Constants::TYPE], ABILITY_TYPE);
+    EXPECT_EQ(jsonObject[JSON_KEY_EXTENSION_ABILITY_TYPE], ABILITY_EXTENSION_ABILITY_TYPE);
+    EXPECT_EQ(jsonObject[JSON_KEY_ORIENTATION], ABILITY_ORIENTATION);
+    EXPECT_EQ(jsonObject[JSON_KEY_LAUNCH_MODE], ABILITY_LAUNCH_MODE);
+    EXPECT_EQ(jsonObject[JSON_KEY_SRC_PATH], ABILITY_SRC_PATH);
+    EXPECT_EQ(jsonObject[JSON_KEY_SRC_LANGUAGE], ABILITY_SRC_LANGUAGE);
+    EXPECT_EQ(jsonObject[Constants::ARKTS_MODE], ABILITY_ARKTS_MODE);
+    EXPECT_EQ(jsonObject[Constants::PERMISSIONS].is_array() && jsonObject[Constants::PERMISSIONS].empty(), true);
+    EXPECT_EQ(jsonObject[Constants::PROCESS], ABILITY_PROCESS);
+    EXPECT_EQ(jsonObject[JSON_KEY_DEVICE_TYPES].is_array() && jsonObject[JSON_KEY_DEVICE_TYPES].empty(), true);
+    EXPECT_EQ(jsonObject[JSON_KEY_DEVICE_CAPABILITIES].is_array() &&
+        jsonObject[JSON_KEY_DEVICE_CAPABILITIES].empty(), true);
+    EXPECT_EQ(jsonObject[Constants::URI], ABILITY_URI);
+    EXPECT_EQ(jsonObject[JSON_KEY_TARGET_ABILITY], ABILITY_TARGET_ABILITY);
+    EXPECT_EQ(jsonObject[JSON_KEY_IS_LAUNCHER_ABILITY], ABILITY_IS_LAUNCHER_ABILITY);
+    EXPECT_EQ(jsonObject[JSON_KEY_IS_NATIVE_ABILITY], ABILITY_IS_NATIVE_ABILITY);
+    EXPECT_EQ(jsonObject[Constants::ENABLED], ABILITY_ENABLED);
+    EXPECT_EQ(jsonObject[JSON_KEY_SUPPORT_PIP_MODE], ABILITY_SUPPORT_PIP_MODE);
+    EXPECT_EQ(jsonObject[JSON_KEY_FORM_ENABLED], ABILITY_FORM_ENABLED);
+    EXPECT_EQ(jsonObject[Constants::READ_PERMISSION], ABILITY_READ_PERMISSION);
+    EXPECT_EQ(jsonObject[Constants::WRITE_PERMISSION], ABILITY_WRITE_PERMISSION);
+    EXPECT_EQ(jsonObject[JSON_KEY_CONFIG_CHANGES].is_array() && jsonObject[JSON_KEY_CONFIG_CHANGES].empty(), true);
+    EXPECT_EQ(jsonObject[JSON_KEY_FORM_ENTITY], ABILITY_FORM_ENTITY);
+    EXPECT_EQ(jsonObject[JSON_KEY_MIN_FORM_HEIGHT], ABILITY_MIN_FORM_HEIGHT);
+    EXPECT_EQ(jsonObject[JSON_KEY_DEFAULT_FORM_HEIGHT], ABILITY_DEFAULT_FORM_HEIGHT);
+    EXPECT_EQ(jsonObject[JSON_KEY_MIN_FORM_WIDTH], ABILITY_MIN_FORM_WIDTH);
+    EXPECT_EQ(jsonObject[JSON_KEY_DEFAULT_FORM_WIDTH], ABILITY_DEFAULT_FORM_WIDTH);
+    EXPECT_EQ(jsonObject[JSON_KEY_BACKGROUND_MODES], ABILITY_BACKGROUND_MODES);
+    EXPECT_EQ(jsonObject[JSON_KEY_PACKAGE], ABILITY_PACKAGE);
+    EXPECT_EQ(jsonObject[Constants::BUNDLE_NAME], ABILITY_BUNDLE_NAME);
+    EXPECT_EQ(jsonObject[Constants::MODULE_NAME], ABILITY_MODULE_NAME);
+    EXPECT_EQ(jsonObject[JSON_KEY_APPLICATION_NAME], ABILITY_APPLICATION_NAME);
+    EXPECT_EQ(jsonObject[JSON_KEY_CODE_PATH], ABILITY_CODE_PATH);
+    EXPECT_EQ(jsonObject[Constants::RESOURCE_PATH], ABILITY_RESOURCE_PATH);
+    EXPECT_EQ(jsonObject[Constants::HAP_PATH], ABILITY_HAP_PATH);
+    EXPECT_EQ(jsonObject[Constants::SRC_ENTRANCE], ABILITY_SRC_ENTRANCE);
+    EXPECT_EQ(jsonObject[Constants::META_DATA].is_array() && jsonObject[Constants::META_DATA].empty(), true);
+    EXPECT_EQ(jsonObject[JSON_KEY_IS_MODULE_JSON], ABILITY_IS_MODULE_JSON);
+    EXPECT_EQ(jsonObject[JSON_KEY_IS_STAGE_BASED_MODEL], ABILITY_IS_STAGE_BASED_MODEL);
+    EXPECT_EQ(jsonObject[JSON_KEY_IS_CONTINUABLE], ABILITY_CONTINUABLE);
+    EXPECT_EQ(jsonObject[Constants::PRIORITY], ABILITY_PRIORITY);
+    EXPECT_EQ(jsonObject[JSON_KEY_START_WINDOW], ABILITY_START_WINDOW);
+    EXPECT_EQ(jsonObject[JSON_KEY_START_WINDOW_ID], ABILITY_START_WINDOW_ID);
+    EXPECT_EQ(jsonObject[JSON_KEY_START_WINDOW_ICON], ABILITY_START_WINDOW_ICON);
+    EXPECT_EQ(jsonObject[JSON_KEY_START_WINDOW_ICON_ID], ABILITY_START_WINDOW_ICON_ID);
+    EXPECT_EQ(jsonObject[JSON_KEY_START_WINDOW_BACKGROUND], ABILITY_START_WINDOW_BACKGROUND);
+    EXPECT_EQ(jsonObject[JSON_KEY_START_WINDOW_BACKGROUND_ID], ABILITY_START_WINDOW_BACKGROUND_ID);
+    EXPECT_EQ(jsonObject[JSON_KEY_REMOVE_MISSION_AFTER_TERMINATE], ABILITY_REMOVE_MISSION_AFTER_TERMINATE);
+    EXPECT_EQ(jsonObject[Constants::COMPILE_MODE], ABILITY_COMPILE_MODE);
+    EXPECT_EQ(jsonObject[JSON_KEY_SUPPORT_WINDOW_MODE].is_array() &&
+        jsonObject[JSON_KEY_SUPPORT_WINDOW_MODE].empty(), true);
+    EXPECT_EQ(jsonObject[JSON_KEY_MAX_WINDOW_WIDTH], ABILITY_MAX_WINDOW_WIDTH);
+    EXPECT_EQ(jsonObject[JSON_KEY_MIN_WINDOW_WIDTH], ABILITY_MIN_WINDOW_WIDTH);
+    EXPECT_EQ(jsonObject[JSON_KEY_MAX_WINDOW_HEIGHT], ABILITY_MAX_WINDOW_HEIGHT);
+    EXPECT_EQ(jsonObject[JSON_KEY_MIN_WINDOW_HEIGHT], ABILITY_MIN_WINDOW_HEIGHT);
+    EXPECT_EQ(jsonObject[Constants::UID], ABILITY_UID);
+    EXPECT_EQ(jsonObject[JSON_KEY_EXCLUDE_FROM_MISSIONS], ABILITY_EXCLUDE_FROM_MISSIONS);
+    EXPECT_EQ(jsonObject[JSON_KEY_UNCLEARABLE_MISSION], ABILITY_UNCLEARABLE_MISSION);
+    EXPECT_EQ(jsonObject[JSON_KEY_EXCLUDE_FROM_DOCK_MISSION], ABILITY_EXCLUDE_FROM_DOCK);
+    EXPECT_EQ(jsonObject[JSON_KEY_PREFER_MULTI_WINDOW_ORIENTATION_MISSION], ABILITY_PREFER_MULTI_WINDOW_ORIENTATION);
+    EXPECT_EQ(jsonObject[JSON_KEY_RECOVERABLE], ABILITY_RECOVERABLE);
+    EXPECT_EQ(jsonObject[JSON_KEY_SUPPORT_EXT_NAMES].is_array() &&
+        jsonObject[JSON_KEY_SUPPORT_EXT_NAMES].empty(), true);
+    EXPECT_EQ(jsonObject[JSON_KEY_SUPPORT_MIME_TYPES].is_array() &&
+        jsonObject[JSON_KEY_SUPPORT_MIME_TYPES].empty(), true);
+    EXPECT_EQ(jsonObject[JSON_KEY_ISOLATION_PROCESS], ABILITY_ISOLATION_PROCESS);
+    EXPECT_EQ(jsonObject[JSON_KEY_CONTINUE_TYPE].is_array() && jsonObject[JSON_KEY_CONTINUE_TYPE].empty(), true);
+    EXPECT_EQ(jsonObject[JSON_KEY_CONTINUE_BUNDLE_NAME].is_array() &&
+        jsonObject[JSON_KEY_CONTINUE_BUNDLE_NAME].empty(), true);
+    EXPECT_EQ(jsonObject[Constants::SKILLS].is_array() && jsonObject[Constants::SKILLS].empty(), true);
+    EXPECT_EQ(jsonObject[Constants::APP_INDEX], ABILITY_APP_INDEX);
+    EXPECT_EQ(jsonObject[JSON_KEY_ORIENTATION_ID], ABILITY_ORIENTATION_ID);
+    EXPECT_EQ(jsonObject[JSON_KEY_MAX_WINDOW_RATIO], ABILITY_MAX_WINDOW_RATIO);
+    EXPECT_EQ(jsonObject[JSON_KEY_MIN_WINDOW_RATIO], ABILITY_MIN_WINDOW_RATIO);
+}
+
 /**
  * @tc.number: BundleInfoJsonSerializer_0100
  * @tc.name: save bundle installation information to persist storage
@@ -2130,12 +2761,12 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0700, Function | Smal
     ShortcutInfo shortcutInfo2;
     CommonEventInfo commonEvent1;
     CommonEventInfo commonEvent2;
-    ExtensionAbilityInfo extensionInfo;
-    extensionInfo.name = TEST_KEY;
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.name = TEST_KEY;
     std::vector<Skill> skill;
     innerModuleInfo.extensionKeys.emplace_back(TEST_KEY1);
     innerModuleInfo.extensionSkillKeys.emplace_back(TEST_KEY2);
-    info.InsertExtensionInfo(TEST_KEY1, extensionInfo);
+    info.InsertExtensionInfo(TEST_KEY1, innerExtensionInfo);
     info.InsertExtensionSkillInfo(TEST_KEY2, skill);
     info.InsertInnerModuleInfo(WRONG_MODULEPACKAGE, innerModuleInfo);
     info.InsertShortcutInfos(WRONG, shortcutInfo1);
@@ -2354,13 +2985,13 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1800, Function | Smal
     auto ret = info.FindExtensionInfo(moduleName, extensionName);
     EXPECT_EQ(ret, std::nullopt);
 
-    ExtensionAbilityInfo extensionInfo;
+    InnerExtensionInfo innerExtensionInfo;
     moduleName = MODULE_NAME;
     extensionName = bundleName;
-    extensionInfo.bundleName = bundleName;
-    extensionInfo.moduleName = moduleName;
-    extensionInfo.name = extensionName;
-    info.InsertExtensionInfo(TEST_KEY, extensionInfo);
+    innerExtensionInfo.bundleName = bundleName;
+    innerExtensionInfo.moduleName = moduleName;
+    innerExtensionInfo.name = extensionName;
+    info.InsertExtensionInfo(TEST_KEY, innerExtensionInfo);
     ret = info.FindExtensionInfo(moduleName, extensionName);
     EXPECT_EQ((*ret).bundleName, bundleName);
 }
@@ -2415,25 +3046,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2200, Function | Smal
 
 /**
  * @tc.number: InnerBundleInfo_2300
- * @tc.name: Test FindExtensionInfos
- * @tc.desc: 1.Test the FindExtensionInfos of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2300, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    std::string bundleName = BUNDLE_NAME;
-    auto ret = info.FindExtensionInfos();
-    EXPECT_EQ(ret, std::nullopt);
-
-    ExtensionAbilityInfo extensionInfo;
-    extensionInfo.bundleName = bundleName;
-    info.InsertExtensionInfo(TEST_KEY, extensionInfo);
-    ret = info.FindExtensionInfos();
-    EXPECT_NE(ret, std::nullopt);
-}
-
-/**
- * @tc.number: InnerBundleInfo_2300
  * @tc.name: Test ProcessBundleWithHapModuleInfoFlag
  * @tc.desc: 1.Test the ProcessBundleWithHapModuleInfoFlag of InnerBundleInfo
  */
@@ -2473,10 +3085,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2500, Function | Smal
     info.GetBundleWithAbilitiesV9(FLAG, hapModuleInfo, Constants::START_USERID);
     EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
 
-    AbilityInfo abilityInfo;
-    abilityInfo.moduleName = hapModuleInfo.moduleName;
-    abilityInfo.name = "";
-    info.InsertAbilitiesInfo(TEST_KEY, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.moduleName = hapModuleInfo.moduleName;
+    innerAbilityInfo.name = "";
+    info.InsertAbilitiesInfo(TEST_KEY, innerAbilityInfo);
     int32_t flag = 4;
     info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::START_USERID);
     EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
@@ -2484,10 +3096,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2500, Function | Smal
     info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, ServiceConstants::NOT_EXIST_USERID);
     EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), false);
 
-    abilityInfo.moduleName = BUNDLE_NAME;
-    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    innerAbilityInfo.moduleName = BUNDLE_NAME;
+    innerAbilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
     hapModuleInfo.moduleName = MODULE_NAME;
-    info.InsertAbilitiesInfo(TEST_KEY, abilityInfo);
+    info.InsertAbilitiesInfo(TEST_KEY, innerAbilityInfo);
     info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::START_USERID);
     EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
 }
@@ -2505,18 +3117,18 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2600, Function | Smal
     info.GetBundleWithExtensionAbilitiesV9(FLAG, hapModuleInfo);
     EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), true);
 
-    ExtensionAbilityInfo extensionInfo;
+    InnerExtensionInfo innerExtensionInfo;
     int32_t flag = 8;
-    extensionInfo.moduleName = moduleName;
-    extensionInfo.enabled = false;
-    info.InsertExtensionInfo(TEST_KEY, extensionInfo);
+    innerExtensionInfo.moduleName = moduleName;
+    innerExtensionInfo.enabled = false;
+    info.InsertExtensionInfo(TEST_KEY, innerExtensionInfo);
     info.GetBundleWithExtensionAbilitiesV9(flag, hapModuleInfo);
     EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), true);
 
-    std::map<std::string, ExtensionAbilityInfo> extensionInfos;
-    extensionInfo.enabled = true;
-    hapModuleInfo.moduleName = extensionInfo.moduleName;
-    extensionInfos["baseExtensionInfos_"] = extensionInfo;
+    std::map<std::string, InnerExtensionInfo> extensionInfos;
+    innerExtensionInfo.enabled = true;
+    hapModuleInfo.moduleName = innerExtensionInfo.moduleName;
+    extensionInfos["baseExtensionInfos_"] = innerExtensionInfo;
     info.AddModuleExtensionInfos(extensionInfos);
     info.GetBundleWithExtensionAbilitiesV9(flag, hapModuleInfo);
     EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), false);
@@ -2634,11 +3246,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3200, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3300, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo innerAbilityInfo;
     std::vector<std::string> continueTypes;
     continueTypes.push_back(CONTINUE_TYPES);
-    abilityInfo.continueType = continueTypes;
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair(BUNDLE_NAME, abilityInfo));
+    innerAbilityInfo.continueType = continueTypes;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(BUNDLE_NAME, innerAbilityInfo));
     auto ret = bundleInfo.FindAbilityInfo(CONTINUE_TYPES, userId);
     EXPECT_NE(ret, std::nullopt);
 }
@@ -2738,24 +3350,24 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3700, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3800, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = ABILITY_NAME;
-    abilityInfo.moduleName = MODULE_NAME_TEST;
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, abilityInfo));
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ABILITY_NAME;
+    innerAbilityInfo.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, innerAbilityInfo));
     auto ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, ABILITY_NAME, true, userId, appIndex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     bundleInfo.baseAbilityInfos_.clear();
-    AbilityInfo abilityInfo2;
-    abilityInfo2.name = ABILITY_NAME;
-    abilityInfo2.moduleName = BUNDLE_NAME;
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, abilityInfo2));
+    InnerAbilityInfo innerAbilityInfo2;
+    innerAbilityInfo2.name = ABILITY_NAME;
+    innerAbilityInfo2.moduleName = BUNDLE_NAME;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, innerAbilityInfo2));
     ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, ABILITY_NAME, true, userId, appIndex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
     bundleInfo.baseAbilityInfos_.clear();
-    AbilityInfo abilityInfo3;
-    abilityInfo3.name = ABILITY_NAME;
-    abilityInfo3.moduleName = MODULE_NAME_TEST;
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, abilityInfo3));
+    InnerAbilityInfo innerAbilityInfo3;
+    innerAbilityInfo3.name = ABILITY_NAME;
+    innerAbilityInfo3.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, innerAbilityInfo3));
     ret = bundleInfo.SetCloneAbilityEnabled("", ABILITY_NAME, true, userId, appIndex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
@@ -2781,10 +3393,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3900, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4000, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = ABILITY_NAME;
-    abilityInfo.moduleName = MODULE_NAME_TEST;
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, abilityInfo));
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ABILITY_NAME;
+    innerAbilityInfo.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, innerAbilityInfo));
     auto ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, "", true, userId, appIndex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 }
@@ -2797,10 +3409,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4000, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4100, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = ABILITY_NAME;
-    abilityInfo.moduleName = MODULE_NAME_TEST;
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", abilityInfo));
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ABILITY_NAME;
+    innerAbilityInfo.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", innerAbilityInfo));
     InnerBundleUserInfo innerBundleUserInfo;
     bundleInfo.innerBundleUserInfos_.insert(std::make_pair("_1", innerBundleUserInfo));
     auto ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, ABILITY_NAME, true, userId, appIndex);
@@ -2815,10 +3427,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4100, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4200, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = ABILITY_NAME;
-    abilityInfo.moduleName = MODULE_NAME_TEST;
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", abilityInfo));
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ABILITY_NAME;
+    innerAbilityInfo.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", innerAbilityInfo));
     InnerBundleUserInfo innerBundleUserInfo;
     std::map<std::string, InnerBundleCloneInfo> cloneInfos;
     InnerBundleCloneInfo innerBundleCloneInfo;
@@ -2840,10 +3452,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4200, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4300, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = ABILITY_NAME;
-    abilityInfo.moduleName = MODULE_NAME_TEST;
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", abilityInfo));
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ABILITY_NAME;
+    innerAbilityInfo.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", innerAbilityInfo));
     InnerBundleUserInfo innerBundleUserInfo;
     std::map<std::string, InnerBundleCloneInfo> cloneInfos;
     InnerBundleCloneInfo innerBundleCloneInfo;
@@ -3011,11 +3623,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5100, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5200, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.uri = URI;
     ExtensionAbilityInfo extensionAbilityInfo;
-    extensionAbilityInfo.uri = URI;
-    ExtensionAbilityInfo baseExtensionInfo;
-    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, extensionAbilityInfo));
-    bool ret = bundleInfo.FindExtensionAbilityInfoByUri(URI, baseExtensionInfo);
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, innerExtensionInfo));
+    bool ret = bundleInfo.FindExtensionAbilityInfoByUri(URI, extensionAbilityInfo);
     EXPECT_TRUE(ret);
 }
 
@@ -3028,13 +3640,13 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5300, Function | Smal
 {
     InnerBundleInfo bundleInfo;
     bundleInfo.baseExtensionInfos_.clear();
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.uri = URI;
     ExtensionAbilityInfo extensionAbilityInfo;
-    extensionAbilityInfo.uri = URI;
-    ExtensionAbilityInfo baseExtensionInfo;
-    bool ret = bundleInfo.FindExtensionAbilityInfoByUri(URI, baseExtensionInfo);
+    bool ret = bundleInfo.FindExtensionAbilityInfoByUri(URI, extensionAbilityInfo);
     EXPECT_FALSE(ret);
-    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, extensionAbilityInfo));
-    ret = bundleInfo.FindExtensionAbilityInfoByUri("URI", baseExtensionInfo);
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, innerExtensionInfo));
+    ret = bundleInfo.FindExtensionAbilityInfoByUri("URI", extensionAbilityInfo);
     EXPECT_FALSE(ret);
 }
 
@@ -3046,10 +3658,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5300, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5400, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.uri = URI;
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.uri = URI;
+    std::vector<InnerAbilityInfo> innerAbilityInfos;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(TEST_ABILITY_NAME, innerAbilityInfo));
     std::vector<AbilityInfo> abilityInfos;
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair(TEST_ABILITY_NAME, abilityInfo));
     bundleInfo.FindAbilityInfosByUri("test", abilityInfos, userId);
     EXPECT_FALSE(abilityInfos.empty());
 }
@@ -3062,10 +3675,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5400, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5500, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.uri = URI;
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.uri = URI;
+    std::vector<InnerAbilityInfo> innerAbilityInfos;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(TEST_ABILITY_NAME, innerAbilityInfo));
     std::vector<AbilityInfo> abilityInfos;
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair(TEST_ABILITY_NAME, abilityInfo));
     bundleInfo.FindAbilityInfosByUri(URI, abilityInfos, userId);
     EXPECT_TRUE(abilityInfos.empty());
 }
@@ -3201,10 +3815,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6100, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6200, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    ExtensionAbilityInfo extensionAbilityInfo;
-    extensionAbilityInfo.moduleName = MODULE_NAME;
-    extensionAbilityInfo.needCreateSandbox = true;
-    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, extensionAbilityInfo));
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.moduleName = MODULE_NAME;
+    innerExtensionInfo.needCreateSandbox = true;
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, innerExtensionInfo));
     auto ret = bundleInfo.GetAllExtensionDirsInSpecifiedModule(MODULE_NAME);
     EXPECT_FALSE(ret.empty());
 }
@@ -3217,9 +3831,9 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6200, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6300, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    ExtensionAbilityInfo extensionAbilityInfo;
-    extensionAbilityInfo.needCreateSandbox = true;
-    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, extensionAbilityInfo));
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.needCreateSandbox = true;
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, innerExtensionInfo));
     auto ret = bundleInfo.GetAllExtensionDirs();
     EXPECT_FALSE(ret.empty());
 }
@@ -3232,10 +3846,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6300, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6400, Function | SmallTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    ExtensionAbilityInfo extensionAbilityInfo;
+    InnerExtensionInfo innerExtensionInfo;
     std::vector<std::string> dataGroupIds;
     dataGroupIds.push_back(TEST_UID);
-    bundleInfo.baseExtensionInfos_.insert(std::make_pair(TEST_NAME, extensionAbilityInfo));
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(TEST_NAME, innerExtensionInfo));
     bundleInfo.UpdateExtensionDataGroupInfo("1", dataGroupIds);
     EXPECT_TRUE(bundleInfo.baseExtensionInfos_[TEST_NAME].validDataGroupIds.empty());
     bundleInfo.UpdateExtensionDataGroupInfo(TEST_NAME, dataGroupIds);
@@ -3974,11 +4588,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_7500, Function | Medi
 {
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
     userInfo.bundleName = TEST_BUNDLE_NAME;
     info.innerBundleUserInfos_.try_emplace(TEST_BUNDLE_NAME, userInfo);
-    info.baseAbilityInfos_.try_emplace(TEST_BUNDLE_NAME, abilityInfo);
+    info.baseAbilityInfos_.try_emplace(TEST_BUNDLE_NAME, innerAbilityInfo);
     std::optional<std::vector<AbilityInfo>> ret = info.FindAbilityInfos(Constants::ALL_USERID);
     EXPECT_EQ(ret, std::nullopt);
 }
@@ -4325,11 +4939,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9300, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9400, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
-    info.baseAbilityInfos_.try_emplace(TEST_KEY, abilityInfo);
-    abilityInfo.name = TEST_NAME;
-    info.baseAbilityInfos_.try_emplace(TEST_KEY1, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    info.baseAbilityInfos_.try_emplace(TEST_KEY, innerAbilityInfo);
+    innerAbilityInfo.name = TEST_NAME;
+    info.baseAbilityInfos_.try_emplace(TEST_KEY1, innerAbilityInfo);
     BundleInfo bundleInfo;
     info.GetBundleWithAbilities(GET_BUNDLE_WITH_ABILITIES, bundleInfo, appIndex, Constants::ALL_USERID);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 0);
@@ -4343,9 +4957,9 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9400, Function | Medi
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9500, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
-    ExtensionAbilityInfo extensionAbilityInfo;
-    extensionAbilityInfo.enabled = false;
-    info.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, extensionAbilityInfo));
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.enabled = false;
+    info.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, innerExtensionInfo));
     BundleInfo bundleInfo;
     info.GetBundleWithExtension(GET_BUNDLE_WITH_EXTENSION_INFO, bundleInfo, appIndex, Constants::ALL_USERID);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 0);
@@ -4678,10 +5292,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11300, Function | Med
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_11400, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = TEST_NAME;
-    abilityInfo.moduleName = MODULE_NAME_TEST;
-    info.baseAbilityInfos_.try_emplace(TEST_KEY1, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = TEST_NAME;
+    innerAbilityInfo.moduleName = MODULE_NAME_TEST;
+    info.baseAbilityInfos_.try_emplace(TEST_KEY1, innerAbilityInfo);
     info.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
     InnerBundleUserInfo innerBundleUserInfo;
     InnerBundleCloneInfo innerBundleCloneInfo;
@@ -5471,5 +6085,133 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfo_0002, Function | Smal
     ret = targetInfo.ReadFromParcel(parcel);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(targetInfo.arkTSMode, Constants::ARKTS_MODE_STATIC);
+}
+
+/**
+ * @tc.number: ExtensionFromJson_0001
+ * @tc.name: test ExtensionFromJson
+ * @tc.desc: 1. test ExtensionFromJson with param ExtensionAbilityInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ExtensionFromJson_0001, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject = MakeExtensionJson();
+    ExtensionAbilityInfo info;
+    ExtensionFromJson(jsonObject, info);
+    CheckExtensionInfo(info);
+}
+
+/**
+ * @tc.number: ExtensionFromJson_0002
+ * @tc.name: test ExtensionFromJson
+ * @tc.desc: 1. test ExtensionFromJson with param InnerExtensionInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ExtensionFromJson_0002, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject = MakeExtensionJson();
+    InnerExtensionInfo info;
+    ExtensionFromJson(jsonObject, info);
+    CheckExtensionInfo(info);
+}
+
+/**
+ * @tc.number: ExtensionToJson_0001
+ * @tc.name: test ExtensionToJson
+ * @tc.desc: 1. test test ExtensionToJson with param ExtensionAbilityInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ExtensionToJson_0001, Function | SmallTest | Level1)
+{
+    ExtensionAbilityInfo info = MakeExtensionInfo<ExtensionAbilityInfo>();
+    nlohmann::json jsonObject;
+    ExtensionToJson(jsonObject, info);
+    CheckExtensionJson(jsonObject);
+}
+
+/**
+ * @tc.number: ExtensionToJson_0002
+ * @tc.name: test ExtensionToJson
+ * @tc.desc: 1. test test ExtensionToJson with param InnerExtensionInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ExtensionToJson_0002, Function | SmallTest | Level1)
+{
+    InnerExtensionInfo info = MakeExtensionInfo<InnerExtensionInfo>();
+    nlohmann::json jsonObject;
+    ExtensionToJson(jsonObject, info);
+    CheckExtensionJson(jsonObject);
+}
+
+/**
+ * @tc.number: ConvertToExtensionInfo_0001
+ * @tc.name: test ConvertToExtensionInfo
+ * @tc.desc: 1. test ConvertToExtensionInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ConvertToExtensionInfo_0001, Function | SmallTest | Level1)
+{
+    InnerExtensionInfo innerExtensionInfo = MakeExtensionInfo<InnerExtensionInfo>();
+    ExtensionAbilityInfo extensionAbilityInfo = InnerExtensionInfo::ConvertToExtensionInfo(innerExtensionInfo);
+    CheckExtensionInfo(extensionAbilityInfo);
+}
+
+/**
+ * @tc.number: AbilityFromJson_0001
+ * @tc.name: test AbilityFromJson
+ * @tc.desc: 1. test AbilityFromJson with param AbilityInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityFromJson_0001, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject = MakeAbilityJson();
+    AbilityInfo info;
+    AbilityFromJson(jsonObject, info);
+    CheckAbilityInfo(info);
+}
+
+/**
+ * @tc.number: AbilityFromJson_0002
+ * @tc.name: test AbilityFromJson
+ * @tc.desc: 1. test AbilityFromJson with param InnerAbilityInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityFromJson_0002, Function | SmallTest | Level1)
+{
+    nlohmann::json jsonObject = MakeAbilityJson();
+    InnerAbilityInfo info;
+    AbilityFromJson(jsonObject, info);
+    CheckAbilityInfo(info);
+}
+
+/**
+ * @tc.number: AbilityToJson_0001
+ * @tc.name: test AbilityToJson
+ * @tc.desc: 1. test AbilityToJson with param AbilityInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityToJson_0001, Function | SmallTest | Level1)
+{
+    AbilityInfo info = MakeAbilityInfo<AbilityInfo>();
+    nlohmann::json jsonObject;
+    AbilityToJson(jsonObject, info);
+    CheckAbilityJson(jsonObject);
+}
+
+/**
+ * @tc.number: AbilityToJson_0002
+ * @tc.name: test AbilityToJson
+ * @tc.desc: 1. test AbilityToJson with param InnerAbilityInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityToJson_0002, Function | SmallTest | Level1)
+{
+    InnerAbilityInfo info = MakeAbilityInfo<InnerAbilityInfo>();
+    nlohmann::json jsonObject;
+    AbilityToJson(jsonObject, info);
+    CheckAbilityJson(jsonObject);
+}
+
+/**
+ * @tc.number: ConvertToAbilityInfo_0001
+ * @tc.name: test ConvertToAbilityInfo
+ * @tc.desc: 1. test ConvertToAbilityInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ConvertToAbilityInfo_0001, Function | SmallTest | Level1)
+{
+    InnerAbilityInfo innerAbilityInfo = MakeAbilityInfo<InnerAbilityInfo>();
+    AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
+    CheckAbilityInfo(abilityInfo);
 }
 } // OHOS

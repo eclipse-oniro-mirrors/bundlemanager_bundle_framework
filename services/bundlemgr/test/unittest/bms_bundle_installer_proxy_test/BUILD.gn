@@ -50,6 +50,7 @@ ohos_unittest("BmsBundleInstallerProxyTest") {
     "googletest:gtest_main",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "safwk:api_cache_manager",
     "samgr:samgr_proxy",
   ]
   external_deps += bundle_install_external_deps

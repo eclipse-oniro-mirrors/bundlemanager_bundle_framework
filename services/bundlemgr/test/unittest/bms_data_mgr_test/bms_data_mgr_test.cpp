@@ -88,6 +88,7 @@ public:
     void TearDown();
     const std::shared_ptr<BundleDataMgr> GetDataMgr() const;
     AbilityInfo GetDefaultAbilityInfo() const;
+    InnerAbilityInfo GetDefaultInnerAbilityInfo() const;
     ShortcutInfo InitShortcutInfo();
 
 private:
@@ -127,6 +128,28 @@ void BmsDataMgrTest::TearDown()
 AbilityInfo BmsDataMgrTest::GetDefaultAbilityInfo() const
 {
     AbilityInfo abilityInfo;
+    abilityInfo.package = PACKAGE_NAME;
+    abilityInfo.name = ABILITY_NAME;
+    abilityInfo.bundleName = BUNDLE_NAME;
+    abilityInfo.applicationName = APP_NAME;
+    abilityInfo.deviceId = DEVICE_ID;
+    abilityInfo.label = LABEL;
+    abilityInfo.description = DESCRIPTION;
+    abilityInfo.iconPath = ICON_PATH;
+    abilityInfo.visible = VISIBLE;
+    abilityInfo.kind = KIND;
+    abilityInfo.type = ABILITY_TYPE;
+    abilityInfo.orientation = ORIENTATION;
+    abilityInfo.launchMode = LAUNCH_MODE;
+    abilityInfo.codePath = CODE_PATH;
+    abilityInfo.resourcePath = RESOURCE_PATH;
+    abilityInfo.libPath = LIB_PATH;
+    return abilityInfo;
+}
+
+InnerAbilityInfo BmsDataMgrTest::GetDefaultInnerAbilityInfo() const
+{
+    InnerAbilityInfo abilityInfo;
     abilityInfo.package = PACKAGE_NAME;
     abilityInfo.name = ABILITY_NAME;
     abilityInfo.bundleName = BUNDLE_NAME;
@@ -951,11 +974,10 @@ HWTEST_F(BmsDataMgrTest, QueryAbilityInfo_0100, Function | SmallTest | Level0)
     applicationInfo1.name = BUNDLE_NAME;
     applicationInfo1.bundleName = BUNDLE_NAME;
 
-    AbilityInfo abilityInfo = GetDefaultAbilityInfo();
-    bundleInfo1.abilityInfos.push_back(abilityInfo);
+    InnerAbilityInfo innerAbilityInfo = GetDefaultInnerAbilityInfo();
     info1.SetBaseBundleInfo(bundleInfo1);
     info1.SetBaseApplicationInfo(applicationInfo1);
-    info1.InsertAbilitiesInfo(BUNDLE_NAME + PACKAGE_NAME + ABILITY_NAME, abilityInfo);
+    info1.InsertAbilitiesInfo(BUNDLE_NAME + PACKAGE_NAME + ABILITY_NAME, innerAbilityInfo);
     info1.AddInnerBundleUserInfo(innerBundleUserInfo);
     info1.SetAbilityEnabled(Constants::EMPTY_STRING, ABILITY_NAME, true, USERID);
     auto dataMgr = GetDataMgr();
@@ -977,22 +999,22 @@ HWTEST_F(BmsDataMgrTest, QueryAbilityInfo_0100, Function | SmallTest | Level0)
     bool ret3 = dataMgr->QueryAbilityInfo(want, 0, USERID, abilityInfo2);
     EXPECT_TRUE(ret3);
 
-    EXPECT_EQ(abilityInfo2.package, abilityInfo.package);
-    EXPECT_EQ(abilityInfo2.name, abilityInfo.name);
-    EXPECT_EQ(abilityInfo2.bundleName, abilityInfo.bundleName);
-    EXPECT_EQ(abilityInfo2.applicationName, abilityInfo.applicationName);
-    EXPECT_EQ(abilityInfo2.deviceId, abilityInfo.deviceId);
-    EXPECT_EQ(abilityInfo2.label, abilityInfo.label);
-    EXPECT_EQ(abilityInfo2.description, abilityInfo.description);
-    EXPECT_EQ(abilityInfo2.iconPath, abilityInfo.iconPath);
-    EXPECT_EQ(abilityInfo2.visible, abilityInfo.visible);
-    EXPECT_EQ(abilityInfo2.kind, abilityInfo.kind);
-    EXPECT_EQ(abilityInfo2.type, abilityInfo.type);
-    EXPECT_EQ(abilityInfo2.orientation, abilityInfo.orientation);
-    EXPECT_EQ(abilityInfo2.launchMode, abilityInfo.launchMode);
-    EXPECT_EQ(abilityInfo2.codePath, abilityInfo.codePath);
-    EXPECT_EQ(abilityInfo2.resourcePath, abilityInfo.resourcePath);
-    EXPECT_EQ(abilityInfo2.libPath, abilityInfo.libPath);
+    EXPECT_EQ(abilityInfo2.package, innerAbilityInfo.package);
+    EXPECT_EQ(abilityInfo2.name, innerAbilityInfo.name);
+    EXPECT_EQ(abilityInfo2.bundleName, innerAbilityInfo.bundleName);
+    EXPECT_EQ(abilityInfo2.applicationName, innerAbilityInfo.applicationName);
+    EXPECT_EQ(abilityInfo2.deviceId, innerAbilityInfo.deviceId);
+    EXPECT_EQ(abilityInfo2.label, innerAbilityInfo.label);
+    EXPECT_EQ(abilityInfo2.description, innerAbilityInfo.description);
+    EXPECT_EQ(abilityInfo2.iconPath, innerAbilityInfo.iconPath);
+    EXPECT_EQ(abilityInfo2.visible, innerAbilityInfo.visible);
+    EXPECT_EQ(abilityInfo2.kind, innerAbilityInfo.kind);
+    EXPECT_EQ(abilityInfo2.type, innerAbilityInfo.type);
+    EXPECT_EQ(abilityInfo2.orientation, innerAbilityInfo.orientation);
+    EXPECT_EQ(abilityInfo2.launchMode, innerAbilityInfo.launchMode);
+    EXPECT_EQ(abilityInfo2.codePath, innerAbilityInfo.codePath);
+    EXPECT_EQ(abilityInfo2.resourcePath, innerAbilityInfo.resourcePath);
+    EXPECT_EQ(abilityInfo2.libPath, innerAbilityInfo.libPath);
 
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
@@ -1538,10 +1560,10 @@ HWTEST_F(BmsDataMgrTest, GetMatchLauncherAbilityInfos_0001, Function | SmallTest
     std::vector<Skill> skills;
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
-    AbilityInfo abilityInfo;
-    abilityInfo.name = BUNDLE_NAME;
-    abilityInfo.type = AbilityType::PAGE;
-    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = BUNDLE_NAME;
+    innerAbilityInfo.type = AbilityType::PAGE;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, innerAbilityInfo);
     InnerModuleInfo moduleInfo;
     moduleInfo.entryAbilityKey = BUNDLE_NAME;
     moduleInfo.isEntry = true;
@@ -1600,9 +1622,9 @@ HWTEST_F(BmsDataMgrTest, GetMatchLauncherAbilityInfos_0002, Function | SmallTest
     dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, installTime, Constants::ANY_USERID);
     EXPECT_TRUE(abilityInfos.empty());
 
-    AbilityInfo abilityInfo;
-    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
-    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
+    innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, innerAbilityInfo);
     dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, installTime, Constants::ANY_USERID);
     EXPECT_FALSE(abilityInfos.empty());
 
@@ -2425,8 +2447,8 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionInfos_0100, Function | SmallTest | Level
     int32_t appIndex = 0;
     dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), true);
-    ExtensionAbilityInfo extensionAbilityInfo;
-    info.InsertExtensionInfo("", extensionAbilityInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    info.InsertExtensionInfo("", innerExtensionInfo);
     dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), false);
     flags = 1;
@@ -2451,8 +2473,8 @@ HWTEST_F(BmsDataMgrTest, GetOneExtensionInfosByExtensionTypeName_0100, Function 
     std::string typeName = "";
     dataMgr->GetOneExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), true);
-    ExtensionAbilityInfo extensionAbilityInfo;
-    info.InsertExtensionInfo("", extensionAbilityInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    info.InsertExtensionInfo("", innerExtensionInfo);
     dataMgr->GetOneExtensionInfosByExtensionTypeName(typeName, flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), false);
     flags = 1;
@@ -4225,9 +4247,9 @@ HWTEST_F(BmsDataMgrTest, GetExtensionAbilityInfoByTypeName_0001, TestSize.Level1
     bundleDataMgr.AddInnerBundleInfo(bundleName, info);
     bundleDataMgr.GetExtensionAbilityInfoByTypeName(flags, userId, infos, typeName);
 
-    ExtensionAbilityInfo extensionInfo;
-    extensionInfo.name = "test_extensionInfo";
-    info.InsertExtensionInfo("test_key", extensionInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.name = "test_innerExtensionInfo";
+    info.InsertExtensionInfo("test_key", innerExtensionInfo);
     bundleDataMgr.GetExtensionAbilityInfoByTypeName(flags, userId, infos, typeName);
     EXPECT_FALSE(bundleDataMgr.bundleInfos_.empty());
 }
@@ -5199,10 +5221,10 @@ HWTEST_F(BmsDataMgrTest, GetModuleNameByBundleAndAbility_0001, TestSize.Level1)
     InnerBundleInfo innerBundleInfo;
     std::string dataGroupId = "dataGroupId";
     DataGroupInfo dataGroupInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = abilityName;
-    abilityInfo.moduleName = "moduleName";
-    std::map<std::string, AbilityInfo> abilityInfos = {{abilityName, abilityInfo}};
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = abilityName;
+    innerAbilityInfo.moduleName = "moduleName";
+    std::map<std::string, InnerAbilityInfo> abilityInfos = {{abilityName, innerAbilityInfo}};
     innerBundleInfo.AddModuleAbilityInfo(abilityInfos);
     innerBundleInfo.AddDataGroupInfo(dataGroupId, dataGroupInfo);
     bool ret2 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
@@ -5238,10 +5260,10 @@ HWTEST_F(BmsDataMgrTest, SetAdditionalInfo_0001, TestSize.Level1)
     InnerBundleInfo innerBundleInfo;
     std::string dataGroupId = "dataGroupId";
     DataGroupInfo dataGroupInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = abilityName;
-    abilityInfo.moduleName = "moduleName";
-    std::map<std::string, AbilityInfo> abilityInfos = {{abilityName, abilityInfo}};
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = abilityName;
+    innerAbilityInfo.moduleName = "moduleName";
+    std::map<std::string, InnerAbilityInfo> abilityInfos = {{abilityName, innerAbilityInfo}};
     innerBundleInfo.AddModuleAbilityInfo(abilityInfos);
     innerBundleInfo.AddDataGroupInfo(dataGroupId, dataGroupInfo);
     bool ret2 = dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
@@ -6019,10 +6041,10 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionBundleNames_0002, Function | MediumTest 
 {
     // Create test data
     InnerBundleInfo info;
-    ExtensionAbilityInfo extensionInfo;
-    extensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
-    info.InsertExtensionInfo("test.extension", extensionInfo);
-    std::shared_lock<std::shared_mutex> lock(dataMgr_->bundleInfoMutex_);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
+    info.InsertExtensionInfo("test.extension", innerExtensionInfo);
+    std::shared_lock<ffrt::shared_mutex> lock(dataMgr_->bundleInfoMutex_);
     dataMgr_->bundleInfos_.emplace("test.bundle", info);
     std::vector<ExtensionAbilityType> types = {
         ExtensionAbilityType::INPUTMETHOD,

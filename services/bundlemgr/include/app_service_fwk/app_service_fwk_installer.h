@@ -93,7 +93,6 @@ private:
     bool GetInnerBundleInfoWithDisable(InnerBundleInfo &info, bool &isAppExist);
     bool CheckNeedInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos, InnerBundleInfo &oldInfo,
         bool &isDowngrade);
-    bool CheckNeedUpdate(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo);
     ErrCode ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo,
         const std::string &hspPath, const InstallParam &installParam);
     ErrCode ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -951,10 +951,10 @@ HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0012, Function | MediumTest | L
     std::string abilityName = "entryAbility";
     std::string extName = "testExt";
 
-    AbilityInfo abilityInfo;
-    abilityInfo.moduleName = moduleName;
-    abilityInfo.supportExtNames.emplace_back(extName);
-    innerBundleInfo.baseAbilityInfos_[abilityName] = abilityInfo;
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.moduleName = moduleName;
+    innerAbilityInfo.supportExtNames.emplace_back(extName);
+    innerBundleInfo.baseAbilityInfos_[abilityName] = innerAbilityInfo;
     ErrCode ret = innerBundleInfo.SetExtName(moduleName, abilityName, extName);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DUPLICATED_EXT_OR_TYPE);
 }
@@ -971,10 +971,10 @@ HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0013, Function | MediumTest | L
     std::string abilityName = "entryAbility";
     std::string mimeType = "testMime";
 
-    AbilityInfo abilityInfo;
-    abilityInfo.moduleName = moduleName;
-    abilityInfo.supportMimeTypes.emplace_back(mimeType);
-    innerBundleInfo.baseAbilityInfos_[abilityName] = abilityInfo;
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.moduleName = moduleName;
+    innerAbilityInfo.supportMimeTypes.emplace_back(mimeType);
+    innerBundleInfo.baseAbilityInfos_[abilityName] = innerAbilityInfo;
     ErrCode ret = innerBundleInfo.SetMimeType(moduleName, abilityName, mimeType);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DUPLICATED_EXT_OR_TYPE);
 }
@@ -1273,10 +1273,10 @@ HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0028, Function | MediumTest | L
 HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0029, Function | MediumTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = "ABILITY_NAME";
-    abilityInfo.moduleName = "MODULE_NAME_TEST";
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", abilityInfo));
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = "ABILITY_NAME";
+    innerAbilityInfo.moduleName = "MODULE_NAME_TEST";
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", innerAbilityInfo));
     InnerBundleUserInfo innerBundleUserInfo;
     std::map<std::string, InnerBundleCloneInfo> cloneInfos;
     InnerBundleCloneInfo innerBundleCloneInfo;
@@ -1301,10 +1301,10 @@ HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0029, Function | MediumTest | L
 HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0030, Function | MediumTest | Level1)
 {
     InnerBundleInfo bundleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = "ABILITY_NAME";
-    abilityInfo.moduleName = "MODULE_NAME_TEST";
-    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", abilityInfo));
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = "ABILITY_NAME";
+    innerAbilityInfo.moduleName = "MODULE_NAME_TEST";
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", innerAbilityInfo));
     InnerBundleUserInfo innerBundleUserInfo;
     std::map<std::string, InnerBundleCloneInfo> cloneInfos;
     InnerBundleCloneInfo innerBundleCloneInfo;
@@ -1483,9 +1483,9 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0002, Function | SmallTest 
     ASSERT_NE(dataMgr, nullptr);
     installer.dataMgr_ = dataMgr;
     InnerBundleInfo innerBundleInfo;
-    ExtensionAbilityInfo extensionAbilityInfo;
-    extensionAbilityInfo.type = ExtensionAbilityType::DRIVER;
-    innerBundleInfo.baseExtensionInfos_["testExt"] = extensionAbilityInfo;
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    innerBundleInfo.baseExtensionInfos_["testExt"] = innerExtensionInfo;
     dataMgr->bundleInfos_["test.bundleName"] = innerBundleInfo;
 
     InstallParam installParam;

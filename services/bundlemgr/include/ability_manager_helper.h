@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_ABILITY_MANAGER_HELPER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_ABILITY_MANAGER_HELPER_H
 
+#include <map>
 #include <string>
 
 namespace OHOS {
@@ -31,6 +32,8 @@ public:
     static bool UninstallApplicationProcesses(
         const std::string &bundleName, const int uid, bool isUpgradeApp = false, int32_t appIndex = 0);
     static int32_t IsRunning(const std::string &bundleName);
+
+    static int32_t QueryRunningSharedBundles(const pid_t pid, std::map<std::string, uint32_t> &shareBundles);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

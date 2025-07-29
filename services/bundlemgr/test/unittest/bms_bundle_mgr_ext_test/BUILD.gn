@@ -147,6 +147,7 @@ ohos_unittest("BmsBundleMgrExtClientTest") {
     "json:nlohmann_json_static",
     "jsoncpp:jsoncpp",
     "os_account:os_account_innerkits",
+    "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",

@@ -25,6 +25,7 @@
 #include "app_service_fwk_installer.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
+#include "bundle_installer.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
@@ -33,6 +34,7 @@
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
+#include "datetime_ex.h"
 #include "directory_ex.h"
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
 #include "dlp_permission_kit.h"
@@ -2395,12 +2397,6 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
             LOG_D(BMS_TAG_DEFAULT, "the installed version is up-to-date");
             continue;
         }
-        if (oldBundleInfo.GetVersionCode() == versionCode) {
-            if (!IsNeedToUpdateSharedAppByHash(oldBundleInfo, infos.begin()->second)) {
-                LOG_D(BMS_TAG_DEFAULT, "the installed version is up-to-date");
-                continue;
-            }
-        }
 
         if (!OTAInstallSystemSharedBundle({scanPath}, appType, removable)) {
             LOG_E(BMS_TAG_DEFAULT, "OTA update shared bundle(%{public}s) error", bundleName.c_str());
@@ -2446,14 +2442,6 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
         if (oldBundleInfo.GetVersionCode() > versionCode) {
             LOG_D(BMS_TAG_DEFAULT, "the installed version is up-to-date");
             continue;
-        }
-        if (oldBundleInfo.GetVersionCode() == versionCode) {
-            for (const auto &item : infos) {
-                if (!IsNeedToUpdateSharedHspByHash(oldBundleInfo, item.second)) {
-                    LOG_D(BMS_TAG_DEFAULT, "the installed version is up-to-date");
-                    continue;
-                }
-            }
         }
         SavePreInstallExceptionAppService(scanPath);
         auto ret = OTAInstallSystemHsp({scanPath});
@@ -2617,45 +2605,6 @@ ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &fil
     AppServiceFwkInstaller installer;
 
     return installer.Install(filePaths, installParam);
-}
-
-bool BMSEventHandler::IsNeedToUpdateSharedHspByHash(
-    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
-{
-    std::string moduleName = newInfo.GetCurrentModulePackage();
-    std::string newModuleBuildHash;
-    if (!newInfo.GetModuleBuildHash(moduleName, newModuleBuildHash)) {
-        LOG_E(BMS_TAG_DEFAULT, "internal error, can not find module %{public}s", moduleName.c_str());
-        return false;
-    }
-
-    std::string oldModuleBuildHash;
-    if (!oldInfo.GetModuleBuildHash(moduleName, oldModuleBuildHash) ||
-        newModuleBuildHash != oldModuleBuildHash) {
-        LOG_D(BMS_TAG_DEFAULT, "module %{public}s need to be updated", moduleName.c_str());
-        return true;
-    }
-    return false;
-}
-
-bool BMSEventHandler::IsNeedToUpdateSharedAppByHash(
-    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
-{
-    auto oldSharedModuleMap = oldInfo.GetInnerSharedModuleInfos();
-    auto newSharedModuleMap = newInfo.GetInnerSharedModuleInfos();
-    for (const auto &item : newSharedModuleMap) {
-        auto newModuleName = item.first;
-        auto oldModuleInfos = oldSharedModuleMap[newModuleName];
-        auto newModuleInfos = item.second;
-        if (!oldModuleInfos.empty() && !newModuleInfos.empty()) {
-            auto oldBuildHash = oldModuleInfos[0].buildHash;
-            auto newBuildHash = newModuleInfos[0].buildHash;
-            return oldBuildHash != newBuildHash;
-        } else {
-            return true;
-        }
-    }
-    return false;
 }
 
 void BMSEventHandler::SaveSystemFingerprint()
@@ -4527,11 +4476,6 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
         LOG_E(BMS_TAG_DEFAULT, "end, reinstall json file is empty");
         return;
     }
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
-    if (installer == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "installer is nullptr");
-        return;
-    }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
@@ -4542,6 +4486,7 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
         LOG_E(BMS_TAG_DEFAULT, "innerReceiverImpl is nullptr");
         return;
     }
+    auto installer = std::make_shared<BundleInstaller>(GetMicroTickCount(), innerReceiverImpl);
     nlohmann::json jsonObject;
     if (!BundleParser::ReadFileIntoJson(QUICK_FIX_APP_RECOVER_FILE, jsonObject) || !jsonObject.is_object() ||
         !GetValueFromJson(jsonObject)) {
@@ -4564,7 +4509,7 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
             installParam.SetKillProcess(false);
             installParam.needSendEvent = false;
             installParam.isKeepData = true;
-            installer->UninstallAndRecover(bundleName, installParam, innerReceiverImpl);
+            installer->UninstallAndRecover(bundleName, installParam);
         }
     }
     LOG_I(BMS_TAG_DEFAULT, "ProcessRebootQuickFixUnInstallAndRecover end");

@@ -141,7 +141,7 @@ static ani_object AniGetBundlePackInfo(ani_env* env, ani_string aniBundleName, a
             RESOURCE_NAME_OF_GET_BUNDLE_PACK_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
-    return CommonFunAni::ConvertBundlePackInfo(env, bundlePackInfo);
+    return CommonFunAni::ConvertBundlePackInfo(env, bundlePackInfo, static_cast<uint32_t>(bundlePackFlag));
 }
 
 static ani_object AniGetDispatchInfo(ani_env* env)

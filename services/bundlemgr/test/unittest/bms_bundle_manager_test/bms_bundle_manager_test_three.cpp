@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -372,14 +372,15 @@ HWTEST_F(BmsBundleManagerTest3, BundleStreamInstallerHostImpl_0100, Function | S
 HWTEST_F(BmsBundleManagerTest3, FindAbilityInfo_0100, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo innerAbilityInfo;
     std::string bundleName = "com.example.test";
     std::string moduleName = "module";
     std::string abilityName = "mainAbility";
-    abilityInfo.bundleName = bundleName;
-    abilityInfo.moduleName = moduleName;
-    abilityInfo.name = abilityName;
-    info.InsertAbilitiesInfo("key", abilityInfo);
+    innerAbilityInfo.bundleName = bundleName;
+    innerAbilityInfo.moduleName = moduleName;
+    innerAbilityInfo.name = abilityName;
+    info.InsertAbilitiesInfo("key", innerAbilityInfo);
+    AbilityInfo abilityInfo;
     ErrCode ret = info.FindAbilityInfo("", "", abilityInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
 
@@ -395,15 +396,16 @@ HWTEST_F(BmsBundleManagerTest3, FindAbilityInfo_0100, Function | MediumTest | Le
 HWTEST_F(BmsBundleManagerTest3, FindAbilityInfo_0200, Function | MediumTest | Level1)
 {
     InnerBundleInfo info;
-    AbilityInfo abilityInfo;
+    InnerAbilityInfo innerAbilityInfo;
     std::string bundleName = "com.example.test";
     std::string moduleName = "module";
     std::string abilityName = "mainAbility";
-    abilityInfo.bundleName = bundleName;
-    abilityInfo.moduleName = moduleName;
-    abilityInfo.name = abilityName;
-    info.InsertAbilitiesInfo("key", abilityInfo);
+    innerAbilityInfo.bundleName = bundleName;
+    innerAbilityInfo.moduleName = moduleName;
+    innerAbilityInfo.name = abilityName;
+    info.InsertAbilitiesInfo("key", innerAbilityInfo);
 
+    AbilityInfo abilityInfo;
     ErrCode ret = info.FindAbilityInfo(moduleName, "", abilityInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 }
@@ -1028,11 +1030,11 @@ HWTEST_F(BmsBundleManagerTest3, GetMimeTypeByUri_0300, Function | SmallTest | Le
 HWTEST_F(BmsBundleManagerTest3, SetExtName_0100, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.moduleName = MODULE_NAME;
-    abilityInfo.name = ABILITY_NAME;
-    std::map<std::string, AbilityInfo> abilityInfoMap;
-    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.moduleName = MODULE_NAME;
+    innerAbilityInfo.name = ABILITY_NAME;
+    std::map<std::string, InnerAbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, innerAbilityInfo);
     innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
     std::string extName = "jpg";
     auto ret = innerBundleInfo.SetExtName(MODULE_NAME, ABILITY_NAME, extName);
@@ -1049,11 +1051,11 @@ HWTEST_F(BmsBundleManagerTest3, SetExtName_0100, Function | SmallTest | Level1)
 HWTEST_F(BmsBundleManagerTest3, SetExtName_0200, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    AbilityInfo abilityInfo;
-    abilityInfo.moduleName = MODULE_NAME;
-    abilityInfo.name = ABILITY_NAME;
-    std::map<std::string, AbilityInfo> abilityInfoMap;
-    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.moduleName = MODULE_NAME;
+    innerAbilityInfo.name = ABILITY_NAME;
+    std::map<std::string, InnerAbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, innerAbilityInfo);
     innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
     std::string mimeType = "image/jpeg";
     auto ret = innerBundleInfo.SetMimeType(MODULE_NAME, ABILITY_NAME, mimeType);
@@ -1076,11 +1078,11 @@ HWTEST_F(BmsBundleManagerTest3, SetExtName_0300, Function | SmallTest | Level1)
     ret = innerBundleInfo.DelExtName(MODULE_NAME, ABILITY_NAME, extName);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 
-    AbilityInfo abilityInfo;
-    abilityInfo.moduleName = MODULE_NAME;
-    abilityInfo.name = ABILITY_NAME;
-    std::map<std::string, AbilityInfo> abilityInfoMap;
-    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.moduleName = MODULE_NAME;
+    innerAbilityInfo.name = ABILITY_NAME;
+    std::map<std::string, InnerAbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, innerAbilityInfo);
     innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
     std::string wrongModuleName = "wrong";
     ret = innerBundleInfo.SetExtName(wrongModuleName, ABILITY_NAME, extName);
@@ -1103,11 +1105,11 @@ HWTEST_F(BmsBundleManagerTest3, SetExtName_0400, Function | SmallTest | Level1)
     ret = innerBundleInfo.DelMimeType(MODULE_NAME, ABILITY_NAME, mimeType);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 
-    AbilityInfo abilityInfo;
-    abilityInfo.moduleName = MODULE_NAME;
-    abilityInfo.name = ABILITY_NAME;
-    std::map<std::string, AbilityInfo> abilityInfoMap;
-    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.moduleName = MODULE_NAME;
+    innerAbilityInfo.name = ABILITY_NAME;
+    std::map<std::string, InnerAbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, innerAbilityInfo);
     innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
     std::string wrongModuleName = "wrong";
     ret = innerBundleInfo.SetMimeType(wrongModuleName, ABILITY_NAME, mimeType);
@@ -1712,9 +1714,9 @@ HWTEST_F(BmsBundleManagerTest3, GetBundleNamesForNewUser_0200, Function | SmallT
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     InnerBundleInfo info;
-    ExtensionAbilityInfo abilityInfo;
-    abilityInfo.type = ExtensionAbilityType::DRIVER;
-    info.InsertExtensionInfo("key", abilityInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    info.InsertExtensionInfo("key", innerExtensionInfo);
     dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
     std::vector<std::string> ret = dataMgr->GetBundleNamesForNewUser();
     EXPECT_EQ(ret.size(), 1);

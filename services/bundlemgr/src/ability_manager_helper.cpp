@@ -16,6 +16,7 @@
 #include "ability_manager_helper.h"
 
 #include "bundle_mgr_service.h"
+#include "system_ability_definition.h"
 #include "system_ability_helper.h"
 
 #include "app_log_tag_wrapper.h"
@@ -83,6 +84,26 @@ int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName)
     return NOT_RUNNING;
 #else
     APP_LOGI("BUNDLE_FRAMEWORK_FREE_INSTALL is false");
+    return FAILED;
+#endif
+}
+
+int32_t AbilityManagerHelper::QueryRunningSharedBundles(
+    const pid_t pid, std::map<std::string, uint32_t> &shareBundles)
+{
+#ifdef ABILITY_RUNTIME_ENABLE
+    sptr<IAppMgr> appMgrProxy =
+        iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
+    if (appMgrProxy == nullptr) {
+        APP_LOGE("fail to find the app mgr service");
+        return FAILED;
+    }
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    int32_t ret = appMgrProxy->QueryRunningSharedBundles(pid, shareBundles);
+    IPCSkeleton::SetCallingIdentity(identity);
+    return ret;
+#else
+    APP_LOGI("ABILITY_RUNTIME_ENABLE is false");
     return FAILED;
 #endif
 }

@@ -113,6 +113,9 @@ public:
     bool CheckBundleNameAndStratAbilityTest(const std::string& bundleName, const std::string& appIdentifier);
     bool BmsCheckBundleNameAndStratAbilityTest(const std::string& bundleName, const std::string& appIdentifier);
     std::string GetCompatibleDeviceType(const std::string& bundleName) override;
+    bool IsTargetApp(const std::string &bundleName, const std::string &appIdentifier) override;
+    bool IsTargetAppTest(const std::string &bundleName, const std::string &appIdentifier);
+    bool BmsIsTargetAppTest(const std::string& bundleName, const std::string& appIdentifier);
 };
 
 std::shared_ptr<BundleMgrService> BmsExtensionDataMgrTest::bundleMgrService_ =
@@ -176,6 +179,32 @@ bool BundleMgrExtTest::BmsCheckBundleNameAndStratAbilityTest(
     if (bundleName == "bundleNameTest" && appIdentifier == "appIdentifierTest") {
         BmsExtensionDataMgr bmsExtensionDataMgrTest;
         bmsExtensionDataMgrTest.CheckBundleNameAndStratAbility(bundleName, appIdentifier);
+        return true;
+    }
+    return false;
+}
+
+bool BundleMgrExtTest::IsTargetApp(
+    const std::string& bundleName, const std::string& appIdentifier)
+{
+    return false;
+}
+
+bool BundleMgrExtTest::IsTargetAppTest(
+    const std::string& bundleName, const std::string& appIdentifier)
+{
+    if (bundleName == "bundleNameTest" && appIdentifier == "appIdentifierTest") {
+        IsTargetApp(bundleName, appIdentifier);
+        return true;
+    }
+    return false;
+}
+
+bool BundleMgrExtTest::BmsIsTargetAppTest(const std::string& bundleName, const std::string& appIdentifier)
+{
+    if (bundleName == "bundleNameTest" && appIdentifier == "appIdentifierTest") {
+        BmsExtensionDataMgr bmsExtensionDataMgrTest;
+        bmsExtensionDataMgrTest.IsTargetApp(bundleName, appIdentifier);
         return true;
     }
     return false;
@@ -2130,5 +2159,75 @@ HWTEST_F(BmsExtensionDataMgrTest, IsMCFlagSet_0001, Function | SmallTest | Level
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
     EXPECT_NO_THROW(bmsExtensionDataMgr.IsMCFlagSet());
+}
+
+/**
+ * @tc.number: BundleMgrExt_IsTargetAppTest_0010
+ * @tc.name: IsTargetApp
+ * @tc.desc: IsTargetApp
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_IsTargetAppTest_0010, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName = "bundleNameTest";
+    std::string appIdentifier = "appIdentifierTest";
+    bool res = bundleMgrExtTest.IsTargetAppTest(bundleName, appIdentifier);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleMgrExt_IsTargetAppTest_0020
+ * @tc.name: IsTargetAppTest
+ * @tc.desc: IsTargetAppTest
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_IsTargetAppTest_0020, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bmsExtensionDataMgrTest;
+    std::string bundleName = "bundleNameTest";
+    std::string appIdentifier = "appIdentifierTest";
+    bool res = bmsExtensionDataMgrTest.IsTargetAppTest(bundleName, appIdentifier);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleMgrExt_IsTargetAppTest_0020
+ * @tc.name: BmsIsTargetAppTest
+ * @tc.desc: BmsIsTargetAppTest
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_IsTargetAppTest_0030, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bmsExtensionDataMgrTest;
+    std::string bundleName = "bundleNameTest";
+    std::string appIdentifier = "appIdentifierTest";
+    bool res = bmsExtensionDataMgrTest.BmsIsTargetAppTest(bundleName, appIdentifier);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleMgrExt_IsTargetAppTest_0030
+ * @tc.name: IsTargetAppTest
+ * @tc.desc: IsTargetAppTest
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_IsTargetAppTest_0040, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bmsExtensionDataMgrTest;
+    std::string bundleName = "bundleNameTest1";
+    std::string appIdentifier = "appIdentifierTest1";
+    bool res = bmsExtensionDataMgrTest.IsTargetAppTest(bundleName, appIdentifier);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: BundleMgrExt_IsTargetAppTest_0040
+ * @tc.name: BmsIsTargetAppTest
+ * @tc.desc: BmsIsTargetAppTest
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_IsTargetAppTest_0050, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bmsExtensionDataMgrTest;
+    std::string bundleName = "bundleNameTest1";
+    std::string appIdentifier = "appIdentifierTest1";
+    bool res = bmsExtensionDataMgrTest.BmsIsTargetAppTest(bundleName, appIdentifier);
+    EXPECT_FALSE(res);
 }
 } // OHOS

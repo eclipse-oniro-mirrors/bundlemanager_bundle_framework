@@ -22,6 +22,7 @@
 #include "event_handler.h"
 #include "event_runner.h"
 #include "iremote_stub.h"
+#include "ipc/critical_manager.h"
 #include "ipc/installd_interface.h"
 
 namespace OHOS {
@@ -246,15 +247,9 @@ private:
 
     bool HandleClearDir(MessageParcel &data, MessageParcel &reply);
 
+    CriticalManager criticalManager_;
+
     bool HandleRestoreconLibs(MessageParcel &data, MessageParcel &reply);
-
-    void SetCritical(bool critical);
-
-    void SetCriticalDelayed(bool critical);
-
-    std::mutex mutex_;
-    int32_t counter_ = 0;
-    bool memMgrStarted_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

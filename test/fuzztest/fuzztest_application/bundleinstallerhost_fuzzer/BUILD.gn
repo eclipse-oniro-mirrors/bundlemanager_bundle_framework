@@ -82,10 +82,7 @@ ohos_fuzztest("BundleInstallerHostFuzzTest") {
   external_deps += [
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
-    "battery_manager:batterysrv_client",
-    "display_manager:displaymgr",
     "ffrt:libffrt",
-    "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
 

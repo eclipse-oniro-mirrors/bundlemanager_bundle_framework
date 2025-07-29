@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -190,6 +190,38 @@ constexpr const char* MODULE_ARKTS_MODE = "moduleArkTSMode";
 constexpr const char* ARKTS_MODE_DYNAMIC = "dynamic";
 constexpr const char* ARKTS_MODE_STATIC = "static";
 constexpr const char* ARKTS_MODE_HYBRID = "hybrid";
+
+inline constexpr const char* NAME = "name";
+inline constexpr const char* SRC_ENTRANCE = "srcEntrance";
+inline constexpr const char* ICON = "icon";
+inline constexpr const char* ICON_ID = "iconId";
+inline constexpr const char* LABEL = "label";
+inline constexpr const char* LABEL_ID = "labelId";
+inline constexpr const char* DESCRIPTION = "description";
+inline constexpr const char* DESCRIPTION_ID = "descriptionId";
+inline constexpr const char* PRIORITY = "priority";
+inline constexpr const char* TYPE = "type";
+inline constexpr const char* EXTENSION_TYPE_NAME = "extensionTypeName";
+inline constexpr const char* PERMISSIONS = "permissions";
+inline constexpr const char* APPIDENTIFIER_ALLOW_LIST = "appIdentifierAllowList";
+inline constexpr const char* READ_PERMISSION = "readPermission";
+inline constexpr const char* WRITE_PERMISSION = "writePermission";
+inline constexpr const char* URI = "uri";
+inline constexpr const char* VISIBLE = "visible";
+inline constexpr const char* META_DATA = "metadata";
+inline constexpr const char* RESOURCE_PATH = "resourcePath";
+inline constexpr const char* ENABLED = "enabled";
+inline constexpr const char* PROCESS = "process";
+inline constexpr const char* COMPILE_MODE = "compileMode";
+inline constexpr const char* EXTENSION_PROCESS_MODE = "extensionProcessMode";
+inline constexpr const char* SKILLS = "skills";
+inline constexpr const char* NEED_CREATE_SANDBOX = "needCreateSandbox";
+inline constexpr const char* DATA_GROUP_IDS = "dataGroupIds";
+inline constexpr const char* VALID_DATA_GROUP_IDS = "validDataGroupIds";
+inline constexpr const char* CUSTOM_PROCESS = "customProcess";
+inline constexpr const char* ISOLATION_PROCESS = "isolationProcess";
+inline constexpr const char* SRC_LANGUAGE_JS = "js";
+inline constexpr const char* PREFER_MULTI_WINDOW_ORIENTATION_DEFAULT = "default";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

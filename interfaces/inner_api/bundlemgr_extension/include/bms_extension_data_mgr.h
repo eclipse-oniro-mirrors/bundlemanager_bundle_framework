@@ -74,6 +74,7 @@ public:
     ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
     void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier);
+    bool IsTargetApp(const std::string &bundleName, const std::string &appIdentifier);
 
     bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum);
     std::string GetCompatibleDeviceType(const std::string &bundleName);
