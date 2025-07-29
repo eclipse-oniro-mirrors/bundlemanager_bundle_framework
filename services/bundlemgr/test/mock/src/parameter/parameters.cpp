@@ -29,7 +29,7 @@ public:
 
 ParameterMapWrapper* GetParameterMap()
 {
-    static ParameterMapWrapper* paramMapWrapper = new ParameterMapWrapper();
+    static auto* paramMapWrapper = new (std::nothrow) ParameterMapWrapper();
     return paramMapWrapper;
 }
 

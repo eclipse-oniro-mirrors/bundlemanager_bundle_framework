@@ -2044,5 +2044,41 @@ HWTEST_F(BmsInstallSystemTest, CreateBundleDataDir_0100, Function | SmallTest | 
     ErrCode ret = bundleMgrProxy->CreateBundleDataDir(USERID);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: PluginInstaller_0001
+ * @tc.name: InstallPlugin
+ * @tc.desc: InstallPlugin path is invalid.
+ */
+HWTEST_F(BmsInstallSystemTest, PluginInstaller_0001, Function | SmallTest | Level1)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    ASSERT_NE(installerProxy, nullptr) << "bundle mgr proxy is nullptr.";
+    std::string hostBundleName = "bundleNameTest";
+    std::vector<std::string> pluginFilePaths;
+    pluginFilePaths.emplace_back("pluginPath1");
+    pluginFilePaths.emplace_back("pluginPath2");
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = 100;
+    int32_t ret = installerProxy->InstallPlugin(hostBundleName, pluginFilePaths,
+        installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: PluginInstaller_0002
+ * @tc.name: UninstallPlugin
+ * @tc.desc: 1.Test the UninstallPlugin of IBundleInstaller
+ */
+HWTEST_F(BmsInstallSystemTest, PluginInstaller_0002, Function | SmallTest | Level1)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    ASSERT_NE(installerProxy, nullptr) << "bundle mgr proxy is nullptr.";
+    std::string pluginBundleName = "pluginName";
+    InstallPluginParam installPluginParam;
+    installPluginParam.userId = 100;
+    ErrCode ret = installerProxy->UninstallPlugin("", pluginBundleName, installPluginParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_HOST_APPLICATION_NOT_FOUND);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
