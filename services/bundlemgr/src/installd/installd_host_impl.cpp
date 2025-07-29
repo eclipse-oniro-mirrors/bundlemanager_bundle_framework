@@ -2576,5 +2576,19 @@ ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
     }
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::RestoreconLibs(const std::string &libPath)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (!InstalldOperator::RestoreconLibs(libPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "RestoreconLibs failed");
+        return ERR_APPEXECFWK_RESTORECON_LIBS_FAILED;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -24,6 +24,7 @@
 #include "installd_death_recipient.h"
 #undef private
 #undef protected
+#include "parameters.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -1917,6 +1918,19 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetArkStartupCacheApl_0100
     ErrCode result = installClient_->SetArkStartupCacheApl(dir);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_RestoreconForArkweb_0100
+ * @tc.name: RestoreconLibs
+ * @tc.desc: Test whether RestoreconLibs is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RestoreconForArkweb_0100, TestSize.Level1)
+{
+    const std::string arkWebName = OHOS::system::GetParameter("persist.arkwebcore.package_name", "");
+    const std::string arkwebLibPath = "/data/app/el1/bundle/public/" + arkWebName + "/libs/arm64/";
+    ErrCode result = installClient_->RestoreconLibs(arkwebLibPath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

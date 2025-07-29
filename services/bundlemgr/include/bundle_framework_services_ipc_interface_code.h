@@ -87,6 +87,7 @@ enum class InstalldInterfaceCode : uint32_t {
     BATCH_GET_BUNDLE_STATS = 59,
     CLEAR_DIR = 60,
     SET_ARK_STARTUP_CACHE_DIR_APL = 61,
+    RESTORE_CON_LIBS = 62,
 };
 
 } // namespace AppExecFwk

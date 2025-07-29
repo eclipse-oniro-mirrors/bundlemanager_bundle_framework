@@ -268,6 +268,8 @@ public:
 
     virtual ErrCode ClearDir(const std::string &dir) override;
 
+    virtual ErrCode RestoreconLibs(const std::string &libPath) override;
+
 private:
     static std::string GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid);
     std::string GetExtensionConfigPath() const;

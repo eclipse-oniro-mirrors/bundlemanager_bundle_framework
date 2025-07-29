@@ -807,6 +807,7 @@ private:
     ErrCode CheckAppDistributionType();
 #ifdef WEBVIEW_ENABLE
     ErrCode VerifyArkWebInstall();
+    void RestoreconForArkweb();
 #endif
 
     bool SetDisposedRuleWhenBundleUpdateStart(const std::unordered_map<std::string, InnerBundleInfo> &infos,

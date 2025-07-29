@@ -246,6 +246,8 @@ private:
 
     bool HandleClearDir(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleRestoreconLibs(MessageParcel &data, MessageParcel &reply);
+
     void SetCritical(bool critical);
 
     void SetCriticalDelayed(bool critical);

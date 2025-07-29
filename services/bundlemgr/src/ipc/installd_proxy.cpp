@@ -1126,5 +1126,16 @@ ErrCode InstalldProxy::ClearDir(const std::string &dir)
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::CLEAR_DIR, data, reply, option);
 }
+
+ErrCode InstalldProxy::RestoreconLibs(const std::string &libPath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String, libPath);
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::RESTORE_CON_LIBS, data, reply, option);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

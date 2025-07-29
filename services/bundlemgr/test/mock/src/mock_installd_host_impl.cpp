@@ -363,5 +363,10 @@ ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::RestoreconLibs(const std::string &libPath)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
