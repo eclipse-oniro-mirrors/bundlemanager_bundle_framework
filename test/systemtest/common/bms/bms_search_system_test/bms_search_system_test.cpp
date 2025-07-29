@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1031,7 +1031,7 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_2800, Function | MediumTest | Level1)
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_EQ(commonTool.VectorToStr(bundleInfo.hapModuleNames), "com.third.hiworld.example.h1");
-    EXPECT_EQ(commonTool.VectorToStr(bundleInfo.moduleNames), "testability1");
+    EXPECT_EQ(commonTool.VectorToStr(bundleInfo.moduleNames), "com.third.hiworld.example.h1");
     TearDownTestCase();
     std::cout << "END BMS_Search_2800" << std::endl;
 }
@@ -1088,8 +1088,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_3000, Function | MediumTest | Level1)
     HapModuleInfo hapModuleInfo;
 
     bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
-    EXPECT_EQ(hapModuleInfo.name, "bmsThirdBundle1");
-    EXPECT_EQ(hapModuleInfo.moduleName, "testability1");
+    EXPECT_EQ(hapModuleInfo.name, "com.third.hiworld.example.h1");
+    EXPECT_EQ(hapModuleInfo.moduleName, "com.third.hiworld.example.h1");
     EXPECT_TRUE(queryResult);
     TearDownTestCase();
     std::cout << "END BMS_Search_3000" << std::endl;
