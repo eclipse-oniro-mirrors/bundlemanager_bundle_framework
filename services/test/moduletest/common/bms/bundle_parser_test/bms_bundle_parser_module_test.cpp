@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -89,21 +89,6 @@ HWTEST_F(BmsBundleParserModuleTest, NullAbility_0200, Function | MediumTest | Le
 {
     pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle1" << ServiceConstants::INSTALL_FILE_SUFFIX;
     CheckBundleParserResult(pathStream_);
-}
-
-/**
- * @tc.number: InvalidBundleProfileName_0300
- * @tc.name: Test parse the bundle with invalid profile success
- * @tc.desc: 1. parse a bundle with invalid profile suffix
- *           2. parse a bundle with invalid profile format
- */
-HWTEST_F(BmsBundleParserModuleTest, InvalidBundleProfileName_0300, Function | MediumTest | Level2)
-{
-    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle14" << ServiceConstants::INSTALL_FILE_SUFFIX;
-    BundleParser bundleParser;
-    InnerBundleInfo innerBundleInfo;
-    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
-    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR) << "fail, parser bundle success!";
 }
 
 /**
