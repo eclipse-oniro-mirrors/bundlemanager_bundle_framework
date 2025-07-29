@@ -101,6 +101,22 @@ HWTEST_F(BundleMgrExtTest, CheckBundleNameAndStratAbility_0100, Function | Small
 }
 
 /**
+ * @tc.number: IsTargetApp_0100
+ * @tc.name: test the IsTargetApp
+ * @tc.desc: 1. system running normally
+ *           2. test IsTargetApp
+ */
+HWTEST_F(BundleMgrExtTest, IsTargetApp_0100, Function | SmallTest | Level0)
+{
+    BundleMgrExtToTest bundleMgrExtToTest;
+    std::string bundleName = "com.ohos.systemui";
+    std::string appID = "appID";
+    bundleMgrExtToTest.IsTargetApp(bundleName, appID);
+    auto ret = bundleMgrExtToTest.IsRdDevice();
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: GetCompatibleDeviceType_0100
  * @tc.name: test the GetCompatibleDeviceType
  * @tc.desc: 1. system running normally

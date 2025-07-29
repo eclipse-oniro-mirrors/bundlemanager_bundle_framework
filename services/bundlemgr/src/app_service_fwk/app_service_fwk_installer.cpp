@@ -1024,55 +1024,22 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
     }
     APP_LOGI_NOFUNC("%{public}s old version:%{public}d, new version:%{public}d",
         bundleName_.c_str(), oldInfo.GetVersionCode(), versionCode_);
-    if ((oldInfo.GetVersionCode() == versionCode_) &&
-        oldInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
-        APP_LOGW("bundle %{public}s type is not same, existing type is %{public}d",
-            bundleName_.c_str(), oldInfo.GetApplicationBundleType());
-        return false;
-    }
-    if (oldInfo.GetVersionCode() > versionCode_) {
+    if (oldInfo.GetVersionCode() == versionCode_) {
+        if (oldInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
+            APP_LOGW("bundle %{public}s type is not same, existing type is %{public}d",
+                bundleName_.c_str(), oldInfo.GetApplicationBundleType());
+            return false;
+        }
+        moduleUpdate_ = true;
+        return true;
+    } else if (oldInfo.GetVersionCode() > versionCode_) {
         isDowngrade = true;
         APP_LOGW("version code is lower than current app service");
         return false;
     }
-
-    for (const auto &item : infos) {
-        if (CheckNeedUpdate(item.second, oldInfo)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool AppServiceFwkInstaller::CheckNeedUpdate(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo)
-{
-    auto oldVersionCode = oldInfo.GetVersionCode();
-    if (oldVersionCode > versionCode_) {
-        APP_LOGW_NOFUNC("fwk new version code is lower than current");
-        return false;
-    } else if (oldVersionCode < versionCode_) {
-        APP_LOGW_NOFUNC("fwk upgrade old version:%{public}d new version: %{public}d", oldVersionCode, versionCode_);
-        versionUpgrade_ = true;
-        return true;
-    }
-    std::string moduleName { newInfo.GetCurModuleName() };
-    std::string buildHashOld;
-    if (!oldInfo.GetModuleBuildHash(moduleName, buildHashOld)) {
-        APP_LOGD("module %{public}s is a new module", moduleName.c_str());
-        moduleUpdate_ = true;
-        return true;
-    }
-    std::string buildHashNew;
-    if (!newInfo.GetModuleBuildHash(moduleName, buildHashNew)) {
-        APP_LOGD("GetModuleBuildHash from module %{public}s failed", moduleName.c_str());
-        return false;
-    }
-    if (buildHashOld != buildHashNew) {
-        APP_LOGD("module %{public}s buildHash has changed", moduleName.c_str());
-        moduleUpdate_ = true;
-        return true;
-    }
-    return false;
+    APP_LOGI_NOFUNC("%{public}s version code is upgraded", bundleName_.c_str());
+    versionUpgrade_ = true;
+    return true;
 }
 
 ErrCode AppServiceFwkInstaller::RemoveLowerVersionSoDir(uint32_t versionCode)

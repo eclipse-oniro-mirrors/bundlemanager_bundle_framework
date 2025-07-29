@@ -32,6 +32,7 @@ BmsEcologicalRuleMgrServiceClient::BmsEcologicalRuleMgrServiceClient()
 
 BmsEcologicalRuleMgrServiceClient::~BmsEcologicalRuleMgrServiceClient()
 {
+    std::lock_guard<std::mutex> lock(proxyMutex_);
     if (bmsEcologicalRuleMgrServiceProxy_ != nullptr) {
         auto remoteObj = bmsEcologicalRuleMgrServiceProxy_->AsObject();
         if (remoteObj != nullptr) {
@@ -67,6 +68,7 @@ sptr<IBmsEcologicalRuleMgrService> BmsEcologicalRuleMgrServiceClient::ConnectSer
 
 bool BmsEcologicalRuleMgrServiceClient::CheckConnectService()
 {
+    std::lock_guard<std::mutex> lock(proxyMutex_);
     if (bmsEcologicalRuleMgrServiceProxy_ == nullptr) {
         LOG_W(BMS_TAG_DEFAULT, "redo ConnectService");
         bmsEcologicalRuleMgrServiceProxy_ = ConnectService();
@@ -80,6 +82,7 @@ bool BmsEcologicalRuleMgrServiceClient::CheckConnectService()
 
 void BmsEcologicalRuleMgrServiceClient::OnRemoteSaDied(const wptr<IRemoteObject> &object)
 {
+    std::lock_guard<std::mutex> lock(proxyMutex_);
     bmsEcologicalRuleMgrServiceProxy_ = ConnectService();
 }
 
@@ -93,6 +96,7 @@ int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS
         LOG_W(BMS_TAG_DEFAULT, "check Connect SA Failed");
         return OHOS::AppExecFwk::IBmsEcologicalRuleMgrService::ErrCode::ERR_FAILED;
     }
+    std::lock_guard<std::mutex> lock(proxyMutex_);
     int32_t res = bmsEcologicalRuleMgrServiceProxy_->QueryFreeInstallExperience(want, callerInfo, rule);
     if (rule.replaceWant != nullptr) {
         rule.replaceWant->SetParam(ERMS_ORIGINAL_TARGET, want.ToString());
@@ -104,8 +108,7 @@ int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS
 
 void BmsEcologicalRuleMgrServiceDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
-    std::shared_ptr<BmsEcologicalRuleMgrServiceClient> instance =
-        DelayedSingleton<BmsEcologicalRuleMgrServiceClient>::GetInstance();
+    auto instance = BmsEcologicalRuleMgrServiceClient::GetInstance();
     if (instance != nullptr) {
         instance->OnRemoteSaDied(object);
     } else {

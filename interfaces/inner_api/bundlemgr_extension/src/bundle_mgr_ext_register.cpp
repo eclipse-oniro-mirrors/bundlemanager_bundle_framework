@@ -18,23 +18,23 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-std::mutex BundleMgrExtRegister::mutex_;
+ffrt::mutex BundleMgrExtRegister::mutex_;
 BundleMgrExtRegister &BundleMgrExtRegister::GetInstance()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<ffrt::mutex> lock(mutex_);
     static BundleMgrExtRegister bundleMgrExt;
     return bundleMgrExt;
 }
 
 void BundleMgrExtRegister::RegisterBundleMgrExt(const std::string& bundleExtName, const CreateFunc& createFunc)
 {
-    std::lock_guard<std::mutex> lock(BundleMgrExtMutex_);
+    std::lock_guard<ffrt::mutex> lock(BundleMgrExtMutex_);
     bundleMgrExts_.emplace(bundleExtName, createFunc);
 }
 
 std::shared_ptr<BundleMgrExt> BundleMgrExtRegister::GetBundleMgrExt(const std::string &bundleExtName)
 {
-    std::lock_guard<std::mutex> lock(BundleMgrExtMutex_);
+    std::lock_guard<ffrt::mutex> lock(BundleMgrExtMutex_);
     auto it = bundleMgrExts_.find(bundleExtName);
     if (it == bundleMgrExts_.end()) {
         return nullptr;

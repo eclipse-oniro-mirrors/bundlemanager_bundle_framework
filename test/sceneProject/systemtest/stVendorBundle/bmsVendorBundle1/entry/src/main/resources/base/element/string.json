@@ -1,0 +1,28 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "bmsVendorBundle_A1 Ability"
+    },
+    {
+      "name": "message",
+      "value": "hello world"
+    },
+    {
+      "name":"hello",
+      "value":"Hello"
+    },
+    {
+      "name":"world",
+      "value":"World"
+    }
+  ]
+}

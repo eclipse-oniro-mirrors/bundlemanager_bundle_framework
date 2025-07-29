@@ -63,6 +63,7 @@ private:
     static void InnerSendDbErrorEvent(const EventInfo& eventInfo);
     static void InnerSendDataPartitionUsageEvent(const EventInfo& eventInfo);
     static void InnerSendDefaultAppEvent(const EventInfo& eventInfo);
+    static void InnerSendQueryBundleInfoEvent(const EventInfo& eventInfo);
 
     template<typename... Types>
     static void InnerEventWrite(const std::string &eventName,

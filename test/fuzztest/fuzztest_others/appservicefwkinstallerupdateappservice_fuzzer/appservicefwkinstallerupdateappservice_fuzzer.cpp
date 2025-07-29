@@ -43,7 +43,6 @@ namespace OHOS {
         appServiceFwk.UpdateAppService(innerBundleInfo, infos, installParam);
         InnerBundleInfo oldInfo;
         InnerBundleInfo newInfo;
-        appServiceFwk.CheckNeedUpdate(newInfo, oldInfo);
         std::string hspPath = ", path: ";
         appServiceFwk.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH, installParam);
         bool isReplace = true;

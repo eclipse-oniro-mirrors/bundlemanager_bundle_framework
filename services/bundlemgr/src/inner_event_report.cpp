@@ -49,6 +49,7 @@ constexpr const char* BMS_DISK_SPACE = "BMS_DISK_SPACE";
 constexpr const char* APP_CONTROL_RULE = "APP_CONTROL_RULE";
 constexpr const char* DB_ERROR = "DB_ERROR";
 constexpr const char* DEFAULT_APP = "DEFAULT_APP";
+constexpr const char* QUERY_BUNDLE_INFO = "QUERY_BUNDLE_INFO";
 
 // event params
 const char* EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -135,6 +136,16 @@ const char* ERROR_CODE = "errorCode";
 const char* REBUILD_TYPE = "rebuildType";
 const char* COMPONENT_NAME = "hisevent";
 const char* PARTITION_NAME = "/data";
+// query event
+const char* EVENT_PARAM_FUNC_ID_LIST = "FUNC_ID_LIST";
+const char* EVENT_PARAM_USER_ID_LIST = "USER_ID_LIST";
+const char* EVENT_PARAM_UID_LIST = "UID_LIST";
+const char* EVENT_PARAM_APP_INDEX_LIST = "APP_INDEX_LIST";
+const char* EVENT_PARAM_FLAG_LIST = "FLAG_LIST";
+const char* EVENT_PARAM_BUNDLE_NAME_LIST = "BUNDLE_NAME_LIST";
+const char* EVENT_PARAM_CALLING_UID_LIST = "CALLING_UID_LIST";
+const char* EVENT_PARAM_CALLING_BUNDLE_NAME_LIST = "CALLING_BUNDLE_NAME_LIST";
+const char* EVENT_PARAM_CALLING_APP_ID_LIST = "CALLING_APP_ID_LIST";
 
 const InstallScene INSTALL_SCENE_STR_MAP_KEY[] = {
     InstallScene::NORMAL,
@@ -314,6 +325,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::DEFAULT_APP,
             [](const EventInfo& eventInfo) {
                 InnerSendDefaultAppEvent(eventInfo);
+            } },
+        { BMSEventType::QUERY_BUNDLE_INFO,
+            [](const EventInfo& eventInfo) {
+                InnerSendQueryBundleInfoEvent(eventInfo);
             } },
     };
 
@@ -752,6 +767,23 @@ void InnerEventReport::InnerSystemEventWrite(
         eventName,
         static_cast<OHOS::HiviewDFX::HiSysEvent::EventType>(type),
         keyValues...);
+}
+
+void InnerEventReport::InnerSendQueryBundleInfoEvent(const EventInfo& eventInfo)
+{
+    InnerSystemEventWrite(
+        QUERY_BUNDLE_INFO,
+        HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_FUNC_ID_LIST, eventInfo.funcIdList,
+        EVENT_PARAM_USER_ID_LIST, eventInfo.userIdList,
+        EVENT_PARAM_UID_LIST, eventInfo.appIndex,
+        EVENT_PARAM_APP_INDEX_LIST, eventInfo.appIndexList,
+        EVENT_PARAM_FLAG_LIST, eventInfo.flagList,
+        EVENT_PARAM_BUNDLE_NAME_LIST, eventInfo.bundleNameList,
+        EVENT_PARAM_CALLING_UID_LIST, eventInfo.callingUidList,
+        EVENT_PARAM_CALLING_BUNDLE_NAME_LIST, eventInfo.callingBundleNameList,
+        EVENT_PARAM_CALLING_APP_ID_LIST, eventInfo.callingAppIdList,
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

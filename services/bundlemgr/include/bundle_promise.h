@@ -20,6 +20,7 @@
 #include <future>
 
 #include "app_log_wrapper.h"
+#include "ffrt.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -33,7 +34,7 @@ public:
      */
     void NotifyAllTasksExecuteFinished()
     {
-        std::lock_guard<std::mutex> lock(notifyTaskMutex_);
+        std::lock_guard<ffrt::mutex> lock(notifyTaskMutex_);
         if (hasNotified_) {
             APP_LOGE("promise has executed and abort when NotifyAllTasksExecuteFinished");
             return;
@@ -49,7 +50,7 @@ public:
      */
     void WaitForAllTasksExecute()
     {
-        std::lock_guard<std::mutex> lock(waitTaskMutex_);
+        std::lock_guard<ffrt::mutex> lock(waitTaskMutex_);
         if (hasWaited_) {
             APP_LOGE("promise has executed and abort when WaitForAllTasksExecute");
             return;
@@ -64,8 +65,8 @@ private:
     std::atomic_bool hasWaited_ = false;
     std::promise<void> promise_;
     std::future<void> future_ = promise_.get_future();
-    std::mutex waitTaskMutex_;
-    std::mutex notifyTaskMutex_;
+    ffrt::mutex waitTaskMutex_;
+    ffrt::mutex notifyTaskMutex_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

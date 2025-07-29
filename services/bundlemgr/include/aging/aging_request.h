@@ -21,6 +21,7 @@
 
 #include "aging_bundle_info.h"
 #include "aging_util.h"
+#include "ffrt.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -41,7 +42,7 @@ public:
 
     const std::vector<AgingBundleInfo> GetAgingBundles() const
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<ffrt::mutex> lock(mutex_);
         return agingBundles_;
     };
 
@@ -90,7 +91,7 @@ private:
 
     static int64_t totalDataBytesThreshold_;
     static int64_t oneDayTimeMs_;
-    mutable std::mutex mutex_;
+    mutable ffrt::mutex mutex_;
     std::vector<AgingBundleInfo> agingBundles_;
 };
 }  //  namespace AppExecFwk

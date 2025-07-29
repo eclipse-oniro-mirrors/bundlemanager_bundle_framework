@@ -482,18 +482,6 @@ ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string>& fil
     return ERR_OK;
 }
 
-bool BMSEventHandler::IsNeedToUpdateSharedHspByHash(
-    const InnerBundleInfo& oldInfo, const InnerBundleInfo& newInfo) const
-{
-    return true;
-}
-
-bool BMSEventHandler::IsNeedToUpdateSharedAppByHash(
-    const InnerBundleInfo& oldInfo, const InnerBundleInfo& newInfo) const
-{
-    return true;
-}
-
 void BMSEventHandler::SaveSystemFingerprint() {}
 
 bool BMSEventHandler::IsSystemUpgrade()

@@ -20,6 +20,7 @@
 
 #include "ability_connect_callback_stub.h"
 #include "bundle_connect_ability_mgr.h"
+#include "ffrt.h"
 #include "service_center_death_recipient.h"
 
 namespace OHOS {
@@ -29,7 +30,7 @@ class ServiceCenterDeathRecipient;
 
 class ServiceCenterConnection : public AAFwk::AbilityConnectionStub {
 public:
-    ServiceCenterConnection(int32_t &connectState, std::condition_variable &cv,
+    ServiceCenterConnection(int32_t &connectState, ffrt::condition_variable &cv,
         const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr)
         : connectState_(connectState), cv_(cv), connectAbilityMgr_(connectAbilityMgr)
     {
@@ -57,7 +58,7 @@ private:
     int32_t &connectState_;
     sptr<IRemoteObject> serviceCenterRemoteObject_;
     sptr<ServiceCenterDeathRecipient> deathRecipient_;
-    std::condition_variable &cv_;
+    ffrt::condition_variable &cv_;
     std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr_;
 };
 }  //  namespace AppExecFwk

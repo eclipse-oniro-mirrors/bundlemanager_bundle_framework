@@ -27,6 +27,7 @@
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
+#include "common_json_converter.h"
 #include "free_install_params.h"
 #include "installd_client.h"
 
@@ -34,7 +35,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* APP_TYPE = "appType";
-constexpr const char* BUNDLE_STATUS = "bundleStatus";
 constexpr const char* BASE_APPLICATION_INFO = "baseApplicationInfo";
 constexpr const char* BASE_BUNDLE_INFO = "baseBundleInfo";
 constexpr const char* BASE_ABILITY_INFO = "baseAbilityInfos";
@@ -176,6 +176,26 @@ const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t user
     return bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
 }
 }  // namespace
+
+void from_json(const nlohmann::json &jsonObject, InnerAbilityInfo &innerAbilityInfo)
+{
+    AbilityFromJson(jsonObject, innerAbilityInfo);
+}
+
+void to_json(nlohmann::json &jsonObject, const InnerAbilityInfo &innerAbilityInfo)
+{
+    AbilityToJson(jsonObject, innerAbilityInfo);
+}
+
+void from_json(const nlohmann::json &jsonObject, InnerExtensionInfo &innerExtensionInfo)
+{
+    ExtensionFromJson(jsonObject, innerExtensionInfo);
+}
+
+void to_json(nlohmann::json &jsonObject, const InnerExtensionInfo &innerExtensionInfo)
+{
+    ExtensionToJson(jsonObject, innerExtensionInfo);
+}
 
 void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResourceInfo)
 {
@@ -483,7 +503,6 @@ void to_json(nlohmann::json &jsonObject, const InstallMark &installMark)
 void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
 {
     jsonObject[APP_TYPE] = appType_;
-    jsonObject[BUNDLE_STATUS] = bundleStatus_;
     jsonObject[ALLOWED_ACLS] = allowedAcls_;
     jsonObject[BASE_APPLICATION_INFO] = *baseApplicationInfo_;
     jsonObject[BASE_BUNDLE_INFO] = *baseBundleInfo_;
@@ -1295,14 +1314,6 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<BundleStatus>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_STATUS,
-        bundleStatus_,
-        JsonType::NUMBER,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<BundleInfo>(jsonObject,
         jsonObjectEnd,
         BASE_BUNDLE_INFO,
@@ -1319,7 +1330,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         true,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, AbilityInfo>>(jsonObject,
+    GetValueIfFindKey<std::map<std::string, InnerAbilityInfo>>(jsonObject,
         jsonObjectEnd,
         BASE_ABILITY_INFO,
         baseAbilityInfos_,
@@ -1418,7 +1429,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         isNewVersion_,
         false,
         parseResult);
-    GetValueIfFindKey<std::map<std::string, ExtensionAbilityInfo>>(jsonObject,
+    GetValueIfFindKey<std::map<std::string, InnerExtensionInfo>>(jsonObject,
         jsonObjectEnd,
         BUNDLE_BASE_EXTENSION_INFOS,
         baseExtensionInfos_,
@@ -1621,7 +1632,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     key.append(".").append(modulePackage).append(".");
     for (const auto &extension : baseExtensionInfos_) {
         if ((extension.first.find(key) != std::string::npos) && (extension.second.moduleName == hapInfo.moduleName)) {
-            hapInfo.extensionInfos.emplace_back(extension.second);
+            hapInfo.extensionInfos.emplace_back(InnerExtensionInfo::ConvertToExtensionInfo(extension.second));
         }
     }
     hapInfo.metadata = it->second.metadata;
@@ -1630,10 +1641,11 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
             continue;
         }
         if ((ability.first.find(key) != std::string::npos) && (ability.second.moduleName == hapInfo.moduleName)) {
-            auto &abilityInfo = hapInfo.abilityInfos.emplace_back(ability.second);
+            AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(ability.second);
+            auto &abilityInfoRef = hapInfo.abilityInfos.emplace_back(abilityInfo);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
-                abilityInfo.applicationInfo, appIndex);
+                abilityInfoRef.applicationInfo, appIndex);
         }
     }
     hapInfo.dependencies = it->second.dependencies;
@@ -1675,10 +1687,10 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(
     const std::string &abilityName,
     int32_t userId) const
 {
-    for (const auto &ability : baseAbilityInfos_) {
-        auto abilityInfo = ability.second;
-        if ((abilityInfo.name == abilityName) &&
-            (moduleName.empty() || (abilityInfo.moduleName == moduleName))) {
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if ((innerAbilityInfo.name == abilityName) &&
+            (moduleName.empty() || (innerAbilityInfo.moduleName == moduleName))) {
+            AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
                 abilityInfo.applicationInfo);
@@ -1692,11 +1704,10 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(
 std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoV9(
     const std::string &moduleName, const std::string &abilityName) const
 {
-    for (const auto &ability : baseAbilityInfos_) {
-        auto abilityInfo = ability.second;
-        if ((abilityInfo.name == abilityName) &&
-            (moduleName.empty() || (abilityInfo.moduleName == moduleName))) {
-            return abilityInfo;
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if ((innerAbilityInfo.name == abilityName) &&
+            (moduleName.empty() || (innerAbilityInfo.moduleName == moduleName))) {
+            return InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
         }
     }
     APP_LOGE("bundleName: %{public}s not find moduleName:%{public}s, abilityName:%{public}s",
@@ -1708,12 +1719,11 @@ ErrCode InnerBundleInfo::FindAbilityInfo(
     const std::string &moduleName, const std::string &abilityName, AbilityInfo &info) const
 {
     bool isModuleFind = false;
-    for (const auto &ability : baseAbilityInfos_) {
-        auto abilityInfo = ability.second;
-        if ((abilityInfo.moduleName == moduleName)) {
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if ((innerAbilityInfo.moduleName == moduleName)) {
             isModuleFind = true;
-            if (abilityInfo.name == abilityName) {
-                info = abilityInfo;
+            if (innerAbilityInfo.name == abilityName) {
+                info = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
                 return ERR_OK;
             }
         }
@@ -1734,11 +1744,11 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
     }
 
     std::vector<AbilityInfo> abilitys;
-    for (const auto &ability : baseAbilityInfos_) {
-        if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if (innerAbilityInfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
             continue;
         }
-        auto abilityInfo = ability.second;
+        auto abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
         GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
             ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
             abilityInfo.applicationInfo);
@@ -1753,11 +1763,11 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
 
 std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(const std::string continueType, int32_t userId) const
 {
-    for (const auto &ability : baseAbilityInfos_) {
-        AbilityInfo abilityInfo = ability.second;
-        std::vector<std::string> continueTypes = abilityInfo.continueType;
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        std::vector<std::string> continueTypes = innerAbilityInfo.continueType;
         auto item = std::find(continueTypes.begin(), continueTypes.end(), continueType);
         if (item != continueTypes.end()) {
+            AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
                 abilityInfo.applicationInfo);
@@ -1773,25 +1783,11 @@ std::optional<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfo(
     for (const auto &extension : baseExtensionInfos_) {
         if ((extension.second.name == extensionName) &&
             (moduleName.empty() || (extension.second.moduleName == moduleName))) {
-            return extension.second;
+            return InnerExtensionInfo::ConvertToExtensionInfo(extension.second);
         }
     }
 
     return std::nullopt;
-}
-
-std::optional<std::vector<ExtensionAbilityInfo>> InnerBundleInfo::FindExtensionInfos() const
-{
-    std::vector<ExtensionAbilityInfo> extensions;
-    for (const auto &extension : baseExtensionInfos_) {
-        extensions.emplace_back(extension.second);
-    }
-
-    if (extensions.empty()) {
-        return std::nullopt;
-    }
-
-    return extensions;
 }
 
 bool InnerBundleInfo::AddModuleInfo(const InnerBundleInfo &newInfo)
@@ -2323,7 +2319,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
+        LOG_W(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
         return;
     }
 
@@ -2389,7 +2385,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
+        LOG_W(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
@@ -2466,7 +2462,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
+        LOG_W(BMS_TAG_QUERY, "can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
             userId, GetBundleName().c_str());
         return false;
     }
@@ -2528,7 +2524,7 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when GetBundleInfo", userId);
+        LOG_W(BMS_TAG_QUERY, "can not find userId %{public}d when GetBundleInfo", userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
@@ -2572,6 +2568,11 @@ void InnerBundleInfo::ProcessBundleFlags(
         } else {
             GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId,
                 bundleInfo.applicationInfo, appIndex);
+        }
+        BmsExtensionDataMgr bmsExtensionDataMgr;
+        if (bundleInfo.applicationInfo.removable &&
+            !bmsExtensionDataMgr.IsTargetApp(GetBundleName(), GetAppIdentifier())) {
+            bundleInfo.applicationInfo.removable = GetUninstallState();
         }
     }
     bundleInfo.applicationInfo.appIndex = appIndex;
@@ -2618,7 +2619,7 @@ void InnerBundleInfo::GetBundleWithReqPermissionsV9(
         const std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = innerBundleUserInfo.cloneInfos;
         std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
         if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
-            LOG_E(BMS_TAG_QUERY,
+            LOG_W(BMS_TAG_QUERY,
                 "can not find userId %{public}d, appIndex %{public}d when get applicationInfo", userId, appIndex);
             return;
         }
@@ -2689,17 +2690,17 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         return;
     }
     APP_LOGD("Get bundleInfo with abilities");
-    for (auto &ability : baseAbilityInfos_) {
-        if ((ability.second.moduleName != hapModuleInfo.moduleName) ||
-            (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY)) {
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if ((innerAbilityInfo.moduleName != hapModuleInfo.moduleName) ||
+            (innerAbilityInfo.name == ServiceConstants::APP_DETAIL_ABILITY)) {
             continue;
         }
-        bool isEnabled = IsAbilityEnabled(ability.second, userId, appIndex);
+        AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
+        bool isEnabled = IsAbilityEnabled(abilityInfo, userId, appIndex);
         if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
             && !isEnabled) {
             continue;
         }
-        AbilityInfo abilityInfo = ability.second;
         abilityInfo.enabled = isEnabled;
         abilityInfo.appIndex = appIndex;
 
@@ -2731,7 +2732,7 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(
         if (extensionInfo.second.moduleName != hapModuleInfo.moduleName || !extensionInfo.second.enabled) {
             continue;
         }
-        ExtensionAbilityInfo info = extensionInfo.second;
+        ExtensionAbilityInfo info = InnerExtensionInfo::ConvertToExtensionInfo(extensionInfo.second);
         info.appIndex = appIndex;
 
         if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
@@ -2751,16 +2752,16 @@ void InnerBundleInfo::GetBundleWithAbilities(
 {
     APP_LOGD("bundleName:%{public}s userid:%{public}d", bundleInfo.name.c_str(), userId);
     if (static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_ABILITIES) {
-        for (auto &ability : baseAbilityInfos_) {
-            if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
+        for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+            if (innerAbilityInfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
                 continue;
             }
-            bool isEnabled = IsAbilityEnabled(ability.second, userId);
+            AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
+            bool isEnabled = IsAbilityEnabled(abilityInfo, userId);
             if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
                 && !isEnabled) {
                 continue;
             }
-            AbilityInfo abilityInfo = ability.second;
             abilityInfo.enabled = isEnabled;
             if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_SKILL) != GET_BUNDLE_WITH_SKILL) {
                 abilityInfo.skills.clear();
@@ -2780,7 +2781,7 @@ void InnerBundleInfo::GetBundleWithExtension(
             if (!extensionInfo.second.enabled) {
                 continue;
             }
-            ExtensionAbilityInfo info = extensionInfo.second;
+            ExtensionAbilityInfo info = InnerExtensionInfo::ConvertToExtensionInfo(extensionInfo.second);
             if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_SKILL) != GET_BUNDLE_WITH_SKILL) {
                 info.skills.clear();
             }
@@ -3116,7 +3117,7 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
         auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
         if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
             != disabledAbilities.end()) {
-            APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+            APP_LOGW_NOFUNC("-n %{public}s -a %{public}s disabled",
                 abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
             return false;
         } else {
@@ -3133,7 +3134,7 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
     auto disabledAbilities = mpCloneInfos.at(appIndexKey).disabledAbilities;
     if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
         != disabledAbilities.end()) {
-        APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+        APP_LOGW_NOFUNC("-n %{public}s -a %{public}s disabled",
             abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
         return false;
     } else {
@@ -3255,7 +3256,7 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
         auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
         if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
             != disabledAbilities.end()) {
-            APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+            APP_LOGW_NOFUNC("-n %{public}s -a %{public}s disabled",
                 abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
             isEnable = false;
         } else {
@@ -3272,7 +3273,7 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
     auto disabledAbilities = mpCloneInfos.at(appIndexKey).disabledAbilities;
     if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
         != disabledAbilities.end()) {
-        APP_LOGE_NOFUNC("-n %{public}s -a %{public}s disabled",
+        APP_LOGW_NOFUNC("-n %{public}s -a %{public}s disabled",
             abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
         isEnable = false;
     } else {
@@ -3828,7 +3829,7 @@ void InnerBundleInfo::GetMainAbilityInfo(AbilityInfo &abilityInfo) const
     for (const auto& item : innerModuleInfos_) {
         const std::string& key = item.second.entryAbilityKey;
         if (!key.empty() && (baseAbilityInfos_.count(key) != 0)) {
-            abilityInfo = baseAbilityInfos_.at(key);
+            abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(baseAbilityInfos_.at(key));
             if (item.second.isEntry) {
                 return;
             }
@@ -4993,7 +4994,7 @@ void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &application
     for (const auto& item : innerModuleInfos_) {
         const std::string& key = item.second.entryAbilityKey;
         if (!key.empty() && (baseAbilityInfos_.count(key) != 0)) {
-            const AbilityInfo &mainAbilityInfo = baseAbilityInfos_.at(key);
+            const InnerAbilityInfo &mainAbilityInfo = baseAbilityInfos_.at(key);
             if ((mainAbilityInfo.labelId != 0) && (mainAbilityInfo.iconId != 0)) {
                 applicationInfo.labelId = mainAbilityInfo.labelId ;
                 applicationInfo.labelResource.id = mainAbilityInfo.labelId;
@@ -5061,7 +5062,9 @@ bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
     pluginBundleInfo.codePath = baseApplicationInfo_->codePath;
     pluginBundleInfo.nativeLibraryPath = bundleName + ServiceConstants::PATH_SEPARATOR +
         baseApplicationInfo_->nativeLibraryPath;
-    pluginBundleInfo.abilityInfos.insert(baseAbilityInfos_.begin(), baseAbilityInfos_.end());
+    for (const auto &item : baseAbilityInfos_) {
+        pluginBundleInfo.abilityInfos.try_emplace(item.first, InnerAbilityInfo::ConvertToAbilityInfo(item.second));
+    }
     pluginBundleInfo.appInfo = *baseApplicationInfo_;
     pluginBundleInfo.appInfo.arkTSMode = GetApplicationArkTSMode();
     for (const auto &info : innerModuleInfos_) {

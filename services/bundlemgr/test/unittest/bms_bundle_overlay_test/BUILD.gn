@@ -82,6 +82,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "ipc:ipc_core",
     "ipc:ipc_single",
     "jsoncpp:jsoncpp",
+    "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
@@ -90,10 +91,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
   external_deps += [
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
-    "battery_manager:batterysrv_client",
-    "display_manager:displaymgr",
     "ffrt:libffrt",
-    "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
 
@@ -207,10 +205,7 @@ ohos_unittest("BmsBundleOverlayInfoTest") {
   external_deps += [
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
-    "battery_manager:batterysrv_client",
-    "display_manager:displaymgr",
     "ffrt:libffrt",
-    "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
 
@@ -314,10 +309,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   external_deps += [
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
-    "battery_manager:batterysrv_client",
-    "display_manager:displaymgr",
     "ffrt:libffrt",
-    "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
 
@@ -465,10 +457,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   external_deps += [
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
-    "battery_manager:batterysrv_client",
-    "display_manager:displaymgr",
     "ffrt:libffrt",
-    "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
 
@@ -614,10 +603,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
   external_deps += [
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
-    "battery_manager:batterysrv_client",
-    "display_manager:displaymgr",
     "ffrt:libffrt",
-    "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
 
@@ -766,10 +752,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   external_deps += [
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
-    "battery_manager:batterysrv_client",
-    "display_manager:displaymgr",
     "ffrt:libffrt",
-    "power_manager:powermgr_client",
     "syscap_codec:syscap_interface_shared",
   ]
 

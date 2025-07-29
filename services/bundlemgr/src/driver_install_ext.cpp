@@ -45,6 +45,7 @@ void DriverInstallExtHandler::RedirectDriverInstallExtPath(std::string &path)
 {
     if (redirectDriverInstallExtPath_ != nullptr) {
         redirectDriverInstallExtPath_(path);
+        return;
     }
     APP_LOGW("redirectDriverInstallExtPath_ func is nullptr");
 }
@@ -53,6 +54,7 @@ void DriverInstallExtHandler::GetDriverExecuteExtPaths(std::vector<std::string> 
 {
     if (getDriverExecuteExtPathsFunc_ != nullptr) {
         getDriverExecuteExtPathsFunc_(paths);
+        return;
     }
     APP_LOGW("getDriverExecuteExtPathsFunc_ func is nullptr");
 }

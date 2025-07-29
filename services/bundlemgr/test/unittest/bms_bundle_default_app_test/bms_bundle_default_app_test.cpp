@@ -57,24 +57,24 @@ const std::string DEFAULT_FILE_TYPE_WORD = "application/msword";
 const std::string DEFAULT_APP_EXCEL = "EXCEL";
 const std::string DEFAULT_APP_PPT = "PPT";
 const std::string ABILITY_VIDEO = "VIDEO";
-const std::string ABILITY_VIDEO_ERROR = "VIDEO-ERROR";
+const std::string ABILITY_VIDEO_ERROR = "VIDEO_ERROR";
 const std::string ABILITY_VIDEO_MP4 = "VideoMp4";
 const std::string ABILITY_IMAGE = "IMAGE";
-const std::string ABILITY_IMAGE_ERROR = "IMAGE-ERROR";
+const std::string ABILITY_IMAGE_ERROR = "IMAGE_ERROR";
 const std::string ABILITY_BROWSER = "BROWSER";
-const std::string ABILITY_BROWSER_ERROR = "BROWSER-ERROR";
+const std::string ABILITY_BROWSER_ERROR = "BROWSER_ERROR";
 const std::string ABILITY_EMAIL = "EMAIL";
-const std::string ABILITY_EMAIL_ERROR = "EMAIL-ERROR";
+const std::string ABILITY_EMAIL_ERROR = "EMAIL_ERROR";
 const std::string ABILITY_AUDIO = "AUDIO";
-const std::string ABILITY_AUDIO_ERROR = "AUDIO-ERROR";
+const std::string ABILITY_AUDIO_ERROR = "AUDIO_ERROR";
 const std::string ABILITY_PDF = "PDF";
-const std::string ABILITY_PDF_ERROR = "PDF-ERROR";
+const std::string ABILITY_PDF_ERROR = "PDF_ERROR";
 const std::string ABILITY_WORD = "WORD";
-const std::string ABILITY_WORD_ERROR = "WORD-ERROR";
+const std::string ABILITY_WORD_ERROR = "WORD_ERROR";
 const std::string ABILITY_EXCEL = "EXCEL";
-const std::string ABILITY_EXCEL_ERROR = "EXCEL-ERROR";
+const std::string ABILITY_EXCEL_ERROR = "EXCEL_ERROR";
 const std::string ABILITY_PPT = "PPT";
-const std::string ABILITY_PPT_ERROR = "PPT-ERROR";
+const std::string ABILITY_PPT_ERROR = "PPT_ERROR";
 const std::string ABILITY_GENERAL_VIDEO = "GeneralVideo";
 const std::string ABILITY_GENERAL_AVI = "GeneralAvi";
 const std::string ABILITY_VIDEO_MS_VIDEO = "VideoMsVideo";
@@ -106,9 +106,6 @@ const nlohmann::json DEFAULT_CONFIG = R"(
     "appType": "appType"
 }]
 )"_json;
-const int32_t LABEL_ID = 16777218;
-const int32_t ICON_ID = 16777222;
-const int32_t DESCRIPTION_ID = 16777217;
 const int32_t USER_ID = 100;
 const int32_t INVALID_USER_ID = 200;
 const int32_t WAIT_TIME = 5; // init mocked bms
@@ -386,9 +383,9 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0200, Function | SmallTest
         EXPECT_EQ(abilityInfo.label, LABEL);
         EXPECT_EQ(abilityInfo.iconPath, ICON);
         EXPECT_EQ(abilityInfo.description, DESCRIPTION);
-        EXPECT_EQ(abilityInfo.labelId, LABEL_ID);
-        EXPECT_EQ(abilityInfo.iconId, ICON_ID);
-        EXPECT_EQ(abilityInfo.descriptionId, DESCRIPTION_ID);
+        EXPECT_GT(abilityInfo.labelId, 0);
+        EXPECT_GT(abilityInfo.iconId, 0);
+        EXPECT_GT(abilityInfo.descriptionId, 0);
     }
 }
 

@@ -122,7 +122,7 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
-                APP_LOGE("appId invalid");
+                APP_LOGW("appId invalid");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
@@ -252,7 +252,7 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
-                APP_LOGE("appId invalid");
+                APP_LOGW("appId invalid");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
@@ -598,7 +598,7 @@ bool ParseDisposedRuleConfiguration(napi_env env, napi_value nDisposedRuleConfig
     napi_get_named_property(env, nDisposedRuleConfiguration, "appId", &prop);
     std::string appId;
     if (!CommonFunc::ParseString(env, prop, appId)) {
-        APP_LOGE("appId invalid");
+        APP_LOGW("appId invalid");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return false;
     }
@@ -747,7 +747,7 @@ static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, Dispose
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null.");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-            SET_DISPOSED_STATUS_SYNC);
+            SET_DISPOSED_RULE);
         napi_throw(env, error);
         return nRet;
     }
@@ -759,9 +759,9 @@ static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, Dispose
     }
     ret = CommonFunc::ConvertErrCode(ret);
     if (ret != NO_ERROR) {
-        APP_LOGE("SetDisposedStatusSync err = %{public}d", ret);
+        APP_LOGE("SetDisposedRule err = %{public}d", ret);
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, SET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+            env, ret, SET_DISPOSED_RULE, PERMISSION_DISPOSED_STATUS);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -786,7 +786,7 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
     }
     if (appId.empty()) {
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_INVALID_APPID, SET_DISPOSED_STATUS_SYNC);
+            env, ERROR_INVALID_APPID, SET_DISPOSED_RULE);
         napi_throw(env, businessError);
         return nullptr;
     }

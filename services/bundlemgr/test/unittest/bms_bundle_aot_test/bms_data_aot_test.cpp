@@ -1855,9 +1855,9 @@ HWTEST_F(BmsAOTMgrTest, IsDriverForAllUser_0100, Function | SmallTest | Level0)
     installer.InitDataMgr();
 
     InnerBundleInfo info;
-    ExtensionAbilityInfo abilityInfo;
-    abilityInfo.type = ExtensionAbilityType::DRIVER;
-    info.InsertExtensionInfo("key", abilityInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    info.InsertExtensionInfo("key", innerExtensionInfo);
     installer.dataMgr_->bundleInfos_.try_emplace(AOT_BUNDLE_NAME, info);
     bool ret = installer.IsDriverForAllUser(AOT_BUNDLE_NAME);
     EXPECT_TRUE(ret);
@@ -1877,9 +1877,9 @@ HWTEST_F(BmsAOTMgrTest, GetBundleNamesForNewUser_0100, Function | SmallTest | Le
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     InnerBundleInfo info;
-    ExtensionAbilityInfo abilityInfo;
-    abilityInfo.type = ExtensionAbilityType::DRIVER;
-    info.InsertExtensionInfo("key", abilityInfo);
+    InnerExtensionInfo innerExtensionInfo;
+    innerExtensionInfo.type = ExtensionAbilityType::DRIVER;
+    info.InsertExtensionInfo("key", innerExtensionInfo);
     dataMgr->bundleInfos_.try_emplace(AOT_BUNDLE_NAME, info);
     OHOS::system::SetParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, "false");
     std::vector<std::string> ret = dataMgr->GetBundleNamesForNewUser();

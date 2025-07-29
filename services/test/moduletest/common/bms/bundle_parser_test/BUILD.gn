@@ -23,6 +23,8 @@ ohos_moduletest("BmsBundleParserModuleTest") {
 
   sources = [
     "${services_path}/bundlemgr/src/bundle_util.cpp",
+    "${services_path}/bundlemgr/src/data/inner_ability_info.cpp",
+    "${services_path}/bundlemgr/src/data/inner_extension_info.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",
     "${services_path}/bundlemgr/src/pre_install_bundle_info.cpp",
