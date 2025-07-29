@@ -11373,7 +11373,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0067, Function | MediumTest | L
 
     installer.pluginIds_ = pluginIds;
     res = installer.JoinPluginId();
-    EXPECT_EQ(res, "11111111|22222222");
+    EXPECT_EQ(res, "11111111,22222222");
 }
 
 /**

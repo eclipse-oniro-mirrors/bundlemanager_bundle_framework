@@ -41,6 +41,7 @@ constexpr const char* LIBS_TMP = "libs_tmp";
 constexpr const char* PERMISSION_KEY = "ohos.permission.kernel.SUPPORT_PLUGIN";
 constexpr const char* PLUGIN_ID = "pluginDistributionIDs";
 constexpr const char* PLUGIN_ID_SEPARATOR = ",";
+constexpr const char* PLUGIN_ID_SEPARATOR_OTHER = "|";
 constexpr const char* REMOVE_TMP_SUFFIX = "_removed";
 constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install/";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
@@ -537,7 +538,11 @@ bool PluginInstaller::ParsePluginId(const std::string &appServiceCapabilities,
                 APP_LOGE("pluginDistributionIDs not found in appServiceCapability");
                 return false;
             }
-            OHOS::SplitStr(it->second, PLUGIN_ID_SEPARATOR, pluginIds);
+            if (it->second.find(PLUGIN_ID_SEPARATOR_OTHER) != std::string::npos) {
+                OHOS::SplitStr(it->second, PLUGIN_ID_SEPARATOR_OTHER, pluginIds);
+            } else {
+                OHOS::SplitStr(it->second, PLUGIN_ID_SEPARATOR, pluginIds);
+            }
             return true;
         }
     }
