@@ -74,11 +74,11 @@ bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::string &mimeType
 
 bool MimeTypeMgr::GetUriSuffix(const std::string &uri, std::string &suffix)
 {
-    if (uri.find(ZIP_FORMAT) != std::string::npos) {
+    if (IsSpecifiedSuffixNumberExtension(uri, ZIP_FORMAT)) {
         suffix = ZIP_SUFFIX;
         return true;
     }
-    if (uri.find(FILE_7Z_FORMAT) != std::string::npos) {
+    if (IsSpecifiedSuffixNumberExtension(uri, FILE_7Z_FORMAT)) {
         suffix = FILE_7Z_SUFFIX;
         return true;
     }
@@ -110,6 +110,20 @@ bool MimeTypeMgr::GetUtdVectorByUri(const std::string &uri, std::vector<std::str
 #else
     return false;
 #endif
+}
+
+bool MimeTypeMgr::IsSpecifiedSuffixNumberExtension(const std::string &uri, const std::string &suffix)
+{
+    size_t pos = uri.rfind(suffix);
+    if (pos == std::string::npos || pos + suffix.length() >= uri.length()) {
+        return false;
+    }
+    for (size_t i = pos + suffix.length(); i < uri.length(); ++i) {
+        if (!std::isdigit(static_cast<unsigned char>(uri[i]))) {
+            return false;
+        }
+    }
+    return true;
 }
 }
 }
