@@ -1,0 +1,36 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "label"
+    },
+    {
+      "name": "READ_CALENDAR_reason",
+      "value": "use ohos.permission.READ_CALENDAR"
+    },
+    {
+      "name": "USE_BLUETOOTH_reason",
+      "value": "use ohos.permission.USE_BLUETOOTH"
+    },
+    {
+      "name": "ANSWER_CALL_reason",
+      "value": "use ohos.permission.ANSWER_CALL"
+    },
+    {
+      "name": "GET_TELEPHONY_STATE_reason",
+      "value": "use ohos.permission.GET_TELEPHONY_STATE"
+    },
+    {
+      "name": "POWER_MANAGER_reason",
+      "value": "use ohos.permission.POWER_MANAGER"
+    }
+  ]
+}
