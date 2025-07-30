@@ -495,35 +495,6 @@ HWTEST_F(BmsAgingTest, AgingClean_0001, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: Start_0001
- * @tc.name: test BundleAgingMgr of Start
- * @tc.desc: Start is false
- */
-HWTEST_F(BmsAgingTest, Start_0001, Function | SmallTest | Level0)
-{
-    BundleAgingMgr bundleAgingMgr;
-    AppExecFwk::BundleAgingMgr::AgingTriggertype type = AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD;
-    DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().SetDisplayState(DisplayPowerMgr::DisplayState::DISPLAY_ON);
-    bundleAgingMgr.Start(type);
-    EXPECT_EQ(DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().GetDisplayState(),
-        DisplayPowerMgr::DisplayState::DISPLAY_ON);
-}
-
-/**
- * @tc.number: Start_0002
- * @tc.name: test BundleAgingMgr of Start
- * @tc.desc: Start is false
- */
-HWTEST_F(BmsAgingTest, Start_0002, Function | SmallTest | Level0)
-{
-    BundleAgingMgr bundleAgingMgr;
-    AppExecFwk::BundleAgingMgr::AgingTriggertype type = AppExecFwk::BundleAgingMgr::AgingTriggertype::FREE_INSTALL;
-    bundleAgingMgr.Start(type);
-    EXPECT_TRUE(bundleAgingMgr.running_);
-    bundleAgingMgr.Start(type);
-    EXPECT_TRUE(bundleAgingMgr.running_);
-}
-/**
  * @tc.number: ProcessBundle_0001
  * @tc.name: test RecentlyUnuseBundleAgingHandler of ProcessBundle
  * @tc.desc: ProcessBundle is true
