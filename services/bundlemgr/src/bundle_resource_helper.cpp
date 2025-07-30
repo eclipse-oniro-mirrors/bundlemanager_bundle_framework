@@ -17,8 +17,11 @@
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "account_helper.h"
+#include "bundle_parser.h"
 #include "bundle_resource_callback.h"
+#include "bundle_resource_constants.h"
 #include "bundle_resource_manager.h"
+#include "bundle_resource_observer.h"
 #include "bundle_resource_param.h"
 #include "bundle_resource_parser.h"
 #include "bundle_resource_register.h"
@@ -249,6 +252,56 @@ bool BundleResourceHelper::GetLauncherAbilityResourceInfo(const std::string &bun
     return true;
 #else
     return false;
+#endif
+}
+
+void BundleResourceHelper::ProcessBundleResourceChange()
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        std::string(BundleResourceConstants::USER_FILE_NAME);
+    nlohmann::json jsonBuf;
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+        return;
+    }
+#ifdef ABILITY_RUNTIME_ENABLE
+    BundleResourceObserver observer;
+    int32_t parseResult = ERR_OK;
+    std::string language;
+    std::string theme;
+    int32_t id;
+    int32_t themeIcon;
+    uint32_t type;
+    for (const auto &[key, value] : jsonBuf.items()) {
+        if (key.find(BundleResourceConstants::THEME) == 0) {
+            const auto &jsonBufEnd = value.end();
+            GetValueIfFindKey<int32_t>(value, jsonBufEnd, BundleResourceConstants::THEME_ID, id,
+                JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+            GetValueIfFindKey<int32_t>(value, jsonBufEnd, BundleResourceConstants::THEME_ICON, themeIcon,
+                JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+            GetValueIfFindKey<uint32_t>(value, jsonBufEnd, BundleResourceConstants::TYPE, type,
+                JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+            BMSJsonUtil::GetStrValueIfFindKey(value, jsonBufEnd, BundleResourceConstants::THEME,
+                theme, false, parseResult);
+            observer.ProcessResourceChangeByType("", theme, id, themeIcon, type);
+            APP_LOGI("-t %{public}d start when reboot", type);
+        }
+        if (key.find(BundleResourceConstants::LANGUAGE) == 0) {
+            const auto &jsonBufEnd = value.end();
+            GetValueIfFindKey<uint32_t>(value, jsonBufEnd, BundleResourceConstants::TYPE, type,
+                JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+            BMSJsonUtil::GetStrValueIfFindKey(value, jsonBufEnd, BundleResourceConstants::LANGUAGE,
+                language, false, parseResult);
+            observer.ProcessResourceChangeByType(language, "", 0, 0, type);
+            APP_LOGI("-t %{public}d start when reboot", type);
+        }
+    }
+#else
+    APP_LOGW("ability runtime is disable");
+#endif
+#else
+    return;
 #endif
 }
 } // AppExecFwk

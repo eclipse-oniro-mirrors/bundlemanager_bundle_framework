@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_CALLBACK_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_CALLBACK_H
 
+#include <mutex>
 #include <string>
 
 #include "bundle_resource_change_type.h"
@@ -51,6 +52,13 @@ private:
     bool SetThemeParamForThemeChanged(const int32_t themeId, const int32_t themeIcon);
 
     void SetUserId(const int32_t userId);
+
+    void SetConfigInFile(const std::string &language, const std::string &theme,
+        const int32_t id, const int32_t themeIcon, const uint32_t type, const int32_t userId);
+
+    void DeleteConfigInFile(const int32_t userId, const uint32_t type);
+
+    std::mutex userFileMutex_;
 };
 } // AppExecFwk
 } // OHOS

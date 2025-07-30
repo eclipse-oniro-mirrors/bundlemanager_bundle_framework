@@ -33,9 +33,10 @@ public:
 
     void OnConfigurationUpdated(const AppExecFwk::Configuration& configuration) override;
 
-private:
     void ProcessResourceChangeByType(const std::string &language, const std::string &theme,
         const int32_t id, const int32_t themeIcon, const uint32_t type);
+
+private:
 
     static void OnSystemColorModeChanged(const std::string &colorMode, const uint32_t type);
 
