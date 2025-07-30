@@ -2854,7 +2854,7 @@ bool InstalldOperator::RestoreconPath(const std::string &path)
         LOG_I(BMS_TAG_INSTALLD, "RestoreconPath success");
         return true;
     }
-    LOG_E(BMS_TAG_INSTALLD, "RestoreconPath failed");
+    LOG_E(BMS_TAG_INSTALLD, "RestoreconPath failed, ret: %{public}d", ret);
     return false;
 }
 }  // namespace AppExecFwk
