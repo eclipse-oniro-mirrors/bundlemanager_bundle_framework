@@ -2350,6 +2350,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14000, Function | Sm
     testFile2 << "test content";
     testFile2.close();
     EXPECT_NE(InstalldOperator::GetProjectUsage(14000), 0);
+    EXPECT_FALSE(InstalldOperator::SetProjectIdForDir(
+        "/data/app/el1/100/base/InstalldOperatorTest_14000/test1.txt", 14000));
     EXPECT_TRUE(InstalldOperator::DeleteDir("/data/app/el1/100/base/InstalldOperatorTest_14000"));
 }
 } // OHOS
