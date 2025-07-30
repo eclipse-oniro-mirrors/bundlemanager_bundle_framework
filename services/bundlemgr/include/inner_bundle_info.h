@@ -86,6 +86,7 @@ struct InnerModuleInfo {
     bool needDelete = false;
     bool debug = false;
     bool resizeable = false;
+    bool deduplicateHar = false;
     uint8_t boolSet = 0;
     uint32_t innerModuleInfoFlag = 0;
     uint32_t labelId = 0;

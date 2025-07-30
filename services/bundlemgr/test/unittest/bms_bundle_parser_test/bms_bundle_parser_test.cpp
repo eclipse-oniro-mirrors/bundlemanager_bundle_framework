@@ -65,6 +65,7 @@ const std::string BUNDLE_MODULE_PROFILE_KEY_DEVICE_TYPE = "deviceType";
 const std::string BUNDLE_APP_PROFILE_KEY_CODE = "code";
 const std::string BUNDLE_APP_PROFILE_KEY_VERSION = "version";
 const std::string BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE = "installationFree";
+const std::string BUNDLE_MODULE_PROFILE_KEY_MODULE_DEDUPLICATE_HAR = "deduplicateHar";
 const size_t ONE = 1;
 const size_t TWO = 2;
 const std::string OVER_MAX_PATH_SIZE(4097, 'x');
@@ -488,6 +489,363 @@ const nlohmann::json MODULE_JSON = R"(
             }
         },
         "module": {
+            "deduplicateHar": true,
+            "abilities": [
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.system.home"
+                            ],
+                            "entities": [
+                                "entity.system.home",
+                                "flag.home.intent.from.system"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                },
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.thirdparty.home"
+                            ],
+                            "entities": [
+                                "entity.thirdparty.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                },
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.system.home"
+                            ],
+                            "entities": [
+                                "entity.thirdparty.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                },
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.thirdparty.home"
+                            ],
+                            "entities": [
+                                "entity.system.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                }
+            ],
+            "deliveryWithInstall": true,
+            "description": "$string:entry_desc",
+            "descriptionId": 16777219,
+            "deviceTypes": [
+                "unknowtype"
+            ],
+            "extensionAbilities": [
+                {
+                    "name": "extensionAbility_A",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.system.home"
+                            ],
+                            "entities": [
+                                "entity.system.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "",
+                    "type": "backup"
+                }
+            ],
+            "installationFree": true,
+            "mainElement": "MainAbility",
+            "name": "entry",
+            "pages": "$profile:main_pages",
+            "srcEntrance": "./ets/Application/AbilityStage.ts",
+            "type": "unknowtype",
+            "virtualMachine": "ark0.0.0.3",
+            "atomicService":{
+                "preloads":[],
+                "resizeable": true
+            }
+        }
+    }
+)"_json;
+
+const nlohmann::json MODULE_JSON_DEDUPLICATEHAR_TRUE = R"(
+    {
+        "app": {
+            "apiReleaseType": "Beta3",
+            "bundleName": "com.example.backuptest",
+            "debug": true,
+            "icon": "$media:app_icon",
+            "iconId": 16777220,
+            "label": "$string:app_name",
+            "labelId": 16777216,
+            "minAPIVersion": 9,
+            "targetAPIVersion": 9,
+            "vendor": "example",
+            "versionCode": 1000000,
+            "versionName": "1.0.0",
+            "bundleType": "atomicService",
+            "default": {
+                "accessible": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            },
+            "phone": {
+                "accessible": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            }
+        },
+        "deviceConfig": {
+            "default": {
+                "keepAlive":true,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false,
+                "accessible": false
+            }
+        },
+        "module": {
+            "deduplicateHar": true,
+            "abilities": [
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.system.home"
+                            ],
+                            "entities": [
+                                "entity.system.home",
+                                "flag.home.intent.from.system"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                },
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.thirdparty.home"
+                            ],
+                            "entities": [
+                                "entity.thirdparty.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                },
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.system.home"
+                            ],
+                            "entities": [
+                                "entity.thirdparty.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                },
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.thirdparty.home"
+                            ],
+                            "entities": [
+                                "entity.system.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                }
+            ],
+            "deliveryWithInstall": true,
+            "description": "$string:entry_desc",
+            "descriptionId": 16777219,
+            "deviceTypes": [
+                "unknowtype"
+            ],
+            "extensionAbilities": [
+                {
+                    "name": "extensionAbility_A",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.system.home"
+                            ],
+                            "entities": [
+                                "entity.system.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "",
+                    "type": "backup"
+                }
+            ],
+            "installationFree": true,
+            "mainElement": "MainAbility",
+            "name": "entry",
+            "pages": "$profile:main_pages",
+            "srcEntrance": "./ets/Application/AbilityStage.ts",
+            "type": "unknowtype",
+            "virtualMachine": "ark0.0.0.3",
+            "atomicService":{
+                "preloads":[],
+                "resizeable": true
+            }
+        }
+    }
+)"_json;
+
+const nlohmann::json MODULE_JSON_DEDUPLICATEHAR_FALSE = R"(
+    {
+        "app": {
+            "apiReleaseType": "Beta3",
+            "bundleName": "com.example.backuptest",
+            "debug": true,
+            "icon": "$media:app_icon",
+            "iconId": 16777220,
+            "label": "$string:app_name",
+            "labelId": 16777216,
+            "minAPIVersion": 9,
+            "targetAPIVersion": 9,
+            "vendor": "example",
+            "versionCode": 1000001,
+            "versionName": "1.0.0",
+            "bundleType": "atomicService",
+            "default": {
+                "accessible": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            },
+            "phone": {
+                "accessible": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            }
+        },
+        "deviceConfig": {
+            "default": {
+                "keepAlive":true,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false,
+                "accessible": false
+            }
+        },
+        "module": {
+            "deduplicateHar": false,
             "abilities": [
                 {
                     "description": "$string:MainAbility_desc",
@@ -637,6 +995,7 @@ const nlohmann::json MODULE_JSON_2 = R"(
             "versionName": "1.0.0"
         },
         "module": {
+            "deduplicateHar": false,
             "deliveryWithInstall": true,
             "description": "$string:entry_desc",
             "descriptionId": 16777219,
@@ -3655,6 +4014,47 @@ HWTEST_F(BmsBundleParserTest, TestParse_7300, Function | SmallTest | Level1)
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR) << profileFileBuffer.str();
+}
+
+
+/**
+ * @tc.name: TestParse_7400
+ * @tc.desc: 1. system running normally
+ *           2. test parse deduplicateHar
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7400, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_DEDUPLICATEHAR_TRUE;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+
+    auto hapModule = innerBundleInfo.FindHapModuleInfo("entry");
+    EXPECT_NE(hapModule, std::nullopt);
+    EXPECT_TRUE(hapModule->deduplicateHar);
+
+    // update deduplicateHar
+    InnerBundleInfo innerBundleInfo2;
+    nlohmann::json profileJson2 = MODULE_JSON_DEDUPLICATEHAR_FALSE;
+    std::ostringstream profileFileBuffer2;
+    profileFileBuffer2 << profileJson2.dump();
+
+    BundleExtractor bundleExtractor2(EMPTY_NAME);
+    result = moduleProfile.TransformTo(
+        profileFileBuffer2, bundleExtractor2, innerBundleInfo2);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer2.str();
+
+    hapModule = innerBundleInfo2.FindHapModuleInfo("entry");
+    EXPECT_NE(hapModule, std::nullopt);
+    EXPECT_FALSE(hapModule->deduplicateHar);
 }
 
 /**
