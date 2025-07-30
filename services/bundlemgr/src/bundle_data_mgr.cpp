@@ -11278,5 +11278,24 @@ bool BundleDataMgr::SetBundleUserInfoRemovable(const std::string bundleName, int
     }
     return true;
 }
+
+ErrCode BundleDataMgr::GetTestRunner(const std::string &bundleName, const std::string &moduleName,
+    ModuleTestRunner &testRunner)
+{
+    APP_LOGD("start GetTestRunner -n %{public}s -m %{public}s", bundleName.c_str(), moduleName.c_str());
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("-n %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto moduleInfo = item->second.GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo) {
+        APP_LOGE("-m %{public}s is not found", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    BundleParser bundleParser;
+    return bundleParser.ParseTestRunner(moduleInfo->hapPath, testRunner);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

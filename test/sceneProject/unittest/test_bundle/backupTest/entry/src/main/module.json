@@ -1,5 +1,10 @@
 {
     "module": {
+        "testRunner": {
+            "name": "testRunnerName",
+            "srcPath": "testRunnerSrcPath",
+            "arkTSMode": "testRunnerArkTSMode"
+        },
         "abilities": [
             {
                 "description": "$string:MainAbility_desc",

@@ -243,6 +243,12 @@ struct MultiAppMode {
     int32_t maxCount = 0;
 };
 
+struct TestRunner {
+    std::string name;
+    std::string srcPath;
+    std::string arkTSMode;
+};
+
 struct App {
     bool debug = false;
     bool keepAlive = false;
@@ -342,6 +348,34 @@ struct ModuleJson {
     App app;
     Module module;
 };
+
+void from_json(const nlohmann::json &jsonObject, TestRunner &testRunner)
+{
+    APP_LOGD("read testRunnerfrom module.json");
+    int32_t parseResult = ERR_OK;
+    const auto &jsonObjectEnd = jsonObject.end();
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        TEST_RUNNER_NAME,
+        testRunner.name,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        TEST_RUNNER_SRC_PATH,
+        testRunner.srcPath,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        TEST_RUNNER_ARKTS_MODE,
+        testRunner.arkTSMode,
+        false,
+        parseResult);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read testRunner error %{public}d", parseResult);
+    }
+}
 
 void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
 {
@@ -2925,6 +2959,51 @@ ErrCode ModuleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_AN_FAILED;
 #endif
         APP_LOGW("Parser ark native file failed");
+    }
+    return ERR_OK;
+}
+
+ErrCode ModuleProfile::TransformToTestRunner(
+    const std::ostringstream &source,
+    ModuleTestRunner &moduleTestRunner) const
+{
+    APP_LOGD("transform module.json stream to TestRunner");
+    nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
+    if (jsonObject.is_discarded()) {
+        APP_LOGE("bad profile");
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+    if (!jsonObject.contains(Profile::MODULE)) {
+        APP_LOGE("TransformToTestRunner failed due to bad module.json");
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+    nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
+    if (!moduleJson.contains(Profile::TEST_RUNNER)) {
+        APP_LOGE("module.json not have testRunner");
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+    nlohmann::json testRunnerObj = moduleJson.at(Profile::TEST_RUNNER);
+    if (!testRunnerObj.is_object()) {
+        APP_LOGE("testRunnerObj is not object");
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+    if (testRunnerObj.contains(Profile::TEST_RUNNER_NAME)) {
+        if (testRunnerObj.at(Profile::TEST_RUNNER_NAME).is_string()) {
+            moduleTestRunner.name = testRunnerObj.at(Profile::TEST_RUNNER_NAME);
+        }
+        APP_LOGW("name is not string");
+    }
+    if (testRunnerObj.contains(Profile::TEST_RUNNER_SRC_PATH)) {
+        if (testRunnerObj.at(Profile::TEST_RUNNER_SRC_PATH).is_string()) {
+            moduleTestRunner.srcPath = testRunnerObj.at(Profile::TEST_RUNNER_SRC_PATH);
+        }
+        APP_LOGW("srcPath is not string");
+    }
+    if (testRunnerObj.contains(Profile::TEST_RUNNER_ARKTS_MODE)) {
+        if (testRunnerObj.at(Profile::TEST_RUNNER_ARKTS_MODE).is_string()) {
+            moduleTestRunner.arkTSMode = testRunnerObj.at(Profile::TEST_RUNNER_ARKTS_MODE);
+        }
+        APP_LOGW("arkTSMode is not string");
     }
     return ERR_OK;
 }

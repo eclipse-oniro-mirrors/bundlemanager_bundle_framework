@@ -923,6 +923,7 @@ private:
     ErrCode HandleSetShortcutVisibleForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllShortcutInfoForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginInfo(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetTestRunner(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

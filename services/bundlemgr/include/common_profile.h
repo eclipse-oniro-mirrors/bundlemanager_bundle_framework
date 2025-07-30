@@ -557,6 +557,12 @@ constexpr const char* START_WINDOW_BACKGROUND_IMAGE_FIT = "startWindowBackground
 constexpr const char* START_MODE = "startMode";
 constexpr const char* START_MODE_MAIN_TASK = "mainTask";
 constexpr const char* START_MODE_RECENT_TASK = "recentTask";
+
+// test runner
+constexpr const char* TEST_RUNNER = "testRunner";
+constexpr const char* TEST_RUNNER_NAME = "name";
+constexpr const char* TEST_RUNNER_SRC_PATH = "srcPath";
+constexpr const char* TEST_RUNNER_ARKTS_MODE = "arkTSMode";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS

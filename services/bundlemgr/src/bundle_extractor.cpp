@@ -50,6 +50,16 @@ bool BundleExtractor::ExtractPackFile(std::ostream &dest) const
     return ExtractByName(BUNDLE_PACKFILE_NAME, dest);
 }
 
+bool BundleExtractor::ExtractModuleProfile(std::ostream &dest) const
+{
+    if (IsNewVersion()) {
+        APP_LOGD("profile is module.json");
+        return ExtractByName(MODULE_PROFILE_NAME, dest);
+    }
+    APP_LOGW("profile is config.json");
+    return false;
+}
+
 BundleParallelExtractor::BundleParallelExtractor(const std::string &source) : BundleExtractor(source, true)
 {
     APP_LOGD("BundleParallelExtractor is created");
