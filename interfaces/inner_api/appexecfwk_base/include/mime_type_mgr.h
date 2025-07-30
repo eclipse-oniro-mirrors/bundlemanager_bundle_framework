@@ -30,6 +30,9 @@ public:
     static bool GetMimeTypeByUri(const std::string &uri, std::string &mimeType);
     static bool GetUtdVectorByUri(const std::string &uri, std::vector<std::string> &utdVector);
     static bool GetUriSuffix(const std::string &uri, std::string &suffix);
+
+private:
+    static bool IsSpecifiedSuffixNumberExtension(const std::string &uri, const std::string &suffix);
 };
 }
 }

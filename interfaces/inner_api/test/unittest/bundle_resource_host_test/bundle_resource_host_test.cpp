@@ -22,6 +22,7 @@
 
 #define private public
 #include "bundle_resource_host.h"
+#include "mime_type_mgr.h"
 #undef private
 #include "bundle_resource_interface.h"
 #include "iremote_stub.h"
@@ -29,7 +30,6 @@
 #include "application_info.h"
 #include "bundle_info.h"
 #include "bundle_user_info.h"
-#include "mime_type_mgr.h"
 #include "json_serializer.h"
 
 using namespace testing::ext;
@@ -1190,6 +1190,77 @@ HWTEST_F(BundleResourceHostTest, MimeTypeMgr_GetUriSuffix_0001, Function | Small
 
     auto ret = localMimeTypeMgr->GetMimeTypeByUri(uri, suffix);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: MimeTypeMgr_GetUriSuffix_0002
+ * @tc.name: MimeTypeMgr_GetUriSuffix_0002
+ * @tc.desc: test GetUriSuffix
+ */
+HWTEST_F(BundleResourceHostTest, MimeTypeMgr_GetUriSuffix_0002, Function | SmallTest | Level1)
+{
+    std::string suffix;
+    bool result = MimeTypeMgr::GetUriSuffix("file://test/test", suffix);
+    EXPECT_FALSE(result);
+
+    result = MimeTypeMgr::GetUriSuffix("file://test/test.zip", suffix);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(suffix, ".zip");
+
+    result = MimeTypeMgr::GetUriSuffix("file://test/test.7z", suffix);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(suffix, ".7z");
+
+    result = MimeTypeMgr::GetUriSuffix("file://test/test.zip.999", suffix);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(suffix, ".zip");
+
+    result = MimeTypeMgr::GetUriSuffix("file://test/test.7z.001", suffix);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(suffix, ".7z");
+
+    result = MimeTypeMgr::GetUriSuffix("file://test/test.zip.abc", suffix);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(suffix, ".abc");
+
+    result = MimeTypeMgr::GetUriSuffix("file://test/test.zip.ab012", suffix);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(suffix, ".ab012");
+
+    result = MimeTypeMgr::GetUriSuffix("file://test/test.7z.abc", suffix);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(suffix, ".abc");
+
+    result = MimeTypeMgr::GetUriSuffix("file://test/test.7z.ab012", suffix);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(suffix, ".ab012");
+
+    result = MimeTypeMgr::GetUriSuffix("file://test/test.zip.torrent", suffix);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(suffix, ".torrent");
+}
+
+/**
+ * @tc.number: MimeTypeMgr_IsSpecifiedSuffixNumberExtension_0001
+ * @tc.name: MimeTypeMgr_IsSpecifiedSuffixNumberExtension_0001
+ * @tc.desc: test IsSpecifiedSuffixNumberExtension
+ */
+HWTEST_F(BundleResourceHostTest, MimeTypeMgr_IsSpecifiedSuffixNumberExtension_0001, Function | SmallTest | Level1)
+{
+    bool result = MimeTypeMgr::IsSpecifiedSuffixNumberExtension("file://test/test", ".zip.");
+    EXPECT_FALSE(result);
+
+    result = MimeTypeMgr::IsSpecifiedSuffixNumberExtension("file://test/test.zip.001", ".zip.");
+    EXPECT_TRUE(result);
+
+    result = MimeTypeMgr::IsSpecifiedSuffixNumberExtension("file://test/test.7z.001", ".7z.");
+    EXPECT_TRUE(result);
+
+    result = MimeTypeMgr::IsSpecifiedSuffixNumberExtension("file://test/test.zip.001abc", ".zip.");
+    EXPECT_FALSE(result);
+
+    result = MimeTypeMgr::IsSpecifiedSuffixNumberExtension("file://test/test.7z.abc001", ".7z.");
+    EXPECT_FALSE(result);
 }
 }
 }
