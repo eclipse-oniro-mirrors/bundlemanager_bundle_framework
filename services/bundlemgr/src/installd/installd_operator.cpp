@@ -2850,7 +2850,7 @@ bool InstalldOperator::ClearDir(const std::string &dir)
 bool InstalldOperator::RestoreconPath(const std::string &path)
 {
     int ret = RestoreconRecurse(path.c_str());
-    if (!ret) {
+    if (ret == ERR_OK) {
         LOG_I(BMS_TAG_INSTALLD, "RestoreconPath success");
         return true;
     }
