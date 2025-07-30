@@ -8133,7 +8133,7 @@ HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0030, Function | SmallTest | 
     bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
         ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
-    EXPECT_EQ(info.versionName, "feature_v1");
+    EXPECT_EQ(info.versionName, "1.1.0");
 
     bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V2_HAP;
     installResult = InstallThirdPartyBundle(bundlePath);
@@ -8142,7 +8142,7 @@ HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0030, Function | SmallTest | 
     result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
         ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
-    EXPECT_EQ(info.versionName, "entry_v2");
+    EXPECT_EQ(info.versionName, "1.0.1");
     UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
 }
 
@@ -8164,7 +8164,7 @@ HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0040, Function | SmallTest | 
     bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
         ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
-    EXPECT_EQ(info.versionName, "entry_v1");
+    EXPECT_EQ(info.versionName, "1.0.0");
 
     bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V2_HAP;
     installResult = InstallThirdPartyBundle(bundlePath);
@@ -8173,7 +8173,7 @@ HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0040, Function | SmallTest | 
     result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
         ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
-    EXPECT_EQ(info.versionName, "entry_v2");
+    EXPECT_EQ(info.versionName, "1.0.1");
     UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
 }
 
@@ -8195,7 +8195,7 @@ HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0050, Function | SmallTest | 
     bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
         ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
-    EXPECT_EQ(info.versionName, "entry_v1");
+    EXPECT_EQ(info.versionName, "1.0.0");
 
     bundlePath = RESOURCE_ROOT_PATH + APP_FEATURE_V1_HAP;
     installResult = InstallThirdPartyBundle(bundlePath);
@@ -8204,7 +8204,7 @@ HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0050, Function | SmallTest | 
     result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
         ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
-    EXPECT_EQ(info.versionName, "entry_v1");
+    EXPECT_EQ(info.versionName, "1.0.0");
 
     bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V2_HAP;
     installResult = InstallThirdPartyBundle(bundlePath);
@@ -8213,7 +8213,7 @@ HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0050, Function | SmallTest | 
     result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
         ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
-    EXPECT_EQ(info.versionName, "entry_v2");
+    EXPECT_EQ(info.versionName, "1.0.1");
     UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
 }
 
@@ -8235,7 +8235,7 @@ HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0060, Function | SmallTest | 
     bool result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
         ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
-    EXPECT_EQ(info.versionName, "feature_v1");
+    EXPECT_EQ(info.versionName, "1.1.0");
 
     bundlePath = RESOURCE_ROOT_PATH + APP_ENTRY_V1_HAP;
     installResult = InstallThirdPartyBundle(bundlePath);
@@ -8244,7 +8244,7 @@ HWTEST_F(BmsBundleInstallerTest, VersionUpdateTest_0060, Function | SmallTest | 
     result = dataMgr->GetApplicationInfo(VERSION_UPDATE_BUNDLE_NAME,
         ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
-    EXPECT_EQ(info.versionName, "entry_v1");
+    EXPECT_EQ(info.versionName, "1.0.0");
     UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
 }
 
