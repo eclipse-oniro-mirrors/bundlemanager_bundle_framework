@@ -15,8 +15,12 @@
 
 #include "bundle_resource_callback.h"
 
+#include <fstream>
+
 #include "account_helper.h"
 #include "bundle_constants.h"
+#include "bundle_parser.h"
+#include "bundle_resource_constants.h"
 #include "bundle_resource_manager.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
@@ -38,6 +42,7 @@ bool BundleResourceCallback::OnUserIdSwitched(const int32_t oldUserId, const int
         APP_LOGE("switch userId %{public}d failed", userId);
         return false;
     }
+    SetUserId(userId);
     if (!manager->AddAllResourceInfo(userId, type, oldUserId)) {
         APP_LOGE("AddAllResourceInfo userId : %{public}d failed", userId);
         return false;
@@ -119,6 +124,7 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
         APP_LOGE("manager is nullptr");
         return false;
     }
+
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if (currentUserId <= 0) {
         currentUserId = Constants::START_USERID;
@@ -200,6 +206,24 @@ bool BundleResourceCallback::SetThemeParamForThemeChanged(const int32_t themeId,
     APP_LOGI("end set themeId %{public}d themeIcon %{public}d", themeId, themeIcon);
 #endif
     return true;
+}
+
+void BundleResourceCallback::SetUserId(const int32_t userId)
+{
+    std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        std::string(BundleResourceConstants::USER_FILE_NAME);
+    nlohmann::json jsonBuf;
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+    }
+    std::ofstream out(path, std::ios::out);
+    if (!out.is_open()) {
+        APP_LOGE("open user file failed, errno:%{public}d", errno);
+        return;
+    }
+    jsonBuf[BundleResourceConstants::USER_ID] = userId;
+    out << jsonBuf.dump();
+    out.close();
 }
 } // AppExecFwk
 } // OHOS

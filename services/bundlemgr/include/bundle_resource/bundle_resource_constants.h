@@ -37,6 +37,8 @@ constexpr const char* ICON = "ICON";
 constexpr const char* SYSTEM_STATE = "SYSTEM_STATE";
 constexpr const char* FOREGROUND = "FOREGROUND";
 constexpr const char* BACKGROUND = "BACKGROUND";
+constexpr const char* USER_FILE_NAME = "/userFile.json";
+constexpr const char* USER_ID = "user";
 
 constexpr int32_t INDEX_NAME = 0;
 constexpr int32_t INDEX_UPDATE_TIME = 1;
