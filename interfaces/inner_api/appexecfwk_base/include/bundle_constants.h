@@ -17,8 +17,11 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_CONSTANTS_H
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
+
+#include "appexecfwk_errors.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -60,6 +63,16 @@ constexpr int32_t CODE_SIGN_UID = 3074;
 // for render process
 constexpr int32_t START_UID_FOR_RENDER_PROCESS = 1000000;
 constexpr int32_t END_UID_FOR_RENDER_PROCESS = 1099999;
+
+// no report for expected errcode
+const std::set<int32_t> EXPECTED_ERROR = {
+    ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST,
+    ERR_APPEXECFWK_INSTALL_FAILED_AND_RESTORE_TO_PREINSTALLED,
+    ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED,
+    ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED,
+    ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL,
+    ERR_APPEXECFWK_UNINSTALL_CONTROLLED
+};
 
 /*
 all of cache path for bundle:

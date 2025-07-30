@@ -493,6 +493,11 @@ void BundleCloneInstaller::SendBundleSystemEvent(const std::string &bundleName, 
     int32_t userId, int32_t appIndex, bool isPreInstallApp, bool isFreeInstallMode,
     InstallScene preBundleScene, ErrCode errCode)
 {
+    if (std::find(Constants::EXPECTED_ERROR.begin(), Constants::EXPECTED_ERROR.end(), errCode) !=
+        Constants::EXPECTED_ERROR.end()) {
+        APP_LOGD("No need report for -e:%{public}d", errCode);
+        return;
+    }
     EventInfo sysEventInfo;
     sysEventInfo.bundleName = bundleName;
     sysEventInfo.isPreInstallApp = isPreInstallApp;
