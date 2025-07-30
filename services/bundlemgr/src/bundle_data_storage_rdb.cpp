@@ -15,6 +15,7 @@
 
 #include "bundle_data_storage_rdb.h"
 
+#include "app_log_tag_wrapper.h"
 #include "bundle_exception_handler.h"
 #include "event_report.h"
 
@@ -130,7 +131,7 @@ bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBun
         return false;
     }
 
-    APP_LOGI("rdb SaveStorageBundleInfo -n %{public}s", innerBundleInfo.GetBundleName().c_str());
+    LOG_NOFUNC_I(BMS_TAG_COMMON, "rdb SaveStorageBundleInfo -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     bool ret = rdbDataManager_->InsertData(
         innerBundleInfo.GetBundleName(), innerBundleInfo.ToString());
     return ret;

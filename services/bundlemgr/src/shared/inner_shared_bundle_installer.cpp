@@ -342,7 +342,8 @@ ErrCode InnerSharedBundleInstaller::CheckBundleTypeWithInstalledVersion()
         BaseSharedBundleInfo installedSharedModule;
         if (oldBundleInfo_.GetMaxVerBaseSharedBundleInfo(sharedModule.moduleName, installedSharedModule) &&
             installedSharedModule.versionCode > sharedModule.versionCode) {
-            APP_LOGE("installing lower version shared package");
+            LOG_NOFUNC_W(BMS_TAG_COMMON, "shared bundle downgrade oldv %{public}d newv %{public}d",
+                installedSharedModule.versionCode, sharedModule.versionCode);
             return ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
         }
     }

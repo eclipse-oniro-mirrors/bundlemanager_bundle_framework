@@ -1979,7 +1979,7 @@ bool InnerBundleInfo::IsExistLauncherAbility() const
 
 void InnerBundleInfo::UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo)
 {
-    LOG_I(BMS_TAG_DEFAULT, "libPath:%{public}s", applicationInfo.nativeLibraryPath.c_str());
+    LOG_NOFUNC_I(BMS_TAG_COMMON, "libPath:%{public}s", applicationInfo.nativeLibraryPath.c_str());
     baseApplicationInfo_->cpuAbi = applicationInfo.cpuAbi;
     baseApplicationInfo_->nativeLibraryPath = applicationInfo.nativeLibraryPath;
 }
@@ -2151,7 +2151,7 @@ void InnerBundleInfo::SetSharedModuleNativeLibraryPath(const std::string &native
     auto moduleInfoIterator = innerModuleInfos_.find(currentPackage_);
     if ((sharedModuleInfoIterator == innerSharedModuleInfos_.end()) ||
         (moduleInfoIterator == innerModuleInfos_.end())) {
-        APP_LOGE("The shared module(%{public}s) infomation not exist", currentPackage_.c_str());
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "The shared module(%{public}s) infomation not exist", currentPackage_.c_str());
         return;
     }
     auto &innerModuleInfoVector = sharedModuleInfoIterator->second;
@@ -3625,7 +3625,7 @@ bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t u
 
     auto item = modInfoItem->isRemovable.find(std::to_string(userId));
     if (item == modInfoItem->isRemovable.end()) {
-        APP_LOGE("-u %{public}d has not -m %{public}s", userId, moduleName.c_str());
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "-u %{public}d has not -m %{public}s", userId, moduleName.c_str());
         return false;
     }
 

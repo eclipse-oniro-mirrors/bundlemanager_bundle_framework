@@ -7027,8 +7027,11 @@ void BaseBundleInstaller::PrintStartWindowIconId(const InnerBundleInfo &info)
     const auto &abilityMap = info.GetInnerAbilityInfos();
     for (const auto &ability : abilityMap) {
         const auto &abilityInfo = ability.second;
-        APP_LOGI("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d", abilityInfo.bundleName.c_str(),
-            abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(), abilityInfo.startWindowIconId);
+        if (abilityInfo.isLauncherAbility) {
+            APP_LOGI_NOFUNC("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d",
+                abilityInfo.bundleName.c_str(), abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(),
+                abilityInfo.startWindowIconId);
+        }
     }
 }
 

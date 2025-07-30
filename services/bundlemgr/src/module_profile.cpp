@@ -18,6 +18,7 @@
 #include <sstream>
 #include <unordered_set>
 
+#include "app_log_tag_wrapper.h"
 #include "parameter.h"
 #include "parameters.h"
 
@@ -2433,8 +2434,6 @@ bool ToAbilityInfo(
     abilityInfo.orientationId = ability.orientationId;
     abilityInfo.process = ability.process;
     abilityInfo.arkTSMode = ability.arkTSMode;
-    APP_LOGI("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d", abilityInfo.bundleName.c_str(),
-        abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(), abilityInfo.startWindowIconId);
     return true;
 }
 
@@ -2740,6 +2739,9 @@ bool ToInnerBundleInfo(
                 if (isLauncherEntity && transformParam.isPreInstallApp) {
                     applicationInfo.isLauncherApp = true;
                     abilityInfo.isLauncherAbility = true;
+                    APP_LOGI_NOFUNC("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d",
+                        abilityInfo.bundleName.c_str(), abilityInfo.moduleName.c_str(), abilityInfo.name.c_str(),
+                        abilityInfo.startWindowIconId);
                 }
                 findEntry = true;
                 break;
