@@ -21,9 +21,9 @@ namespace AppExecFwk {
 
 namespace  {
 constexpr const char* CLASSNAME_BUNDLE_RES_INFO_INNER =
-    "LbundleManager/BundleResourceInfoInner/BundleResourceInfoInner;";
+    "bundleManager.BundleResourceInfoInner.BundleResourceInfoInner";
 constexpr const char* CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER =
-    "LbundleManager/LauncherAbilityResourceInfoInner/LauncherAbilityResourceInfoInner;";
+    "bundleManager.LauncherAbilityResourceInfoInner.LauncherAbilityResourceInfoInner";
 constexpr const char* PROPERTYNAME_BUNDLENAME = "bundleName";
 constexpr const char* PROPERTYNAME_MODULENAME = "moduleName";
 constexpr const char* PROPERTYNAME_ABILITYNAME = "abilityName";
