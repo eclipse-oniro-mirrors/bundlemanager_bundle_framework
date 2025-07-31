@@ -2311,6 +2311,8 @@ public:
     ErrCode GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex);
     ErrCode IsCloneAppIndexExisted(const int32_t userId, const int32_t appIndex, bool &res);
     void SetkeyId(const int32_t userId, const std::string &keyId, const int32_t appIndex = 0);
+    void InnerSetKeyId(const int32_t userId, const std::string &keyId, const int32_t appIndex = 0);
+    std::string GetKeyId(const int32_t userId, const int32_t appIndex);
     bool GetApplicationInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
         ApplicationInfo &appInfo) const;
     bool GetBundleInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,

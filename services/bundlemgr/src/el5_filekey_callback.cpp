@@ -16,6 +16,7 @@
 #include "el5_filekey_callback.h"
 #include "inner_bundle_clone_common.h"
 #include "installd_client.h"
+#include "ipc/create_dir_param.h"
 #include "bundle_service_constants.h"
 #include "bundle_constants.h"
 
@@ -80,9 +81,11 @@ void El5FilekeyCallback::ProcessAppEl5Dir(const Security::AccessToken::AppKeyInf
         return;
     }
     // update the keyId to the bundleInfo
-    bundleInfo.SetkeyId(info.userId, keyId, appIndex);
-    bundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-    if (!dataMgr->UpdateInnerBundleInfo(bundleInfo)) {
+    CreateDirParam param;
+    param.bundleName = info.bundleName;
+    param.userId = info.userId;
+    param.appIndex = appIndex;
+    if (!dataMgr->UpdateEl5KeyId(param, keyId)) {
         APP_LOGE("save keyId failed");
         return;
     }
