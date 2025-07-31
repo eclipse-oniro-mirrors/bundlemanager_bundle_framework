@@ -3177,4 +3177,28 @@ HWTEST_F(BmsBundleManagerTest, GetPluginHapModuleInfo_0001, Function | MediumTes
         pluginModuleName, userId, hapModuleInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
+
+/**
+ * @tc.number: GetBundleInfosV9_0001
+ * @tc.name: test GetBundleInfosV9 proxy
+ * @tc.desc: 1.query bundle infos success
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleInfosV9_0001, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret1 = hostImpl->GetBundleInfosV9(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT), bundleInfos, USERID);
+    EXPECT_EQ(ret1, ERR_OK);
+
+    hostImpl->isBrokerServiceExisted_ = true;
+    ErrCode ret2 = hostImpl->GetBundleInfosV9(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT), bundleInfos, USERID);
+    EXPECT_EQ(ret2, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
 } // OHOS
