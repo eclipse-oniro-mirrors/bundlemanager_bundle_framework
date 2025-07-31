@@ -344,10 +344,10 @@ void AOTHandler::DeleteArkAp(const BundleInfo &bundleInfo, const int32_t userId)
         std::string mergedAp = arkProfilePath;
         runtimeAp.append(PGO_RT_AP_PREFIX).append(moduleName)
             .append(ServiceConstants::PGO_FILE_SUFFIX);
-        APP_LOGI("begin rm runtimeAp: %{public}s", runtimeAp.c_str());
+        APP_LOGD("begin rm runtimeAp: %{public}s", runtimeAp.c_str());
         (void)InstalldClient::GetInstance()->RemoveDir(runtimeAp);
         mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(ServiceConstants::PGO_FILE_SUFFIX);
-        APP_LOGI("begin rm mergedAp: %{public}s", mergedAp.c_str());
+        APP_LOGD("begin rm mergedAp: %{public}s", mergedAp.c_str());
         (void)InstalldClient::GetInstance()->RemoveDir(mergedAp);
     }
 }

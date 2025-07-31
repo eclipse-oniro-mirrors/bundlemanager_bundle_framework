@@ -270,7 +270,7 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
             return false;
         }
     }
-    APP_LOGI("hap number: %{public}zu", hapFileList.size());
+    APP_LOGI_NOFUNC("hap number: %{public}zu", hapFileList.size());
     closedir(dir);
     return true;
 }

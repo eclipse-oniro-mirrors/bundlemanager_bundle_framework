@@ -240,7 +240,7 @@ void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::stri
         std::thread t(delayCloseTask);
         t.detach();
     }
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "add task taskName:%{public}s", taskName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "add task:%{public}s", taskName.c_str());
     g_taskCounter++;
     threadPool_->AddTask(task);
 }

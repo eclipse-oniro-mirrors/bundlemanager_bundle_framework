@@ -2491,12 +2491,12 @@ void BMSEventHandler::ProcessRebootAppServiceUninstall()
         for (const auto &preBundlePath : loadIter.second.GetBundlePaths()) {
             auto parserInfoIter = parserInfoMap.find(preBundlePath);
             if (parserInfoIter != parserInfoMap.end()) {
-                APP_LOGI("OTA uninstall app(%{public}s) module path(%{public}s) exits.",
+                LOG_NOFUNC_I(BMS_TAG_COMMON, "OTA no need delete appService %{public}s module path %{public}s",
                     bundleName.c_str(), preBundlePath.c_str());
                 continue;
             }
 
-            APP_LOGI("OTA app(%{public}s) delete path(%{public}s).",
+            LOG_NOFUNC_I(BMS_TAG_COMMON, "OTA appService %{public}s delete path %{public}s",
                 bundleName.c_str(), preBundlePath.c_str());
             DeletePreInfoInDb(bundleName, preBundlePath, false);
         }
@@ -4373,12 +4373,12 @@ void BMSEventHandler::UpdatePreinstallDB(
         std::string bundleName = existInfo.first;
         auto it = needInstallMap.find(bundleName);
         if (it != needInstallMap.end()) {
-            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s installed already update", bundleName.c_str());
+            LOG_NOFUNC_I(BMS_TAG_COMMON, "%{public}s installed already update", bundleName.c_str());
             continue;
         }
         auto hapParseInfoMapIter = hapParseInfoMap_.find(bundleName);
         if (hapParseInfoMapIter == hapParseInfoMap_.end()) {
-            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s not preinstalled", bundleName.c_str());
+            LOG_NOFUNC_I(BMS_TAG_COMMON, "%{public}s not preinstalled", bundleName.c_str());
             continue;
         }
         UpdatePreinstallDBForNotUpdatedBundle(bundleName, hapParseInfoMapIter->second);

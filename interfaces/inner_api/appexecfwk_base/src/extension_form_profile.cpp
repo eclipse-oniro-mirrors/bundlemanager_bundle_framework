@@ -18,6 +18,7 @@
 #include <mutex>
 #include <set>
 
+#include "app_log_tag_wrapper.h"
 #include "extension_form_profile.h"
 #include "json_util.h"
 #include "nlohmann/json.hpp"
@@ -720,7 +721,8 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
         return false;
     }
     info.enableBlurBackground = form.enableBlurBackground;
-    APP_LOGI("form name: %{public}s enableBlurBackground: %{public}d", info.name.c_str(), info.enableBlurBackground);
+    LOG_NOFUNC_I(BMS_TAG_COMMON, "form name: %{public}s enableBlurBackground: %{public}d",
+        info.name.c_str(), info.enableBlurBackground);
     if (info.enableBlurBackground) {
         info.transparencyEnabled = true;
     }
