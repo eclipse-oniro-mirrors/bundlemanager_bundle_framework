@@ -368,4 +368,31 @@ HWTEST_F(BmsBundleInstallDeviceTypeTest, CheckSupportAppTypes_0800, Function | S
     bool ret = checker.CheckSupportAppTypes(infos, supportAppTypes);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: IsSubSet
+ * @tc.name: test IsSubSet
+ * @tc.desc: IsSubSet
+ */
+HWTEST_F(BmsBundleInstallDeviceTypeTest, IsSubSet_0100, Function | SmallTest | Level0)
+{
+    std::vector<std::string> vec = {"111"};
+    std::vector<std::string> vec2 = {"111"};
+    std::vector<std::string> vec3 = {"222"};
+    std::vector<std::string> vec4 = {"222", "333"};
+    std::vector<std::string> vec5 = {"111", "222", "333"};
+    std::vector<std::string> vec6 = {"222", "333", "444"};
+    BundleInstallChecker checker;
+    EXPECT_TRUE(checker.IsSubSet(vec, vec2));
+    EXPECT_TRUE(checker.IsSubSet(vec2, vec));
+
+    EXPECT_FALSE(checker.IsSubSet(vec3, vec4));
+    EXPECT_TRUE(checker.IsSubSet(vec4, vec3));
+
+    EXPECT_FALSE(checker.IsSubSet(vec4, vec5));
+    EXPECT_TRUE(checker.IsSubSet(vec5, vec4));
+
+    EXPECT_FALSE(checker.IsSubSet(vec5, vec6));
+    EXPECT_FALSE(checker.IsSubSet(vec6, vec5));
+}
 } // OHOS
