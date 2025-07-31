@@ -1232,9 +1232,14 @@ int64_t InstalldOperator::GetDiskUsageFromQuota(const int32_t uid)
 bool InstalldOperator::SetProjectIdForDir(const std::string &path, uint32_t projectId)
 {
     LOG_I(BMS_TAG_INSTALLD, "path: %{public}s, projectId: %{public}u", path.c_str(), projectId);
-    int32_t fd = open(path.c_str(), O_RDONLY | O_DIRECTORY);
+    std::string realPath;
+    if (!PathToRealPath(path, realPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "path(%{public}s) is not real path", path.c_str());
+        return false;
+    }
+    int32_t fd = open(realPath.c_str(), O_RDONLY | O_DIRECTORY);
     if (fd < 0) {
-        LOG_E(BMS_TAG_INSTALLD, "Failed to open directory: %{public}s, errno: %{public}d", path.c_str(), errno);
+        LOG_E(BMS_TAG_INSTALLD, "Failed to open directory: %{public}s, errno: %{public}d", realPath.c_str(), errno);
         return false;
     }
 
