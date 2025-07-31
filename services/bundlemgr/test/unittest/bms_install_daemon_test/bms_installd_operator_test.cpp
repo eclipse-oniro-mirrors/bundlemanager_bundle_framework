@@ -19,6 +19,7 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <gtest/gtest.h>
@@ -33,6 +34,7 @@
 #include "directory_ex.h"
 #include "file_ex.h"
 #include "installd/installd_operator.h"
+#include "parameters.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -208,5 +210,23 @@ HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0006, Function | SmallTes
     auto ret = InstalldOperator::MkOwnerDir(dir, 0, 0, 0);
     EXPECT_TRUE(ret);
     EXPECT_NO_THROW(InstalldOperator::ClearDir(dir));
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_0007
+ * @tc.name: test function of RestoreconPath
+ * @tc.desc: 1. calling RestoreconPath of InstalldOperator
+ */
+HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0007, Function | SmallTest | Level0)
+{
+    const std::string arkWebName = OHOS::system::GetParameter("persist.arkwebcore.package_name", "");
+    const std::string arkWebLibPath = "/data/app/el1/bundle/public/" + arkWebName + "/libs/arm64/";
+    if (std::filesystem::exists(arkWebLibPath)) {
+        auto ret = InstalldOperator::RestoreconPath(arkWebLibPath);
+        EXPECT_TRUE(ret);
+    } else {
+        auto ret = InstalldOperator::RestoreconPath(arkWebLibPath);
+        EXPECT_FALSE(ret);
+    }
 }
 } // OHOS

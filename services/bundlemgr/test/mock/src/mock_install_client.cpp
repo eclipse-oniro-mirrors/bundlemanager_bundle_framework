@@ -392,5 +392,11 @@ ErrCode InstalldClient::ClearDir(const std::string &dir)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::RestoreconPath(const std::string &path)
+{
+    return ERR_OK;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

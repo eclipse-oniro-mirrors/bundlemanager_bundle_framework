@@ -248,6 +248,8 @@ private:
     bool HandleClearDir(MessageParcel &data, MessageParcel &reply);
 
     CriticalManager criticalManager_;
+
+    bool HandleRestoreconPath(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

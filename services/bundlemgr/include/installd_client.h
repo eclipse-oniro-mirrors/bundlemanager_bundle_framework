@@ -271,6 +271,8 @@ public:
 
     ErrCode ClearDir(const std::string &dir);
 
+    ErrCode RestoreconPath(const std::string &path);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

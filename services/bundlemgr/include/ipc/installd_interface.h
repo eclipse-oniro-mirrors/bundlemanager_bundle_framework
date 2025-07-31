@@ -488,6 +488,11 @@ public:
     {
         return ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
     }
+
+    virtual ErrCode RestoreconPath(const std::string &path)
+    {
+        return ERR_OK;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

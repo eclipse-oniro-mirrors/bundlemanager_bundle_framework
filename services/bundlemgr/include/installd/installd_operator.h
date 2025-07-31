@@ -329,6 +329,8 @@ public:
 
     static bool ClearDir(const std::string &dir);
 
+    static bool RestoreconPath(const std::string &path);
+
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);

@@ -643,5 +643,10 @@ ErrCode InstalldClient::ClearDir(const std::string &dir)
 {
     return CallService(&IInstalld::ClearDir, dir);
 }
+
+ErrCode InstalldClient::RestoreconPath(const std::string &path)
+{
+    return CallService(&IInstalld::RestoreconPath, path);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

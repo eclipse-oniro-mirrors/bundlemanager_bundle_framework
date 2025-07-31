@@ -1113,6 +1113,21 @@ ErrCode BaseBundleInstaller::VerifyArkWebInstall()
     }
     return ERR_OK;
 }
+
+void BaseBundleInstaller::RestoreconForArkweb()
+{
+    if (!IsArkWeb(bundleName_)) {
+        return;
+    }
+    const std::string arkWebLibPath = std::string(APP_INSTALL_PATH) + "/public/" + bundleName_ + "/libs/arm64/";
+    LOG_I(BMS_TAG_INSTALLER, "RestoreconPath, arkWebLibPath: %{public}s", arkWebLibPath.c_str());
+    ErrCode result = InstalldClient::GetInstance()->RestoreconPath(arkWebLibPath);
+    if (result == ERR_OK) {
+        NWeb::AppFwkUpdateClient::GetInstance().NotifyArkWebInstallSuccess(bundleName_);
+    } else {
+        LOG_E(BMS_TAG_INSTALLER, "Failed to restorecon arkweb dir, error code: %{public}d", result);
+    }
+}
 #endif
 
 void BaseBundleInstaller::KillRelatedProcessIfArkWeb(bool isOta)
@@ -1452,6 +1467,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT_WITH_ROLLBACK(result, "copy driver files failed due to error %{public}d", newInfos, oldInfo);
 
     UpdateInstallerState(InstallerState::INSTALL_SUCCESS);                         // ---- 100%
+#ifdef WEBVIEW_ENABLE
+    RestoreconForArkweb();
+#endif
     LOG_D(BMS_TAG_INSTALLER, "finish ProcessBundleInstall bundlePath install touch off aging");
     moduleName_ = GetModuleNames(newInfos);
     isBundleCrossAppSharedConfig_ = IsBundleCrossAppSharedConfig(newInfos);

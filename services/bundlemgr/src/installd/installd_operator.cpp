@@ -2851,5 +2851,16 @@ bool InstalldOperator::ClearDir(const std::string &dir)
     LOG_I(BMS_TAG_INSTALLD, "clearDir success");
     return true;
 }
+
+bool InstalldOperator::RestoreconPath(const std::string &path)
+{
+    int ret = RestoreconRecurse(path.c_str());
+    if (ret == ERR_OK) {
+        LOG_I(BMS_TAG_INSTALLD, "RestoreconPath success");
+        return true;
+    }
+    LOG_E(BMS_TAG_INSTALLD, "RestoreconPath failed, ret: %{public}d", ret);
+    return false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

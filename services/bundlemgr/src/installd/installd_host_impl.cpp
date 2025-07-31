@@ -2606,5 +2606,19 @@ ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
     }
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::RestoreconPath(const std::string &path)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (!InstalldOperator::RestoreconPath(path)) {
+        LOG_E(BMS_TAG_INSTALLD, "RestoreconPath failed");
+        return ERR_APPEXECFWK_RESTORECON_PATH_FAILED;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
