@@ -55,7 +55,7 @@ void ClearCharPointer(char** ptr, int count)
     }
 }
 
-CArrString ConvertArrString(std::vector<std::string> vecStr)
+CArrString ConvertArrString(const std::vector<std::string>& vecStr)
 {
     if (vecStr.size() == 0) {
         return {nullptr, 0};
@@ -1282,8 +1282,9 @@ RetBundleInfo ConvertBundleInfo(const AppExecFwk::BundleInfo& cBundleInfo, int32
     bundleInfo.minCompatibleVersionCode = cBundleInfo.minCompatibleVersionCode;
     bundleInfo.targetVersion = cBundleInfo.targetVersion;
     if ((static_cast<uint32_t>(flags) &
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
-        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) {
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) ==
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)
+    ) {
         bundleInfo.appInfo = ConvertApplicationInfo(cBundleInfo.applicationInfo);
     } else {
         bundleInfo.appInfo = InitApplicationInfo();
@@ -1308,8 +1309,9 @@ RetBundleInfo ConvertBundleInfo(const AppExecFwk::BundleInfo& cBundleInfo, int32
     }
 
     if ((static_cast<uint32_t>(flags) &
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
-        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) ==
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)
+    ) {
         bundleInfo.signInfo = ConvertSignatureInfo(cBundleInfo.signatureInfo);
     } else {
         bundleInfo.signInfo = InitSignInfo();
@@ -1330,8 +1332,9 @@ RetBundleInfoV2 ConvertBundleInfoV2(const AppExecFwk::BundleInfo& cBundleInfo, i
     bundleInfo.minCompatibleVersionCode = cBundleInfo.minCompatibleVersionCode;
     bundleInfo.targetVersion = cBundleInfo.targetVersion;
     if ((static_cast<uint32_t>(flags) &
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
-        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) {
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) ==
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)
+    ) {
         bundleInfo.appInfo = ConvertApplicationInfoV2(cBundleInfo.applicationInfo);
     } else {
         bundleInfo.appInfo = InitApplicationInfoV2();
@@ -1356,8 +1359,9 @@ RetBundleInfoV2 ConvertBundleInfoV2(const AppExecFwk::BundleInfo& cBundleInfo, i
     }
 
     if ((static_cast<uint32_t>(flags) &
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
-        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) ==
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)
+    ) {
         bundleInfo.signInfo = ConvertSignatureInfo(cBundleInfo.signatureInfo);
     } else {
         bundleInfo.signInfo = InitSignInfo();
