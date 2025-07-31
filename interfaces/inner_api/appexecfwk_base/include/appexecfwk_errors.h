@@ -630,6 +630,9 @@ enum {
 
     // IDL
     ERR_APPEXECFWK_IDL_GET_RESULT_ERROR = 8522610,
+
+    // control not dynamic atomicService
+    ERR_APPEXECFWK_INSTALL_NOT_SUPPORT_STATIC_ATOMIC_SERVICE = 8522630,
 };
 
 // Error code for Hidump

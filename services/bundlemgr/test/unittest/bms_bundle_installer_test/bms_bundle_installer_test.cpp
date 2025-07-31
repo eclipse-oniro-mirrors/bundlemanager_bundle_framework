@@ -12296,4 +12296,156 @@ HWTEST_F(BmsBundleInstallerTest, ProcessArkStartupCache_0010, Function | SmallTe
     EXPECT_EQ(ret, ERR_OK);
     setuid(Constants::ROOT_UID);
 }
+
+/**
+ * @tc.number: CheckArkTSMode_0100
+ * @tc.name: test CheckArkTSMode
+ * @tc.desc: 1.Test CheckArkTSMode the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkTSMode_0100, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    auto result = installer.CheckArkTSMode(infos);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CheckArkTSMode_0200
+ * @tc.name: test CheckArkTSMode
+ * @tc.desc: 1.Test CheckArkTSMode the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkTSMode_0200, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
+    infos.emplace(SYSTEMFIEID_HAP_PATH, innerBundleInfo);
+    auto result = installer.CheckArkTSMode(infos);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckArkTSMode_0300
+ * @tc.name: test CheckArkTSMode
+ * @tc.desc: 1.Test CheckArkTSMode the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkTSMode_0300, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    infos.emplace(SYSTEMFIEID_HAP_PATH, innerBundleInfo);
+    auto result = installer.CheckArkTSMode(infos);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_NOT_SUPPORT_STATIC_ATOMIC_SERVICE);
+}
+
+/**
+ * @tc.number: CheckArkTSMode_0400
+ * @tc.name: test CheckArkTSMode
+ * @tc.desc: 1.Test CheckArkTSMode the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkTSMode_0400, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_HYBRID;
+    innerBundleInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    infos.emplace(SYSTEMFIEID_HAP_PATH, innerBundleInfo);
+    auto result = installer.CheckArkTSMode(infos);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_NOT_SUPPORT_STATIC_ATOMIC_SERVICE);
+}
+
+/**
+ * @tc.number: CheckArkTSMode_0500
+ * @tc.name: test CheckArkTSMode
+ * @tc.desc: 1.Test CheckArkTSMode the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkTSMode_0500, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    innerBundleInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    InnerModuleInfo innerModuleInfo1;
+    innerModuleInfo1.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    innerBundleInfo.innerModuleInfos_["feature"] = innerModuleInfo1;
+    infos.emplace(SYSTEMFIEID_HAP_PATH, innerBundleInfo);
+    auto result = installer.CheckArkTSMode(infos);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_NOT_SUPPORT_STATIC_ATOMIC_SERVICE);
+}
+
+/**
+ * @tc.number: CheckArkTSMode_0600
+ * @tc.name: test CheckArkTSMode
+ * @tc.desc: 1.Test CheckArkTSMode the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkTSMode_0600, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    innerBundleInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    InnerModuleInfo innerModuleInfo1;
+    innerModuleInfo1.moduleArkTSMode = Constants::ARKTS_MODE_HYBRID;
+    innerBundleInfo.innerModuleInfos_["feature"] = innerModuleInfo1;
+    infos.emplace(SYSTEMFIEID_HAP_PATH, innerBundleInfo);
+    auto result = installer.CheckArkTSMode(infos);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_NOT_SUPPORT_STATIC_ATOMIC_SERVICE);
+}
+
+/**
+ * @tc.number: CheckArkTSMode_0700
+ * @tc.name: test CheckArkTSMode
+ * @tc.desc: 1.Test CheckArkTSMode the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkTSMode_0700, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    innerBundleInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    infos.emplace(SYSTEMFIEID_HAP_PATH, innerBundleInfo);
+    auto result = installer.CheckArkTSMode(infos);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckArkTSMode_0800
+ * @tc.name: test CheckArkTSMode
+ * @tc.desc: 1.Test CheckArkTSMode the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkTSMode_0800, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    innerBundleInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    InnerModuleInfo innerModuleInfo1;
+    innerModuleInfo1.moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
+    innerBundleInfo.innerModuleInfos_["feature"] = innerModuleInfo1;
+    infos.emplace(SYSTEMFIEID_HAP_PATH, innerBundleInfo);
+    auto result = installer.CheckArkTSMode(infos);
+    EXPECT_EQ(result, ERR_OK);
+}
 } // OHOS
