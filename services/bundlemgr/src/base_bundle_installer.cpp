@@ -7841,15 +7841,17 @@ bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
 
 void BaseBundleInstaller::SetHybridSpawn()
 {
+    if (!InitDataMgr()) {
+        return;
+    }
     InnerBundleInfo info;
-    bool isExist = false;
-    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
-        LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed when set hybrid spawn");
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, info)) {
+        LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed");
         return;
     }
     std::string arkTSMode = info.GetApplicationArkTSMode();
     if (arkTSMode == Constants::ARKTS_MODE_STATIC || arkTSMode == Constants::ARKTS_MODE_HYBRID) {
-        LOG_I(BMS_TAG_INSTALLER, "set persist.bms.data.preload true");
+        LOG_I(BMS_TAG_INSTALLER, "set persist.appspawn.hybridspawn.enable true");
         OHOS::system::SetParameter(ServiceConstants::HYBRID_SPAWN_ENABLE, BMS_TRUE);
     }
 }
