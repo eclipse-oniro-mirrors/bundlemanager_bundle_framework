@@ -81,7 +81,7 @@ constexpr const char* CLASSNAME_ELEMENTNAME_INNER = "bundleManager.ElementNameIn
 constexpr const char* CLASSNAME_SKILL_INNER = "bundleManager.SkillInner.SkillInner";
 constexpr const char* CLASSNAME_SKILLURI_INNER = "bundleManager.SkillInner.SkillUriInner";
 constexpr const char* CLASSNAME_SHORTCUTINFO_INNER = "bundleManager.ShortcutInfo.ShortcutInfoInner";
-constexpr const char* CLASSNAME_SHORTCUTWANT_INNER = "bundleManagerShortcutInfo.ShortcutWantInner";
+constexpr const char* CLASSNAME_SHORTCUTWANT_INNER = "bundleManager.ShortcutInfo.ShortcutWantInner";
 constexpr const char* CLASSNAME_SHORTCUT_PARAMETERITEM_INNER = "bundleManager.ShortcutInfo.ParameterItemInner";
 constexpr const char* CLASSNAME_LAUNCHER_ABILITY_INFO_INNER =
     "bundleManager.LauncherAbilityInfoInner.LauncherAbilityInfoInner";
