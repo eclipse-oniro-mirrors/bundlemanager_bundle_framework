@@ -174,6 +174,10 @@ private:
 
     bool CheckAllAddResourceInfo(const int32_t userId);
 
+    void FilterResourceInfoWhenSystemThemeChanged(
+        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        const int32_t userId);
+
     std::atomic<bool> isInterrupted_ = false;
     std::atomic_uint currentTaskNum_ = 0;
     std::mutex mutex_;

@@ -71,6 +71,9 @@ bool BundleResourceDrawable::GetIconResourceByTheme(
         resourceInfo.abilityName_);
     if (state == Global::Resource::SUCCESS) {
         LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s find theme resource", resourceInfo.bundleName_.c_str());
+        if (backgroundInfo.second == 0) {
+            return ProcessForegroundIcon(foregroundInfo, resourceInfo);
+        }
         auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(foregroundInfo, backgroundInfo,
             themeMask, drawableType, resourceManager);
         if ((drawableDescriptor != nullptr) && (drawableDescriptor->GetPixelMap() != nullptr)) {
@@ -117,6 +120,26 @@ bool BundleResourceDrawable::GetIconResourceByHap(
         return false;
     }
     return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
+#else
+    return false;
+#endif
+}
+
+bool BundleResourceDrawable::ProcessForegroundIcon(
+    std::pair<std::unique_ptr<uint8_t[]>, size_t> &foregroundInfo,
+    ResourceInfo &resourceInfo)
+{
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+    LOG_I(BMS_TAG_DEFAULT, "-n %{public}s theme exist, but background not exist", resourceInfo.bundleName_.c_str());
+    // init foreground
+    resourceInfo.foreground_.resize(foregroundInfo.second);
+    for (size_t index = 0; index < foregroundInfo.second; ++index) {
+        resourceInfo.foreground_[index] = foregroundInfo.first[index];
+    }
+    // encode base64
+    BundleResourceImageInfo bundleResourceImageInfo;
+    return bundleResourceImageInfo.ConvertToBase64(std::move(foregroundInfo.first), foregroundInfo.second,
+        resourceInfo.icon_);
 #else
     return false;
 #endif

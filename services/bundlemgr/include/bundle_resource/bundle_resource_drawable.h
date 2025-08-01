@@ -41,6 +41,10 @@ public:
         std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
         ResourceInfo &resourceInfo);
 
+    bool ProcessForegroundIcon(
+        std::pair<std::unique_ptr<uint8_t[]>, size_t> &foregroundInfo,
+        ResourceInfo &resourceInfo);
+
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     bool GetBadgedIconResource(
         const std::shared_ptr<Media::PixelMap> layeredPixelMap,
