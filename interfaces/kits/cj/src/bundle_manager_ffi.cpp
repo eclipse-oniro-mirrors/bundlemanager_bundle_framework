@@ -45,40 +45,6 @@ std::vector<std::string> CharPtrToVector(char** charPtr, int32_t size)
     return result;
 }
 
-CArrString VectorToCArrString(std::vector<std::string> &vec)
-{
-    if (vec.size() == 0) {
-        return {nullptr, 0};
-    }
-    char** result = new char* [vec.size()];
-    if (result == nullptr) {
-        APP_LOGE("VectorToCArrString malloc failed");
-        return {nullptr, 0};
-    }
-    size_t temp = 0;
-    for (size_t i = 0; i < vec.size(); i++) {
-        result[i] = new char[vec[i].length() + 1];
-        if (result[i] == nullptr) {
-            break;
-        }
-        auto res = strcpy_s(result[i], vec[i].length() + 1, vec[i].c_str());
-        if (res != EOK) {
-            APP_LOGE("failed to strcpy_s.");
-        }
-        temp++;
-    }
-
-    if (temp != vec.size()) {
-        for (size_t j = temp; j > 0; j--) {
-            delete result[j - 1];
-            result[j - 1] = nullptr;
-        }
-        delete[] result;
-        return {nullptr, 0};
-    }
-    return {result, vec.size()};
-}
-
 extern "C" {
     int32_t FfiOHOSGetCallingUid()
     {
@@ -127,7 +93,7 @@ extern "C" {
             return {status, {}};
         }
         res.code = SUCCESS_CODE;
-        res.value = VectorToCArrString(extensionAbilityInfo);
+        res.value = ConvertArrString(extensionAbilityInfo);
         APP_LOGI("BundleManager::FfiGetProfileByExtensionAbility success");
         return res;
     }
@@ -143,7 +109,7 @@ extern "C" {
             return {status, {}};
         }
         res.code = SUCCESS_CODE;
-        res.value = VectorToCArrString(extensionAbilityInfo);
+        res.value = ConvertArrString(extensionAbilityInfo);
         APP_LOGI("BundleManager::FfiGetProfileByAbility success");
         return res;
     }

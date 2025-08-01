@@ -43,6 +43,7 @@ namespace Convert {
     RetBundleInfoV2 ConvertBundleInfoV2(const AppExecFwk::BundleInfo& cBundleInfo, int32_t flags);
     char* MallocCString(const std::string& origin);
     void FreeRetBundleInfoV2(RetBundleInfoV2& bundleInfo);
+    CArrString ConvertArrString(const std::vector<std::string>& vecStr);
 } // Convert
  
 } // BundleManager
