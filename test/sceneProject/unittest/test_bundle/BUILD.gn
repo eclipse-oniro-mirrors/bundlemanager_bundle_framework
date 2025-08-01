@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -24,7 +24,6 @@ group("test_bundle") {
     "bmsThirdBundle1:bmsThirdBundle1",
     "bmsThirdBundle2:bmsThirdBundle2",
     "defaultAppTest:defaultAppTest",
-    "devicetype_error:devicetype_error",
     "eighth_right:eighth_right",
     "eleventh_right:eleventh_right",
     "fifteenth_right:fifteenth_right",
