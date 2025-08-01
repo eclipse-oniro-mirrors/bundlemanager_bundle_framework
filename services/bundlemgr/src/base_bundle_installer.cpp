@@ -345,7 +345,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     int32_t uid = Constants::INVALID_UID;
     bool isUninstalledFromBmsExtension = false;
     ErrCode result = ProcessBundleUninstall(bundleName, installParam, uid);
-    if (result == ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL) {
+    if (result == ERR_APPEXECFWK_UNINSTALL_STATE_NOT_ALLOW) {
         CheckBundleNameAndStratAbility(bundleName, appIdentifier_);
     }
     if (result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) {
@@ -413,7 +413,7 @@ ErrCode BaseBundleInstaller::CheckUninstallInnerBundleInfo(const InnerBundleInfo
     if (!info.GetUninstallState()) {
         LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
             bundleName.c_str(), info.GetUninstallState());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+        return ERR_APPEXECFWK_UNINSTALL_STATE_NOT_ALLOW;
     }
     if (info.GetApplicationBundleType() != BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is not shared library");
@@ -1750,7 +1750,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         if (!isForcedUninstall) {
             LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
                 bundleName.c_str(), oldInfo.GetUninstallState());
-            return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+            return ERR_APPEXECFWK_UNINSTALL_STATE_NOT_ALLOW;
         }
     }
 
@@ -2028,7 +2028,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         !oldInfo.GetUninstallState() && installParam.GetKillProcess() && !installParam.GetIsUninstallAndRecover()) {
         LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
             bundleName.c_str(), oldInfo.GetUninstallState());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+        return ERR_APPEXECFWK_UNINSTALL_STATE_NOT_ALLOW;
     }
 
     bool isModuleExist = oldInfo.FindModule(modulePackage);

@@ -1600,7 +1600,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0007, Function | SmallTest 
     info.uninstallState_ = false;
     std::string bundleName;
     auto ret = installer.CheckUninstallInnerBundleInfo(info, bundleName);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_STATE_NOT_ALLOW);
 }
 
 /**
