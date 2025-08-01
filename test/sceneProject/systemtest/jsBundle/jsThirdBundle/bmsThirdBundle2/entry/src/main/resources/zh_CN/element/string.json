@@ -1,0 +1,12 @@
+{
+  "string": [
+    {
+      "name":"hello",
+      "value":"您好"
+    },
+    {
+      "name":"world",
+      "value":"世界"
+    }
+  ]
+}

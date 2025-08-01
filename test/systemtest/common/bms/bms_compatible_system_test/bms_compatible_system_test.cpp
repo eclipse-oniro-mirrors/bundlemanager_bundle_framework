@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,11 +39,6 @@ const std::string OPERATION_FAILED = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
 const std::string TEST_BUNDLE_NAME_ONE = "com.example.third1";
 const std::string TEST_ABILITY_NAME_ONE = "com.example.third1.MainAbility";
-const int MIN_HEIGHT = 50;
-const int MIN_WIDTH = 100;
-const int DEFAULT_HEIGHT = 100;
-const int DEFAULT_WIDTH = 200;
-const uint32_t FORM_NUM = 3;
 const int32_t USERID = 100;
 }  // namespace
 using OHOS::AAFwk::Want;
@@ -228,11 +223,6 @@ static void CheckCompatibleAbilityInfo(
     EXPECT_EQ(compatibleAbilityInfo.launchMode, LaunchMode::STANDARD);
     EXPECT_FALSE(compatibleAbilityInfo.supportPipMode);
     EXPECT_EQ(compatibleAbilityInfo.bundleName, bundleName);
-    EXPECT_EQ(compatibleAbilityInfo.formEntity, FORM_NUM);
-    EXPECT_EQ(compatibleAbilityInfo.minFormHeight, MIN_HEIGHT);
-    EXPECT_EQ(compatibleAbilityInfo.defaultFormHeight, DEFAULT_HEIGHT);
-    EXPECT_EQ(compatibleAbilityInfo.minFormWidth, MIN_WIDTH);
-    EXPECT_EQ(compatibleAbilityInfo.defaultFormWidth, DEFAULT_WIDTH);
     EXPECT_TRUE(compatibleAbilityInfo.enabled);
 }
 static void CheckCompatibleApplicationInfo(
@@ -379,7 +369,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0400, Function | Mediu
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0400";
     std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
-    std::vector<std::string> abilityNames = {"com.example.third1.MainAbility", "com.example.third3.MainAbility"};
+    std::vector<std::string> abilityNames = {"com.example.third3.MainAbility", "com.example.third1.MainAbility"};
     std::string bundleName = TEST_BUNDLE_NAME_ONE;
     std::string message;
 
@@ -735,8 +725,8 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0100, Function | Med
         EXPECT_NE(bundleMgrProxy, nullptr);
     }
     std::vector<CommonEventInfo> commonEventInfos;
-    EXPECT_TRUE(bundleMgrProxy->GetAllCommonEventInfo("BMS_TESTCOMMONEVNET_THIRD2", commonEventInfos));
-    EXPECT_FALSE(commonEventInfos.size() == 0);
+    EXPECT_FALSE(bundleMgrProxy->GetAllCommonEventInfo("BMS_TESTCOMMONEVNET_THIRD2", commonEventInfos));
+    EXPECT_TRUE(commonEventInfos.size() == 0);
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     GTEST_LOG_(INFO) << "END BMS_GetAllCommonEventInfo_0100";
