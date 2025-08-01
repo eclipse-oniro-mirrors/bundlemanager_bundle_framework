@@ -1,0 +1,24 @@
+{
+  "string": [
+    {
+      "name": "app_name",
+      "value": "bmsAccessTokentest1"
+    },
+    {
+      "name": "mainability_description",
+      "value": "JS_Phone_Empty Feature Ability"
+    },
+    {
+      "name": "form_desc",
+      "value": "Form desc"
+    },
+    {
+      "name": "Form_label",
+      "value": "Form label"
+    },
+    {
+      "name": "reason",
+      "value": "Need open camera"
+    }
+  ]
+}
