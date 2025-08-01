@@ -81,12 +81,12 @@ constexpr const char* PROPERTYNAME_UNBOXED = "unboxed";
         }                                     \
     } while (0)
 namespace CommonFunAniNS {
-constexpr const char* CLASSNAME_BOOLEAN = "C{std.core.Boolean}";
-constexpr const char* CLASSNAME_INT = "C{std.core.Int}";
-constexpr const char* CLASSNAME_LONG = "C{std.core.Long}";
-constexpr const char* CLASSNAME_DOUBLE = "C{std.core.Double}";
-constexpr const char* CLASSNAME_ARRAY = "C{escompat.Array}";
-constexpr const char* CLASSNAME_STRING = "C{std.core.String}";
+constexpr const char* CLASSNAME_BOOLEAN = "std.core.Boolean";
+constexpr const char* CLASSNAME_INT = "std.core.Int";
+constexpr const char* CLASSNAME_LONG = "std.core.Long";
+constexpr const char* CLASSNAME_DOUBLE = "std.core.Double";
+constexpr const char* CLASSNAME_ARRAY = "escompat.Array";
+constexpr const char* CLASSNAME_STRING = "std.core.String";
 } // namespace CommonFunAniNS
 class CommonFunAni {
 public:
@@ -659,8 +659,9 @@ public:
                 valueClassName = CommonFunAniNS::CLASSNAME_STRING;
             }
             if (valueClassName != nullptr) {
-                setterSig = valueClassName;
-                setterSig.append(":");
+                setterSig.append("C{");
+                setterSig.append(valueClassName);
+                setterSig.append("}:");
             }
             setterParam.r = value;
         } else {
@@ -761,8 +762,7 @@ public:
         RETURN_NULL_IF_NULL(valueClass);
 
         ani_method ctor = nullptr;
-        ani_status status =
-            env->Class_FindMethod(valueClass, "<ctor>", ctorSig.empty() ? nullptr : ctorSig.c_str(), &ctor);
+        ani_status status = env->Class_FindMethod(valueClass, "<ctor>", ctorSig.c_str(), &ctor);
         if (status != ANI_OK) {
             APP_LOGE("Class_FindMethod <ctor> failed %{public}d", status);
             return nullptr;
