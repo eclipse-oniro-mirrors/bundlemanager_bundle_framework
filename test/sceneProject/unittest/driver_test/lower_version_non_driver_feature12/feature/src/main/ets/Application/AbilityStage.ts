@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,20 +13,12 @@
  * limitations under the License.
  */
 
-@Entry
-@Component
-struct Index {
-  @State message: string = 'Default App Test'
+import AbilityStage from "@ohos.app.ability.AbilityStage"
 
-  build() {
-    Row() {
-      Column() {
-        Text(this.message)
-          .fontSize(50)
-          .fontWeight(FontWeight.Bold)
-      }
-      .width('100%')
-    }
-    .height('100%')
+export default class MyAbilityStage extends AbilityStage {
+  onCreate() {
+    console.log("[Demo] MyAbilityStage onCreate")
+    globalThis.stageOnCreateRun = 1;
+    globalThis.stageContext = this.context;
   }
 }
