@@ -1876,6 +1876,33 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::CleanBundleCacheFilesForSelf(const sptr<ICleanCacheCallback> cleanCacheCallback)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to CleanBundleCacheFilesForSelf");
+    if (cleanCacheCallback == nullptr) {
+        APP_LOGE("fail to CleanBundleCacheFilesForSelf due to params error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to CleanBundleCacheFilesForSelf due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteRemoteObject(cleanCacheCallback->AsObject())) {
+        APP_LOGE("fail to CleanBundleCacheFilesForSelf, for write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES_FOR_SELF, data, reply)) {
+        APP_LOGE("fail to CleanBundleCacheFilesForSelf from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName,
     const int userId, const int appIndex, const int callerUid)
 {

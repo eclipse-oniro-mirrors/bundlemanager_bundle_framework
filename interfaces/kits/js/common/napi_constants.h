@@ -137,6 +137,7 @@ constexpr const char* GET_ABILITYINFO_PERMISSIONS = "ohos.permission.GET_ABILITY
 constexpr const char* GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 constexpr const char* GET_PERMISSION_DEF = "GetPermissionDef";
 constexpr const char* CLEAN_BUNDLE_CACHE_FILES = "cleanBundleCacheFiles";
+constexpr const char* CLEAN_BUNDLE_CACHE_FILES_FOR_SELF = "CleanBundleCacheFilesForSelf";
 constexpr const char* GET_ALL_BUNDLE_CACHE_SIZE = "getAllBundleCacheSize";
 constexpr const char* CLEAN_ALL_BUNDLE_CACHE = "cleanAllBundleCache";
 constexpr const char* GET_APP_PROVISION_INFO = "GetAppProvisionInfo";

@@ -779,6 +779,12 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode CleanBundleCacheFilesForSelf(const sptr<ICleanCacheCallback> cleanCacheCallback)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    
     /**
      * @brief Clears cache data of a specified size.
      * @param cacheSize Indicates the size of the cache data is to be cleared.

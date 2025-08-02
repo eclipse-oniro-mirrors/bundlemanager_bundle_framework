@@ -114,6 +114,11 @@ struct CleanBundleCacheCallbackInfo : public BaseCallbackInfo {
     OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
 };
 
+struct CleanBundleCacheForSelfCallbackInfo : public BaseCallbackInfo {
+    explicit CleanBundleCacheForSelfCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    OHOS::sptr<CleanCacheCallback> cleanCacheCallback;
+};
+
 struct GetAllBundleCacheCallbackInfo : public BaseCallbackInfo {
     explicit GetAllBundleCacheCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
@@ -356,6 +361,7 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabel(napi_env env, napi_callback_info info);
 napi_value GetAbilityIcon(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
+napi_value CleanBundleCacheFilesForSelf(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
 napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
 napi_value GetProfile(napi_env env, napi_callback_info info, const AbilityProfileType &profileType);

@@ -710,6 +710,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_TEST_RUNNER):
             errCode = HandleGetTestRunner(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES_FOR_SELF):
+            errCode = HandleCleanBundleCacheFilesForSelf(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1836,6 +1839,23 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFiles(MessageParcel &data, MessageP
     int32_t appIndex = data.ReadInt32();
 
     ErrCode ret = CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCleanBundleCacheFilesForSelf(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("read failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    sptr<ICleanCacheCallback> cleanCacheCallback = iface_cast<ICleanCacheCallback>(object);
+    ErrCode ret = CleanBundleCacheFilesForSelf(cleanCacheCallback);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

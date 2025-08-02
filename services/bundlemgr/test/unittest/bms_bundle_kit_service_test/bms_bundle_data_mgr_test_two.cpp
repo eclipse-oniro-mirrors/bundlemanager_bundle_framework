@@ -1855,6 +1855,22 @@ HWTEST_F(BmsBundleDataMgrTest2, CleanBundleCacheFiles_0001, Function | MediumTes
 }
 
 /**
+ * @tc.number: CleanBundleCacheFilesForSelf_0001
+ * @tc.name: test BundleMgrHostImpl::CleanBundleCacheFilesForSelf
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest2, CleanBundleCacheFilesForSelf_0001, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    sptr<ICleanCacheCallback> cleanCacheCallback =  new (std::nothrow) ICleanCacheCallbackTest();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ErrCode ret = bundleMgrHostImpl_->CleanBundleCacheFilesForSelf(cleanCacheCallback);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
  * @tc.number: CleanBundleCacheFilesAutomatic_0001
  * @tc.name: test BundleMgrHostImpl::CleanBundleCacheFilesAutomatic
  * @tc.desc: 1. system run normally

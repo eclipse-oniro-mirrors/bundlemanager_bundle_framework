@@ -1859,6 +1859,34 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::CleanBundleCacheFilesForSelf(const sptr<ICleanCacheCallback> cleanCacheCallback)
+{
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("CleanBundleCacheFilesForSelf", HITRACE_FLAG_INCLUDE_ASYNC);
+    auto uid = IPCSkeleton::GetCallingUid();
+    auto userId = BundleUtil::GetUserIdByUid(uid);
+    std::string bundleName;
+    int32_t appIndex;
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    if (dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex) != ERR_OK) {
+        APP_LOGE("GetBundleNameAndIndexForUid failed");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (!cleanCacheCallback) {
+        APP_LOGE("the cleanCacheCallback is nullptr");
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true, uid, bundleName);
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, userId, appIndex);
+    return ERR_OK;
+}
+
 void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     const sptr<ICleanCacheCallback> cleanCacheCallback,
     const std::shared_ptr<BundleDataMgr> &dataMgr,

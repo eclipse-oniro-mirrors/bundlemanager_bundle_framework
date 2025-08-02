@@ -730,6 +730,124 @@ HWTEST_F(BmsCleanAllBundleCacheTest, CleanCache_0400, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: CleanCacheForSelf_0100
+ * @tc.name: test can clean the cache files
+ * @tc.desc: 1.system run normally
+ *           2.GetApplicationInfoWithResponseId failed
+ *           3.clean the cache files faild
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanCacheForSelf_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    CreateFileDir();
+
+    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto result = hostImpl->CleanBundleCacheFilesForSelf(cleanCache);
+    EXPECT_FALSE(result == ERR_OK);
+
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanCacheForSelf_0200
+ * @tc.name: test can clean the cache files
+ * @tc.desc: 1.system run normally
+ *           2.cleanCache is nullptr
+ *           3.clean the cache files failed
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanCacheForSelf_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false);
+    CreateFileDir();
+
+    IPCSkeleton::SetCallingUid(TEST_UID);
+    auto uid = IPCSkeleton::GetCallingUid();
+    EXPECT_EQ(uid, TEST_UID);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    sptr<MockCleanCache> cleanCache = nullptr;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    dataMgr->bundleIdMap_.insert({BASE_TEST_UID, BUNDLE_NAME_TEST});
+    auto result = hostImpl->CleanBundleCacheFilesForSelf(cleanCache);
+    EXPECT_EQ(result, ERR_APPEXECFWK_NULL_PTR);
+
+    IPCSkeleton::SetCallingUid(20000001);
+    dataMgr->bundleIdMap_.erase(BASE_TEST_UID);
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanCacheForSelf_0300
+ * @tc.name: test can clean the cache files
+ * @tc.desc: 1.system run normally
+ *           2.GetBundleNameAndIndexForUid failed
+ *           3.clean the cache files failed
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanCacheForSelf_0300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false);
+    CreateFileDir();
+
+    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto result = hostImpl->CleanBundleCacheFilesForSelf(cleanCache);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanCacheForSelf_0400
+ * @tc.name: test can clean the cache files
+ * @tc.desc: 1.system run normally
+ *           2.clean the cache files failed
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanCacheForSelf_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    CreateFileDir();
+
+    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    auto result = bundleMgrProxy->CleanBundleCacheFilesForSelf(cleanCache);
+    EXPECT_FALSE(result == ERR_OK);
+
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanCacheForSelf_0500
+ * @tc.name: test can clean the cache files
+ * @tc.desc: 1.system run normally
+ *           2.clean the cache files failed by nullptr cleaCache
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanCacheForSelf_0500, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    CreateFileDir();
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode result = bundleMgrProxy->CleanBundleCacheFilesForSelf(nullptr);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+/**
  * @tc.number: CleanBundleCacheFilesAutomatic_0100
  * @tc.name: test CleanBundleCacheFilesAutomatic
  * @tc.desc: 1. system run normally

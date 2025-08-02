@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1100,6 +1100,24 @@ HWTEST_F(BmsBundleMgrProxyTest, CleanBundleCacheFiles_0100, Function | MediumTes
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     cleanCacheCallback =  new (std::nothrow) ICleanCacheCallbackTest();
     res = bundleMgrProxy.CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId, appIndex);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesForSelf_0100
+ * @tc.name: test the CleanBundleCacheFilesForSelf
+ * @tc.desc: 1. system running normally
+ *           2. test CleanBundleCacheFilesForSelf
+ */
+HWTEST_F(BmsBundleMgrProxyTest, CleanBundleCacheFilesForSelf_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    sptr<ICleanCacheCallback> cleanCacheCallback;
+    auto res = bundleMgrProxy.CleanBundleCacheFilesForSelf(cleanCacheCallback);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    cleanCacheCallback =  new (std::nothrow) ICleanCacheCallbackTest();
+    res = bundleMgrProxy.CleanBundleCacheFilesForSelf(cleanCacheCallback);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
 }
 
