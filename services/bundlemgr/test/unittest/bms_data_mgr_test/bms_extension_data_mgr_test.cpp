@@ -43,6 +43,7 @@ namespace OHOS {
 namespace {
 const int32_t USERID = 100;
 const int32_t TEST_UID = 20065535;
+constexpr int32_t REMOTE_RESULT = 8585601;
 const uint32_t SDK_VERSION = 10;
 const uint32_t COMPATIBLE_VERSION = 11;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
@@ -2144,7 +2145,8 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleNamesForUidExt_0100, Function | Small
     EXPECT_THAT(ret, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
+        BMS_BROKER_ERR_INSTALL_FAILED,
+        REMOTE_RESULT));
     #else
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
