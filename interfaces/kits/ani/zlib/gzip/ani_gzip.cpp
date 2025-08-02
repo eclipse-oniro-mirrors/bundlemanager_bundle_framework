@@ -30,6 +30,8 @@ constexpr const char* CLASSNAME_DOUBLE = "std.core.Double";
 constexpr const char* CLASSNAME_GZERROROUTPUTINFOINNER = "@ohos.zlib.zlib.GzErrorOutputInfoInner";
 constexpr const char* FIELD_NAME_NATIVEGZFILE = "nativeGZFile";
 constexpr int INVALID_FD = -1;
+constexpr uint8_t MIN_ASCII = 0;
+constexpr uint8_t MAX_ASCII = 255;
 } // namespace
 using namespace arkts::ani_signature;
 
@@ -486,6 +488,10 @@ ani_long gzfwriteNative(ani_env* env, ani_object instance, ani_arraybuffer aniBu
     CHECK_PARAM_NULL_RETURN(env, 0);
     CHECK_PARAM_NULL_THROW_RETURN(instance, EFAULT, 0);
     CHECK_PARAM_NULL_THROW_RETURN(aniBuf, EINVAL, 0);
+    if (aniSize < 0 || aniNItems < 0) {
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return 0;
+    }
 
     size_t bufLen = 0;
     void* buf = nullptr;
@@ -524,6 +530,10 @@ ani_long gzfreadNative(ani_env* env, ani_object instance, ani_arraybuffer aniBuf
     CHECK_PARAM_NULL_RETURN(env, 0);
     CHECK_PARAM_NULL_THROW_RETURN(instance, EFAULT, 0);
     CHECK_PARAM_NULL_THROW_RETURN(aniBuf, EINVAL, 0);
+    if (aniSize < 0 || aniNItems < 0) {
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return 0;
+    }
 
     size_t bufLen = 0;
     void* buf = nullptr;
@@ -645,6 +655,12 @@ ani_int gzungetcNative(ani_env* env, ani_object instance, ani_int aniC)
 
     gzFile nativeGZFile = nullptr;
     if (!TryGetNativeGZFile(env, instance, nativeGZFile, EINVAL)) {
+        return -1;
+    }
+
+    if (aniC < MIN_ASCII || aniC > MAX_ASCII) {
+        APP_LOGE("gzungetcNative invalid c: %{public}d", aniC);
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return -1;
     }
 
@@ -855,6 +871,12 @@ ani_int gzputcNative(ani_env* env, ani_object instance, ani_int aniC)
 
     gzFile nativeGZFile = nullptr;
     if (!TryGetNativeGZFile(env, instance, nativeGZFile, EINVAL)) {
+        return -1;
+    }
+
+    if (aniC < MIN_ASCII || aniC > MAX_ASCII) {
+        APP_LOGE("gzputcNative invalid c: %{public}d", aniC);
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return -1;
     }
 
