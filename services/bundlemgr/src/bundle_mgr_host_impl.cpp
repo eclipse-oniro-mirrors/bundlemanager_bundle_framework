@@ -98,6 +98,7 @@ const std::unordered_map<std::string, int32_t> QUERY_FUNC_MAP = {
     {"GetAppProvisionInfo", 5}
 };
 const std::vector<int32_t> QUERY_EXPECTED_ERR = {
+    ERR_OK,
     ERR_BUNDLE_MANAGER_PERMISSION_DENIED,
     ERR_BUNDLE_MANAGER_INVALID_USER_ID,
     ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST,
@@ -109,7 +110,48 @@ const std::vector<int32_t> QUERY_EXPECTED_ERR = {
 }
 
 std::shared_mutex g_queryEventMutex;
-std::unordered_map<int32_t, EventInfo> g_queryEventList;
+std::unordered_map<int32_t, std::vector<QueryEventInfo>> g_queryEventList;
+
+bool InsertQueryEventInfo(int32_t errCode, const QueryEventInfo& info)
+{
+    std::vector<QueryEventInfo> infos;
+    std::unique_lock<std::shared_mutex> lock(g_queryEventMutex);
+    if (g_queryEventList.find(errCode) == g_queryEventList.end()) {
+        g_queryEventList[errCode].push_back(info);
+        g_queryEventList[errCode][0].lastReportEventTime = BundleUtil::GetCurrentTime();
+        APP_LOGD("init record for -e: %{public}d", errCode);
+        return true;
+    }
+    if (std::find(g_queryEventList[errCode].begin(), g_queryEventList[errCode].end(), info) ==
+        g_queryEventList[errCode].end()) {
+        g_queryEventList[errCode].push_back(info);
+        APP_LOGD("add new record for -e:%{public}d",
+            errCode);
+        return true;
+    }
+    return false;
+}
+
+bool TransQueryEventInfo(const std::vector<QueryEventInfo> &infos, EventInfo &report)
+{
+    if (infos.empty()) {
+        APP_LOGW("no query info to transform");
+        return false;
+    }
+    report.errCode = infos[0].errCode;
+    for (auto queryInfo: infos) {
+        report.funcIdList.push_back(queryInfo.funcId);
+        report.userIdList.push_back(queryInfo.userId);
+        report.uidList.push_back(queryInfo.uid);
+        report.appIndexList.push_back(queryInfo.appIndex);
+        report.flagList.push_back(queryInfo.flag);
+        report.bundleNameList.push_back(queryInfo.bundleName);
+        report.callingUidList.push_back(queryInfo.callingUid);
+        report.callingBundleNameList.push_back(queryInfo.callingBundleName);
+        report.callingAppIdList.push_back(queryInfo.callingAppId);
+    }
+    return true;
+}
 
 void ClearGlobalQueryEventInfo()
 {
@@ -123,27 +165,27 @@ void EraseQueryEventInfo(ErrCode error)
     g_queryEventList.erase(error);
 }
 
-EventInfo GetQueryEventInfo(ErrCode error)
+std::vector<QueryEventInfo> GetQueryEventInfo(ErrCode error)
 {
-    EventInfo info;
+    std::vector<QueryEventInfo> infos;
     std::unique_lock<std::shared_mutex> queryEventMutex(g_queryEventMutex);
     if (g_queryEventList.find(error) != g_queryEventList.end()) {
         return g_queryEventList[error];
     }
-    return info;
+    return infos;
 }
 
-EventInfo PrepareQueryEvent(ErrCode errCode, const std::string &bundleName, const std::string &func,
+QueryEventInfo PrepareQueryEvent(ErrCode errCode, const std::string &bundleName, const std::string &func,
     int32_t uid, int32_t userId, int32_t appIndex, int32_t flags)
 {
-    EventInfo info;
+    QueryEventInfo info;
     info.errCode = errCode;
-    info.funcIdList = {QUERY_FUNC_MAP.at(func)};
-    info.uidList = {uid};
-    info.userIdList = {userId};
-    info.appIndexList = {appIndex};
-    info.flagList = {flags};
-    info.bundleNameList = {bundleName};
+    info.funcId = QUERY_FUNC_MAP.at(func);
+    info.uid = uid;
+    info.userId = userId;
+    info.appIndex = appIndex;
+    info.flag = flags;
+    info.bundleName = bundleName;
     return info;
 }
 
@@ -277,7 +319,7 @@ bool BundleMgrHostImpl::GetBundleInfo(
     int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCTION_GET_BUNDLE_INFO);
     ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
     // API9 need to be system app
-    int32_t intervalTime = ONE_DAY;
+    int64_t intervalTime = ONE_DAY;
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
@@ -293,7 +335,7 @@ bool BundleMgrHostImpl::GetBundleInfo(
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
-        EventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, bundleName,
+        QueryEventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, bundleName,
             "GetBundleInfo", -1, userId, 0, flags);
         SendQueryBundleInfoEvent(info, intervalTime, true);
         return false;
@@ -351,11 +393,11 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfoV9");
-    int32_t intervalTime = ONE_DAY;
+    int64_t intervalTime = ONE_DAY;
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
-        EventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, bundleName,
+        QueryEventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, bundleName,
             "GetBundleInfoV9", -1, userId, 0, flags);
         SendQueryBundleInfoEvent(info, intervalTime, true);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -368,7 +410,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
                 return ERR_OK;
             }
         }
-        EventInfo info = PrepareQueryEvent(res, bundleName, "GetBundleInfoV9", -1, userId, 0, flags);
+        QueryEventInfo info = PrepareQueryEvent(res, bundleName, "GetBundleInfoV9", -1, userId, 0, flags);
         SendQueryBundleInfoEvent(info, intervalTime, false);
     }
     return res;
@@ -589,7 +631,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
 bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleName)
 {
     APP_LOGD("start GetBundleNameForUid, uid : %{public}d", uid);
-    int32_t intervalTime = ONE_DAY;
+    int64_t intervalTime = ONE_DAY;
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
@@ -603,7 +645,7 @@ bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleNa
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        EventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, "None",
+        QueryEventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, "None",
             "GetBundleNameForUid", uid, -1, 0, -1);
         SendQueryBundleInfoEvent(info, intervalTime, true);
         return false;
@@ -611,7 +653,7 @@ bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleNa
     bool res = dataMgr->GetBundleNameForUid(uid, bundleName);
     if (!res) {
         APP_LOGD("GetBundleNameForUid failed, -u: %{public}d", uid);
-        EventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INVALID_UID, "None",
+        QueryEventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INVALID_UID, "None",
             "GetBundleNameForUid", uid, -1, 0, -1);
         SendQueryBundleInfoEvent(info, intervalTime, false);
     }
@@ -659,11 +701,11 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    int32_t intervalTime = ONE_DAY;
+    int64_t intervalTime = ONE_DAY;
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        EventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, "None",
+        QueryEventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, "None",
             "GetNameForUid", uid, -1, 0, -1);
         SendQueryBundleInfoEvent(info, intervalTime, true);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -673,14 +715,14 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         ret = bmsExtensionClient->GetBundleNameByUid(uid, name);
         if (ret != ERR_OK) {
-            EventInfo info = PrepareQueryEvent(ret, "None",
+            QueryEventInfo info = PrepareQueryEvent(ret, "None",
                 "GetNameForUid", uid, -1, 0, -1);
             SendQueryBundleInfoEvent(info, intervalTime, false);
             return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
     }
     if (ret != ERR_OK) {
-        EventInfo info = PrepareQueryEvent(ret, "None",
+        QueryEventInfo info = PrepareQueryEvent(ret, "None",
             "GetNameForUid", uid, -1, 0, -1);
         SendQueryBundleInfoEvent(info, intervalTime, false);
     }
@@ -3872,18 +3914,18 @@ ErrCode BundleMgrHostImpl::GetAppProvisionInfo(const std::string &bundleName, in
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    int32_t intervalTime = ONE_DAY;
+    int64_t intervalTime = ONE_DAY;
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        EventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, bundleName,
+        QueryEventInfo info = PrepareQueryEvent(ERR_BUNDLE_MANAGER_INTERNAL_ERROR, bundleName,
             "GetAppProvisionInfo", -1, userId, 0, -1);
         SendQueryBundleInfoEvent(info, intervalTime, true);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ErrCode ret = dataMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo);
     if (ret != ERR_OK) {
-        EventInfo info = PrepareQueryEvent(ret, bundleName, "GetAppProvisionInfo", -1, userId, 0, -1);
+        QueryEventInfo info = PrepareQueryEvent(ret, bundleName, "GetAppProvisionInfo", -1, userId, 0, -1);
         SendQueryBundleInfoEvent(info, intervalTime, false);
     }
     return ret;
@@ -5933,42 +5975,6 @@ bool BundleMgrHostImpl::GreatOrEqualTargetAPIVersion(const int32_t platformVersi
     return dataMgr->GreatOrEqualTargetAPIVersion(platformVersion, minorVersion, patchVersion);
 }
 
-bool BundleMgrHostImpl::CheckNeedAddEvent(const EventInfo &query, size_t maxEventSize)
-{
-    std::unique_lock<std::shared_mutex> queryEventMutex(g_queryEventMutex);
-    if (g_queryEventList.find(query.errCode) == g_queryEventList.end()) {
-        g_queryEventList[query.errCode] = query;
-        g_queryEventList[query.errCode].lastReportEventTime = BundleUtil::GetCurrentTime();
-        return true;
-    }
-    EventInfo info = g_queryEventList[query.errCode];
-    if (info.bundleNameList.size() >= maxEventSize) {
-        return false;
-    }
-    if (std::find(info.funcIdList.begin(), info.funcIdList.end(), query.funcIdList[0]) == info.funcIdList.end() ||
-        std::find(info.userIdList.begin(), info.userIdList.end(), query.userIdList[0]) == info.userIdList.end() ||
-        std::find(info.uidList.begin(), info.uidList.end(), query.uidList[0]) == info.uidList.end() ||
-        std::find(info.appIndexList.begin(), info.appIndexList.end(),
-            query.appIndexList[0]) == info.appIndexList.end() ||
-        std::find(info.flagList.begin(), info.flagList.end(), query.flagList[0]) == info.flagList.end() ||
-        std::find(info.bundleNameList.begin(), info.bundleNameList.end(),
-            query.bundleNameList[0]) == info.bundleNameList.end() ||
-        std::find(info.callingUidList.begin(), info.callingUidList.end(),
-            query.callingUidList[0]) == info.callingUidList.end()) {
-        g_queryEventList[query.errCode].funcIdList.push_back(query.funcIdList[0]);
-        g_queryEventList[query.errCode].userIdList.push_back(query.userIdList[0]);
-        g_queryEventList[query.errCode].uidList.push_back(query.uidList[0]);
-        g_queryEventList[query.errCode].appIndexList.push_back(query.appIndexList[0]);
-        g_queryEventList[query.errCode].flagList.push_back(query.flagList[0]);
-        g_queryEventList[query.errCode].bundleNameList.push_back(query.bundleNameList[0]);
-        g_queryEventList[query.errCode].callingUidList.push_back(query.callingUidList[0]);
-        g_queryEventList[query.errCode].callingBundleNameList.push_back(query.callingBundleNameList[0]);
-        g_queryEventList[query.errCode].callingAppIdList.push_back(query.callingAppIdList[0]);
-        return true;
-    }
-    return false;
-}
-
 bool BundleMgrHostImpl::GetCallingInfo(int32_t callingUid, std::string &callingBundleName, std::string &callingAppId)
 {
     auto dataMgr = GetDataMgrFromService();
@@ -5992,40 +5998,46 @@ bool BundleMgrHostImpl::GetCallingInfo(int32_t callingUid, std::string &callingB
     return true;
 }
 
-bool BundleMgrHostImpl::SendQueryBundleInfoEvent(EventInfo &query, int32_t intervalTime, bool reportNow)
+bool BundleMgrHostImpl::SendQueryBundleInfoEvent(
+    QueryEventInfo &query, int64_t intervalTime, bool reportNow)
 {
-    if (std::find(QUERY_EXPECTED_ERR.begin(), QUERY_EXPECTED_ERR.end(), query.errCode) != QUERY_EXPECTED_ERR.end()) {
-        APP_LOGD("No need report for -e:%{public}d", query.errCode);
+    ErrCode errCode = query.errCode;
+    if (std::find(QUERY_EXPECTED_ERR.begin(), QUERY_EXPECTED_ERR.end(), errCode) != QUERY_EXPECTED_ERR.end()) {
+        APP_LOGD("No need report for -e:%{public}d", errCode);
         return false;
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     APP_LOGD("start, -f:%{public}d, -c:%{public}d, -e:%{public}d",
-        query.funcIdList.front(), callingUid, query.errCode);
+        query.funcId, callingUid, errCode);
     // get calling bundle info
     std::string callingBundleName = Constants::EMPTY_STRING;
     std::string callingAppId = Constants::EMPTY_STRING;
     GetCallingInfo(callingUid, callingBundleName, callingAppId);
-    query.callingUidList = {callingUid};
-    query.callingBundleNameList = {callingBundleName};
-    query.callingAppIdList = {callingAppId};
+    query.callingUid = callingUid;
+    query.callingBundleName = callingBundleName;
+    query.callingAppId = callingAppId;
+    
+    InsertQueryEventInfo(errCode, query);
+    auto infos = GetQueryEventInfo(errCode);
     // check report now
     if (reportNow) {
-        EventReport::SendSystemEvent(BMSEventType::QUERY_BUNDLE_INFO, query);
+        EventInfo report;
+        TransQueryEventInfo(infos, report);
         APP_LOGD("SendSystemEvent now");
+        EventReport::SendSystemEvent(BMSEventType::QUERY_BUNDLE_INFO, report);
+        EraseQueryEventInfo(errCode);
         return true;
     }
-
-    if (CheckNeedAddEvent(query, MAX_QUERY_EVENT_REPORT_ONCE)) {
-        APP_LOGD("only add record for: %{public}d", query.errCode);
-        return false;
-    }
-
-    EventInfo reportInfo = GetQueryEventInfo(query.errCode);
-    if (reportInfo.bundleNameList.size() >= MAX_QUERY_EVENT_REPORT_ONCE ||
-        (BundleUtil::GetCurrentTime() - reportInfo.lastReportEventTime) >= intervalTime) {
-        APP_LOGD("SendSystemEvent for :%{public}d", reportInfo.errCode);
-        EventReport::SendSystemEvent(BMSEventType::QUERY_BUNDLE_INFO, reportInfo);
-        EraseQueryEventInfo(reportInfo.errCode);
+    
+    size_t infoSize = infos.size();
+    int32_t lastReportEventTime = infos[0].lastReportEventTime;
+    if (infoSize >= MAX_QUERY_EVENT_REPORT_ONCE ||
+        (BundleUtil::GetCurrentTime() - lastReportEventTime) >= intervalTime) {
+        APP_LOGD("SendSystemEvent for :%{public}d", errCode);
+        EventInfo report;
+        TransQueryEventInfo(infos, report);
+        EventReport::SendSystemEvent(BMSEventType::QUERY_BUNDLE_INFO, report);
+        EraseQueryEventInfo(errCode);
         return true;
     }
     return false;

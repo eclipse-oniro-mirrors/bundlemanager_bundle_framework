@@ -33,6 +33,32 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct QueryEventInfo {
+    int32_t errCode = ERR_OK;
+    int64_t lastReportEventTime = 0;
+    int32_t funcId = 0;
+    int32_t uid = 0;
+    int32_t userId = -1;
+    int32_t appIndex = -1;
+    int32_t callingUid = -1;
+    int32_t flag = -1;
+    std::string bundleName = "";
+    std::string callingAppId = "";
+    std::string callingBundleName = "";
+
+    bool operator==(const QueryEventInfo& other) const
+    {
+        return funcId == other.funcId &&
+               uid == other.uid &&
+               userId == other.userId &&
+               appIndex == other.appIndex &&
+               flag == other.flag &&
+               bundleName == other.bundleName &&
+               callingUid == other.callingUid &&
+               callingAppId == other.callingAppId &&
+               callingBundleName == other.callingBundleName;
+    }
+};
 class BundleMgrHostImpl : public BundleMgrHost {
 public:
     BundleMgrHostImpl() = default;
@@ -1205,8 +1231,7 @@ private:
     bool GetLabelFromCache(const std::string &cacheKey, const std::string &abilityName,
         const std::unordered_map<std::string, std::vector<LauncherAbilityResourceInfo>> &resourceCache,
         std::string &label);
-    bool SendQueryBundleInfoEvent(EventInfo &query, int32_t intervalTime, bool reportNow);
-    bool CheckNeedAddEvent(const EventInfo &query, size_t maxEventSize);
+    bool SendQueryBundleInfoEvent(QueryEventInfo &query, int64_t intervalTime, bool reportNow);
     bool GetCallingInfo(int32_t callingUid, std::string &callingBundleName, std::string &callingAppId);
 
     std::atomic<bool> isBrokerServiceExisted_ = false;

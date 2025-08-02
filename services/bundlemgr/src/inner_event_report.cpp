@@ -773,10 +773,10 @@ void InnerEventReport::InnerSendQueryBundleInfoEvent(const EventInfo& eventInfo)
 {
     InnerSystemEventWrite(
         QUERY_BUNDLE_INFO,
-        HiSysEventType::BEHAVIOR,
+        HiSysEventType::STATISTIC,
         EVENT_PARAM_FUNC_ID_LIST, eventInfo.funcIdList,
         EVENT_PARAM_USER_ID_LIST, eventInfo.userIdList,
-        EVENT_PARAM_UID_LIST, eventInfo.appIndex,
+        EVENT_PARAM_UID_LIST, eventInfo.uidList,
         EVENT_PARAM_APP_INDEX_LIST, eventInfo.appIndexList,
         EVENT_PARAM_FLAG_LIST, eventInfo.flagList,
         EVENT_PARAM_BUNDLE_NAME_LIST, eventInfo.bundleNameList,
