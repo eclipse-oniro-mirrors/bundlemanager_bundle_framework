@@ -166,13 +166,13 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
             APP_LOGW_NOFUNC("ParseResourceInfo fail key:%{public}s", resourceInfos[index].GetKey().c_str());
         }
     }
+    ProcessSpecialBundleResource(userId, resourceInfos);
     if ((resourceInfos[0].labelNeedParse_ && resourceInfos[0].label_.empty()) ||
         (resourceInfos[0].iconNeedParse_ && resourceInfos[0].icon_.empty())) {
         APP_LOGE_NOFUNC("ParseResourceInfos fail -n %{public}s -m %{public}s",
             resourceInfos[0].bundleName_.c_str(), resourceInfos[0].moduleName_.c_str());
         return false;
     }
-    ProcessSpecialBundleResource(userId, resourceInfos);
     APP_LOGD("end");
     return true;
 }
