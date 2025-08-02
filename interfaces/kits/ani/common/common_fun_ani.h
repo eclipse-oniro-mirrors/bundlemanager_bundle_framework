@@ -372,10 +372,10 @@ public:
         RETURN_FALSE_IF_NULL(env);
         RETURN_FALSE_IF_NULL(aniArray);
 
-        ani_double length;
-        ani_status status = env->Object_GetPropertyByName_Double(aniArray, "length", &length);
+        ani_size length = 0;
+        ani_status status = env->Array_GetLength(reinterpret_cast<ani_array>(aniArray), &length);
         if (status != ANI_OK) {
-            APP_LOGE("Object_GetPropertyByName_Double failed %{public}d", status);
+            APP_LOGE("Array_GetLength failed %{public}d", status);
             return false;
         }
         for (ani_int i = 0; i < static_cast<ani_int>(length); ++i) {
