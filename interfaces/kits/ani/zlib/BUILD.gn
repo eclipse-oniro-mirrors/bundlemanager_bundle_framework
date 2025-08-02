@@ -47,16 +47,8 @@ ohos_shared_library("ani_zlib") {
     "${kits_path}/js/zip/src/zip_reader.cpp",
     "${kits_path}/js/zip/src/zip_utils.cpp",
     "${kits_path}/js/zip/src/zip_writer.cpp",
-    "ani_zip.cpp",
+    "${kits_path}/js/zip/src/zip.cpp",
     "ani_zlib.cpp",
-  ]
-
-  deps = [
-    "${base_path}:appexecfwk_base",
-    "${common_path}:libappexecfwk_common",
-    "${core_path}:appexecfwk_core",
-    "${kits_path}/ani/common:bms_ani_common",
-    "${kits_path}/js/common:bundle_napi_common",
   ]
 
   cflags = [
@@ -67,6 +59,14 @@ ohos_shared_library("ani_zlib") {
   cflags_cc = [
     "-Os",
     "-fstack-protector-strong",
+  ]
+
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "${kits_path}/ani/common:bms_ani_common",
+    "${kits_path}/js/common:bundle_napi_common",
   ]
 
   external_deps = [
