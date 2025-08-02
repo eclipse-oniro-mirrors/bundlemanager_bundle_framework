@@ -166,7 +166,7 @@ HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtClient_0100, Function | Sma
     #ifdef USE_ARM64
     EXPECT_THAT(ret, testing::AnyOf(ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY, REMOTE_RESULT));
     #else
-    EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
     EXPECT_EQ(bundleNames.empty(), true);
 }
