@@ -286,19 +286,36 @@ void BundleResourceManager::InnerProcessResourceInfoBySystemThemeChanged(
     // 1. The icons dir is empty.
     // 2. Previous theme change is interrupted.
     if (!CheckAllAddResourceInfo(userId) && !isInterrupted_) {
-        // judge whether the bundle theme exists
-        for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
-            if (!BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
-                !BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
-                iter = resourceInfosMap.erase(iter);
-            } else {
-                ++iter;
-            }
-        }
+        FilterResourceInfoWhenSystemThemeChanged(resourceInfosMap, userId);
     }
     // process labelNeedParse_
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
         ProcessResourceInfoNoNeedToParseOtherIcon(iter->second);
+    }
+}
+
+void BundleResourceManager::FilterResourceInfoWhenSystemThemeChanged(
+    std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+    const int32_t userId)
+{
+    bool isThemeFlagExistA = BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) +
+        THEME_ICONS_A_FLAG);
+    // judge whether the bundle theme exists
+    for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
+        bool isThemeExistInA = BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) +
+            THEME_ICONS_A + iter->first);
+        bool isThemeExistInB = BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) +
+            THEME_ICONS_B + iter->first);
+        if (!isThemeExistInA && !isThemeExistInB) {
+            iter = resourceInfosMap.erase(iter);
+            continue;
+        }
+        if ((isThemeFlagExistA && isThemeExistInA) || (!isThemeFlagExistA && isThemeExistInB)) {
+            for (auto &resource : iter->second) {
+                resource.hasThemeIcon_ = true;
+            }
+        }
+        ++iter;
     }
 }
 

@@ -5305,6 +5305,45 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0229, Function | SmallTest
 }
 
 /**
+ * @tc.number: ProcessForegroundIcon_0010
+ * Function: ProcessForegroundIcon
+ * @tc.name: test ProcessForegroundIcon
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessForegroundIcon
+ */
+HWTEST_F(BmsBundleResourceTest, ProcessForegroundIcon_0010, Function | SmallTest | Level0)
+{
+    std::pair<std::unique_ptr<uint8_t[]>, size_t> foregroundInfo;
+    ResourceInfo resourceInfo;
+    BundleResourceDrawable drawable;
+    bool ret = drawable.ProcessForegroundIcon(foregroundInfo, resourceInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ParseResourceInfos_0010
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfos
+ */
+HWTEST_F(BmsBundleResourceTest, ParseResourceInfos_0010, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.label_ = BUNDLE_NAME;
+    resourceInfo.labelId_ = 0;
+    resourceInfo.iconId_ = 0;
+    resourceInfo.hasThemeIcon_ = true;
+    std::vector<ResourceInfo> resourceInfos;
+    resourceInfos.push_back(resourceInfo);
+
+    BundleResourceParser parser;
+    bool ans = parser.ParseResourceInfos(USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+}
+
+/**
  * @tc.number: IsOnlineTheme_0010
  * Function: IsOnlineTheme
  * @tc.name: test IsOnlineTheme
@@ -5581,6 +5620,178 @@ HWTEST_F(BmsBundleResourceTest, CheckThemeType_0080, Function | SmallTest | Leve
     ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME, THEME_TEST_USERID, isOnlineTheme);
     EXPECT_TRUE(ret);
     EXPECT_FALSE(isOnlineTheme);
+
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+/**
+ * @tc.number: FilterResourceInfoWhenSystemThemeChanged_0010
+ * Function: FilterResourceInfoWhenSystemThemeChanged
+ * @tc.name: test system theme change
+ * @tc.desc: 1. system running normally
+ *           2. test FilterResourceInfoWhenSystemThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, FilterResourceInfoWhenSystemThemeChanged_0010, Function | SmallTest | Level0)
+{
+    // flag exist in A, icons exist in A and B
+    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+    std::ofstream file;
+    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+    file << "" << endl;
+    file.close();
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        ResourceInfo info;
+        info.bundleName_ = BUNDLE_NAME_NOT_EXIST;
+        resourceInfosMap[BUNDLE_NAME_NOT_EXIST].emplace_back(info);
+        // theme not exist
+        manager->FilterResourceInfoWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
+        EXPECT_TRUE(resourceInfosMap.empty());
+    }
+
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+/**
+ * @tc.number: FilterResourceInfoWhenSystemThemeChanged_0020
+ * Function: FilterResourceInfoWhenSystemThemeChanged
+ * @tc.name: test system theme change
+ * @tc.desc: 1. system running normally
+ *           2. test FilterResourceInfoWhenSystemThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, FilterResourceInfoWhenSystemThemeChanged_0020, Function | SmallTest | Level0)
+{
+    // flag exist in A, icons exist in A and B
+    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+    std::ofstream file;
+    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+    file << "" << endl;
+    file.close();
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        ResourceInfo info;
+        info.bundleName_ = BUNDLE_NAME;
+        resourceInfosMap[BUNDLE_NAME].emplace_back(info);
+        ResourceInfo info2;
+        info2.bundleName_ = BUNDLE_NAME_NOT_EXIST;
+        resourceInfosMap[BUNDLE_NAME_NOT_EXIST].emplace_back(info2);
+        manager->FilterResourceInfoWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
+        EXPECT_EQ(resourceInfosMap.size(), 1);
+        if (resourceInfosMap.find(BUNDLE_NAME) != resourceInfosMap.end()) {
+            EXPECT_TRUE(resourceInfosMap[BUNDLE_NAME][0].hasThemeIcon_);
+        }
+    }
+
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+/**
+ * @tc.number: FilterResourceInfoWhenSystemThemeChanged_0030
+ * Function: FilterResourceInfoWhenSystemThemeChanged
+ * @tc.name: test system theme change
+ * @tc.desc: 1. system running normally
+ *           2. test FilterResourceInfoWhenSystemThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, FilterResourceInfoWhenSystemThemeChanged_0030, Function | SmallTest | Level0)
+{
+    // flag exist in B, icons exist in A and B
+    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        ResourceInfo info;
+        info.bundleName_ = BUNDLE_NAME;
+        resourceInfosMap[BUNDLE_NAME].emplace_back(info);
+        ResourceInfo info2;
+        info2.bundleName_ = BUNDLE_NAME_NOT_EXIST;
+        resourceInfosMap[BUNDLE_NAME_NOT_EXIST].emplace_back(info2);
+        manager->FilterResourceInfoWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
+        EXPECT_EQ(resourceInfosMap.size(), 1);
+        if (resourceInfosMap.find(BUNDLE_NAME) != resourceInfosMap.end()) {
+            EXPECT_TRUE(resourceInfosMap[BUNDLE_NAME][0].hasThemeIcon_);
+        }
+    }
+
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+/**
+ * @tc.number: FilterResourceInfoWhenSystemThemeChanged_0040
+ * Function: FilterResourceInfoWhenSystemThemeChanged
+ * @tc.name: test system theme change
+ * @tc.desc: 1. system running normally
+ *           2. test FilterResourceInfoWhenSystemThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, FilterResourceInfoWhenSystemThemeChanged_0040, Function | SmallTest | Level0)
+{
+    // flag exist in A, icons exist in B
+    OHOS::ForceCreateDirectory(THEME_A_ICON_JSON_BUNDLE_NAME);
+    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+    std::ofstream file;
+    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
+    file << "" << endl;
+    file.close();
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        ResourceInfo info;
+        info.bundleName_ = BUNDLE_NAME;
+        resourceInfosMap[BUNDLE_NAME].emplace_back(info);
+        ResourceInfo info2;
+        info2.bundleName_ = BUNDLE_NAME_NOT_EXIST;
+        resourceInfosMap[BUNDLE_NAME_NOT_EXIST].emplace_back(info2);
+        manager->FilterResourceInfoWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
+        EXPECT_EQ(resourceInfosMap.size(), 1);
+        if (resourceInfosMap.find(BUNDLE_NAME) != resourceInfosMap.end()) {
+            EXPECT_FALSE(resourceInfosMap[BUNDLE_NAME][0].hasThemeIcon_);
+        }
+    }
+
+    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+}
+
+/**
+ * @tc.number: FilterResourceInfoWhenSystemThemeChanged_0050
+ * Function: FilterResourceInfoWhenSystemThemeChanged
+ * @tc.name: test system theme change
+ * @tc.desc: 1. system running normally
+ *           2. test FilterResourceInfoWhenSystemThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, FilterResourceInfoWhenSystemThemeChanged_0050, Function | SmallTest | Level0)
+{
+    // flag exist in B, icons exist in A and B
+    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
+    OHOS::ForceCreateDirectory(THEME_B_ICON_JSON_BUNDLE_NAME);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        ResourceInfo info;
+        info.bundleName_ = BUNDLE_NAME;
+        resourceInfosMap[BUNDLE_NAME].emplace_back(info);
+        ResourceInfo info2;
+        info2.bundleName_ = BUNDLE_NAME_NOT_EXIST;
+        resourceInfosMap[BUNDLE_NAME_NOT_EXIST].emplace_back(info2);
+        manager->FilterResourceInfoWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
+        EXPECT_EQ(resourceInfosMap.size(), 1);
+        if (resourceInfosMap.find(BUNDLE_NAME) != resourceInfosMap.end()) {
+            EXPECT_FALSE(resourceInfosMap[BUNDLE_NAME][0].hasThemeIcon_);
+        }
+    }
 
     OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
 }

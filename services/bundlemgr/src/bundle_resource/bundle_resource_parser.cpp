@@ -152,25 +152,27 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
                 std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager(
                     resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
                     resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, *resConfig, 0, userId));
-            resourceManagerMap[resourceInfos[index].moduleName_] = resourceManager;
-            if (!BundleResourceConfiguration::InitResourceGlobalConfig(
-                resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager,
-                resourceInfos[index].iconNeedParse_, resourceInfos[index].labelNeedParse_)) {
-                APP_LOGW("InitResourceGlobalConfig failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
+            if (resourceInfos[index].hasThemeIcon_) {
+                (void)BundleResourceConfiguration::InitResourceGlobalConfig(resourceManager);
+            } else {
+                (void)BundleResourceConfiguration::InitResourceGlobalConfig(
+                    resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager,
+                    resourceInfos[index].iconNeedParse_, resourceInfos[index].labelNeedParse_);
             }
+            resourceManagerMap[resourceInfos[index].moduleName_] = resourceManager;
         }
 
         if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfos[index])) {
             APP_LOGW_NOFUNC("ParseResourceInfo fail key:%{public}s", resourceInfos[index].GetKey().c_str());
         }
     }
+    ProcessSpecialBundleResource(userId, resourceInfos);
     if ((resourceInfos[0].labelNeedParse_ && resourceInfos[0].label_.empty()) ||
         (resourceInfos[0].iconNeedParse_ && resourceInfos[0].icon_.empty())) {
         APP_LOGE_NOFUNC("ParseResourceInfos fail -n %{public}s -m %{public}s",
             resourceInfos[0].bundleName_.c_str(), resourceInfos[0].moduleName_.c_str());
         return false;
     }
-    ProcessSpecialBundleResource(userId, resourceInfos);
     APP_LOGD("end");
     return true;
 }
