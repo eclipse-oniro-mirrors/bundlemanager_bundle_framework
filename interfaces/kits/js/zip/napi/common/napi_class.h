@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,13 +40,13 @@ public:
     static T *GetEntityOf(napi_env env, napi_value objStat)
     {
         if (!env || !objStat) {
-            APP_LOGE("Empty input: env %d, obj %d", env == nullptr, objStat == nullptr);
+            APP_LOGE("Empty input: env %{public}d, obj %{public}d", env == nullptr, objStat == nullptr);
             return nullptr;
         }
         T *t = nullptr;
         napi_status status = napi_unwrap(env, objStat, (void **)&t);
         if (status != napi_ok) {
-            APP_LOGE("Cannot umwarp for pointer: %d", status);
+            APP_LOGE("Cannot umwarp for pointer: %{public}d", status);
             return nullptr;
         }
         return t;
@@ -73,13 +73,13 @@ public:
     static T *RemoveEntityOfFinal(napi_env env, napi_value objStat)
     {
         if (!env || !objStat) {
-            APP_LOGD("Empty input: env %d,obj %d", env == nullptr, objStat == nullptr);
+            APP_LOGD("Empty input: env %{public}d, obj %{public}d", env == nullptr, objStat == nullptr);
             return nullptr;
         }
         T *t = nullptr;
         napi_status status = napi_remove_wrap(env, objStat, (void **)&t);
         if (status != napi_ok) {
-            APP_LOGD("Cannot umwrap for pointer: %d", status);
+            APP_LOGD("Cannot umwrap for pointer: %{public}d", status);
             return nullptr;
         }
         return t;
