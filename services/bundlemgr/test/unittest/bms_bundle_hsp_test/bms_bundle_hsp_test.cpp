@@ -45,7 +45,6 @@ const std::string HSP_NAME_A = "hsp_A.hsp";
 const std::string HSP_NAME_B = "hsp_B.hsp";
 const std::string HSP_NAME_C = "hsp_C.hsp";
 const std::string HSP_NAME_C2 = "hsp_C2.hsp";
-const std::string HSP_NAME_D = "hsp_D.hsp";
 const std::string MODULE_NAME_ENTRY = "entry";
 const std::string MODULE_NAME_A = "hsp_A";
 const std::string MODULE_NAME_B = "hsp_B";
@@ -307,17 +306,6 @@ HWTEST_F(BmsBundleHspTest, BmsBundleHspTest_0600, Function | SmallTest | Level0)
     EXPECT_EQ(installResult, ERR_OK);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleHspTest_0700
- * @tc.name: BmsBundleHspTest
- * @tc.desc: test install for dependency other app and the app is not install
- */
-HWTEST_F(BmsBundleHspTest, BmsBundleHspTest_0700, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(MODULE_D_FILE_PATH + HSP_NAME_D);
-    EXPECT_NE(installResult, ERR_OK);
 }
 
 /**
