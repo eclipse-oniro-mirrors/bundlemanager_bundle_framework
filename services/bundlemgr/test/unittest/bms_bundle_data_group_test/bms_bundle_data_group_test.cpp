@@ -1547,7 +1547,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0004, Function | SmallTest 
     installParam.concentrateSendEvent = true;
 
     auto result = installer.UninstallBundle(bundleName, installParam);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL);
+    EXPECT_EQ(result, ERR_APPEXECFWK_UNINSTALL_STATE_NOT_ALLOW);
 
     dataMgr->bundleInfos_.erase(bundleName);
 }
