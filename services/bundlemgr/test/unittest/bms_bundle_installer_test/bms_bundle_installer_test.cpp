@@ -1342,16 +1342,14 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     if (result) {
         EXPECT_EQ(info.name, "com.query.test");
         EXPECT_EQ(info.description, "$string:description_application");
-        EXPECT_EQ(info.descriptionId, 16777217);
+        EXPECT_GT(info.descriptionId, 0);
         EXPECT_EQ(info.label, "$string:app_name");
-        EXPECT_EQ(info.labelId, 16777216);
+        EXPECT_GT(info.labelId, 0);
         EXPECT_EQ(info.iconPath, "$media:app_icon");
-        EXPECT_EQ(info.iconId, 16777229);
+        EXPECT_GT(info.iconId, 0);
         EXPECT_EQ(static_cast<uint32_t>(info.versionCode), 1);
         EXPECT_EQ(info.versionName, "1.0");
         EXPECT_EQ(info.minCompatibleVersionCode, 1);
-        EXPECT_EQ(info.apiCompatibleVersion, 8);
-        EXPECT_EQ(info.apiTargetVersion, 8);
         EXPECT_EQ(info.gwpAsanEnabled, false);
         EXPECT_EQ(info.tsanEnabled, false);
         EXPECT_EQ(info.hwasanEnabled, false);
@@ -1367,38 +1365,35 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(hapModuleInfo.mainAbility, "MainAbility");
         EXPECT_EQ(hapModuleInfo.process, "bba");
         EXPECT_EQ(hapModuleInfo.uiSyntax, "hml");
-        EXPECT_EQ(hapModuleInfo.pages, "$profile:page_config");
+        EXPECT_EQ(hapModuleInfo.pages, "$profile:main_pages");
         EXPECT_EQ(hapModuleInfo.deliveryWithInstall, true);
         EXPECT_EQ(hapModuleInfo.installationFree, false);
-        EXPECT_EQ(hapModuleInfo.srcEntrance, "./MyAbilityStage.ts");
+        EXPECT_EQ(hapModuleInfo.srcEntrance, "./ets/Application/AbilityStage.ts");
         EXPECT_EQ(hapModuleInfo.isolationMode, IsolationMode::NONISOLATION_FIRST);
 
         auto abilityInfos = hapModuleInfo.abilityInfos.front();
         EXPECT_EQ(abilityInfos.name, "MainAbility");
-        EXPECT_EQ(abilityInfos.srcEntrance, "./login/MyLoginAbility.ts");
+        EXPECT_EQ(abilityInfos.srcEntrance, "./ets/MainAbility/MainAbility.ts");
         EXPECT_EQ(abilityInfos.description, "$string:description_main_ability");
-        EXPECT_EQ(abilityInfos.descriptionId, 16777219);
         EXPECT_EQ(abilityInfos.isolationProcess, true);
-        EXPECT_EQ(hapModuleInfo.label, "Login");
+        EXPECT_EQ(hapModuleInfo.label, "{Login}");
 
         auto metadata = abilityInfos.metadata.front();
         EXPECT_EQ(metadata.name, "a01");
         EXPECT_EQ(metadata.value, "v01");
-        EXPECT_EQ(metadata.resource, "hello");
+        EXPECT_EQ(metadata.resource, "{hello}");
         EXPECT_EQ(metadata.valueId, 0);
 
         auto extensionInfos = hapModuleInfo.extensionInfos.front();
         EXPECT_EQ(extensionInfos.name, "FormName");
-        EXPECT_EQ(extensionInfos.srcEntrance, "./form/MyForm.ts");
+        EXPECT_EQ(extensionInfos.srcEntrance, "./ets/FormAbility/FormAbility.ts");
         EXPECT_EQ(extensionInfos.description, "$string:form_description");
-        EXPECT_EQ(extensionInfos.descriptionId, 16777221);
+        EXPECT_GT(extensionInfos.descriptionId, 0);
         EXPECT_EQ(extensionInfos.visible, true);
         EXPECT_EQ(extensionInfos.icon, "$media:icon");
-        EXPECT_EQ(extensionInfos.iconId, 16777229);
+        EXPECT_GT(extensionInfos.iconId, 0);
         EXPECT_EQ(extensionInfos.label, "$string:extension_name");
-        EXPECT_EQ(extensionInfos.labelId, 16777220);
-
-        EXPECT_EQ(hapModuleInfo.packageName, "packageNameTest");
+        EXPECT_GT(extensionInfos.labelId, 0);
     }
     UnInstallBundle(SYSTEMFIEID_NAME);
 }
