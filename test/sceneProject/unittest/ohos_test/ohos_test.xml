@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -267,11 +267,7 @@
               src="res"/>
       <option name="push" value="test_bundle/second_backup_right.hap -> /data/test/resource/bms/install_bundle/test4/"
               src="res"/>
-      <option name="push" value="test_bundle/first_right_with_diff_moduleName.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/first_right_with_diff_moduleType.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
-      <option name="push" value="test_bundle/second_right_with_same_moduleName.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
       <option name="push"
         value="test_bundle/testhapdemo/testhapdemo.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
