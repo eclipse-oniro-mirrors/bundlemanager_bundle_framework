@@ -29,6 +29,7 @@ public:
 
 private:
     static void OnUserIdChanged(const int32_t oldUserId, const int32_t newUserId);
+    bool CheckUserSwitchWhenReboot(const int32_t userId, int32_t &oldUserId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

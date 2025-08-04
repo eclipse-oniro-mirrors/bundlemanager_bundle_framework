@@ -49,6 +49,8 @@ public:
 
 private:
     bool SetThemeParamForThemeChanged(const int32_t themeId, const int32_t themeIcon);
+
+    void SetUserId(const int32_t userId);
 };
 } // AppExecFwk
 } // OHOS

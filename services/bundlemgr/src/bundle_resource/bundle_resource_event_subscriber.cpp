@@ -15,12 +15,16 @@
 
 #include "bundle_resource_event_subscriber.h"
 
+#include <fstream>
 #include <thread>
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_parser.h"
 #include "bundle_resource_callback.h"
+#include "bundle_resource_constants.h"
 #include "common_event_support.h"
+#include "json_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -47,8 +51,8 @@ void BundleResourceEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDa
         }
         int32_t userId = data.GetCode();
         // when boot, user 0 or -1 switch to user 100, no need to flush resource rdb
-        if ((oldUserId == Constants::DEFAULT_USERID) || (oldUserId == Constants::INVALID_USERID) ||
-            (oldUserId == Constants::U1)) {
+        if (((oldUserId == Constants::DEFAULT_USERID) || (oldUserId == Constants::INVALID_USERID) ||
+            (oldUserId == Constants::U1)) && !CheckUserSwitchWhenReboot(userId, oldUserId)) {
             APP_LOGI("switch userId %{public}d to %{public}d, no need to process", oldUserId, userId);
             return;
         }
@@ -63,6 +67,28 @@ void BundleResourceEventSubscriber::OnUserIdChanged(const int32_t oldUserId, con
 {
     BundleResourceCallback callback;
     callback.OnUserIdSwitched(oldUserId, newUserId);
+}
+
+bool BundleResourceEventSubscriber::CheckUserSwitchWhenReboot(const int32_t userId, int32_t &oldUserId)
+{
+    std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        std::string(BundleResourceConstants::USER_FILE_NAME);
+    nlohmann::json jsonBuf;
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+        return false;
+    }
+    const auto &jsonBufEnd = jsonBuf.end();
+    int32_t parseResult = ERR_OK;
+    int32_t lastUserId = 0;
+    GetValueIfFindKey<int32_t>(jsonBuf, jsonBufEnd, BundleResourceConstants::USER_ID, lastUserId,
+        JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    if ((parseResult == ERR_OK) && (lastUserId != userId)) {
+        // The user before reboot and the current user do not match, need add resources.
+        oldUserId = lastUserId;
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
