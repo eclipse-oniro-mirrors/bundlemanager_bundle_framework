@@ -1106,11 +1106,12 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
         LOG_D(BMS_TAG_INSTALLD, "GetDiskUsage path invalid");
         return 0;
     }
-    std::string filePath = dir;
-    if (!isRealPath && !PathToRealPath(dir, filePath)) {
+    char tmpPath[PATH_MAX] = {0};
+    if (!isRealPath && realpath(dir.c_str(), tmpPath) == nullptr) {
         LOG_D(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", dir.c_str());
         return 0;
     }
+    std::string filePath = tmpPath;
     uint64_t size = GetFolderSize(filePath);
     if (size > static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
         LOG_E(BMS_TAG_INSTALLD, "GetFolderSize overflow:%{public}s", filePath.c_str());
