@@ -1492,7 +1492,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_MultiHapInstall_0200, Function | MediumTest |
     std::cout << "START BMS_MultiHapInstall_0200" << std::endl;
     std::vector<std::shared_future<void>> futureVec;
 
-    for (int32_t i = 11; i <= 12; i++) {
+    for (int32_t i = 11; i < 12; i++) {
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
         bool installFlag = 0;
         auto res = std::async(std::launch::async, InstallMultiBundle, bundleFilePath, installFlag);

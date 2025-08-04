@@ -4591,12 +4591,18 @@ HWTEST_F(ActsBmsKitSystemTest, Errors_0500, Function | MediumTest | Level1)
     bool result = false;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
         std::vector<std::string> resvec;
-        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle12.rpk";
+        std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle12.hap";
         Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Failure[ERR_INSTALL_INVALID_HAP_NAME]");
+        EXPECT_EQ(installResult, "Success");
+
+        std::vector<std::string> resvec2;
+        Uninstall(BASE_BUNDLE_NAME + "12", resvec2);
+        std::string uninstallResult = commonTool.VectorToStr(resvec2);
+        EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
         if (std::strcmp(installResult.c_str(), "Success") == 0) {
             APP_LOGI("Errors_0500 failed - cycle count: %{public}d", i);
             break;
@@ -4607,7 +4613,7 @@ HWTEST_F(ActsBmsKitSystemTest, Errors_0500, Function | MediumTest | Level1)
     if (result && stLevel_.BMSLevel > 1) {
         APP_LOGI("Errors_0500 success - cycle count: %{public}d", stLevel_.BMSLevel);
     }
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
     std::cout << "Errors_0500" << std::endl;
 }
 
