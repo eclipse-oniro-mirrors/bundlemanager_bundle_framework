@@ -145,7 +145,7 @@ constexpr const char* ERR_MSG_INVALID_APPINDEX =
 constexpr const char* ERROR_MSG_LOCKED_APPLICATION_UNINSTALL =
     "Failed to uninstall the app because the app is locked.";
 constexpr const char* ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE =
-    "The app does not support the creation of an appClone instance.";
+    "The app or device does not support the creation of an appClone instance.";
 constexpr const char* ERR_MSG_SHORTCUT_ID_ILLEGAL =
     "The specified shortcut id is illegal.";
 constexpr const char* ERR_MSG_INSTALL_FAILED_INCONSISTENT_SIGNATURE =

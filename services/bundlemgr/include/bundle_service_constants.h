@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -184,6 +184,7 @@ constexpr const char* DEVELOPERMODE_STATE = "const.security.developermode.state"
 constexpr const char* BMS_DATA_PRELOAD = "persist.bms.data.preload";
 constexpr const char* IS_SUPPORT_PLUGIN = "const.bms.support_plugin";
 constexpr const char* IS_DRIVER_FOR_ALL_USERS = "const.bms.driverForAllUsers";
+constexpr const char* IS_APP_CLONE_DISABLE = "persist.edm.app_clone_disable";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config
