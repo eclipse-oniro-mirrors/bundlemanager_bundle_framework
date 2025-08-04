@@ -1,0 +1,91 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "EntryAbility",
+    "deviceTypes": [
+        "2in1",
+        "default",
+        "tablet",
+        "tv",
+        "wearable"
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.DISTRIBUTED_DATASYNC",
+        "reason": "$string:EntryAbility_label",
+        "usedScene": {
+          "abilities": [
+            "com.example.hiworld.himusic.entry.MainAbility",
+            "com.example.hiworld.himusic.entry.PlayService"
+          ],
+          "when": "inuse"
+        }
+      },
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "abilities": [
+      {
+        "name": "com.example.hiworld.himusic.entry.MainAbility",
+        "srcEntry": "./ets/entryability/EntryAbility.ets",
+        "description": "himusic main ability",
+        "icon": "$media:layered_image",
+        "label": "$string:EntryAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background",
+        "orientation": "unspecified",
+        "exported": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "action.system.home"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "com.example.hiworld.himusic.entry.PlayService",
+        "srcEntry": "./ets/entryability/EntryAbility.ets",
+        "description": "himusic play ability",
+        "icon": "$media:layered_image",
+        "label": "$string:EntryAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background",
+        "orientation": "unspecified",
+        "exported": true,
+        "skills": [
+          {
+            "entities": [
+              "entity.audio"
+            ],
+            "actions": [
+              "action.play.music",
+              "action.stop.music"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
