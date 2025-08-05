@@ -525,6 +525,20 @@ HWTEST_F(BmsBundleInstallerPermissionTest, GetFileStat_0100, Function | SmallTes
 }
 
 /**
+ * @tc.number: ChangeFileStat_0100
+ * @tc.name: test ChangeFileStat
+ * @tc.desc: test ChangeFileStat of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, ChangeFileStat_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::string file = "test.file";
+    FileStat fileStat;
+    ErrCode ret = installdHostImpl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: VerifyCodeSignature_0100
  * @tc.name: test VerifyCodeSignature
  * @tc.desc: 1.Test the VerifyCodeSignature of InstalldHostImpl without permission

@@ -1823,4 +1823,47 @@ HWTEST_F(BmsInstallDaemonTest, CreateExtensionDataDir_0100, Function | SmallTest
     ErrCode ret = hostImpl.CreateExtensionDataDir(createDirParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
 }
+
+/**
+ * @tc.number: ChangeFileStat_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test ChangeFileStat
+*/
+HWTEST_F(BmsInstallDaemonTest, ChangeFileStat_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string file = "/invalid/file/path";
+    FileStat fileStat;
+    ErrCode ret = hostImpl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    file = "/data/service/el1/public/bms/bundle_manager_service/app_install/100";
+    fileStat.mode = -1;
+    ret = hostImpl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    fileStat.mode = 02771;
+    fileStat.uid = -1;
+    ret = hostImpl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    fileStat.uid = 5523;
+    fileStat.gid = -1;
+    ret = hostImpl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    fileStat.gid = 2002;
+    ret = hostImpl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_OK);
+
+    fileStat.mode = 02777;
+    fileStat.uid = 0;
+    ret = hostImpl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_OK);
+
+    fileStat.mode = 02771;
+    fileStat.uid = 5523;
+    ret = hostImpl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

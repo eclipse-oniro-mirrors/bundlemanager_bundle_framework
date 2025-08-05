@@ -221,6 +221,11 @@ ErrCode InstalldClient::GetFileStat(const std::string &file, FileStat &fileStat)
     return 0;
 }
 
+ErrCode InstalldClient::ChangeFileStat(const std::string &file, FileStat &fileStat)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::ExtractDiffFiles(
     const std::string &filePath, const std::string &targetPath, const std::string &cpuAbi)
 {

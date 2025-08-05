@@ -1639,6 +1639,46 @@ ErrCode InstalldHostImpl::GetFileStat(const std::string &file, FileStat &fileSta
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ChangeFileStat(const std::string &file, FileStat &fileStat)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    LOG_I(BMS_TAG_INSTALLD, "path: %{public}s, mode: %{public}d, uid: %{public}d, gid: %{public}d",
+        file.c_str(), fileStat.mode, fileStat.uid, fileStat.gid);
+    std::string filePath = "";
+    if (!PathToRealPath(file, filePath)) {
+        LOG_E(BMS_TAG_INSTALLD, "not real path: %{public}s", file.c_str());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    struct stat s;
+    if (stat(filePath.c_str(), &s) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Stat filePath(%{public}s) failed errno %{public}d", filePath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (fileStat.mode < 0 || fileStat.mode > ServiceConstants::MODE_BASE || fileStat.uid < 0 || fileStat.gid < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "ChangeFileStat with invalid param mode:%{public}d, uid:%{public}d, gid:%{public}d",
+            fileStat.mode, fileStat.uid, fileStat.gid);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (fileStat.mode != s.st_mode) {
+        if (chmod(filePath.c_str(), fileStat.mode) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "ChangeFileStat chmod failed errno %{public}d", errno);
+            return ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED;
+        }
+    }
+    if (fileStat.uid != s.st_uid || fileStat.gid != s.st_gid) {
+        if (chown(filePath.c_str(), fileStat.uid, fileStat.gid) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "ChangeFileStat chown failed errno %{public}d", errno);
+            return ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED;
+        }
+    }
+
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
     const std::string &cpuAbi)
 {

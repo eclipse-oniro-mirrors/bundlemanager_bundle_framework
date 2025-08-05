@@ -187,6 +187,8 @@ private:
 
     bool HandleGetFileStat(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleChangeFileStat(MessageParcel &data, MessageParcel &reply);
+
     bool HandleExtractDiffFiles(MessageParcel &data, MessageParcel &reply);
 
     bool HandleApplyDiffPatch(MessageParcel &data, MessageParcel &reply);

@@ -121,6 +121,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_FILE_STAT):
             result = this->HandleGetFileStat(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CHANGE_FILE_STAT):
+            result = HandleChangeFileStat(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_DIFF_FILES):
             result = this->HandleExtractDiffFiles(data, reply);
             break;
@@ -696,6 +699,20 @@ bool InstalldHost::HandleGetFileStat(MessageParcel &data, MessageParcel &reply)
         return false;
     }
 
+    return true;
+}
+
+bool InstalldHost::HandleChangeFileStat(MessageParcel &data, MessageParcel &reply)
+{
+    std::string file = Str16ToStr8(data.ReadString16());
+    std::unique_ptr<FileStat> info(data.ReadParcelable<FileStat>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+
+    ErrCode result = ChangeFileStat(file, *info);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 

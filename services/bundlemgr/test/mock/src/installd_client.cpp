@@ -316,6 +316,16 @@ ErrCode InstalldClient::GetFileStat(const std::string &file, FileStat &fileStat)
     return CallService(&IInstalld::GetFileStat, file, fileStat);
 }
 
+ErrCode InstalldClient::ChangeFileStat(const std::string &file, FileStat &fileStat)
+{
+    if (file.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::ChangeFileStat, file, fileStat);
+}
+
 ErrCode InstalldClient::ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
     const std::string &cpuAbi)
 {

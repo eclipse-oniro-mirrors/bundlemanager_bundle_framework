@@ -7156,6 +7156,20 @@ HWTEST_F(BmsBundleInstallerTest, GetFileStat_0100, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: ChangeFileStat_0100
+ * @tc.name: test ChangeFileStat
+ * @tc.desc: test ChangeFileStat of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, ChangeFileStat_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string file;
+    FileStat fileStat;
+    ErrCode ret = hostImpl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
  * @tc.number: ExtractDiffFiles_0100
  * @tc.name: test ExtractDiffFiles
  * @tc.desc: test ExtractDiffFiles of InstalldHostImpl
