@@ -184,6 +184,8 @@ public:
 
     ErrCode GetFileStat(const std::string &file, FileStat &fileStat);
 
+    ErrCode ChangeFileStat(const std::string &file, FileStat &fileStat);
+
     ErrCode ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
         const std::string &cpuAbi);
 

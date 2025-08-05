@@ -333,6 +333,11 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode ChangeFileStat(const std::string &file, FileStat &fileStat)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
         const std::string &cpuAbi)
     {

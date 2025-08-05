@@ -182,6 +182,11 @@ ErrCode InstalldHostImpl::GetFileStat(const std::string &file, FileStat &fileSta
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ChangeFileStat(const std::string &file, FileStat &fileStat)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
     const std::string &cpuAbi)
 {

@@ -567,6 +567,21 @@ ErrCode InstalldProxy::GetFileStat(const std::string &file, FileStat &fileStat)
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::ChangeFileStat(const std::string &file, FileStat &fileStat)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(file));
+    if (!data.WriteParcelable(&fileStat)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable fileStat failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::CHANGE_FILE_STAT, data, reply, option);
+}
+
 ErrCode InstalldProxy::ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
     const std::string &cpuAbi)
 {

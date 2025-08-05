@@ -112,6 +112,7 @@ constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* PATCH_PATH = "patch_";
 constexpr const char* HOT_RELOAD_PATH = "hotreload_";
 // uid and gid
+constexpr int16_t MODE_BASE = 07777;
 constexpr int32_t BMS_UID = 1000;
 constexpr int32_t SHELL_UID = 2000;
 constexpr int32_t BACKU_HOME_GID = 1089;

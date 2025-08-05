@@ -411,6 +411,21 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1600, Function | SmallTest |
 }
 
 /**
+ * @tc.number: InstalldProxyTest_1650
+ * @tc.name: test Marshalling function of ChangeFileStat
+ * @tc.desc: 1. calling ChangeFileStat of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1650, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    FileStat fileStat;
+    auto ret = proxy->ChangeFileStat(TEST_STRING, fileStat);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: InstalldProxyTest_1700
  * @tc.name: test Marshalling function of FileStat
  * @tc.desc: 1. calling ExtractDiffFiles of proxy
