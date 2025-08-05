@@ -27,10 +27,14 @@ constexpr const char* BUNDLE_RESOURCE_RDB_STORAGE_PATH = "/data/storage/bundle_r
 constexpr const char* BUNDLE_RESOURCE_RDB_NAME = "/bundleResource.db";
 // resource table name
 constexpr const char* BUNDLE_RESOURCE_RDB_TABLE_NAME = "bundleResource";
+constexpr const char* BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME = "bundleIconResource";
 constexpr const char* SEPARATOR = "/";
+constexpr const char* UNDER_LINE = "_";
 constexpr const char* EXTENSION_ABILITY_SEPARATOR = "+";
 // bundle resource rdb table key
 constexpr const char* NAME = "NAME";
+constexpr const char* USER_ID = "USER_ID";
+constexpr const char* ICON_TYPE = "ICON_TYPE";
 constexpr const char* UPDATE_TIME = "UPDATE_TIME";
 constexpr const char* LABEL = "LABEL";
 constexpr const char* ICON = "ICON";
@@ -38,7 +42,7 @@ constexpr const char* SYSTEM_STATE = "SYSTEM_STATE";
 constexpr const char* FOREGROUND = "FOREGROUND";
 constexpr const char* BACKGROUND = "BACKGROUND";
 constexpr const char* USER_FILE_NAME = "/userFile.json";
-constexpr const char* USER_ID = "user";
+constexpr const char* USER = "user";
 constexpr const char* THEME = "theme";
 constexpr const char* LANGUAGE = "language";
 constexpr const char* THEME_ID = "themeId";

@@ -23,6 +23,11 @@
 #include "launcher_ability_resource_info.h"
 namespace OHOS {
 namespace AppExecFwk {
+enum class IconResourceType {
+    UNKNOWN = 0,
+    THEME_ICON = 1,
+    DYNAMIC_ICON = 2
+};
 class ResourceInfo {
 public:
     ResourceInfo();
@@ -49,8 +54,8 @@ public:
     int32_t extensionAbilityType_ = -1;
     // for dynamic icon
     bool hasDynamicIcon_ = false;
-    // for theme icon
-    bool hasThemeIcon_ = false;
+    // for icon type
+    IconResourceType iconType_ = IconResourceType::THEME_ICON;
     // key
     std::string bundleName_;
     std::string moduleName_;
