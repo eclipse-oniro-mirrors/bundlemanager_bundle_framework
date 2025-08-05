@@ -1,0 +1,19 @@
+{
+  "forms": [
+    {
+      "colorMode": "light",
+      "description": " JSA1 Form",
+      "supportDimensions": [
+        "2*2",
+        "2*4"
+      ],
+      "src": "./ets/pages/Index.ets",
+      "isDefault": true,
+      "name": "Form_JSA1",
+      "uiSyntax": "arkts",
+      "updateEnabled": true,
+      "updateDuration": 1,
+      "defaultDimension": "2*2"
+    }
+  ]
+}
