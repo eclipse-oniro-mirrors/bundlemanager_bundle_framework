@@ -567,6 +567,7 @@ private:
 
     void ProcessCheckAppExtensionAbility();
     void InnerProcessCheckAppExtensionAbility();
+    void UpdateExtensionType();
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
     bool IsSystemFingerprintChanged();
