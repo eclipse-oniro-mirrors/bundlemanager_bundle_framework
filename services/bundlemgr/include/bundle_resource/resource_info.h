@@ -54,8 +54,8 @@ public:
     int32_t extensionAbilityType_ = -1;
     // for dynamic icon
     bool hasDynamicIcon_ = false;
-    // for icon type
-    IconResourceType iconType_ = IconResourceType::THEME_ICON;
+    // for theme icon
+    bool hasThemeIcon_ = false;
     // key
     std::string bundleName_;
     std::string moduleName_;

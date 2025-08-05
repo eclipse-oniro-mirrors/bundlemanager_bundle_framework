@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_ICON_RDB_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_ICON_RDB_H
 
+#include <cstdint>
 #include <unordered_map>
 #include <shared_mutex>
 #include <vector>
@@ -71,6 +72,9 @@ private:
 
     void ParseKey(const std::string &key,
         LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
+    
+    bool ProcessThemeOrDynamicResource(const int32_t userId, std::vector<LauncherAbilityResourceInfo> &infos,
+        const LauncherAbilityResourceInfo &info);
 
     std::shared_ptr<RdbDataManager> rdbDataManager_;
     mutable ffrt::shared_mutex isOnlineThemeMutex_;
