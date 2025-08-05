@@ -255,6 +255,7 @@ bundle_resource = [
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_process.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_rdb.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_register.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_theme_process.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/resource_info.cpp",
 ]
 
