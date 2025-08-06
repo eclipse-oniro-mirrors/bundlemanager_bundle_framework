@@ -4323,6 +4323,7 @@ bool BMSEventHandler::IsPathExistInInstalledBundleInfo(
 void BMSEventHandler::CheckALLResourceInfo()
 {
     LOG_I(BMS_TAG_DEFAULT, "start");
+    BundleResourceHelper::ProcessBundleResourceChange();
     std::thread ProcessBundleResourceThread(ProcessBundleResourceInfo);
     ProcessBundleResourceThread.detach();
 }

@@ -70,6 +70,8 @@ public:
         
     static bool GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
+    
+    static void ProcessBundleResourceChange();
 };
 } // AppExecFwk
 } // OHOS

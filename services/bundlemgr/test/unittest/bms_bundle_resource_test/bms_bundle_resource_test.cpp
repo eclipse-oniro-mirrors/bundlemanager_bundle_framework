@@ -6330,4 +6330,43 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0254, Function | SmallTest
     ret = subscriberPtr->CheckUserSwitchWhenReboot(userId, oldUserId);
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0255
+ * @tc.name: DeleteConfigInFile and SetConfigInFile
+ * @tc.desc: 1. test DeleteConfigInFile and SetConfigInFile
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0255, Function | SmallTest | Level0)
+{
+    std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        std::string(BundleResourceConstants::USER_FILE_NAME);
+    OHOS::RemoveFile(path);
+
+    BundleResourceCallback callback;
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    callback.DeleteConfigInFile(userId, 0);
+    BundleResourceHelper::ProcessBundleResourceChange();
+
+    std::string language = BundleSystemState::GetInstance().GetSystemLanguage();
+    callback.SetConfigInFile(language, "", 0, 0, 1, userId);
+    BundleResourceHelper::ProcessBundleResourceChange();
+    callback.DeleteConfigInFile(userId + 1, 1);
+    callback.DeleteConfigInFile(userId, 1);
+
+    nlohmann::json jsonBuf;
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+    }
+    EXPECT_TRUE(jsonBuf.empty());
+
+    callback.SetConfigInFile("", "theme", 1, 1, 16, userId);
+    BundleResourceHelper::ProcessBundleResourceChange();
+    callback.DeleteConfigInFile(userId, 16);
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+    }
+    EXPECT_TRUE(jsonBuf.empty());
+    callback.SetConfigInFile("", "", 0, 0, 0, userId);
+    callback.DeleteConfigInFile(userId, 0);
+}
 } // OHOS
