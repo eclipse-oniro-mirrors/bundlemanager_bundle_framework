@@ -396,6 +396,12 @@ static void SetDisposedRules(ani_env* env, ani_object aniDisposedRuleConfigurati
         APP_LOGE("Parse disposedRuleConfigurations invalid");
         return;
     }
+    uint32_t arrayLength = disposedRuleConfigurations.size();
+    if (arrayLength == 0 || arrayLength > MAX_VECTOR_NUM) {
+        APP_LOGE("disposedRuleConfigurations length invalid!");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_LENGTH_ERROR);
+        return;
+    }
     auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("appControlProxy is null");

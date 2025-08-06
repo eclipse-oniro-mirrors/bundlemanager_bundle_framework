@@ -220,7 +220,7 @@ bool AniAppControlCommon::ParseDisposedRule(ani_env* env, ani_object object, Dis
 
     // controlType: ControlType
     RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_CONTROLTYPE, &enumItem));
-    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, disposedRule.disposedType));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, disposedRule.controlType));
 
     // elementList: Array<ElementName>
     RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_ELEMENTLIST, &array));
