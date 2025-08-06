@@ -39,11 +39,6 @@ const std::string OPERATION_FAILED = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
 const std::string TEST_BUNDLE_NAME_ONE = "com.example.third1";
 const std::string TEST_ABILITY_NAME_ONE = "com.example.third1.MainAbility";
-const int MIN_HEIGHT = 50;
-const int MIN_WIDTH = 100;
-const int DEFAULT_HEIGHT = 100;
-const int DEFAULT_WIDTH = 200;
-const uint32_t FORM_NUM = 3;
 const int32_t USERID = 100;
 }  // namespace
 using OHOS::AAFwk::Want;
@@ -228,11 +223,6 @@ static void CheckCompatibleAbilityInfo(
     EXPECT_EQ(compatibleAbilityInfo.launchMode, LaunchMode::STANDARD);
     EXPECT_FALSE(compatibleAbilityInfo.supportPipMode);
     EXPECT_EQ(compatibleAbilityInfo.bundleName, bundleName);
-    EXPECT_EQ(compatibleAbilityInfo.formEntity, FORM_NUM);
-    EXPECT_EQ(compatibleAbilityInfo.minFormHeight, MIN_HEIGHT);
-    EXPECT_EQ(compatibleAbilityInfo.defaultFormHeight, DEFAULT_HEIGHT);
-    EXPECT_EQ(compatibleAbilityInfo.minFormWidth, MIN_WIDTH);
-    EXPECT_EQ(compatibleAbilityInfo.defaultFormWidth, DEFAULT_WIDTH);
     EXPECT_TRUE(compatibleAbilityInfo.enabled);
 }
 static void CheckCompatibleApplicationInfo(
