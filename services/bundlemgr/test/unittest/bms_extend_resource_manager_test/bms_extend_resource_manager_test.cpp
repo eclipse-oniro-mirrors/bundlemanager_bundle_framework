@@ -76,10 +76,10 @@ public:
     void SetUp();
     void TearDown();
 
-    ErrCode InstallBundle(const std::string &bundlePath) const;
-    ErrCode UnInstallBundle(const std::string &bundleName) const;
-    void StartInstalldService() const;
-    void StartBundleService();
+    static ErrCode InstallBundle(const std::string &bundlePath);
+    static ErrCode UnInstallBundle(const std::string &bundleName);
+    static void StartInstalldService();
+    static void StartBundleService();
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 
 private:
@@ -96,9 +96,13 @@ BmsExtendResourceManagerTest::~BmsExtendResourceManagerTest()
 {}
 
 void BmsExtendResourceManagerTest::SetUpTestCase()
-{}
+{
+    StartBundleService();
+    StartInstalldService();
+    InstallBundle(BUNDLE_PATH);
+}
 
-ErrCode BmsExtendResourceManagerTest::InstallBundle(const std::string &bundlePath) const
+ErrCode BmsExtendResourceManagerTest::InstallBundle(const std::string &bundlePath)
 {
     if (!bundleMgrService_) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -121,7 +125,7 @@ ErrCode BmsExtendResourceManagerTest::InstallBundle(const std::string &bundlePat
     return receiver->GetResultCode();
 }
 
-ErrCode BmsExtendResourceManagerTest::UnInstallBundle(const std::string &bundleName) const
+ErrCode BmsExtendResourceManagerTest::UnInstallBundle(const std::string &bundleName)
 {
     if (!bundleMgrService_) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
@@ -150,7 +154,7 @@ const std::shared_ptr<BundleDataMgr> BmsExtendResourceManagerTest::GetBundleData
 }
 
 
-void BmsExtendResourceManagerTest::StartInstalldService() const
+void BmsExtendResourceManagerTest::StartInstalldService()
 {}
 
 void BmsExtendResourceManagerTest::StartBundleService()
@@ -164,19 +168,16 @@ void BmsExtendResourceManagerTest::StartBundleService()
 
 void BmsExtendResourceManagerTest::TearDownTestCase()
 {
+    UnInstallBundle(BUNDLE_NAME);
     bundleMgrService_->OnStop();
 }
 
 void BmsExtendResourceManagerTest::SetUp()
 {
-    StartBundleService();
-    StartInstalldService();
-    InstallBundle(BUNDLE_PATH);
 }
 
 void BmsExtendResourceManagerTest::TearDown()
 {
-    UnInstallBundle(BUNDLE_NAME);
 }
 
 /**
@@ -1822,6 +1823,7 @@ HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0002, 
     setuid(20020001);
     bool ret = impl.CheckWhetherDynamicIconNeedProcess(BUNDLE_NAME, Constants::UNSPECIFIED_USERID);
     EXPECT_TRUE(ret);
+    setuid(0);
 }
 
 /**

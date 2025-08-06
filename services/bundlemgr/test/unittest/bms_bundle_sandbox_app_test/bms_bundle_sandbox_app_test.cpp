@@ -119,6 +119,13 @@ BmsSandboxAppTest::~BmsSandboxAppTest()
 
 void BmsSandboxAppTest::SetUpTestCase()
 {
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
+    }
+    if (!bundleMgrService_->IsServiceReady()) {
+        bundleMgrService_->OnStart();
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    }
 }
 
 void BmsSandboxAppTest::TearDownTestCase()
@@ -128,13 +135,6 @@ void BmsSandboxAppTest::TearDownTestCase()
 
 void BmsSandboxAppTest::SetUp()
 {
-    if (!installdService_->IsServiceReady()) {
-        installdService_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
 }
 
 void BmsSandboxAppTest::TearDown()
@@ -2076,6 +2076,7 @@ HWTEST_F(BmsSandboxAppTest, GetBundleArchiveInfoBySandBoxPath_0100, Function | S
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
+    setuid(0);
 }
 
 /**
@@ -2117,6 +2118,7 @@ HWTEST_F(BmsSandboxAppTest, GetBundleArchiveInfoBySandBoxPath_0200, Function | S
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
+    setuid(0);
 }
 
 /**
@@ -2153,7 +2155,7 @@ HWTEST_F(BmsSandboxAppTest, GetBundleInfoForSelf_0100, Function | SmallTest | Le
     EXPECT_EQ(res, ERR_OK);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
-    bundleMgrService_->GetDataMgr()->bundleInfos_.clear();
+    setuid(0);
 }
 
 /**
@@ -2186,6 +2188,7 @@ HWTEST_F(BmsSandboxAppTest, VerifyDependency_0100, Function | SmallTest | Level1
     setuid(TEST_UID);
     bool res = bundleMgrHostImpl_->VerifyDependency(BUNDLE_NAME_TEST);
     EXPECT_EQ(res, false);
+    setuid(0);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
 }
@@ -2224,7 +2227,7 @@ HWTEST_F(BmsSandboxAppTest, VerifyDependency_0200, Function | SmallTest | Level1
     EXPECT_EQ(res, false);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
-    bundleMgrService_->GetDataMgr()->bundleInfos_.clear();
+    setuid(0);
 }
 
 /**
