@@ -77,8 +77,10 @@ bool BundleResourceProcess::GetAllResourceInfo(
             APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
             continue;
         }
-        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-            APP_LOGD("bundleName:%{public}s is shared", bundleName.c_str());
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
+            ((innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK)
+            && innerBundleInfo.IsHsp())) {
+            APP_LOGD("bundleName:%{public}s is shared or app service", bundleName.c_str());
             continue;
         }
         std::vector<ResourceInfo> resourceInfos;
@@ -111,6 +113,12 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
     InnerBundleInfo innerBundleInfo;
     if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+        return false;
+    }
+    if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
+        ((innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK)
+        && innerBundleInfo.IsHsp())) {
+        APP_LOGW("bundleName:%{public}s is shared or app service", bundleName.c_str());
         return false;
     }
 
