@@ -34,6 +34,7 @@ public:
 
     static void ClearCache();
     bool InsertData(const std::string &key, const std::string &value);
+    ErrCode InsertDataWithCode(const std::string &key, const std::string &value);
     bool InsertData(const NativeRdb::ValuesBucket &valuesBucket);
     bool UpdateData(const std::string &key, const std::string &value);
     bool DeleteData(const std::string &key);
@@ -62,8 +63,8 @@ public:
 
     void SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode);
 private:
-    std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
-    void GetRdbStoreFromNative();
+    std::shared_ptr<NativeRdb::RdbStore> GetRdbStore(ErrCode &result);
+    ErrCode GetRdbStoreFromNative();
     int32_t InsertWithRetry(std::shared_ptr<NativeRdb::RdbStore> rdbStore, int64_t &rowId,
         const NativeRdb::ValuesBucket &valuesBucket);
     bool IsRetryErrCode(int32_t errCode);

@@ -12433,4 +12433,39 @@ HWTEST_F(BmsBundleInstallerTest, CheckArkTSMode_0800, Function | MediumTest | Le
     auto result = installer.CheckArkTSMode(infos);
     EXPECT_EQ(result, ERR_OK);
 }
+
+/**
+ * @tc.number: AddInnerBundleUserInfo_0100
+ * @tc.name: test AddInnerBundleUserInfo
+ * @tc.desc: 1.AddInnerBundleUserInfo failed
+ *           2.AddInnerBundleUserInfo succeed
+ */
+HWTEST_F(BmsBundleInstallerTest, AddInnerBundleUserInfo_0100, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    bool result = InstallSystemBundle(bundleFile);
+    EXPECT_TRUE(result) << "the bundle file install failed: " << bundleFile;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = ADD_NEW_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    auto ret = dataMgr->AddInnerBundleUserInfo(BUNDLE_NAME, innerBundleUserInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // test multiuser force uninstall
+    InstallParam installParam;
+    installParam.userId = USERID;
+    setuid(Constants::EDC_UID);
+    installParam.parameters.emplace(Constants::VERIFY_UNINSTALL_FORCED_KEY,
+        Constants::VERIFY_UNINSTALL_FORCED_VALUE);
+    ErrCode res = MockForceUnInstallBundle(BUNDLE_NAME, installParam);
+    EXPECT_EQ(res, ERR_OK);
+
+    dataMgr->RemoveInnerBundleUserInfo(BUNDLE_NAME, ADD_NEW_USERID);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
+    ClearBundleInfo();
+}
 } // OHOS

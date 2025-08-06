@@ -137,6 +137,20 @@ bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBun
     return ret;
 }
 
+ErrCode BundleDataStorageRdb::SaveStorageBundleInfoWithCode(const InnerBundleInfo &innerBundleInfo)
+{
+    EventReport::ReportDataPartitionUsageEvent();
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    LOG_NOFUNC_I(BMS_TAG_COMMON, "rdb SaveStorageBundleInfo -n %{public}s", innerBundleInfo.GetBundleName().c_str());
+    return rdbDataManager_->InsertDataWithCode(
+        innerBundleInfo.GetBundleName(), innerBundleInfo.ToString());
+}
+
+
 bool BundleDataStorageRdb::DeleteStorageBundleInfo(const InnerBundleInfo &innerBundleInfo)
 {
     if (rdbDataManager_ == nullptr) {

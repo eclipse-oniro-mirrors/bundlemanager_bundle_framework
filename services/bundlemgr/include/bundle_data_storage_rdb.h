@@ -33,6 +33,7 @@ public:
     bool SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override;
     bool DeleteStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) override;
     virtual bool ResetKvStore() override;
+    ErrCode SaveStorageBundleInfoWithCode(const InnerBundleInfo &innerBundleInfo) override;
 
 private:
     void TransformStrToInfo(

@@ -264,7 +264,8 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1200, Function | SmallTest 
     ASSERT_NE(rdbDataManager, nullptr);
     auto store = std::make_shared<MockAppProvisionInfo>();
     rdbDataManager->rdbStore_ = store;
-    auto ret = rdbDataManager->GetRdbStore();
+    ErrCode result = ERR_OK;
+    auto ret = rdbDataManager->GetRdbStore(result);
     ASSERT_EQ(ret, store);
 }
 
@@ -279,7 +280,8 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1300, Function | SmallTest 
     ASSERT_NE(rdbDataManager, nullptr);
     rdbDataManager->rdbStore_ = nullptr;
     rdbDataManager->bmsRdbConfig_.dbName = "";
-    auto ret = rdbDataManager->GetRdbStore();
+    ErrCode result = ERR_OK;
+    auto ret = rdbDataManager->GetRdbStore(result);
     ASSERT_EQ(ret, nullptr);
 }
 
@@ -294,7 +296,8 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1400, Function | SmallTest 
     ASSERT_NE(rdbDataManager, nullptr);
     rdbDataManager->rdbStore_ = nullptr;
     rdbDataManager->bmsRdbConfig_.dbName = BMS_BACK_UP_RDB_NAME;
-    auto ret = rdbDataManager->GetRdbStore();
+    ErrCode result = ERR_OK;
+    auto ret = rdbDataManager->GetRdbStore(result);
     ASSERT_EQ(ret, nullptr);
 }
 
@@ -311,7 +314,8 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1500, Function | SmallTest 
     auto store = std::make_shared<MockAppProvisionInfo>();
     MockGetRdbStore(store);
     rdbDataManager->bmsRdbConfig_.dbName = BMS_BACK_UP_RDB_NAME;
-    auto ret = rdbDataManager->GetRdbStore();
+    ErrCode result = ERR_OK;
+    auto ret = rdbDataManager->GetRdbStore(result);
     ASSERT_NE(ret, nullptr);
 }
 
@@ -329,7 +333,8 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1600, Function | SmallTest 
     MockGetRdbStore(store);
     rdbDataManager->bmsRdbConfig_.dbName = BMS_BACK_UP_RDB_NAME;
     rdbDataManager->isInitial_ = false;
-    auto ret = rdbDataManager->GetRdbStore();
+    ErrCode result = ERR_OK;
+    auto ret = rdbDataManager->GetRdbStore(result);
     ASSERT_NE(ret, nullptr);
 }
 
@@ -347,6 +352,8 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_1700, Function | SmallTest 
     MockGetRdbStore(store);
     auto ret = rdbDataManager->InsertData(KEY_ONE, VALUE_ONE);
     EXPECT_FALSE(ret);
+    auto ret2 = rdbDataManager->InsertDataWithCode(KEY_ONE, VALUE_ONE);
+    EXPECT_NE(ret2, ERR_OK);
 }
 
 /**
