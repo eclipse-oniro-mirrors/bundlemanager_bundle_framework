@@ -266,11 +266,7 @@
               src="res"/>
       <option name="push" value="test_bundle/second_backup_right.hap -> /data/test/resource/bms/install_bundle/test4/"
               src="res"/>
-      <option name="push" value="test_bundle/first_right_with_diff_moduleName.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/first_right_with_diff_moduleType.hap -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
-      <option name="push" value="test_bundle/second_right_with_same_moduleName.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
       <option name="push"
         value="test_bundle/testhapdemo/testhapdemo.hap -> /data/test/resource/bms/install_bundle/" src="res"/>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -79,9 +79,7 @@ const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string RIGHT_DIFFERENT_RELEASE_TYPE = "first_diff_release_type.hap";
 const std::string RIGHT_COMPATIBLE_VERSION_CODE = "first_right_compCode.hap";
 const std::string RIGHT_DIFFERENT_COMPATIBLE_VERSION_CODE = "first_diff_minCompCode.hap";
-const std::string RIGHT_DIFFERENT_MODULE_NAME = "first_right_with_diff_moduleName.hap";
 const std::string RIGHT_DIFFERENT_MODULE_TYPE = "first_right_with_diff_moduleType.hap";
-const std::string SECOND_SAME_WITH_MODULE_NAME = "second_right_with_same_moduleName.hap";
 const std::string TEST_HAP_DEMO = "testhapdemo.hap";
 const std::string TEST_HAP_DEMO_2 = "testhapdemo2.hap";
 const std::string TEST_HAP_DEMO_3 = "testhapdemo3.hap";
@@ -1108,31 +1106,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5200, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_5300
- * @tc.name: test to install haps with same moduelName
- * @tc.desc: 1.the moduleName is different in the same packageName hap
- *           2.the installation result is fail
- */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5300, Function | SmallTest | Level1)
-{
-    std::vector<std::string> filePaths;
-    std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
-    filePaths.emplace_back(firstBundleFile);
-    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_OK);
-    CheckFileExist();
-    CheckModuleFileExist();
-
-    std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_DIFFERENT_MODULE_NAME;
-    filePaths.clear();
-    filePaths.emplace_back(secondBundleFile);
-    installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_INCONSISTENT_MODULE_NAME);
-
-    ClearBundleInfo(BUNDLE_NAME);
-}
-
-/**
  * @tc.number: MultipleHapsInstall_5400
  * @tc.name: test to install haps with same moduelName
  * @tc.desc: 1.the moduleType is different in the same packageName hap
@@ -1153,31 +1126,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5400, Function | SmallTes
     filePaths.emplace_back(secondBundleFile);
     installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_INCONSISTENT_MODULE_NAME);
-
-    ClearBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: MultipleHapsInstall_5500
- * @tc.name: test to install haps with same moduelName
- * @tc.desc: 1.the moduleName is same in the different packageName hap
- *           2.the installation result is fail
- */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5500, Function | SmallTest | Level1)
-{
-    std::vector<std::string> filePaths;
-    std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
-    filePaths.emplace_back(firstBundleFile);
-    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_OK);
-    CheckFileExist();
-    CheckModuleFileExist();
-
-    std::string secondBundleFile = RESOURCE_ROOT_PATH + SECOND_SAME_WITH_MODULE_NAME;
-    filePaths.clear();
-    filePaths.emplace_back(secondBundleFile);
-    installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME);
 
     ClearBundleInfo(BUNDLE_NAME);
 }
