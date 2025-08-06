@@ -1143,22 +1143,23 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2500, Function | MediumTest | Level1)
     bool getInfoResult =
         bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo, USERID);
     EXPECT_TRUE(getInfoResult);
+    bool hasA1 = false;
+    bool hasA2 = false;
+    bool hasA3 = false;
+
     for (const auto &abilityInfo : bundleInfo.abilityInfos) {
-        switch (abilityInfo.type) {
-            case (AbilityType::DATA):
-                EXPECT_EQ(abilityInfo.name, "bmsThirdBundle_A1");
-                break;
-            case (AbilityType::SERVICE):
-                EXPECT_EQ(abilityInfo.name, "bmsThirdBundle_A2");
-                break;
-            case (AbilityType::PAGE):
-                EXPECT_EQ(abilityInfo.name, "bmsThirdBundle_A3");
-                break;
-            default:
-                std::cout << "no this ability" << std::endl;
-                break;
+        if (abilityInfo.name == "bmsThirdBundle_A1") {
+            hasA1 = true;
+        } else if (abilityInfo.name == "bmsThirdBundle_A2") {
+            hasA2 = true;
+        } else if (abilityInfo.name == "bmsThirdBundle_A3") {
+            hasA3 = true;
         }
     }
+
+    EXPECT_TRUE(hasA1) << "Should have bmsThirdBundle_A1";
+    EXPECT_TRUE(hasA2) << "Should have bmsThirdBundle_A2";
+    EXPECT_TRUE(hasA3) << "Should have bmsThirdBundle_A3";
 
     std::string uninstallMsg;
     UninstallBundle(bundleName, uninstallMsg);
