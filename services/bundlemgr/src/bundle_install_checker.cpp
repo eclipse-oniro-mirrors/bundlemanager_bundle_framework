@@ -840,12 +840,18 @@ void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInf
 ErrCode BundleInstallChecker::ParseBundleInfo(
     const std::string &bundleFilePath,
     InnerBundleInfo &info,
-    BundlePackInfo &packInfo) const
+    BundlePackInfo &packInfo)
 {
     BundleParser bundleParser;
     ErrCode result = bundleParser.Parse(bundleFilePath, info);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "parse bundle info failed, error: %{public}d", result);
+        if (result == ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED) {
+            std::string resultMsg = "In the module named " + info.GetCurrentModulePackage() +
+                ", the Abi type supported by the device does not match the Abi type configured in the C++ project.";
+            LOG_E(BMS_TAG_INSTALLER, "%{public}s", resultMsg.c_str());
+            SetCheckResultMsg(resultMsg);
+        }
         return result;
     }
 
