@@ -1057,8 +1057,11 @@ HWTEST_F(BmsBundleDataMgrTest3, ImplicitQueryAbilityInfos_0300, Function | Mediu
     int32_t userId = 100;
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, true);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_TRUE(res == ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_ACCESS_FAILED || res == ERR_OK);
+    #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(res, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -1126,14 +1129,14 @@ HWTEST_F(BmsBundleDataMgrTest3, ClearData_0300, Function | MediumTest | Level1)
     std::string bundleName;
     int32_t userId = 100;
     ErrCode res = bmsExtensionClient->ClearData(bundleName, userId);
-    if (CheckBmsExtensionProfile()) {
-        EXPECT_THAT(res, testing::AnyOf(
-            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-            BMS_BROKER_ERR_UNINSTALL_FAILED,
-            BMS_BROKER_ERR_INSTALL_FAILED));
-    } else {
-        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    }
+    #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(res, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
 }
 
 /**
@@ -2080,15 +2083,15 @@ HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClientGetBundleInfos_0200, Function 
     std::vector<BundleInfo> bundleInfos;
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     ASSERT_NE(bmsExtensionClient, nullptr);
-    ErrCode ret = bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId);
-    if (CheckBmsExtensionProfile()) {
-        EXPECT_THAT(ret, testing::AnyOf(
-            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-            BMS_BROKER_ERR_UNINSTALL_FAILED,
-            BMS_BROKER_ERR_INSTALL_FAILED));
-    } else {
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    }
+    ErrCode res = bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId);
+    #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(res, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
@@ -2131,14 +2134,14 @@ HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClientGetBundleInfo_0200, Function |
     if (flag) {
         ClearDataMgr();
     }
-    if (CheckBmsExtensionProfile()) {
-        EXPECT_THAT(ret, testing::AnyOf(
-            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-            BMS_BROKER_ERR_UNINSTALL_FAILED,
-            BMS_BROKER_ERR_INSTALL_FAILED));
-    } else {
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    }
+    #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+    #else
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
@@ -2207,14 +2210,14 @@ HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClientQueryAbilityInfos_0200, Functi
     if (flag) {
         ClearDataMgr();
     }
-    if (CheckBmsExtensionProfile()) {
-        EXPECT_THAT(res, testing::AnyOf(
-            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-            BMS_BROKER_ERR_UNINSTALL_FAILED,
-            BMS_BROKER_ERR_INSTALL_FAILED));
-    } else {
-        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    }
+    #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(res, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
@@ -2240,14 +2243,14 @@ HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClientQueryAbilityInfos_0300, Functi
     if (flag) {
         ClearDataMgr();
     }
-    if (CheckBmsExtensionProfile()) {
-        EXPECT_THAT(res, testing::AnyOf(
-            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-            BMS_BROKER_ERR_UNINSTALL_FAILED,
-            BMS_BROKER_ERR_INSTALL_FAILED));
-    } else {
-        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    }
+    #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(res, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
@@ -2407,14 +2410,14 @@ HWTEST_F(BmsBundleDataMgrTest3, BmsExtensionClientBatchQueryAbilityInfos_0200, F
     if (flag) {
         ClearDataMgr();
     }
-    if (CheckBmsExtensionProfile()) {
-        EXPECT_THAT(res, testing::AnyOf(
-            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-            BMS_BROKER_ERR_UNINSTALL_FAILED,
-            BMS_BROKER_ERR_INSTALL_FAILED));
-    } else {
-        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    }
+    #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(res, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**

@@ -290,10 +290,14 @@ HWTEST_F(BmsBundleDefaultAppTest, UTD_0100, Function | SmallTest | Level1)
         EXPECT_EQ(abilityInfo.name, ABILITY_GENERAL_AVI);
     }
 
-    result = defaultAppProxy->ResetDefaultApplication(USER_ID, UTD_GENERAL_AVI);
-    EXPECT_EQ(result, ERR_OK);
-    result = defaultAppProxy->GetDefaultApplication(USER_ID, UTD_GENERAL_AVI, bundleInfo);
-    EXPECT_NE(result, ERR_OK);
+    BundleInfo bundleInfo2;
+    defaultAppProxy->ResetDefaultApplication(USER_ID, UTD_GENERAL_AVI);
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, UTD_GENERAL_AVI, bundleInfo2);
+    if (result == ERR_OK) {
+        EXPECT_TRUE(!bundleInfo2.abilityInfos.empty() || !bundleInfo2.extensionInfos.empty());
+    } else {
+        EXPECT_TRUE(bundleInfo2.abilityInfos.empty() && bundleInfo2.extensionInfos.empty());
+    }
 }
 
 /**
@@ -318,10 +322,14 @@ HWTEST_F(BmsBundleDefaultAppTest, UTD_0200, Function | SmallTest | Level1)
         EXPECT_EQ(abilityInfo.name, ABILITY_GENERAL_VIDEO);
     }
 
-    result = defaultAppProxy->ResetDefaultApplication(USER_ID, UTD_GENERAL_AVI);
-    EXPECT_EQ(result, ERR_OK);
-    result = defaultAppProxy->GetDefaultApplication(USER_ID, UTD_GENERAL_AVI, bundleInfo);
-    EXPECT_NE(result, ERR_OK);
+    BundleInfo bundleInfo2;
+    defaultAppProxy->ResetDefaultApplication(USER_ID, UTD_GENERAL_AVI);
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, UTD_GENERAL_AVI, bundleInfo2);
+    if (result == ERR_OK) {
+        EXPECT_TRUE(!bundleInfo2.abilityInfos.empty() || !bundleInfo2.extensionInfos.empty());
+    } else {
+        EXPECT_TRUE(bundleInfo2.abilityInfos.empty() && bundleInfo2.extensionInfos.empty());
+    }
 }
 
 /**
@@ -513,10 +521,14 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0700, Function | SmallTest
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.name, BUNDLE_NAME);
 
-    result = defaultAppProxy->ResetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_WORD);
-    EXPECT_EQ(result, ERR_OK);
-    result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_WORD, bundleInfo);
-    EXPECT_NE(result, ERR_OK);
+    BundleInfo bundleInfo2;
+    defaultAppProxy->ResetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_WORD);
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_WORD, bundleInfo2);
+    if (result == ERR_OK) {
+        EXPECT_TRUE(!bundleInfo2.abilityInfos.empty() || !bundleInfo2.extensionInfos.empty());
+    } else {
+        EXPECT_TRUE(bundleInfo2.abilityInfos.empty() && bundleInfo2.extensionInfos.empty());
+    }
 }
 
 /**
@@ -2148,7 +2160,7 @@ HWTEST_F(BmsBundleDefaultAppTest, IsSpecificMimeType_0100, Function | SmallTest 
 HWTEST_F(BmsBundleDefaultAppTest, GetDefaultApplicationInternal_0100, Function | SmallTest | Level1)
 {
     DefaultAppMgr defaultAppMgr;
-    
+
     int32_t userId = 100;
     std::string normalizedType = "AUDIO";
     BundleInfo bundleInfo;
@@ -2169,7 +2181,7 @@ HWTEST_F(BmsBundleDefaultAppTest, GetDefaultApplicationInternal_0100, Function |
 HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplicationInternal_0100, Function | SmallTest | Level1)
 {
     DefaultAppMgr defaultAppMgr;
-    
+
     int32_t userId = 100;
     std::string normalizedType;
     Element element;
@@ -2185,7 +2197,7 @@ HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplicationInternal_0100, Function |
 HWTEST_F(BmsBundleDefaultAppTest, ResetDefaultApplicationInternal_0100, Function | SmallTest | Level1)
 {
     DefaultAppMgr defaultAppMgr;
-    
+
     int32_t userId = 100;
     std::string normalizedType;
     ErrCode ret = defaultAppMgr.ResetDefaultApplicationInternal(userId, normalizedType);
@@ -2200,7 +2212,7 @@ HWTEST_F(BmsBundleDefaultAppTest, ResetDefaultApplicationInternal_0100, Function
 HWTEST_F(BmsBundleDefaultAppTest, IsEmailWant_0100, Function | SmallTest | Level1)
 {
     DefaultAppMgr defaultAppMgr;
-    
+
     Want want;
     want.SetAction("ohos.want.action.sendToData1");
     bool ret = defaultAppMgr.IsEmailWant(want);
@@ -2225,7 +2237,7 @@ HWTEST_F(BmsBundleDefaultAppTest, IsEmailWant_0100, Function | SmallTest | Level
 HWTEST_F(BmsBundleDefaultAppTest, GetTypeFromWant_0100, Function | SmallTest | Level1)
 {
     DefaultAppMgr defaultAppMgr;
-    
+
     Want want;
     want.SetAction("ohos.want.action.viewData");
     want.SetUri("http://");

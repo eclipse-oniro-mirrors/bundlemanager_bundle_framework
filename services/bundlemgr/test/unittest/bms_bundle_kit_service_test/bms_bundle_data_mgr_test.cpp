@@ -1896,14 +1896,14 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0700, Function | MediumTest | L
     int32_t userId = -3;
     std::vector<AbilityInfo> abilityInfos;
     auto ret = bmsExtensionClient->QueryAbilityInfos(want, 0, userId, abilityInfos, false);
-    if (CheckBmsExtensionProfile()) {
-        EXPECT_THAT(ret, testing::AnyOf(
-            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-            BMS_BROKER_ERR_UNINSTALL_FAILED,
-            BMS_BROKER_ERR_INSTALL_FAILED));
-    } else {
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    }
+    #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(ret, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+    #else
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
@@ -2082,14 +2082,14 @@ HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0040, Function | MediumTes
     std::vector<AbilityInfo> abilityInfos;
     std::vector<Want> wants{ want };
     ErrCode res = bmsExtensionClient->BatchQueryAbilityInfos(wants, 0, userId, abilityInfos, false);
-    if (CheckBmsExtensionProfile()) {
-        EXPECT_THAT(res, testing::AnyOf(
-            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-            BMS_BROKER_ERR_UNINSTALL_FAILED,
-            BMS_BROKER_ERR_INSTALL_FAILED));
-    } else {
-        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    }
+    #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(res, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
@@ -2441,16 +2441,15 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0030, Function | Medium
     std::vector<AbilityInfo> abilityInfos;
     bool isNewVersion = true;
     ErrCode res = bmsExtensionClient->ImplicitQueryAbilityInfos(want, 0, userId, abilityInfos, isNewVersion);
-    if (CheckBmsExtensionProfile()) {
-        EXPECT_THAT(res, testing::AnyOf(
-            ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-            BMS_BROKER_ERR_UNINSTALL_FAILED,
-            BMS_BROKER_ERR_INSTALL_FAILED));
-    } else {
-        EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    }
+    #if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(res, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
-
 
 /**
  * @tc.number: ImplicitQueryAbilityInfos_0040
@@ -4362,7 +4361,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetCallingInfo_0100, Function | SmallTest | Level
     innerBundleUserInfo.bundleName = bundleName;
     innerBundleUserInfo.bundleUserInfo.userId = 100;
     info.AddInnerBundleUserInfo(innerBundleUserInfo);
-    
+
     dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
     dataMgr->AddInnerBundleInfo(bundleName, info);
 
@@ -4402,7 +4401,7 @@ HWTEST_F(BmsBundleDataMgrTest, SendQueryBundleInfoEvent_0100, Function | SmallTe
     test.errCode = ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     bool ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, 0, true);
     EXPECT_EQ(ret, false);
- 
+
     // test reportNow is true
     test.errCode = ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, 0, true);
@@ -4417,7 +4416,7 @@ HWTEST_F(BmsBundleDataMgrTest, SendQueryBundleInfoEvent_0100, Function | SmallTe
     test.bundleName = "test.SendQueryBundleInfoEvent_0100_new";
     ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, 0, false);
     EXPECT_EQ(ret, true);
-    
+
     // test infoSize < MAX_QUERY_EVENT_REPORT_ONCE, but has wait for more than intervalTime
     ClearGlobalQueryEventInfo();
     ret = bundleMgrHostImpl_->SendQueryBundleInfoEvent(test, 0, false);
@@ -4579,13 +4578,13 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleNameForUid_0100, Function | SmallTest | 
     innerBundleUserInfo.bundleName = bundleName;
     innerBundleUserInfo.bundleUserInfo.userId = 100;
     info.AddInnerBundleUserInfo(innerBundleUserInfo);
-    
+
     dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
     dataMgr->AddInnerBundleInfo(bundleName, info);
 
     int32_t testBundleId = TEST_QUERY_EVENT_BUNDLE_ID2;
     dataMgr->bundleIdMap_.insert(std::pair<int32_t, std::string>(testBundleId, bundleName));
-    
+
     testRet = bundleMgrHostImpl_->GetBundleNameForUid(TEST_QUERY_EVENT_UID2, testResult);
     EXPECT_TRUE(testRet);
 }

@@ -411,14 +411,14 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0011, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
     std::vector<int64_t> bundleStats;
     ErrCode res = bmsExtensionDataMgr.GetBundleStats("", USERID, bundleStats);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 }
 
 /**
@@ -430,14 +430,14 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0012, Function | SmallTest
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.ClearData("", USERID);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 }
 
 /**
@@ -449,14 +449,14 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0013, Function | SmallTest
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.ClearCache("", nullptr, USERID);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 }
 
 /**
@@ -483,14 +483,14 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0015, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
     std::string bundleName = "";
     ErrCode res = bmsExtensionDataMgr.GetBundleNameByUid(TEST_UID, bundleName);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 }
 
 /**
@@ -1423,18 +1423,8 @@ HWTEST_F(BmsExtensionDataMgrTest, QueryAbilityInfos_001, Function | SmallTest | 
     int16_t handleTest = 1;
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     ErrCode res = bmsExtensionDataMgrTest.QueryAbilityInfos(want, userId, abilityInfos);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_THAT(res, testing::AnyOf(
-        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
-    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
-    #endif
-
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    res = bmsExtensionDataMgrTest.QueryAbilityInfos(want, userId, abilityInfos);
-    #ifdef USE_EXTENSION_DATA
+#ifdef USE_EXTENSION_DATA
+    #ifdef CONTAIN_BROKER_CLIENT_ENABLED
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
@@ -1442,6 +1432,20 @@ HWTEST_F(BmsExtensionDataMgrTest, QueryAbilityInfos_001, Function | SmallTest | 
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
+#else
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+#endif
+
+    bmsExtensionDataMgrTest.handler_ = nullptr;
+    res = bmsExtensionDataMgrTest.QueryAbilityInfos(want, userId, abilityInfos);
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(res, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+#else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+#endif
 }
 
 /**
@@ -1461,19 +1465,8 @@ HWTEST_F(BmsExtensionDataMgrTest, QueryAbilityInfosWithFlag_001, Function | Smal
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     ErrCode res = bmsExtensionDataMgrTest.QueryAbilityInfosWithFlag(want, flags, userId,
         abilityInfos, isNewVersion);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_THAT(res, testing::AnyOf(
-        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
-    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
-    #endif
-
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    res = bmsExtensionDataMgrTest.QueryAbilityInfosWithFlag(want, flags, userId,
-        abilityInfos, isNewVersion);
-    #ifdef USE_EXTENSION_DATA
+#ifdef USE_EXTENSION_DATA
+    #ifdef CONTAIN_BROKER_CLIENT_ENABLED
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
@@ -1481,6 +1474,21 @@ HWTEST_F(BmsExtensionDataMgrTest, QueryAbilityInfosWithFlag_001, Function | Smal
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
+#else
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+#endif
+
+    bmsExtensionDataMgrTest.handler_ = nullptr;
+    res = bmsExtensionDataMgrTest.QueryAbilityInfosWithFlag(want, flags, userId,
+        abilityInfos, isNewVersion);
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(res, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+#else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+#endif
 }
 
 /**
@@ -1498,18 +1506,8 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleInfos_001, Function | SmallTest | Lev
     int16_t handleTest = 1;
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     ErrCode res = bmsExtensionDataMgrTest.GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_THAT(res, testing::AnyOf(
-        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
-    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
-    #endif
-
-    bmsExtensionDataMgrTest.handler_ = nullptr;
-    res = bmsExtensionDataMgrTest.GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
-    #ifdef USE_EXTENSION_DATA
+#ifdef USE_EXTENSION_DATA
+    #ifdef CONTAIN_BROKER_CLIENT_ENABLED
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
@@ -1517,6 +1515,20 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleInfos_001, Function | SmallTest | Lev
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
+#else
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+#endif
+
+    bmsExtensionDataMgrTest.handler_ = nullptr;
+    res = bmsExtensionDataMgrTest.GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
+    EXPECT_THAT(res, testing::AnyOf(
+        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
+        BMS_BROKER_ERR_UNINSTALL_FAILED,
+        BMS_BROKER_ERR_INSTALL_FAILED));
+#else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+#endif
 }
 
 /**
@@ -1530,14 +1542,14 @@ HWTEST_F(BmsExtensionDataMgrTest, Uninstall_001, Function | SmallTest | Level0)
     bmsExtensionDataMgrTest.handler_ = nullptr;
     std::string bundleName = "testname";
     ErrCode res = bmsExtensionDataMgrTest.Uninstall(bundleName);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
-    #endif
+#endif
 }
 
 /**
@@ -1553,26 +1565,26 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleStats_001, Function | SmallTest | Lev
     int32_t userId = 0;
     std::vector<int64_t> bundleStats;
     ErrCode res = bmsExtensionDataMgrTest.GetBundleStats(bundleName, userId, bundleStats);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 
     int16_t handleTest = 1;
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.GetBundleStats(bundleName, userId, bundleStats);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 }
 
 /**
@@ -1587,26 +1599,26 @@ HWTEST_F(BmsExtensionDataMgrTest, ClearData_001, Function | SmallTest | Level0)
     std::string bundleName = "testname";
     int32_t userId = 0;
     ErrCode res = bmsExtensionDataMgrTest.ClearData(bundleName, userId);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 
     int16_t handleTest = 1;
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.ClearData(bundleName, userId);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 }
 
 /**
@@ -1622,26 +1634,26 @@ HWTEST_F(BmsExtensionDataMgrTest, ClearCache_001, Function | SmallTest | Level0)
     int32_t userId = 0;
     sptr<IRemoteObject> callback;
     ErrCode res = bmsExtensionDataMgrTest.ClearCache(bundleName, callback, userId);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 
     int16_t handleTest = 1;
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.ClearCache(bundleName, callback, userId);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 }
 
 /**
@@ -1677,26 +1689,26 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleNameByUid_001, Function | SmallTest |
     std::string bundleName = "testname";
     int32_t uid = 0;
     ErrCode res = bmsExtensionDataMgrTest.GetBundleNameByUid(uid, bundleName);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 
     int16_t handleTest = 1;
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.GetBundleNameByUid(uid, bundleName);
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(res, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED));
-    #else
+#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 }
 
 /**
@@ -2141,15 +2153,15 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleNamesForUidExt_0100, Function | Small
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode ret = bmsExtensionDataMgr.GetBundleNamesForUidExt(uid, bundleNames);
 
-    #ifdef USE_EXTENSION_DATA
+#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(ret, testing::AnyOf(
         ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
         BMS_BROKER_ERR_UNINSTALL_FAILED,
         BMS_BROKER_ERR_INSTALL_FAILED,
         REMOTE_RESULT));
-    #else
+#else
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
 }
 
 /**
