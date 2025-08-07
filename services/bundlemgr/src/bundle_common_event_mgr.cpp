@@ -115,7 +115,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
             static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
     int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
     int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID || bundleUserId == Constants::U1) ?
-        AccountHelper::GetCurrentActiveUserId() : bundleUserId;
+        AccountHelper::GetUserIdByCallerType() : bundleUserId;
 
     // trigger the status callback for status listening
     if ((dataMgr != nullptr) && (installResult.type != NotifyType::START_INSTALL)) {

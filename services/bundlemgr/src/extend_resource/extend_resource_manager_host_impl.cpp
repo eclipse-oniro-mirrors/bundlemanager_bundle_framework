@@ -673,7 +673,7 @@ ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
     std::string curDynamicModule = info.GetCurDynamicIconModule(userId, appIndex);
     if (curDynamicModule.empty() && (userId == Constants::UNSPECIFIED_USERID)) {
         int32_t realUserId = BundleUtil::GetUserIdByCallingUid();
-        realUserId = (realUserId == Constants::DEFAULT_USERID) ? AccountHelper::GetCurrentActiveUserId() : realUserId;
+        realUserId = (realUserId == Constants::DEFAULT_USERID) ? AccountHelper::GetUserIdByCallerType() : realUserId;
         curDynamicModule = info.GetCurDynamicIconModule(realUserId, appIndex);
     }
     if (curDynamicModule.empty()) {
@@ -826,7 +826,7 @@ bool ExtendResourceManagerHostImpl::IsNeedUpdateBundleResourceInfo(
     if (userId == Constants::DEFAULT_USERID) {
         return true;
     }
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    int32_t currentUserId = AccountHelper::GetUserIdByCallerType();
     if ((currentUserId <= 0)) {
         currentUserId = Constants::START_USERID;
     }
@@ -872,7 +872,7 @@ bool ExtendResourceManagerHostImpl::CheckWhetherDynamicIconNeedProcess(
     int32_t currentUserId = userId;
     if (currentUserId == Constants::UNSPECIFIED_USERID) {
         if (BundlePermissionMgr::IsNativeTokenType()) {
-            currentUserId = AccountHelper::GetCurrentActiveUserId();
+            currentUserId = AccountHelper::GetUserIdByCallerType();
         } else {
             currentUserId = BundleUtil::GetUserIdByCallingUid();
         }

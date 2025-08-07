@@ -4798,7 +4798,7 @@ int32_t BaseBundleInstaller::GetConfirmUserId(
         return userId;
     }
     int32_t currUserId = sysEventInfo_.callingUid / Constants::BASE_USER_RANGE;
-    currUserId = currUserId < Constants::START_USERID ? AccountHelper::GetCurrentActiveUserId() : currUserId;
+    currUserId = currUserId < Constants::START_USERID ? AccountHelper::GetUserIdByCallerType() : currUserId;
     return currUserId;
 }
 
