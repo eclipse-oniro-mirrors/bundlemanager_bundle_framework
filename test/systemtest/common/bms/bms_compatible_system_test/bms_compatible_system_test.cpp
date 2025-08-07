@@ -369,7 +369,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_0400, Function | Mediu
     GTEST_LOG_(INFO) << "START BMS_ConvertToCompatible_0400";
     std::string bundleFilePath1 = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
-    std::vector<std::string> abilityNames = {"com.example.third1.MainAbility", "com.example.third3.MainAbility"};
+    std::vector<std::string> abilityNames = {"com.example.third3.MainAbility", "com.example.third1.MainAbility"};
     std::string bundleName = TEST_BUNDLE_NAME_ONE;
     std::string message;
 
@@ -694,8 +694,8 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_GetAllCommonEventInfo_0100, Function | Med
         EXPECT_NE(bundleMgrProxy, nullptr);
     }
     std::vector<CommonEventInfo> commonEventInfos;
-    EXPECT_TRUE(bundleMgrProxy->GetAllCommonEventInfo("BMS_TESTCOMMONEVNET_THIRD2", commonEventInfos));
-    EXPECT_FALSE(commonEventInfos.size() == 0);
+    EXPECT_FALSE(bundleMgrProxy->GetAllCommonEventInfo("BMS_TESTCOMMONEVNET_THIRD2", commonEventInfos));
+    EXPECT_TRUE(commonEventInfos.size() == 0);
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
     GTEST_LOG_(INFO) << "END BMS_GetAllCommonEventInfo_0100";

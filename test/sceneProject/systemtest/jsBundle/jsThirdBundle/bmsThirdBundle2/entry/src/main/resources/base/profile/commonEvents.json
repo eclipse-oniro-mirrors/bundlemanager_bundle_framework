@@ -1,0 +1,14 @@
+{
+  "commonEvents":[
+    {
+      "name":".MainAbility",
+      "types":[
+        "type_third2A",
+        "type_third2B"
+      ],
+      "events":[
+        "BMS_TESTCOMMONEVNET_THIRD2"
+      ]
+    }
+  ]
+}
