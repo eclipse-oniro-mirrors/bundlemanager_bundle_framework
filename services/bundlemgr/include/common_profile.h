@@ -407,6 +407,7 @@ constexpr const char* MODULE_APP_STARTUP = "appStartup";
 constexpr const char* MODULE_FORM_EXTENSION_MODULE = "formExtensionModule";
 constexpr const char* MODULE_FORM_WIDGET_MODULE = "formWidgetModule";
 constexpr const char* MODULE_HAS_INTENT = "hasInsightIntent";
+constexpr const char* MODULE_DEDUPLICATE_HAR = "deduplicateHar";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";

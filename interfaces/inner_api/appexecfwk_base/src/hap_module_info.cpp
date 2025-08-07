@@ -105,6 +105,7 @@ const char* HAP_MODULE_INFO_APP_STARTUP = "appStartup";
 const char* HAP_MODULE_INFO_FORM_EXTENSION_MODULE = "formExtensionModule";
 const char* HAP_MODULE_INFO_FORM_WIDGET_MODULE = "formWidgetModule";
 const char* HAP_MODULE_INFO_HAS_INTENT = "hasIntent";
+const char* HAP_MODULE_INFO_DEDUPLICATE_HAR = "deduplicateHar";
 const uint32_t MODULE_CAPACITY = 204800; // 200K
 }
 
@@ -680,6 +681,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     abilitySrcEntryDelegator = Str16ToStr8(parcel.ReadString16());
     abilityStageSrcEntryDelegator = Str16ToStr8(parcel.ReadString16());
     hasIntent = parcel.ReadBool();
+    deduplicateHar = parcel.ReadBool();
     return true;
 }
 
@@ -824,6 +826,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilitySrcEntryDelegator));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilityStageSrcEntryDelegator));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hasIntent);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, deduplicateHar);
     return true;
 }
 
@@ -896,6 +899,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_FORM_EXTENSION_MODULE, hapModuleInfo.formExtensionModule},
         {HAP_MODULE_INFO_FORM_WIDGET_MODULE, hapModuleInfo.formWidgetModule},
         {HAP_MODULE_INFO_HAS_INTENT, hapModuleInfo.hasIntent},
+        {HAP_MODULE_INFO_DEDUPLICATE_HAR, hapModuleInfo.deduplicateHar},
         {Constants::MODULE_ARKTS_MODE, hapModuleInfo.moduleArkTSMode},
         {Constants::ARKTS_MODE, hapModuleInfo.arkTSMode}
     };
@@ -1361,6 +1365,12 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         Constants::ARKTS_MODE,
         hapModuleInfo.arkTSMode,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_DEDUPLICATE_HAR,
+        hapModuleInfo.deduplicateHar,
         false,
         parseResult);
     if (parseResult != ERR_OK) {
