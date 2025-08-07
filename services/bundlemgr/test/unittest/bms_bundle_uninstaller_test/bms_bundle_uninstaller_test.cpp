@@ -40,7 +40,7 @@ namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string MODULE_PACKAGE = "com.example.l3jsdemo";
-const std::string MODULE_PACKAGE1 = "com.example.l2jsdemo";
+const std::string MODULE_PACKAGE1 = "l2jsdemo";
 const std::string ERROR_BUNDLE_NAME = "com.example.bundle.uninstall.error";
 const std::string ERROR_MODULE_PACKAGE_NAME = "com.example.module.uninstall.error";
 const std::string BUNDLE_FILE_PATH = "/data/test/resource/bms/uninstall_bundle/right.hap";

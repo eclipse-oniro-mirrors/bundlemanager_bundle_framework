@@ -86,8 +86,8 @@ const std::string TEST_HAP_DEMO_3 = "testhapdemo3.hap";
 
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
-const std::string PACKAGE_NAME_FIRST = "com.example.l3jsdemo";
-const std::string PACKAGE_NAME_SECOND = "com.example.l2jsdemo";
+const std::string PACKAGE_NAME_FIRST = "entry";
+const std::string PACKAGE_NAME_SECOND = "l2jsdemo";
 const std::string PACKAGE_NAME_THIRD = "com.example.l1jsdemo";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
