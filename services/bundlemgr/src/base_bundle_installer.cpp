@@ -1544,6 +1544,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!ProcessExtProfile(installParam)) {
         LOG_W(BMS_TAG_INSTALLER, "ProcessExtProfile failed");
     }
+    SetHybridSpawn();
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     return result;
@@ -2310,6 +2311,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                     return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
                 }
             }
+            SetHybridSpawn();
             UtdHandler::InstallUtdAsync(bundleName, userId_);
             GenerateNewUserDataGroupInfos(oldInfo);
             isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
@@ -5918,6 +5920,23 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
     }
+    if (!parsedPaths.empty()) {
+        std::filesystem::path hapPath(parsedPaths.front());
+        std::string bundleNameDir = hapPath.parent_path().string();
+        FileStat fileStat;
+        ErrCode res = InstalldClient::GetInstance()->GetFileStat(bundleNameDir, fileStat);
+        int32_t sharedMode = S_IRWXU | S_IRWXG | S_ISGID;
+        if (res == ERR_OK && (fileStat.mode & ServiceConstants::MODE_BASE) != sharedMode) {
+            LOG_W(BMS_TAG_INSTALLER, "shared dir mode is not correct %{public}d for %{public}s",
+                fileStat.mode, bundleNameDir.c_str());
+            fileStat.mode = sharedMode;
+            InstalldClient::GetInstance()->ChangeFileStat(bundleNameDir, fileStat);
+            fileStat.mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+            for (const auto &path : parsedPaths) {
+                InstalldClient::GetInstance()->ChangeFileStat(path, fileStat);
+            }
+        }
+    }
     return ERR_OK;
 }
 
@@ -7933,6 +7952,23 @@ bool BaseBundleInstaller::ProcessExtProfile(const InstallParam &installParam)
         return false;
     }
     return true;
+}
+
+void BaseBundleInstaller::SetHybridSpawn()
+{
+    if (!InitDataMgr()) {
+        return;
+    }
+    InnerBundleInfo info;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName_, info)) {
+        LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed");
+        return;
+    }
+    std::string arkTSMode = info.GetApplicationArkTSMode();
+    if (arkTSMode == Constants::ARKTS_MODE_STATIC || arkTSMode == Constants::ARKTS_MODE_HYBRID) {
+        LOG_I(BMS_TAG_INSTALLER, "set persist.appspawn.hybridspawn.enable true");
+        OHOS::system::SetParameter(ServiceConstants::HYBRID_SPAWN_ENABLE, BMS_TRUE);
+    }
 }
 
 bool BaseBundleInstaller::IsBundleCrossAppSharedConfig(const std::unordered_map<std::string, InnerBundleInfo> &newInfos)

@@ -139,7 +139,7 @@ HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtProxy_0100, Function | Smal
     int32_t funcResult = ERR_APPEXECFWK_IDL_GET_RESULT_ERROR;
     auto ret = bundleMgrExtProxy->GetBundleNamesForUidExt(uid, bundleNames, funcResult);
     EXPECT_EQ(ret, ERR_OK);
-#ifdef USE_ARM64
+#if defined(USE_ARM64) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(ret, testing::AnyOf(ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY, REMOTE_RESULT));
 #else
     EXPECT_EQ(funcResult, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
@@ -163,11 +163,11 @@ HWTEST_F(BmsBundleMgrExtTest, GetBundleNamesForUidExtClient_0100, Function | Sma
     int32_t uid = 111;
     std::vector<std::string> bundleNames;
     auto ret = BundleMgrExtClient::GetInstance().GetBundleNamesForUidExt(uid, bundleNames);
-    #ifdef USE_ARM64
+#if defined(USE_ARM64) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
     EXPECT_THAT(ret, testing::AnyOf(ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY, REMOTE_RESULT));
-    #else
+#else
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    #endif
+#endif
     EXPECT_EQ(bundleNames.empty(), true);
 }
 

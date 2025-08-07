@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "entry_MainAbility",
+      "value": "entry_MainAbility"
+    },
+    {
+      "name": "description_mainability",
+      "value": "description_mainability"
+    },
+    {
+      "name": "reason",
+      "value": "use ohos.permission.GET_BUNDLE_INFO_PRIVILEGED"
+    }
+  ]
+}

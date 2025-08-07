@@ -112,6 +112,7 @@ constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* PATCH_PATH = "patch_";
 constexpr const char* HOT_RELOAD_PATH = "hotreload_";
 // uid and gid
+constexpr int16_t MODE_BASE = 07777;
 constexpr int32_t BMS_UID = 1000;
 constexpr int32_t SHELL_UID = 2000;
 constexpr int32_t BACKU_HOME_GID = 1089;
@@ -184,6 +185,7 @@ constexpr const char* DEVELOPERMODE_STATE = "const.security.developermode.state"
 constexpr const char* BMS_DATA_PRELOAD = "persist.bms.data.preload";
 constexpr const char* IS_SUPPORT_PLUGIN = "const.bms.support_plugin";
 constexpr const char* IS_DRIVER_FOR_ALL_USERS = "const.bms.driverForAllUsers";
+constexpr const char* HYBRID_SPAWN_ENABLE = "persist.appspawn.hybridspawn.enable";
 constexpr const char* IS_APP_CLONE_DISABLE = "persist.edm.app_clone_disable";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";

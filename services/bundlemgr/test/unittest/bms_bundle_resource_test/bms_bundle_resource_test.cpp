@@ -27,6 +27,7 @@
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
+#include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_drawable.h"
 
@@ -34,6 +35,7 @@
 #include "bundle_resource_callback.h"
 #include "bundle_resource_change_type.h"
 #include "bundle_resource_configuration.h"
+#include "bundle_resource_constants.h"
 #include "bundle_resource_event_subscriber.h"
 #include "bundle_resource_helper.h"
 #include "bundle_resource_host_impl.h"
@@ -6280,5 +6282,91 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0252, Function | SmallTest
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0253
+ * @tc.name: SetUserId
+ * @tc.desc: 1. test SetUserId
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0253, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    callback.SetUserId(100);
+    std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        std::string(BundleResourceConstants::USER_FILE_NAME);
+    auto ret = access(path.c_str(), F_OK);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0254
+ * @tc.name: CheckUserSwitchWhenReboot
+ * @tc.desc: 1. test CheckUserSwitchWhenReboot
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0254, Function | SmallTest | Level0)
+{
+    OHOS::EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+
+    auto subscriberPtr = std::make_shared<BundleResourceEventSubscriber>(subscribeInfo);
+    ASSERT_NE(subscriberPtr, nullptr);
+
+    BundleResourceCallback callback;
+    callback.SetUserId(100);
+
+    int32_t oldUserId = 0;
+    int32_t userId = 200;
+    subscriberPtr->CheckUserSwitchWhenReboot(userId, oldUserId);
+    EXPECT_EQ(oldUserId, 100);
+
+    userId = 100;
+    bool ret = subscriberPtr->CheckUserSwitchWhenReboot(userId, oldUserId);
+    EXPECT_EQ(ret, false);
+    std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        std::string(BundleResourceConstants::USER_FILE_NAME);
+    OHOS::ForceRemoveDirectory(path);
+    ret = subscriberPtr->CheckUserSwitchWhenReboot(userId, oldUserId);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0255
+ * @tc.name: DeleteConfigInFile and SetConfigInFile
+ * @tc.desc: 1. test DeleteConfigInFile and SetConfigInFile
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0255, Function | SmallTest | Level0)
+{
+    std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        std::string(BundleResourceConstants::USER_FILE_NAME);
+    OHOS::RemoveFile(path);
+
+    BundleResourceCallback callback;
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    callback.DeleteConfigInFile(userId, 0);
+    BundleResourceHelper::ProcessBundleResourceChange();
+
+    std::string language = BundleSystemState::GetInstance().GetSystemLanguage();
+    callback.SetConfigInFile(language, "", 0, 0, 1, userId);
+    BundleResourceHelper::ProcessBundleResourceChange();
+    callback.DeleteConfigInFile(userId + 1, 1);
+    callback.DeleteConfigInFile(userId, 1);
+
+    nlohmann::json jsonBuf;
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+    }
+    EXPECT_TRUE(jsonBuf.empty());
+
+    callback.SetConfigInFile("", "theme", 1, 1, 16, userId);
+    BundleResourceHelper::ProcessBundleResourceChange();
+    callback.DeleteConfigInFile(userId, 16);
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+    }
+    EXPECT_TRUE(jsonBuf.empty());
+    callback.SetConfigInFile("", "", 0, 0, 0, userId);
+    callback.DeleteConfigInFile(userId, 0);
 }
 } // OHOS

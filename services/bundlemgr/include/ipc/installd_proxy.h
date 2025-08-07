@@ -198,6 +198,8 @@ public:
 
     virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat) override;
 
+    virtual ErrCode ChangeFileStat(const std::string &file, FileStat &fileStat) override;
+
     virtual ErrCode ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
         const std::string &cpuAbi) override;
 

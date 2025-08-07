@@ -1,0 +1,14 @@
+{
+  "shortcuts": [
+    {
+      "icon": "$media:icon",
+      "shortcutId": "id.third3",
+      "label": "$string:app_name",
+      "wants": [
+        {
+          "bundleName": "com.example.third3"
+        }
+      ]
+    }
+  ]
+}

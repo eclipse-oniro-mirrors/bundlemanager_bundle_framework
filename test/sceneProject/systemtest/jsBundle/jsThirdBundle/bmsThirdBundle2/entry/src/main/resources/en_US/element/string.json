@@ -1,0 +1,12 @@
+{
+  "string": [
+    {
+      "name":"hello",
+      "value":"Hello"
+    },
+    {
+      "name":"world",
+      "value":"World"
+    }
+  ]
+}

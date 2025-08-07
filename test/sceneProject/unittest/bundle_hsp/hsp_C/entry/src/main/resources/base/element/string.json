@@ -1,20 +1,32 @@
 {
-    "string":  [
-        {
-            "name": "entry_desc",
-            "value": "entry_desc"
-        },
-        {
-            "name": "entry_label",
-            "value": "entry_label"
-        },
-        {
-            "name": "MainAbility_desc",
-            "value": "MainAbility_desc"
-        },
-        {
-            "name": "MainAbility_label",
-            "value": "MainAbility_label"
-        }
-    ]
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "label"
+    },
+    {
+      "name": "entry_desc",
+      "value": "entry_desc"
+    },
+    {
+      "name": "entry_label",
+      "value": "entry_label"
+    },
+    {
+      "name": "MainAbility_desc",
+      "value": "MainAbility_desc"
+    },
+    {
+      "name": "MainAbility_label",
+      "value": "MainAbility_label"
+    }
+  ]
 }

@@ -2550,6 +2550,30 @@ bool BMSEventHandler::InnerProcessUninstallAppServiceModule(const InnerBundleInf
     return true;
 }
 
+void BMSEventHandler::UpdateExtensionType()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        return;
+    }
+    std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
+    for (auto &[bundleName, innerBundleInfo] : infos) {
+        bool needUpdate = false;
+        for (auto &[key, innerExtensionInfo] : innerBundleInfo.FetchInnerExtensionInfos()) {
+            if (innerExtensionInfo.type == ExtensionAbilityType::UNSPECIFIED) {
+                LOG_I(BMS_TAG_DEFAULT, "update extension type, -b : %{public}s, -e : %{public}s",
+                    bundleName.c_str(), innerExtensionInfo.name.c_str());
+                needUpdate = true;
+                innerExtensionInfo.type = ConvertToExtensionAbilityType(innerExtensionInfo.extensionTypeName);
+            }
+        }
+        if (needUpdate) {
+            dataMgr->UpdateInnerBundleInfo(innerBundleInfo, true);
+        }
+    }
+}
+
 void BMSEventHandler::ProcessCheckAppExtensionAbility()
 {
     bool checkExtensionAbility = false;
@@ -2559,6 +2583,7 @@ void BMSEventHandler::ProcessCheckAppExtensionAbility()
         return;
     }
     LOG_I(BMS_TAG_DEFAULT, "Need to check extension ability");
+    UpdateExtensionType();
     InnerProcessCheckAppExtensionAbility();
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
 }
@@ -4298,6 +4323,7 @@ bool BMSEventHandler::IsPathExistInInstalledBundleInfo(
 void BMSEventHandler::CheckALLResourceInfo()
 {
     LOG_I(BMS_TAG_DEFAULT, "start");
+    BundleResourceHelper::ProcessBundleResourceChange();
     std::thread ProcessBundleResourceThread(ProcessBundleResourceInfo);
     ProcessBundleResourceThread.detach();
 }

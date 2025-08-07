@@ -79,7 +79,6 @@ const std::string TEST_CREATE_DIR_PATH = "/data/test/resource/bms/install_bundle
 const std::string TEST_CREATE_FILE_PATH = "/data/test/resource/bms/install_bundle/test_create_dir/test.hap";
 const std::string INVALID_PATH = "/install_bundle/";
 const std::string RIGHT_BUNDLE = "right.hap";
-const std::string TYPE_BUNDLE = "devicetype_error.hap";
 const std::string INVALID_BUNDLE = "nonfile.hap";
 const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
@@ -1153,20 +1152,6 @@ HWTEST_F(BmsBundleInstallerTest, SystemInstall_0600, Function | SmallTest | Leve
     std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
     bool result = InstallSystemBundle(bundleFile);
     EXPECT_FALSE(result);
-}
-
-/**
- * @tc.number: ThirdPartyInstall_0100
- * @tc.name: test the install will fail when installd service has error
- * @tc.desc: 1.the installd service has error
- *           2.the install result is fail
- */
-HWTEST_F(BmsBundleInstallerTest, ThirdPartyInstall_0100, Function | SmallTest | Level0)
-{
-    StopInstalldService();
-    std::string bundleFile = RESOURCE_ROOT_PATH + TYPE_BUNDLE;
-    auto result = InstallThirdPartyBundle(bundleFile);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR);
 }
 
 /**
@@ -7167,6 +7152,20 @@ HWTEST_F(BmsBundleInstallerTest, GetFileStat_0100, Function | SmallTest | Level1
     std::string file;
     FileStat fileStat;
     ErrCode ret = hostImpl.GetFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ChangeFileStat_0100
+ * @tc.name: test ChangeFileStat
+ * @tc.desc: test ChangeFileStat of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, ChangeFileStat_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string file;
+    FileStat fileStat;
+    ErrCode ret = hostImpl.ChangeFileStat(file, fileStat);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

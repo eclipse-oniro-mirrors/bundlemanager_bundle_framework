@@ -64,7 +64,6 @@ ohos_unittest("BmsBundleHspTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_B:hsp_B",
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_C:hsp_C",
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_C2:hsp_C2",
-    "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_D:hsp_D",
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_entry:hsp_entry",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${core_path}:appexecfwk_core",

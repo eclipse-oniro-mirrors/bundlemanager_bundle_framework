@@ -37,8 +37,8 @@ namespace {
 const std::string BUNDLE_NAME = "com.example.dependenciestest";
 const std::string BUNDLE_NAME_2 = "com.example.l3jsdemo";
 const std::string HAP_FILE_PATH = "/data/test/resource/bms/crowdtesting/";
-const std::string HAP_NAME_ENTRY_B = "dependencies_entry_B.hap";
-const std::string HAP_NAME_ENTRY_C = "dependencies_entry_C.hap";
+const std::string HAP_NAME_ENTRY_B = "dependencies_entry_B.hsp";
+const std::string HAP_NAME_ENTRY_C = "dependencies_entry_C.hsp";
 const std::string HAP_NAME_FIRST_RIGHT = "first_right.hap";
 const int32_t USERID = 100;
 const int32_t CROWDTEST_DEADLINE = 100000000;

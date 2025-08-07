@@ -304,6 +304,7 @@ struct Module {
     bool compressNativeLibs = true;
     bool extractNativeLibs = true;
     bool hasInsightIntent = false;
+    bool deduplicateHar = false;
     uint32_t descriptionId = 0;
     int32_t targetPriority = 0;
     std::string name;
@@ -1724,6 +1725,12 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.arkTSMode,
         false,
         g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_DEDUPLICATE_HAR,
+        module.deduplicateHar,
+        false,
+        g_parseResult);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -2658,6 +2665,7 @@ bool ToInnerModuleInfo(
     if (moduleJson.module.hasInsightIntent) {
         BundleUtil::SetBit(InnerModuleInfoBoolFlag::HAS_INTENT, innerModuleInfo.boolSet);
     }
+    innerModuleInfo.deduplicateHar = moduleJson.module.deduplicateHar;
     return true;
 }
 

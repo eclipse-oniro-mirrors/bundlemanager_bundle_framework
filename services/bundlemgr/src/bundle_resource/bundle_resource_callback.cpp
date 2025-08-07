@@ -15,8 +15,12 @@
 
 #include "bundle_resource_callback.h"
 
+#include <fstream>
+
 #include "account_helper.h"
 #include "bundle_constants.h"
+#include "bundle_parser.h"
+#include "bundle_resource_constants.h"
 #include "bundle_resource_manager.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
@@ -38,6 +42,7 @@ bool BundleResourceCallback::OnUserIdSwitched(const int32_t oldUserId, const int
         APP_LOGE("switch userId %{public}d failed", userId);
         return false;
     }
+    SetUserId(userId);
     if (!manager->AddAllResourceInfo(userId, type, oldUserId)) {
         APP_LOGE("AddAllResourceInfo userId : %{public}d failed", userId);
         return false;
@@ -64,6 +69,11 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language,
         APP_LOGD("current language is %{public}s no change", language.c_str());
         return true;
     }
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (currentUserId <= 0) {
+        currentUserId = Constants::START_USERID;
+    }
+    SetConfigInFile(language, "", -1, -1, type, currentUserId);
     BundleSystemState::GetInstance().SetSystemLanguage(language);
     // need delete all and reload all
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
@@ -72,15 +82,11 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language,
         return false;
     }
 
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-    if (currentUserId <= 0) {
-        currentUserId = Constants::START_USERID;
-    }
-
     if (!manager->AddAllResourceInfo(currentUserId, type)) {
         APP_LOGE("AddAllResourceInfo currentUserId %{public}d failed", currentUserId);
         return false;
     }
+    DeleteConfigInFile(currentUserId, type);
     APP_LOGI("end, language %{public}s", language.c_str());
     return true;
 }
@@ -108,6 +114,11 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
         APP_LOGI("icons no need to change, return");
         return false;
     }
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (currentUserId <= 0) {
+        currentUserId = Constants::START_USERID;
+    }
+    SetConfigInFile("", theme, themeId, themeIcon, type, currentUserId);
 #ifdef GLOBAL_RESMGR_ENABLE
     if (!SetThemeParamForThemeChanged(themeId, themeIcon)) {
         APP_LOGE("set theme param failed, themeId %{public}d themeIcon %{public}d", themeId, themeIcon);
@@ -119,15 +130,12 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
         APP_LOGE("manager is nullptr");
         return false;
     }
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-    if (currentUserId <= 0) {
-        currentUserId = Constants::START_USERID;
-    }
 
     if (!manager->AddAllResourceInfo(currentUserId, type)) {
         APP_LOGE("AddAllResourceInfo currentUserId %{public}d failed", currentUserId);
         return false;
     }
+    DeleteConfigInFile(currentUserId, type);
     APP_LOGI("end, theme:%{public}s", theme.c_str());
     return true;
 }
@@ -200,6 +208,105 @@ bool BundleResourceCallback::SetThemeParamForThemeChanged(const int32_t themeId,
     APP_LOGI("end set themeId %{public}d themeIcon %{public}d", themeId, themeIcon);
 #endif
     return true;
+}
+
+void BundleResourceCallback::SetUserId(const int32_t userId)
+{
+    std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        std::string(BundleResourceConstants::USER_FILE_NAME);
+    nlohmann::json jsonBuf;
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+    }
+    std::ofstream out(path, std::ios::out);
+    if (!out.is_open()) {
+        APP_LOGE("open user file failed, errno:%{public}d", errno);
+        return;
+    }
+    jsonBuf[BundleResourceConstants::USER_ID] = userId;
+    out << jsonBuf.dump();
+    out.close();
+}
+
+void BundleResourceCallback::DeleteConfigInFile(const int32_t userId, const uint32_t type)
+{
+    std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        std::string(BundleResourceConstants::USER_FILE_NAME);
+    nlohmann::json jsonBuf;
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+        return;
+    }
+    std::string key;
+    if (type == static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE)) {
+        key = std::string(BundleResourceConstants::LANGUAGE) +
+            std::string(BundleResourceConstants::USER_SEPARATOR) + std::to_string(userId);
+    } else if (type == static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) {
+        key = std::string(BundleResourceConstants::THEME) +
+            std::string(BundleResourceConstants::USER_SEPARATOR) + std::to_string(userId);
+    } else {
+        return;
+    }
+    auto it = jsonBuf.find(key);
+    if (it == jsonBuf.end()) {
+        return;
+    }
+    jsonBuf.erase(it);
+    std::ofstream out(path, std::ios::out);
+    if (!out.is_open()) {
+        APP_LOGE("open user file failed, errno:%{public}d", errno);
+        return;
+    }
+    out << jsonBuf.dump();
+    out.close();
+    APP_LOGI("-u %{public}d -t %{public}d delete config success.", userId, type);
+}
+
+void BundleResourceCallback::SetConfigInFile(const std::string &language, const std::string &theme,
+    const int32_t id, const int32_t themeIcon, const uint32_t type, const int32_t userId)
+{
+    std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        std::string(BundleResourceConstants::USER_FILE_NAME);
+    nlohmann::json jsonBuf;
+    std::lock_guard<std::mutex> lock(userFileMutex_);
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+    }
+    FILE *out = fopen(path.c_str(), "w");
+    if (out == nullptr) {
+        APP_LOGE("fopen %{public}s failed", path.c_str());
+        return;
+    }
+    nlohmann::json config;
+    if (type == static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE)) {
+        config[BundleResourceConstants::LANGUAGE] = language;
+        config[BundleResourceConstants::USER_ID] = userId;
+        config[BundleResourceConstants::TYPE] = type;
+        std::string key = std::string(BundleResourceConstants::LANGUAGE) +
+            std::string(BundleResourceConstants::USER_SEPARATOR) + std::to_string(userId);
+        jsonBuf[key] = config;
+    } else if (type == static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) {
+        config[BundleResourceConstants::THEME] = theme;
+        config[BundleResourceConstants::THEME_ID] = id;
+        config[BundleResourceConstants::THEME_ICON] = themeIcon;
+        config[BundleResourceConstants::USER_ID] = userId;
+        config[BundleResourceConstants::TYPE] = type;
+        std::string key = std::string(BundleResourceConstants::THEME) +
+            std::string(BundleResourceConstants::USER_SEPARATOR) + std::to_string(userId);
+        jsonBuf[key] = config;
+    } else {
+        (void)fclose(out);
+        return;
+    }
+
+    if (fputs(jsonBuf.dump().c_str(), out) == EOF) {
+        APP_LOGE("fputs %{public}s failed", path.c_str());
+        (void)fclose(out);
+        return;
+    }
+    (void)fsync(fileno(out));
+    (void)fclose(out);
+    APP_LOGI("-u %{public}d -t %{public}d save config success.", userId, type);
 }
 } // AppExecFwk
 } // OHOS

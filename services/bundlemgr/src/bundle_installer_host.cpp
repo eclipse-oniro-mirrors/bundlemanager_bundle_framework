@@ -957,7 +957,7 @@ ErrCode BundleInstallerHost::InstallCloneApp(const std::string &bundleName, int3
 {
     if (OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false) &&
         OHOS::system::GetBoolParameter(ServiceConstants::IS_APP_CLONE_DISABLE, false)) {
-        LOG_E(BMS_TAG_INSTALLER, "the app or device does not support the creation of an appClone instance.");
+        LOG_E(BMS_TAG_INSTALLER, "the enterprise device does not support the creation of an appClone instance.");
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE;
     }
     LOG_D(BMS_TAG_INSTALLER, "params[bundleName: %{public}s, user_id: %{public}d, appIndex: %{public}d]",

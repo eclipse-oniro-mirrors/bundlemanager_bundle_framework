@@ -124,6 +124,7 @@ struct HapModuleInfo : public Parcelable {
     bool isStageBasedModel = false;
     bool hasIntent = false;
     bool resizeable = false;
+    bool deduplicateHar = false;
     uint32_t descriptionId = 0;
     uint32_t iconId = 0;
     uint32_t labelId = 0;

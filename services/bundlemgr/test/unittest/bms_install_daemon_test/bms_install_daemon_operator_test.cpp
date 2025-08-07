@@ -692,6 +692,19 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3600, Function | Sma
 }
 
 /**
+ * @tc.number: InstalldOperatorTest_3650
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetDiskUsage of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3650, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::GetDiskUsage("", true);
+    EXPECT_EQ(ret, 0);
+    ret = InstalldOperator::GetDiskUsage(TEST_PATH, false);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
  * @tc.number: InstalldHostImplTest_3700
  * @tc.name: test function of InstalldOperator
  * @tc.desc: 1. calling CopyFile of InstalldOperator

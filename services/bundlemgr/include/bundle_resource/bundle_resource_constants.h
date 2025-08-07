@@ -37,6 +37,14 @@ constexpr const char* ICON = "ICON";
 constexpr const char* SYSTEM_STATE = "SYSTEM_STATE";
 constexpr const char* FOREGROUND = "FOREGROUND";
 constexpr const char* BACKGROUND = "BACKGROUND";
+constexpr const char* USER_FILE_NAME = "/userFile.json";
+constexpr const char* USER_ID = "user";
+constexpr const char* THEME = "theme";
+constexpr const char* LANGUAGE = "language";
+constexpr const char* THEME_ID = "themeId";
+constexpr const char* TYPE = "type";
+constexpr const char* THEME_ICON = "themeIcon";
+constexpr const char* USER_SEPARATOR = "_";
 
 constexpr int32_t INDEX_NAME = 0;
 constexpr int32_t INDEX_UPDATE_TIME = 1;

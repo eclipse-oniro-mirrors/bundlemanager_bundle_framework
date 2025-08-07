@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,52 +12,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import file from '@system.file';
-
-import {Core, ExpectExtend, InstrumentLog, ReportExtend} from "deccjsunit/index.ets"
-import GlobalContext from "../MainAbility/GlobalContext.ts"
-
 
 @Entry
 @Component
 struct Index {
-  aboutToAppear(){
-    console.info("start run testcase!!!!")
-    const core:Core = Core.getInstance()
-    const expectExtend:ExpectExtend = new ExpectExtend({
-      id: 'extend'
-    })
-    core.addService('expect', expectExtend)
-    const reportExtend:ReportExtend = new ReportExtend(file)
-
-    core.addService('report', reportExtend)
-    core.init()
-    core.subscribeEvent('task', reportExtend)
-
-    const globalContext:GlobalContext = new GlobalContext()
-    globalContext.globalContext(core)
-    core.execute()
-  }
+  @State message: string = 'Hello'
 
   build() {
-    Flex({ direction:FlexDirection.Column, alignItems:ItemAlign.Center, justifyContent: FlexAlign.Center }) {
-      Text('Hello World')
-        .fontSize(50)
-        .fontWeight(FontWeight.Bold)
-      Button() {
-        Text('next page')
-          .fontSize(25)
+    Row() {
+      Column() {
+        Text(this.message)
+          .fontSize(50)
           .fontWeight(FontWeight.Bold)
-      }.type(ButtonType.Capsule)
-      .margin({
-        top: 20
-      })
-      .backgroundColor('#0D9FFB')
-      .onClick(() => {
-
-      })
+      }
+      .width('100%')
     }
-    .width('100%')
     .height('100%')
   }
 }
