@@ -25,18 +25,22 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 constexpr int32_t INDEX_NAME = 0;
 constexpr int32_t INDEX_USERID = 1;
-constexpr int32_t INDEX_ICON = 2;
-constexpr int32_t INDEX_FOREGROUND = 3;
-constexpr int32_t INDEX_BACKGROUND = 4;
-constexpr int32_t INDEX_ICON_TYPE = 5;
+constexpr int32_t INDEX_ICON_TYPE = 2;
+constexpr int32_t INDEX_ICON = 3;
+constexpr int32_t INDEX_FOREGROUND = 4;
+constexpr int32_t INDEX_BACKGROUND = 5;
+constexpr int32_t APP_INDEX_1 = 5;
+constexpr int32_t APP_INDEX_2 = 5;
+constexpr int32_t APP_INDEX_3 = 5;
+constexpr int32_t APP_INDEX_4 = 5;
+constexpr int32_t APP_INDEX_5 = 5;
 }
 
 BundleResourceIconRdb::BundleResourceIconRdb()
 {
-    APP_LOGI_NOFUNC("BundleResourceRdb create");
+    APP_LOGI_NOFUNC("BundleResourceIconRdb create");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = BundleResourceConstants::BUNDLE_RESOURCE_RDB_NAME;
     bmsRdbConfig.dbPath = BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH;
@@ -44,8 +48,8 @@ BundleResourceIconRdb::BundleResourceIconRdb()
     bmsRdbConfig.createTableSql = std::string(
         "CREATE TABLE IF NOT EXISTS "
         + std::string(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME)
-        + "(NAME TEXT NOT NULL, USER_ID INTEGER, ICON TEXT, "
-        + "FOREGROUND BLOB, BACKGROUND BLOB, ICON_TYPE INTEGER, PRIMARY KEY (NAME, USER_ID, ICON_TYPE));");
+        + "(NAME TEXT NOT NULL, USER_ID INTEGER, ICON_TYPE INTEGER, ICON TEXT, "
+        + "FOREGROUND BLOB, BACKGROUND BLOB, PRIMARY KEY (NAME, USER_ID, ICON_TYPE));");
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }
@@ -66,11 +70,11 @@ bool BundleResourceIconRdb::AddResourceIconInfo(const int32_t userId, const Icon
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BundleResourceConstants::NAME, resourceInfo.GetKey());
     valuesBucket.PutInt(BundleResourceConstants::USER_ID, userId);
+    valuesBucket.PutInt(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
     valuesBucket.PutString(BundleResourceConstants::ICON, resourceInfo.icon_);
     // used for layered icons
     valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, resourceInfo.foreground_);
     valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, resourceInfo.background_);
-    valuesBucket.PutInt(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
     APP_LOGD("key:%{public}s foreground: %{public}zu, background: %{public}zu", resourceInfo.GetKey().c_str(),
         resourceInfo.foreground_.size(), resourceInfo.background_.size());
 
@@ -99,11 +103,11 @@ bool BundleResourceIconRdb::AddResourceIconInfos(const int32_t userId, const Ico
         NativeRdb::ValuesBucket valuesBucket;
         valuesBucket.PutString(BundleResourceConstants::NAME, info.GetKey());
         valuesBucket.PutInt(BundleResourceConstants::USER_ID, userId);
+        valuesBucket.PutInt(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
         valuesBucket.PutString(BundleResourceConstants::ICON, info.icon_);
         // used for layered icons
         valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, info.foreground_);
         valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, info.background_);
-        valuesBucket.PutInt(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
         APP_LOGD("key:%{public}s foreground: %{public}zu, background: %{public}zu", info.GetKey().c_str(),
             info.foreground_.size(), info.background_.size());
         valuesBuckets.emplace_back(valuesBucket);
@@ -137,16 +141,24 @@ bool BundleResourceIconRdb::DeleteResourceIconInfo(const std::string &bundleName
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
     // need delete both bundle resource and launcher ability resource
-    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, key);
+    // delete launcher ability resource
+    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, key + BundleResourceConstants::SEPARATOR);
     absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
     if (type != IconResourceType::UNKNOWN) {
         absRdbPredicates.EqualTo(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
     }
     if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
         APP_LOGW("delete key:%{public}s failed", key.c_str());
-        return false;
     }
-    return true;
+    //delete bundle resource
+    NativeRdb::AbsRdbPredicates absRdbPredicates1(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
+    // need delete both bundle resource and launcher ability resource
+    absRdbPredicates1.EqualTo(BundleResourceConstants::NAME, key);
+    absRdbPredicates1.EqualTo(BundleResourceConstants::USER_ID, userId);
+    if (type != IconResourceType::UNKNOWN) {
+        absRdbPredicates1.EqualTo(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
+    }
+    return rdbDataManager_->DeleteData(absRdbPredicates1);
 }
 
 bool BundleResourceIconRdb::DeleteResourceIconInfos(const std::string &bundleName,
@@ -160,8 +172,20 @@ bool BundleResourceIconRdb::DeleteResourceIconInfos(const std::string &bundleNam
     APP_LOGD("need delete resource info, -n %{public}s, -u %{public}d, -t %{public}d",
         bundleName.c_str(), userId, static_cast<int32_t>(type));
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
+    std::vector<std::string> values;
+    std::string value1 = std::to_string(APP_INDEX_1) + BundleResourceConstants::UNDER_LINE + bundleName;
+    std::string value2 = std::to_string(APP_INDEX_2) + BundleResourceConstants::UNDER_LINE + bundleName;
+    std::string value3 = std::to_string(APP_INDEX_3) + BundleResourceConstants::UNDER_LINE + bundleName;
+    std::string value4 = std::to_string(APP_INDEX_4) + BundleResourceConstants::UNDER_LINE + bundleName;
+    std::string value5 = std::to_string(APP_INDEX_5) + BundleResourceConstants::UNDER_LINE + bundleName;
+    values.emplace_back(bundleName);
+    values.emplace_back(value1);
+    values.emplace_back(value2);
+    values.emplace_back(value3);
+    values.emplace_back(value4);
+    values.emplace_back(value5);
     // need delete both bundle resource and launcher ability resource
-    absRdbPredicates.Contains(BundleResourceConstants::NAME, bundleName);
+    absRdbPredicates.In(BundleResourceConstants::NAME, values);
     absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
     if (type != IconResourceType::UNKNOWN) {
         absRdbPredicates.EqualTo(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
@@ -235,13 +259,13 @@ void BundleResourceIconRdb::ParseNameToResourceName(const std::string &name, std
 {
     resourceName = name;
     // clone bundle no need to add
-    auto pos = name.find_first_of(BundleResourceConstants::UNDER_LINE);
+    auto pos = name.find_first_of(BundleResourceConstants::SEPARATOR);
     if (pos != std::string::npos) {
-        int32_t appIndex = 0;
-        if (!OHOS::StrToInt(name.substr(0, pos), appIndex)) {
-            return;
-        }
-        resourceName = name.substr(pos + 1);
+        resourceName = name.substr(0, pos);
+    }
+    auto firstPos = resourceName.find_first_of(BundleResourceConstants::UNDER_LINE);
+    if (firstPos != std::string::npos) {
+        resourceName = resourceName.substr(firstPos + 1);
     }
 }
 
@@ -282,13 +306,7 @@ bool BundleResourceIconRdb::GetResourceIconInfos(const std::string &bundleName,
         LauncherAbilityResourceInfo resourceInfo;
         IconResourceType type;
         if (ConvertToLauncherAbilityResourceInfo(absSharedResultSet, resourceFlag, resourceInfo, type)) {
-            // todo 需要判断是否已经存在，已经存在则需要判断下是否为 theme or dynamic
-            if (type == IconResourceType::DYNAMIC_ICON) {
-                if (ProcessThemeOrDynamicResource(userId, launcherAbilityResourceInfos, resourceInfo)) {
-                    continue;
-                }
-            }
-            launcherAbilityResourceInfos.push_back(resourceInfo);
+            InnerProcessResourceIconInfos(resourceInfo, type, userId, launcherAbilityResourceInfos);
         }
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
 
@@ -320,13 +338,7 @@ bool BundleResourceIconRdb::GetAllResourceIconInfo(const int32_t userId, const u
         LauncherAbilityResourceInfo resourceInfo;
         IconResourceType type;
         if (ConvertToLauncherAbilityResourceInfo(absSharedResultSet, resourceFlag, resourceInfo, type)) {
-            // todo 需要判断是否已经存在，已经存在则需要判断下是否为 theme or dynamic
-            if (type == IconResourceType::DYNAMIC_ICON) {
-                if (ProcessThemeOrDynamicResource(userId, launcherAbilityResourceInfos, resourceInfo)) {
-                    continue;
-                }
-            }
-            launcherAbilityResourceInfos.push_back(resourceInfo);
+            InnerProcessResourceIconInfos(resourceInfo, type, userId, launcherAbilityResourceInfos);
         }
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
 
@@ -391,7 +403,7 @@ bool BundleResourceIconRdb::GetIsOnlineTheme(const int32_t userId)
 {
     std::shared_lock<ffrt::shared_mutex> lock(isOnlineThemeMutex_);
     auto iter = isOnlineThemeMap_.find(userId);
-    if (iter != isOnlineThemeMap_.end()) {
+    if (iter == isOnlineThemeMap_.end()) {
         return false;
     }
     return iter->second;
@@ -403,23 +415,35 @@ void BundleResourceIconRdb::SetIsOnlineTheme(const int32_t userId, bool isOnline
     isOnlineThemeMap_[userId] = isOnlineTheme;
 }
 
-bool BundleResourceIconRdb::ProcessThemeOrDynamicResource(
-    const int32_t userId,
-    std::vector<LauncherAbilityResourceInfo> &infos,
-    const LauncherAbilityResourceInfo &info)
+void BundleResourceIconRdb::InnerProcessResourceIconInfos(const LauncherAbilityResourceInfo &resourceInfo,
+    const IconResourceType type, const int32_t userId,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
-    auto iter = std::find_if(infos.begin(), infos.end(),
-        [&](const LauncherAbilityResourceInfo &resource) {
-            return (resource.bundleName == info.bundleName) &&
-                (resource.appIndex == info.appIndex);
-        });
-    if (iter != infos.end()) {
-        if (GetIsOnlineTheme(userId)) {
-            return true;
-        }
-        infos.erase(iter);
+    if (!resourceInfo.abilityName.empty() && GetIsOnlineTheme(userId)) {
+        launcherAbilityResourceInfos.push_back(resourceInfo);
+        return;
     }
-    return false;
+    auto iter = std::find_if(launcherAbilityResourceInfos.begin(), launcherAbilityResourceInfos.end(),
+        [resourceInfo](const LauncherAbilityResourceInfo info) {
+            return (resourceInfo.bundleName == info.bundleName) && (resourceInfo.appIndex == info.appIndex);
+        });
+    // not exist
+    if (iter == launcherAbilityResourceInfos.end()) {
+        launcherAbilityResourceInfos.push_back(resourceInfo);
+        return;
+    }
+    // if exist, need to process theme or dynamic icon
+    if (((type == IconResourceType::THEME_ICON) && GetIsOnlineTheme(userId)) ||
+        ((type == IconResourceType::DYNAMIC_ICON) && !GetIsOnlineTheme(userId))) {
+        for (auto iter = launcherAbilityResourceInfos.begin(); iter != launcherAbilityResourceInfos.end();) {
+            if ((iter->bundleName == resourceInfo.bundleName) && (iter->appIndex == resourceInfo.appIndex)) {
+                iter = launcherAbilityResourceInfos.erase(iter);
+            } else {
+                ++iter;
+            }
+        }
+        launcherAbilityResourceInfos.push_back(resourceInfo);
+    }
 }
 } // AppExecFwk
 } // OHOS

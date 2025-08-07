@@ -81,7 +81,7 @@ bool BundleResourceEventSubscriber::CheckUserSwitchWhenReboot(const int32_t user
     const auto &jsonBufEnd = jsonBuf.end();
     int32_t parseResult = ERR_OK;
     int32_t lastUserId = 0;
-    GetValueIfFindKey<int32_t>(jsonBuf, jsonBufEnd, BundleResourceConstants::USER_ID, lastUserId,
+    GetValueIfFindKey<int32_t>(jsonBuf, jsonBufEnd, BundleResourceConstants::USER, lastUserId,
         JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     if ((parseResult == ERR_OK) && (lastUserId != userId)) {
         // The user before reboot and the current user do not match, need add resources.

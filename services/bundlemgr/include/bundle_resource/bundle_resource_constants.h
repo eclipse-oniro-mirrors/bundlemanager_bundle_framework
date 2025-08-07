@@ -48,7 +48,6 @@ constexpr const char* LANGUAGE = "language";
 constexpr const char* THEME_ID = "themeId";
 constexpr const char* TYPE = "type";
 constexpr const char* THEME_ICON = "themeIcon";
-constexpr const char* USER_SEPARATOR = "_";
 
 constexpr int32_t INDEX_NAME = 0;
 constexpr int32_t INDEX_UPDATE_TIME = 1;

@@ -223,7 +223,7 @@ void BundleResourceCallback::SetUserId(const int32_t userId)
         APP_LOGE("open user file failed, errno:%{public}d", errno);
         return;
     }
-    jsonBuf[BundleResourceConstants::USER_ID] = userId;
+    jsonBuf[BundleResourceConstants::USER] = userId;
     out << jsonBuf.dump();
     out.close();
 }
@@ -240,10 +240,10 @@ void BundleResourceCallback::DeleteConfigInFile(const int32_t userId, const uint
     std::string key;
     if (type == static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE)) {
         key = std::string(BundleResourceConstants::LANGUAGE) +
-            std::string(BundleResourceConstants::USER_SEPARATOR) + std::to_string(userId);
+            std::string(BundleResourceConstants::UNDER_LINE) + std::to_string(userId);
     } else if (type == static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) {
         key = std::string(BundleResourceConstants::THEME) +
-            std::string(BundleResourceConstants::USER_SEPARATOR) + std::to_string(userId);
+            std::string(BundleResourceConstants::UNDER_LINE) + std::to_string(userId);
     } else {
         return;
     }
@@ -280,19 +280,19 @@ void BundleResourceCallback::SetConfigInFile(const std::string &language, const 
     nlohmann::json config;
     if (type == static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE)) {
         config[BundleResourceConstants::LANGUAGE] = language;
-        config[BundleResourceConstants::USER_ID] = userId;
+        config[BundleResourceConstants::USER] = userId;
         config[BundleResourceConstants::TYPE] = type;
         std::string key = std::string(BundleResourceConstants::LANGUAGE) +
-            std::string(BundleResourceConstants::USER_SEPARATOR) + std::to_string(userId);
+            std::string(BundleResourceConstants::UNDER_LINE) + std::to_string(userId);
         jsonBuf[key] = config;
     } else if (type == static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) {
         config[BundleResourceConstants::THEME] = theme;
         config[BundleResourceConstants::THEME_ID] = id;
         config[BundleResourceConstants::THEME_ICON] = themeIcon;
-        config[BundleResourceConstants::USER_ID] = userId;
+        config[BundleResourceConstants::USER] = userId;
         config[BundleResourceConstants::TYPE] = type;
         std::string key = std::string(BundleResourceConstants::THEME) +
-            std::string(BundleResourceConstants::USER_SEPARATOR) + std::to_string(userId);
+            std::string(BundleResourceConstants::UNDER_LINE) + std::to_string(userId);
         jsonBuf[key] = config;
     } else {
         (void)fclose(out);

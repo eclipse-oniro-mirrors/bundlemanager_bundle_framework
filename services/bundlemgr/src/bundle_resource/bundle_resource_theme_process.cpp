@@ -28,6 +28,9 @@ constexpr const char* THEME_ICONS_B = "/b/app/icons/";
 constexpr const char* THEME_ICONS_A_FLAG = "/a/app/flag";
 constexpr const char* THEME_ICONS_B_FLAG = "/b/app/flag";
 constexpr const char* THEME_ICONS_CHAR = "/";
+constexpr const char* COM_OHOS_CONTACTS_ENTRY_ABILITY = "com.ohos.contacts.EntryAbility";
+constexpr const char* COM_OHOS_CONTACTS_ENTRY = "entry";
+constexpr const char* COM_OHOS_CONTACTS = "com.ohos.contacts";
 }
 
 bool BundleResourceThemeProcess::IsBundleThemeExist(
@@ -68,6 +71,23 @@ bool BundleResourceThemeProcess::IsThemeExistInFlagA(const std::string &bundleNa
 bool BundleResourceThemeProcess::IsThemeExistInFlagB(const std::string &bundleName, const int32_t userId)
 {
     return BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + bundleName);
+}
+
+void BundleResourceThemeProcess::ProcessSpecialBundleResource(
+    const std::vector<LauncherAbilityResourceInfo> &resourceIconInfos,
+    BundleResourceInfo &bundleResourceInfo)
+{
+    // contact icon is same with COM_OHOS_CONTACTS_ENTRY_ABILITY icon, if theme not exist, use hap resource
+    for (const auto &item : resourceIconInfos) {
+        if ((item.bundleName == bundleResourceInfo.bundleName) &&
+            (item.moduleName == COM_OHOS_CONTACTS_ENTRY) &&
+            (item.abilityName == COM_OHOS_CONTACTS_ENTRY_ABILITY)) {
+            // process com.ohos.contacts icon
+            bundleResourceInfo.icon = item.icon;
+            bundleResourceInfo.foreground = item.foreground;
+            bundleResourceInfo.background = item.background;
+        }
+    }
 }
 } // AppExecFwk
 } // OHOS

@@ -18,13 +18,8 @@
 
 #include <vector>
 
-#include "bundle_system_state.h"
 #include "bundle_resource_info.h"
 #include "launcher_ability_resource_info.h"
-#include "rdb_data_manager.h"
-#include "resource_info.h"
-#include "resource_manager.h"
-#include "extension_ability_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -41,6 +36,9 @@ public:
     static bool IsThemeExistInFlagA(const std::string &bundleName, const int32_t userId);
 
     static bool IsThemeExistInFlagB(const std::string &bundleName, const int32_t userId);
+
+    static void ProcessSpecialBundleResource(const std::vector<LauncherAbilityResourceInfo> &resourceIconInfos,
+        BundleResourceInfo &bundleResourceInfo);
 };
 } // AppExecFwk
 } // OHOS
