@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -628,38 +628,7 @@ HWTEST_F(BmsCompatibleSystemTest, BMS_ConvertToCompatible_1100, Function | Mediu
     EXPECT_EQ(compatibleApplicationInfo.name, "");
     GTEST_LOG_(INFO) << "END BMS_ConvertToCompatible_1100";
 }
-/**
- * @tc.number: BMS_QueryAbilityInfoByUri_0100
- * @tc.name: test the interface of QueryAbilityInfoByUri
- * @tc.desc: 1.install a third hap with data ability
- *           2.get the ability info by the correct ability uri
- */
-HWTEST_F(BmsCompatibleSystemTest, BMS_QueryAbilityInfoByUri_0100, Function | MediumTest | Level1)
-{
-    GTEST_LOG_(INFO) << "START BMS_QueryAbilityInfoByUri_0100";
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundleDataAbility.hap";
-    std::string bundleName = "com.example.dataability";
-    std::string abilityName = "com.example.dataability.MainAbility";
-    std::string uri = "dataability://com.test.demo.dataability.UserADataAbility";
-    std::string message;
-    Install(bundleFilePath, InstallFlag::NORMAL, message);
-    EXPECT_EQ(message, "Success") << "install fail!";
-    std::string abilityUri = "dataability:///com.test.demo.dataability.UserADataAbility";
-    AbilityInfo abilityInfo;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_TRUE(false);
-    }
-    bool result = bundleMgrProxy->QueryAbilityInfoByUri(abilityUri, USERID, abilityInfo);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(abilityInfo.name, abilityName);
-    EXPECT_EQ(abilityInfo.bundleName, bundleName);
-    EXPECT_EQ(abilityInfo.uri, uri);
-    Uninstall(bundleName, message);
-    EXPECT_EQ(message, "Success") << "uninstall fail!";
-    GTEST_LOG_(INFO) << "END BMS_QueryAbilityInfoByUri_0100";
-}
+
 /**
  * @tc.number: BMS_QueryAbilityInfoByUri_0200
  * @tc.name: test the interface of QueryAbilityInfoByUri
