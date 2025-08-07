@@ -1173,7 +1173,7 @@ std::tuple<bool, void *, int64_t> CommonFunc::GetGZWriteArg(napi_env env, const 
     int64_t len = 0;
     NapiValue sizeNVal(env, funcArg[ArgumentPosition::SECOND]);
     std::tie(succ, len) = sizeNVal.ToInt64();
-    if (!succ || len > bufLen) {
+    if (!succ || len > static_cast<int64_t>(bufLen)) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0};
     }
