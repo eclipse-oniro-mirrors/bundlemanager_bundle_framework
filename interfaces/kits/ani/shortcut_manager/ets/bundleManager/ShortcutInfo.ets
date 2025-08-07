@@ -25,6 +25,7 @@ export interface ShortcutInfo {
     wants?: Array<ShortcutWant>;
     appIndex: number;
     sourceType: number;
+    visible?: boolean;
 }
 
 export interface ShortcutWant {
@@ -51,6 +52,7 @@ export class ShortcutInfoInner implements ShortcutInfo {
     wants?: Array<ShortcutWant> | undefined;
     appIndex: number;
     sourceType: number;
+    public visible?: boolean | undefined;
 }
 
 class ShortcutWantInner implements ShortcutWant {

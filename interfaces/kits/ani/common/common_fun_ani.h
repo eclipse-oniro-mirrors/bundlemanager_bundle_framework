@@ -644,11 +644,12 @@ public:
         }
 
         ani_object valueObj = nullptr;
-        if constexpr (std::is_same_v<valueType, ani_boolean> || std::is_same_v<valueType, ani_char> ||
-                      std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
-                      std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
-                      std::is_same_v<valueType, ani_long> ||
-                      std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double>) {
+        if constexpr (std::is_same_v<valueType, ani_boolean> || std::is_same_v<valueType, ani_char>) {
+            status = env->Object_New(valueClass, ctor, &valueObj, value);
+        } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_short> ||
+                             std::is_same_v<valueType, ani_int> || std::is_same_v<valueType, uint32_t> ||
+                             std::is_same_v<valueType, ani_long> || std::is_same_v<valueType, ani_float> ||
+                             std::is_same_v<valueType, ani_double>) {
             status = env->Object_New(valueClass, ctor, &valueObj, static_cast<double>(value));
         } else {
             APP_LOGE("Classname %{public}s Unsupported", propertyName);

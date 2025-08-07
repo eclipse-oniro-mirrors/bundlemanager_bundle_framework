@@ -31,6 +31,7 @@ constexpr const char* NS_NAME_ZLIB = "@ohos.zlib.zlib";
 constexpr const char* PROPERTY_NAME_LEVEL = "level";
 constexpr const char* PROPERTY_NAME_MEMLEVEL = "memLevel";
 constexpr const char* PROPERTY_NAME_STRATEGY = "strategy";
+constexpr const char* PROPERTY_NAME_PARALLEL = "parallel";
 constexpr const char* TYPE_NAME_CHECKSUMINTERNAL = "ChecksumInternal";
 constexpr const char* PARAM_NAME_IN_FILE = "inFile";
 constexpr const char* PARAM_NAME_IN_FILES = "inFiles";
@@ -204,6 +205,11 @@ static bool ANIParseOptions(ani_env* env, ani_object object, LIBZIP::OPTIONS& op
     // strategy?: CompressStrategy
     if (CommonFunAni::CallGetterOptional(env, object, PROPERTY_NAME_STRATEGY, &enumItem)) {
         RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, options.strategy));
+    }
+
+    // parallel?: ParallelStrategy
+    if (CommonFunAni::CallGetterOptional(env, object, PROPERTY_NAME_PARALLEL, &enumItem)) {
+        RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, options.parallel));
     }
 
     return true;
