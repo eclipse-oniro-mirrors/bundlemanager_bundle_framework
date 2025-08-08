@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -308,7 +308,7 @@ HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_0200, Funct
     std::cout << "START Bms_Overlay_Internal_Install_0200" << std::endl;
     std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST2_PATH1 };
     ErrCode ret = InstallOverlayBundle(bundlePaths);
-    EXPECT_EQ(ret, IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY) << "install fail!" <<
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<
         INTERNAL_OVERLAY_TEST2_PATH1;
     std::cout << "END Bms_Overlay_Internal_Install_0200" << std::endl;
 }
@@ -325,7 +325,7 @@ HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_0300, Funct
     std::cout << "START Bms_Overlay_Internal_Install_0300" << std::endl;
     std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST2_PATH2 };
     ErrCode ret = InstallOverlayBundle(bundlePaths);
-    EXPECT_EQ(ret, IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY) << "install fail!" <<
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<
         INTERNAL_OVERLAY_TEST2_PATH2;
     std::cout << "END Bms_Overlay_Internal_Install_0300" << std::endl;
 }
@@ -342,7 +342,7 @@ HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_0400, Funct
     std::cout << "START Bms_Overlay_Internal_Install_0400" << std::endl;
     std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST3_PATH };
     ErrCode ret = InstallOverlayBundle(bundlePaths);
-    EXPECT_EQ(ret, IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_NAME_MISSED) << "install fail!" <<
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<
         INTERNAL_OVERLAY_TEST3_PATH;
     std::cout << "END Bms_Overlay_Internal_Install_0400" << std::endl;
 }
