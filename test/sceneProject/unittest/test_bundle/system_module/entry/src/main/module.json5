@@ -1,63 +1,65 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {
     "module": {
         "name":"module01",
         "type":"entry",
-        "srcEntry":"./MyAbilityStage.ts",
+        "srcEntry":"./ets/Application/AbilityStage.ts",
         "description":"$string:description_application",
-        "descriptionId": 2020,
         "process":"bba",
         "mainElement":"MainAbility",
         "deviceTypes":[
             "2in1",
             "tablet",
             "default",
-            "car",
-            "liteWearable",
-            "phone",
-            "smartVision",
-            "tablet",
             "tv",
             "wearable",
-            "router"
         ],
         "deliveryWithInstall":true,
         "installationFree":false,
         "virtualMachine":"ark",
-        "pages":"$profile:page_config",
+        "pages":"$profile:main_pages",
         "metadata":[
             {
                 "name":"string",
                 "value":"string",
-                "resource":"@profile:config_file"
             },
             {
                 "name":"string",
                 "value":"string",
-                "resource":"@profile:config_file"
             }
         ],
         "abilities": [
             {
             "name": "MainAbility",
-            "srcEntry": "./login/MyLoginAbility.ts",
+            "srcEntry": "./ets/MainAbility/MainAbility.ts",
             "description": "$string:description_main_ability",
-            "descriptionId": 3030,
             "icon": "$media:icon",
-            "iconId": 4040,
-            "label": "Login",
-            "labelId": 16777216,
+            "label": "{Login}",
             "permissions":["ext","sql"],
             "isolationProcess": true,
             "metadata":[
                 {
                     "name":"a01",
                     "value":"v01",
-                    "resource":"hello"
+                    "resource":"{hello}"
                 },
                 {
                     "name":"a02",
                     "value":"v02",
-                    "resource":"world"
                 }
             ],
             "exported": true,
@@ -95,24 +97,28 @@
                "audioRecording",
                "location",
                "bluetoothInteraction",
-               "multDeviceConnection",
                "wifiInteraction",
                "voip",
                "taskKeeping"
-           ]
-        }
+           ],
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:start_window_background"
+            }
     ],
         "extensionAbilities": [
             {
             "name": "FormName",
-            "srcEntry": "./form/MyForm.ts",
+            "srcEntry": "./ets/FormAbility/FormAbility.ts",
             "icon": "$media:icon",
-            "iconId": 16777223,
             "label": "$string:extension_name",
-            "labelId": 6060,
             "description": "$string:form_description",
-            "descriptionId": 7070,
             "type": "form",
+            "metadata": [
+                {
+                    "name": "ohos.extension.form",
+                    "resource": "$profile:form_config"
+                }
+            ],
             "readPermission":"readPermission---",
             "writePermission":"writePermission---",
             "permissions":["aaa","ccc"],
@@ -140,13 +146,7 @@
                    }
                ]
             }
-        ],
-        "metadata": [
-            {
-            "name": "ohos.extablility.form",
-            "resource": "$profile:form_config"
-           }
-         ]
+        ]
       }
     ],
 		"requestPermissions": [
@@ -175,9 +175,7 @@
                 "provisionEnable":true,
                 "distributedSceneEnable":true,
                 "label":"$string:permlab_provider",
-                "labelId":12,
                 "description":"$string:permdesc_provider",
-                "descriptionId":13
             },
             {
                 "name":"ohos.abilitydemo.permission.PROVIDER002",
@@ -186,11 +184,8 @@
                 "provisionEnable":true,
                 "distributedSceneEnable":true,
                 "label":"$string:permlab_provider",
-                "labelId":112,
                 "description":"$string:permdesc_provider002",
-                "descriptionId":113
             }
         ],
-        "packageName": "packageNameTest"
     }
 }
