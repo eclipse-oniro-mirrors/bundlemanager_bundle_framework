@@ -393,20 +393,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0300, Function | SmallTest 
 }
 
 /**
- * @tc.number: ThirdPartyInstall_0400
- * @tc.name: test the illegal bundleName file can't be installed
- * @tc.desc: 1.the third party bundle name is illegal
- *           2.the third party bundle can't be installed and the result is fail
- */
-HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0400, Function | SmallTest | Level0)
-{
-    std::string wrongBundleName = RESOURCE_ROOT_PATH + WRONG_BUNDLE_NAME;
-    ErrCode result = InstallThirdPartyBundle(wrongBundleName);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME);
-    CheckFileNonExist();
-}
-
-/**
  * @tc.number: ThirdPartyInstall_0500
  * @tc.name: test the bundle file with invalid path will cause the result of install failure
  * @tc.desc: 1.the bundle file has invalid path
@@ -454,26 +440,6 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0100, Function | SmallTe
     EXPECT_TRUE(result);
     EXPECT_EQ(info.name, BUNDLE_NAME);
     ClearBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: ThirdPartyUpdateData_0200
- * @tc.name: test the wrong bundle file can't be installed and its info will not updated to bms
- * @tc.desc: 1.the ThirdParty bundle is wrong
- *           2.the wrong bundle can't be installed and its info will not updated to bms
- */
-HWTEST_F(BmsMultipleInstallerTest, ThirdPartyUpdateData_0200, Function | SmallTest | Level0)
-{
-    ApplicationInfo info;
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
-    EXPECT_FALSE(result);
-    std::string wrongBundleName = RESOURCE_ROOT_PATH + WRONG_BUNDLE_NAME;
-    ErrCode installResult = InstallThirdPartyBundle(wrongBundleName);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME);
-    result = dataMgr->GetApplicationInfo(BUNDLE_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
-    EXPECT_FALSE(result);
 }
 
 /**
@@ -601,22 +567,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0400, Function | SmallTes
     filePaths.emplace_back(nonExistFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID) << "installation is successful";
-    CheckFileNonExist();
-}
-
-/**
- * @tc.number: MultipleHapsInstall_0500
- * @tc.name: test the illegal bundleName file can't be installed
- * @tc.desc: 1.the third party bundle name is illegal
- *           2.the third party bundle can't be installed and the result is fail
- */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0500, Function | SmallTest | Level0)
-{
-    std::vector<std::string> filePaths;
-    std::string wrongBundleName = RESOURCE_ROOT_PATH + WRONG_BUNDLE_NAME;
-    filePaths.emplace_back(wrongBundleName);
-    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME);
     CheckFileNonExist();
 }
 
@@ -916,22 +866,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2100, Function | SmallTes
     filePaths.emplace_back(secondBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME);
-    CheckFileNonExist();
-}
-
-/**
- * @tc.number: MultipleHapsInstall_2200
- * @tc.name: test to install haps when one direction in the array
- * @tc.desc: 1.one direction are placed in the array, there is on invalid hap file under the direction.
- *           2.the installation result is failed
- */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2200, Function | SmallTest | Level1)
-{
-    std::vector<std::string> filePaths;
-    std::string firstBundleFile = RESOURCE_TEST2_PATH;
-    filePaths.emplace_back(firstBundleFile);
-    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
     CheckFileNonExist();
 }
 

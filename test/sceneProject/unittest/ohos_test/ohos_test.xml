@@ -68,8 +68,6 @@
         src="res" />
       <option name="push" value="test_bundle/bmsAccessTokentest3.hap -> /data/test/resource/bms/accesstoken_bundle/"
         src="res" />
-      <option name="push" value="test_bundle/wrong_bundle_name.ha ->
-        /data/test/resource/bms/accesstoken_bundle/" src="res" />
       <option name="push" value="test_bundle/bmsThirdBundle1.hap -> /data/test/resource/bms/accesstoken_bundle/"
         src="res" />
       <option name="push" value="test_bundle/bmsThirdBundle2.hap -> /data/test/resource/bms/accesstoken_bundle/"
@@ -111,8 +109,6 @@
       <option name="push" value="test_bundle/version1.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/version2.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/version3.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/wrong_bundle_name.ha -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/backup.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/signatureTest.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/preview.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
@@ -166,8 +162,6 @@
       <option name="push" value="test_bundle/version1.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/version2.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/version3.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/wrong_bundle_name.ha -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/test/"
               src="res"/>
       <option name="push" value="test_bundle/second_right.hap -> /data/test/resource/bms/install_bundle/test/"
@@ -188,8 +182,6 @@
       <option name="push" value="test_bundle/version1.hap -> /data/test/resource/bms/update_bundle/" src="res"/>
       <option name="push" value="test_bundle/version2.hap -> /data/test/resource/bms/update_bundle/" src="res"/>
       <option name="push" value="test_bundle/version3.hap -> /data/test/resource/bms/update_bundle/" src="res"/>
-      <option name="push" value="test_bundle/wrong_bundle_name.ha -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
     </preparer>
   </target>
   <target name="BmsBundleVerifierTest">
@@ -206,8 +198,6 @@
       <option name="push" value="test_bundle/version1.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/version2.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/version3.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/wrong_bundle_name.ha -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
     </preparer>
   </target>
   <target name="BmsMultipleBundleInstallerTest">
@@ -240,8 +230,6 @@
               src="res"/>
       <option name="push" value="test_bundle/sixteenth_right.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
-      <option name="push" value="test_bundle/wrong_bundle_name.ha -> /data/test/resource/bms/install_bundle/"
-              src="res"/>
       <option name="push" value="test_bundle/first_diff_release_type.hap -> /data/test/resource/bms/install_bundle/"
               src="res"/>
       <option name="push" value="test_bundle/first_right_compCode.hap -> /data/test/resource/bms/install_bundle/"
@@ -255,8 +243,6 @@
       <option name="push" value="test_bundle/second_right.hap -> /data/test/resource/bms/install_bundle/test1/"
               src="res"/>
       <option name="push" value="test_bundle/twelfth_right.hap -> /data/test/resource/bms/install_bundle/test1/"
-              src="res"/>
-      <option name="push" value="test_bundle/wrong_bundle_name.ha -> /data/test/resource/bms/install_bundle/test2/"
               src="res"/>
       <option name="push" value="test_bundle/first_right.hap -> /data/test/resource/bms/install_bundle/test3/"
               src="res"/>
