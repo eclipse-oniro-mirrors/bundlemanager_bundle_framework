@@ -151,10 +151,10 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
                 return true;
             }
             auto iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
-                    [bundleName, appIndex](const auto resourceIconInfo) {
-                        return ((resourceIconInfo.bundleName == bundleName) &&
-                            (resourceIconInfo.appIndex == appIndex));
-                    });
+                [bundleName, appIndex](const auto resourceIconInfo) {
+                    return ((resourceIconInfo.bundleName == bundleName) &&
+                        (resourceIconInfo.appIndex == appIndex));
+                });
             if (iter != resourceIconInfos.end()) {
                 bundleResourceInfo.icon = iter->icon;
                 bundleResourceInfo.foreground = iter->foreground;
@@ -193,7 +193,8 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
                         return ((resource.bundleName == resourceIconInfo.bundleName) &&
                             (resource.moduleName == resourceIconInfo.moduleName) &&
                             (resource.abilityName == resourceIconInfo.abilityName) &&
-                            (resource.appIndex == resourceIconInfo.appIndex)); });
+                            (resource.appIndex == resourceIconInfo.appIndex));
+                    });
                 if (iter == resourceIconInfos.end()) {
                     iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
                         [resource](const auto resourceIconInfo) {
@@ -275,7 +276,8 @@ bool BundleResourceManager::GetAllLauncherAbilityResourceInfo(const uint32_t fla
                         return ((resource.bundleName == resourceIconInfo.bundleName) &&
                             (resource.moduleName == resourceIconInfo.moduleName) &&
                             (resource.abilityName == resourceIconInfo.abilityName) &&
-                            (resource.appIndex == resourceIconInfo.appIndex)); });
+                            (resource.appIndex == resourceIconInfo.appIndex));
+                    });
                 if (iter == resourceIconInfos.end()) {
                     iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
                         [resource](const auto resourceIconInfo) {
@@ -904,7 +906,7 @@ void BundleResourceManager::DeleteNotExistThemeResource(
     if (oldResourceNames.empty()) {
         return;
     }
-    std::set<string> newBundleNames;
+    std::set<std::string> newBundleNames;
     for (const auto &item : resourceInfosMap) {
         for (const auto &resource : item.second) {
             newBundleNames.insert(resource.GetKey());
@@ -928,7 +930,7 @@ bool BundleResourceManager::AddResourceInfosWhenSystemThemeChanged(
         return false;
     }
     // 1. used to delete no exist in current theme bundle resource
-    std::set<string> oldResourceNames;
+    std::set<std::string> oldResourceNames;
     if (!bundleResourceIconRdb_->GetAllResourceIconName(userId, oldResourceNames, IconResourceType::THEME_ICON)) {
         APP_LOGW("get old bundle names failed");
     }
