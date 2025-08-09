@@ -31,11 +31,6 @@ constexpr int32_t INDEX_ICON_TYPE = 2;
 constexpr int32_t INDEX_ICON = 3;
 constexpr int32_t INDEX_FOREGROUND = 4;
 constexpr int32_t INDEX_BACKGROUND = 5;
-constexpr int32_t APP_INDEX_1 = 5;
-constexpr int32_t APP_INDEX_2 = 5;
-constexpr int32_t APP_INDEX_3 = 5;
-constexpr int32_t APP_INDEX_4 = 5;
-constexpr int32_t APP_INDEX_5 = 5;
 }
 
 BundleResourceIconRdb::BundleResourceIconRdb()
@@ -141,24 +136,16 @@ bool BundleResourceIconRdb::DeleteResourceIconInfo(const std::string &bundleName
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
     // need delete both bundle resource and launcher ability resource
-    // delete launcher ability resource
-    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, key + BundleResourceConstants::SEPARATOR);
+    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, key);
     absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
     if (type != IconResourceType::UNKNOWN) {
         absRdbPredicates.EqualTo(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
     }
     if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
         APP_LOGW("delete key:%{public}s failed", key.c_str());
+        return false;
     }
-    //delete bundle resource
-    NativeRdb::AbsRdbPredicates absRdbPredicates1(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
-    // need delete both bundle resource and launcher ability resource
-    absRdbPredicates1.EqualTo(BundleResourceConstants::NAME, key);
-    absRdbPredicates1.EqualTo(BundleResourceConstants::USER_ID, userId);
-    if (type != IconResourceType::UNKNOWN) {
-        absRdbPredicates1.EqualTo(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
-    }
-    return rdbDataManager_->DeleteData(absRdbPredicates1);
+    return true;
 }
 
 bool BundleResourceIconRdb::DeleteResourceIconInfos(const std::string &bundleName,
@@ -172,20 +159,8 @@ bool BundleResourceIconRdb::DeleteResourceIconInfos(const std::string &bundleNam
     APP_LOGD("need delete resource info, -n %{public}s, -u %{public}d, -t %{public}d",
         bundleName.c_str(), userId, static_cast<int32_t>(type));
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
-    std::vector<std::string> values;
-    std::string value1 = std::to_string(APP_INDEX_1) + BundleResourceConstants::UNDER_LINE + bundleName;
-    std::string value2 = std::to_string(APP_INDEX_2) + BundleResourceConstants::UNDER_LINE + bundleName;
-    std::string value3 = std::to_string(APP_INDEX_3) + BundleResourceConstants::UNDER_LINE + bundleName;
-    std::string value4 = std::to_string(APP_INDEX_4) + BundleResourceConstants::UNDER_LINE + bundleName;
-    std::string value5 = std::to_string(APP_INDEX_5) + BundleResourceConstants::UNDER_LINE + bundleName;
-    values.emplace_back(bundleName);
-    values.emplace_back(value1);
-    values.emplace_back(value2);
-    values.emplace_back(value3);
-    values.emplace_back(value4);
-    values.emplace_back(value5);
     // need delete both bundle resource and launcher ability resource
-    absRdbPredicates.In(BundleResourceConstants::NAME, values);
+    absRdbPredicates.Contains(BundleResourceConstants::NAME, bundleName);
     absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
     if (type != IconResourceType::UNKNOWN) {
         absRdbPredicates.EqualTo(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
@@ -259,13 +234,13 @@ void BundleResourceIconRdb::ParseNameToResourceName(const std::string &name, std
 {
     resourceName = name;
     // clone bundle no need to add
-    auto pos = name.find_first_of(BundleResourceConstants::SEPARATOR);
+    auto pos = name.find_first_of(BundleResourceConstants::UNDER_LINE);
     if (pos != std::string::npos) {
-        resourceName = name.substr(0, pos);
-    }
-    auto firstPos = resourceName.find_first_of(BundleResourceConstants::UNDER_LINE);
-    if (firstPos != std::string::npos) {
-        resourceName = resourceName.substr(firstPos + 1);
+        int32_t appIndex = 0;
+        if (!OHOS::StrToInt(name.substr(0, pos), appIndex)) {
+            return;
+        }
+        resourceName = name.substr(pos + 1);
     }
 }
 
