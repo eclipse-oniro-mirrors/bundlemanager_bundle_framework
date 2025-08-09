@@ -23,6 +23,11 @@
 #include "launcher_ability_resource_info.h"
 namespace OHOS {
 namespace AppExecFwk {
+enum class IconResourceType {
+    UNKNOWN = 0,
+    THEME_ICON = 1,
+    DYNAMIC_ICON = 2
+};
 class ResourceInfo {
 public:
     ResourceInfo();

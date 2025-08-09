@@ -383,8 +383,8 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfos(
         return false;
     }
     OHOS::AAFwk::Want want;
-    want.SetAction(Want::ACTION_HOME);
-    want.AddEntity(Want::ENTITY_HOME);
+    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
+    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
     std::vector<AbilityInfo> abilityInfos;
     int64_t time = 0;
     dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, time, userId);
