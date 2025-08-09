@@ -306,6 +306,8 @@ void BMSEventHandler::AfterBmsStart()
     }
 #endif
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
+    // process is online theme
+    BundleResourceHelper::SetIsOnlineThemeWhenBoot();
     CreateAppInstallDir();
     SetAllInstallFlag();
     HandleSceneBoard();
@@ -366,6 +368,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_INSTALL_SOURCE);
     UpdateOtaFlag(OTAFlag::DELETE_DEPRECATED_ARK_PATHS);
     UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_ICON);
+    UpdateOtaFlag(OTAFlag::PROCESS_THEME_AND_DYNAMIC_ICON);
     (void)SaveBmsSystemTimeForShortcut();
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
     (void)SaveUpdatePermissionsFlag();
@@ -1283,7 +1286,6 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckRecoverableApplicationInfo();
     ProcessCheckInstallSource();
     ProcessCheckAppExtensionAbility();
-    InnerProcessAllDynamicIconInfoWhenOta();
     // Driver update may cause shader cache invalidity and need to be cleared
     CleanAllBundleShaderCache();
     CleanAllBundleEl1ShaderCacheLocal();
@@ -2233,6 +2235,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         LOG_E(BMS_TAG_DEFAULT, "multi install failed");
     }
     UpdatePreinstallDB(needInstallMap);
+    // process bundle theme and dynamic resource
+    InnerProcessAllThemeAndDynamicIconInfoWhenOta(needInstallMap);
 }
 
 bool BMSEventHandler::CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo)
@@ -2614,7 +2618,7 @@ void BMSEventHandler::InnerProcessCheckAppExtensionAbility()
 
     for (const auto &bundleName : bundleNames) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "-n %{public}s add resource when ota", bundleName.c_str());
-        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId, ADD_RESOURCE_TYPE::UPDATE_BUNDLE);
     }
 }
 
@@ -4357,7 +4361,8 @@ void BMSEventHandler::ProcessBundleResourceInfo()
 
     for (const auto &bundleName : needAddResourceBundles) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "-n %{public}s add resource when reboot", bundleName.c_str());
-        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, Constants::START_USERID);
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, Constants::START_USERID,
+            ADD_RESOURCE_TYPE::INSTALL_BUNDLE);
     }
     LOG_I(BMS_TAG_DEFAULT, "ProcessBundleResourceInfo end");
 }
@@ -4827,6 +4832,31 @@ void BMSEventHandler::InnerProcessAllDynamicIconInfoWhenOta()
     }
     dataMgr->ProcessDynamicIconForOta();
     UpdateOtaFlag(OTAFlag::PROCESS_DYNAMIC_ICON);
+}
+
+void BMSEventHandler::InnerProcessAllThemeAndDynamicIconInfoWhenOta(
+    const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap)
+{
+    // process dynamic info
+    InnerProcessAllDynamicIconInfoWhenOta();
+    // process theme and dynamic icon
+    bool checkThemeDynamicIcon = false;
+    CheckOtaFlag(OTAFlag::PROCESS_THEME_AND_DYNAMIC_ICON, checkThemeDynamicIcon);
+    if (checkThemeDynamicIcon) {
+        LOG_I(BMS_TAG_DEFAULT, "No need to process theme and dynamic due to has checked");
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "process theme and dynamic start");
+    std::set<std::string> bundleNames;
+    for (const auto &item : needInstallMap) {
+        bundleNames.insert(item.first);
+    }
+    if (!BundleResourceHelper::ProcessThemeAndDynamicIconWhenOta(bundleNames)) {
+        LOG_E(BMS_TAG_DEFAULT, "process theme and dynamic failed");
+        return;
+    }
+    UpdateOtaFlag(OTAFlag::PROCESS_THEME_AND_DYNAMIC_ICON);
+    LOG_I(BMS_TAG_DEFAULT, "process theme and dynamic end");
 }
 
 void BMSEventHandler::InnerProcessBootCheckOnDemandBundle()

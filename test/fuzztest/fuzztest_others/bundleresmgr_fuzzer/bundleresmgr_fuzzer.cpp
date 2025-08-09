@@ -32,11 +32,9 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     std::string bundleName(data, size);
-    manager->AddResourceInfoByBundleName(bundleName, USERID);
     manager->DeleteResourceInfo(bundleName);
-    manager->AddAllResourceInfo(USERID, 0, 0);
+    manager->AddAllResourceInfo(USERID, 0);
     manager->DeleteAllResourceInfo();
-    manager->AddResourceInfoByAbility(bundleName, MODULE_NAME, ABILITY_NAME, USERID);
     std::vector<std::string> keyNames;
     manager->GetAllResourceName(keyNames);
     BundleResourceInfo info;
@@ -48,40 +46,26 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     manager->GetAllBundleResourceInfo(0, infos);
     manager->GetAllLauncherAbilityResourceInfo(0, launcherInfos);
     std::vector<ResourceInfo> resourceInfos;
-    manager->SaveResourceInfos(resourceInfos);
     std::string targetBundleName(data, size);
     manager->GetTargetBundleName(bundleName, targetBundleName);
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = bundleName;
     resourceInfo.label_ = bundleName;
-    manager->UpdateBundleIcon(bundleName, resourceInfo);
     int32_t appIndex = 1;
-    manager->AddCloneBundleResourceInfo(bundleName, appIndex);
-    manager->DeleteCloneBundleResourceInfo(bundleName, appIndex);
     manager->DeleteNotExistResourceInfo();
-    manager->AddResourceInfo(USERID, resourceInfo);
-    manager->AddResourceInfos(USERID, resourceInfos);
     std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
     resourceInfosMap[BUNDLE_NAME_NO_ICON] = resourceInfos;
-    manager->AddResourceInfosByMap(resourceInfosMap, manager->currentTaskNum_,
-        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE), USERID, USERID);
-    manager->InnerProcessResourceInfoByResourceUpdateType(resourceInfosMap,
-        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE), USERID, USERID);
     manager->ProcessResourceInfoWhenParseFailed(resourceInfo);
-    manager->ProcessResourceInfo(resourceInfos, resourceInfo);
     manager->GetDefaultIcon(resourceInfo);
     manager->CheckResourceFlags(static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
     manager->SendBundleResourcesChangedEvent(USERID,
         static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
     manager->InnerProcessResourceInfoBySystemLanguageChanged(resourceInfosMap);
     manager->InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, USERID);
-    manager->InnerProcessResourceInfoByUserIdChanged(resourceInfosMap, USERID, USERID);
     std::vector<std::string> existResourceNames;
     manager->DeleteNotExistResourceInfo(resourceInfosMap, existResourceNames);
-    manager->InnerProcessWhetherThemeExist(bundleName, USERID);
-    manager->GetBundleResourceInfoForCloneBundle(bundleName, appIndex, resourceInfos);
-    manager->UpdateCloneBundleResourceInfo(bundleName, appIndex,
-        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE));
+    manager->GetBundleResourceInfoForCloneBundle(bundleName, appIndex,
+        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE), resourceInfos);
     manager->DeleteNotExistResourceInfo(bundleName, appIndex, resourceInfos);
     manager->ProcessResourceInfoNoNeedToParseOtherIcon(resourceInfos);
     return true;

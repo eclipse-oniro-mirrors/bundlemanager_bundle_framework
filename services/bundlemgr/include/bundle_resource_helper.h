@@ -26,6 +26,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+enum class ADD_RESOURCE_TYPE {
+    INSTALL_BUNDLE = 1,
+    UPDATE_BUNDLE = 2,
+    CREATE_USER = 3
+};
+
 class BundleResourceHelper {
 public:
     // parse system config and init BundleSystemState, like language and colorMode
@@ -38,30 +44,29 @@ public:
     static void RegisterCommonEventSubscriber();
 
     static void AddResourceInfoByBundleName(const std::string &bundleName,
-        const int32_t userId);
+        const int32_t userId, const ADD_RESOURCE_TYPE type, const bool isBundleFirstInstall = true);
 
-    static bool DeleteResourceInfo(const std::string &key, const int32_t userId = Constants::UNSPECIFIED_USERID);
+    static bool DeleteBundleResourceInfo(const std::string &bundleName,
+        const int32_t userId, const bool isExistInOtherUser);
 
     static bool DeleteAllResourceInfo();
-
-    static void SetApplicationEnabled(const std::string &bundleName, bool enabled, const int32_t userId,
-        int32_t appIndex = 0);
-
-    static void SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, bool enabled, const int32_t userId, int32_t appIndex = 0);
 
     static void GetAllBundleResourceName(std::vector<std::string> &resourceNames);
 
     static std::string ParseBundleName(const std::string &keyName);
 
+    static void SetIsOnlineThemeWhenBoot();
+
     static void SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
         int32_t userId);
 
     static bool AddCloneBundleResourceInfo(const std::string &bundleName,
-        const int32_t appIndex, const int32_t userId = Constants::UNSPECIFIED_USERID);
+        const int32_t userId, const int32_t appIndex, const bool isExistInOtherUser);
 
-    static bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex,
-        const int32_t userId = Constants::UNSPECIFIED_USERID);
+    static bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const bool isExistInOtherUser);
+
+    static bool ProcessThemeAndDynamicIconWhenOta(const std::set<std::string> updateBundleNames);
 
     static void DeleteNotExistResourceInfo();
 

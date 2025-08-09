@@ -2729,6 +2729,26 @@ bool BundleDataMgr::RemoveExtResources(const std::string &bundleName,
     return true;
 }
 
+ErrCode BundleDataMgr::GetExtendResourceInfo(
+    const std::string &bundleName, const std::string &moduleName,
+    ExtendResourceInfo &extendResourceInfo)
+{
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto extendResourceInfos = infoItem->second.GetExtendResourceInfos();
+    auto iter = extendResourceInfos.find(moduleName);
+    if (iter == extendResourceInfos.end()) {
+        APP_LOGE("can not find module %{public}s", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    extendResourceInfo = iter->second;
+    return ERR_OK;
+}
+
 bool BundleDataMgr::UpateCurDynamicIconModule(
     const std::string &bundleName, const std::string &moduleName, const int32_t userId, const int32_t appIndex)
 {

@@ -30,8 +30,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     BundleResourceHelper::RegisterConfigurationObserver();
     BundleResourceHelper::RegisterCommonEventSubscriber();
     std::string bundleName(data, size);
-    BundleResourceHelper::AddResourceInfoByBundleName(bundleName, USERID);
-    BundleResourceHelper::DeleteResourceInfo(bundleName);
+    BundleResourceHelper::AddResourceInfoByBundleName(bundleName, USERID, ADD_RESOURCE_TYPE::INSTALL_BUNDLE, true);
     BundleResourceHelper::DeleteAllResourceInfo();
     std::vector<std::string> resourceNames;
     BundleResourceHelper::GetAllBundleResourceName(resourceNames);
@@ -39,8 +38,8 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     std::string moduleName(data, size);
     BundleResourceHelper::SetOverlayEnabled(bundleName, moduleName, true, USERID);
     int32_t appIndex = 0;
-    BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, appIndex, USERID);
-    BundleResourceHelper::DeleteCloneBundleResourceInfo(bundleName, appIndex, USERID);
+    BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, USERID, appIndex, true);
+    BundleResourceHelper::DeleteCloneBundleResourceInfo(bundleName, USERID, appIndex, false);
     BundleResourceHelper::DeleteNotExistResourceInfo();
     return true;
 }

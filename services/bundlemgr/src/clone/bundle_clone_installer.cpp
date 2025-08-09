@@ -267,9 +267,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     {
         auto appIndexes = info.GetCloneBundleAppIndexes();
         // appIndex not exist, need parse
-        if (appIndexes.find(appIndex) == appIndexes.end()) {
-            BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, appIndex, userId);
-        }
+        BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, userId, appIndex,
+            appIndexes.find(appIndex) != appIndexes.end());
     }
 
     // total to commit, avoid rollback
@@ -344,9 +343,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         InnerBundleInfo info;
         if (dataMgr_->FetchInnerBundleInfo(bundleName, info)) {
             auto appIndexes = info.GetCloneBundleAppIndexes();
-            if (appIndexes.find(appIndex) == appIndexes.end()) {
-                BundleResourceHelper::DeleteCloneBundleResourceInfo(bundleName, appIndex, userId);
-            }
+            BundleResourceHelper::DeleteCloneBundleResourceInfo(bundleName, userId, appIndex,
+                appIndexes.find(appIndex) != appIndexes.end());
         }
     }
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL

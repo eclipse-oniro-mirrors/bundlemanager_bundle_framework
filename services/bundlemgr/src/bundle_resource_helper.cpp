@@ -57,35 +57,57 @@ void BundleResourceHelper::RegisterCommonEventSubscriber()
 }
 
 void BundleResourceHelper::AddResourceInfoByBundleName(const std::string &bundleName,
-    const int32_t userId)
+    const int32_t userId, const ADD_RESOURCE_TYPE type, const bool isBundleFirstInstall)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGI_NOFUNC("-n %{public}s -u %{public}d add resource start", bundleName.c_str(), userId);
+    APP_LOGI_NOFUNC("-n %{public}s -u %{public}d type %{public}d add resource start", bundleName.c_str(), userId,
+        static_cast<int32_t>(type));
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("failed, manager is nullptr");
         return;
     }
-    // add new resource info
-    if (!manager->AddResourceInfoByBundleName(bundleName, userId)) {
-        APP_LOGW("failed, bundleName:%{public}s", bundleName.c_str());
+    switch (type) {
+        case ADD_RESOURCE_TYPE::INSTALL_BUNDLE : {
+            // add new resource info
+            if (!manager->AddResourceInfoByBundleNameWhenInstall(bundleName, userId, isBundleFirstInstall)) {
+                APP_LOGW("add failed, bundleName:%{public}s", bundleName.c_str());
+            }
+            break;
+        }
+        case ADD_RESOURCE_TYPE::UPDATE_BUNDLE : {
+            if (!manager->AddResourceInfoByBundleNameWhenUpdate(bundleName, userId)) {
+                APP_LOGW("update failed, bundleName:%{public}s", bundleName.c_str());
+            }
+            break;
+        }
+        case ADD_RESOURCE_TYPE::CREATE_USER : {
+            if (!manager->AddResourceInfoByBundleNameWhenCreateUser(bundleName, userId)) {
+                APP_LOGW("update failed, bundleName:%{public}s", bundleName.c_str());
+            }
+            break;
+        }
+        default:
+            break;
     }
-    APP_LOGI_NOFUNC("-n %{public}s -u %{public}d add resource end", bundleName.c_str(), userId);
+    APP_LOGI_NOFUNC("-n %{public}s -u %{public}d type %{public}d add resource end", bundleName.c_str(), userId,
+        static_cast<int32_t>(type));
 #endif
 }
 
-bool BundleResourceHelper::DeleteResourceInfo(const std::string &key, const int32_t userId)
+bool BundleResourceHelper::DeleteBundleResourceInfo(
+    const std::string &bundleName, const int32_t userId, const bool isExistInOtherUser)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGI("start delete key %{public}s userId:%{public}d", key.c_str(), userId);
+    APP_LOGI("start delete resource -n %{public}s -u %{public}d", bundleName.c_str(), userId);
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("failed, manager is nullptr");
         return false;
     }
 
-    if (!manager->DeleteResourceInfo(key)) {
-        APP_LOGE("failed, key:%{public}s", key.c_str());
+    if (!manager->DeleteBundleResourceInfo(bundleName, userId, isExistInOtherUser)) {
+        APP_LOGE("delete resource failed -n %{public}s -u %{public}d", bundleName.c_str(), userId);
         return false;
     }
 
@@ -151,7 +173,7 @@ bool BundleResourceHelper::DeleteAllResourceInfo()
 }
 
 bool BundleResourceHelper::AddCloneBundleResourceInfo(const std::string &bundleName,
-    const int32_t appIndex, const int32_t userId)
+    const int32_t userId, const int32_t appIndex, const bool isExistInOtherUser)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     APP_LOGI("start add clone bundle:%{public}s appIndex:%{public}d userId:%{public}d",
@@ -161,7 +183,7 @@ bool BundleResourceHelper::AddCloneBundleResourceInfo(const std::string &bundleN
         APP_LOGE("failed, manager is nullptr");
         return false;
     }
-    if (!manager->AddCloneBundleResourceInfo(bundleName, appIndex, userId)) {
+    if (!manager->AddCloneBundleResourceInfoWhenInstall(bundleName, userId, appIndex, isExistInOtherUser)) {
         APP_LOGE("add clone bundle resource failed, bundleName:%{public}s, appIndex:%{public}d",
             bundleName.c_str(), appIndex);
         return false;
@@ -176,7 +198,7 @@ bool BundleResourceHelper::AddCloneBundleResourceInfo(const std::string &bundleN
 }
 
 bool BundleResourceHelper::DeleteCloneBundleResourceInfo(const std::string &bundleName,
-    const int32_t appIndex, const int32_t userId)
+    const int32_t userId, const int32_t appIndex, const bool isExistInOtherUser)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     APP_LOGI("start delete clone bundle:%{public}s appIndex:%{public}d userId:%{public}d",
@@ -187,7 +209,7 @@ bool BundleResourceHelper::DeleteCloneBundleResourceInfo(const std::string &bund
         return false;
     }
 
-    if (!manager->DeleteCloneBundleResourceInfo(bundleName, appIndex)) {
+    if (!manager->DeleteCloneBundleResourceInfoWhenUninstall(bundleName, userId, appIndex, isExistInOtherUser)) {
         APP_LOGE("failed, key:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
         return false;
     }
@@ -212,6 +234,27 @@ void BundleResourceHelper::DeleteNotExistResourceInfo()
         APP_LOGE("delete not exist resource failed");
         return;
     }
+#endif
+}
+
+bool BundleResourceHelper::ProcessThemeAndDynamicIconWhenOta(const std::set<std::string> updateBundleNames)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGI("ProcessThemeAndDynamicIconWhenOta start");
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return false;
+    }
+
+    if (!manager->ProcessThemeAndDynamicIconWhenOta(updateBundleNames)) {
+        APP_LOGE("ProcessThemeAndDynamicIconWhenOta failed");
+        return false;
+    }
+    APP_LOGI("ProcessThemeAndDynamicIconWhenOta end");
+    return true;
+#else
+    return false;
 #endif
 }
 
@@ -302,6 +345,18 @@ void BundleResourceHelper::ProcessBundleResourceChange()
 #endif
 #else
     return;
+#endif
+}
+
+void BundleResourceHelper::SetIsOnlineThemeWhenBoot()
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    manager->SetIsOnlineThemeWhenBoot();
 #endif
 }
 } // AppExecFwk

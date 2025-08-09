@@ -31,7 +31,8 @@ class BundleResourceProcess {
 public:
     // get LauncherAbilityResourceInfo and BundleResourceInfo by bundleName
     static bool GetResourceInfoByBundleName(const std::string &bundleName, const int32_t userId,
-        std::vector<ResourceInfo> &resourceInfo, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
+        std::vector<ResourceInfo> &resourceInfo, const int32_t appIndex = Constants::DEFAULT_APP_INDEX,
+        bool needParseDynamic = true);
     // get LauncherAbilityResourceInfo by abilityName
     static bool GetLauncherResourceInfoByAbilityName(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const int32_t userId,
@@ -55,6 +56,9 @@ public:
 
     static bool CheckThemeType(const std::string &bundleName, const int32_t userId, bool &isOnlineTheme);
 
+    static bool GetDynamicIconResourceInfo(const std::string &bundleName,
+        const std::string &dynamicModuleName, ResourceInfo &resourceInfo);
+
 private:
     // used for show in settings
     static bool GetBundleResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
@@ -75,7 +79,8 @@ private:
     static ResourceInfo ConvertToExtensionAbilityResourceInfo(const ExtensionAbilityInfo &info);
 
     static bool InnerGetResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
-        std::vector<ResourceInfo> &resourceInfos, const int32_t appIndex = Constants::DEFAULT_APP_INDEX);
+        std::vector<ResourceInfo> &resourceInfos, const int32_t appIndex = Constants::DEFAULT_APP_INDEX,
+        bool needParseDynamic = true);
 
     static bool OnGetResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfos);

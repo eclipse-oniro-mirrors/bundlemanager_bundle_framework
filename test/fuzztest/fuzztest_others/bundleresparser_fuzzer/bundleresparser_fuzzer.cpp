@@ -75,7 +75,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     parser.GetMediaDataById(resourceManager, iconId, density, datas);
     ResourceInfo newResourceInfo;
     parser.IsNeedToParseResourceInfo(newResourceInfo, resourceInfo);
-    parser.ProcessSpecialBundleResource(USERID, resourceInfos);
     return true;
 }
 }
