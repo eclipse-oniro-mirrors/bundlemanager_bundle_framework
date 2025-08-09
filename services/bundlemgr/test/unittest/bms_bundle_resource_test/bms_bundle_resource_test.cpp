@@ -6336,4 +6336,64 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0255, Function | SmallTest
     callback.SetConfigInFile("", "", 0, 0, 0, userId);
     callback.DeleteConfigInFile(userId, 0);
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0256
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetResourceInfoByBundleName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0256, Function | SmallTest | Level0)
+{
+    std::vector<ResourceInfo> resourceInfos;
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    bundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+    savedDataMgr->bundleInfos_["bundle_test"] = bundleInfo;
+
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName("bundle_test", USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    bundleInfo.SetApplicationBundleType(BundleType::SHARED);
+    savedDataMgr->bundleInfos_["bundle_test"] = bundleInfo;
+    ans = BundleResourceProcess::GetResourceInfoByBundleName("bundle_test", USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+    auto iter = savedDataMgr->bundleInfos_.find("bundle_test");
+    if (iter != savedDataMgr->bundleInfos_.end()) {
+        savedDataMgr->bundleInfos_.erase(iter);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0257
+ * Function: GetAllResourceInfo
+ * @tc.name: test GetAllResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0257, Function | SmallTest | Level0)
+{
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    bundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+    savedDataMgr->bundleInfos_["bundle_test"] = bundleInfo;
+
+    bool ans = BundleResourceProcess::GetAllResourceInfo(USERID, resourceInfosMap);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfosMap.empty());
+    auto iter = savedDataMgr->bundleInfos_.find("bundle_test");
+    if (iter != savedDataMgr->bundleInfos_.end()) {
+        savedDataMgr->bundleInfos_.erase(iter);
+    }
+}
 } // OHOS
