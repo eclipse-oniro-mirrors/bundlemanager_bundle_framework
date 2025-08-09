@@ -268,7 +268,11 @@ HWTEST_F(BmsBundleResourceIconRdbTest, ParseNameToResourceName_0001, Function | 
 
     key = "1_bundleName/moduleName/abilityName";
     resourceIconRdb.ParseNameToResourceName(key, bundleName);
-    EXPECT_EQ(bundleName, "bundleName");
+    EXPECT_EQ(bundleName, "bundleName/moduleName/abilityName");
+
+    key = "aaa_bundleName/moduleName/abilityName";
+    resourceIconRdb.ParseNameToResourceName(key, bundleName);
+    EXPECT_EQ(bundleName, "aaa_bundleName/moduleName/abilityName");
 }
 
 /**
