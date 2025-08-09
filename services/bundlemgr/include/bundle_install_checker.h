@@ -206,7 +206,7 @@ private:
     ErrCode ParseBundleInfo(
         const std::string &bundleFilePath,
         InnerBundleInfo &info,
-        BundlePackInfo &packInfo) const;
+        BundlePackInfo &packInfo);
 
     ErrCode CheckSystemSize(
         const std::string &bundlePath,
