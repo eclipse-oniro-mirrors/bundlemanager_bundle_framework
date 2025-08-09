@@ -1663,13 +1663,13 @@ ErrCode InstalldHostImpl::ChangeFileStat(const std::string &file, FileStat &file
             fileStat.mode, fileStat.uid, fileStat.gid);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (fileStat.mode != s.st_mode) {
+    if (fileStat.mode != static_cast<int32_t>(s.st_mode)) {
         if (chmod(filePath.c_str(), fileStat.mode) != 0) {
             LOG_E(BMS_TAG_INSTALLD, "ChangeFileStat chmod failed errno %{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED;
         }
     }
-    if (fileStat.uid != s.st_uid || fileStat.gid != s.st_gid) {
+    if (fileStat.uid != static_cast<int32_t>(s.st_uid) || fileStat.gid != static_cast<int32_t>(s.st_gid)) {
         if (chown(filePath.c_str(), fileStat.uid, fileStat.gid) != 0) {
             LOG_E(BMS_TAG_INSTALLD, "ChangeFileStat chown failed errno %{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED;
