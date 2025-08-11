@@ -23,6 +23,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int16_t WAIT_TIME = 3000;
+constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 constexpr int16_t MAX_VEC_SIZE = 1000;
 constexpr int16_t MAX_STRING_SIZE = 1024;
 }
@@ -391,7 +392,7 @@ ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundl
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::BATCH_GET_BUNDLE_STATS, data, reply, option);
     if (ret == ERR_OK) {
         int32_t statsSize = reply.ReadInt32();
-        if (statsSize <= 0) {
+        if (statsSize <= 0 || statsSize > MAX_BATCH_QUERY_BUNDLE_SIZE) {
             APP_LOGW("statsSize failed");
             return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
         }
