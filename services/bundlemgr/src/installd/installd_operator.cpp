@@ -646,17 +646,17 @@ bool InstalldOperator::ProcessBundleInstallNative(const std::string &userId, con
     const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
 {
     struct HapInfo hapInfo;
-    int res = strcpy_s(hapInfo.packageName, packageName.length() + 1, packageName.c_str());
-    if (res != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName");
+    if (strcpy_s(hapInfo.packageName, sizeof(hapInfo.packageName), packageName.c_str()) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName: %{public}s", packageName.c_str());
+        return false;
     }
-    res = strcpy_s(hapInfo.hapPath, hapPath.length() + 1, hapPath.c_str());
-    if (res != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath");
+    if (strcpy_s(hapInfo.hapPath, sizeof(hapInfo.hapPath), hapPath.c_str()) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath: %{public}s", hapPath.c_str());
+        return false;
     }
-    res = strcpy_s(hapInfo.abi, cpuAbi.length() + 1, cpuAbi.c_str());
-    if (res != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi");
+    if (strcpy_s(hapInfo.abi, sizeof(hapInfo.abi), cpuAbi.c_str()) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi: %{public}s", cpuAbi.c_str());
+        return false;
     }
     int ret = NativeInstallHnp(userId.c_str(), hnpRootPath.c_str(), &hapInfo, 1);
     LOG_D(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);
