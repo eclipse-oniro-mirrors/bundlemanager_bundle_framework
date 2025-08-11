@@ -1540,7 +1540,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         ProcessArkStartupCache(ceateArk, cacheInfo.GetModuleSize(), userId_);
     }
     ProcessUpdateShortcut();
-    ProcessAddResourceInfo(installParam, bundleName_, userId_);
+    BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_,
+        (isAppExist_ && hasInstalledInUser_) ? ADD_RESOURCE_TYPE::UPDATE_BUNDLE : ADD_RESOURCE_TYPE::INSTALL_BUNDLE,
+        !isAppExist_);
     if (!ProcessExtProfile(installParam)) {
         LOG_W(BMS_TAG_INSTALLER, "ProcessExtProfile failed");
     }
@@ -1831,6 +1833,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 "DeleteShortcutVisibleInfo failed, bundleName: %{public}s, userId: %{public}d, appIndex: 0",
                 bundleName.c_str(), userId_);
         }
+        BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, true);
         return ERR_OK;
     }
     dataMgr_->DisableBundle(bundleName);
@@ -1915,7 +1918,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     DeleteEncryptedStatus(bundleName, uid);
-    BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
+    BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
     DeleteRouterInfo(bundleName);
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
@@ -2128,6 +2131,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             DeleteRouterInfo(bundleName);
             SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
             UninstallDebugAppSandbox(bundleName, uid, oldInfo);
+            BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
             return ERR_OK;
         }
         auto removeRes = RemoveBundleUserData(oldInfo, installParam.isKeepData);
@@ -2139,6 +2143,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         if (!PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName)) {
             LOG_E(BMS_TAG_INSTALLER, "DeleteInnerPatchInfo failed, bundleName: %{public}s", bundleName.c_str());
         }
+        BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, true);
         return ERR_OK;
     }
 
@@ -2322,6 +2327,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 preInstallBundleInfo.DeleteForceUnisntalledUser(userId_);
                 dataMgr_->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
             }
+            // process resource
+            BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId_, ADD_RESOURCE_TYPE::CREATE_USER);
             return ERR_OK;
         }
     }
@@ -7007,7 +7014,7 @@ ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName
             oldInfo.GetBundleName().c_str());
     }
     DeleteRouterInfo(oldInfo.GetBundleName());
-    BundleResourceHelper::DeleteResourceInfo(oldInfo.GetBundleName());
+    BundleResourceHelper::DeleteBundleResourceInfo(oldInfo.GetBundleName(), userId_, false);
     RemoveProfileFromCodeSign(oldInfo.GetBundleName());
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), oldInfo.GetBundleName());
     return ERR_OK;
@@ -7341,37 +7348,6 @@ bool BaseBundleInstaller::DeleteAppGalleryHapFromTempPath()
     }
     LOG_I(BMS_TAG_INSTALLER, "delete app_temp file end");
     return true;
-}
-
-void BaseBundleInstaller::ProcessAddResourceInfo(const InstallParam &installParam,
-    const std::string &bundleName, int32_t userId)
-{
-    // if bundle not exist, need to add resource
-    if (!isAppExist_) {
-        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
-        return;
-    }
-    // if user id is 0, 1, or 100, need to add resource
-    if ((userId == Constants::DEFAULT_USERID) || (userId == Constants::U1) ||
-        (userId == Constants::START_USERID)) {
-        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
-        return;
-    }
-    // For multiple users, it is necessary to check whether the userId is equal to the current active userId.
-    // When OTA, the default user is obtained.
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserIdWithRetry(installParam.isOTA || otaInstall_);
-    if (currentUserId == Constants::INVALID_USERID) {
-        LOG_W(BMS_TAG_INSTALLER, "current user %{public}d is invalid", currentUserId);
-        if ((installParam.isOTA || otaInstall_) && userId != Constants::START_USERID &&
-            dataMgr_->HasUserInstallInBundle(bundleName, Constants::START_USERID)) {
-            return;
-        }
-        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
-        return;
-    }
-    if (userId == currentUserId) {
-        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
-    }
 }
 
 void BaseBundleInstaller::CheckPreBundle(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,

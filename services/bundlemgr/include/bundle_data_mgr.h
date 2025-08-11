@@ -798,6 +798,8 @@ public:
     void CreateAppInstallDir(int32_t userId);
     void RemoveAppInstallDir(int32_t userId);
     bool IsObtainAbilityInfo(const Want &want, int32_t userId, AbilityInfo &abilityInfo);
+    ErrCode GetExtendResourceInfo(const std::string &bundleName, const std::string &moduleName,
+        ExtendResourceInfo &extendResourceInfos);
 
     /**
      * @brief Sets whether to enable isRemovable based on given bundle name, module name and isEnable.

@@ -98,7 +98,8 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
     const std::string &bundleName,
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfo,
-    const int32_t appIndex)
+    const int32_t appIndex,
+    bool needParseDynamic)
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -122,7 +123,7 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
         return false;
     }
 
-    return InnerGetResourceInfo(innerBundleInfo, userId, resourceInfo, appIndex);
+    return InnerGetResourceInfo(innerBundleInfo, userId, resourceInfo, appIndex, needParseDynamic);
 }
 
 bool BundleResourceProcess::GetLauncherResourceInfoByAbilityName(
@@ -253,38 +254,51 @@ bool BundleResourceProcess::GetDynamicIcon(
     return true;
 }
 
+bool BundleResourceProcess::GetDynamicIconResourceInfo(const std::string &bundleName,
+    const std::string &dynamicModuleName, ResourceInfo &resourceInfo)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    ExtendResourceInfo extendResourceInfo;
+    if (dataMgr->GetExtendResourceInfo(bundleName, dynamicModuleName, extendResourceInfo) != ERR_OK) {
+        APP_LOGE("GetExtendResourceInfo failed -n %{public}s -m %{public}s",
+            bundleName.c_str(), dynamicModuleName.c_str());
+        return false;
+    }
+    BundleResourceParser parser;
+    if (!parser.ParseIconResourceByPath(extendResourceInfo.filePath, extendResourceInfo.iconId, resourceInfo)) {
+        APP_LOGE("-n %{public}s parse dynamicIcon failed, iconId:%{public}d",
+            bundleName.c_str(), extendResourceInfo.iconId);
+        return false;
+    }
+    return true;
+}
+
 bool BundleResourceProcess::InnerGetResourceInfo(
     const InnerBundleInfo &innerBundleInfo,
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfos,
-    const int32_t appIndex)
+    const int32_t appIndex,
+    bool needParseDynamic)
 {
-    ResourceInfo dynamicResourceInfo;
-    dynamicResourceInfo.bundleName_ = innerBundleInfo.GetBundleName();
-    dynamicResourceInfo.appIndex_ = appIndex;
-    bool hasDynamicIcon = GetDynamicIcon(innerBundleInfo, userId, dynamicResourceInfo);
     if (!OnGetResourceInfo(innerBundleInfo, userId, resourceInfos)) {
-        if (!hasDynamicIcon) {
-            APP_LOGW("bundleName: %{public}s get bundle resource failed",
-                innerBundleInfo.GetBundleName().c_str());
-            return false;
-        }
-
-        APP_LOGI("%{public}s no default icon, build new", innerBundleInfo.GetBundleName().c_str());
-        ResourceInfo defaultResourceInfo;
-        defaultResourceInfo.bundleName_ = innerBundleInfo.GetBundleName();
-        defaultResourceInfo.labelNeedParse_ = false;
-        defaultResourceInfo.iconNeedParse_ = false;
-        defaultResourceInfo.icon_ = dynamicResourceInfo.icon_;
-        defaultResourceInfo.foreground_ = dynamicResourceInfo.foreground_;
-        defaultResourceInfo.background_ = dynamicResourceInfo.background_;
-        resourceInfos.emplace_back(defaultResourceInfo);
-    }
-
-    if (hasDynamicIcon) {
-        APP_LOGI("-n %{public}s -u %{public}d -i %{public}d has dynamicIcon", innerBundleInfo.GetBundleName().c_str(),
+        APP_LOGE("-n %{public}s -u %{public}d -i %{public}d no resource", innerBundleInfo.GetBundleName().c_str(),
             userId, appIndex);
-        ChangeDynamicIcon(resourceInfos, dynamicResourceInfo);
+        return false;
+    }
+    if (needParseDynamic) {
+        ResourceInfo dynamicResourceInfo;
+        dynamicResourceInfo.bundleName_ = innerBundleInfo.GetBundleName();
+        dynamicResourceInfo.appIndex_ = appIndex;
+        bool hasDynamicIcon = GetDynamicIcon(innerBundleInfo, userId, dynamicResourceInfo);
+        if (hasDynamicIcon) {
+            APP_LOGI("-n %{public}s -u %{public}d -i %{public}d has dynamicIcon",
+                innerBundleInfo.GetBundleName().c_str(), userId, appIndex);
+            ChangeDynamicIcon(resourceInfos, dynamicResourceInfo);
+        }
     }
     // for clone bundle
     std::set<int32_t> appIndexes = innerBundleInfo.GetCloneBundleAppIndexes();
@@ -356,7 +370,6 @@ ResourceInfo BundleResourceProcess::ConvertToBundleResourceInfo(const InnerBundl
     }
     resourceInfo.moduleName_ = moduleName;
     resourceInfo.abilityName_ = std::string();
-    resourceInfo.hasDynamicIcon_ = innerBundleInfo.IsDynamicIconModuleExist();
     return resourceInfo;
 }
 

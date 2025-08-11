@@ -12163,24 +12163,6 @@ HWTEST_F(BmsBundleInstallerTest, GetAllPreInstallBundleInfos_0100, Function | Me
 }
 
 /**
- * @tc.number: ProcessAddResourceInfo_0010
- * @tc.name: test ProcessAddResourceInfo
- * @tc.desc: 1.Test the ProcessAddResourceInfo of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, ProcessAddResourceInfo_0010, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.isAppExist_ = true;
-    std::string testBudnleName = "com.example.u1Enable";
-    InstallParam installParam;
-    installer.ProcessAddResourceInfo(installParam, testBudnleName, 1);
-    bool res = BundleResourceHelper::DeleteResourceInfo(testBudnleName, 1);
-    EXPECT_FALSE(res);
-    res = BundleResourceHelper::DeleteResourceInfo(testBudnleName, -1);
-    EXPECT_FALSE(res);
-}
-
-/**
  * @tc.number: ProcessExtProfile_0010
  * @tc.name: test ProcessExtProfile
  * @tc.desc: 1.Test the ProcessExtProfile of BaseBundleInstaller

@@ -43,10 +43,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleresourcehelper->BundleSystemStateInit();
     bundleresourcehelper->RegisterConfigurationObserver();
     bundleresourcehelper->RegisterCommonEventSubscriber();
-    bundleresourcehelper->AddResourceInfoByBundleName(bundleName, USERID);
-    bundleresourcehelper->AddResourceInfoByBundleName(bundleName, userId);
-    bundleresourcehelper->DeleteResourceInfo(key, userId);
-    bundleresourcehelper->DeleteResourceInfo(key, USERID);
+    bundleresourcehelper->AddResourceInfoByBundleName(bundleName, USERID, ADD_RESOURCE_TYPE::INSTALL_BUNDLE, true);
+    bundleresourcehelper->AddResourceInfoByBundleName(bundleName, userId, ADD_RESOURCE_TYPE::INSTALL_BUNDLE, true);
     bundleresourcehelper->DeleteAllResourceInfo();
     std::vector<std::string> resourceNames;
     bundleresourcehelper->GetAllBundleResourceName(resourceNames);
@@ -54,10 +52,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     bundleresourcehelper->SetOverlayEnabled(bundleName, moduleName, true, userId);
     int32_t appIndex = fdp.ConsumeIntegral<int32_t>();
-    bundleresourcehelper->AddCloneBundleResourceInfo(bundleName, appIndex, USERID);
-    bundleresourcehelper->AddCloneBundleResourceInfo(bundleName, appIndex, userId);
-    bundleresourcehelper->DeleteCloneBundleResourceInfo(bundleName, appIndex, USERID);
-    bundleresourcehelper->DeleteCloneBundleResourceInfo(bundleName, appIndex, userId);
+    bundleresourcehelper->DeleteCloneBundleResourceInfo(bundleName, USERID, appIndex, true);
+    bundleresourcehelper->DeleteCloneBundleResourceInfo(bundleName, userId, appIndex, false);
     bundleresourcehelper->DeleteNotExistResourceInfo();
     uint32_t flags = fdp.ConsumeIntegral<uint32_t>();
     BundleResourceInfo bundleResourceInfo;

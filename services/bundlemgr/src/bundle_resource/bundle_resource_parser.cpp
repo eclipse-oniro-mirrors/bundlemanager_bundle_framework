@@ -39,17 +39,6 @@ constexpr char CHAR_COLON = ':';
 constexpr const char* OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
 constexpr int8_t BADGE_SIZE = 62;
 #endif
-constexpr const char* COM_OHOS_CONTACTS_ENTRY_ABILITY = "com.ohos.contacts.EntryAbility";
-constexpr const char* COM_OHOS_CONTACTS_ENTRY = "entry";
-constexpr const char* SYSTEM_THEME_PATH = "/data/service/el1/public/themes/";
-constexpr const char* ENTRY_ABILITY_THEME_ICONS_A =
-    "/a/app/icons/com.ohos.contacts/entry/com.ohos.contacts.EntryAbility";
-constexpr const char* ENTRY_ABILITY_THEME_ICONS_B =
-    "/b/app/icons/com.ohos.contacts/entry/com.ohos.contacts.EntryAbility";
-constexpr const char* THEME_ICONS_A_FLAG = "/a/app/flag";
-constexpr const char* THEME_ICONS_B_FLAG = "/b/app/flag";
-constexpr const char* COM_OHOS_CONTACTS = "com.ohos.contacts";
-
 struct LayeredImage {
     std::string foreground;
     std::string background;
@@ -152,13 +141,9 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
                 std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager(
                     resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
                     resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, *resConfig, 0, userId));
-            if (resourceInfos[index].hasThemeIcon_) {
-                (void)BundleResourceConfiguration::InitResourceGlobalConfig(resourceManager);
-            } else {
-                (void)BundleResourceConfiguration::InitResourceGlobalConfig(
-                    resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager,
-                    resourceInfos[index].iconNeedParse_, resourceInfos[index].labelNeedParse_);
-            }
+            (void)BundleResourceConfiguration::InitResourceGlobalConfig(
+                resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager,
+                resourceInfos[index].iconNeedParse_, resourceInfos[index].labelNeedParse_);
             resourceManagerMap[resourceInfos[index].moduleName_] = resourceManager;
         }
 
@@ -166,7 +151,6 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
             APP_LOGW_NOFUNC("ParseResourceInfo fail key:%{public}s", resourceInfos[index].GetKey().c_str());
         }
     }
-    ProcessSpecialBundleResource(userId, resourceInfos);
     if ((resourceInfos[0].labelNeedParse_ && resourceInfos[0].label_.empty()) ||
         (resourceInfos[0].iconNeedParse_ && resourceInfos[0].icon_.empty())) {
         APP_LOGE_NOFUNC("ParseResourceInfos fail -n %{public}s -m %{public}s",
@@ -283,7 +267,7 @@ bool BundleResourceParser::ParseIconResourceByPath(const std::string &hapPath, c
 
 bool BundleResourceParser::ParseResourceInfoByResourceManager(
     const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
-    ResourceInfo &resourceInfo)
+    ResourceInfo &resourceInfo, bool usingThemeResource)
 {
     if (resourceManager == nullptr) {
         APP_LOGE("resourceManager is nullptr");
@@ -296,7 +280,8 @@ bool BundleResourceParser::ParseResourceInfoByResourceManager(
         ans = false;
     }
 
-    if (resourceInfo.iconNeedParse_ && !ParseIconResourceByResourceManager(resourceManager, resourceInfo)) {
+    if (resourceInfo.iconNeedParse_ && !ParseIconResourceByResourceManager(resourceManager, resourceInfo,
+        usingThemeResource)) {
         APP_LOGE_NOFUNC("ParseIconResource fail key %{public}s", resourceInfo.GetKey().c_str());
         ans = false;
     }
@@ -327,7 +312,7 @@ bool BundleResourceParser::ParseLabelResourceByResourceManager(
 
 bool BundleResourceParser::ParseIconResourceByResourceManager(
     const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
-    ResourceInfo &resourceInfo)
+    ResourceInfo &resourceInfo, bool usingThemeResource)
 {
     if (resourceManager == nullptr) {
         APP_LOGE("resourceManager is nullptr");
@@ -337,13 +322,15 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         APP_LOGE_NOFUNC("iconId is 0 or less than 0");
         return false;
     }
-    // Firstly, check if the bundle theme resource exists, density 0
-    BundleResourceDrawable drawable;
-    if (drawable.GetIconResourceByTheme(resourceInfo.iconId_, 0, resourceManager, resourceInfo) &&
-        !resourceInfo.foreground_.empty()) {
-        return true;
+    if (usingThemeResource) {
+        // Firstly, check if the bundle theme resource exists, density 0
+        BundleResourceDrawable drawable;
+        if (drawable.GetIconResourceByTheme(resourceInfo.iconId_, 0, resourceManager, resourceInfo) &&
+            !resourceInfo.foreground_.empty()) {
+            return true;
+        }
+        APP_LOGI_NOFUNC("%{public}s not exist theme", resourceInfo.GetKey().c_str());
     }
-    APP_LOGI_NOFUNC("%{public}s not exist theme", resourceInfo.GetKey().c_str());
     // parse json
     std::string type;
     size_t len;
@@ -365,6 +352,7 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         return bundleResourceImageInfo.ConvertToBase64(std::move(jsonBuf), len, resourceInfo.icon_);
     }
     APP_LOGI_NOFUNC("%{public}s icon is not png, parse by drawable descriptor", resourceInfo.GetKey().c_str());
+    BundleResourceDrawable drawable;
     if (!drawable.GetIconResourceByHap(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
         APP_LOGE("key:%{public}s parse failed with hap iconId:%{public}d",
             resourceInfo.GetKey().c_str(), resourceInfo.iconId_);
@@ -518,39 +506,99 @@ bool BundleResourceParser::ParserCloneResourceInfo(
 #endif
 }
 
-void BundleResourceParser::ProcessSpecialBundleResource(const int32_t userId, std::vector<ResourceInfo> &resourceInfos)
+bool BundleResourceParser::ParseResourceInfosNoTheme(
+    const int32_t userId, std::vector<ResourceInfo> &resourceInfos)
 {
+    APP_LOGD("start");
     if (resourceInfos.empty()) {
-        APP_LOGW("resourceInfos empty");
-        return;
+        APP_LOGE("resourceInfos is empty");
+        return false;
     }
-    if ((resourceInfos[0].GetKey() == COM_OHOS_CONTACTS)) {
-        bool isContactsEntryAbilityExistTheme = false;
-        if (BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG) &&
-            BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + ENTRY_ABILITY_THEME_ICONS_A)) {
-            isContactsEntryAbilityExistTheme = true;
+    // same module need parse together
+    std::map<std::string, std::shared_ptr<Global::Resource::ResourceManager>> resourceManagerMap;
+    size_t size = resourceInfos.size();
+    for (size_t index = 0; index < size; ++index) {
+        if (!resourceInfos[index].iconNeedParse_ && !resourceInfos[index].labelNeedParse_) {
+            APP_LOGI("%{public}s no need parse", resourceInfos[index].bundleName_.c_str());
+            continue;
         }
-        if (!isContactsEntryAbilityExistTheme &&
-            BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B_FLAG) &&
-            BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + ENTRY_ABILITY_THEME_ICONS_B)) {
-            isContactsEntryAbilityExistTheme = true;
+        if ((index > 0) && !IsNeedToParseResourceInfo(resourceInfos[index], resourceInfos[0])) {
+            continue;
         }
-        if (!isContactsEntryAbilityExistTheme) {
-            APP_LOGI("%{public}s not exist entry ability theme", resourceInfos[0].GetKey().c_str());
-            return;
-        }
-        for (const auto &resourceInfo : resourceInfos) {
-            if ((resourceInfo.moduleName_ == COM_OHOS_CONTACTS_ENTRY) &&
-                (resourceInfo.abilityName_ == COM_OHOS_CONTACTS_ENTRY_ABILITY) &&
-                !resourceInfo.icon_.empty()) {
-                APP_LOGI("%{public}s exist entry ability theme", resourceInfos[0].GetKey().c_str());
-                resourceInfos[0].icon_ = resourceInfo.icon_;
-                resourceInfos[0].foreground_ = resourceInfo.foreground_;
-                resourceInfos[0].background_ = resourceInfo.background_;
-                return;
+        auto resourceManager = resourceManagerMap[resourceInfos[index].moduleName_];
+        if (resourceManager == nullptr) {
+            std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+            if (resConfig == nullptr) {
+                APP_LOGE("resConfig is nullptr");
+                continue;
+            }
+            resourceManager =
+                std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager(
+                    resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
+                    resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, *resConfig, 0, userId));
+            resourceManagerMap[resourceInfos[index].moduleName_] = resourceManager;
+            if (!BundleResourceConfiguration::InitResourceGlobalConfig(
+                resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager,
+                resourceInfos[index].iconNeedParse_, resourceInfos[index].labelNeedParse_)) {
+                APP_LOGW("InitResourceGlobalConfig failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
             }
         }
+
+        if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfos[index], false)) {
+            APP_LOGW_NOFUNC("ParseResourceInfo fail key:%{public}s", resourceInfos[index].GetKey().c_str());
+        }
     }
+    if ((resourceInfos[0].labelNeedParse_ && resourceInfos[0].label_.empty()) ||
+        (resourceInfos[0].iconNeedParse_ && resourceInfos[0].icon_.empty())) {
+        APP_LOGE_NOFUNC("ParseResourceInfos fail -n %{public}s -m %{public}s",
+            resourceInfos[0].bundleName_.c_str(), resourceInfos[0].moduleName_.c_str());
+        return false;
+    }
+    APP_LOGD("end");
+    return true;
+}
+
+bool BundleResourceParser::ParseIconResourceInfosWithTheme(
+    const int32_t userId, std::vector<ResourceInfo> &resourceInfos)
+{
+    APP_LOGD("start");
+    if (resourceInfos.empty()) {
+        APP_LOGE("resourceInfos is empty");
+        return false;
+    }
+    // same module need parse together
+    std::map<std::string, std::shared_ptr<Global::Resource::ResourceManager>> resourceManagerMap;
+    size_t size = resourceInfos.size();
+    for (size_t index = 0; index < size; ++index) {
+        auto resourceManager = resourceManagerMap[resourceInfos[index].moduleName_];
+        if (resourceManager == nullptr) {
+            std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+            if (resConfig == nullptr) {
+                APP_LOGE("resConfig is nullptr");
+                continue;
+            }
+            resourceManager =
+                std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager(
+                    resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
+                    resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, *resConfig, 0, userId));
+            resourceManagerMap[resourceInfos[index].moduleName_] = resourceManager;
+            // no add path when theme exist
+            if (!BundleResourceConfiguration::InitResourceGlobalConfig(resourceManager)) {
+                APP_LOGW("InitResourceGlobalConfig failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
+            }
+        }
+
+        if (!ParseIconResourceByResourceManager(resourceManager, resourceInfos[index])) {
+            APP_LOGW_NOFUNC("ParseResourceInfo fail key:%{public}s", resourceInfos[index].GetKey().c_str());
+        }
+    }
+    if (resourceInfos[0].icon_.empty()) {
+        APP_LOGE_NOFUNC("ParseResourceInfos fail -n %{public}s -m %{public}s",
+            resourceInfos[0].bundleName_.c_str(), resourceInfos[0].moduleName_.c_str());
+        return false;
+    }
+    APP_LOGD("end");
+    return true;
 }
 } // AppExecFwk
 } // OHOS

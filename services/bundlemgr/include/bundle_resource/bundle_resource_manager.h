@@ -24,6 +24,7 @@
 #include "ability_info.h"
 #include "bundle_constants.h"
 #include "bundle_resource_change_type.h"
+#include "bundle_resource_icon_rdb.h"
 #include "bundle_resource_rdb.h"
 #include "bundle_system_state.h"
 #include "inner_bundle_info.h"
@@ -46,26 +47,9 @@ public:
      */
     bool DeleteResourceInfo(const std::string &key);
     /**
-     * add all resource info in system, used when system configuration changed, like:
-     * language, colorMode, theme, and so on
-     */
-    bool AddAllResourceInfo(const int32_t userId, const uint32_t type,
-        const int32_t oldUserId = Constants::INVALID_USERID);
-    /**
      * delete all resource info
      */
     bool DeleteAllResourceInfo();
-    /**
-     * add bundle resource info by bundleName, used when bundle state changed, like:
-     * enable or disable
-     */
-    bool AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId);
-    /**
-     * add launcher ability resource info by abilityName, used when ability state changed, like:
-     * enable or disable
-     */
-    bool AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, const int32_t userId);
 
     bool GetAllResourceName(std::vector<std::string> &keyNames);
 
@@ -87,46 +71,51 @@ public:
     bool FilterLauncherAbilityResourceInfoWithFlag(const uint32_t flags,
         const std::string &bundleName, std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
 
-    bool SaveResourceInfos(std::vector<ResourceInfo> &resourceInfos);
-
     void GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName);
-
-    bool UpdateBundleIcon(const std::string &bundleName, ResourceInfo &resourceInfo);
-
-    bool AddCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex,
-        const int32_t userId = Constants::UNSPECIFIED_USERID);
-
-    bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
     bool DeleteNotExistResourceInfo();
 
-    bool AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
-	
     bool GetExtensionAbilityResourceInfo(const std::string &bundleName,
         const ExtensionAbilityType extensionAbilityType, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0);
 
-    bool GetResourceInfoForRequestUser(const std::string &bundleName, const int32_t userId, const uint32_t flags,
-        const int32_t appIndex, std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo);
-    
-    bool ConvertLauncherAbilityResourceInfo(const ResourceInfo &resourceInfo, const uint32_t flags,
-        LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
+    bool AddResourceInfoByBundleNameWhenInstall(const std::string &bundleName, const int32_t userId,
+        const bool isBundleFirstInstall = true);
+
+    bool AddResourceInfoByBundleNameWhenUpdate(const std::string &bundleName, const int32_t userId);
+
+    bool AddResourceInfoByBundleNameWhenCreateUser(const std::string &bundleName, const int32_t userId);
+
+    bool DeleteBundleResourceInfo(const std::string &bundleName, const int32_t userId, const bool isExistInOtherUser);
+
+    bool AddDynamicIconResource(
+        const std::string &bundleName, const int32_t userId, const int32_t appIndex, ResourceInfo &resourceInfo);
+
+    bool DeleteDynamicIconResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+
+    bool AddAllResourceInfo(const int32_t userId, const uint32_t type);
+
+    bool AddResourceInfosWhenSystemThemeChanged(
+        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        const int32_t userId, const uint32_t tempTaskNumber);
+
+    bool AddResourceInfosWhenSystemLanguageChanged(
+        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        const int32_t userId, const uint32_t tempTaskNumber);
+
+    bool AddCloneBundleResourceInfoWhenInstall(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const bool isExistInOtherUser);
+
+    bool DeleteCloneBundleResourceInfoWhenUninstall(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex, const bool isExistInOtherUser);
+
+    void SetIsOnlineThemeWhenBoot();
+
+    // for ota, need process all user
+    bool ProcessThemeAndDynamicIconWhenOta(const std::set<std::string> &updateBundleNames);
 
 private:
-    bool AddResourceInfo(const int32_t userId, ResourceInfo &resourceInfo);
-
-    bool AddResourceInfos(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
-
-    bool AddResourceInfosByMap(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        const uint32_t tempTaskNumber, const uint32_t type, const int32_t userId, const int32_t oldUserId);
-
-    void InnerProcessResourceInfoByResourceUpdateType(
-        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap, const uint32_t type,
-        const int32_t userId, const int32_t oldUserId);
-
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);
-
-    void ProcessResourceInfo(const std::vector<ResourceInfo> &resourceInfos, ResourceInfo &resourceInfo);
 
     void GetDefaultIcon(ResourceInfo &resourceInfo);
 
@@ -138,50 +127,47 @@ private:
         std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap);
 
     void InnerProcessResourceInfoBySystemThemeChanged(
-        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        const int32_t userId);
-
-    void InnerProcessResourceInfoByUserIdChanged(
-        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        const int32_t userId, const int32_t oldUserId);
+        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap, const int32_t userId);
 
     void DeleteNotExistResourceInfo(const std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
         const std::vector<std::string> &existResourceNames);
 
-    bool InnerProcessWhetherThemeExist(const std::string &bundleName, const int32_t userId);
-
     bool GetBundleResourceInfoForCloneBundle(const std::string &bundleName,
-        const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);
+        const int32_t appIndex, const uint32_t type, std::vector<ResourceInfo> &resourceInfos);
 
-    bool UpdateCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex, const uint32_t type);
-
-    bool UpdateCloneBundleResourceInfo(const std::string &bundleName, const int32_t userId,
-        const int32_t appIndex, const uint32_t type);
+    bool ProcessCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
     void DeleteNotExistResourceInfo(const std::string &bundleName,
         const int32_t appIndex, const std::vector<ResourceInfo> &resourceInfos);
 
     void ProcessResourceInfoNoNeedToParseOtherIcon(std::vector<ResourceInfo> &resourceInfos);
 
-    bool ProcessUpdateCloneBundleResourceInfo(const std::string &bundleName);
+    bool ProcessCloneBundleResourceInfoWhenSystemThemeChanged(
+        const std::string &bundleName, const int32_t userId, const int32_t appIndex);
 
-    void BundleResourceConvertToResourceInfo(const BundleResourceInfo &bundleResourceInfo, ResourceInfo &resourceInfo);
+    bool ProcessCloneBundleResourceInfoWhenSystemLanguageChanged(
+        const std::string &bundleName, const int32_t userId, const int32_t appIndex);
 
-    void LauncherAbilityResourceConvertToResourceInfo(
-        const LauncherAbilityResourceInfo &launcherAbilityResourceInfo, ResourceInfo &resourceInfo);
+    void DeleteNotExistThemeResource(const std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        const std::set<std::string> &oldResourceNames, const int32_t userId);
+
+    bool IsNeedProcessResourceIconInfo(const uint32_t resourceFlags);
+
+    bool InnerProcessThemeIconWhenOta(const std::string &bundleName, const std::set<int32_t> userIds);
+
+    bool InnerProcessDynamicIconWhenOta(const std::string &bundleName);
+
+    int32_t GetUserId();
+
+    void SetIsOnlineTheme(const int32_t userId);
 
     void PrepareSysRes();
-
-    bool CheckAllAddResourceInfo(const int32_t userId);
-
-    void FilterResourceInfoWhenSystemThemeChanged(
-        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        const int32_t userId);
 
     std::atomic<bool> isInterrupted_ = false;
     std::atomic_uint currentTaskNum_ = 0;
     std::mutex mutex_;
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
+    std::shared_ptr<BundleResourceIconRdb> bundleResourceIconRdb_;
     std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_ = nullptr;
     static std::mutex g_sysResMutex;
     static std::shared_ptr<Global::Resource::ResourceManager> g_resMgr;

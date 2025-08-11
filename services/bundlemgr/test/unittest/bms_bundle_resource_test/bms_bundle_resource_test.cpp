@@ -512,90 +512,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0012, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0013
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddResourceInfoByBundleName, bundle not exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0013, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    // bundle not exist
-    bool ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, USERID);
-    EXPECT_FALSE(ans);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0014
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddResourceInfoByBundleName, bundle exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0014, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    // bundle exist, userId not exist
-    bool ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, 200);
-    EXPECT_FALSE(ans);
-
-    // bundle exist, userId exist
-    ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, USERID);
-    EXPECT_TRUE(ans);
-
-    // delete key
-    ans = manager->DeleteResourceInfo(BUNDLE_NAME);
-    EXPECT_TRUE(ans);
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0015
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddResourceInfoByAbility, bundle exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0015, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    // bundle not exist
-    bool ans = manager->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, USERID);
-    EXPECT_FALSE(ans);
-
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    // bundle exist, moduleName or abilityName not exist
-    ans = manager->AddResourceInfoByAbility(BUNDLE_NAME, "xxx", "yyy", USERID);
-    EXPECT_FALSE(ans);
-
-    // bundle  moduleName exist, abilityName not exist
-    ans = manager->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, "yyy", USERID);
-    EXPECT_FALSE(ans);
-
-    // bundle  moduleName exist, abilityName exist
-    ans = manager->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, USERID);
-    EXPECT_TRUE(ans);
-
-    // delete key
-    ans = manager->DeleteResourceInfo(BUNDLE_NAME);
-    EXPECT_TRUE(ans);
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0016
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
@@ -1550,6 +1466,11 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0067, Function | SmallTest
     ans = parser.ParseIconResourceByResourceManager(resourceManager, info); // iconId not exist
     EXPECT_FALSE(ans);
     EXPECT_EQ(info.icon_, "");
+
+    info.iconId_ = 1;
+    ans = parser.ParseIconResourceByResourceManager(resourceManager, info, false);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(info.icon_, "");
 }
 
 /**
@@ -1697,7 +1618,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0073, Function | SmallTest
 {
     BundleResourceCallback callback;
     bool ans = callback.OnUserIdSwitched(100, 200);
-    EXPECT_FALSE(ans);
+    EXPECT_TRUE(ans);
 
     ans = callback.OnUserIdSwitched(200, 100);
     EXPECT_TRUE(ans);
@@ -2412,70 +2333,6 @@ HWTEST_F(BmsBundleResourceTest, ProcessBundleResourceInfo_0001, Function | Small
 }
 
 /**
- * @tc.number: ProcessResourceInfo_0001
- * @tc.name: test the start function of ProcessResourceInfo
- * @tc.desc: 1. test ProcessResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, ProcessResourceInfo_0001, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        std::vector<ResourceInfo> resourceInfos;
-        ResourceInfo info;
-        info.label_ = "xxx";
-        info.icon_ = "yyy";
-        manager->ProcessResourceInfo(resourceInfos, info);
-        EXPECT_FALSE(info.label_.empty());
-        EXPECT_FALSE(info.icon_.empty());
-
-        info.label_ = "";
-        info.icon_ = "";
-        info.bundleName_ = "aaa";
-        manager->ProcessResourceInfo(resourceInfos, info);
-        EXPECT_FALSE(info.label_.empty());
-        EXPECT_FALSE(info.icon_.empty());
-
-        resourceInfos.emplace_back(info);
-        info.icon_ = "";
-        manager->ProcessResourceInfo(resourceInfos, info);
-        EXPECT_FALSE(info.label_.empty());
-        EXPECT_FALSE(info.icon_.empty());
-    }
-}
-
-/**
- * @tc.number: AddResourceInfos_0001
- * @tc.name: test the start function of AddResourceInfos
- * @tc.desc: 1. test AddResourceInfos
- */
-HWTEST_F(BmsBundleResourceTest, AddResourceInfos_0001, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_NO_ICON);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    std::vector<ResourceInfo> resourceInfos;
-    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME_NO_ICON, USERID, resourceInfos);
-    EXPECT_TRUE(ans);
-    EXPECT_FALSE(resourceInfos.empty());
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        bool ret = manager->AddResourceInfosByMap(resourceInfosMap, 0, 0, USERID, USERID);
-        EXPECT_FALSE(ret);
-        resourceInfosMap[BUNDLE_NAME_NO_ICON] = resourceInfos;
-        ret = manager->AddResourceInfosByMap(resourceInfosMap, manager->currentTaskNum_,
-            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE), USERID, USERID);
-        EXPECT_TRUE(ret);
-    }
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_NO_ICON);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0105
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
@@ -3179,269 +3036,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0130, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0140
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test UpdateBundleIcon
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0140, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        ResourceInfo info;
-        info.bundleName_ = BUNDLE_NAME;
-        info.label_ = BUNDLE_NAME;
-        bool ret = manager->UpdateBundleIcon(BUNDLE_NAME, info);
-        EXPECT_TRUE(ret);
-
-        BundleResourceInfo bundleResourceInfo;
-        ret = manager->GetBundleResourceInfo(BUNDLE_NAME, 1, bundleResourceInfo);
-        EXPECT_TRUE(ret);
-        EXPECT_EQ(info.bundleName_, bundleResourceInfo.bundleName);
-        EXPECT_EQ(info.label_, bundleResourceInfo.label);
-        EXPECT_TRUE(bundleResourceInfo.icon.empty());
-
-        ret = manager->DeleteResourceInfo(BUNDLE_NAME);
-        EXPECT_TRUE(ret);
-    }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0141
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test UpdateBundleIcon
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0141, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        BundleResourceInfo oldBundleResourceInfo;
-        bool ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
-            oldBundleResourceInfo);
-        EXPECT_TRUE(ret);
-        EXPECT_EQ(oldBundleResourceInfo.bundleName, BUNDLE_NAME);
-
-        ResourceInfo resourceInfo;
-        resourceInfo.appIndex_ = Constants::UNSPECIFIED_USERID;
-        resourceInfo.icon_ = "icon";
-        resourceInfo.foreground_.push_back(1);
-        resourceInfo.background_.push_back(1);
-        ret = manager->UpdateBundleIcon(BUNDLE_NAME, resourceInfo);
-        EXPECT_TRUE(ret);
-
-        BundleResourceInfo newBundleResourceInfo;
-        ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
-            newBundleResourceInfo);
-        EXPECT_TRUE(ret);
-        EXPECT_EQ(newBundleResourceInfo.bundleName, oldBundleResourceInfo.bundleName);
-        EXPECT_EQ(newBundleResourceInfo.label, oldBundleResourceInfo.label);
-        EXPECT_EQ(newBundleResourceInfo.icon, resourceInfo.icon_);
-        EXPECT_EQ(newBundleResourceInfo.foreground.size(), resourceInfo.foreground_.size());
-        EXPECT_FALSE(newBundleResourceInfo.foreground.empty());
-        if (!newBundleResourceInfo.foreground.empty() && !resourceInfo.foreground_.empty()) {
-            EXPECT_EQ(newBundleResourceInfo.foreground[0], resourceInfo.foreground_[0]);
-        }
-        EXPECT_EQ(newBundleResourceInfo.background.size(), resourceInfo.background_.size());
-        EXPECT_FALSE(newBundleResourceInfo.background.empty());
-        if (!newBundleResourceInfo.background.empty() && !resourceInfo.background_.empty()) {
-            EXPECT_EQ(newBundleResourceInfo.background[0], resourceInfo.background_[0]);
-        }
-    }
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0142
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test UpdateBundleIcon
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0142, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        std::vector<LauncherAbilityResourceInfo> oldLauncherAbilityResourceInfos;
-        bool ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
-            oldLauncherAbilityResourceInfos);
-        EXPECT_TRUE(ret);
-        EXPECT_FALSE(oldLauncherAbilityResourceInfos.empty());
-
-        ResourceInfo resourceInfo;
-        resourceInfo.icon_ = "icon";
-        resourceInfo.foreground_.push_back(1);
-        resourceInfo.background_.push_back(1);
-        ret = manager->UpdateBundleIcon(BUNDLE_NAME, resourceInfo);
-        EXPECT_TRUE(ret);
-
-        std::vector<LauncherAbilityResourceInfo> newLauncherAbilityResourceInfos;
-        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        setuid(currentUserId * Constants::BASE_USER_RANGE);
-        ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
-            newLauncherAbilityResourceInfos);
-        setuid(Constants::ROOT_UID);
-        EXPECT_TRUE(ret);
-        EXPECT_FALSE(newLauncherAbilityResourceInfos.empty());
-        if (!newLauncherAbilityResourceInfos.empty() && !oldLauncherAbilityResourceInfos.empty()) {
-            EXPECT_EQ(newLauncherAbilityResourceInfos[0].bundleName, oldLauncherAbilityResourceInfos[0].bundleName);
-            EXPECT_EQ(newLauncherAbilityResourceInfos[0].moduleName, oldLauncherAbilityResourceInfos[0].moduleName);
-            EXPECT_EQ(newLauncherAbilityResourceInfos[0].abilityName, oldLauncherAbilityResourceInfos[0].abilityName);
-            EXPECT_EQ(newLauncherAbilityResourceInfos[0].label, oldLauncherAbilityResourceInfos[0].label);
-            EXPECT_EQ(newLauncherAbilityResourceInfos[0].icon, resourceInfo.icon_);
-            EXPECT_EQ(newLauncherAbilityResourceInfos[0].foreground.size(), resourceInfo.foreground_.size());
-            EXPECT_FALSE(newLauncherAbilityResourceInfos[0].foreground.empty());
-            if (!newLauncherAbilityResourceInfos[0].foreground.empty() && !resourceInfo.foreground_.empty()) {
-                EXPECT_EQ(newLauncherAbilityResourceInfos[0].foreground[0], resourceInfo.foreground_[0]);
-            }
-            EXPECT_EQ(newLauncherAbilityResourceInfos[0].background.size(), resourceInfo.background_.size());
-            EXPECT_FALSE(newLauncherAbilityResourceInfos[0].background.empty());
-            if (!newLauncherAbilityResourceInfos[0].background.empty() && !resourceInfo.background_.empty()) {
-                EXPECT_EQ(newLauncherAbilityResourceInfos[0].background[0], resourceInfo.background_[0]);
-            }
-        }
-    }
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0143
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddCloneBundleResourceInfo, bundleName not exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0143, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        bool ret = manager->AddCloneBundleResourceInfo(BUNDLE_NAME, 1);
-        EXPECT_FALSE(ret);
-    }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0144
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddCloneBundleResourceInfo, bundleName exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0144, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        BundleResourceInfo bundleResourceInfo;
-        bool ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
-            bundleResourceInfo);
-        EXPECT_TRUE(ret);
-        // add clone bundle resource
-        int32_t appIndex = 1;
-        ret = manager->AddCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
-        EXPECT_TRUE(ret);
-        BundleResourceInfo cloneBundleResourceInfo;
-        ret = manager->GetBundleResourceInfo(BUNDLE_NAME, static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
-            cloneBundleResourceInfo, appIndex);
-        EXPECT_TRUE(ret);
-        EXPECT_EQ(cloneBundleResourceInfo.bundleName, bundleResourceInfo.bundleName);
-        EXPECT_EQ(cloneBundleResourceInfo.appIndex, appIndex);
-        EXPECT_EQ(cloneBundleResourceInfo.label, bundleResourceInfo.label + std::to_string(appIndex));
-        EXPECT_FALSE(cloneBundleResourceInfo.icon.empty());
-        EXPECT_FALSE(cloneBundleResourceInfo.foreground.empty());
-        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
-        EXPECT_TRUE(ret);
-    }
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0145
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddCloneBundleResourceInfo, bundleName exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0145, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-        bool ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
-            launcherAbilityResourceInfos);
-        EXPECT_TRUE(ret);
-        // add clone bundle resource
-        int32_t appIndex = 1;
-        ret = manager->AddCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
-        EXPECT_TRUE(ret);
-
-        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        setuid(currentUserId * Constants::BASE_USER_RANGE);
-        std::vector<LauncherAbilityResourceInfo> cloneLauncherAbilityResourceInfos;
-        ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
-            cloneLauncherAbilityResourceInfos, appIndex);
-        setuid(Constants::ROOT_UID);
-        EXPECT_TRUE(ret);
-        EXPECT_EQ(launcherAbilityResourceInfos.size(), cloneLauncherAbilityResourceInfos.size());
-        if (!launcherAbilityResourceInfos.empty() && !cloneLauncherAbilityResourceInfos.empty()) {
-            EXPECT_EQ(cloneLauncherAbilityResourceInfos[0].bundleName, launcherAbilityResourceInfos[0].bundleName);
-            EXPECT_EQ(cloneLauncherAbilityResourceInfos[0].moduleName, launcherAbilityResourceInfos[0].moduleName);
-            EXPECT_EQ(cloneLauncherAbilityResourceInfos[0].abilityName, launcherAbilityResourceInfos[0].abilityName);
-            EXPECT_EQ(cloneLauncherAbilityResourceInfos[0].label,
-                launcherAbilityResourceInfos[0].label + std::to_string(appIndex));
-            EXPECT_EQ(cloneLauncherAbilityResourceInfos[0].appIndex, appIndex);
-            EXPECT_FALSE(cloneLauncherAbilityResourceInfos[0].icon.empty());
-            EXPECT_FALSE(cloneLauncherAbilityResourceInfos[0].foreground.empty());
-        }
-        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
-        EXPECT_TRUE(ret);
-    }
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0146
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
@@ -3515,7 +3109,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0175, Function | SmallTest
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
-        ret = manager->AddAllResourceInfo(USERID, 0, 0);
+        ret = manager->AddAllResourceInfo(USERID, 0);
         EXPECT_TRUE(ret);
     }
 }
@@ -3770,125 +3364,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0160, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0161
- * Function: InnerProcessWhetherThemeExist
- * @tc.name: test user change
- * @tc.desc: 1. system running normally
- *           2. test InnerProcessWhetherThemeExist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0161, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        bool ret = manager->InnerProcessWhetherThemeExist(BUNDLE_NAME, 0);
-        EXPECT_FALSE(ret);
-        ret = manager->InnerProcessWhetherThemeExist(BUNDLE_NAME, 100);
-        EXPECT_FALSE(ret);
-    }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0162
- * Function: DeleteNotExistResourceInfo
- * @tc.name: test user change
- * @tc.desc: 1. system running normally
- *           2. test DeleteNotExistResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0162, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        ResourceInfo resourceInfo;
-        resourceInfo.bundleName_ = "notExist";
-        std::vector<ResourceInfo> resourceInfos;
-        resourceInfos.emplace_back(resourceInfo);
-        resourceInfo.appIndex_ = 1;
-        resourceInfos.emplace_back(resourceInfo);
-        resourceInfo.bundleName_ = "bundleName";
-        resourceInfo.appIndex_ = 0;
-        resourceInfos.emplace_back(resourceInfo);
-        resourceInfo.appIndex_ = 1;
-        resourceInfos.emplace_back(resourceInfo);
-        resourceInfo.appIndex_ = 2;
-        resourceInfos.emplace_back(resourceInfo);
-        bool ret = manager->SaveResourceInfos(resourceInfos);
-        EXPECT_TRUE(ret);
-        std::vector<std::string> existResourceNames;
-        existResourceNames.emplace_back("notExist");
-        existResourceNames.emplace_back("1_notExist");
-        existResourceNames.emplace_back("bundleName");
-        existResourceNames.emplace_back("1_bundleName");
-        existResourceNames.emplace_back("2_bundleName");
-        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        ResourceInfo info;
-        info.appIndexes_.emplace_back(1);
-        resourceInfosMap["bundleName"].emplace_back(info);
-        manager->DeleteNotExistResourceInfo(resourceInfosMap, existResourceNames);
-        BundleResourceInfo bundleResourceInfo;
-        ret = manager->GetBundleResourceInfo("bundleName",
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo);
-        EXPECT_TRUE(ret);
-        ret = manager->GetBundleResourceInfo("bundleName",
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo, 1);
-        EXPECT_TRUE(ret);
-        ret = manager->GetBundleResourceInfo("bundleName",
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo, 2);
-        EXPECT_FALSE(ret);
-        ret = manager->GetBundleResourceInfo("notExist",
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo);
-        EXPECT_FALSE(ret);
-        manager->DeleteResourceInfo("bundleName");
-        manager->DeleteResourceInfo("1_bundleName");
-        manager->DeleteResourceInfo("2_bundleName");
-        manager->DeleteResourceInfo("notExist");
-        manager->DeleteResourceInfo("1_notExist");
-    }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0163
- * Function: AddCloneBundleResourceInfo
- * @tc.name: test AddCloneBundleResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0163, Function | SmallTest | Level0)
-{
-    int32_t appIndex = 1;
-    bool ret = BundleResourceHelper::AddCloneBundleResourceInfo(BUNDLE_NAME, false, USERID);
-    EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0164
- * Function: DeleteCloneBundleResourceInfo
- * @tc.name: test DeleteCloneBundleResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0164, Function | SmallTest | Level0)
-{
-    int32_t appIndex = 1;
-    bool ret = BundleResourceHelper::DeleteCloneBundleResourceInfo(BUNDLE_NAME, false, USERID);
-    EXPECT_TRUE(ret);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0165
- * Function: AddResourceInfoByBundleName
- * @tc.name: test
- * @tc.desc: 1. system running normally
- *           2. test AddResourceInfoByBundleName
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0165, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
-    ASSERT_NE(bundleResourceHostImpl, nullptr);
-    auto ret = bundleResourceHostImpl->AddResourceInfoByBundleName("", USERID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
-    ret = bundleResourceHostImpl->AddResourceInfoByBundleName(BUNDLE_NAME, USERID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0166
  * Function: AddResourceInfoByAbility
  * @tc.name: test
@@ -3985,37 +3460,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0170, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0171
- * Function: UpdateCloneBundleResourceInfo
- * @tc.name: test
- * @tc.desc: 1. system running normally
- *           2. test UpdateCloneBundleResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0171, Function | SmallTest | Level0)
-{
-    ResourceInfo resourceInfo;
-    std::string bundleName = "bundleName/moduleName/abilityName";
-    int32_t appIndex = 1;
-    uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE);
-    resourceInfo.bundleName_ = bundleName;
-    resourceInfo.icon_ = "data:image/png";
-    resourceInfo.foreground_.push_back(1);
-    resourceInfo.label_ = "xxxx";
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    ASSERT_NE(manager, nullptr);
-    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
-    EXPECT_TRUE(ret);
-    ret = manager->UpdateCloneBundleResourceInfo(bundleName, appIndex, 0);
-    EXPECT_FALSE(ret);
-    ret = manager->UpdateCloneBundleResourceInfo(bundleName, appIndex, type);
-    EXPECT_FALSE(ret);
-    // delete key
-    ret = manager->DeleteResourceInfo(resourceInfo.GetKey());
-    EXPECT_TRUE(ret);
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0172
  * Function: ProcessResourceInfoNoNeedToParseOtherIcon
  * @tc.name: test
@@ -4051,23 +3495,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0173, Function | SmallTest
     themeId = 1000;
     ret = bundleResourceCallback.SetThemeParamForThemeChanged(themeId, themeIcon);
     EXPECT_TRUE(ret);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0174
- * Function: DeleteResourceInfo
- * @tc.name: test DeleteResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0174, Function | SmallTest | Level0)
-{
-    BundleResourceHelper::BundleSystemStateInit();
-    BundleResourceHelper::RegisterConfigurationObserver();
-    BundleResourceHelper::RegisterCommonEventSubscriber();
-    BundleResourceHelper::AddResourceInfoByBundleName(BUNDLE_NAME, 100);
-
-    std::string key;
-    bool ret = BundleResourceHelper::DeleteResourceInfo(key);
-    EXPECT_FALSE(ret);
 }
 
 /**
@@ -4122,32 +3549,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0186, Function | SmallTest
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
     ret = drawable.GetIconResourceByTheme(iconId, density, resourceManager, resourceInfo);
     EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0187
- * Function: GetIconResourceByTheme
- * @tc.name: test
- * @tc.desc: 1. system running normally
- *           2. test GetIconResourceByTheme
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0187, Function | SmallTest | Level0)
-{
-    BundleResourceParser parse;
-    std::vector<ResourceInfo> resourceInfos;
-    parse.ProcessSpecialBundleResource(100, resourceInfos);
-    EXPECT_TRUE(resourceInfos.empty());
-    ResourceInfo resourceInfo;
-    resourceInfo.icon_ = "1";
-    resourceInfos.emplace_back(resourceInfo);
-    parse.ProcessSpecialBundleResource(100, resourceInfos);
-    EXPECT_EQ(resourceInfos[0].icon_, resourceInfo.icon_);
-
-    resourceInfos.clear();
-    resourceInfo.bundleName_ = "com.ohos.contacts";
-    resourceInfos.emplace_back(resourceInfo);
-    parse.ProcessSpecialBundleResource(100, resourceInfos);
-    EXPECT_EQ(resourceInfos[0].icon_, resourceInfo.icon_);
 }
 
 /**
@@ -4219,104 +3620,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0191, Function | SmallTest
     if (iter != savedDataMgr->bundleInfos_.end()) {
         savedDataMgr->bundleInfos_.erase(iter);
     }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0192
- * Function: ProcessUpdateCloneBundleResourceInfo
- * @tc.name: test
- * @tc.desc: 1. system running normally
- *           2. test ProcessUpdateCloneBundleResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0192, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        bool ret = manager->ProcessUpdateCloneBundleResourceInfo(BUNDLE_NAME_NOT_EXIST);
-        EXPECT_TRUE(ret);
-    }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0193
- * Function: ProcessUpdateCloneBundleResourceInfo
- * @tc.name: test
- * @tc.desc: 1. system running normally
- *           2. test ProcessUpdateCloneBundleResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0193, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-        InnerBundleCloneInfo cloneInfo;
-        cloneInfo.appIndex = 1;
-        InnerBundleUserInfo userInfo;
-        userInfo.cloneInfos["1"] = cloneInfo;
-        InnerBundleInfo bundleInfo;
-        bundleInfo.innerBundleUserInfos_["100"] = userInfo;
-        savedDataMgr->bundleInfos_[BUNDLE_NAME_NOT_EXIST] = bundleInfo;
-
-        bool ret = manager->ProcessUpdateCloneBundleResourceInfo(BUNDLE_NAME_NOT_EXIST);
-        EXPECT_FALSE(ret);
-
-        auto iter = savedDataMgr->bundleInfos_.find(BUNDLE_NAME_NOT_EXIST);
-        if (iter != savedDataMgr->bundleInfos_.end()) {
-            savedDataMgr->bundleInfos_.erase(iter);
-        }
-    }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0194
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddResourceInfoByBundleName, bundle not exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0194, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        bool ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, USERID, APP_INDEX);
-        EXPECT_FALSE(ans);
-    }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0195
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddResourceInfoByBundleName, bundle exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0195, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        // bundle exist, userId exist, appIndex = 0
-        bool ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, USERID, 0);
-        EXPECT_TRUE(ans);
-
-        // bundle exist, userId exist, appIndex = 1
-        ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, USERID, APP_INDEX);
-        EXPECT_TRUE(ans);
-
-        // delete key
-        ans = manager->DeleteResourceInfo(BUNDLE_NAME);
-        EXPECT_TRUE(ans);
-
-        ans = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, APP_INDEX);
-        EXPECT_TRUE(ans);
-    }
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 
 /**
@@ -4450,169 +3753,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0200, Function | SmallTest
     bundleInfo.extendResourceInfos_[BUNDLE_NAME] = extendResourceInfo;
     ret = BundleResourceProcess::GetDynamicIcon(bundleInfo, USERID, resourceInfo);
     EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0201
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddCloneBundleResourceInfo, bundleName not exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0201, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        // add clone bundle resource
-        int32_t appIndex = 1;
-        bool ret = manager->AddCloneBundleResourceInfo(BUNDLE_NAME, appIndex, USERID);
-        EXPECT_FALSE(ret);
-    }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0202
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddCloneBundleResourceInfo, bundleName exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0202, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        BundleResourceInfo bundleResourceInfo;
-        bool ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
-            bundleResourceInfo);
-        EXPECT_TRUE(ret);
-        // add clone bundle resource
-        int32_t appIndex = 1;
-        ret = manager->AddCloneBundleResourceInfo(BUNDLE_NAME, appIndex, USERID);
-        EXPECT_TRUE(ret);
-        BundleResourceInfo cloneBundleResourceInfo;
-        ret = manager->GetBundleResourceInfo(BUNDLE_NAME, static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
-            cloneBundleResourceInfo, appIndex);
-        EXPECT_TRUE(ret);
-        EXPECT_EQ(cloneBundleResourceInfo.bundleName, bundleResourceInfo.bundleName);
-        EXPECT_EQ(cloneBundleResourceInfo.appIndex, appIndex);
-        EXPECT_EQ(cloneBundleResourceInfo.label, bundleResourceInfo.label + std::to_string(appIndex));
-        EXPECT_FALSE(cloneBundleResourceInfo.icon.empty());
-        EXPECT_FALSE(cloneBundleResourceInfo.foreground.empty());
-        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
-        EXPECT_TRUE(ret);
-    }
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0203
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test UpdateCloneBundleResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0203, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        bool ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, USERID, 0, 0);
-        EXPECT_FALSE(ret);
-
-        ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, USERID, 1,
-            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
-        EXPECT_FALSE(ret);
-
-        ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, USERID, 1,
-            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE));
-        EXPECT_FALSE(ret);
-    }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0204
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test UpdateCloneBundleResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0204, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        int32_t appIndex = 1;
-        bool ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, USERID, appIndex,
-            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE));
-        EXPECT_TRUE(ret);
-
-        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
-        EXPECT_TRUE(ret);
-    }
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0205
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test BundleResourceConvertToResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0205, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        BundleResourceInfo bundleResourceInfo;
-        bundleResourceInfo.label = "label";
-        ResourceInfo resourceInfo;
-        manager->BundleResourceConvertToResourceInfo(bundleResourceInfo, resourceInfo);
-        EXPECT_EQ(bundleResourceInfo.label, resourceInfo.label_);
-
-        ResourceInfo resourceInfo2;
-        resourceInfo2.appIndex_ = 1;
-        manager->BundleResourceConvertToResourceInfo(bundleResourceInfo, resourceInfo2);
-        EXPECT_NE(bundleResourceInfo.label, resourceInfo2.label_);
-    }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0206
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test LauncherAbilityResourceConvertToResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0206, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        LauncherAbilityResourceInfo launcherAbilityResourceInfo;
-        launcherAbilityResourceInfo.label = "label";
-        ResourceInfo resourceInfo;
-        manager->LauncherAbilityResourceConvertToResourceInfo(launcherAbilityResourceInfo, resourceInfo);
-        EXPECT_EQ(launcherAbilityResourceInfo.label, resourceInfo.label_);
-
-        ResourceInfo resourceInfo2;
-        resourceInfo2.appIndex_ = 1;
-        manager->LauncherAbilityResourceConvertToResourceInfo(launcherAbilityResourceInfo, resourceInfo2);
-        EXPECT_NE(launcherAbilityResourceInfo.label, resourceInfo2.label_);
-    }
 }
 
 /**
@@ -5290,29 +4430,6 @@ HWTEST_F(BmsBundleResourceTest, ProcessForegroundIcon_0010, Function | SmallTest
 }
 
 /**
- * @tc.number: ParseResourceInfos_0010
- * Function: BundleResourceParser
- * @tc.name: test BundleResourceParser
- * @tc.desc: 1. system running normally
- *           2. test ParseResourceInfos
- */
-HWTEST_F(BmsBundleResourceTest, ParseResourceInfos_0010, Function | SmallTest | Level0)
-{
-    ResourceInfo resourceInfo;
-    resourceInfo.bundleName_ = BUNDLE_NAME;
-    resourceInfo.label_ = BUNDLE_NAME;
-    resourceInfo.labelId_ = 0;
-    resourceInfo.iconId_ = 0;
-    resourceInfo.hasThemeIcon_ = true;
-    std::vector<ResourceInfo> resourceInfos;
-    resourceInfos.push_back(resourceInfo);
-
-    BundleResourceParser parser;
-    bool ans = parser.ParseResourceInfos(USERID, resourceInfos);
-    EXPECT_FALSE(ans);
-}
-
-/**
  * @tc.number: IsOnlineTheme_0010
  * Function: IsOnlineTheme
  * @tc.name: test IsOnlineTheme
@@ -5594,279 +4711,6 @@ HWTEST_F(BmsBundleResourceTest, CheckThemeType_0080, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: FilterResourceInfoWhenSystemThemeChanged_0010
- * Function: FilterResourceInfoWhenSystemThemeChanged
- * @tc.name: test system theme change
- * @tc.desc: 1. system running normally
- *           2. test FilterResourceInfoWhenSystemThemeChanged
- */
-HWTEST_F(BmsBundleResourceTest, FilterResourceInfoWhenSystemThemeChanged_0010, Function | SmallTest | Level0)
-{
-    // flag exist in A, icons exist in A and B
-    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
-    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
-    std::ofstream file;
-    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
-    file << "" << endl;
-    file.close();
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        ResourceInfo info;
-        info.bundleName_ = BUNDLE_NAME_NOT_EXIST;
-        resourceInfosMap[BUNDLE_NAME_NOT_EXIST].emplace_back(info);
-        // theme not exist
-        manager->FilterResourceInfoWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
-        EXPECT_TRUE(resourceInfosMap.empty());
-    }
-
-    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
-}
-
-/**
- * @tc.number: FilterResourceInfoWhenSystemThemeChanged_0020
- * Function: FilterResourceInfoWhenSystemThemeChanged
- * @tc.name: test system theme change
- * @tc.desc: 1. system running normally
- *           2. test FilterResourceInfoWhenSystemThemeChanged
- */
-HWTEST_F(BmsBundleResourceTest, FilterResourceInfoWhenSystemThemeChanged_0020, Function | SmallTest | Level0)
-{
-    // flag exist in A, icons exist in A and B
-    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
-    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
-    std::ofstream file;
-    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
-    file << "" << endl;
-    file.close();
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        ResourceInfo info;
-        info.bundleName_ = BUNDLE_NAME;
-        resourceInfosMap[BUNDLE_NAME].emplace_back(info);
-        ResourceInfo info2;
-        info2.bundleName_ = BUNDLE_NAME_NOT_EXIST;
-        resourceInfosMap[BUNDLE_NAME_NOT_EXIST].emplace_back(info2);
-        manager->FilterResourceInfoWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
-        EXPECT_EQ(resourceInfosMap.size(), 1);
-        if (resourceInfosMap.find(BUNDLE_NAME) != resourceInfosMap.end()) {
-            EXPECT_TRUE(resourceInfosMap[BUNDLE_NAME][0].hasThemeIcon_);
-        }
-    }
-
-    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
-}
-
-/**
- * @tc.number: FilterResourceInfoWhenSystemThemeChanged_0030
- * Function: FilterResourceInfoWhenSystemThemeChanged
- * @tc.name: test system theme change
- * @tc.desc: 1. system running normally
- *           2. test FilterResourceInfoWhenSystemThemeChanged
- */
-HWTEST_F(BmsBundleResourceTest, FilterResourceInfoWhenSystemThemeChanged_0030, Function | SmallTest | Level0)
-{
-    // flag exist in B, icons exist in A and B
-    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
-    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        ResourceInfo info;
-        info.bundleName_ = BUNDLE_NAME;
-        resourceInfosMap[BUNDLE_NAME].emplace_back(info);
-        ResourceInfo info2;
-        info2.bundleName_ = BUNDLE_NAME_NOT_EXIST;
-        resourceInfosMap[BUNDLE_NAME_NOT_EXIST].emplace_back(info2);
-        manager->FilterResourceInfoWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
-        EXPECT_EQ(resourceInfosMap.size(), 1);
-        if (resourceInfosMap.find(BUNDLE_NAME) != resourceInfosMap.end()) {
-            EXPECT_TRUE(resourceInfosMap[BUNDLE_NAME][0].hasThemeIcon_);
-        }
-    }
-
-    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
-}
-
-/**
- * @tc.number: FilterResourceInfoWhenSystemThemeChanged_0040
- * Function: FilterResourceInfoWhenSystemThemeChanged
- * @tc.name: test system theme change
- * @tc.desc: 1. system running normally
- *           2. test FilterResourceInfoWhenSystemThemeChanged
- */
-HWTEST_F(BmsBundleResourceTest, FilterResourceInfoWhenSystemThemeChanged_0040, Function | SmallTest | Level0)
-{
-    // flag exist in A, icons exist in B
-    OHOS::ForceCreateDirectory(THEME_A_ICON_JSON_BUNDLE_NAME);
-    OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
-    std::ofstream file;
-    file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
-    file << "" << endl;
-    file.close();
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        ResourceInfo info;
-        info.bundleName_ = BUNDLE_NAME;
-        resourceInfosMap[BUNDLE_NAME].emplace_back(info);
-        ResourceInfo info2;
-        info2.bundleName_ = BUNDLE_NAME_NOT_EXIST;
-        resourceInfosMap[BUNDLE_NAME_NOT_EXIST].emplace_back(info2);
-        manager->FilterResourceInfoWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
-        EXPECT_EQ(resourceInfosMap.size(), 1);
-        if (resourceInfosMap.find(BUNDLE_NAME) != resourceInfosMap.end()) {
-            EXPECT_FALSE(resourceInfosMap[BUNDLE_NAME][0].hasThemeIcon_);
-        }
-    }
-
-    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
-}
-
-/**
- * @tc.number: FilterResourceInfoWhenSystemThemeChanged_0050
- * Function: FilterResourceInfoWhenSystemThemeChanged
- * @tc.name: test system theme change
- * @tc.desc: 1. system running normally
- *           2. test FilterResourceInfoWhenSystemThemeChanged
- */
-HWTEST_F(BmsBundleResourceTest, FilterResourceInfoWhenSystemThemeChanged_0050, Function | SmallTest | Level0)
-{
-    // flag exist in B, icons exist in A and B
-    OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
-    OHOS::ForceCreateDirectory(THEME_B_ICON_JSON_BUNDLE_NAME);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        ResourceInfo info;
-        info.bundleName_ = BUNDLE_NAME;
-        resourceInfosMap[BUNDLE_NAME].emplace_back(info);
-        ResourceInfo info2;
-        info2.bundleName_ = BUNDLE_NAME_NOT_EXIST;
-        resourceInfosMap[BUNDLE_NAME_NOT_EXIST].emplace_back(info2);
-        manager->FilterResourceInfoWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
-        EXPECT_EQ(resourceInfosMap.size(), 1);
-        if (resourceInfosMap.find(BUNDLE_NAME) != resourceInfosMap.end()) {
-            EXPECT_FALSE(resourceInfosMap[BUNDLE_NAME][0].hasThemeIcon_);
-        }
-    }
-
-    OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
-}
-
-/**
- * @tc.number: UpdateCloneBundleResourceInfo_0010
- * Function: UpdateCloneBundleResourceInfo
- * @tc.name: test
- * @tc.desc: 1. system running normally
- *           2. test UpdateCloneBundleResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, UpdateCloneBundleResourceInfo_0010, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        bool ret = manager->UpdateCloneBundleResourceInfo(THEME_TEST_BUNDLE_NAME, USERID, 1,
-            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
-        EXPECT_TRUE(ret);
-        ret = manager->DeleteCloneBundleResourceInfo(THEME_TEST_BUNDLE_NAME, 1);
-        EXPECT_TRUE(ret);
-    }
-}
-
-/**
- * @tc.number: UpdateCloneBundleResourceInfo_0020
- * Function: UpdateCloneBundleResourceInfo
- * @tc.name: test
- * @tc.desc: 1. system running normally
- *           2. test UpdateCloneBundleResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, UpdateCloneBundleResourceInfo_0020, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
-        std::ofstream file;
-        file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
-        file << "" << endl;
-        file.close();
-        // description.json not exist
-        bool ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, THEME_TEST_USERID, 1,
-            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
-        EXPECT_TRUE(ret);
-
-        // description.json exist
-        std::ofstream file2;
-        file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
-        file2 << "{\"origin\":\"online\"}" << endl;
-        file2.close();
-
-        ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, THEME_TEST_USERID, 1,
-            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
-        EXPECT_TRUE(ret);
-        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, 1);
-        EXPECT_TRUE(ret);
-
-        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
-    }
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: UpdateCloneBundleResourceInfo_0030
- * Function: UpdateCloneBundleResourceInfo
- * @tc.name: test
- * @tc.desc: 1. system running normally
- *           2. test UpdateCloneBundleResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, UpdateCloneBundleResourceInfo_0030, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        OHOS::ForceCreateDirectory(THEME_A_ICON_BUNDLE_NAME);
-        std::ofstream file;
-        file.open(THEME_A_FLAG_BUNDLE_NAME, ios::out);
-        file << "" << endl;
-        file.close();
-        // description.json exist
-        std::ofstream file2;
-        file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
-        file2 << "{\"origin\":\"preset\"}" << endl;
-        file2.close();
-        bool ret = manager->UpdateCloneBundleResourceInfo(BUNDLE_NAME, THEME_TEST_USERID, 1,
-            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
-        EXPECT_TRUE(ret);
-        ret = manager->DeleteCloneBundleResourceInfo(BUNDLE_NAME, 1);
-        EXPECT_TRUE(ret);
-
-        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
-    }
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
  * @tc.number: GetDynamicIcon_0010
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
@@ -5913,39 +4757,6 @@ HWTEST_F(BmsBundleResourceTest, GetDynamicIcon_0010, Function | SmallTest | Leve
     ret = BundleResourceProcess::GetDynamicIcon(bundleInfo, THEME_TEST_USERID, resourceInfo);
     EXPECT_FALSE(ret);
     OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
-}
-
-/**
- * @tc.number: InnerProcessResourceInfoByUserIdChanged_0010
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test InnerProcessResourceInfoByUserIdChanged
- */
-HWTEST_F(BmsBundleResourceTest, InnerProcessResourceInfoByUserIdChanged_0010, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        std::vector<ResourceInfo> resourceInfos;
-        ResourceInfo resourceInfo;
-        resourceInfos.push_back(resourceInfo);
-        resourceInfosMap["bundleName"] = resourceInfos;
-        manager->InnerProcessResourceInfoByUserIdChanged(resourceInfosMap, 100, 101);
-        EXPECT_TRUE(resourceInfosMap.empty());
-
-        resourceInfos.clear();
-        resourceInfo.hasDynamicIcon_ = true;
-        resourceInfos.push_back(resourceInfo);
-        resourceInfosMap["bundleName"] = resourceInfos;
-        manager->InnerProcessResourceInfoByUserIdChanged(resourceInfosMap, 100, 101);
-        EXPECT_FALSE(resourceInfosMap.empty());
-        EXPECT_FALSE(resourceInfosMap["bundleName"].empty());
-        if (!resourceInfosMap["bundleName"].empty()) {
-            EXPECT_TRUE(resourceInfosMap["bundleName"][0].hasDynamicIcon_);
-        }
-    }
 }
 
 /**
@@ -6125,102 +4936,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0185, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0230
- * @tc.name: CheckAllAddResourceInfo
- * @tc.desc: 1. test CheckAllAddResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0230, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    if (manager != nullptr) {
-        auto ret = manager->CheckAllAddResourceInfo(THEME_TEST_USERID);
-        EXPECT_FALSE(ret);
-    }
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0240
- * @tc.name: GetResourceInfoForRequestUser
- * @tc.desc: 1. test GetResourceInfoForRequestUser
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0240, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    ASSERT_NE(manager, nullptr);
-    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    int32_t userId = -1;
-    std::string bundleName = "bundleName";
-    uint32_t flag = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
-
-    auto ret = manager->GetResourceInfoForRequestUser(bundleName, userId, flag,
-        0, launcherAbilityResourceInfos);
-    EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0250
- * @tc.name: GetResourceInfoForRequestUser
- * @tc.desc: 1. test GetResourceInfoForRequestUser
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0250, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    ASSERT_NE(manager, nullptr);
-    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    std::string bundleName = "bundleName";
-    uint32_t flag = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
-
-    auto ret = manager->GetResourceInfoForRequestUser(BUNDLE_NAME, USERID, flag,
-        0, launcherAbilityResourceInfos);
-    EXPECT_TRUE(ret);
-
-    ret = manager->GetResourceInfoForRequestUser(BUNDLE_NAME, USERID, flag,
-        1, launcherAbilityResourceInfos);
-    EXPECT_FALSE(ret);
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0251
- * @tc.name: ConvertLauncherAbilityResourceInfo
- * @tc.desc: 1. test ConvertLauncherAbilityResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0251, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    ASSERT_NE(manager, nullptr);
-    ResourceInfo resourceInfo;
-    uint32_t flags = 0;
-    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
-    auto ret = manager->ConvertLauncherAbilityResourceInfo(resourceInfo,
-        flags, launcherAbilityResourceInfo);
-    EXPECT_FALSE(ret);
-
-    resourceInfo.moduleName_ = "moduleName";
-    resourceInfo.abilityName_ = "abilityName";
-    ret = manager->ConvertLauncherAbilityResourceInfo(resourceInfo,
-        flags, launcherAbilityResourceInfo);
-    EXPECT_TRUE(ret);
-
-    flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
-    ret = manager->ConvertLauncherAbilityResourceInfo(resourceInfo,
-        flags, launcherAbilityResourceInfo);
-    EXPECT_TRUE(ret);
-
-    flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL) |
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON);
-    ret = manager->ConvertLauncherAbilityResourceInfo(resourceInfo,
-        flags, launcherAbilityResourceInfo);
-    EXPECT_TRUE(ret);
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0252
  * @tc.name: GetLauncherAbilityResourceInfo
  * @tc.desc: 1. test GetLauncherAbilityResourceInfo
@@ -6394,6 +5109,766 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0257, Function | SmallTest
     auto iter = savedDataMgr->bundleInfos_.find("bundle_test");
     if (iter != savedDataMgr->bundleInfos_.end()) {
         savedDataMgr->bundleInfos_.erase(iter);
+    }
+}
+
+/**
+ * @tc.number: GetExtendResourceInfo_0001
+ * Function: GetExtendResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetExtendResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, GetExtendResourceInfo_0001, Function | SmallTest | Level0)
+{
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ExtendResourceInfo resourceInfo;
+    ErrCode ret = savedDataMgr->GetExtendResourceInfo(BUNDLE_NAME_NOT_EXIST, BUNDLE_NAME_NOT_EXIST, resourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo bundleInfo;
+    savedDataMgr->bundleInfos_[BUNDLE_NAME_NOT_EXIST] = bundleInfo;
+    ret = savedDataMgr->GetExtendResourceInfo(BUNDLE_NAME_NOT_EXIST, BUNDLE_NAME_NOT_EXIST, resourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.iconId = 100;
+    bundleInfo.extendResourceInfos_[BUNDLE_NAME_NOT_EXIST] = extendResourceInfo;
+    savedDataMgr->bundleInfos_[BUNDLE_NAME_NOT_EXIST] = bundleInfo;
+    ret = savedDataMgr->GetExtendResourceInfo(BUNDLE_NAME_NOT_EXIST, BUNDLE_NAME_NOT_EXIST, resourceInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(resourceInfo.iconId, extendResourceInfo.iconId);
+
+    auto iter = savedDataMgr->bundleInfos_.find(BUNDLE_NAME_NOT_EXIST);
+    if (iter != savedDataMgr->bundleInfos_.end()) {
+        savedDataMgr->bundleInfos_.erase(iter);
+    }
+}
+
+/**
+ * @tc.number: GetDynamicIconResourceInfo_0001
+ * Function: GetDynamicIconResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetDynamicIconResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, GetDynamicIconResourceInfo_0001, Function | SmallTest | Level0)
+{
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(nullptr);
+    ResourceInfo resourceInfo;
+    bool ret = BundleResourceProcess::GetDynamicIconResourceInfo(BUNDLE_NAME_NOT_EXIST, BUNDLE_NAME_NOT_EXIST,
+        resourceInfo);
+    EXPECT_FALSE(ret);
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(savedDataMgr);
+    ret = BundleResourceProcess::GetDynamicIconResourceInfo(BUNDLE_NAME_NOT_EXIST, BUNDLE_NAME_NOT_EXIST,
+        resourceInfo);
+    EXPECT_FALSE(ret);
+
+    ExtendResourceInfo extendResourceInfo;
+    extendResourceInfo.iconId = 100;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.extendResourceInfos_[BUNDLE_NAME_NOT_EXIST] = extendResourceInfo;
+    savedDataMgr->bundleInfos_[BUNDLE_NAME_NOT_EXIST] = bundleInfo;
+    ret = BundleResourceProcess::GetDynamicIconResourceInfo(BUNDLE_NAME_NOT_EXIST, BUNDLE_NAME_NOT_EXIST,
+        resourceInfo);
+    EXPECT_FALSE(ret);
+    auto iter = savedDataMgr->bundleInfos_.find(BUNDLE_NAME_NOT_EXIST);
+    if (iter != savedDataMgr->bundleInfos_.end()) {
+        savedDataMgr->bundleInfos_.erase(iter);
+    }
+}
+
+/**
+ * @tc.number: ParseResourceInfosNoTheme_0010
+ * Function: ParseResourceInfosNoTheme
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfosNoTheme
+ */
+HWTEST_F(BmsBundleResourceTest, ParseResourceInfosNoTheme_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+
+    if (!resourceInfos.empty()) {
+        BundleResourceParser parser;
+        resourceInfos[0].label_ = "";
+        resourceInfos[0].icon_ = "";
+        ans = parser.ParseResourceInfosNoTheme(USERID, resourceInfos);
+        EXPECT_TRUE(ans);
+        EXPECT_NE(resourceInfos[0].label_, "");
+        EXPECT_NE(resourceInfos[0].icon_, "");
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: ParseResourceInfosNoTheme_0020
+ * Function: ParseResourceInfosNoTheme
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfosNoTheme
+ */
+HWTEST_F(BmsBundleResourceTest, ParseResourceInfosNoTheme_0020, Function | SmallTest | Level0)
+{
+    std::vector<ResourceInfo> resourceInfos;
+    BundleResourceParser parser;
+    bool ans = parser.ParseResourceInfosNoTheme(USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    ResourceInfo resourceInfo;
+    resourceInfo.labelNeedParse_ = false;
+    resourceInfo.iconNeedParse_ = false;
+    resourceInfos.push_back(resourceInfo);
+    ans = parser.ParseResourceInfosNoTheme(USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    resourceInfo.labelNeedParse_ = true;
+    resourceInfos.clear();
+    resourceInfos.push_back(resourceInfo);
+    ans = parser.ParseResourceInfosNoTheme(USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    resourceInfo.iconNeedParse_ = true;
+    resourceInfos.clear();
+    resourceInfos.push_back(resourceInfo);
+    ans = parser.ParseResourceInfosNoTheme(USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+
+    resourceInfos.push_back(resourceInfo);
+    ans = parser.ParseResourceInfosNoTheme(USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: ParseResourceInfosWithTheme_0010
+ * Function: ParseResourceInfosWithTheme
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfosWithTheme
+ */
+HWTEST_F(BmsBundleResourceTest, ParseResourceInfosWithTheme_0010, Function | SmallTest | Level0)
+{
+    std::vector<ResourceInfo> resourceInfos;
+    BundleResourceParser parser;
+    bool ans = parser.ParseIconResourceInfosWithTheme(USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+
+    ResourceInfo resourceInfo;
+    resourceInfos.push_back(resourceInfo);
+    ans = parser.ParseIconResourceInfosWithTheme(USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: InnerGetResourceInfo_0010
+ * Function: InnerGetResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test InnerGetResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, InnerGetResourceInfo_0010, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::vector<ResourceInfo> resourceInfos;
+    bool ret = BundleResourceProcess::InnerGetResourceInfo(innerBundleInfo, USERID, resourceInfos, 0, true);
+    EXPECT_FALSE(ret);
+
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    ret = BundleResourceProcess::InnerGetResourceInfo(innerBundleInfo, USERID, resourceInfos, 0, true);
+    EXPECT_TRUE(ret);
+
+    std::vector<ResourceInfo> resourceInfos2;
+    ret = BundleResourceProcess::InnerGetResourceInfo(innerBundleInfo, USERID, resourceInfos2, 0, false);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetBundleResourceInfoForCloneBundle_0010
+ * Function: GetBundleResourceInfoForCloneBundle
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfoForCloneBundle
+ */
+HWTEST_F(BmsBundleResourceTest, GetBundleResourceInfoForCloneBundle_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::vector<ResourceInfo> resourceInfos;
+        bool ans = manager->GetBundleResourceInfoForCloneBundle(BUNDLE_NAME_NOT_EXIST, 1,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE), resourceInfos);
+        EXPECT_FALSE(ans);
+        ResourceInfo info;
+        info.bundleName_ = BUNDLE_NAME_NOT_EXIST;
+        info.label_ = "label";
+        info.icon_ = "icon";
+        BundleResourceRdb resourceRdb;
+        ans = resourceRdb.AddResourceInfo(info);
+        EXPECT_TRUE(ans);
+        std::vector<ResourceInfo> resourceInfos2;
+        ans = manager->GetBundleResourceInfoForCloneBundle(BUNDLE_NAME_NOT_EXIST, 1,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE), resourceInfos2);
+        EXPECT_TRUE(ans);
+        EXPECT_EQ(resourceInfos2.size(), 1);
+
+        info.moduleName_ = BUNDLE_NAME_NOT_EXIST;
+        info.abilityName_ = BUNDLE_NAME_NOT_EXIST;
+        info.label_ = "label";
+        info.icon_ = "icon";
+        ans = resourceRdb.AddResourceInfo(info);
+        EXPECT_TRUE(ans);
+        std::vector<ResourceInfo> resourceInfos3;
+        ans = manager->GetBundleResourceInfoForCloneBundle(BUNDLE_NAME_NOT_EXIST, 1,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE), resourceInfos3);
+        EXPECT_TRUE(ans);
+        EXPECT_EQ(resourceInfos3.size(), 2);
+
+        ans = resourceRdb.DeleteResourceInfo(BUNDLE_NAME_NOT_EXIST);
+        EXPECT_TRUE(ans);
+    }
+}
+
+/**
+ * @tc.number: AddResourceInfoByBundleNameWhenInstall_0010
+ * Function: AddResourceInfoByBundleNameWhenInstall
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleNameWhenInstall
+ */
+HWTEST_F(BmsBundleResourceTest, AddResourceInfoByBundleNameWhenInstall_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->AddResourceInfoByBundleNameWhenInstall(BUNDLE_NAME_NOT_EXIST, USERID, true);
+        EXPECT_FALSE(ret);
+        ret = manager->AddResourceInfoByBundleNameWhenInstall(BUNDLE_NAME, USERID, true);
+        EXPECT_TRUE(ret);
+        ret = manager->AddResourceInfoByBundleNameWhenInstall(BUNDLE_NAME, USERID, false);
+        EXPECT_TRUE(ret);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: AddResourceInfoByBundleNameWhenUpdate_0010
+ * Function: AddResourceInfoByBundleNameWhenUpdate
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleNameWhenUpdate
+ */
+HWTEST_F(BmsBundleResourceTest, AddResourceInfoByBundleNameWhenUpdate_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->AddResourceInfoByBundleNameWhenUpdate(BUNDLE_NAME_NOT_EXIST, USERID);
+        EXPECT_FALSE(ret);
+        ret = manager->AddResourceInfoByBundleNameWhenUpdate(BUNDLE_NAME, USERID);
+        EXPECT_TRUE(ret);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessCloneBundleResourceInfo_0010
+ * Function: ProcessCloneBundleResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessCloneBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, ProcessCloneBundleResourceInfo_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->ProcessCloneBundleResourceInfo(BUNDLE_NAME_NOT_EXIST, 1);
+        EXPECT_FALSE(ret);
+        ret = manager->ProcessCloneBundleResourceInfo(BUNDLE_NAME, 1);
+        EXPECT_TRUE(ret);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: AddResourceInfoByBundleNameWhenCreateUser_0010
+ * Function: AddResourceInfoByBundleNameWhenCreateUser
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleNameWhenCreateUser
+ */
+HWTEST_F(BmsBundleResourceTest, AddResourceInfoByBundleNameWhenCreateUser_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->AddResourceInfoByBundleNameWhenCreateUser(BUNDLE_NAME_NOT_EXIST, 100);
+        EXPECT_TRUE(ret);
+        OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+        ret = manager->AddResourceInfoByBundleNameWhenCreateUser(BUNDLE_NAME, THEME_TEST_USERID);
+        EXPECT_FALSE(ret);
+        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: AddResourceInfoByBundleNameWhenCreateUser_0020
+ * Function: AddResourceInfoByBundleNameWhenCreateUser
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleNameWhenCreateUser
+ */
+HWTEST_F(BmsBundleResourceTest, AddResourceInfoByBundleNameWhenCreateUser_0020, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+        bool ret = manager->AddResourceInfoByBundleNameWhenCreateUser(BUNDLE_NAME, THEME_TEST_USERID);
+        EXPECT_FALSE(ret);
+        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    }
+}
+
+/**
+ * @tc.number: DeleteBundleResourceInfo_0010
+ * Function: DeleteBundleResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteBundleResourceInfo_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->DeleteBundleResourceInfo(BUNDLE_NAME_NOT_EXIST, USERID, false);
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteBundleResourceInfo(BUNDLE_NAME_NOT_EXIST, USERID, true);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: AddDynamicIconResource_0010
+ * Function: AddDynamicIconResource
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddDynamicIconResource
+ */
+HWTEST_F(BmsBundleResourceTest, AddDynamicIconResource_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        ResourceInfo resourceInfo;
+        bool ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 0, resourceInfo);
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 0);
+        EXPECT_TRUE(ret);
+
+        ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0, resourceInfo);
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: AddAllResourceInfo_0010
+ * Function: AddAllResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddAllResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, AddAllResourceInfo_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->AddAllResourceInfo(THEME_TEST_USERID, 0);
+        EXPECT_FALSE(ret);
+
+        ret = manager->AddAllResourceInfo(USERID, 0);
+        EXPECT_TRUE(ret);
+
+        ret = manager->AddAllResourceInfo(USERID,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
+        EXPECT_TRUE(ret);
+
+        ret = manager->AddAllResourceInfo(USERID,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE));
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: AddResourceInfosWhenSystemLanguageChanged_0010
+ * Function: AddResourceInfosWhenSystemLanguageChanged
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfosWhenSystemLanguageChanged
+ */
+HWTEST_F(BmsBundleResourceTest, AddResourceInfosWhenSystemLanguageChanged_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        bool ret = manager->AddResourceInfosWhenSystemLanguageChanged(resourceInfosMap, USERID, 0);
+        EXPECT_FALSE(ret);
+        ResourceInfo resourceInfo;
+        resourceInfosMap[BUNDLE_NAME].push_back(resourceInfo);
+        manager->currentTaskNum_ = 100;
+        ret = manager->AddResourceInfosWhenSystemLanguageChanged(resourceInfosMap, USERID, 6000000);
+        EXPECT_FALSE(ret);
+
+        ret = manager->AddResourceInfosWhenSystemLanguageChanged(resourceInfosMap, USERID, 100);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: ProcessCloneBundleResourceInfoWhenSystemLanguageChanged_0010
+ * Function: ProcessCloneBundleResourceInfoWhenSystemLanguageChanged
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessCloneBundleResourceInfoWhenSystemLanguageChanged
+ */
+HWTEST_F(BmsBundleResourceTest, ProcessCloneBundleResourceInfoWhenSystemLanguageChanged_0010,
+    Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->ProcessCloneBundleResourceInfoWhenSystemLanguageChanged(BUNDLE_NAME, USERID, 0);
+        EXPECT_FALSE(ret);
+
+        ret = manager->ProcessCloneBundleResourceInfoWhenSystemLanguageChanged(BUNDLE_NAME_NOT_EXIST, USERID, 1);
+        EXPECT_FALSE(ret);
+
+        ret = manager->ProcessCloneBundleResourceInfoWhenSystemLanguageChanged(BUNDLE_NAME, USERID, 1);
+        EXPECT_TRUE(ret);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: AddResourceInfosWhenSystemThemeChanged_0010
+ * Function: AddResourceInfosWhenSystemThemeChanged
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfosWhenSystemThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, AddResourceInfosWhenSystemThemeChanged_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        bool ret = manager->AddResourceInfosWhenSystemThemeChanged(resourceInfosMap, USERID, 0);
+        EXPECT_FALSE(ret);
+        OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+        ResourceInfo resourceInfo;
+        resourceInfosMap[BUNDLE_NAME].push_back(resourceInfo);
+        manager->currentTaskNum_ = 100;
+        ret = manager->AddResourceInfosWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID, 1000000);
+        EXPECT_FALSE(ret);
+
+        ret = manager->AddResourceInfosWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID, 100);
+        EXPECT_TRUE(ret);
+        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    }
+}
+
+/**
+ * @tc.number: ProcessCloneBundleResourceInfoWhenSystemThemeChanged_0010
+ * Function: ProcessCloneBundleResourceInfoWhenSystemThemeChanged
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessCloneBundleResourceInfoWhenSystemThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, ProcessCloneBundleResourceInfoWhenSystemThemeChanged_0010,
+    Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->ProcessCloneBundleResourceInfoWhenSystemThemeChanged(BUNDLE_NAME_NOT_EXIST, USERID, 1);
+        EXPECT_FALSE(ret);
+
+        ret = manager->ProcessCloneBundleResourceInfoWhenSystemThemeChanged(BUNDLE_NAME, USERID, 1);
+        EXPECT_FALSE(ret);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerProcessResourceInfoBySystemThemeChanged_0010
+ * Function: InnerProcessResourceInfoBySystemThemeChanged
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessResourceInfoBySystemThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, InnerProcessResourceInfoBySystemThemeChanged_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        ResourceInfo resourceInfo;
+        resourceInfosMap[BUNDLE_NAME_NOT_EXIST].push_back(resourceInfo);
+        resourceInfosMap[BUNDLE_NAME].push_back(resourceInfo);
+        resourceInfosMap[MODULE_NAME].clear();
+        OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+        manager->InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, THEME_TEST_USERID);
+        EXPECT_EQ(resourceInfosMap.size(), 1);
+        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    }
+}
+
+/**
+ * @tc.number: AddCloneBundleResourceInfoWhenInstall_0010
+ * Function: AddCloneBundleResourceInfoWhenInstall
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddCloneBundleResourceInfoWhenInstall
+ */
+HWTEST_F(BmsBundleResourceTest, AddCloneBundleResourceInfoWhenInstall_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->AddCloneBundleResourceInfoWhenInstall(BUNDLE_NAME_NOT_EXIST, USERID, 1, false);
+        EXPECT_FALSE(ret);
+        ret = manager->AddCloneBundleResourceInfoWhenInstall(BUNDLE_NAME, USERID, 1, false);
+        EXPECT_TRUE(ret);
+        OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+        ret = manager->AddCloneBundleResourceInfoWhenInstall(BUNDLE_NAME, USERID, 2, false);
+        EXPECT_TRUE(ret);
+        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteCloneBundleResourceInfoWhenUninstall_0010
+ * Function: DeleteCloneBundleResourceInfoWhenUninstall
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteCloneBundleResourceInfoWhenUninstall
+ */
+HWTEST_F(BmsBundleResourceTest, DeleteCloneBundleResourceInfoWhenUninstall_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->DeleteCloneBundleResourceInfoWhenUninstall(BUNDLE_NAME_NOT_EXIST, USERID, 1, false);
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteCloneBundleResourceInfoWhenUninstall(BUNDLE_NAME_NOT_EXIST, USERID, 1, true);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: IsNeedProcessResourceIconInfo_0010
+ * Function: IsNeedProcessResourceIconInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test IsNeedProcessResourceIconInfo
+ */
+HWTEST_F(BmsBundleResourceTest, IsNeedProcessResourceIconInfo_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        uint32_t resourceFlags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+        bool ret = manager->IsNeedProcessResourceIconInfo(resourceFlags);
+        EXPECT_TRUE(ret);
+
+        resourceFlags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+        ret = manager->IsNeedProcessResourceIconInfo(resourceFlags);
+        EXPECT_FALSE(ret);
+
+        resourceFlags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON);
+        ret = manager->IsNeedProcessResourceIconInfo(resourceFlags);
+        EXPECT_TRUE(ret);
+
+        resourceFlags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+        ret = manager->IsNeedProcessResourceIconInfo(resourceFlags);
+        EXPECT_TRUE(ret);
+
+        resourceFlags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL);
+        ret = manager->IsNeedProcessResourceIconInfo(resourceFlags);
+        EXPECT_FALSE(ret);
+
+        resourceFlags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ONLY_WITH_MAIN_ABILITY);
+        ret = manager->IsNeedProcessResourceIconInfo(resourceFlags);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: GetUserId_0010
+ * Function: GetUserId
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetUserId
+ */
+HWTEST_F(BmsBundleResourceTest, GetUserId_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        auto userId = manager->GetUserId();
+        EXPECT_EQ(userId, USERID);
+    }
+}
+
+/**
+ * @tc.number: SetIsOnlineThemeWhenBoot_0020
+ * Function: SetIsOnlineThemeWhenBoot
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test SetIsOnlineThemeWhenBoot
+ */
+HWTEST_F(BmsBundleResourceTest, SetIsOnlineThemeWhenBoot_0020, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        bundleMgrService_->RegisterDataMgr(nullptr);
+        manager->SetIsOnlineThemeWhenBoot();
+        bundleMgrService_->RegisterDataMgr(savedDataMgr);
+        manager->SetIsOnlineThemeWhenBoot();
+        bool ret = manager->bundleResourceIconRdb_->GetIsOnlineTheme(THEME_TEST_USERID);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: InnerProcessThemeIconWhenOta_0010
+ * Function: InnerProcessThemeIconWhenOta
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessThemeIconWhenOta
+ */
+HWTEST_F(BmsBundleResourceTest, InnerProcessThemeIconWhenOta_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::set<int32_t> userIds;
+        userIds.insert(USERID);
+        bool ret = manager->InnerProcessThemeIconWhenOta(BUNDLE_NAME, userIds);
+        EXPECT_TRUE(ret);
+
+        auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        bundleMgrService_->RegisterDataMgr(nullptr);
+        OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+        userIds.insert(THEME_TEST_USERID);
+        ret = manager->InnerProcessThemeIconWhenOta(BUNDLE_NAME, userIds);
+        EXPECT_FALSE(ret);
+        bundleMgrService_->RegisterDataMgr(savedDataMgr);
+        ret = manager->InnerProcessThemeIconWhenOta(BUNDLE_NAME, userIds);
+        EXPECT_TRUE(ret);
+        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+    }
+}
+
+/**
+ * @tc.number: InnerProcessDynamicIconWhenOta_0010
+ * Function: InnerProcessDynamicIconWhenOta
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessDynamicIconWhenOta
+ */
+HWTEST_F(BmsBundleResourceTest, InnerProcessDynamicIconWhenOta_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        bundleMgrService_->RegisterDataMgr(nullptr);
+        bool ret = manager->InnerProcessDynamicIconWhenOta(BUNDLE_NAME);
+        EXPECT_FALSE(ret);
+        bundleMgrService_->RegisterDataMgr(savedDataMgr);
+
+        ret = manager->InnerProcessDynamicIconWhenOta(BUNDLE_NAME_NOT_EXIST);
+        EXPECT_FALSE(ret);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessThemeAndDynamicIconWhenOta_0010
+ * Function: ProcessThemeAndDynamicIconWhenOta
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessThemeAndDynamicIconWhenOta
+ */
+HWTEST_F(BmsBundleResourceTest, ProcessThemeAndDynamicIconWhenOta_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::set<std::string> updateBundleNames;
+        auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        bundleMgrService_->RegisterDataMgr(nullptr);
+        bool ret = manager->ProcessThemeAndDynamicIconWhenOta(updateBundleNames);
+        EXPECT_FALSE(ret);
+        bundleMgrService_->RegisterDataMgr(savedDataMgr);
+
+        ret = manager->ProcessThemeAndDynamicIconWhenOta(updateBundleNames);
+        EXPECT_TRUE(ret);
     }
 }
 } // OHOS

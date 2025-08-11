@@ -29,25 +29,7 @@ namespace OHOS {
 namespace AppExecFwk {
 bool BundleResourceCallback::OnUserIdSwitched(const int32_t oldUserId, const int32_t userId, const uint32_t type)
 {
-    APP_LOGI("start, oldUserId:%{public}d to newUserId:%{public}d", oldUserId, userId);
-    if (userId != Constants::START_USERID) {
-        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if (currentUserId != userId) {
-            APP_LOGE("userId:%{public}d current:%{public}d not same", userId, currentUserId);
-            return false;
-        }
-    }
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    if (manager == nullptr) {
-        APP_LOGE("switch userId %{public}d failed", userId);
-        return false;
-    }
-    SetUserId(userId);
-    if (!manager->AddAllResourceInfo(userId, type, oldUserId)) {
-        APP_LOGE("AddAllResourceInfo userId : %{public}d failed", userId);
-        return false;
-    }
-    APP_LOGI("end, oldUserId:%{public}d to newUserId:%{public}d", oldUserId, userId);
+    APP_LOGI("start, oldUserId:%{public}d to newUserId:%{public}d no need to process", oldUserId, userId);
     return true;
 }
 
@@ -161,11 +143,7 @@ bool BundleResourceCallback::OnOverlayStatusChanged(
     manager->GetTargetBundleName(bundleName, targetBundleName);
     APP_LOGI("bundleName:%{public}s, targetBundleName:%{public}s overlay changed", bundleName.c_str(),
         targetBundleName.c_str());
-    if (!manager->DeleteResourceInfo(targetBundleName)) {
-        APP_LOGW("delete resource failed %{public}s", targetBundleName.c_str());
-    }
-
-    if (!manager->AddResourceInfoByBundleName(targetBundleName, userId)) {
+    if (!manager->AddResourceInfoByBundleNameWhenUpdate(targetBundleName, userId)) {
         APP_LOGE("add resource failed %{public}s", targetBundleName.c_str());
         return false;
     }

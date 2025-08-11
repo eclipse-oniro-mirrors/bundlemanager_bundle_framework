@@ -41,6 +41,10 @@ public:
     // parse clone bundle resource info
     bool ParserCloneResourceInfo(const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);
 
+    bool ParseResourceInfosNoTheme(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
+
+    bool ParseIconResourceInfosWithTheme(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
+
 private:
     // for defaultIconPath is empty, icon and label exist in same hap.
     bool ParseResourceInfoWithSameHap(const int32_t userId, ResourceInfo &resourceInfo);
@@ -49,7 +53,7 @@ private:
     bool ParseLabelResourceByPath(const std::string &hapPath, const uint32_t labelId, std::string &label);
 
     bool ParseResourceInfoByResourceManager(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
-        ResourceInfo &resourceInfo);
+        ResourceInfo &resourceInfo, bool usingThemeResource = true);
 
     // parse label resource by resourceManager
     bool ParseLabelResourceByResourceManager(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
@@ -57,7 +61,7 @@ private:
 
     // parse foreground/background/mask icons resource by resourceManager
     bool ParseIconResourceByResourceManager(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
-        ResourceInfo &resourceInfo);
+        ResourceInfo &resourceInfo, bool usingThemeResource = true);
 
     bool ParseForegroundAndBackgroundResource(
         const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
@@ -69,8 +73,6 @@ private:
         const uint32_t iconId, const int32_t density, std::vector<uint8_t> &data);
 
     bool IsNeedToParseResourceInfo(const ResourceInfo &newResourceInfo, const ResourceInfo &oldResourceInfo);
-
-    void ProcessSpecialBundleResource(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
 };
 } // AppExecFwk
 } // OHOS

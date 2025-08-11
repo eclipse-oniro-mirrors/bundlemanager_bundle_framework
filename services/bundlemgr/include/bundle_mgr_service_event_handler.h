@@ -58,6 +58,7 @@ enum OTAFlag : uint32_t {
     DELETE_DEPRECATED_ARK_PATHS = 0x00008000,
     CHECK_EXTENSION_ABILITY = 0x00010000,
     PROCESS_DYNAMIC_ICON = 0x00020000,
+    PROCESS_THEME_AND_DYNAMIC_ICON = 0x00040000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -648,6 +649,8 @@ private:
     bool UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const;
     void CheckALLResourceInfo();
     void InnerProcessAllDynamicIconInfoWhenOta();
+    void InnerProcessAllThemeAndDynamicIconInfoWhenOta(
+        const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap);
     // Used to add bundle resource Info that does not exist in rdb when OTA.
     void static ProcessBundleResourceInfo();
     // scan all bundle data group info

@@ -195,7 +195,8 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     if (!dataMgr_->AddInnerBundleUserInfo(bundleName, newUserInfo)) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-
+    // add new user bundle info
+    BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId, ADD_RESOURCE_TYPE::CREATE_USER);
     CreateEl5Dir(info, userId, uid);
     CreateDataGroupDir(bundleName, userId);
 
