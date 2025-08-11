@@ -1626,7 +1626,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
     }
 
     // Get current active userId
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    int32_t currentUserId = AccountHelper::GetUserIdByCallerType();
     APP_LOGI("current active userId is %{public}d", currentUserId);
     if (currentUserId == Constants::INVALID_USERID) {
         APP_LOGE("currentUserId %{public}d is invalid", currentUserId);
@@ -2445,7 +2445,8 @@ ErrCode BundleMgrHostImpl::IsModuleRemovable(const std::string &bundleName, cons
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    return dataMgr->IsModuleRemovable(bundleName, moduleName, isRemovable);
+    int32_t userId = AccountHelper::GetUserIdByCallerType();
+    return dataMgr->IsModuleRemovable(bundleName, moduleName, isRemovable, userId);
 }
 
 bool BundleMgrHostImpl::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable)
@@ -2459,7 +2460,8 @@ bool BundleMgrHostImpl::SetModuleRemovable(const std::string &bundleName, const 
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->SetModuleRemovable(bundleName, moduleName, isEnable);
+    int32_t userId = AccountHelper::GetUserIdByCallerType();
+    return dataMgr->SetModuleRemovable(bundleName, moduleName, isEnable, userId);
 }
 
 bool BundleMgrHostImpl::GetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName)
@@ -2873,7 +2875,7 @@ bool BundleMgrHostImpl::GetFormsInfoByModule(
 bool BundleMgrHostImpl::GetShortcutInfos(
     const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
 {
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    int32_t currentUserId = AccountHelper::GetUserIdByCallerType();
     APP_LOGD("current active userId is %{public}d", currentUserId);
     if (currentUserId == Constants::INVALID_USERID) {
         APP_LOGW("current userId is invalid");
@@ -3191,7 +3193,7 @@ const OHOS::sptr<IDistributedBms> BundleMgrHostImpl::GetDistributedBundleMgrServ
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrHostImpl::GetConnectAbilityMgrFromService()
 {
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    int32_t currentUserId = AccountHelper::GetUserIdByCallerType();
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetConnectAbility(currentUserId);
 }
 #endif
@@ -4305,7 +4307,8 @@ bool BundleMgrHostImpl::GetGroupDir(const std::string &dataGroupId, std::string 
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
-    return dataMgr->GetGroupDir(dataGroupId, dir);
+    int32_t userId = AccountHelper::GetUserIdByCallerType();
+    return dataMgr->GetGroupDir(dataGroupId, dir, userId);
 }
 
 void BundleMgrHostImpl::SetBrokerServiceStatus(bool isServiceExisted)
@@ -4743,7 +4746,7 @@ ErrCode BundleMgrHostImpl::CheckSandboxPath(std::vector<std::string> &sourcePath
 ErrCode BundleMgrHostImpl::MigrateDataUserAuthentication()
 {
 #ifdef BMS_USER_AUTH_FRAMEWORK_ENABLED
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    int32_t userId = AccountHelper::GetUserIdByCallerType();
     if (userId == Constants::INVALID_USERID) {
         APP_LOGE("userId %{public}d is invalid", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -4841,13 +4844,13 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
         APP_LOGE("dataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    int32_t userId = AccountHelper::GetUserIdByCallerType();
     if (userId == Constants::INVALID_USERID) {
         APP_LOGE("userId %{public}d is invalid", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos();
+    std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos(userId);
     for (auto recoverableBundleInfo: recoverableBundleInfos) {
         std::string bundleName = recoverableBundleInfo.GetBundleName();
         if (bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId)) {
@@ -4883,7 +4886,7 @@ ErrCode BundleMgrHostImpl::GetUninstalledBundleInfo(const std::string bundleName
         APP_LOGE("dataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    int32_t userId = AccountHelper::GetUserIdByCallerType();
     if (userId == Constants::INVALID_USERID) {
         APP_LOGE("userId %{public}d is invalid", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -5063,7 +5066,7 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
         return resCode;
     }
     AbilityInfo mainAbilityInfo;
-    int32_t currentActiveUserId = AccountHelper::GetCurrentActiveUserId();
+    int32_t currentActiveUserId = AccountHelper::GetUserIdByCallerType();
     innerBundleInfo.GetMainAbilityInfo(mainAbilityInfo);
     NotifyBundleEvents installRes = {
         .isModuleUpdate = false,

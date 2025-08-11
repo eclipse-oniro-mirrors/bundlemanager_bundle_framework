@@ -23,6 +23,8 @@
 #ifdef ACCOUNT_ENABLE
 #include "os_account_manager.h"
 #endif
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -71,6 +73,18 @@ int32_t AccountHelper::GetCurrentActiveUserId()
     APP_LOGI("ACCOUNT_ENABLE is false");
     return 0;
 #endif
+}
+
+int32_t AccountHelper::GetUserIdByCallerType()
+{
+    auto callerToken = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        return AccountHelper::GetCurrentActiveUserId();
+    }
+
+    return AccountHelper::GetOsAccountLocalIdFromUid(IPCSkeleton::GetCallingUid());
 }
 
 bool AccountHelper::IsOsAccountVerified(const int32_t userId)

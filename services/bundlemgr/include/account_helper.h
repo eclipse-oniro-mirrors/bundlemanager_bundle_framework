@@ -27,6 +27,8 @@ public:
 
     static int32_t GetCurrentActiveUserId();
 
+    static int32_t GetUserIdByCallerType();
+
     static bool IsOsAccountVerified(const int32_t userId);
 
     static int32_t GetOsAccountLocalIdFromUid(const int32_t callingUid);

@@ -2782,7 +2782,7 @@ HWTEST_F(BmsBundleDataMgrTest, SetModuleRemovable_0100, Function | SmallTest | L
 {
     bool isEnabled = false;
     bool res = GetBundleDataMgr()->SetModuleRemovable(
-        BUNDLE_NAME_TEST, BUNDLE_NAME_TEST, isEnabled);
+        BUNDLE_NAME_TEST, BUNDLE_NAME_TEST, isEnabled, TEST_U100);
     EXPECT_EQ(res, false);
 }
 
@@ -2801,7 +2801,7 @@ HWTEST_F(BmsBundleDataMgrTest, SetModuleRemovable_0200, Function | SmallTest | L
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     bool res = GetBundleDataMgr()->SetModuleRemovable(
-        BUNDLE_NAME_TEST, BUNDLE_NAME_TEST, isEnabled);
+        BUNDLE_NAME_TEST, BUNDLE_NAME_TEST, isEnabled, TEST_U100);
     EXPECT_EQ(res, false);
 }
 
@@ -3835,7 +3835,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0100, Functio
     innerBundleUserInfo1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
     info.AddInnerBundleUserInfo(innerBundleUserInfo1);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
-    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos();
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
     EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
 }
 
@@ -3852,7 +3852,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0200, Functio
     InnerBundleInfo info;
     info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
-    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos();
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
     EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
 }
 
@@ -3873,7 +3873,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0300, Functio
     acls.push_back(std::string(Constants::PERMISSION_U1_ENABLED));
     info.SetAllowedAcls(acls);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
-    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos();
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
     EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
 }
 
@@ -3895,7 +3895,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0400, Functio
     innerBundleUserInfo1.bundleName = BUNDLE_NAME_FOR_TEST_U1ENABLE;
     info.AddInnerBundleUserInfo(innerBundleUserInfo1);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_U1ENABLE, info);
-    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos();
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
     EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_NAME_FOR_TEST_U1ENABLE));
 }
 

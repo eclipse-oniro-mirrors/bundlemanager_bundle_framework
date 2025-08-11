@@ -804,17 +804,21 @@ public:
      * @param bundleName Indicates the bundleName.
      * @param moduleName Indicates the moduleName.
      * @param isEnable Set module isRemovable is enable.
+     * @param userId Indicates the user ID.
      * @return Returns true if the module isRemovable is set success; returns false otherwise.
      */
-    bool SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable);
+    bool SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable,
+        int32_t userId);
     /**
      * @brief Get Module isRemovable by bundleName and moduleName.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param moduleName Indicates the moduleName.
      * @param isRemovable Indicates the module whether is removable.
+     * @param userId Indicates the user ID.
      * @return Returns ERR_OK if the module isRemovable is successfully obtained; returns other ErrCode otherwise.
      */
-    ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool &isRemovable) const;
+    ErrCode IsModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool &isRemovable,
+        int32_t userId) const;
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     int64_t GetBundleSpaceSize(const std::string &bundleName) const;
@@ -995,8 +999,7 @@ public:
         const std::map<std::string, int32_t> &groupIdMap,
         const std::map<std::string, std::set<std::string>> &needProcessGroupInfoBundleNames);
     bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId, std::vector<DataGroupInfo> &infos) const;
-    bool GetGroupDir(const std::string &dataGroupId, std::string &dir,
-        int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    bool GetGroupDir(const std::string &dataGroupId, std::string &dir, int32_t userId) const;
     void GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
         std::unordered_set<int32_t> &uniqueIdSet) const;
     void GenerateDataGroupInfos(const std::string &bundleName,
@@ -1021,7 +1024,7 @@ public:
     ErrCode GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerBundleInfo &innerBundleInfo,
         int32_t &appIndex) const;
     std::string GetModuleNameByBundleAndAbility(const std::string& bundleName, const std::string& abilityName);
-    const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos();
+    const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos(int32_t userId);
     ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
     ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
     ErrCode CreateBundleDataDir(int32_t userId);
