@@ -229,6 +229,7 @@ constexpr const char* PROPERTYNAME_DISPATCHAPIVERSION = "dispatchAPIVersion";
 constexpr const char* PROPERTYNAME_TARGETMOUDLENAME = "targetModuleName";
 constexpr const char* PROPERTYNAME_PRIORITY = "priority";
 constexpr const char* PROPERTYNAME_STATE = "state";
+constexpr const char* PROPERTYNAME_VISIBLE = "visible";
 constexpr const char* PROPERTYNAME_ACTION = "action";
 
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
@@ -1502,6 +1503,10 @@ ani_object CommonFunAni::ConvertShortcutInfo(ani_env* env, const ShortcutInfo& s
     // sourceType: number
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SOURCETYPE, shortcutInfo.sourceType));
 
+    // visible?: boolean
+    RETURN_NULL_IF_FALSE(CallSetterOptional(
+        env, cls, object, PROPERTYNAME_VISIBLE, BoolToAniBoolean(shortcutInfo.visible)));
+
     return object;
 }
 
@@ -2108,6 +2113,12 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
     // sourceType: number
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SOURCETYPE, &intValue));
     shortcutInfo.sourceType = intValue;
+
+    ani_boolean boolValue = false;
+    // visible?: boolean
+    if (CallGetterOptional(env, object, PROPERTYNAME_VISIBLE, &boolValue)) {
+        shortcutInfo.visible = boolValue;
+    }
 
     return true;
 }
