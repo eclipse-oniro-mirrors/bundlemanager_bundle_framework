@@ -64,6 +64,11 @@ static std::map<int32_t, std::string> appDistributionTypeMap = {
 };
 constexpr int32_t EMPTY_VALUE = -500;
 constexpr const char* EMPTY_STRING = "ani empty string";
+enum AbilityProfileType : uint32_t {
+    ABILITY_PROFILE = 0,
+    EXTENSION_PROFILE,
+    UNKNOWN_PROFILE
+};
 } // namespace
 
 static void CheckToCache(
@@ -401,6 +406,11 @@ static ani_boolean IsApplicationEnabledNative(ani_env* env,
     if (iBundleMgr == nullptr) {
         APP_LOGE("GetBundleMgr failed");
         BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return isEnable;
+    }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
         return isEnable;
     }
     ErrCode ret = ERR_OK;
@@ -1017,8 +1027,79 @@ static ani_object GetLaunchWant(ani_env* env)
     return CommonFunAni::ConvertWantInfo(env, want);
 }
 
+static ErrCode InnerGetProfile(const std::string& moduleName, const std::string& abilityName,
+    const std::string& metadataName, AbilityProfileType profileType, std::vector<std::string>& profileVec)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    if (abilityName.empty()) {
+        APP_LOGE("InnerGetProfile failed due to empty abilityName");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+
+    if (moduleName.empty()) {
+        APP_LOGE("InnerGetProfile failed due to empty moduleName");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ErrCode result;
+    BundleMgrClient client;
+    BundleInfo bundleInfo;
+    if (profileType == AbilityProfileType::ABILITY_PROFILE) {
+        auto getAbilityFlag = baseFlag +
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
+        result = iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("GetBundleInfoForSelf failed");
+            return result;
+        }
+        AbilityInfo targetAbilityInfo;
+        result = BundleManagerHelper::GetAbilityFromBundleInfo(
+            bundleInfo, abilityName, moduleName, targetAbilityInfo);
+        if (result != ERR_OK) {
+            return result;
+        }
+        if (!client.GetProfileFromAbility(targetAbilityInfo, metadataName, profileVec)) {
+            APP_LOGE("GetProfileFromExtension failed");
+            return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+        }
+        return ERR_OK;
+    }
+
+    if (profileType == AbilityProfileType::EXTENSION_PROFILE) {
+        auto getExtensionFlag = baseFlag +
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
+        result = iBundleMgr->GetBundleInfoForSelf(getExtensionFlag, bundleInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("GetBundleInfoForSelf failed");
+            return result;
+        }
+
+        ExtensionAbilityInfo targetExtensionInfo;
+        result = BundleManagerHelper::GetExtensionFromBundleInfo(
+            bundleInfo, abilityName, moduleName, targetExtensionInfo);
+        if (result != ERR_OK) {
+            return result;
+        }
+        if (!client.GetProfileFromExtension(targetExtensionInfo, metadataName, profileVec)) {
+            APP_LOGE("GetProfileFromExtension failed");
+            return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+        }
+        return ERR_OK;
+    }
+
+    APP_LOGE("InnerGetProfile failed due to type is invalid");
+    return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+}
+
 static ani_object GetProfileByAbilityNative(ani_env* env, ani_string aniModuleName, ani_string aniAbilityName,
-    ani_string aniMetadataName, ani_boolean aniIsExtensionProfile, ani_boolean aniIsSync)
+    ani_string aniMetadataName, ani_enum_item aniProfileType, ani_boolean aniIsSync)
 {
     APP_LOGD("ani GetProfileByAbilityNative called");
     std::string moduleName;
@@ -1048,16 +1129,18 @@ static ani_object GetProfileByAbilityNative(ani_env* env, ani_string aniModuleNa
     if (!CommonFunAni::ParseString(env, aniMetadataName, metadataName)) {
         APP_LOGW("Parse metadataName failed, The default value is undefined");
     }
-    bool isExtensionProfile = CommonFunAni::AniBooleanToBool(aniIsExtensionProfile);
-
+    AbilityProfileType profileType = AbilityProfileType::UNKNOWN_PROFILE;
+    if (!EnumUtils::EnumETSToNative(env, aniProfileType, profileType)) {
+        APP_LOGE("Parse profileType failed");
+        return nullptr;
+    }
     std::vector<std::string> profileVec;
-    ErrCode ret = BundleManagerHelper::CommonInnerGetProfile(
-        moduleName, abilityName, metadataName, isExtensionProfile, profileVec);
+    ErrCode ret = InnerGetProfile(moduleName, abilityName, metadataName, profileType, profileVec);
     if (ret != ERR_OK) {
         APP_LOGE("InnerGetProfile failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            (isSync ? (isExtensionProfile ? GET_PROFILE_BY_EXTENSION_ABILITY_SYNC : GET_PROFILE_BY_ABILITY_SYNC) : ""),
-            "");
+            (isSync ? (profileType == AbilityProfileType::EXTENSION_PROFILE ?
+            GET_PROFILE_BY_EXTENSION_ABILITY_SYNC : GET_PROFILE_BY_ABILITY_SYNC) : ""), "");
         return nullptr;
     }
     return CommonFunAni::ConvertAniArrayString(env, profileVec);
@@ -1384,6 +1467,14 @@ static ani_object GetSharedBundleInfoNative(ani_env* env, ani_string aniBundleNa
         APP_LOGE("moduleName parse failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, Constants::MODULE_NAME, TYPE_STRING);
         return nullptr;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+    }
+    if (moduleName.empty()) {
+        APP_LOGE("moduleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
     }
     std::vector<SharedBundleInfo> sharedBundles;
     ErrCode ret = BundleManagerHelper::InnerGetSharedBundleInfo(bundleName, moduleName, sharedBundles);

@@ -25,6 +25,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace CommonFunAniNS {
+constexpr int32_t UNSPECIFIED = 255;
+
 constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_FLAG = "L@ohos/bundle/bundleManager/bundleManager/BundleFlag;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE = "L@ohos/bundle/bundleManager/bundleManager/BundleType;";
 constexpr const char* CLASSNAME_BUNDLEMANAGER_MULTIAPPMODE_TYPE =
@@ -346,8 +348,11 @@ public:
     // bundleManager.ExtensionAbilityType
     static inline ani_enum_item EnumNativeToETS_BundleManager_ExtensionAbilityType(ani_env* env, const int32_t value)
     {
-        return EnumNativeToETSByTable(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_EXTENSIONABILITY_TYPE, value,
-            Array_BundleManager_ExtensionAbilityType);
+        bool isValid = std::find(std::begin(Array_BundleManager_ExtensionAbilityType),
+                                 std::end(Array_BundleManager_ExtensionAbilityType),
+                                 value) != std::end(Array_BundleManager_ExtensionAbilityType);
+        return EnumNativeToETSByTable(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_EXTENSIONABILITY_TYPE,
+            isValid ? value : CommonFunAniNS::UNSPECIFIED, Array_BundleManager_ExtensionAbilityType);
     }
 
     /* bundleManager.ModuleType
