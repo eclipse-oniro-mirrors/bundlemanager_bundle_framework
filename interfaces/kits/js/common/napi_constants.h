@@ -279,6 +279,8 @@ constexpr const char* DELETE_UNINSTALL_DISPOSED_RULE = "DeleteUninstallDisposedR
 constexpr const char* GET_UNINSTALL_DISPOSED_RULE = "GetUninstallDisposedRule";
 constexpr const char* SET_DISPOSED_RULE = "SetDisposedRule";
 constexpr const char* SET_DISPOSED_RULES = "SetDisposedRules";
+constexpr const char* PARAM_LENGTH_ERROR = "parameter length invalid";
+constexpr uint32_t MAX_VECTOR_NUM = 1000;
 
 // default_app_manager
 const std::unordered_map<std::string, std::string> TYPE_MAPPING = {
