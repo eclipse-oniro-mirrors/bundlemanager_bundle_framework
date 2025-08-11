@@ -378,7 +378,7 @@ static ani_object GetAllBundleInfoNative(ani_env* env, ani_double aniBundleFlags
             Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
         return nullptr;
     }
-    APP_LOGI("GetBundleInfosV9 ret: %{public}d, bundleInfos size: %{public}d", ret, bundleInfos.size());
+    APP_LOGI("GetBundleInfosV9 ret: %{public}d, bundleInfos size: %{public}zu", ret, bundleInfos.size());
 
     return CommonFunAni::ConvertAniArray(env, bundleInfos, CommonFunAni::ConvertBundleInfo, bundleFlags);
 }
@@ -415,7 +415,7 @@ static ani_object GetAllApplicationInfoNative(ani_env* env, ani_double aniApplic
             Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
         return nullptr;
     }
-    APP_LOGI("applicationInfos size: %{public}d", appInfos.size());
+    APP_LOGI("applicationInfos size: %{public}zu", appInfos.size());
 
     return CommonFunAni::ConvertAniArray(env, appInfos, CommonFunAni::ConvertApplicationInfo);
 }
