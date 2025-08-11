@@ -5113,6 +5113,40 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0257, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleResourceTest_0258
+ * Function: SetConfigInFile
+ * @tc.name: test SetConfigInFile
+ * @tc.desc: 1. system running normally
+ *           2. test SetConfigInFile
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0258, Function | SmallTest | Level0)
+{
+    std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
+        std::string(BundleResourceConstants::USER_FILE_NAME);
+    OHOS::RemoveFile(path);
+
+    BundleResourceCallback callback;
+    callback.SetConfigInFile("", "", 0, 0, 0, 0);
+    nlohmann::json jsonBuf;
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+    }
+    EXPECT_TRUE(jsonBuf.is_null());
+
+    std::string notJson = R"({"test1": "123", "test2":})";
+    std::ofstream file;
+    file.open(path, ios::out);
+    file << notJson;
+    file.close();
+    callback.SetConfigInFile("", "", 0, 0, 0, 0);
+    if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
+        APP_LOGW("read user file failed, errno %{public}d", errno);
+    }
+    EXPECT_TRUE(jsonBuf.is_discarded());
+    OHOS::RemoveFile(path);
+}
+
+/**
  * @tc.number: GetExtendResourceInfo_0001
  * Function: GetExtendResourceInfo
  * @tc.name: test

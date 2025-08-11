@@ -58,7 +58,7 @@ private:
 
     void DeleteConfigInFile(const int32_t userId, const uint32_t type);
 
-    std::mutex userFileMutex_;
+    static std::mutex userFileMutex_;
 };
 } // AppExecFwk
 } // OHOS

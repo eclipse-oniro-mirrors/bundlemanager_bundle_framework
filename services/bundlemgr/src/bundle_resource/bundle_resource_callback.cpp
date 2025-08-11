@@ -27,6 +27,8 @@
 #endif
 namespace OHOS {
 namespace AppExecFwk {
+std::mutex BundleResourceCallback::userFileMutex_;
+
 bool BundleResourceCallback::OnUserIdSwitched(const int32_t oldUserId, const int32_t userId, const uint32_t type)
 {
     APP_LOGI("start, oldUserId:%{public}d to newUserId:%{public}d no need to process", oldUserId, userId);
@@ -211,6 +213,7 @@ void BundleResourceCallback::DeleteConfigInFile(const int32_t userId, const uint
     std::string path = std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH) +
         std::string(BundleResourceConstants::USER_FILE_NAME);
     nlohmann::json jsonBuf;
+    std::lock_guard<std::mutex> lock(userFileMutex_);
     if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
         APP_LOGW("read user file failed, errno %{public}d", errno);
         return;
@@ -249,6 +252,10 @@ void BundleResourceCallback::SetConfigInFile(const std::string &language, const 
     std::lock_guard<std::mutex> lock(userFileMutex_);
     if (!BundleParser::ReadFileIntoJson(path, jsonBuf)) {
         APP_LOGW("read user file failed, errno %{public}d", errno);
+    }
+    if (jsonBuf.is_discarded()) {
+        APP_LOGW("bad profile file %{public}s", path.c_str());
+        return;
     }
     FILE *out = fopen(path.c_str(), "w");
     if (out == nullptr) {
