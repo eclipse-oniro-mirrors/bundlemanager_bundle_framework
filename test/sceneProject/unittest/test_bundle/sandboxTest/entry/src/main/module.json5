@@ -1,13 +1,25 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {
     "module": {
         "abilities": [
             {
                 "description": "$string:phone_entry_main",
-                "descriptionId": 16777221,
                 "icon": "$media:icon",
-                "iconId": 16777225,
                 "label": "$string:entry_label",
-                "labelId": 16777218,
                 "metadata": [
                     {
                         "name": "ohos.ability.shortcuts",
@@ -26,6 +38,8 @@
                     }
                 ],
                 "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
                 "exported": true
             },
             {
@@ -135,44 +149,40 @@
         ],
         "deliveryWithInstall": true,
         "description": "$string:phone_entry_dsc",
-        "descriptionId": 16777220,
         "deviceTypes": [
             "2in1",
             "tablet",
             "default",
-            "phone"
+            "tv",
+            "wearable"
         ],
         "extensionAbilities": [
             {
                 "description": "$string:form_description",
-                "descriptionId": 16777219,
                 "icon": "$media:icon",
-                "iconId": 16777225,
                 "metadata": [
                     {
                         "name": "ohos.extension.form",
-                        "resource": "@profile:form_config"
+                        "resource": "$profile:form_config"
                     }
                 ],
                 "name": "Form",
-                "srcEntry": "./ets/Form/MyForm.ts",
+                "srcEntry": "./ets/Application/AbilityStage.ts",
                 "type": "form",
-                "exported": true
+                "visible": true
             },
             {
                 "description": "$string:serviceability_description",
-                "descriptionId": 16777222,
                 "icon": "$media:icon",
-                "iconId": 16777225,
                 "name": "WeatherFormAbility",
-                "srcEntry": "./ets/Weather/WeatherFormAbility.ts",
+                "srcEntry": "./ets/Application/AbilityStage.ts",
                 "type": "service"
             }
         ],
         "installationFree": false,
         "mainElement": "MainAbility",
         "name": "entry_phone",
-        "pages": "@profile:main_pages",
+        "pages": "$profile:main_pages",
         "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "entry"
     }
