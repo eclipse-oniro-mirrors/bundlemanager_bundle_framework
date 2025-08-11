@@ -4991,6 +4991,9 @@ void BMSEventHandler::ProcessUpdatePermissions()
         auto &innerBundleInfo = infoPair.second;
         std::string bundleName = innerBundleInfo.GetBundleName();
         auto &userInfos = innerBundleInfo.GetInnerBundleUserInfos();
+        if (userInfos.empty()) {
+            continue;
+        }
         AppProvisionInfo appProvisionInfo;
         if (dataMgr->GetAppProvisionInfo(bundleName, userInfos.begin()->second.bundleUserInfo.userId,
             appProvisionInfo) != ERR_OK) {
