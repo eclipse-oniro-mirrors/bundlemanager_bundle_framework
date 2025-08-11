@@ -29,6 +29,7 @@
 #include "bms_extension_client.h"
 #include "bms_extension_profile.h"
 #include "bundle_data_mgr.h"
+#include "bundle_file_util.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_mgr_ext.h"
@@ -3319,6 +3320,7 @@ HWTEST_F(BmsBundleDataMgrTest3, RestoreUidAndGidFromUninstallInfo_0100, Function
     EXPECT_TRUE(ret);
     auto restoreBundleName = bundleDataMgr->bundleIdMap_.at(bundleId);
     EXPECT_EQ(restoreBundleName, BUNDLE_NAME_TEST);
+    EXPECT_TRUE(BundleFileUtil::IsExistDir(ServiceConstants::HMDFS_CONFIG_PATH + BUNDLE_NAME_TEST));
     bundleDataMgr->DeleteUninstallBundleInfo(BUNDLE_NAME_TEST, USERID);
     bundleDataMgr->bundleIdMap_.erase(bundleId);
 }
