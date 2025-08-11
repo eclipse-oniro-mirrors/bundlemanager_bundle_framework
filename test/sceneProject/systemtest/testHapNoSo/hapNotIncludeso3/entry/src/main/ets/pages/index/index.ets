@@ -12,33 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import file from '@system.file';
-
-import {Core, ExpectExtend, InstrumentLog, ReportExtend} from "deccjsunit/index.ets"
-import GlobalContext from "../MainAbility/GlobalContext.ts"
-
 
 @Entry
 @Component
 struct Index {
-  aboutToAppear(){
-    console.info("start run testcase!!!!")
-    const core:Core = Core.getInstance()
-    const expectExtend:ExpectExtend = new ExpectExtend({
-      id: 'extend'
-    })
-    core.addService('expect', expectExtend)
-    const reportExtend:ReportExtend = new ReportExtend(file)
-
-    core.addService('report', reportExtend)
-    core.init()
-    core.subscribeEvent('task', reportExtend)
-
-    const globalContext:GlobalContext = new GlobalContext()
-    globalContext.globalContext(core)
-    core.execute()
-  }
-
   build() {
     Flex({ direction:FlexDirection.Column, alignItems:ItemAlign.Center, justifyContent: FlexAlign.Center }) {
       Text('Hello World')
