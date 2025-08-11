@@ -224,7 +224,7 @@ static ani_object createChecksumNative(ani_env* env, ani_boolean)
     Type checksumType = Builder::BuildClass({ zlibNS.Name(), TYPE_NAME_CHECKSUMINTERNAL });
     ani_class clsChecksum = CommonFunAni::CreateClassByName(env, checksumType.Descriptor());
     if (clsChecksum != nullptr) {
-        objChecksum = CommonFunAni::CreateNewObjectByClass(env, clsChecksum);
+        objChecksum = CommonFunAni::CreateNewObjectByClass(env, checksumType.Descriptor(), clsChecksum);
     }
     if (objChecksum == nullptr) {
         auto errorPair = LIBZIP::errCodeTable.at(EFAULT);
@@ -242,7 +242,7 @@ static ani_object createGZipNative(ani_env* env, ani_boolean)
     Type gzipType = Builder::BuildClass({ zlibNS.Name(), TYPE_NAME_GZIPINTERNAL });
     ani_class clsGZip = CommonFunAni::CreateClassByName(env, gzipType.Descriptor());
     if (clsGZip != nullptr) {
-        objGZip = CommonFunAni::CreateNewObjectByClass(env, clsGZip);
+        objGZip = CommonFunAni::CreateNewObjectByClass(env, gzipType.Descriptor(), clsGZip);
     }
     if (objGZip == nullptr) {
         auto errorPair = LIBZIP::errCodeTable.at(EFAULT);

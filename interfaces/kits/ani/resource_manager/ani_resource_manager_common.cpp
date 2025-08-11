@@ -40,7 +40,7 @@ ani_object AniResourceManagerCommon::ConvertBundleResourceInfo(ani_env* env, con
     ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_BUNDLE_RES_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CommonFunAni::CreateNewObjectByClass(env, cls);
+    ani_object object = CommonFunAni::CreateNewObjectByClass(env, CLASSNAME_BUNDLE_RES_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -81,7 +81,7 @@ ani_object AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo(ani_env*
     ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CommonFunAni::CreateNewObjectByClass(env, cls);
+    ani_object object = CommonFunAni::CreateNewObjectByClass(env, CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;

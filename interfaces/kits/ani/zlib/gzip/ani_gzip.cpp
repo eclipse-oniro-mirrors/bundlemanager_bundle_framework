@@ -27,7 +27,7 @@ namespace AniZLibGZip {
 namespace {
 constexpr const char* CLASSNAME_STRING = "std.core.String";
 constexpr const char* CLASSNAME_DOUBLE = "std.core.Double";
-constexpr const char* CLASSNAME_GZERROROUTPUTINFOINNER = "@ohos.zlib.zlib.GzErrorOutputInfoInner";
+constexpr const char* CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER = "@ohos.zlib.zlib.GzErrorOutputInfoInner";
 constexpr const char* FIELD_NAME_NATIVEGZFILE = "nativeGZFile";
 constexpr int INVALID_FD = -1;
 constexpr uint8_t MIN_ASCII = 0;
@@ -412,10 +412,10 @@ ani_object gzerrorNative(ani_env* env, ani_object instance)
     const char* errMsg = gzerror(nativeGZFile, &errCode);
     CHECK_PARAM_NULL_THROW_RETURN(errMsg, LIBZIP::EZSTREAM_ERROR, nullptr);
 
-    ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_GZERROROUTPUTINFOINNER);
+    ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CommonFunAni::CreateNewObjectByClass(env, cls);
+    ani_object object = CommonFunAni::CreateNewObjectByClass(env, CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     // status: ReturnStatus

@@ -214,9 +214,9 @@ public:
         const char* keyName, const char* valueName);
 
     static ani_class CreateClassByName(ani_env* env, const std::string& className);
-    static ani_object CreateNewObjectByClass(ani_env* env, ani_class cls);
+    static ani_object CreateNewObjectByClass(ani_env* env, const std::string& className, ani_class cls);
     static ani_object CreateNewObjectByClassV2(
-        ani_env* env, ani_class cls, const std::string& ctorSig, const ani_value* args);
+        ani_env* env, const std::string& className, const std::string& ctorSig, const ani_value* args);
     static inline ani_object ConvertAniArrayString(ani_env* env, const std::vector<std::string>& strings)
     {
         return ConvertAniArray(env, strings, [](ani_env* env, const std::string& nativeStr) {
@@ -283,12 +283,9 @@ public:
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
 
-        ani_class arrayCls = CreateClassByName(env, CommonFunAniNS::CLASSNAME_ARRAY);
-        RETURN_NULL_IF_NULL(arrayCls);
-
         ani_size length = cArray.size();
         ani_value arg = { .i = static_cast<ani_int>(length) };
-        ani_object arrayObj = CreateNewObjectByClassV2(env, arrayCls, "i:", &arg);
+        ani_object arrayObj = CreateNewObjectByClassV2(env, CommonFunAniNS::CLASSNAME_ARRAY, "i:", &arg);
         RETURN_NULL_IF_NULL(arrayObj);
 
         ani_status status = ANI_OK;
@@ -318,12 +315,9 @@ public:
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
 
-        ani_class arrayCls = CreateClassByName(env, CommonFunAniNS::CLASSNAME_ARRAY);
-        RETURN_NULL_IF_NULL(arrayCls);
-
         ani_size length = nativeArray.size();
         ani_value arg = { .i = static_cast<ani_int>(length) };
-        ani_object arrayObj = CreateNewObjectByClassV2(env, arrayCls, "i:", &arg);
+        ani_object arrayObj = CreateNewObjectByClassV2(env, CommonFunAniNS::CLASSNAME_ARRAY, "i:", &arg);
         RETURN_NULL_IF_NULL(arrayObj);
 
         ani_status status = ANI_OK;
