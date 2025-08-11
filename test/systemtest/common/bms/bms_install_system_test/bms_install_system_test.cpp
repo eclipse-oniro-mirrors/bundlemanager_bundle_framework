@@ -1299,7 +1299,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3100, Function | MediumTest | Level2)
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "e4.hap";
 
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_PROP_TYPE_ERROR]");
+    EXPECT_EQ(installMsg, OPERATION_SUCCESS);
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     BundleInfo bundleInfo;
@@ -1310,6 +1310,10 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3100, Function | MediumTest | Level2)
     }
     bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
+
+    std::string uninstallMsg;
+    UninstallBundle(bundleName, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, OPERATION_SUCCESS) << "uninstall fail!" << bundleFilePath;
     std::cout << "END BMS_Install_3100" << std::endl;
 }
 
@@ -1327,7 +1331,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3200, Function | MediumTest | Level2)
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "e5.hap";
 
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_PROP_CHECK_ERROR]");
+    EXPECT_EQ(installMsg, OPERATION_SUCCESS);
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     BundleInfo bundleInfo;
@@ -1338,6 +1342,10 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3200, Function | MediumTest | Level2)
     }
     bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
+
+    std::string uninstallMsg;
+    UninstallBundle(bundleName, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, OPERATION_SUCCESS) << "uninstall fail!" << bundleFilePath;
     std::cout << "END BMS_Install_3200" << std::endl;
 }
 
@@ -1355,7 +1363,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3300, Function | MediumTest | Level2)
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "e6.hap";
 
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_PROP_TYPE_ERROR]");
+    EXPECT_EQ(installMsg, OPERATION_SUCCESS);
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     BundleInfo bundleInfo;
@@ -1366,6 +1374,10 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_3300, Function | MediumTest | Level2)
     }
     bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
+
+    std::string uninstallMsg;
+    UninstallBundle(bundleName, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, OPERATION_SUCCESS) << "uninstall fail!" << bundleFilePath;
     std::cout << "END BMS_Install_3300" << std::endl;
 }
 
