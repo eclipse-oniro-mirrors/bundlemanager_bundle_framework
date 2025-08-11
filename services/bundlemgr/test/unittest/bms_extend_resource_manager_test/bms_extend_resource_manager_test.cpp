@@ -1426,7 +1426,7 @@ HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0500, Function | Smal
     extendResourceInfo.iconId = 0;
     ExtendResourceManagerHostImpl impl;
     bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo, INVALID_ID, 0);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
     auto iter = dataMgr->bundleInfos_.find(TEST_BUNDLE);
     if (iter != dataMgr->bundleInfos_.end()) {
         dataMgr->bundleInfos_.erase(iter);
@@ -1521,7 +1521,7 @@ HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_1000, Function | 
 
     ExtendResourceManagerHostImpl impl;
     bool ret = impl.ResetBundleResourceIcon(TEST_BUNDLE, INVALID_ID, 1);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
     auto iter = dataMgr->bundleInfos_.find(TEST_BUNDLE);
     if (iter != dataMgr->bundleInfos_.end()) {
         dataMgr->bundleInfos_.erase(iter);

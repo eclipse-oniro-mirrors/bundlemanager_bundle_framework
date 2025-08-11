@@ -220,8 +220,8 @@ HWTEST_F(BmsBundleResourceThemeProcessTest, ProcessSpecialBundleResource_0001, F
     BundleResourceInfo bundleResourceInfo1;
     bundleResourceInfo1.bundleName = COM_OHOS_CONTACTS;
     bundleResourceInfo1.icon = "icon1";
-    BundleResourceThemeProcess::ProcessSpecialBundleResource(resourceIconInfos, bundleResourceInfo);
-    EXPECT_EQ(bundleResourceInfo.icon, "icon");
+    BundleResourceThemeProcess::ProcessSpecialBundleResource(resourceIconInfos, bundleResourceInfo1);
+    EXPECT_EQ(bundleResourceInfo1.icon, "icon");
 }
 #endif
 }

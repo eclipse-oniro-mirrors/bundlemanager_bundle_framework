@@ -183,8 +183,8 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
         if (IsNeedProcessResourceIconInfo(resourceFlags)) {
             int32_t userId = GetUserId();
             std::vector<LauncherAbilityResourceInfo> resourceIconInfos;
-            if (!bundleResourceIconRdb_->GetResourceIconInfos(bundleName, userId, 0, resourceFlags, resourceIconInfos)
-                || resourceIconInfos.empty()) {
+            if (!bundleResourceIconRdb_->GetResourceIconInfos(bundleName, userId, appIndex, resourceFlags,
+                resourceIconInfos) || resourceIconInfos.empty()) {
                 return true;
             }
             for (auto &resource : launcherAbilityResourceInfo) {
