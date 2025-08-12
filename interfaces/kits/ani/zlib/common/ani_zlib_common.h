@@ -54,7 +54,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace AniZLibCommon {
 
-void ThrowZLibNapiError(ani_env* env, int posixError)
+inline void ThrowZLibNapiError(ani_env* env, int posixError)
 {
     auto errorPair = LIBZIP::errCodeTable.find(posixError) == LIBZIP::errCodeTable.end()
                          ? LIBZIP::errCodeTable.at(ENOSTR)

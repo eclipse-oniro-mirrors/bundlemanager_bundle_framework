@@ -15,6 +15,7 @@
 
 #include "ani_checksum.h"
 #include "ani_signature_builder.h"
+#include "ani_zlib_common.h"
 #include "napi_constants.h"
 
 namespace OHOS {
@@ -203,6 +204,12 @@ ani_long adler32CombineNative(ani_env* env, ani_object, ani_long aniAdler1, ani_
 {
     APP_LOGD("adler32CombineNative entry");
 
+    if (aniLen2 < 0) {
+        APP_LOGE("negative aniLen2");
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return 0;
+    }
+
 #ifdef Z_LARGE64
     return static_cast<ani_long>(adler32_combine64(
         static_cast<uLong>(aniAdler1), static_cast<uLong>(aniAdler2), static_cast<z_off64_t>(aniLen2)));
@@ -244,6 +251,12 @@ ani_long crc32Native(ani_env* env, ani_object, ani_long aniCrc, ani_arraybuffer 
 ani_long crc32CombineNative(ani_env* env, ani_object, ani_long aniCrc1, ani_long aniCrc2, ani_long aniLen2)
 {
     APP_LOGD("crc32CombineNative entry");
+
+    if (aniLen2 < 0) {
+        APP_LOGE("negative aniLen2");
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return 0;
+    }
 
 #ifdef Z_LARGE64
     return static_cast<ani_long>(
