@@ -10600,6 +10600,10 @@ void BundleDataMgr::RestoreUidAndGidFromUninstallInfo()
         auto item = bundleIdMap_.find(bundleId);
         if (item == bundleIdMap_.end()) {
             uninstallBundleIdMap.emplace(bundleId, info.first);
+            BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(info.first, ServiceConstants::HMDFS_CONFIG_PATH,
+                info.second.appProvisionType, Constants::APP_PROVISION_TYPE_FILE_NAME);
         }
     }
     for (const auto &item : uninstallBundleIdMap) {
