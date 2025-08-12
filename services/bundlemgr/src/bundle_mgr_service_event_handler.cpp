@@ -2439,12 +2439,9 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
         }
         InnerBundleInfo oldBundleInfo;
         bool hasInstalled = dataMgr->FetchInnerBundleInfo(bundleName, oldBundleInfo);
-        if (!hasInstalled) {
-            LOG_W(BMS_TAG_DEFAULT, "app(%{public}s) has been uninstalled and do not OTA install", bundleName.c_str());
-            continue;
-        }
-        if (oldBundleInfo.GetVersionCode() > versionCode) {
-            LOG_D(BMS_TAG_DEFAULT, "the installed version is up-to-date");
+        if (hasInstalled && oldBundleInfo.GetVersionCode() > versionCode) {
+            LOG_W(BMS_TAG_DEFAULT, "%{public}s the installed version %{public}d is greater then curVer %{public}d",
+                bundleName.c_str(), oldBundleInfo.GetVersionCode(), versionCode);
             continue;
         }
         SavePreInstallExceptionAppService(scanPath);
