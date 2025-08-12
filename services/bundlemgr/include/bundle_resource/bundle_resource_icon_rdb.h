@@ -20,6 +20,7 @@
 #include <shared_mutex>
 #include <vector>
 
+#include "bundle_constants.h"
 #include "bundle_resource_info.h"
 #include "launcher_ability_resource_info.h"
 #include "rdb_data_manager.h"
