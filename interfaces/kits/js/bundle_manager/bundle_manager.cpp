@@ -4588,7 +4588,7 @@ napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetAdditionalInfo(bundleName, additionalInfo));
     if (ret != SUCCESS) {
-        APP_LOGE_NOFUNC("GetAdditionalInfo %{public}s error", bundleName.c_str());
+        APP_LOGD("GetAdditionalInfo %{public}s error", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, RESOURCE_NAME_OF_GET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);

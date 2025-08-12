@@ -3816,7 +3816,7 @@ ErrCode BundleDataMgr::GetBundleNameAndIndex(const int32_t uid, std::string &bun
     std::shared_lock<ffrt::shared_mutex> bundleIdLock(bundleIdMapMutex_);
     auto bundleIdIter = bundleIdMap_.find(bundleId);
     if (bundleIdIter == bundleIdMap_.end()) {
-        APP_LOGW_NOFUNC("bundleId %{public}d is not existed", bundleId);
+        APP_LOGD("bundleId %{public}d is not existed", bundleId);
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
     std::string keyName = bundleIdIter->second;
@@ -4298,7 +4298,7 @@ ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
     int32_t appIndex = 0;
     ErrCode ret = GetBundleNameAndIndex(uid, name, appIndex);
     if (ret != ERR_OK) {
-        APP_LOGD("the uid(%{public}d) is not an application", uid);
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "uid(%{public}d) invalid", uid);
         return ret;
     }
     APP_LOGD("GetBundleNameForUid, uid %{public}d, bundleName %{public}s, appIndex %{public}d",
