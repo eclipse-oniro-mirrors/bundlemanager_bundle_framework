@@ -153,7 +153,8 @@ private:
 
     bool IsNeedProcessResourceIconInfo(const uint32_t resourceFlags);
 
-    bool InnerProcessThemeIconWhenOta(const std::string &bundleName, const std::set<int32_t> userIds);
+    bool InnerProcessThemeIconWhenOta(const std::string &bundleName, const std::set<int32_t> userIds,
+        const bool hasBundleUpdated = false);
 
     bool InnerProcessDynamicIconWhenOta(const std::string &bundleName);
 

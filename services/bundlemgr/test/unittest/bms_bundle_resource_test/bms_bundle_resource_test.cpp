@@ -5854,6 +5854,39 @@ HWTEST_F(BmsBundleResourceTest, InnerProcessThemeIconWhenOta_0010, Function | Sm
 }
 
 /**
+ * @tc.number: InnerProcessThemeIconWhenOta_0020
+ * Function: InnerProcessThemeIconWhenOta
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessThemeIconWhenOta
+ */
+HWTEST_F(BmsBundleResourceTest, InnerProcessThemeIconWhenOta_0020, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
+        std::set<int32_t> userIds;
+        userIds.insert(THEME_TEST_USERID);
+        InnerBundleUserInfo userInfo;
+        userInfo.bundleUserInfo.userId = THEME_TEST_USERID;
+        InnerBundleInfo bundleInfo;
+        bundleInfo.innerBundleUserInfos_["_20000"] = userInfo;
+        auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        savedDataMgr->bundleInfos_[BUNDLE_NAME] = bundleInfo;
+        bool ret = manager->InnerProcessThemeIconWhenOta(BUNDLE_NAME, userIds, false);
+        EXPECT_TRUE(ret);
+        ret = manager->InnerProcessThemeIconWhenOta(BUNDLE_NAME, userIds, true);
+        EXPECT_TRUE(ret);
+        OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
+        auto iter = savedDataMgr->bundleInfos_.find(BUNDLE_NAME);
+        if (iter != savedDataMgr->bundleInfos_.end()) {
+            savedDataMgr->bundleInfos_.erase(iter);
+        }
+    }
+}
+
+/**
  * @tc.number: InnerProcessDynamicIconWhenOta_0010
  * Function: InnerProcessDynamicIconWhenOta
  * @tc.name: test
