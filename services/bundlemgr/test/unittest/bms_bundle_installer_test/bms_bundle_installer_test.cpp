@@ -8428,6 +8428,40 @@ HWTEST_F(BmsBundleInstallerTest, InstallCloneApp_0100, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: InstallCloneApp_0200
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the InstallCloneApp of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallCloneApp_0200, Function | SmallTest | Level0)
+{
+    int32_t index = 0;
+    BundleInstallerHost bundleInstallerHost;
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    OHOS::system::SetParameter(ServiceConstants::IS_APP_CLONE_DISABLE, "true");
+    ErrCode result = bundleInstallerHost.InstallCloneApp(BUNDLE_NAME, USERID, index);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
+    OHOS::system::SetParameter(ServiceConstants::IS_APP_CLONE_DISABLE, "false");
+}
+
+/**
+ * @tc.number: InstallCloneApp_0300
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the InstallCloneApp of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallCloneApp_0300, Function | SmallTest | Level0)
+{
+    int32_t index = 0;
+    BundleInstallerHost bundleInstallerHost;
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    OHOS::system::SetParameter(ServiceConstants::IS_APP_CLONE_DISABLE, "false");
+    ErrCode result = bundleInstallerHost.InstallCloneApp(BUNDLE_NAME, USERID, index);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
+    OHOS::system::SetParameter(ServiceConstants::IS_APP_CLONE_DISABLE, "false");
+}
+
+/**
  * @tc.number: HandleInstallCloneApp_0100
  * @tc.name: test Install
  * @tc.desc: 1.Test the HandleInstallCloneApp of BundleInstallerHost
