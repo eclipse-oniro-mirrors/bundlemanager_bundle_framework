@@ -16,7 +16,9 @@
 #include "bundle_resource_icon_rdb.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "bundle_resource_constants.h"
+#include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
 #include "scope_guard.h"
@@ -135,8 +137,17 @@ bool BundleResourceIconRdb::DeleteResourceIconInfo(const std::string &bundleName
         key = std::to_string(appIndex) + BundleResourceConstants::UNDER_LINE + bundleName;
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
-    // need delete both bundle resource and launcher ability resource
-    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, key);
+    /**
+     * key:
+     * appIndex_bundleName
+     * appIndex_bundleName/moduleName/abilityName
+     */
+    absRdbPredicates.BeginWrap();
+    absRdbPredicates.EqualTo(BundleResourceConstants::NAME, key);
+    absRdbPredicates.Or();
+    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, key + BundleResourceConstants::SEPARATOR);
+    absRdbPredicates.EndWrap();
+
     absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
     if (type != IconResourceType::UNKNOWN) {
         absRdbPredicates.EqualTo(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
@@ -159,9 +170,31 @@ bool BundleResourceIconRdb::DeleteResourceIconInfos(const std::string &bundleNam
     APP_LOGD("need delete resource info, -n %{public}s, -u %{public}d, -t %{public}d",
         bundleName.c_str(), userId, static_cast<int32_t>(type));
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
-    // need delete both bundle resource and launcher ability resource
-    absRdbPredicates.Contains(BundleResourceConstants::NAME, bundleName);
-    absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
+    /**
+     * key:
+     * bundleName
+     * bundleName/moduleName/abilityName
+     * appIndex_bundleName
+     * appIndex_bundleName/moduleName/abilityName
+     */
+    absRdbPredicates.BeginWrap();
+    absRdbPredicates.EqualTo(BundleResourceConstants::NAME, bundleName);
+    absRdbPredicates.Or();
+    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, bundleName + BundleResourceConstants::SEPARATOR);
+    for (int32_t index = ServiceConstants::CLONE_APP_INDEX_MIN;
+        index <= ServiceConstants::CLONE_APP_INDEX_MAX; ++index) {
+        absRdbPredicates.Or();
+        absRdbPredicates.EqualTo(BundleResourceConstants::NAME, std::to_string(index) +
+            BundleResourceConstants::UNDER_LINE + bundleName);
+        absRdbPredicates.Or();
+        absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, std::to_string(index) +
+            BundleResourceConstants::UNDER_LINE + bundleName + BundleResourceConstants::SEPARATOR);
+    }
+    absRdbPredicates.EndWrap();
+
+    if (userId != Constants::UNSPECIFIED_USERID) {
+        absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
+    }
     if (type != IconResourceType::UNKNOWN) {
         absRdbPredicates.EqualTo(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
     }
@@ -174,24 +207,7 @@ bool BundleResourceIconRdb::DeleteResourceIconInfos(const std::string &bundleNam
 
 bool BundleResourceIconRdb::DeleteResourceIconInfos(const std::string &bundleName, const IconResourceType type)
 {
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    if (bundleName.empty()) {
-        APP_LOGE("failed, bundleName is empty");
-        return false;
-    }
-    APP_LOGD("need delete resource info, -n %{public}s, -t %{public}d",
-        bundleName.c_str(), static_cast<int32_t>(type));
-    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
-    // need delete both bundle resource and launcher ability resource
-    absRdbPredicates.Contains(BundleResourceConstants::NAME, bundleName);
-    if (type != IconResourceType::UNKNOWN) {
-        absRdbPredicates.EqualTo(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
-    }
-    if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
-        APP_LOGW("delete bundleName:%{public}s failed", bundleName.c_str());
-        return false;
-    }
-    return true;
+    return DeleteResourceIconInfos(bundleName, Constants::UNSPECIFIED_USERID, type);
 }
 
 bool BundleResourceIconRdb::GetAllResourceIconName(const int32_t userId, std::set<std::string> &resourceNames,
@@ -259,7 +275,14 @@ bool BundleResourceIconRdb::GetResourceIconInfos(const std::string &bundleName,
     resourceInfo.bundleName_ = bundleName;
     resourceInfo.appIndex_ = appIndex;
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME);
-    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, resourceInfo.GetKey());
+    // bundleName or bundleName/moduleName/abilityName
+    absRdbPredicates.BeginWrap();
+    absRdbPredicates.EqualTo(BundleResourceConstants::NAME, resourceInfo.GetKey());
+    absRdbPredicates.Or();
+    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, resourceInfo.GetKey() +
+        BundleResourceConstants::SEPARATOR);
+    absRdbPredicates.EndWrap();
+
     absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
     if (type != IconResourceType::UNKNOWN) {
         absRdbPredicates.EqualTo(BundleResourceConstants::ICON_TYPE, static_cast<int32_t>(type));
