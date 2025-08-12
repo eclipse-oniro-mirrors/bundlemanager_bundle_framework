@@ -26,6 +26,7 @@
 #ifdef CODE_SIGNATURE_ENABLE
 #include "aot/aot_sign_data_cache_mgr.h"
 #endif
+#include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "scope_guard.h"
 #include "installd_client.h"
@@ -235,7 +236,7 @@ ErrCode AOTHandler::AOTInternal(const std::optional<AOTArgs> &aotArgs, uint32_t 
         std::lock_guard<std::mutex> lock(executeMutex_);
         ret = InstalldClient::GetInstance()->ExecuteAOT(*aotArgs, pendSignData);
     }
-    APP_LOGI("ExecuteAOT ret : %{public}d", ret);
+    LOG_I(BMS_TAG_AOT, "ExecuteAOT ret : %{public}d", ret);
 #ifdef CODE_SIGNATURE_ENABLE
     AOTSignDataCacheMgr::GetInstance().AddSignDataForHap(*aotArgs, versionCode, pendSignData, ret);
 #endif
@@ -788,7 +789,7 @@ bool AOTHandler::CheckDeviceState() const
     DisplayPowerMgr::DisplayState displayState =
         DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().GetDisplayState();
     if (displayState != DisplayPowerMgr::DisplayState::DISPLAY_OFF) {
-        APP_LOGI("displayState is not DISPLAY_OFF");
+        LOG_I(BMS_TAG_AOT, "displayState is not DISPLAY_OFF");
         return false;
     }
     return true;

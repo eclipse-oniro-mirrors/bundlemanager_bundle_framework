@@ -29,6 +29,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
@@ -197,7 +198,7 @@ void AOTExecutor::MapSysCompArgs(const AOTArgs &aotArgs, std::unordered_map<std:
 
 void AOTExecutor::MapHapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap)
 {
-    APP_LOGI_NOFUNC("MapHapArgs : %{public}s", aotArgs.ToString().c_str());
+    APP_LOGD("MapHapArgs : %{public}s", aotArgs.ToString().c_str());
     nlohmann::json subject = GetSubjectInfo(aotArgs);
 
     nlohmann::json objectArray = nlohmann::json::array();
@@ -230,7 +231,7 @@ void AOTExecutor::MapHapArgs(const AOTArgs &aotArgs, std::unordered_map<std::str
     argsMap.emplace(IS_SYS_COMP, IS_SYS_COMP_FALSE);
 
     for (const auto &arg : argsMap) {
-        APP_LOGI("%{public}s: %{public}s", arg.first.c_str(), arg.second.c_str());
+        LOG_NOFUNC_I(BMS_TAG_AOT, "%{public}s: %{public}s", arg.first.c_str(), arg.second.c_str());
     }
 }
 

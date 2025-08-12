@@ -3280,7 +3280,7 @@ std::string BundleMgrHostImpl::GetAppIdByBundleName(const std::string &bundleNam
     }
     std::string appId;
     if (dataMgr->GetAppIdByBundleName(bundleName, appId) != ERR_OK) {
-        APP_LOGE("GetAppIdByBundleName failed");
+        APP_LOGD("GetAppIdByBundleName failed");
         return Constants::EMPTY_STRING;
     }
     APP_LOGD("appId is %{private}s", appId.c_str());
