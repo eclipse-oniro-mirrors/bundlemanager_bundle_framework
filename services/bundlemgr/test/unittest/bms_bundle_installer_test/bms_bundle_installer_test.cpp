@@ -12261,6 +12261,58 @@ HWTEST_F(BmsBundleInstallerTest, CleanAllBundleCache_0010, Function | SmallTest 
 }
 
 /**
+ * @tc.number: CheckAddResultMsg_0010
+ * @tc.name: test CheckAddResultMsg
+ * @tc.desc: 1.Test the CheckAddResultMsg
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAddResultMsg_0010, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo info1;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = "CheckAddResultMsg_0010";
+    info1.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo module1;
+    module1.moduleName = "hsp1";
+    module1.distro.moduleType = Profile::MODULE_TYPE_SHARED;
+    BundleUtil::SetBit(InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR, module1.boolSet);
+    module1.modulePackage = "hsp1";
+    info1.InsertInnerModuleInfo("hsp1", module1);
+    
+    InnerModuleInfo module2;
+    module2.moduleName = "hsp2";
+    BundleUtil::ResetBit(InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR, module2.boolSet);
+    module2.distro.moduleType = Profile::MODULE_TYPE_SHARED;
+    module2.modulePackage = "hsp2";
+    info1.InsertInnerModuleInfo("hsp2", module2);
+
+    infos.insert(pair<std::string, InnerBundleInfo>("CheckAddResultMsg_0010", info1));
+
+    InnerBundleInfo oldInfo;
+    ApplicationInfo applicationInfo2;
+    applicationInfo.bundleName = "CheckAddResultMsg_0010";
+    oldInfo.SetBaseApplicationInfo(applicationInfo2);
+    InnerModuleInfo module3;
+    module3.moduleName = "hsp3";
+    module3.distro.moduleType = Profile::MODULE_TYPE_SHARED;
+    BundleUtil::SetBit(InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR, module3.boolSet);
+    module3.modulePackage = "hsp3";
+    oldInfo.InsertInnerModuleInfo("hsp3", module3);
+    
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+    bool res = installer.CheckAddResultMsg(infos, oldInfo, true);
+    EXPECT_EQ(res, false);
+
+    res = installer.CheckAddResultMsg(infos, oldInfo, false);
+    EXPECT_EQ(res, true);
+
+    infos.clear();
+    res = installer.CheckAddResultMsg(infos, oldInfo, false);
+    EXPECT_EQ(res, true);
+}
+
+/**
  * @tc.number: ProcessArkStartupCache_0010
  * @tc.name: test ProcessArkStartupCache
  * @tc.desc: 1.Test the ProcessArkStartupCache of BaseBundleInstaller

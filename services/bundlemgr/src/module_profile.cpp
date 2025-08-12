@@ -2632,7 +2632,9 @@ bool ToInnerModuleInfo(
     if (moduleJson.module.hasInsightIntent) {
         BundleUtil::SetBit(InnerModuleInfoBoolFlag::HAS_INTENT, innerModuleInfo.boolSet);
     }
-    innerModuleInfo.deduplicateHar = moduleJson.module.deduplicateHar;
+    if (moduleJson.module.deduplicateHar) {
+        BundleUtil::SetBit(InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR, innerModuleInfo.boolSet);
+    }
     return true;
 }
 
