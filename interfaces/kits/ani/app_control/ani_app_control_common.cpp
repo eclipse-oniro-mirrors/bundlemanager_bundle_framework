@@ -119,54 +119,53 @@ bool AniAppControlCommon::ParseWantWithoutVerification(ani_env* env, ani_object 
     RETURN_FALSE_IF_NULL(env);
     RETURN_FALSE_IF_NULL(object);
 
-    ani_string string = nullptr;
-    ani_double doubleValue = 0;
-    ani_array array = nullptr;
-
     // bundleName?: string
+    ani_string string = nullptr;
     std::string bundleName = "";
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_BUNDLENAME, &string)) {
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_BUNDLENAME, &string)) {
         bundleName = CommonFunAni::AniStrToString(env, string);
     }
 
     // abilityName?: string
     std::string abilityName = "";
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_ABILITYNAME, &string)) {
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_ABILITYNAME, &string)) {
         abilityName = CommonFunAni::AniStrToString(env, string);
     }
 
     // deviceId?: string
     std::string deviceId = "";
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_DEVICEID, &string)) {
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_DEVICEID, &string)) {
         deviceId = CommonFunAni::AniStrToString(env, string);
     }
 
     // uri?: string
     std::string uri = "";
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_URI, &string)) {
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_URI, &string)) {
         uri = CommonFunAni::AniStrToString(env, string);
     }
 
     // type?: string
     std::string type = "";
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_TYPE, &string)) {
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_TYPE, &string)) {
         type = CommonFunAni::AniStrToString(env, string);
     }
 
-    // flags?: number
+    // flags?: int
+    ani_int intValue = 0;
     int32_t flags = 0;
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_FLAGS, &doubleValue)) {
-        CommonFunAni::TryCastTo(doubleValue, &flags);
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_FLAGS, &intValue)) {
+        flags = intValue;
     }
 
     // action?: string
     std::string action = "";
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_ACTION, &string)) {
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_ACTION, &string)) {
         action = CommonFunAni::AniStrToString(env, string);
     }
 
     // entities?: Array<string>
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_ENTITIES, &array)) {
+    ani_array array = nullptr;
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_ENTITIES, &array)) {
         std::vector<std::string> entities;
         if (CommonFunAni::ParseStrArray(env, array, entities)) {
             for (size_t idx = 0; idx < entities.size(); ++idx) {
@@ -178,7 +177,7 @@ bool AniAppControlCommon::ParseWantWithoutVerification(ani_env* env, ani_object 
 
     // moduleName?: string
     std::string moduleName = "";
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_MODULENAME, &string)) {
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_MODULENAME, &string)) {
         moduleName = CommonFunAni::AniStrToString(env, string);
     }
 
@@ -221,7 +220,7 @@ bool AniAppControlCommon::ParseDisposedRule(ani_env* env, ani_object object, Dis
 
     // controlType: ControlType
     RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_CONTROLTYPE, &enumItem));
-    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, disposedRule.disposedType));
+    RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, disposedRule.controlType));
 
     // elementList: Array<ElementName>
     RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_ELEMENTLIST, &array));

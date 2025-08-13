@@ -205,7 +205,7 @@ static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object ani
     }
     if (appId.empty()) {
         APP_LOGE("appId is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPID, SET_DISPOSED_STATUS_SYNC, "");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPID, SET_DISPOSED_RULE, "");
         return;
     }
     DisposedRule rule;
@@ -218,7 +218,7 @@ static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object ani
     auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("appControlProxy is null");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_DISPOSED_STATUS_SYNC, "");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_DISPOSED_RULE, "");
         return;
     }
 
@@ -231,7 +231,7 @@ static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object ani
     if (ret != ERR_OK) {
         APP_LOGE("SetDisposedRule failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            SET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+            SET_DISPOSED_RULE, PERMISSION_DISPOSED_STATUS);
     }
 }
 
@@ -394,6 +394,12 @@ static void SetDisposedRules(ani_env* env, ani_object aniDisposedRuleConfigurati
     if (!CommonFunAni::ParseAniArray(env, aniDisposedRuleConfigurations, disposedRuleConfigurations,
         ParseDisposedRuleConfiguration)) {
         APP_LOGE("Parse disposedRuleConfigurations invalid");
+        return;
+    }
+    uint32_t arrayLength = disposedRuleConfigurations.size();
+    if (arrayLength == 0 || arrayLength > MAX_VECTOR_NUM) {
+        APP_LOGE("disposedRuleConfigurations length invalid!");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_LENGTH_ERROR);
         return;
     }
     auto appControlProxy = CommonFunc::GetAppControlProxy();

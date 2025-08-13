@@ -2019,8 +2019,12 @@ void IsApplicationEnabledComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->isEnable, &result[ARGS_POS_ONE]));
     } else {
-        APP_LOGE("asyncCallbackInfo is null");
-        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
+        if (asyncCallbackInfo->bundleName.empty()) {
+            APP_LOGW("bundleName is empty");
+            result[0] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        } else {
+            result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
+        }
     }
     CommonFunc::NapiReturnDeferred<ApplicationEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
@@ -2813,8 +2817,72 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
 
 static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
 {
-    return BundleManagerHelper::CommonInnerGetProfile(info.moduleName, info.abilityName, info.metadataName,
-        info.type == AbilityProfileType::EXTENSION_PROFILE, info.profileVec);
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    if (info.abilityName.empty()) {
+        APP_LOGE("InnerGetProfile failed due to empty abilityName");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+
+    if (info.moduleName.empty()) {
+        APP_LOGE("InnerGetProfile failed due to empty moduleName");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ErrCode result;
+    BundleMgrClient client;
+    BundleInfo bundleInfo;
+    if (info.type == AbilityProfileType::ABILITY_PROFILE) {
+        auto getAbilityFlag = baseFlag +
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
+        result = iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("GetBundleInfoForSelf failed");
+            return result;
+        }
+        AbilityInfo targetAbilityInfo;
+        result = BundleManagerHelper::GetAbilityFromBundleInfo(
+            bundleInfo, info.abilityName, info.moduleName, targetAbilityInfo);
+        if (result != ERR_OK) {
+            return result;
+        }
+        if (!client.GetProfileFromAbility(targetAbilityInfo, info.metadataName, info.profileVec)) {
+            APP_LOGE("GetProfileFromExtension failed");
+            return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+        }
+        return ERR_OK;
+    }
+
+    if (info.type == AbilityProfileType::EXTENSION_PROFILE) {
+        auto getExtensionFlag = baseFlag +
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
+        result = iBundleMgr->GetBundleInfoForSelf(getExtensionFlag, bundleInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("GetBundleInfoForSelf failed");
+            return result;
+        }
+
+        ExtensionAbilityInfo targetExtensionInfo;
+        result = BundleManagerHelper::GetExtensionFromBundleInfo(
+            bundleInfo, info.abilityName, info.moduleName, targetExtensionInfo);
+        if (result != ERR_OK) {
+            return result;
+        }
+        if (!client.GetProfileFromExtension(targetExtensionInfo, info.metadataName, info.profileVec)) {
+            APP_LOGE("GetProfileFromExtension failed");
+            return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+        }
+        return ERR_OK;
+    }
+
+    APP_LOGE("InnerGetProfile failed due to type is invalid");
+    return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
 }
 
 void GetProfileExec(napi_env env, void *data)
@@ -4087,8 +4155,18 @@ void GetSharedBundleInfoComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
         CommonFunc::ConvertAllSharedBundleInfo(env, result[ARGS_POS_ONE], asyncCallbackInfo->sharedBundles);
     } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_SHARED_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        if (asyncCallbackInfo->bundleName.empty()) {
+            APP_LOGE("bundleName is empty");
+            result[ARGS_POS_ZERO] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR,
+                PARAM_BUNDLENAME_EMPTY_ERROR);
+        } else if (asyncCallbackInfo->moduleName.empty()) {
+            APP_LOGE("moduleName is empty");
+            result[ARGS_POS_ZERO] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR,
+                PARAM_MODULENAME_EMPTY_ERROR);
+        } else {
+            result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+                GET_SHARED_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        }
     }
     CommonFunc::NapiReturnDeferred<SharedBundleCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
@@ -5196,7 +5274,7 @@ void GetAllAppCloneBundleInfoComplete(napi_env env, napi_status status, void *da
         CloneAppBundleInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfos, asyncCallbackInfo->bundleFlags);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_ALL_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO);
+            GET_ALL_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     CommonFunc::NapiReturnDeferred<CloneAppBundleInfosCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }

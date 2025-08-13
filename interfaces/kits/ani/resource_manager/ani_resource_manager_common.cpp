@@ -21,9 +21,9 @@ namespace AppExecFwk {
 
 namespace  {
 constexpr const char* CLASSNAME_BUNDLE_RES_INFO_INNER =
-    "LbundleManager/BundleResourceInfoInner/BundleResourceInfoInner;";
+    "bundleManager.BundleResourceInfoInner.BundleResourceInfoInner";
 constexpr const char* CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER =
-    "LbundleManager/LauncherAbilityResourceInfoInner/LauncherAbilityResourceInfoInner;";
+    "bundleManager.LauncherAbilityResourceInfoInner.LauncherAbilityResourceInfoInner";
 constexpr const char* PROPERTYNAME_BUNDLENAME = "bundleName";
 constexpr const char* PROPERTYNAME_MODULENAME = "moduleName";
 constexpr const char* PROPERTYNAME_ABILITYNAME = "abilityName";
@@ -67,7 +67,7 @@ ani_object AniResourceManagerCommon::ConvertBundleResourceInfo(ani_env* env, con
             CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_DRAWABLEDESCRIPTOR, aDrawableDescriptor));
     }
 
-    // appIndex: number
+    // appIndex: int
     RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, bundleResInfo.appIndex));
 
     return object;
@@ -116,7 +116,7 @@ ani_object AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo(ani_env*
             CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_DRAWABLEDESCRIPTOR, aDrawableDescriptor));
     }
 
-    // appIndex: number
+    // appIndex: int
     RETURN_NULL_IF_FALSE(
         CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, launcherAbilityResourceInfo.appIndex));
 

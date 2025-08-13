@@ -187,6 +187,12 @@ namespace bundleManager {
     FLAG_PREINSTALLED_APP_UPDATE = 0x00000040,
   }
 
+  export enum AbilityProfileType {
+    ABILITY_PROFILE = 0,
+    EXTENSION_PROFILE = 1,
+    UNKNOWN_PROFILE = 2
+  }
+
   export native function getBundleInfoForSelfNative(bundleFlags: int, isSync: boolean): BundleInfo;
 
   export native function getBundleInfoNative(bundleName: string, bundleFlags: int, userId: int, isSync: boolean) : BundleInfo;
@@ -251,7 +257,7 @@ namespace bundleManager {
   export native function getLaunchWant(): Want;
 
   export native function getProfileByAbilityNative(moduleName: string,
-    abilityName: string, metadataName: string, isExtensionProfile: boolean, isSync: boolean): Array<string>;
+    abilityName: string, metadataName: string, profileType: AbilityProfileType, isSync: boolean): Array<string>;
   
   export native function getPermissionDefNative(permissionName: string, isSync: boolean): PermissionDef;
 
@@ -364,13 +370,13 @@ namespace bundleManager {
 
   function getProfileByAbilitySync(moduleName: string, abilityName: string, metadataName?: string): Array<string> {
     let metadataNameInfo: string = metadataName ?? "";
-    return bundleManager.getProfileByAbilityNative(moduleName, abilityName, metadataNameInfo, false, true);
+    return bundleManager.getProfileByAbilityNative(moduleName, abilityName, metadataNameInfo, AbilityProfileType.ABILITY_PROFILE, true);
   }
 
   function getProfileByExtensionAbilitySync(moduleName: string,
     extensionAbilityName: string, metadataName?: string): Array<string> {
     let metadataNameInfo: string = metadataName ?? "";
-    return bundleManager.getProfileByAbilityNative(moduleName, extensionAbilityName, metadataNameInfo, true, true);
+    return bundleManager.getProfileByAbilityNative(moduleName, extensionAbilityName, metadataNameInfo, AbilityProfileType.EXTENSION_PROFILE, true);
   }
 
   function getPermissionDefSync(permissionName: string): PermissionDef {
@@ -1152,7 +1158,7 @@ namespace bundleManager {
       => void, reject: (error: Error) => void) => {
       let metadataNameInfo: string = metadataName ?? "";
       let execFun = (): Array<string> => {
-        return bundleManager.getProfileByAbilityNative(moduleName, abilityName, metadataNameInfo, false, false);
+        return bundleManager.getProfileByAbilityNative(moduleName, abilityName, metadataNameInfo, AbilityProfileType.ABILITY_PROFILE, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -1169,7 +1175,7 @@ namespace bundleManager {
   function getProfileByAbility(moduleName: string,
     abilityName: string, metadataName: string, callback: AsyncCallback<Array<string>>) {
     let execFun = (): Array<string> => {
-      return bundleManager.getProfileByAbilityNative(moduleName, abilityName, metadataName, false, false);
+      return bundleManager.getProfileByAbilityNative(moduleName, abilityName, metadataName, AbilityProfileType.ABILITY_PROFILE, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -1186,7 +1192,7 @@ namespace bundleManager {
       => void, reject: (error: Error) => void) => {
       let metadataNameInfo: string = metadataName ?? "";
       let execFun = (): Array<string> => {
-        return bundleManager.getProfileByAbilityNative(moduleName, extensionAbilityName, metadataNameInfo, true, false);
+        return bundleManager.getProfileByAbilityNative(moduleName, extensionAbilityName, metadataNameInfo, AbilityProfileType.EXTENSION_PROFILE, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -1203,7 +1209,7 @@ namespace bundleManager {
   function getProfileByExtensionAbility(moduleName: string,
     extensionAbilityName: string, metadataName: string, callback: AsyncCallback<Array<string>>): void {
     let execFun = (): Array<string> => {
-      return bundleManager.getProfileByAbilityNative(moduleName, extensionAbilityName, metadataName, true, false);
+      return bundleManager.getProfileByAbilityNative(moduleName, extensionAbilityName, metadataName, AbilityProfileType.EXTENSION_PROFILE, false);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {

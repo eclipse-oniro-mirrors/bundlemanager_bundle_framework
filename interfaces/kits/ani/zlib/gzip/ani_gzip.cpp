@@ -30,6 +30,8 @@ constexpr const char* CLASSNAME_DOUBLE = "std.core.Double";
 constexpr const char* CLASSNAME_GZERROROUTPUTINFOINNER = "@ohos.zlib.zlib.GzErrorOutputInfoInner";
 constexpr const char* FIELD_NAME_NATIVEGZFILE = "nativeGZFile";
 constexpr int INVALID_FD = -1;
+constexpr uint8_t MIN_ASCII = 0;
+constexpr uint8_t MAX_ASCII = 255;
 } // namespace
 using namespace arkts::ani_signature;
 
@@ -59,12 +61,12 @@ static bool TrySetNativeGZFile(ani_env* env, ani_object instance, gzFile natieGZ
     return true;
 }
 
-static bool TryGetStringArg(ani_env* env, ani_object args, ani_int index, std::string& output)
+static bool TryGetStringArg(ani_env* env, ani_array_ref args, ani_size index, std::string& output)
 {
     ani_ref ref = nullptr;
-    ani_status status = env->Object_CallMethodByName_Ref(args, "$_get", "I:Lstd/core/Object;", &ref, index);
+    ani_status status = env->Array_Get_Ref(args, index, &ref);
     if (status != ANI_OK) {
-        APP_LOGE("Object_CallMethodByName_Ref failed %{public}d", status);
+        APP_LOGE("Array_Get_Ref failed %{public}d", status);
         return false;
     }
 
@@ -112,12 +114,12 @@ static bool TryGetStringArg(ani_env* env, ani_object args, ani_int index, std::s
     return result;
 }
 
-static bool TryGetNumberArg(ani_env* env, ani_object args, ani_int index, std::string& output)
+static bool TryGetNumberArg(ani_env* env, ani_array_ref args, ani_size index, std::string& output)
 {
     ani_ref ref = nullptr;
-    ani_status status = env->Object_CallMethodByName_Ref(args, "$_get", "I:Lstd/core/Object;", &ref, index);
+    ani_status status = env->Array_Get_Ref(args, index, &ref);
     if (status != ANI_OK) {
-        APP_LOGE("Object_CallMethodByName_Ref failed %{public}d", status);
+        APP_LOGE("Array_Get_Ref failed %{public}d", status);
         return false;
     }
 
@@ -169,20 +171,19 @@ static bool TryGetNumberArg(ani_env* env, ani_object args, ani_int index, std::s
 
 static bool GetFormattedString(ani_env* env, const std::string& format, ani_object args, std::string& formattedString)
 {
-    ani_double length = 0;
-    ani_status status = env->Object_GetPropertyByName_Double(args, "length", &length);
+    ani_size maxArgCount = 0;
+    ani_status status = env->Array_GetLength(reinterpret_cast<ani_array>(args), &maxArgCount);
     if (status != ANI_OK) {
-        APP_LOGE("Object_GetPropertyByName_Double failed %{public}d", status);
+        APP_LOGE("Array_GetLength failed %{public}d", status);
         return false;
     }
 
-    if (length == 0) {
+    if (maxArgCount == 0) {
         formattedString = format;
         return true;
     }
 
-    ani_int maxArgCount = static_cast<ani_int>(length);
-    ani_int curArgCount = 0;
+    ani_size curArgCount = 0;
     std::string arg;
     for (size_t pos = 0; pos < format.size(); ++pos) {
         if (curArgCount >= maxArgCount) {
@@ -198,14 +199,14 @@ static bool GetFormattedString(ani_env* env, const std::string& format, ani_obje
         switch (format[pos + 1]) {
             case 'd':
             case 'i':
-                if (TryGetNumberArg(env, args, curArgCount, arg)) {
+                if (TryGetNumberArg(env, reinterpret_cast<ani_array_ref>(args), curArgCount, arg)) {
                     formattedString += arg;
                 }
                 ++curArgCount;
                 ++pos;
                 break;
             case 's':
-                if (TryGetStringArg(env, args, curArgCount, arg)) {
+                if (TryGetStringArg(env, reinterpret_cast<ani_array_ref>(args), curArgCount, arg)) {
                     formattedString += arg;
                 }
                 ++curArgCount;
@@ -486,6 +487,10 @@ ani_long gzfwriteNative(ani_env* env, ani_object instance, ani_arraybuffer aniBu
     CHECK_PARAM_NULL_RETURN(env, 0);
     CHECK_PARAM_NULL_THROW_RETURN(instance, EFAULT, 0);
     CHECK_PARAM_NULL_THROW_RETURN(aniBuf, EINVAL, 0);
+    if (aniSize < 0 || aniNItems < 0) {
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return 0;
+    }
 
     size_t bufLen = 0;
     void* buf = nullptr;
@@ -498,6 +503,12 @@ ani_long gzfwriteNative(ani_env* env, ani_object instance, ani_arraybuffer aniBu
     CHECK_PARAM_NULL_THROW_RETURN(buf, EINVAL, 0);
     if (bufLen == 0) {
         APP_LOGE("bufLen is 0");
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return 0;
+    }
+    z_size_t total = static_cast<z_size_t>(aniSize) * static_cast<z_size_t>(aniNItems); //zlib will handle overflow
+    if (static_cast<z_size_t>(bufLen) < total) {
+        APP_LOGE("bufLen is too small");
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return 0;
     }
@@ -524,6 +535,10 @@ ani_long gzfreadNative(ani_env* env, ani_object instance, ani_arraybuffer aniBuf
     CHECK_PARAM_NULL_RETURN(env, 0);
     CHECK_PARAM_NULL_THROW_RETURN(instance, EFAULT, 0);
     CHECK_PARAM_NULL_THROW_RETURN(aniBuf, EINVAL, 0);
+    if (aniSize < 0 || aniNItems < 0) {
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return 0;
+    }
 
     size_t bufLen = 0;
     void* buf = nullptr;
@@ -536,6 +551,12 @@ ani_long gzfreadNative(ani_env* env, ani_object instance, ani_arraybuffer aniBuf
     CHECK_PARAM_NULL_THROW_RETURN(buf, EINVAL, 0);
     if (bufLen == 0) {
         APP_LOGE("bufLen is 0");
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return 0;
+    }
+    z_size_t total = static_cast<z_size_t>(aniSize) * static_cast<z_size_t>(aniNItems); //zlib will handle overflow
+    if (static_cast<z_size_t>(bufLen) < total) {
+        APP_LOGE("bufLen is too small");
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return 0;
     }
@@ -606,6 +627,10 @@ ani_long gzwriteNative(ani_env* env, ani_object instance, ani_arraybuffer aniBuf
     CHECK_PARAM_NULL_RETURN(env, 0);
     CHECK_PARAM_NULL_THROW_RETURN(instance, EFAULT, 0);
     CHECK_PARAM_NULL_THROW_RETURN(aniBuf, EINVAL, 0);
+    if (aniLen < 0) {
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return 0;
+    }
 
     size_t bufLen = 0;
     void* buf = nullptr;
@@ -618,6 +643,11 @@ ani_long gzwriteNative(ani_env* env, ani_object instance, ani_arraybuffer aniBuf
     CHECK_PARAM_NULL_THROW_RETURN(buf, EINVAL, 0);
     if (bufLen == 0) {
         APP_LOGE("bufLen is 0");
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return 0;
+    }
+    if (bufLen < static_cast<size_t>(aniLen)) {
+        APP_LOGE("bufLen is too small");
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return 0;
     }
@@ -645,6 +675,12 @@ ani_int gzungetcNative(ani_env* env, ani_object instance, ani_int aniC)
 
     gzFile nativeGZFile = nullptr;
     if (!TryGetNativeGZFile(env, instance, nativeGZFile, EINVAL)) {
+        return -1;
+    }
+
+    if (aniC < MIN_ASCII || aniC > MAX_ASCII) {
+        APP_LOGE("gzungetcNative invalid c: %{public}d", aniC);
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return -1;
     }
 
@@ -858,6 +894,12 @@ ani_int gzputcNative(ani_env* env, ani_object instance, ani_int aniC)
         return -1;
     }
 
+    if (aniC < MIN_ASCII || aniC > MAX_ASCII) {
+        APP_LOGE("gzputcNative invalid c: %{public}d", aniC);
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
+        return -1;
+    }
+
     int ret = gzputc(nativeGZFile, aniC);
     if (ret < 0) {
         APP_LOGE("gzputc failed %{public}d", ret);
@@ -899,7 +941,7 @@ ani_int gzprintfNative(ani_env* env, ani_object instance, ani_string aniFormat, 
     }
 
     int ret = gzprintf(nativeGZFile, "%s", formattedStr.c_str());
-    if (ret <= 0) {
+    if (ret < 0) {
         APP_LOGE("gzprintf failed %{public}d", ret);
         AniZLibCommon::ThrowZLibNapiError(env, ret);
     }
