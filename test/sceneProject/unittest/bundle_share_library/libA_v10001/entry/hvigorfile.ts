@@ -13,12 +13,9 @@
  * limitations under the License.
  */
 
-{
-  "modelVersion": "5.0.0",
-  "description": "Please describe the basic information.",
-  "dependencies": {
-  },
-  "devDependencies": {
-    "@ohos/hypium": "1.0.21"
-  }
+import { hspTasks } from '@ohos/hvigor-ohos-plugin';
+
+export default {
+  system: hspTasks,  /* Built-in plugin of Hvigor. It cannot be modified. */
+  plugins:[]         /* Custom plugin to extend the functionality of Hvigor. */
 }

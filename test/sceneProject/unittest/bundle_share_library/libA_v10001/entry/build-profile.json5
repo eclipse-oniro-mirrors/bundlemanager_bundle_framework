@@ -12,13 +12,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+ 
 {
-  "modelVersion": "5.0.0",
-  "description": "Please describe the basic information.",
-  "dependencies": {
-  },
-  "devDependencies": {
-    "@ohos/hypium": "1.0.21"
-  }
+  "apiType": "stageMode",
+  "buildOption": {},
+  "buildOptionSet": [
+    {
+      "name": "release",
+      "arkOptions": {
+        "obfuscation": {
+          "ruleOptions": {
+            "enable": false,
+            "files": [
+              "./obfuscation-rules.txt"
+            ]
+          }
+        }
+      },
+      "nativeLib": {
+        "debugSymbol": {
+          "strip": true,
+          "exclude": []
+        }
+      }
+    },
+  ],
+  "targets": [
+    {
+      "name": "default"
+    },
+    {
+      "name": "ohosTest",
+    }
+  ]
 }
