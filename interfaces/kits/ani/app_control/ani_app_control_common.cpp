@@ -50,7 +50,7 @@ ani_object AniAppControlCommon::ConvertDisposedRule(ani_env* env, const Disposed
     ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_DISPOSED_RULE_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CommonFunAni::CreateNewObjectByClass(env, cls);
+    ani_object object = CommonFunAni::CreateNewObjectByClass(env, CLASSNAME_DISPOSED_RULE_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     // want: Want
@@ -92,7 +92,7 @@ ani_object AniAppControlCommon::ConvertUninstallDisposedRule(ani_env* env,
     ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CommonFunAni::CreateNewObjectByClass(env, cls);
+    ani_object object = CommonFunAni::CreateNewObjectByClass(env, CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     // want: Want

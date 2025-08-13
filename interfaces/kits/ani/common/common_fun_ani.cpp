@@ -103,6 +103,8 @@ constexpr const char* CLASSNAME_DISPATCH_INFO_INNER = "bundleManager.DispatchInf
 constexpr const char* CLASSNAME_OVERLAY_MOUDLE_INFO_INNER =
     "bundleManager.OverlayModuleInfoInner.OverlayModuleInfoInner";
 constexpr const char* CLASSNAME_WANT = "@ohos.app.ability.Want.Want";
+constexpr const char* CLASSNAME_ZLIB_CHECKSUM_INTERNAL = "@ohos.zlib.zlib.ChecksumInternal";
+constexpr const char* CLASSNAME_ZLIB_GZIP_INTERNAL = "@ohos.zlib.zlib.GZipInternal";
 
 constexpr const char* PROPERTYNAME_NAME = "name";
 constexpr const char* PROPERTYNAME_VERSIONCODE = "versionCode";
@@ -232,6 +234,8 @@ static std::map<std::string, ANIClassCacheItem> g_aniClassCache = {
     { CLASSNAME_PRELOADITEM_INNER, { } },
     { CLASSNAME_ROUTERITEM_INNER, { } },
     { CLASSNAME_DATAITEM_INNER, { } },
+    { CLASSNAME_ZLIB_CHECKSUM_INTERNAL, { } },
+    { CLASSNAME_ZLIB_GZIP_INTERNAL, { } },
 };
 
 static ani_class GetCacheClass(ani_env* env, const std::string& className)
@@ -262,22 +266,18 @@ static ani_class GetCacheClass(ani_env* env, const std::string& className)
     return cls;
 }
 
-static ani_method GetCacheCtorMethod(
-    ani_env* env, ani_class cls, const std::string& ctorSig = Builder::BuildSignatureDescriptor({}))
+static ani_method GetCacheCtorMethod(ani_env* env, const std::string& className, ani_class cls,
+    const std::string& ctorSig = Builder::BuildSignatureDescriptor({}))
 {
     RETURN_NULL_IF_NULL(env);
     RETURN_NULL_IF_NULL(cls);
 
     std::lock_guard<std::mutex> lock(g_aniClassCacherMutex);
-    auto iter = std::find_if(g_aniClassCache.begin(), g_aniClassCache.end(), [env, cls](const auto& pair) {
-        ani_boolean equals = ANI_FALSE;
-        env->Reference_StrictEquals(pair.second.classRef, cls, &equals);
-        return equals == ANI_TRUE;
-    });
+    auto iter = g_aniClassCache.find(className);
     if (iter == g_aniClassCache.end()) {
         return nullptr;
     }
-    
+
     auto iterMethod = iter->second.classMethodMap.find(ctorSig);
     if (iterMethod != iter->second.classMethodMap.end() && iterMethod->second != nullptr) {
         return iterMethod->second;
@@ -295,13 +295,13 @@ static ani_method GetCacheCtorMethod(
     return method;
 }
 
-static ani_method GetCtorMethod(
-    ani_env* env, ani_class cls, const std::string& ctorSig = Builder::BuildSignatureDescriptor({}))
+static ani_method GetCtorMethod(ani_env* env, const std::string& className, ani_class cls,
+    const std::string& ctorSig = Builder::BuildSignatureDescriptor({}))
 {
     RETURN_NULL_IF_NULL(env);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_method method = GetCacheCtorMethod(env, cls, ctorSig);
+    ani_method method = GetCacheCtorMethod(env, className, cls, ctorSig);
     if (method != nullptr) {
         return method;
     }
@@ -384,12 +384,12 @@ ani_class CommonFunAni::CreateClassByName(ani_env* env, const std::string& class
     return cls;
 }
 
-ani_object CommonFunAni::CreateNewObjectByClass(ani_env* env, ani_class cls)
+ani_object CommonFunAni::CreateNewObjectByClass(ani_env* env, const std::string& className, ani_class cls)
 {
     RETURN_NULL_IF_NULL(env);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_method method = GetCtorMethod(env, cls);
+    ani_method method = GetCtorMethod(env, className, cls);
     RETURN_NULL_IF_NULL(method);
 
     ani_object object = nullptr;
@@ -402,13 +402,15 @@ ani_object CommonFunAni::CreateNewObjectByClass(ani_env* env, ani_class cls)
 }
 
 ani_object CommonFunAni::CreateNewObjectByClassV2(
-    ani_env* env, ani_class cls, const std::string& ctorSig, const ani_value* args)
+    ani_env* env, const std::string& className, const std::string& ctorSig, const ani_value* args)
 {
     RETURN_NULL_IF_NULL(env);
-    RETURN_NULL_IF_NULL(cls);
     RETURN_NULL_IF_NULL(args);
 
-    ani_method method = GetCtorMethod(env, cls, ctorSig.empty()? nullptr: ctorSig.c_str());
+    ani_class cls = CreateClassByName(env, className);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_method method = GetCtorMethod(env, className, cls, ctorSig);
     RETURN_NULL_IF_NULL(method);
     ani_object object = nullptr;
     ani_status status = env->Object_New_A(cls, method, &object, args);
@@ -422,9 +424,6 @@ ani_object CommonFunAni::CreateNewObjectByClassV2(
 ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo, int32_t flags)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLEINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -506,8 +505,8 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         { .i = bundleInfo.appIndex },
         { .r = firstInstallTime },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)          // moduleName: string
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING)          // moduleName: string
         .AddClass(RAW_CLASSNAME_STRING)          // vendor: string
         .AddLong()                               // versionCode: long
         .AddClass(RAW_CLASSNAME_STRING)          // versionName: string
@@ -522,8 +521,9 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         .AddLong()                               // updateTime: long
         .AddClass(RAW_CLASSNAME_ARRAY)           // routerMap: Array<RouterItem>
         .AddInt()                                // appIndex: int
-        .AddClass(RAW_CLASSNAME_LONG);           // firstInstallTime?: long
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddClass(RAW_CLASSNAME_LONG)            // firstInstallTime?: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLEINFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertDefaultAppAbilityInfo(ani_env* env, const AbilityInfo& abilityInfo)
@@ -533,7 +533,7 @@ ani_object CommonFunAni::ConvertDefaultAppAbilityInfo(ani_env* env, const Abilit
     ani_class cls = CreateClassByName(env, CLASSNAME_ABILITYINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_ABILITYINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -581,7 +581,7 @@ ani_object CommonFunAni::ConvertDefaultAppExtensionInfo(ani_env* env, const Exte
     ani_class cls = CreateClassByName(env, CLASSNAME_EXTENSIONABILITYINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_EXTENSIONABILITYINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -617,7 +617,7 @@ ani_object CommonFunAni::ConvertDefaultAppHapModuleInfo(ani_env* env, const Bund
     ani_class cls = CreateClassByName(env, CLASSNAME_HAPMODULEINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_HAPMODULEINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     // abilitiesInfo: Array<AbilityInfo>
@@ -640,7 +640,7 @@ ani_object CommonFunAni::ConvertDefaultAppBundleInfo(ani_env* env, const BundleI
     ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLEINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_BUNDLEINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -661,9 +661,6 @@ ani_object CommonFunAni::ConvertDefaultAppBundleInfo(ani_env* env, const BundleI
 ani_object CommonFunAni::ConvertMetadata(ani_env* env, const Metadata& metadata)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_METADATA_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -687,39 +684,35 @@ ani_object CommonFunAni::ConvertMetadata(ani_env* env, const Metadata& metadata)
         { .r = resource },
         { .r = valueId },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING) // name: string
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING) // name: string
         .AddClass(RAW_CLASSNAME_STRING) // value: string
         .AddClass(RAW_CLASSNAME_STRING) // resource: string
-        .AddClass(RAW_CLASSNAME_LONG);  // valueId?: long
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddClass(RAW_CLASSNAME_LONG)   // valueId?: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_METADATA_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertMultiAppMode(ani_env* env, const MultiAppModeData& multiAppMode)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_MULTIAPPMODE_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
     ani_value args[] = {
         { .r = EnumUtils::EnumNativeToETS_BundleManager_MultiAppModeType(
             env, static_cast<int32_t>(multiAppMode.multiAppModeType)) },
         { .i = multiAppMode.maxCount },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_BUNDLEMANAGER_MULTIAPPMODE_TYPE) // multiAppModeType: bundleManager.MultiAppModeType
-        .AddInt();                                               // maxCount: int
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_BUNDLEMANAGER_MULTIAPPMODE_TYPE) // multiAppModeType: bundleManager.MultiAppModeType
+        .AddInt()                                                // maxCount: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_MULTIAPPMODE_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertModuleMetaInfosItem(
     ani_env* env, const std::pair<std::string, std::vector<Metadata>>& item)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_MODULEMETADATA_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // moduleName: string
     ani_string moduleName = nullptr;
@@ -733,18 +726,16 @@ ani_object CommonFunAni::ConvertModuleMetaInfosItem(
         { .r = moduleName },
         { .r = metadata },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING) // moduleName: string
-        .AddClass(RAW_CLASSNAME_ARRAY); // metadata: Array<Metadata>
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING) // moduleName: string
+        .AddClass(RAW_CLASSNAME_ARRAY)  // metadata: Array<Metadata>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_MODULEMETADATA_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationInfo& appInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_APPLICATIONINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -855,8 +846,8 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         { .z = BoolToAniBoolean(appInfo.cloudFileSyncEnabled) },
         { .r = flags },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)                    // name: string
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING)                    // name: string
         .AddClass(RAW_CLASSNAME_STRING)                    // description: string
         .AddLong()                                         // descriptionId: long
         .AddBoolean()                                      // enabled: boolean
@@ -886,16 +877,14 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         .AddClass(RAW_CLASSNAME_STRING)                    // installSource: string
         .AddClass(RAW_CLASSNAME_STRING)                    // releaseType: string
         .AddBoolean()                                      // cloudFileSyncEnabled: boolean
-        .AddClass(RAW_CLASSNAME_INT);                      // flags?: int
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddClass(RAW_CLASSNAME_INT)                       // flags?: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_APPLICATIONINFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abilityInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_ABILITYINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // bundleName: string
     ani_string bundleName = nullptr;
@@ -991,8 +980,8 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
         { .i = abilityInfo.appIndex },
         { .l = static_cast<ani_long>(abilityInfo.orientationId) },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)                           // bundleName: string
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING)                           // bundleName: string
         .AddClass(RAW_CLASSNAME_STRING)                           // moduleName: string
         .AddClass(RAW_CLASSNAME_STRING)                           // name: string
         .AddClass(RAW_CLASSNAME_STRING)                           // label: string
@@ -1015,16 +1004,14 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
         .AddBoolean()                       // excludeFromDock: boolean
         .AddClass(RAW_CLASSNAME_ARRAY)      // skills: Array<Skill>
         .AddInt()                           // appIndex: int
-        .AddLong();                         // orientationId: long
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddLong()                          // orientationId: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_ABILITYINFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertWindowSize(ani_env* env, const AbilityInfo& abilityInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_WINDOWSIZE_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     ani_value args[] = {
         { .d = abilityInfo.maxWindowRatio },
@@ -1034,22 +1021,20 @@ ani_object CommonFunAni::ConvertWindowSize(ani_env* env, const AbilityInfo& abil
         { .l = static_cast<ani_long>(abilityInfo.maxWindowHeight) },
         { .l = static_cast<ani_long>(abilityInfo.minWindowHeight) },
     };
-    SignatureBuilder sign {};
-    sign.AddDouble() // maxWindowRatio: double
+    static const std::string ctorSig = SignatureBuilder()
+        .AddDouble() // maxWindowRatio: double
         .AddDouble() // minWindowRatio: double
         .AddLong()   // maxWindowWidth: long
         .AddLong()   // minWindowWidth: long
         .AddLong()   // maxWindowHeight: long
-        .AddLong();  // minWindowHeight: long
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddLong()   // minWindowHeight: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_WINDOWSIZE_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbilityInfo& extensionInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_EXTENSIONABILITYINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // bundleName: string
     ani_string bundleName = nullptr;
@@ -1120,8 +1105,8 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
         { .r = skills },
         { .i = extensionInfo.appIndex },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)                              // bundleName: string
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING)                              // bundleName: string
         .AddClass(RAW_CLASSNAME_STRING)                              // moduleName: string
         .AddClass(RAW_CLASSNAME_STRING)                              // name: string
         .AddLong()                                                   // labelId: long
@@ -1137,8 +1122,9 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
         .AddClass(RAW_CLASSNAME_STRING)                              // readPermission: string
         .AddClass(RAW_CLASSNAME_STRING)                              // writePermission: string
         .AddClass(RAW_CLASSNAME_ARRAY)                               // skills: Array<Skill>
-        .AddInt();                                                   // appIndex: int
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddInt()                                                    // appIndex: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_EXTENSIONABILITYINFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertResource(ani_env* env, const Resource& resource)
@@ -1148,7 +1134,7 @@ ani_object CommonFunAni::ConvertResource(ani_env* env, const Resource& resource)
     ani_class cls = CreateClassByName(env, CLASSNAME_RESOURCE_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_RESOURCE_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -1170,9 +1156,6 @@ ani_object CommonFunAni::ConvertResource(ani_env* env, const Resource& resource)
 ani_object CommonFunAni::ConvertSignatureInfo(ani_env* env, const SignatureInfo& signatureInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_SIGNATUREINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // appId: string
     ani_string appId = nullptr;
@@ -1201,12 +1184,13 @@ ani_object CommonFunAni::ConvertSignatureInfo(ani_env* env, const SignatureInfo&
         { .r = appIdentifier },
         { .r = certificateRef },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)  // appId: string
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING)  // appId: string
         .AddClass(RAW_CLASSNAME_STRING)  // fingerprint: string
         .AddClass(RAW_CLASSNAME_STRING)  // appIdentifier: string
-        .AddClass(RAW_CLASSNAME_STRING); // certificate?: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddClass(RAW_CLASSNAME_STRING)  // certificate?: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_SIGNATUREINFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertKeyValuePair(
@@ -1217,7 +1201,7 @@ ani_object CommonFunAni::ConvertKeyValuePair(
     ani_class cls = CreateClassByName(env, className);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, className, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -1238,9 +1222,6 @@ ani_object CommonFunAni::ConvertKeyValuePairV2(
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, className);
-    RETURN_NULL_IF_NULL(cls);
-
     // key: string
     ani_string key = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, item.first, key));
@@ -1253,10 +1234,11 @@ ani_object CommonFunAni::ConvertKeyValuePairV2(
         { .r = key },
         { .r = value },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)  // key: string
-        .AddClass(RAW_CLASSNAME_STRING); // value: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING)  // key: string
+        .AddClass(RAW_CLASSNAME_STRING)  // value: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, className, ctorSig, args);
 }
 
 inline ani_object CommonFunAni::ConvertDataItem(ani_env* env, const std::pair<std::string, std::string>& item)
@@ -1267,9 +1249,6 @@ inline ani_object CommonFunAni::ConvertDataItem(ani_env* env, const std::pair<st
 ani_object CommonFunAni::ConvertRouterItem(ani_env* env, const RouterItem& routerItem)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_ROUTERITEM_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -1298,21 +1277,19 @@ ani_object CommonFunAni::ConvertRouterItem(ani_env* env, const RouterItem& route
         { .r = customData },
         { .r = aDataArrayObject },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING) // name: string
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING) // name: string
         .AddClass(RAW_CLASSNAME_STRING) // pageSourceFile: string
         .AddClass(RAW_CLASSNAME_STRING) // buildFunction: string
         .AddClass(RAW_CLASSNAME_STRING) // customData: string
-        .AddClass(RAW_CLASSNAME_ARRAY); // data: Array<DataItem>
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddClass(RAW_CLASSNAME_ARRAY)  // data: Array<DataItem>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_ROUTERITEM_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertRequestPermission(ani_env* env, const RequestPermission& requestPermission)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_PERMISSION_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -1337,22 +1314,20 @@ ani_object CommonFunAni::ConvertRequestPermission(ani_env* env, const RequestPer
         { .l = static_cast<ani_long>(requestPermission.reasonId) },
         { .r = usedScene },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)     // name: string
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING)     // name: string
         .AddClass(RAW_CLASSNAME_STRING)     // moduleName: string
         .AddClass(RAW_CLASSNAME_STRING)     // reason: string
         .AddLong()                          // reasonId: long
-        .AddClass(RAW_CLASSNAME_USEDSCENE); // usedScene: UsedScene
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddClass(RAW_CLASSNAME_USEDSCENE)  // usedScene: UsedScene
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_PERMISSION_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertRequestPermissionUsedScene(
     ani_env* env, const RequestPermissionUsedScene& requestPermissionUsedScene)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_USEDSCENE_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // abilities: Array<string>
     ani_object abilities = ConvertAniArrayString(env, requestPermissionUsedScene.abilities);
@@ -1366,18 +1341,16 @@ ani_object CommonFunAni::ConvertRequestPermissionUsedScene(
         { .r = abilities },
         { .r = when },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_ARRAY)   // abilities: Array<string>
-        .AddClass(RAW_CLASSNAME_STRING); // when: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_ARRAY)   // abilities: Array<string>
+        .AddClass(RAW_CLASSNAME_STRING)  // when: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_USEDSCENE_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertPreloadItem(ani_env* env, const PreloadItem& preloadItem)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_PRELOADITEM_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // moduleName: string
     ani_string moduleName = nullptr;
@@ -1386,17 +1359,15 @@ ani_object CommonFunAni::ConvertPreloadItem(ani_env* env, const PreloadItem& pre
     ani_value args[] = {
         { .r = moduleName },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING); // moduleName: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING)  // moduleName: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_PRELOADITEM_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertDependency(ani_env* env, const Dependency& dependency)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_DEPENDENCY_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // moduleName: string
     ani_string moduleName = nullptr;
@@ -1411,19 +1382,17 @@ ani_object CommonFunAni::ConvertDependency(ani_env* env, const Dependency& depen
         { .r = bundleName },
         { .l = static_cast<ani_long>(dependency.versionCode) },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING) // moduleName: string
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING) // moduleName: string
         .AddClass(RAW_CLASSNAME_STRING) // bundleName: string
-        .AddLong();                     // versionCode: long
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddLong()                      // versionCode: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_DEPENDENCY_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo& hapModuleInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_HAPMODULEINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -1526,8 +1495,8 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
         { .r = nativeLibraryPath },
         { .r = codePath },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)                    // name: string
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING)                    // name: string
         .AddClass(RAW_CLASSNAME_STRING)                    // icon: string
         .AddLong()                                         // iconId: long
         .AddClass(RAW_CLASSNAME_STRING)                    // label: string
@@ -1547,8 +1516,9 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
         .AddClass(RAW_CLASSNAME_STRING)                    // fileContextMenuConfig: string
         .AddClass(RAW_CLASSNAME_ARRAY)                     // routerMap: Array<RouterItem>
         .AddClass(RAW_CLASSNAME_STRING)                    // nativeLibraryPath: string
-        .AddClass(RAW_CLASSNAME_STRING);                   // codePath: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddClass(RAW_CLASSNAME_STRING)                    // codePath: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_HAPMODULEINFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertElementName(ani_env* env, const ElementName& elementName)
@@ -1558,7 +1528,7 @@ ani_object CommonFunAni::ConvertElementName(ani_env* env, const ElementName& ele
     ani_class cls = CreateClassByName(env, CLASSNAME_ELEMENTNAME_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_ELEMENTNAME_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -1597,9 +1567,6 @@ ani_object CommonFunAni::ConvertElementName(ani_env* env, const ElementName& ele
 ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUri& skillUri, bool isExtension)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_SKILLURI_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // scheme: string
     ani_string scheme = nullptr;
@@ -1655,8 +1622,8 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
         { .i = skillUri.maxFileSupported },
         { .r = linkFeature },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)  // scheme: string
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_STRING)  // scheme: string
         .AddClass(RAW_CLASSNAME_STRING)  // host: string
         .AddInt()                        // port: int
         .AddClass(RAW_CLASSNAME_STRING)  // path: string
@@ -1665,16 +1632,14 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
         .AddClass(RAW_CLASSNAME_STRING)  // type: string
         .AddClass(RAW_CLASSNAME_STRING)  // utd: string
         .AddInt()                        // maxFileSupported: int
-        .AddClass(RAW_CLASSNAME_STRING); // linkFeature: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddClass(RAW_CLASSNAME_STRING)  // linkFeature: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_SKILLURI_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertAbilitySkillInner(ani_env* env, const Skill& skill, bool isExtension)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_SKILL_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // actions: Array<string>
     ani_object actions = ConvertAniArrayString(env, skill.actions);
@@ -1695,12 +1660,13 @@ ani_object CommonFunAni::ConvertAbilitySkillInner(ani_env* env, const Skill& ski
         { .r = uris },
         { .z = BoolToAniBoolean(isExtension? false: skill.domainVerify) },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_ARRAY) // actions: Array<string>
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(RAW_CLASSNAME_ARRAY) // actions: Array<string>
         .AddClass(RAW_CLASSNAME_ARRAY) // entities: Array<string>
         .AddClass(RAW_CLASSNAME_ARRAY) // uris: Array<SkillUri>
-        .AddBoolean();                 // domainVerify: boolean
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddBoolean()                  // domainVerify: boolean
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_SKILL_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertAppCloneIdentity(ani_env* env, const std::string& bundleName, const int32_t appIndex)
@@ -1710,7 +1676,7 @@ ani_object CommonFunAni::ConvertAppCloneIdentity(ani_env* env, const std::string
     ani_class cls = CreateClassByName(env, CLASSNAME_APPCLONEIDENTITY_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_APPCLONEIDENTITY_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -1732,7 +1698,7 @@ ani_object CommonFunAni::ConvertPermissionDef(ani_env* env, const PermissionDef&
     ani_class cls = CreateClassByName(env, CLASSNAME_PERMISSIONDEF_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_PERMISSIONDEF_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -1760,7 +1726,7 @@ ani_object CommonFunAni::ConvertSharedBundleInfo(ani_env* env, const SharedBundl
     ani_class cls = CreateClassByName(env, CLASSNAME_SHAREDBUNDLEINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_SHAREDBUNDLEINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -1790,7 +1756,7 @@ ani_object CommonFunAni::ConvertSharedModuleInfo(ani_env* env, const SharedModul
     ani_class cls = CreateClassByName(env, CLASSNAME_SHAREDMODULEINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_SHAREDMODULEINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -1823,7 +1789,7 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
     ani_class cls = CreateClassByName(env, CLASSNAME_APPPROVISIONINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_APPPROVISIONINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -1886,7 +1852,7 @@ ani_object CommonFunAni::ConvertValidity(ani_env* env, const Validity& validity)
     ani_class cls = CreateClassByName(env, CLASSNAME_VALIDITY_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_VALIDITY_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     // notBefore: long
@@ -1906,7 +1872,7 @@ ani_object CommonFunAni::ConvertRecoverableApplicationInfo(
     ani_class cls = CreateClassByName(env, CLASSNAME_RECOVERABLEAPPLICATIONINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_RECOVERABLEAPPLICATIONINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -1950,7 +1916,7 @@ ani_object CommonFunAni::ConvertPreinstalledApplicationInfo(
     ani_class cls = CreateClassByName(env, CLASSNAME_PREINSTALLEDAPPLICATIONINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_PREINSTALLEDAPPLICATIONINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -1979,7 +1945,7 @@ ani_object CommonFunAni::ConvertPluginBundleInfo(ani_env* env, const PluginBundl
     ani_class cls = CreateClassByName(env, CLASSNAME_PLUGINBUNDLEINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_PLUGINBUNDLEINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2025,7 +1991,7 @@ ani_object CommonFunAni::ConvertPluginModuleInfo(ani_env* env, const PluginModul
     ani_class cls = CreateClassByName(env, CLASSNAME_PLUGINMODULEINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_PLUGINMODULEINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2051,7 +2017,7 @@ ani_object CommonFunAni::ConvertShortcutInfo(ani_env* env, const ShortcutInfo& s
     ani_class cls = CreateClassByName(env, CLASSNAME_SHORTCUTINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_SHORTCUTINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2115,7 +2081,7 @@ ani_object CommonFunAni::ConvertShortcutIntent(ani_env* env, const ShortcutInten
     ani_class cls = CreateClassByName(env, CLASSNAME_SHORTCUTWANT_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_SHORTCUTWANT_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2154,7 +2120,7 @@ ani_object CommonFunAni::ConvertLauncherAbilityInfo(ani_env* env, const Launcher
     ani_class cls = CreateClassByName(env, CLASSNAME_LAUNCHER_ABILITY_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_LAUNCHER_ABILITY_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     // applicationInfo: ApplicationInfo
@@ -2189,7 +2155,7 @@ ani_object CommonFunAni::ConvertOverlayModuleInfo(ani_env* env, const OverlayMod
     ani_class cls = CreateClassByName(env, CLASSNAME_OVERLAY_MOUDLE_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_OVERLAY_MOUDLE_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2223,7 +2189,7 @@ ani_object CommonFunAni::CreateBundleChangedInfo(
     ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLE_CHANGED_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_BUNDLE_CHANGED_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2248,7 +2214,7 @@ ani_object CommonFunAni::ConvertVersion(ani_env* env, const Version& version)
     ani_class cls = CreateClassByName(env, CLASSNAME_VERSION_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_VERSION_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2274,7 +2240,7 @@ ani_object CommonFunAni::ConvertPackageApp(ani_env* env, const PackageApp& packa
     ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLE_CONFIG_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_BUNDLE_CONFIG_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2298,7 +2264,7 @@ ani_object CommonFunAni::ConvertAbilityFormInfo(ani_env* env, const AbilityFormI
     ani_class cls = CreateClassByName(env, CLASSNAME_ABILITY_FORM_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_ABILITY_FORM_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2342,7 +2308,7 @@ ani_object CommonFunAni::ConvertModuleAbilityInfo(ani_env* env, const ModuleAbil
     ani_class cls = CreateClassByName(env, CLASSNAME_MODULE_ABILITY_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_MODULE_ABILITY_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2374,7 +2340,7 @@ ani_object CommonFunAni::ConvertModuleDistro(ani_env* env, const ModuleDistro& m
     ani_class cls = CreateClassByName(env, CLASSNAME_MODULE_DISTRO_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_MODULE_DISTRO_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2405,7 +2371,7 @@ ani_object CommonFunAni::ConvertApiVersion(ani_env* env, const ApiVersion& apiVe
     ani_class cls = CreateClassByName(env, CLASSNAME_API_VERSION_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_API_VERSION_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2431,7 +2397,7 @@ ani_object CommonFunAni::ConvertExtensionAbilities(ani_env* env, const Extension
     ani_class cls = CreateClassByName(env, CLASSNAME_EXTENSION_ABILITY_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_EXTENSION_ABILITY_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2455,7 +2421,7 @@ ani_object CommonFunAni::ConvertPackageModule(ani_env* env, const PackageModule&
     ani_class cls = CreateClassByName(env, CLASSNAME_MODULE_CONFIG_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_MODULE_CONFIG_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2500,7 +2466,7 @@ ani_object CommonFunAni::ConvertSummary(ani_env* env, const Summary& summary, bo
     ani_class cls = CreateClassByName(env, CLASSNAME_PACKAGE_SUMMARY_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_PACKAGE_SUMMARY_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     if (withApp) {
@@ -2525,7 +2491,7 @@ ani_object CommonFunAni::ConvertPackages(ani_env* env, const Packages& packages)
     ani_class cls = CreateClassByName(env, CLASSNAME_PACKAGE_CONFIG_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_PACKAGE_CONFIG_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2557,7 +2523,7 @@ ani_object CommonFunAni::ConvertBundlePackInfo(ani_env* env, const BundlePackInf
     ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLE_PACK_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_BUNDLE_PACK_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     // packages: Array<PackageConfig>
@@ -2599,7 +2565,7 @@ ani_object CommonFunAni::CreateDispatchInfo(
     ani_class cls = CreateClassByName(env, CLASSNAME_DISPATCH_INFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_DISPATCH_INFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2622,7 +2588,7 @@ ani_object CommonFunAni::ConvertDynamicIconInfo(ani_env* env, const DynamicIconI
     ani_class cls = CreateClassByName(env, CLASSNAME_DYNAMICICONINFO_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_DYNAMICICONINFO_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
@@ -2677,7 +2643,7 @@ ani_object CommonFunAni::ConvertWantInfo(ani_env* env, const Want& want)
     ani_class cls = CreateClassByName(env, CLASSNAME_WANT);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_WANT, cls);
     RETURN_NULL_IF_NULL(object);
 
     // bundleName?: string
