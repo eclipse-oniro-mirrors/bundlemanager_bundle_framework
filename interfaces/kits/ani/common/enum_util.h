@@ -244,6 +244,27 @@ private:
         9,
         8,
     };
+    /* zlib.ReturnStatus
+    enum ReturnStatus {
+        OK = 0,
+        STREAM_END = 1,
+        NEED_DICT = 2,
+        ERRNO = -1,
+        STREAM_ERROR = -2,
+        DATA_ERROR = -3,
+        MEM_ERROR = -4,
+        BUF_ERROR = -5
+    } */
+    static constexpr std::array<int, 9> Array_Zlib_ReturnStatus = {
+        0,
+        1,
+        2,
+        -1,
+        -2,
+        -3,
+        -4,
+        -5
+    };
 
 public:
     template<typename enumType>
@@ -458,14 +479,10 @@ public:
     }
 
     // zlib.ReturnStatus
-    // enum ReturnStatus {
-    //     OK = 0,
-    //     STREAM_END = 1,
-    //     NEED_DICT = 2,
-    // }
     static inline ani_enum_item EnumNativeToETS_Zlib_ReturnStatus(ani_env* env, const int32_t value)
     {
-        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_ZLIB_RETURN_STATUS, value, 0);
+        return EnumNativeToETSByTable(env,
+            CommonFunAniNS::CLASSNAME_ZLIB_RETURN_STATUS, value, Array_Zlib_ReturnStatus);
     }
 
     // appControl.ComponentType
