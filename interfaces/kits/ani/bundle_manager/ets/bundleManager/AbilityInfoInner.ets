@@ -96,6 +96,25 @@ export class AbilityInfoInner implements AbilityInfo {
       this.appIndex = appIndex;
       this.orientationId = orientationId;
   }
+  constructor(bundleName: string,
+    moduleName: string,
+    name: string,
+    label: string,
+    labelId: long,
+    description: string,
+    descriptionId: long,
+    icon: string,
+    iconId: long) {
+      this.bundleName = bundleName;
+      this.moduleName = moduleName;
+      this.name = name;
+      this.label = label;
+      this.labelId = labelId;
+      this.description = description;
+      this.descriptionId = descriptionId;
+      this.icon = icon;
+      this.iconId = iconId;
+  }
 }
 
 export class WindowSizeInner implements WindowSize {

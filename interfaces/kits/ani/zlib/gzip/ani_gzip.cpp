@@ -25,10 +25,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace AniZLibGZip {
 namespace {
-constexpr const char* CLASSNAME_STRING = "std.core.String";
-constexpr const char* CLASSNAME_DOUBLE = "std.core.Double";
 constexpr const char* CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER = "@ohos.zlib.zlib.GzErrorOutputInfoInner";
-constexpr const char* FIELD_NAME_NATIVEGZFILE = "nativeGZFile";
+constexpr const char* FIELD_NAME_NATIVE_GZFILE = "nativeGZFile";
 constexpr int INVALID_FD = -1;
 constexpr uint8_t MIN_ASCII = 0;
 constexpr uint8_t MAX_ASCII = 255;
@@ -38,7 +36,7 @@ using namespace arkts::ani_signature;
 static bool TryGetNativeGZFile(ani_env* env, ani_object instance, gzFile& file, int throwsOnError)
 {
     ani_long longValue = 0;
-    ani_status status = env->Object_GetFieldByName_Long(instance, FIELD_NAME_NATIVEGZFILE, &longValue);
+    ani_status status = env->Object_GetFieldByName_Long(instance, FIELD_NAME_NATIVE_GZFILE, &longValue);
     if (status != ANI_OK) {
         APP_LOGE("Object_GetFieldByName_Long failed %{public}d", status);
         AniZLibCommon::ThrowZLibNapiError(env, throwsOnError);
@@ -49,11 +47,10 @@ static bool TryGetNativeGZFile(ani_env* env, ani_object instance, gzFile& file, 
     return true;
 }
 
-static bool TrySetNativeGZFile(ani_env* env, ani_object instance, gzFile natieGZFile)
+static bool TrySetNativeGZFile(ani_env* env, ani_object instance, gzFile nativeGZFile)
 {
-    ani_long longValue = 0;
     ani_status status =
-        env->Object_SetFieldByName_Long(instance, FIELD_NAME_NATIVEGZFILE, reinterpret_cast<ani_long>(natieGZFile));
+        env->Object_SetFieldByName_Long(instance, FIELD_NAME_NATIVE_GZFILE, reinterpret_cast<ani_long>(nativeGZFile));
     if (status != ANI_OK) {
         APP_LOGE("Object_GetFieldByName_Long failed %{public}d", status);
         return false;
@@ -94,7 +91,7 @@ static bool TryGetStringArg(ani_env* env, ani_array_ref args, ani_size index, st
 
     ani_object arg = static_cast<ani_object>(ref);
 
-    Type type = Builder::BuildClass(CLASSNAME_STRING);
+    Type type = Builder::BuildClass(CommonFunAniNS::CLASSNAME_STRING);
     ani_class cls = CommonFunAni::CreateClassByName(env, type.Descriptor().c_str());
     if (cls == nullptr) {
         APP_LOGE("CreateClassByName failed ");
@@ -147,7 +144,7 @@ static bool TryGetNumberArg(ani_env* env, ani_array_ref args, ani_size index, st
 
     ani_object arg = static_cast<ani_object>(ref);
 
-    Type type = Builder::BuildClass(CLASSNAME_DOUBLE);
+    Type type = Builder::BuildClass(CommonFunAniNS::CLASSNAME_DOUBLE);
     ani_class cls = CommonFunAni::CreateClassByName(env, type.Descriptor().c_str());
     if (cls == nullptr) {
         APP_LOGE("CreateClassByName failed ");
@@ -252,6 +249,7 @@ void gzdopenNative(ani_env* env, ani_object instance, ani_int aniFd, ani_string 
     CHECK_PARAM_NULL_THROW(nativeGZFile, ENOENT);
     if (!TrySetNativeGZFile(env, instance, nativeGZFile)) {
         APP_LOGE("TrySetNativeGZFile failed");
+        gzclose(nativeGZFile);
         AniZLibCommon::ThrowZLibNapiError(env, EFAULT);
     }
 }
@@ -314,6 +312,7 @@ void gzopenNative(ani_env* env, ani_object instance, ani_string aniPath, ani_str
     CHECK_PARAM_NULL_THROW(nativeGZFile, ENOENT);
     if (!TrySetNativeGZFile(env, instance, nativeGZFile)) {
         APP_LOGE("TrySetNativeGZFile failed");
+        gzclose(nativeGZFile);
         AniZLibCommon::ThrowZLibNapiError(env, EFAULT);
     }
 }
@@ -412,22 +411,20 @@ ani_object gzerrorNative(ani_env* env, ani_object instance)
     const char* errMsg = gzerror(nativeGZFile, &errCode);
     CHECK_PARAM_NULL_THROW_RETURN(errMsg, LIBZIP::EZSTREAM_ERROR, nullptr);
 
-    ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CommonFunAni::CreateNewObjectByClass(env, CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    // status: ReturnStatus
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(
-        env, cls, object, "status", EnumUtils::EnumNativeToETS_Zlib_ReturnStatus(env, errCode)));
-
     // statusMsg: string
-    ani_string string = nullptr;
-    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, errMsg, string));
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, "statusMsg", string));
+    ani_string statusMsg = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, errMsg, statusMsg));
 
-    return object;
+    ani_value args[] = {
+        { .r = EnumUtils::EnumNativeToETS_Zlib_ReturnStatus(env, errCode) },
+        { .r = statusMsg },
+    };
+    static const std::string ctorSig =
+        arkts::ani_signature::SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_ZLIB_RETURN_STATUS) // status: ReturnStatus
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING)             // statusMsg: string
+            .BuildSignatureDescriptor();
+    return CommonFunAni::CreateNewObjectByClassV2(env, CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER, ctorSig, args);
 }
 
 ani_int gzgetcNative(ani_env* env, ani_object instance)

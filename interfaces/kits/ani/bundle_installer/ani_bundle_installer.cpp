@@ -529,7 +529,7 @@ static ani_object AniGetBundleInstaller(ani_env* env, ani_boolean aniIsSync)
         return nullptr;
     }
     g_isSystemApp = true;
-    const std::string installerClzName = Builder::BuildClass(INNERINSTALLER_CLASSNAME).Descriptor();
+    static const std::string installerClzName = Builder::BuildClass(INNERINSTALLER_CLASSNAME).Descriptor();
     ani_class installerClz = CommonFunAni::CreateClassByName(env, installerClzName);
     RETURN_NULL_IF_NULL(installerClz);
     return CommonFunAni::CreateNewObjectByClass(env, installerClzName, installerClz);

@@ -73,12 +73,49 @@ export default namespace appControl {
     public controlType: ControlType = ControlType.ALLOWED_LIST;
     public elementList: Array<ElementName>;
     public priority: int;
+
+    constructor() { }
+    constructor(componentType: ComponentType,
+      disposedType: DisposedType,
+      controlType: ControlType,
+      elementList: Array<ElementName>,
+      priority: int) {
+        this.componentType = componentType;
+        this.disposedType = disposedType;
+        this.controlType = controlType;
+        this.elementList = elementList;
+        this.priority = priority;
+    }
+    constructor(componentType: ComponentType,
+      disposedType: DisposedType,
+      controlType: ControlType,
+      elementList: Array<ElementName>,
+      priority: int,
+      want: Want) {
+        this.componentType = componentType;
+        this.disposedType = disposedType;
+        this.controlType = controlType;
+        this.elementList = elementList;
+        this.priority = priority;
+        this.want = want;
+    }
   }
 
   export class UninstallDisposedRuleInner implements UninstallDisposedRule {
     public want: Want = {};
     public uninstallComponentType: UninstallComponentType = UninstallComponentType.EXTENSION;
     public priority: int;
+
+    constructor() { }
+    constructor(uninstallComponentType: UninstallComponentType, priority: int) {
+        this.uninstallComponentType = uninstallComponentType;
+        this.priority = priority;
+    }
+    constructor(uninstallComponentType: UninstallComponentType, priority: int, want: Want) {
+        this.uninstallComponentType = uninstallComponentType;
+        this.priority = priority;
+        this.want = want;
+    }
   }
 
   export class DisposedRuleConfigurationInner implements DisposedRuleConfiguration {

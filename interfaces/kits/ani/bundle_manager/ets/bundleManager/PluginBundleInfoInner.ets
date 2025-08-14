@@ -24,10 +24,38 @@ export class PluginBundleInfoInner implements PluginBundleInfo {
   public readonly versionCode: long;
   public readonly versionName: string = '';
   public readonly pluginModuleInfos: Array<PluginModuleInfo> = new Array<PluginModuleInfo>;
+
+  constructor() { }
+  constructor(label: string,
+    labelId: long,
+    icon: string,
+    iconId: long,
+    pluginBundleName: string,
+    versionCode: long,
+    versionName: string,
+    pluginModuleInfos: Array<PluginModuleInfo>) {
+      this.label = label;
+      this.labelId = labelId;
+      this.icon = icon;
+      this.iconId = iconId;
+      this.pluginBundleName = pluginBundleName;
+      this.versionCode = versionCode;
+      this.versionName = versionName;
+      this.pluginModuleInfos = pluginModuleInfos;
+  }
 }
 
 export class PluginModuleInfoInner implements PluginModuleInfo {
   public readonly moduleName: string = '';
   public readonly descriptionId: long;
   public readonly description: string = '';
+
+  constructor() { }
+  constructor(moduleName: string,
+    descriptionId: long,
+    description: string) {
+      this.moduleName = moduleName;
+      this.descriptionId = descriptionId;
+      this.description = description;
+  }
 }

@@ -22,4 +22,17 @@ export class BundleResourceInfoInner implements BundleResourceInfo {
     readonly label: string = '';
     readonly drawableDescriptor: DrawableDescriptor | null = null;
     readonly appIndex: int;
+
+    constructor() { }
+    constructor(bundleName: string,
+        icon: string,
+        label: string,
+        drawableDescriptor: DrawableDescriptor | null,
+        appIndex: int) {
+            this.bundleName = bundleName;
+            this.icon = icon;
+            this.label = label;
+            this.drawableDescriptor = drawableDescriptor;
+            this.appIndex = appIndex;
+    }
 }
