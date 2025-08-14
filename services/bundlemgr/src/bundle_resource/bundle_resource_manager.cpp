@@ -675,6 +675,7 @@ bool BundleResourceManager::AddResourceInfoByBundleNameWhenCreateUser(
             bundleName.c_str(), userId);
         return false;
     }
+    PrepareSysRes();
     std::vector<ResourceInfo> themeResourceInfos;
     themeResourceInfos.emplace_back(resourceInfos[0]);
     // 3. traverse all resourceInfo to determine if ability theme exist
@@ -1051,6 +1052,7 @@ bool BundleResourceManager::AddCloneBundleResourceInfoWhenInstall(
      * if not exist, need to process both bundleResourceRdb and bundleResourceIconRdb;
      * if exist, only need to process bundleResourceIconRdb.
      */
+    PrepareSysRes();
     bool ret = true;
     if (!isExistInOtherUser) {
         // 1. process clone resource icon and label in bundleResourceRdb, icon with badge, label with appIndex
@@ -1182,7 +1184,7 @@ void BundleResourceManager::SetIsOnlineTheme(const int32_t userId)
 }
 
 bool BundleResourceManager::InnerProcessThemeIconWhenOta(
-    const std::string &bundleName, const std::set<int32_t> userIds)
+    const std::string &bundleName, const std::set<int32_t> userIds, const bool hasBundleUpdated)
 {
     // 1. theme whether exist in all user, no need to process
     std::vector<int32_t> existThemeUserIds;
@@ -1207,7 +1209,7 @@ bool BundleResourceManager::InnerProcessThemeIconWhenOta(
         if ((dataMgr->IsBundleInstalled(bundleName, userId, 0, isInstalled) != ERR_OK) || !isInstalled) {
             continue;
         }
-        if (!isUpdated) {
+        if (!isUpdated && !hasBundleUpdated) {
             (void)AddResourceInfoByBundleNameWhenUpdate(bundleName, existThemeUserIds[0]);
             isUpdated = true;
         }
@@ -1278,10 +1280,9 @@ bool BundleResourceManager::ProcessThemeAndDynamicIconWhenOta(
         // dynamic icon need all process
         InnerProcessDynamicIconWhenOta(bundleName);
         // theme icon already process when bundle update
-        if (std::find(updateBundleNames.begin(), updateBundleNames.end(), bundleName) != updateBundleNames.end()) {
-            continue;
-        }
-        InnerProcessThemeIconWhenOta(bundleName, userIds);
+        bool hasBundleUpdated = std::find(updateBundleNames.begin(), updateBundleNames.end(),
+            bundleName) != updateBundleNames.end();
+        InnerProcessThemeIconWhenOta(bundleName, userIds, hasBundleUpdated);
     }
     APP_LOGI("ProcessThemeAndDynamicIconWhenOta end");
     return true;
