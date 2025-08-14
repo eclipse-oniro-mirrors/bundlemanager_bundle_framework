@@ -66,8 +66,8 @@ constexpr int32_t EMPTY_VALUE = -500;
 constexpr const char* EMPTY_STRING = "ani empty string";
 enum AbilityProfileType : uint32_t {
     ABILITY_PROFILE = 0,
-    EXTENSION_PROFILE,
-    UNKNOWN_PROFILE
+    EXTENSION_PROFILE = 1,
+    UNKNOWN_PROFILE = 2
 };
 } // namespace
 
@@ -360,7 +360,7 @@ static ani_object GetAllBundleInfoNative(ani_env* env, ani_int aniBundleFlags, a
             Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
         return nullptr;
     }
-    APP_LOGI("GetBundleInfosV9 ret: %{public}d, bundleInfos size: %{public}d", ret, bundleInfos.size());
+    APP_LOGD("GetBundleInfosV9 ret: %{public}d, bundleInfos size: %{public}zu", ret, bundleInfos.size());
 
     return CommonFunAni::ConvertAniArray(env, bundleInfos, CommonFunAni::ConvertBundleInfo, aniBundleFlags);
 }
@@ -386,7 +386,7 @@ static ani_object GetAllApplicationInfoNative(ani_env* env, ani_int aniApplicati
             Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
         return nullptr;
     }
-    APP_LOGI("applicationInfos size: %{public}d", appInfos.size());
+    APP_LOGD("applicationInfos size: %{public}zu", appInfos.size());
 
     return CommonFunAni::ConvertAniArray(env, appInfos, CommonFunAni::ConvertApplicationInfo);
 }
@@ -703,7 +703,7 @@ static ani_object QueryAbilityInfoWithWantsNative(ani_env* env,
 {
     APP_LOGD("ani QueryAbilityInfoWithWants called");
     std::vector<OHOS::AAFwk::Want> wants;
-    if (!ParseAniWantList(env, aniWants, wants)) {
+    if (!ParseAniWantList(env, aniWants, wants) || wants.empty()) {
         APP_LOGE("ParseAniWant failed");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
         return nullptr;
@@ -1433,7 +1433,7 @@ static ani_object GetAllAppCloneBundleInfoNative(
             env, ret, GET_ALL_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
-    APP_LOGI("GetAllAppCloneBundleInfoNative bundleInfos size: %{public}d", bundleInfos.size());
+    APP_LOGD("GetAllAppCloneBundleInfoNative bundleInfos size: %{public}zu", bundleInfos.size());
 
     return CommonFunAni::ConvertAniArray(env, bundleInfos, CommonFunAni::ConvertBundleInfo, aniBundleFlags);
 }
@@ -1471,10 +1471,12 @@ static ani_object GetSharedBundleInfoNative(ani_env* env, ani_string aniBundleNa
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
     }
     if (moduleName.empty()) {
         APP_LOGE("moduleName is empty");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
+        return nullptr;
     }
     std::vector<SharedBundleInfo> sharedBundles;
     ErrCode ret = BundleManagerHelper::InnerGetSharedBundleInfo(bundleName, moduleName, sharedBundles);
