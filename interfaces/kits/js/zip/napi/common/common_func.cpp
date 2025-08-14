@@ -1157,7 +1157,7 @@ std::tuple<bool, void *, int64_t, int64_t> CommonFunc::GetGZFReadArg(napi_env en
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, 0};
     }
-    if (size > (static_cast<int64_t>(len) / nitems)) {
+    if (nitems != 0 && (size > (static_cast<int64_t>(len) / nitems))) {
         APP_LOGE("buf too small");
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, 0};
@@ -1211,7 +1211,7 @@ std::tuple<bool, void *, int64_t, int64_t> CommonFunc::GetGZFWriteArg(napi_env e
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, 0};
     }
-    if (size > (static_cast<int64_t>(len) / nitems)) {
+    if (nitems != 0 && (size > (static_cast<int64_t>(len) / nitems))) {
         APP_LOGE("buf too small");
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, nullptr, 0, 0};
