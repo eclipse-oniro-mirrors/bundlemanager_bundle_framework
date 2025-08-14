@@ -59,6 +59,7 @@ enum OTAFlag : uint32_t {
     CHECK_EXTENSION_ABILITY = 0x00010000,
     PROCESS_DYNAMIC_ICON = 0x00020000,
     PROCESS_THEME_AND_DYNAMIC_ICON = 0x00040000,
+    CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR = 0x00080000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -543,6 +544,7 @@ private:
     void InnerProcessCheckPreinstallData();
     void ProcessCheckShaderCacheDir();
     void InnerProcessCheckShaderCacheDir();
+    void ProcessCheckSystemOptimizeShaderCacheDir();
     void ProcessCheckCloudShaderDir();
     void InnerProcessCheckCloudShaderDir();
     void InnerProcessCheckCloudShaderCommonDir(const int32_t uid, const int32_t gid);
