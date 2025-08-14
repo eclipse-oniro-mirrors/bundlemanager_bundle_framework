@@ -627,10 +627,6 @@ ani_long gzwriteNative(ani_env* env, ani_object instance, ani_arraybuffer aniBuf
     CHECK_PARAM_NULL_RETURN(env, 0);
     CHECK_PARAM_NULL_THROW_RETURN(instance, EFAULT, 0);
     CHECK_PARAM_NULL_THROW_RETURN(aniBuf, EINVAL, 0);
-    if (aniLen < 0) {
-        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
-        return 0;
-    }
 
     size_t bufLen = 0;
     void* buf = nullptr;
@@ -646,7 +642,7 @@ ani_long gzwriteNative(ani_env* env, ani_object instance, ani_arraybuffer aniBuf
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return 0;
     }
-    if (bufLen < static_cast<size_t>(aniLen)) {
+    if (aniLen > static_cast<int64_t>(bufLen)) {
         APP_LOGE("bufLen is too small");
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return 0;
