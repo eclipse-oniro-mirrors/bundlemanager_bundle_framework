@@ -362,6 +362,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA);
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
+    UpdateOtaFlag(OTAFlag::CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_BACK_UP_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
@@ -1279,6 +1280,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckAppFileManagerDir();
     ProcessCheckPreinstallData();
     ProcessCheckShaderCacheDir();
+    ProcessCheckSystemOptimizeShaderCacheDir();
     ProcessCheckCloudShaderDir();
     ProcessNewBackupDir();
     CheckAndCreateShareFilesSubDataDirs();
@@ -1515,9 +1517,20 @@ void BMSEventHandler::ProcessCheckShaderCacheDir()
     }
     LOG_I(BMS_TAG_DEFAULT, "Need to check shader cache dir");
     InnerProcessCheckShaderCacheDir();
-    CheckAllBundleEl1ShaderCacheLocal();
-    CheckSystemOptimizeShaderCache();
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
+}
+
+void BMSEventHandler::ProcessCheckSystemOptimizeShaderCacheDir()
+{
+    bool checkShaderCache = false;
+    CheckOtaFlag(OTAFlag::CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR, checkShaderCache);
+    if (checkShaderCache) {
+        LOG_I(BMS_TAG_DEFAULT, "Not need to check system optimize shader cache dir due to has checked");
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Need to check system optimize shader cache dir");
+    CheckSystemOptimizeShaderCache();
+    UpdateOtaFlag(OTAFlag::CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR);
 }
 
 void BMSEventHandler::InnerProcessCheckShaderCacheDir()
