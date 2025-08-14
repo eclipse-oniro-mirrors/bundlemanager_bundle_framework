@@ -1122,9 +1122,7 @@ void BaseBundleInstaller::RestoreconForArkweb()
     const std::string arkWebLibPath = std::string(APP_INSTALL_PATH) + "/public/" + bundleName_ + "/libs/arm64/";
     LOG_I(BMS_TAG_INSTALLER, "RestoreconPath, arkWebLibPath: %{public}s", arkWebLibPath.c_str());
     ErrCode result = InstalldClient::GetInstance()->RestoreconPath(arkWebLibPath);
-    if (result == ERR_OK) {
-        NWeb::AppFwkUpdateClient::GetInstance().NotifyArkWebInstallSuccess(bundleName_);
-    } else {
+    if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "Failed to restorecon arkweb dir, error code: %{public}d", result);
     }
 }

@@ -60,6 +60,9 @@
 #include "storage_manager_proxy.h"
 #include "iservice_registry.h"
 #endif
+#ifdef WEBVIEW_ENABLE
+#include "app_fwk_update_client.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -122,6 +125,7 @@ constexpr const char* BUNDLE_SCAN_FINISH = "1";
 constexpr const char* CODE_PROTECT_FLAG = "codeProtectFlag";
 constexpr const char* CODE_PROTECT_FLAG_CHECKED = "checked";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
+constexpr const char* ARKWEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
 constexpr int64_t TEN_MB = 1024 * 1024 * 10; //10MB
 
 std::set<PreScanInfo> installList_;
@@ -327,6 +331,13 @@ void BMSEventHandler::AfterBmsStart()
     RemoveUnreservedSandbox();
     ProcessCheckAppEl1Dir();
     ProcessCheckSystemOptimizeDir();
+#ifdef WEBVIEW_ENABLE
+    std::string arkWebName = OHOS::system::GetParameter(ARKWEB_BUNDLE_NAME_PARAM, "");
+    if (!arkWebName.empty()) {
+        LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler NotifyArkWebInstallSuccess %{public}s", arkWebName.c_str());
+        NWeb::AppFwkUpdateClient::GetInstance().NotifyArkWebInstallSuccess(arkWebName);
+    }
+#endif
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
 }
 
