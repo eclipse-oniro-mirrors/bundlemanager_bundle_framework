@@ -216,6 +216,9 @@ static void AniInstall(ani_env* env, [[maybe_unused]] ani_object installerObj,
     if (!GetInstallParamForInstall(env, arrayObj, aniInstParam, hapFiles, installParam)) {
         return;
     }
+    if (installParam.installFlag == InstallFlag::NORMAL) {
+        installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    }
     InstallResult result;
     ExecuteInstall(hapFiles, installParam, result);
     ProcessResult(env, result, InstallOption::INSTALL);
