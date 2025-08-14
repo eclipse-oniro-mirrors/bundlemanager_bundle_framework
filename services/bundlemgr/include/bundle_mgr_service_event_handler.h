@@ -692,6 +692,9 @@ private:
     bool SaveUpdatePermissionsFlag();
     bool CleanAllBundleEl1ArkStartupCacheLocal();
     bool ProcessCheckSystemOptimizeDir();
+#ifdef WEBVIEW_ENABLE
+    void NotifyFWKAfterBmsStart();
+#endif
 
     ErrCode CheckSystemOptimizeBundleShaderCache(const std::string &bundleName,
         int32_t appIndex, int32_t userId, int32_t uid);

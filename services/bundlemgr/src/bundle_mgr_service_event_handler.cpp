@@ -125,7 +125,7 @@ constexpr const char* BUNDLE_SCAN_FINISH = "1";
 constexpr const char* CODE_PROTECT_FLAG = "codeProtectFlag";
 constexpr const char* CODE_PROTECT_FLAG_CHECKED = "checked";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
-constexpr const char* ARKWEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
+constexpr const char* APPSPAWN_PRELOAD_ARKWEB_ENGINE = "const.startup.appspawn.preload.arkwebEngine";
 constexpr int64_t TEN_MB = 1024 * 1024 * 10; //10MB
 
 std::set<PreScanInfo> installList_;
@@ -332,14 +332,21 @@ void BMSEventHandler::AfterBmsStart()
     ProcessCheckAppEl1Dir();
     ProcessCheckSystemOptimizeDir();
 #ifdef WEBVIEW_ENABLE
-    std::string arkWebName = OHOS::system::GetParameter(ARKWEB_BUNDLE_NAME_PARAM, "");
-    if (!arkWebName.empty()) {
-        LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler NotifyArkWebInstallSuccess %{public}s", arkWebName.c_str());
-        NWeb::AppFwkUpdateClient::GetInstance().NotifyArkWebInstallSuccess(arkWebName);
-    }
+    NotifyFWKAfterBmsStart();
 #endif
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
 }
+
+#ifdef WEBVIEW_ENABLE
+void BMSEventHandler::NotifyFWKAfterBmsStart()
+{
+    if (OHOS::system::GetParameter(APPSPAWN_PRELOAD_ARKWEB_ENGINE, "") != VALUE_TRUE) {
+        LOG_W(BMS_TAG_DEFAULT, "APPSPAWN_PRELOAD_ARKWEB_ENGINE is false");
+        return;
+    }
+    NWeb::AppFwkUpdateClient::GetInstance().NotifyFWKAfterBmsStart();
+}
+#endif
 
 void BMSEventHandler::ClearCache()
 {
