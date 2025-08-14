@@ -2271,6 +2271,7 @@ public:
     void UpdateSharedModuleInfo();
     AOTCompileStatus GetAOTCompileStatus(const std::string &moduleName) const;
     void SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus);
+    bool IsAOTFlagsInitial() const;
     void ResetAOTFlags();
     ErrCode ResetAOTCompileStatus(const std::string &moduleName);
     void GetInternalDependentHspInfo(const std::string &moduleName, std::vector<HspInfo> &hspInfoVector) const;

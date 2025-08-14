@@ -92,7 +92,6 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
 ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
     std::vector<BundleResourceInfo> &bundleResourceInfos)
 {
-    APP_LOGD("start");
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -105,6 +104,8 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    APP_LOGI_NOFUNC("GetAllBundleResourceInfo -p:%{public}d, -f:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags);
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("manager is nullptr");
@@ -138,7 +139,6 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
 ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
-    APP_LOGD("start");
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -151,7 +151,8 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-
+    APP_LOGI_NOFUNC("GetAllLauncherAbilityResourceInfo -p:%{public}d, -f:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags);
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("manager is nullptr");

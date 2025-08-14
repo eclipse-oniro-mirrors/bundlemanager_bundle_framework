@@ -804,6 +804,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfos(MessageParcel &data, MessagePar
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
+    APP_LOGI_NOFUNC("GetApplicationInfos bundles:%{public}zu, size:%{public}zu", infos.size(), reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -824,6 +825,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlags(MessageParcel &data
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
+    APP_LOGI_NOFUNC("GetApplicationInfos bundles:%{public}zu, size:%{public}zu", infos.size(), reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -844,6 +846,8 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9(MessageParcel &da
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
+    APP_LOGI_NOFUNC("GetApplicationInfosV9 bundles:%{public}zu, size:%{public}zu",
+        infos.size(), reply.GetRawDataSize());
     return ERR_OK;
 }
 
