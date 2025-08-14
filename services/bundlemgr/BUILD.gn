@@ -49,8 +49,6 @@ config("bundlemgr_common_config") {
     "../../interfaces/inner_api/bundlemgr_extension/include",
   ]
 
-  include_dirs += bundle_mgr_impl_include_dirs
-
   defines = [
     "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
@@ -254,8 +252,6 @@ ohos_shared_library("libbms") {
   sources = bundle_mgr_source
 
   sources += bundle_install_sources
-
-  sources += bundle_mgr_impl_sources
 
   defines = [
     "APP_LOG_TAG = \"BMS\"",

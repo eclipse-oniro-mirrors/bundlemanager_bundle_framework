@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -10,20 +10,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-VENDOR_CONFIG_PATH = rebase_path(
-        "//vendor/${product_company}/${product_name}/foundation/bundlemanager/bundle_framework/appexecfwk_impl.gni")
-CMD = "if [ -f ${VENDOR_CONFIG_PATH} ]; then echo true; else echo false; fi"
-
-vendor_config_exist =
-    exec_script("//build/lite/run_shell_cmd.py", [ CMD ], "value")
-if (vendor_config_exist) {
-  import(
-      "//vendor/${product_company}/${product_name}/foundation/bundlemanager/bundle_framework/appexecfwk_impl.gni")
-} else {
-  bundle_mgr_impl_sources = []
-  bundle_mgr_impl_include_dirs = []
-}
 
 bundle_framework_path = "//foundation/bundlemanager/bundle_framework"
 ecological_rule_mgr_path = "//foundation/bundlemanager/ecological_rule_mgr/interfaces/innerkits/include"
