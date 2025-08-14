@@ -14,11 +14,12 @@
  */
 
 {
-  "modelVersion": "5.0.0",
+  "name": "libb",
+  "version": "1.0.0",
+  "versionCode":10001,
   "description": "Please describe the basic information.",
-  "dependencies": {
-  },
-  "devDependencies": {
-    "@ohos/hypium": "1.0.21"
-  }
+  "main": "",
+  "author": "",
+  "license": "",
+  "dependencies": {}
 }
