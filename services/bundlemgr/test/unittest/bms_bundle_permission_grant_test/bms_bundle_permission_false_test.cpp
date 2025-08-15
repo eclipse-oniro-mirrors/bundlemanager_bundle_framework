@@ -1786,6 +1786,42 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_28000, Funct
 }
 
 /**
+ * @tc.number: BmsBundlePermissionFalseTest_29000
+ * @tc.name: test GetPluginHapModuleInfo
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_29000, Function | SmallTest | Level1)
+{
+    HapModuleInfo hapModuleInfo;
+    ErrCode testRet = bundleMgrHostImpl_->GetPluginHapModuleInfo("", "", "", 0, hapModuleInfo);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_30000
+ * @tc.name: test GetPluginAbilityInfo
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_30000, Function | SmallTest | Level1)
+{
+    AbilityInfo abilityInfo;
+    ErrCode testRet = bundleMgrHostImpl_->GetPluginAbilityInfo("", "", "", "", 0, abilityInfo);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_31000
+ * @tc.name: test GetPluginInfo
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_31000, Function | SmallTest | Level1)
+{
+    PluginBundleInfo pluginBundleInfo;
+    ErrCode testRet = bundleMgrHostImpl_->GetPluginInfo("", "", 0, pluginBundleInfo);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: GetAllPluginInfo_0001
  * @tc.name: test GetAllPluginInfo
  * @tc.desc: 1.system run normally
