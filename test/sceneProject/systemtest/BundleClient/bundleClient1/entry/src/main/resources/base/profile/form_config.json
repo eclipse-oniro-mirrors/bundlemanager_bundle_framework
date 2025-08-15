@@ -7,12 +7,13 @@
             "formConfigAbility": "ability://xxxxx",
             "formVisibleNotify": false,
             "isDefault": true,
-            "name": "Form_Js",
+            "name": "Form",
             "scheduledUpdateTime": "10:30",
-            "src": "pages/card/index",
+            "src": "./ets/pages/FormCard.ets",
             "supportDimensions": [
                 "2*2"
             ],
+            "uiSyntax": "arkts",
             "updateDuration": 1,
             "updateEnabled": true,
             "window": {
