@@ -192,8 +192,9 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
 
     ScopeGuard addBundleUserGuard([&] { dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId); });
-    if (!dataMgr_->AddInnerBundleUserInfo(bundleName, newUserInfo)) {
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    result = dataMgr_->AddInnerBundleUserInfo(bundleName, newUserInfo);
+    if (result != ERR_OK) {
+        return result;
     }
     // add new user bundle info
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId, ADD_RESOURCE_TYPE::CREATE_USER);

@@ -38,7 +38,7 @@ void RdbDataManager::ClearCache()
     NativeRdb::RdbHelper::ClearCache();
 }
 
-std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
+std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore(ErrCode &ret)
 {
     return nullptr;
 }
@@ -46,6 +46,11 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
 bool RdbDataManager::InsertData(const std::string &key, const std::string &value)
 {
     return true;
+}
+
+ErrCode RdbDataManager::InsertDataWithCode(const std::string &key, const std::string &value)
+{
+    return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
 }
 
 bool RdbDataManager::InsertData(const NativeRdb::ValuesBucket &valuesBucket)

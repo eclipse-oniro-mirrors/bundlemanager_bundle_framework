@@ -633,7 +633,7 @@ bool BundleDataMgr::RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundl
     return true;
 }
 
-bool BundleDataMgr::AddInnerBundleUserInfo(
+ErrCode BundleDataMgr::AddInnerBundleUserInfo(
     const std::string &bundleName, const InnerBundleUserInfo& newUserInfo)
 {
     APP_LOGD("AddInnerBundleUserInfo:%{public}s", bundleName.c_str());
@@ -641,18 +641,19 @@ bool BundleDataMgr::AddInnerBundleUserInfo(
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     std::lock_guard<ffrt::mutex> stateLock(stateMutex_);
     auto& info = bundleInfos_.at(bundleName);
     info.AddInnerBundleUserInfo(newUserInfo);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-    if (!dataStorage_->SaveStorageBundleInfo(info)) {
-        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
-        return false;
+    ErrCode ret = dataStorage_->SaveStorageBundleInfoWithCode(info);
+    if (ret != ERR_OK) {
+        APP_LOGW("update storage failed bundle:%{public}s, errcode:%{public}d", bundleName.c_str(), ret);
+        return ret;
     }
-    return true;
+    return ERR_OK;
 }
 
 bool BundleDataMgr::RemoveInnerBundleUserInfo(

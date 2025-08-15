@@ -629,8 +629,8 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0900, Function | SmallTest | Leve
 {
     auto rdbDataManager = OpenDbAndTable();
     ASSERT_NE(rdbDataManager, nullptr);
-
-    auto ret = rdbDataManager->GetRdbStore();
+    ErrCode result = ERR_OK;
+    auto ret = rdbDataManager->GetRdbStore(result);
     EXPECT_NE(ret, nullptr);
 }
 
@@ -658,8 +658,8 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1100, Function | SmallTest | Leve
 {
     auto rdbDataManager = OpenDbAndTable();
     ASSERT_NE(rdbDataManager, nullptr);
-
-    auto rdbStore = rdbDataManager->GetRdbStore();
+    ErrCode result = ERR_OK;
+    auto rdbStore = rdbDataManager->GetRdbStore(result);
     ASSERT_NE(rdbStore, nullptr);
 
     NativeRdb::ValuesBucket valuesBucket;
@@ -680,16 +680,46 @@ HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1200, Function | SmallTest | Leve
 {
     auto rdbDataManager = OpenDbAndTable();
     ASSERT_NE(rdbDataManager, nullptr);
-
-    auto rdbStore = rdbDataManager->GetRdbStore();
+    ErrCode result = ERR_OK;
+    auto rdbStore = rdbDataManager->GetRdbStore(result);
     ASSERT_NE(rdbStore, nullptr);
 
     std::string path = DB_PATH + DB_NAME;
     auto res = BundleUtil::DeleteDir(path);
     EXPECT_TRUE(res);
-
-    rdbStore = rdbDataManager->GetRdbStore();
+    result = ERR_OK;
+    rdbStore = rdbDataManager->GetRdbStore(result);
     ASSERT_NE(rdbStore, nullptr);
+}
+
+/**
+ * @tc.number: RdbDataManager_1300
+ * @tc.name: insert queryAll
+ * @tc.desc: 1.insert data
+ *           2.queryAll data
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1300, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    EXPECT_TRUE(rdbDataManager != nullptr);
+
+    ErrCode ret = rdbDataManager->InsertDataWithCode(KEY_ONE, VALUE_ONE);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = rdbDataManager->InsertDataWithCode(KEY_TWO, VALUE_TWO);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = rdbDataManager->InsertDataWithCode(KEY_THREE, VALUE_THREE);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::map<std::string, std::string> datas;
+    bool ret2 = rdbDataManager->QueryAllData(datas);
+    EXPECT_TRUE(ret2);
+    EXPECT_TRUE(datas[KEY_ONE] == VALUE_ONE);
+    EXPECT_TRUE(datas[KEY_TWO] == VALUE_TWO);
+    EXPECT_TRUE(datas[KEY_THREE] == VALUE_THREE);
+    CloseDb();
 }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
