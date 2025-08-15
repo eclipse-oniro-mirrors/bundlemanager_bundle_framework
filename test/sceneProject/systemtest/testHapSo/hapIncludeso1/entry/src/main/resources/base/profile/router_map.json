@@ -2,12 +2,12 @@
     "routerMap": [
       {
         "name": "DynamicPage1",
-        "pageSourceFile": "entry/src/index",
+        "pageSourceFile": "src/main/ets/pages/index.ets",
         "buildFunction": "myFunction"
       },
       {
         "name": "DynamicPage2",
-        "pageSourceFile": "entry/src/index",
+        "pageSourceFile": "src/main/ets/pages/index.ets",
         "buildFunction": "myBuilder",
         "data": {
           "key1": "data1",
