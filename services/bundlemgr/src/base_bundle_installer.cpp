@@ -5411,8 +5411,8 @@ void BaseBundleInstaller::RestoreHaps(const std::vector<std::string> &bundlePath
 void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
     const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode)
 {
-    if (std::find(Constants::EXPECTED_ERROR.begin(), Constants::EXPECTED_ERROR.end(), errCode) !=
-        Constants::EXPECTED_ERROR.end()) {
+    if (std::find(ServiceConstants::EXPECTED_ERROR.begin(), ServiceConstants::EXPECTED_ERROR.end(), errCode) !=
+        ServiceConstants::EXPECTED_ERROR.end()) {
         APP_LOGD("No need report for -e:%{public}d", errCode);
         return;
     }

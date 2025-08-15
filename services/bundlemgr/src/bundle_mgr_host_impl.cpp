@@ -1730,13 +1730,11 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesGetCleanSize(const std::string &
     (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
     if (userId < 0) {
         APP_LOGE("userId is invalid");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     if (bundleName.empty()) {
         APP_LOGE("the bundleName empty");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
@@ -1752,7 +1750,6 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesGetCleanSize(const std::string &
 
     if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean cacheFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
     }
 
@@ -1851,8 +1848,6 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName, appIndex)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
-            callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
@@ -1861,8 +1856,6 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     }
     if (userId < 0) {
         APP_LOGE("userId is invalid");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
-            callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     if (bundleName.empty() || !cleanCacheCallback) {
@@ -1895,8 +1888,6 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
 
     if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean cacheFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
-            callingUid, callingBundleName);
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
     }
 
@@ -1981,27 +1972,26 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
 {
     APP_LOGI("start CleanBundleDataFiles, bundleName : %{public}s, userId:%{public}d, appIndex:%{public}d",
         bundleName.c_str(), userId, appIndex);
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return false;
-    }
     int32_t callingUid = callerUid;
     if (callerUid == -1) {
         callingUid =  IPCSkeleton::GetCallingUid();
     }
     std::string callingBundleName;
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
+            callingUid, callingBundleName);
+        return false;
+    }
+    
     (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES system api denied");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
-            callingUid, callingBundleName);
         return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
-            callingUid, callingBundleName);
         return false;
     }
     if (!BundlePermissionMgr::CheckUserFromShell(userId)) {
@@ -2012,8 +2002,6 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     }
     if (bundleName.empty() || userId < 0) {
         APP_LOGE("the  bundleName empty or invalid userid");
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
-            callingUid, callingBundleName);
         return false;
     }
     if (!CheckAppIndex(bundleName, userId, appIndex)) {
@@ -2041,8 +2029,6 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
 
     if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean dataFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
-            callingUid, callingBundleName);
         return false;
     }
     InnerBundleUserInfo innerBundleUserInfo;
