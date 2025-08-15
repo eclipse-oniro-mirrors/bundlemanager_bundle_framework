@@ -1193,6 +1193,22 @@ HWTEST_F(BmsServiceStartupTest, ConvertPermissionDef_0200, Function | SmallTest 
 }
 
 /**
+ * @tc.number: ConvertPermissionDef_0300
+ * @tc.name: test ConvertPermissionDef
+ * @tc.desc: 1.test ConvertPermissionDef of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, ConvertPermissionDef_0300, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    AccessToken::PermissionDef permDef;
+    OHOS::AppExecFwk::DefinePermission definePermission;
+    definePermission.grantMode = Profile::DEFINEPERMISSION_GRANT_MODE_MANUAL_SETTINGS;
+    BundlePermissionMgr::ConvertPermissionDef(permDef, definePermission, BUNDLE_TEMP_NAME);
+    EXPECT_EQ(permDef.grantMode, AccessToken::GrantMode::MANUAL_SETTINGS);
+}
+
+/**
 * @tc.number: PreInstallExceptionMgr_0001
 * @tc.name: test PreInstallExceptionMgr
 * @tc.desc: 1. test is valid input

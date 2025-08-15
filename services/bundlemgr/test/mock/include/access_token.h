@@ -70,6 +70,7 @@ typedef enum TypePermissionState {
 typedef enum TypeGrantMode {
     USER_GRANT = 0,
     SYSTEM_GRANT = 1,
+    MANUAL_SETTINGS = 2,
 } GrantMode;
 
 typedef enum TypeATokenAvailableTypeEnum {
