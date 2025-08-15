@@ -21,6 +21,15 @@ export class SharedBundleInfoInner implements SharedBundleInfo {
   public readonly compatiblePolicy: bundleManager.CompatiblePolicy =
     bundleManager.CompatiblePolicy.BACKWARD_COMPATIBILITY;
   public readonly sharedModuleInfo: Array<SharedModuleInfo> = new Array<SharedModuleInfo>;
+
+  constructor() { }
+  constructor(name: string,
+    compatiblePolicy: bundleManager.CompatiblePolicy,
+    sharedModuleInfo: Array<SharedModuleInfo>) {
+      this.name = name;
+      this.compatiblePolicy = compatiblePolicy;
+      this.sharedModuleInfo = sharedModuleInfo;
+  }
 }
 
 export class SharedModuleInfoInner implements SharedModuleInfo {
@@ -29,4 +38,17 @@ export class SharedModuleInfoInner implements SharedModuleInfo {
   public readonly versionName: string = '';
   public readonly description: string = '';
   public readonly descriptionId: long;
+
+  constructor() { }
+  constructor(name: string,
+    versionCode: long,
+    versionName: string,
+    description: string,
+    descriptionId: long) {
+      this.name = name;
+      this.versionCode = versionCode;
+      this.versionName = versionName;
+      this.description = description;
+      this.descriptionId = descriptionId;
+  }
 }

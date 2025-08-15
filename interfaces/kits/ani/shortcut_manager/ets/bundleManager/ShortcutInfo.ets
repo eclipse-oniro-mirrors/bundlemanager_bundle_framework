@@ -53,6 +53,33 @@ export class ShortcutInfoInner implements ShortcutInfo {
     appIndex: int;
     sourceType: int;
     public visible?: boolean | undefined;
+
+    constructor() { }
+    constructor(id: string,
+        bundleName: string,
+        appIndex: int,
+        sourceType: int,
+        moduleName?: string,
+        hostAbility?: string,
+        icon?: string,
+        iconId?: long,
+        label?: string,
+        labelId?: long,
+        wants?: Array<ShortcutWant>,
+        visible?: boolean) {
+            this.id = id;
+            this.bundleName = bundleName;
+            this.appIndex = appIndex;
+            this.sourceType = sourceType;
+            this.moduleName = moduleName;
+            this.hostAbility = hostAbility;
+            this.icon = icon;
+            this.iconId = iconId;
+            this.label = label;
+            this.labelId = labelId;
+            this.wants = wants;
+            this.visible = visible;
+    }
 }
 
 class ShortcutWantInner implements ShortcutWant {
@@ -60,9 +87,25 @@ class ShortcutWantInner implements ShortcutWant {
     targetModule?: string | undefined;
     targetAbility: string = "";
     parameters?: Array<ParameterItem> | undefined;
+
+    constructor() { }
+    constructor(targetBundle: string,
+        targetAbility: string,
+        targetModule?: string,
+        parameters?: Array<ParameterItem>) {
+            this.targetBundle = targetBundle;
+            this.targetAbility = targetAbility;
+            this.targetModule = targetModule;
+            this.parameters = parameters;
+    }
 }
 
 class ParameterItemInner implements ParameterItem {
     key: string = "";
     value: string = "";
+    constructor() { }
+    constructor(key: string, value: string) {
+        this.key = key;
+        this.value = value;
+    }
 }

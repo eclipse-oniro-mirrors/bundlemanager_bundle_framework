@@ -25,4 +25,19 @@ export class LauncherAbilityInfoInner implements LauncherAbilityInfo {
   readonly iconId: long;
   readonly userId: int;
   readonly installTime: long;
+
+  constructor() { }
+  constructor(applicationInfo: ApplicationInfo,
+    elementName: ElementName,
+    labelId: long,
+    iconId: long,
+    userId: int,
+    installTime: long) {
+      this.applicationInfo = applicationInfo;
+      this.elementName = elementName;
+      this.labelId = labelId;
+      this.iconId = iconId;
+      this.userId = userId;
+      this.installTime = installTime;
+  }
 }

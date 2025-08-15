@@ -97,6 +97,12 @@ export default namespace zlib {
   class GzErrorOutputInfoInner implements GzErrorOutputInfo {
     status: ReturnStatus = ReturnStatus.OK;
     statusMsg: string;
+
+    constructor() { }
+    constructor(status: ReturnStatus, statusMsg: string) {
+        this.status = status;
+        this.statusMsg = statusMsg;
+    }
   }
   
   export function compressFile(inFile: string, outFile: string, options: Options, callback: AsyncCallback<void>): void {

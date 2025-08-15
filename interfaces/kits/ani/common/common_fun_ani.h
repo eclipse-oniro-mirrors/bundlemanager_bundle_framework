@@ -134,8 +134,6 @@ public:
 
     static ani_object ConvertKeyValuePair(
         ani_env* env, const std::pair<std::string, std::string>& item, const std::string& className);
-    static ani_object ConvertKeyValuePairV2(
-        ani_env* env, const std::pair<std::string, std::string>& item, const std::string& className);
     static ani_object ConvertDataItem(ani_env* env, const std::pair<std::string, std::string>& item);
     static ani_object ConvertRouterItem(ani_env* env, const RouterItem& routerItem);
 
@@ -659,42 +657,6 @@ public:
         return true;
     }
 
-    // sets property to null
-    static bool CallSetterNull(ani_env* env, ani_class cls, ani_object object, const char* propertyName,
-        const char* valueClassName = nullptr)
-    {
-        RETURN_FALSE_IF_NULL(env);
-        RETURN_FALSE_IF_NULL(cls);
-        RETURN_FALSE_IF_NULL(object);
-
-        ani_ref nullRef = nullptr;
-        ani_status status = env->GetNull(&nullRef);
-        if (status != ANI_OK) {
-            APP_LOGE("GetNull %{public}s failed %{public}d", propertyName, status);
-            return false;
-        }
-
-        return CallSetter(env, cls, object, propertyName, nullRef, valueClassName);
-    }
-
-    // sets optional property to undefined
-    static bool CallSetterOptionalUndefined(ani_env* env, ani_class cls, ani_object object, const char* propertyName,
-        const char* valueClassName = nullptr)
-    {
-        RETURN_FALSE_IF_NULL(env);
-        RETURN_FALSE_IF_NULL(cls);
-        RETURN_FALSE_IF_NULL(object);
-
-        ani_ref undefined = nullptr;
-        ani_status status = env->GetUndefined(&undefined);
-        if (status != ANI_OK) {
-            APP_LOGE("GetUndefined %{public}s failed %{public}d", propertyName, status);
-            return false;
-        }
-
-        return CallSetter(env, cls, object, propertyName, undefined, valueClassName);
-    }
-
     template<typename valueType>
     static ani_object BoxValue(ani_env* env, valueType value, const char** pValueClassName = nullptr)
     {
@@ -747,24 +709,6 @@ public:
         }
 
         return valueObj;
-    }
-
-    template<typename valueType>
-    static bool CallSetterOptional(ani_env* env, ani_class cls, ani_object object, const char* propertyName,
-        valueType value, const char* valueClassName = nullptr)
-    {
-        RETURN_FALSE_IF_NULL(env);
-        RETURN_FALSE_IF_NULL(cls);
-        RETURN_FALSE_IF_NULL(object);
-
-        if constexpr (std::is_pointer_v<valueType> && std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
-            return CallSetter(env, cls, object, propertyName, value, valueClassName);
-        }
-
-        ani_object valueObj = BoxValue(env, value, &valueClassName);
-        RETURN_FALSE_IF_NULL(valueObj);
-
-        return CallSetter(env, cls, object, propertyName, valueObj, valueClassName);
     }
 };
 } // namespace AppExecFwk

@@ -28,9 +28,43 @@ export class AppProvisionInfoInner implements AppProvisionInfo {
   public readonly issuer: string = '';
   public readonly appIdentifier: string = '';
   public readonly organization: string = '';
+
+  constructor() { }
+  constructor(versionCode: long,
+    versionName: string,
+    uuid: string,
+    type: string,
+    appDistributionType: string,
+    validity: Validity,
+    developerId: string,
+    certificate: string,
+    apl: string,
+    issuer: string,
+    appIdentifier: string,
+    organization: string) {
+      this.versionCode = versionCode;
+      this.versionName = versionName;
+      this.uuid = uuid;
+      this.type = type;
+      this.appDistributionType = appDistributionType;
+      this.validity = validity;
+      this.developerId = developerId;
+      this.certificate = certificate;
+      this.apl = apl;
+      this.issuer = issuer;
+      this.appIdentifier = appIdentifier;
+      this.organization = organization;
+  }
 }
 
 export class ValidityInner implements Validity {
   public readonly notBefore: long;
   public readonly notAfter: long;
+
+  constructor() { }
+  constructor(notBefore: long,
+    notAfter: long) {
+      this.notBefore = notBefore;
+      this.notAfter = notAfter;
+  }
 }
