@@ -1117,7 +1117,7 @@ ErrCode BaseBundleInstaller::VerifyArkWebInstall()
 
 void BaseBundleInstaller::RestoreconForArkweb()
 {
-    if (OHOS::system::GetParameter(APPSPAWN_PRELOAD_ARKWEB_ENGINE, "") != BMS_TRUE) {
+    if (!OHOS::system::GetBoolParameter(APPSPAWN_PRELOAD_ARKWEB_ENGINE, false)) {
         LOG_W(BMS_TAG_INSTALLER, "APPSPAWN_PRELOAD_ARKWEB_ENGINE is false");
         return;
     }

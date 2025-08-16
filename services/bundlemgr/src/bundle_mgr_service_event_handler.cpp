@@ -340,7 +340,7 @@ void BMSEventHandler::AfterBmsStart()
 #ifdef WEBVIEW_ENABLE
 void BMSEventHandler::NotifyFWKAfterBmsStart()
 {
-    if (OHOS::system::GetParameter(APPSPAWN_PRELOAD_ARKWEB_ENGINE, "") != VALUE_TRUE) {
+    if (!OHOS::system::GetBoolParameter(APPSPAWN_PRELOAD_ARKWEB_ENGINE, false)) {
         LOG_W(BMS_TAG_DEFAULT, "APPSPAWN_PRELOAD_ARKWEB_ENGINE is false");
         return;
     }
