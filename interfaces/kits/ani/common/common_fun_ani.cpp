@@ -165,6 +165,7 @@ static std::map<std::string, ANIClassCacheItem> g_aniClassCache = {
     { CLASSNAME_PRELOAD_ITEM_INNER, { } },
     { CLASSNAME_ROUTER_ITEM_INNER, { } },
     { CLASSNAME_DATA_ITEM_INNER, { } },
+    { CLASSNAME_APP_PROVISION_INFO_INNER, { } },
     { CLASSNAME_ZLIB_CHECKSUM_INTERNAL, { } },
     { CLASSNAME_ZLIB_GZIP_INTERNAL, { } },
 };
