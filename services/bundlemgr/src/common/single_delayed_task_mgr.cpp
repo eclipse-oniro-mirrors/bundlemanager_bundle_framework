@@ -49,7 +49,7 @@ void SingleDelayedTaskMgr::ScheduleDelayedTask(std::function<void()> func)
             std::chrono::milliseconds sleepTime =
                 std::chrono::duration_cast<std::chrono::milliseconds>(executeTime - now);
             if (sleepTime.count() <= 0) {
-                LOG_I(BMS_TAG_DEFAULT, "execute begin %{public}s", sharedPtr->taskName_.c_str());
+                LOG_NOFUNC_I(BMS_TAG_DEFAULT, "execute begin %{public}s", sharedPtr->taskName_.c_str());
                 break;
             }
             sharedPtr = nullptr;
