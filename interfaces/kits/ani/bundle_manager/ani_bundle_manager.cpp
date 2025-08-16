@@ -785,7 +785,7 @@ static ani_object QueryAbilityInfoWithWantsNative(ani_env* env,
     std::vector<OHOS::AAFwk::Want> wants;
     int32_t abilityFlags = 0;
     int32_t userId = EMPTY_USER_ID;
-    if (!ParseAniWantList(env, aniWants, wants)) {
+    if (!ParseAniWantList(env, aniWants, wants) || wants.empty()) {
         APP_LOGE("ParseAniWant failed");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
         return nullptr;
