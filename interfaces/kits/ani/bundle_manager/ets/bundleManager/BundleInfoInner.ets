@@ -72,6 +72,10 @@ export class BundleInfoInner implements BundleInfo {
       this.appIndex = appIndex;
       this.firstInstallTime = firstInstallTime;
   }
+  constructor(name: string, hapModulesInfo: Array<HapModuleInfo>) {
+      this.name = name;
+      this.hapModulesInfo = hapModulesInfo;
+  }
 }
 
 export class ReqPermissionDetailInner implements ReqPermissionDetail {
@@ -120,6 +124,12 @@ export class SignatureInfoInner implements SignatureInfo {
 export class AppCloneIdentityInner implements AppCloneIdentity {
   readonly bundleName: string = "";
   readonly appIndex: int;
+
+  constructor() { }
+  constructor(bundleName: string, appIndex: int) {
+    this.bundleName = bundleName;
+    this.appIndex = appIndex;
+  }
 }
 
 export class DynamicIconInfoInner implements DynamicIconInfo {
@@ -127,6 +137,14 @@ export class DynamicIconInfoInner implements DynamicIconInfo {
   public readonly moduleName: string = '';
   public readonly userId: int;
   public readonly appIndex: int;
+
+  constructor() { }
+  constructor(bundleName: string, moduleName: string, userId: int, appIndex: int) {
+    this.bundleName = bundleName;
+    this.moduleName = moduleName;
+    this.userId = userId;
+    this.appIndex = appIndex;
+  }
 }
 
 export class BundleOptionsInner implements BundleOptions {

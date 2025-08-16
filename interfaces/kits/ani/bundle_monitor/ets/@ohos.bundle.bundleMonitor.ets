@@ -29,6 +29,15 @@ export default namespace bundleMonitor {
     readonly bundleName: string;
     readonly userId: int;
     readonly appIndex: int;
+
+    constructor() { }
+    constructor(bundleName: string,
+      userId: int,
+      appIndex: int) {
+        this.bundleName = bundleName;
+        this.userId = userId;
+        this.appIndex = appIndex;
+    }
   }
 
   type BundleChangedEvent = 'add' | 'update' | 'remove';

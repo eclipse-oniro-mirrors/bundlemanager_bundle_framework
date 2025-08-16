@@ -24,4 +24,21 @@ export class LauncherAbilityResourceInfoInner implements LauncherAbilityResource
     readonly label: string = '';
     readonly drawableDescriptor: DrawableDescriptor | null = null;
     readonly appIndex: int;
+
+    constructor() { }
+    constructor(bundleName: string,
+        moduleName: string,
+        abilityName: string,
+        icon: string,
+        label: string,
+        drawableDescriptor: DrawableDescriptor | null,
+        appIndex: int) {
+            this.bundleName = bundleName;
+            this.moduleName = moduleName;
+            this.abilityName = abilityName;
+            this.icon = icon;
+            this.label = label;
+            this.drawableDescriptor = drawableDescriptor;
+            this.appIndex = appIndex;
+    }
 }

@@ -145,4 +145,12 @@ export class PreinstalledApplicationInfoInner implements PreinstalledApplication
   readonly moduleName: string = "";
   readonly iconId: long;
   readonly labelId: long;
+
+  constructor() { }
+  constructor(bundleName: string, moduleName: string, iconId: long, labelId: long) {
+    this.bundleName = bundleName;
+    this.moduleName = moduleName;
+    this.iconId = iconId;
+    this.labelId = labelId;
+  }
 }

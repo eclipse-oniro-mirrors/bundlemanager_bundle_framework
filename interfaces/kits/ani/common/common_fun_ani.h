@@ -134,8 +134,6 @@ public:
 
     static ani_object ConvertKeyValuePair(
         ani_env* env, const std::pair<std::string, std::string>& item, const std::string& className);
-    static ani_object ConvertKeyValuePairV2(
-        ani_env* env, const std::pair<std::string, std::string>& item, const std::string& className);
     static ani_object ConvertDataItem(ani_env* env, const std::pair<std::string, std::string>& item);
     static ani_object ConvertRouterItem(ani_env* env, const RouterItem& routerItem);
 
@@ -214,9 +212,9 @@ public:
         const char* keyName, const char* valueName);
 
     static ani_class CreateClassByName(ani_env* env, const std::string& className);
-    static ani_object CreateNewObjectByClass(ani_env* env, ani_class cls);
+    static ani_object CreateNewObjectByClass(ani_env* env, const std::string& className, ani_class cls);
     static ani_object CreateNewObjectByClassV2(
-        ani_env* env, ani_class cls, const std::string& ctorSig, const ani_value* args);
+        ani_env* env, const std::string& className, const std::string& ctorSig, const ani_value* args);
     static inline ani_object ConvertAniArrayString(ani_env* env, const std::vector<std::string>& strings)
     {
         return ConvertAniArray(env, strings, [](ani_env* env, const std::string& nativeStr) {
@@ -283,12 +281,9 @@ public:
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
 
-        ani_class arrayCls = CreateClassByName(env, CommonFunAniNS::CLASSNAME_ARRAY);
-        RETURN_NULL_IF_NULL(arrayCls);
-
         ani_size length = cArray.size();
         ani_value arg = { .i = static_cast<ani_int>(length) };
-        ani_object arrayObj = CreateNewObjectByClassV2(env, arrayCls, "i:", &arg);
+        ani_object arrayObj = CreateNewObjectByClassV2(env, CommonFunAniNS::CLASSNAME_ARRAY, "i:", &arg);
         RETURN_NULL_IF_NULL(arrayObj);
 
         ani_status status = ANI_OK;
@@ -318,12 +313,9 @@ public:
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
 
-        ani_class arrayCls = CreateClassByName(env, CommonFunAniNS::CLASSNAME_ARRAY);
-        RETURN_NULL_IF_NULL(arrayCls);
-
         ani_size length = nativeArray.size();
         ani_value arg = { .i = static_cast<ani_int>(length) };
-        ani_object arrayObj = CreateNewObjectByClassV2(env, arrayCls, "i:", &arg);
+        ani_object arrayObj = CreateNewObjectByClassV2(env, CommonFunAniNS::CLASSNAME_ARRAY, "i:", &arg);
         RETURN_NULL_IF_NULL(arrayObj);
 
         ani_status status = ANI_OK;
@@ -665,42 +657,6 @@ public:
         return true;
     }
 
-    // sets property to null
-    static bool CallSetterNull(ani_env* env, ani_class cls, ani_object object, const char* propertyName,
-        const char* valueClassName = nullptr)
-    {
-        RETURN_FALSE_IF_NULL(env);
-        RETURN_FALSE_IF_NULL(cls);
-        RETURN_FALSE_IF_NULL(object);
-
-        ani_ref nullRef = nullptr;
-        ani_status status = env->GetNull(&nullRef);
-        if (status != ANI_OK) {
-            APP_LOGE("GetNull %{public}s failed %{public}d", propertyName, status);
-            return false;
-        }
-
-        return CallSetter(env, cls, object, propertyName, nullRef, valueClassName);
-    }
-
-    // sets optional property to undefined
-    static bool CallSetterOptionalUndefined(ani_env* env, ani_class cls, ani_object object, const char* propertyName,
-        const char* valueClassName = nullptr)
-    {
-        RETURN_FALSE_IF_NULL(env);
-        RETURN_FALSE_IF_NULL(cls);
-        RETURN_FALSE_IF_NULL(object);
-
-        ani_ref undefined = nullptr;
-        ani_status status = env->GetUndefined(&undefined);
-        if (status != ANI_OK) {
-            APP_LOGE("GetUndefined %{public}s failed %{public}d", propertyName, status);
-            return false;
-        }
-
-        return CallSetter(env, cls, object, propertyName, undefined, valueClassName);
-    }
-
     template<typename valueType>
     static ani_object BoxValue(ani_env* env, valueType value, const char** pValueClassName = nullptr)
     {
@@ -753,24 +709,6 @@ public:
         }
 
         return valueObj;
-    }
-
-    template<typename valueType>
-    static bool CallSetterOptional(ani_env* env, ani_class cls, ani_object object, const char* propertyName,
-        valueType value, const char* valueClassName = nullptr)
-    {
-        RETURN_FALSE_IF_NULL(env);
-        RETURN_FALSE_IF_NULL(cls);
-        RETURN_FALSE_IF_NULL(object);
-
-        if constexpr (std::is_pointer_v<valueType> && std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
-            return CallSetter(env, cls, object, propertyName, value, valueClassName);
-        }
-
-        ani_object valueObj = BoxValue(env, value, &valueClassName);
-        RETURN_FALSE_IF_NULL(valueObj);
-
-        return CallSetter(env, cls, object, propertyName, valueObj, valueClassName);
     }
 };
 } // namespace AppExecFwk

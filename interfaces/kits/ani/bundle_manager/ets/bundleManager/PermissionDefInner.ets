@@ -20,4 +20,15 @@ export class PermissionDefInner implements PermissionDef {
   public readonly grantMode: int;
   public readonly labelId: long;
   public readonly descriptionId: long;
+
+  constructor() { }
+  constructor(permissionName: string,
+    grantMode: int,
+    labelId: long,
+    descriptionId: long) {
+      this.permissionName = permissionName;
+      this.grantMode = grantMode;
+      this.labelId = labelId;
+      this.descriptionId = descriptionId;
+  }
 }

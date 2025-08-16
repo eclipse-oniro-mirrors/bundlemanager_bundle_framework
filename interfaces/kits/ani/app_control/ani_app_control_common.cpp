@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <ani_signature_builder.h>
+
 #include "ani_app_control_common.h"
 #include "ani_common_want.h"
 #include "common_fun_ani.h"
@@ -25,63 +27,70 @@ namespace {
 constexpr const char* CLASSNAME_DISPOSED_RULE_INNER = "@ohos.bundle.appControl.appControl.DisposedRuleInner";
 constexpr const char* CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER =
     "@ohos.bundle.appControl.appControl.UninstallDisposedRuleInner";
+constexpr const char* CLASSNAME_WANT = "@ohos.app.ability.Want.Want";
 constexpr const char* PROPERTYNAME_WANT = "want";
-constexpr const char* PROPERTYNAME_COMPONENTTYPE = "componentType";
-constexpr const char* PROPERTYNAME_DISPOSEDTYPE = "disposedType";
-constexpr const char* PROPERTYNAME_CONTROLTYPE = "controlType";
-constexpr const char* PROPERTYNAME_ELEMENTLIST = "elementList";
+constexpr const char* PROPERTYNAME_COMPONENT_TYPE = "componentType";
+constexpr const char* PROPERTYNAME_DISPOSED_TYPE = "disposedType";
+constexpr const char* PROPERTYNAME_CONTROL_TYPE = "controlType";
+constexpr const char* PROPERTYNAME_ELEMENT_LIST = "elementList";
 constexpr const char* PROPERTYNAME_PRIORITY = "priority";
-constexpr const char* PROPERTYNAME_UNINSTALLCOMPONENTTYPE = "uninstallComponentType";
-constexpr const char* PROPERTYNAME_BUNDLENAME = "bundleName";
-constexpr const char* PROPERTYNAME_ABILITYNAME = "abilityName";
+constexpr const char* PROPERTYNAME_UNINSTALL_COMPONENT_TYPE = "uninstallComponentType";
+constexpr const char* PROPERTYNAME_BUNDLE_NAME = "bundleName";
+constexpr const char* PROPERTYNAME_ABILITY_NAME = "abilityName";
 constexpr const char* PROPERTYNAME_DEVICEID = "deviceId";
 constexpr const char* PROPERTYNAME_URI = "uri";
 constexpr const char* PROPERTYNAME_TYPE = "type";
 constexpr const char* PROPERTYNAME_FLAGS = "flags";
 constexpr const char* PROPERTYNAME_ACTION = "action";
 constexpr const char* PROPERTYNAME_ENTITIES = "entities";
-constexpr const char* PROPERTYNAME_MODULENAME = "moduleName";
+constexpr const char* PROPERTYNAME_MODULE_NAME = "moduleName";
 }
 
 ani_object AniAppControlCommon::ConvertDisposedRule(ani_env* env, const DisposedRule& disposedRule)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_DISPOSED_RULE_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CommonFunAni::CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
     // want: Want
+    ani_object want = nullptr;
     if (disposedRule.want != nullptr) {
-        ani_object aWant = WrapWant(env, *disposedRule.want);
-        RETURN_NULL_IF_NULL(aWant);
-        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_WANT, aWant));
+        want = WrapWant(env, *disposedRule.want);
+        RETURN_NULL_IF_NULL(want);
     }
 
-    // componentType: ComponentType
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_COMPONENTTYPE,
-        EnumUtils::EnumNativeToETS_AppControl_ComponentType(env, static_cast<int32_t>(disposedRule.componentType))));
-
-    // disposedType: DisposedType
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_DISPOSEDTYPE,
-        EnumUtils::EnumNativeToETS_AppControl_DisposedType(env, static_cast<int32_t>(disposedRule.disposedType))));
-
-    // controlType: ControlType
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_CONTROLTYPE,
-        EnumUtils::EnumNativeToETS_AppControl_ControlType(env, static_cast<int32_t>(disposedRule.controlType))));
-
     // elementList: Array<ElementName>
-    ani_object aElementList = CommonFunAni::ConvertAniArray(
+    ani_object elementList = CommonFunAni::ConvertAniArray(
         env, disposedRule.elementList, CommonFunAni::ConvertElementName);
-    RETURN_NULL_IF_NULL(aElementList);
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_ELEMENTLIST, aElementList));
+    RETURN_NULL_IF_NULL(elementList);
 
-    // priority: int
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_PRIORITY, disposedRule.priority));
-
-    return object;
+    ani_value args[] = {
+        { .r = EnumUtils::EnumNativeToETS_AppControl_ComponentType(
+            env, static_cast<int32_t>(disposedRule.componentType)) },
+        { .r = EnumUtils::EnumNativeToETS_AppControl_DisposedType(
+            env, static_cast<int32_t>(disposedRule.disposedType)) },
+        { .r = EnumUtils::EnumNativeToETS_AppControl_ControlType(env, static_cast<int32_t>(disposedRule.controlType)) },
+        { .r = elementList },
+        { .i = disposedRule.priority },
+        { .r = want },
+    };
+    static const std::string ctorSig =
+        arkts::ani_signature::SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_COMPONENT_TYPE) // componentType: ComponentType
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_DISPOSED_TYPE)  // disposedType: DisposedType
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_CONTROL_TYPE)   // controlType: ControlType
+            .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                     // elementList: Array<ElementName>
+            .AddInt()                                                      // priority: int
+            .BuildSignatureDescriptor();
+    static const std::string ctorSigWithWant =
+        arkts::ani_signature::SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_COMPONENT_TYPE) // componentType: ComponentType
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_DISPOSED_TYPE)  // disposedType: DisposedType
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_CONTROL_TYPE)   // controlType: ControlType
+            .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                     // elementList: Array<ElementName>
+            .AddInt()                                                      // priority: int
+            .AddClass(CLASSNAME_WANT)                                      // want: Want
+            .BuildSignatureDescriptor();
+    return CommonFunAni::CreateNewObjectByClassV2(
+        env, CLASSNAME_DISPOSED_RULE_INNER, disposedRule.want == nullptr? ctorSig: ctorSigWithWant, args);
 }
 
 ani_object AniAppControlCommon::ConvertUninstallDisposedRule(ani_env* env,
@@ -89,29 +98,32 @@ ani_object AniAppControlCommon::ConvertUninstallDisposedRule(ani_env* env,
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CommonFunAni::CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
     // want: Want
+    ani_object want = nullptr;
     if (uninstallDisposedRule.want != nullptr) {
-        ani_object aWant = WrapWant(env, *uninstallDisposedRule.want);
-        RETURN_NULL_IF_NULL(aWant);
-        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_WANT, aWant));
+        want = WrapWant(env, *uninstallDisposedRule.want);
+        RETURN_NULL_IF_NULL(want);
     }
 
-    // uninstallComponentType: UninstallComponentType
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_UNINSTALLCOMPONENTTYPE,
-        EnumUtils::EnumNativeToETS_AppControl_UninstallComponentType(
-            env, static_cast<int32_t>(uninstallDisposedRule.uninstallComponentType))));
-
-    // priority: int
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(
-        env, cls, object, PROPERTYNAME_PRIORITY, uninstallDisposedRule.priority));
-
-    return object;
+    ani_value args[] = {
+        { .r = EnumUtils::EnumNativeToETS_AppControl_UninstallComponentType(
+            env, static_cast<int32_t>(uninstallDisposedRule.uninstallComponentType)) },
+        { .i = uninstallDisposedRule.priority },
+        { .r = want },
+    };
+    static const std::string ctorSig =
+        arkts::ani_signature::SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_UNINSTALL_COMPONENT_TYPE) // uninstallComponentType
+            .AddInt()                                                                // priority: int
+            .BuildSignatureDescriptor();
+    static const std::string ctorSigWithWant =
+        arkts::ani_signature::SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_APPCONTROL_UNINSTALL_COMPONENT_TYPE) // uninstallComponentType
+            .AddInt()                                                                // priority: int
+            .AddClass(CLASSNAME_WANT)                                                // want: Want
+            .BuildSignatureDescriptor();
+    return CommonFunAni::CreateNewObjectByClassV2(env, CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER,
+        uninstallDisposedRule.want == nullptr ? ctorSig : ctorSigWithWant, args);
 }
 
 bool AniAppControlCommon::ParseWantWithoutVerification(ani_env* env, ani_object object, Want& want)
@@ -122,13 +134,13 @@ bool AniAppControlCommon::ParseWantWithoutVerification(ani_env* env, ani_object 
     // bundleName?: string
     ani_string string = nullptr;
     std::string bundleName = "";
-    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_BUNDLENAME, &string)) {
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_BUNDLE_NAME, &string)) {
         bundleName = CommonFunAni::AniStrToString(env, string);
     }
 
     // abilityName?: string
     std::string abilityName = "";
-    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_ABILITYNAME, &string)) {
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_ABILITY_NAME, &string)) {
         abilityName = CommonFunAni::AniStrToString(env, string);
     }
 
@@ -177,7 +189,7 @@ bool AniAppControlCommon::ParseWantWithoutVerification(ani_env* env, ani_object 
 
     // moduleName?: string
     std::string moduleName = "";
-    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_MODULENAME, &string)) {
+    if (CommonFunAni::CallGetFieldOptional(env, object, PROPERTYNAME_MODULE_NAME, &string)) {
         moduleName = CommonFunAni::AniStrToString(env, string);
     }
 
@@ -211,19 +223,19 @@ bool AniAppControlCommon::ParseDisposedRule(ani_env* env, ani_object object, Dis
     disposedRule.want = std::make_shared<Want>(want);
 
     // componentType: ComponentType
-    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_COMPONENTTYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_COMPONENT_TYPE, &enumItem));
     RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, disposedRule.componentType));
 
     // disposedType: DisposedType
-    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_DISPOSEDTYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_DISPOSED_TYPE, &enumItem));
     RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, disposedRule.disposedType));
 
     // controlType: ControlType
-    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_CONTROLTYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_CONTROL_TYPE, &enumItem));
     RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, disposedRule.controlType));
 
     // elementList: Array<ElementName>
-    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_ELEMENTLIST, &array));
+    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_ELEMENT_LIST, &array));
     RETURN_FALSE_IF_FALSE(CommonFunAni::ParseAniArray(
         env, array, disposedRule.elementList, CommonFunAni::ParseElementName));
 
@@ -254,7 +266,7 @@ bool AniAppControlCommon::ParseUninstallDisposedRule(ani_env* env,
     uninstallDisposedRule.want = std::make_shared<Want>(want);
 
     // uninstallComponentType: UninstallComponentType
-    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_UNINSTALLCOMPONENTTYPE, &enumItem));
+    RETURN_FALSE_IF_FALSE(CommonFunAni::CallGetter(env, object, PROPERTYNAME_UNINSTALL_COMPONENT_TYPE, &enumItem));
     RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, uninstallDisposedRule.uninstallComponentType));
 
     // priority: int

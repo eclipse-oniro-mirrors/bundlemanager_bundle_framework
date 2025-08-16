@@ -86,6 +86,10 @@ export class HapModuleInfoInner implements HapModuleInfo {
       this.nativeLibraryPath = nativeLibraryPath;
       this.codePath = codePath;
   }
+  constructor(abilitiesInfo: Array<AbilityInfo>, extensionAbilitiesInfo: Array<ExtensionAbilityInfo>) {
+      this.abilitiesInfo = abilitiesInfo;
+      this.extensionAbilitiesInfo = extensionAbilitiesInfo;
+  }
 }
 
 export class DependencyInner implements Dependency {
