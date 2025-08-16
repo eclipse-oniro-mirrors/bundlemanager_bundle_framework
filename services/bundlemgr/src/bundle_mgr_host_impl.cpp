@@ -252,7 +252,6 @@ bool BundleMgrHostImpl::GetApplicationInfos(
 bool BundleMgrHostImpl::GetApplicationInfos(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
-    LOG_D(BMS_TAG_QUERY, "GetApplicationInfos flags:%{public}d userId:%{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
@@ -268,6 +267,8 @@ bool BundleMgrHostImpl::GetApplicationInfos(
             "GetApplicationInfos return empty, not support target level greater than or equal to api9");
         return true;
     }
+    APP_LOGI_NOFUNC("GetApplicationInfos -p:%{public}d, -f:%{public}d, -u:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags, userId);
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
@@ -279,7 +280,6 @@ bool BundleMgrHostImpl::GetApplicationInfos(
 ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
-    LOG_D(BMS_TAG_QUERY, "GetApplicationInfosV9 flags:%{public}d userId:%{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -288,6 +288,8 @@ ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
         LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    APP_LOGI_NOFUNC("GetApplicationInfosV9 -p:%{public}d, -f:%{public}d, -u:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags, userId);
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
@@ -550,8 +552,6 @@ bool BundleMgrHostImpl::GetBundleInfos(const BundleFlag flag, std::vector<Bundle
 
 bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    LOG_I(BMS_TAG_QUERY, "-f: %{public}d, -u: %{public}d uid:%{public}d", flags,
-        userId, IPCSkeleton::GetCallingUid());
     // API9 need to be system app
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
@@ -562,7 +562,8 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
-    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfos");
+    APP_LOGI_NOFUNC("GetBundleInfos -p:%{public}d, -f:%{public}d, -u:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags, userId);
     if (!BundlePermissionMgr::IsNativeTokenType() &&
         (BundlePermissionMgr::GetHapApiVersion() >= ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY,
@@ -585,8 +586,6 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
 
 ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    LOG_I(BMS_TAG_QUERY, "-f: %{public}d, -u: %{public}d uid:%{public}d", flags,
-        userId, IPCSkeleton::GetCallingUid());
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -595,7 +594,8 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         LOG_E(BMS_TAG_QUERY, "permission denied");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfosV9");
+    APP_LOGI_NOFUNC("GetBundleInfosV9 -p:%{public}d, -f:%{public}d, -u:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags, userId);
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");

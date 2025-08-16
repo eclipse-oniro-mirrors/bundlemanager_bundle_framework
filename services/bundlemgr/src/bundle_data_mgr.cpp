@@ -7747,6 +7747,9 @@ void BundleDataMgr::ResetAOTFlags()
     APP_LOGI("ResetAOTFlags begin");
     std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::for_each(bundleInfos_.begin(), bundleInfos_.end(), [this](auto &item) {
+        if (item.second.IsAOTFlagsInitial()) {
+            return;
+        }
         item.second.ResetAOTFlags();
         if (!dataStorage_->SaveStorageBundleInfo(item.second)) {
             APP_LOGW("SaveStorageBundleInfo failed, bundleName : %{public}s", item.second.GetBundleName().c_str());
@@ -7762,6 +7765,9 @@ void BundleDataMgr::ResetAOTFlagsCommand(const std::string &bundleName)
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+        return;
+    }
+    if (item->second.IsAOTFlagsInitial()) {
         return;
     }
     item->second.ResetAOTFlags();

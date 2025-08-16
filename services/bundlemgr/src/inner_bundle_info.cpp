@@ -256,6 +256,22 @@ AOTCompileStatus InnerBundleInfo::GetAOTCompileStatus(const std::string &moduleN
     return item->second.aotCompileStatus;
 }
 
+bool InnerBundleInfo::IsAOTFlagsInitial() const
+{
+    if (!baseApplicationInfo_->arkNativeFilePath.empty()) {
+        return false;
+    }
+    if (!baseApplicationInfo_->arkNativeFileAbi.empty()) {
+        return false;
+    }
+    for (const auto &item : innerModuleInfos_) {
+        if (item.second.aotCompileStatus != AOTCompileStatus::NOT_COMPILED) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void InnerBundleInfo::ResetAOTFlags()
 {
     baseApplicationInfo_->arkNativeFilePath.clear();

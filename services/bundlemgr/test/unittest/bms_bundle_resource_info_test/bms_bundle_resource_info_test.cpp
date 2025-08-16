@@ -94,7 +94,7 @@ HWTEST_F(BmsBundleResourceInfoTest, ReadFromParcel_0300, Function | MediumTest |
     std::string bundleName = "bundleName";
     parcel.WriteString16(Str8ToStr16(bundleName));
     std::string label = "label";
-    parcel.WriteString16(Str8ToStr16(label));
+    parcel.WriteString(label);
     parcel.WriteInt32(1);
 
     auto res = bundleResourceInfo.ReadFromParcel(parcel);
@@ -116,10 +116,10 @@ HWTEST_F(BmsBundleResourceInfoTest, ReadFromParcel_0400, Function | MediumTest |
     std::string bundleName = "bundleName";
     parcel.WriteString16(Str8ToStr16(bundleName));
     std::string label = "label";
-    parcel.WriteString16(Str8ToStr16(label));
+    parcel.WriteString(label);
     std::string icon = "icon";
-    parcel.WriteString16(Str8ToStr16(icon));
-    parcel.WriteString16(Str8ToStr16(icon));
+    parcel.WriteString(icon);
+    parcel.WriteString(icon);
 
     auto res = bundleResourceInfo.ReadFromParcel(parcel);
     EXPECT_FALSE(res);
@@ -141,9 +141,9 @@ HWTEST_F(BmsBundleResourceInfoTest, ReadFromParcel_0500, Function | MediumTest |
     std::string bundleName = "bundleName";
     parcel.WriteString16(Str8ToStr16(bundleName));
     std::string label = "label";
-    parcel.WriteString16(Str8ToStr16(label));
+    parcel.WriteString(label);
     std::string icon = "icon";
-    parcel.WriteString16(Str8ToStr16(icon));
+    parcel.WriteString(icon);
     parcel.WriteInt32(0);
     parcel.WriteInt32(0);
     int32_t appIndex = 1;
@@ -216,7 +216,7 @@ HWTEST_F(BmsBundleResourceInfoTest, UnMarshalling_0300, Function | MediumTest | 
     std::string bundleName = "bundleName";
     parcel.WriteString16(Str8ToStr16(bundleName));
     std::string label = "label";
-    parcel.WriteString16(Str8ToStr16(label));
+    parcel.WriteString(label);
     parcel.WriteInt32(1);
 
     auto res = BundleResourceInfo::Unmarshalling(parcel);
@@ -235,10 +235,10 @@ HWTEST_F(BmsBundleResourceInfoTest, UnMarshalling_0400, Function | MediumTest | 
     std::string bundleName = "bundleName";
     parcel.WriteString16(Str8ToStr16(bundleName));
     std::string label = "label";
-    parcel.WriteString16(Str8ToStr16(label));
+    parcel.WriteString(label);
     std::string icon = "icon";
-    parcel.WriteString16(Str8ToStr16(icon));
-    parcel.WriteString16(Str8ToStr16(icon));
+    parcel.WriteString(icon);
+    parcel.WriteString(icon);
 
     auto res = BundleResourceInfo::Unmarshalling(parcel);
     ASSERT_EQ(res, nullptr);
@@ -256,9 +256,9 @@ HWTEST_F(BmsBundleResourceInfoTest, UnMarshalling_0500, Function | MediumTest | 
     std::string bundleName = "bundleName";
     parcel.WriteString16(Str8ToStr16(bundleName));
     std::string label = "label";
-    parcel.WriteString16(Str8ToStr16(label));
+    parcel.WriteString(label);
     std::string icon = "icon";
-    parcel.WriteString16(Str8ToStr16(icon));
+    parcel.WriteString(icon);
     parcel.WriteInt32(0);
     parcel.WriteInt32(0);
     int32_t appIndex = 1;
