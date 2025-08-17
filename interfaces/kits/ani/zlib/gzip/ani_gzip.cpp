@@ -61,10 +61,10 @@ static bool TrySetNativeGZFile(ani_env* env, ani_object instance, gzFile natieGZ
     return true;
 }
 
-static bool TryGetStringArg(ani_env* env, ani_array_ref args, ani_size index, std::string& output)
+static bool TryGetStringArg(ani_env* env, ani_array args, ani_size index, std::string& output)
 {
     ani_ref ref = nullptr;
-    ani_status status = env->Array_Get_Ref(args, index, &ref);
+    ani_status status = env->Array_Get(args, index, &ref);
     if (status != ANI_OK) {
         APP_LOGE("Array_Get_Ref failed %{public}d", status);
         return false;
@@ -114,10 +114,10 @@ static bool TryGetStringArg(ani_env* env, ani_array_ref args, ani_size index, st
     return result;
 }
 
-static bool TryGetNumberArg(ani_env* env, ani_array_ref args, ani_size index, std::string& output)
+static bool TryGetNumberArg(ani_env* env, ani_array args, ani_size index, std::string& output)
 {
     ani_ref ref = nullptr;
-    ani_status status = env->Array_Get_Ref(args, index, &ref);
+    ani_status status = env->Array_Get(args, index, &ref);
     if (status != ANI_OK) {
         APP_LOGE("Array_Get_Ref failed %{public}d", status);
         return false;
@@ -199,14 +199,14 @@ static bool GetFormattedString(ani_env* env, const std::string& format, ani_obje
         switch (format[pos + 1]) {
             case 'd':
             case 'i':
-                if (TryGetNumberArg(env, reinterpret_cast<ani_array_ref>(args), curArgCount, arg)) {
+                if (TryGetNumberArg(env, reinterpret_cast<ani_array>(args), curArgCount, arg)) {
                     formattedString += arg;
                 }
                 ++curArgCount;
                 ++pos;
                 break;
             case 's':
-                if (TryGetStringArg(env, reinterpret_cast<ani_array_ref>(args), curArgCount, arg)) {
+                if (TryGetStringArg(env, reinterpret_cast<ani_array>(args), curArgCount, arg)) {
                     formattedString += arg;
                 }
                 ++curArgCount;
