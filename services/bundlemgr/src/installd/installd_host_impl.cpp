@@ -2496,6 +2496,9 @@ ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const 
     if (!InstalldOperator::MoveFile(originPath, targetPath)) {
         LOG_E(BMS_TAG_INSTALLD, "move file %{public}s to %{public}s failed errno:%{public}d",
             originPath.c_str(), targetPath.c_str(), errno);
+        if (errno == EXDEV) {
+            return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_CROSS_DEV;
+        }
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
     }
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;

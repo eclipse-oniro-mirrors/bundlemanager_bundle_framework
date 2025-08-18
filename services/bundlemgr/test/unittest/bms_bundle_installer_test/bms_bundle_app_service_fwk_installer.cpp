@@ -2136,6 +2136,10 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveHapToCodeDir_0001, Function | 
     auto ret2 = InstalldClient::GetInstance()->MoveHapToCodeDir(originPath, targetPath);
     EXPECT_NE(ret2, ERR_OK);
 
+    targetPath = "/data/app/el2/100/base/test.hap";
+    auto ret3 = InstalldClient::GetInstance()->MoveHapToCodeDir(HAP_PATH_TEST, targetPath);
+    EXPECT_EQ(ret3, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_CROSS_DEV);
+
     targetPath = "testTargetPath";
     EXPECT_NO_THROW(InstalldClient::GetInstance()->MoveHapToCodeDir(originPath, targetPath));
 }
