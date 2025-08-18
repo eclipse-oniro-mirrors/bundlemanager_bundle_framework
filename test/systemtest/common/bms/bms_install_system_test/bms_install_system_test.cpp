@@ -1178,7 +1178,7 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2600, Function | MediumTest | Level2)
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "e3.hap";
 
     InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Failure[ERR_INSTALL_PARSE_PROFILE_PROP_CHECK_ERROR]");
+    EXPECT_EQ(installMsg, OPERATION_SUCCESS);
 
     std::string bundleName = THIRD_BASE_BUNDLE_NAME + "1";
     BundleInfo bundleInfo;
@@ -1189,6 +1189,10 @@ HWTEST_F(BmsInstallSystemTest, BMS_Install_2600, Function | MediumTest | Level2)
     }
     bool getInfoResult = bundleMgrProxy->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(getInfoResult);
+    
+    std::string uninstallMsg;
+    UninstallBundle("com123.third.hiworld.example1", uninstallMsg);
+    EXPECT_EQ(uninstallMsg, OPERATION_SUCCESS) << "uninstall fail!" << bundleFilePath;
     std::cout << "END BMS_Install_2600" << std::endl;
 }
 

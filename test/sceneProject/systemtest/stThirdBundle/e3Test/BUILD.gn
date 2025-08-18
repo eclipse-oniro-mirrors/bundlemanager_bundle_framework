@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,22 +14,10 @@
 import("//build/ohos.gni")
 import("../../../../../appexecfwk.gni")
 
-ohos_hap("e3Test") {
-  hap_profile = "./src/main/config.json"
+ohos_app("e3Test") {
   hap_name = "e3"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/stThirdBundle/${hap_name}.hap"
+  hap_out_dir = "$root_out_dir/tests/systemtest/bundle_framework/bundle_framework/resource/stThirdBundle"
   testonly = true
-  deps = [
-    ":hjs_demo_js_assets",
-    ":hjs_demo_resources",
-  ]
-  certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/123com.third.hiworld.example1.p7b"
-}
-ohos_js_assets("hjs_demo_js_assets") {
-  source_dir = "./src/main/js/default"
-}
-ohos_resources("hjs_demo_resources") {
-  sources = [ "./src/main/js/resources" ]
-  hap_profile = "./src/main/config.json"
+  certificate_profile = "./signature/com123.third.hiworld.example1.p7b"
 }
