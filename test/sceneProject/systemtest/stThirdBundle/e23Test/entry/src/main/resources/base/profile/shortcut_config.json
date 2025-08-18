@@ -1,0 +1,16 @@
+{
+  "shortcuts": [
+    {
+      "shortcutId": "id",
+      "label": "$string:shortcut",
+      "icon": "$media:icon",
+      "wants": [
+        {
+          "bundleName": "com.huawei.hiworld.himusic",
+          "moduleName": "entry",
+          "abilityName": "MainAbility"
+        }
+      ]
+    }
+  ]
+}

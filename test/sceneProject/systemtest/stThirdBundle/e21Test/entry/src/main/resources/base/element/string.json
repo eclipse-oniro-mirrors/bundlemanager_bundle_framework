@@ -1,0 +1,24 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "label"
+    },
+    {
+      "name": "shortcut",
+      "value": "JS_Phone_Empty Feature Ability"
+    },
+    {
+      "name": "permreason_camera",
+      "value": "JS_Phone_Empty Feature Ability"
+    }
+  ]
+}
