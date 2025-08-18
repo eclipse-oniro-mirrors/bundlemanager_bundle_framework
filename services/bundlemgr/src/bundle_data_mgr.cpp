@@ -3283,7 +3283,7 @@ bool BundleDataMgr::GetAdaptBaseShareBundleInfo(
         auto item = shareBundles.find(dependency.bundleName);
         if ((item != shareBundles.end()) && innerBundleInfo.GetBaseSharedBundleInfo(dependency.moduleName,
             item->second, baseSharedBundleInfo)) {
-            APP_LOGI("get share bundle by pid -n %{public}s -v %{public}u succeed",
+            APP_LOGI_NOFUNC("get share bundle by pid -n %{public}s -v %{public}u succeed",
                 dependency.bundleName.c_str(), item->second);
             return true;
         }

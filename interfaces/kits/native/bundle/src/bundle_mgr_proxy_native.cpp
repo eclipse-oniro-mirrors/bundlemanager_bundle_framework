@@ -60,7 +60,7 @@ bool BundleMgrProxyNative::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
 
 bool BundleMgrProxyNative::GetCompatibleDeviceTypeNative(std::string &deviceType)
 {
-    LOG_I(BMS_TAG_QUERY, "begin to get compatible device type");
+    LOG_D(BMS_TAG_QUERY, "begin to get compatible device type");
     MessageParcel data;
     if (!data.WriteInterfaceToken(BMS_PROXY_INTERFACE_TOKEN)) {
         LOG_E(BMS_TAG_QUERY, "Write interfaceToken failed");

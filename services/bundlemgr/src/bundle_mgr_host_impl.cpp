@@ -698,7 +698,7 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
         return false;
     }();
     if (!permissionVerify) {
-        APP_LOGE("verify permission failed");
+        APP_LOGE_NOFUNC("GetNameForUid permission denied");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     int64_t intervalTime = ONE_DAY;
@@ -5507,7 +5507,7 @@ ErrCode BundleMgrHostImpl::GetCompatibleDeviceTypeNative(std::string &deviceType
     dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName);
     BmsExtensionDataMgr bmsExtensionDataMgr;
     deviceType = bmsExtensionDataMgr.GetCompatibleDeviceType(bundleName);
-    APP_LOGI("deviceType : %{public}s", deviceType.c_str());
+    APP_LOGD("deviceType : %{public}s", deviceType.c_str());
     return ERR_OK;
 }
 

@@ -375,7 +375,7 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
     ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        APP_LOGE_NOFUNC("GoToFirstRow failed, ret: %{public}d", ret);
         return false;
     }
 
