@@ -18,7 +18,7 @@
  * @kit BasicServicesKit
  */
 
-import { AsyncCallback, BusinessError } from '@ohos.base';
+import { AsyncCallback, BusinessError, RecordData } from '@ohos.base';
 
 export default namespace zlib {
 
@@ -104,7 +104,142 @@ export default namespace zlib {
         this.statusMsg = statusMsg;
     }
   }
-  
+
+  export interface ZStream {
+    nextIn?: ArrayBuffer;
+    availableIn?: int;
+    totalIn?: long;
+    nextOut?: ArrayBuffer;
+    availableOut?: int;
+    totalOut?: long;
+    dataType?: int;
+    adler?: long;
+  }
+
+  class ZStreamInner implements ZStream {
+    nextIn?: ArrayBuffer | undefined;
+    availableIn?: int | undefined;
+    totalIn?: long | undefined;
+    nextOut?: ArrayBuffer | undefined;
+    availableOut?: int | undefined;
+    totalOut?: long | undefined;
+    dataType?: int | undefined;
+    adler?: long | undefined;
+
+    constructor(availableIn?: int,
+      totalIn?: long,
+      availableOut?: int,
+      totalOut?: long,
+      dataType?: int,
+      adler?: long) {
+        this.availableIn = availableIn;
+        this.totalIn = totalIn;
+        this.availableOut = availableOut;
+        this.totalOut = totalOut;
+        this.dataType = dataType;
+        this.adler = adler;
+    }
+  }
+
+  export interface ZipOutputInfo {
+    status: ReturnStatus;
+    destLen: long;
+  }
+
+  class ZipOutputInfoInner implements ZipOutputInfo {
+    status: ReturnStatus = ReturnStatus.OK;
+    destLen: long;
+
+    constructor() { }
+    constructor(status: ReturnStatus, destLen: long) {
+        this.status = status;
+        this.destLen = destLen;
+    }
+  }
+
+  export interface DecompressionOutputInfo {
+    status: ReturnStatus;
+    destLength: long;
+    sourceLength: long;
+  }
+
+  class DecompressionOutputInfoInner implements DecompressionOutputInfo {
+    status: ReturnStatus = ReturnStatus.OK;
+    destLength: long;
+    sourceLength: long;
+
+    constructor() { }
+    constructor(status: ReturnStatus, destLength: long, sourceLength: long) {
+        this.status = status;
+        this.destLength = destLength;
+        this.sourceLength = sourceLength;
+    }
+  }
+
+  export interface GzHeader {
+    isText?: boolean;
+    os?: int;
+    time?: long;
+    xflags?: int;
+    extra?: ArrayBuffer;
+    extraLen?: int;
+    name?: ArrayBuffer;
+    comment?: ArrayBuffer;
+    hcrc?: boolean;
+    done?: boolean;
+  }
+
+  class GzHeaderInner implements GzHeader {
+    isText?: boolean | undefined;
+    os?: int | undefined;
+    time?: long | undefined;
+    xflags?: int | undefined;
+    extra?: ArrayBuffer | undefined;
+    extraLen?: int | undefined;
+    name?: ArrayBuffer | undefined;
+    comment?: ArrayBuffer | undefined;
+    hcrc?: boolean | undefined;
+    done?: boolean | undefined;
+  }
+
+  export interface DictionaryOutputInfo {
+    status: ReturnStatus;
+    dictionaryLength: int;
+  }
+
+  class DictionaryOutputInfoInner implements DictionaryOutputInfo {
+    status: ReturnStatus = ReturnStatus.OK;
+    dictionaryLength: int;
+
+    constructor() { }
+    constructor(status: ReturnStatus, dictionaryLength: int) {
+        this.status = status;
+        this.dictionaryLength = dictionaryLength;
+    }
+  }
+
+  export interface DeflatePendingOutputInfo {
+    status: ReturnStatus;
+    pending: int;
+    bits: int;
+  }
+
+  class DeflatePendingOutputInfoInner implements DeflatePendingOutputInfo {
+    status: ReturnStatus = ReturnStatus.OK;
+    pending: int;
+    bits: int;
+
+    constructor() { }
+    constructor(status: ReturnStatus, pending: int, bits: int) {
+        this.status = status;
+        this.pending = pending;
+        this.bits = bits;
+    }
+  }
+
+  type InflateBackInputCallback = (inDesc: RecordData) => ArrayBuffer;
+  type InflateBackOutputCallback = (outDesc: RecordData, buf: ArrayBuffer, length: int) => int;
+
   export function compressFile(inFile: string, outFile: string, options: Options, callback: AsyncCallback<void>): void {
     let execFun = (): void => {
       zlib.compressFileNative(inFile, outFile, options);
@@ -338,6 +473,7 @@ export default namespace zlib {
   }
 
   export class GZipInternal implements GZip {
+    @JSONStringifyIgnore
     nativeGZFile : long = 0;
     
     public native gzdopenNative(fd: int, mode: string): void;
@@ -781,6 +917,832 @@ export default namespace zlib {
     }
   }
 
+  export interface Zip {
+    getZStream(): Promise<ZStream | undefined>;
+    zlibVersion(): Promise<string>;
+    zlibCompileFlags(): Promise<int>;
+    compress(dest: ArrayBuffer, source: ArrayBuffer, sourceLen?: long): Promise<ZipOutputInfo>;
+    compress2(dest: ArrayBuffer, source: ArrayBuffer, level: CompressLevel, sourceLen?: long): Promise<ZipOutputInfo>;
+    compressBound(sourceLen: int): Promise<int>;
+    uncompress(dest: ArrayBuffer, source: ArrayBuffer, sourceLen?: long): Promise<ZipOutputInfo>;
+    uncompress2(dest: ArrayBuffer, source: ArrayBuffer, sourceLen?: long): Promise<DecompressionOutputInfo>;
+    inflateValidate(strm: ZStream, check: int): Promise<ReturnStatus>;
+    inflateSyncPoint(strm: ZStream): Promise<ReturnStatus>;
+    inflateSync(strm: ZStream): Promise<ReturnStatus>;
+    inflateSetDictionary(strm: ZStream, dictionary: ArrayBuffer): Promise<ReturnStatus>;
+    inflateResetKeep(strm: ZStream): Promise<ReturnStatus>;
+    inflateReset2(strm: ZStream, windowBits: int): Promise<ReturnStatus>;
+    inflateReset(strm: ZStream): Promise<ReturnStatus>;
+    inflatePrime(strm: ZStream, bits: int, value: int): Promise<ReturnStatus>;
+    inflateMark(strm: ZStream): Promise<int>;
+    inflateInit2(strm: ZStream, windowBits: int): Promise<ReturnStatus>;
+    inflateInit(strm: ZStream): Promise<ReturnStatus>;
+    inflateGetHeader(strm: ZStream, header: GzHeader): Promise<ReturnStatus>;
+    inflateGetDictionary(strm: ZStream, dictionary: ArrayBuffer): Promise<DictionaryOutputInfo>;
+    inflateEnd(strm: ZStream): Promise<ReturnStatus>;
+    inflateCopy(source: Zip): Promise<ReturnStatus>;
+    inflateCodesUsed(strm: ZStream): Promise<long>;
+    inflateBackInit(strm: ZStream, windowBits: long, window: ArrayBuffer): Promise<ReturnStatus>;
+    inflateBackEnd(strm: ZStream): Promise<ReturnStatus>;
+    inflateBack(strm: ZStream, backIn: InflateBackInputCallback, inDesc: RecordData, backOut: InflateBackOutputCallback, outDesc: RecordData): Promise<ReturnStatus>;
+    inflate(strm: ZStream, flush: CompressFlushMode): Promise<ReturnStatus>;
+    deflateInit(strm: ZStream, level: CompressLevel): Promise<ReturnStatus>;
+    deflateInit2(strm: ZStream, level: CompressLevel, method: CompressMethod, windowBits: int, memLevel: MemLevel, strategy: CompressStrategy): Promise<ReturnStatus>;
+    deflate(strm: ZStream, flush: CompressFlushMode): Promise<ReturnStatus>;
+    deflateEnd(strm: ZStream): Promise<ReturnStatus>;
+    deflateBound(strm: ZStream, sourceLength: long): Promise<int>;
+    deflateSetHeader(strm: ZStream, head: GzHeader): Promise<ReturnStatus>;
+    deflateCopy(source: Zip): Promise<ReturnStatus>;
+    deflateSetDictionary(strm: ZStream, dictionary: ArrayBuffer): Promise<ReturnStatus>;
+    deflateGetDictionary(strm: ZStream, dictionary: ArrayBuffer): Promise<DictionaryOutputInfo>;
+    deflateTune(strm: ZStream, goodLength: int, maxLazy: int, niceLength: int, maxChain: int): Promise<ReturnStatus>;
+    deflateReset(strm: ZStream): Promise<ReturnStatus>;
+    deflateResetKeep(strm: ZStream): Promise<ReturnStatus>;
+    deflatePending(strm: ZStream): Promise<DeflatePendingOutputInfo>;
+    deflateParams(strm: ZStream, level: CompressLevel, strategy: CompressStrategy): Promise<ReturnStatus>;
+    deflatePrime(strm: ZStream, bits: int, value: int): Promise<ReturnStatus>;
+  }
+
+  class ZipCleaner {
+    public ptr: long = 0;
+
+    constructor(ptr: long) {
+      this.ptr = ptr;
+    }
+
+    public native zipClean(): void;
+  }
+
+  export function callback(zipCleaner: ZipCleaner): void {
+    zipCleaner.zipClean();
+  }
+
+  let destroyRegister = new FinalizationRegistry<ZipCleaner>(callback);
+  let unregisterToken = new object();
+
+  export class ZipInternal implements Zip {
+    @JSONStringifyIgnore
+    nativeZStream: long = 0;
+    @JSONStringifyIgnore
+    private zipCleaner: ZipCleaner | null = null;
+
+    registerZipCleaner(): void {
+      if (this.nativeZStream == 0) {
+        return;
+      }
+      this.zipCleaner = new ZipCleaner(this.nativeZStream);
+      destroyRegister.register(this, this.zipCleaner!, unregisterToken);
+    }
+
+    unregisterZipCleaner(): void {
+      destroyRegister.unregister(unregisterToken);
+    }
+
+    public native getZStreamNative(): ZStream | undefined;
+    public native zlibVersionNative(): string;
+    public native zlibCompileFlagsNative(): int;
+    public native compressNative(dest: ArrayBuffer, source: ArrayBuffer): ZipOutputInfo;
+    public native compressWithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, sourceLen: long): ZipOutputInfo;
+    public native compress2Native(dest: ArrayBuffer, source: ArrayBuffer, level: CompressLevel): ZipOutputInfo;
+    public native compress2WithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, level: CompressLevel, sourceLen: long): ZipOutputInfo;
+    public native compressBoundNative(sourceLen: int): int;
+    public native uncompressNative(dest: ArrayBuffer, source: ArrayBuffer): ZipOutputInfo;
+    public native uncompressWithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, sourceLen: long): ZipOutputInfo;
+    public native uncompress2Native(dest: ArrayBuffer, source: ArrayBuffer): DecompressionOutputInfo;
+    public native uncompress2WithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, sourceLen: long): DecompressionOutputInfo;
+    public native inflateValidateNative(strm: ZStream, check: int): ReturnStatus;
+    public native inflateSyncPointNative(strm: ZStream): ReturnStatus;
+    public native inflateSyncNative(strm: ZStream): ReturnStatus;
+    public native inflateSetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): ReturnStatus;
+    public native inflateResetKeepNative(strm: ZStream): ReturnStatus;
+    public native inflateReset2Native(strm: ZStream, windowBits: int): ReturnStatus;
+    public native inflateResetNative(strm: ZStream): ReturnStatus;
+    public native inflatePrimeNative(strm: ZStream, bits: int, value: int): ReturnStatus;
+    public native inflateMarkNative(strm: ZStream): int;
+    public native inflateInit2Native(strm: ZStream, windowBits: int): ReturnStatus;
+    public native inflateInitNative(strm: ZStream): ReturnStatus;
+    public native inflateGetHeaderNative(strm: ZStream, header: GzHeader): ReturnStatus;
+    public native inflateGetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): DictionaryOutputInfo;
+    public native inflateEndNative(strm: ZStream): ReturnStatus;
+    public native inflateCopyNative(source: Zip): ReturnStatus;
+    public native inflateCodesUsedNative(strm: ZStream): long;
+    public native inflateBackInitNative(strm: ZStream, windowBits: long, window: ArrayBuffer): ReturnStatus;
+    public native inflateBackEndNative(strm: ZStream): ReturnStatus;
+    public native inflateBackNative(strm: ZStream, backIn: InflateBackInputCallback, inDesc: RecordData, backOut: InflateBackOutputCallback, outDesc: RecordData): ReturnStatus;
+    public native inflateNative(strm: ZStream, flush: CompressFlushMode): ReturnStatus;
+    public native deflateInitNative(strm: ZStream, level: CompressLevel): ReturnStatus;
+    public native deflateInit2Native(strm: ZStream, level: CompressLevel, method: CompressMethod, windowBits: int, memLevel: MemLevel, strategy: CompressStrategy): ReturnStatus;
+    public native deflateNative(strm: ZStream, flush: CompressFlushMode): ReturnStatus;
+    public native deflateEndNative(strm: ZStream): ReturnStatus;
+    public native deflateBoundNative(strm: ZStream, sourceLength: long): int;
+    public native deflateSetHeaderNative(strm: ZStream, head: GzHeader): ReturnStatus;
+    public native deflateCopyNative(source: Zip): ReturnStatus;
+    public native deflateSetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): ReturnStatus;
+    public native deflateGetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): DictionaryOutputInfo;
+    public native deflateTuneNative(strm: ZStream, goodLength: int, maxLazy: int, niceLength: int, maxChain: int): ReturnStatus;
+    public native deflateResetNative(strm: ZStream): ReturnStatus;
+    public native deflateResetKeepNative(strm: ZStream): ReturnStatus;
+    public native deflatePendingNative(strm: ZStream): DeflatePendingOutputInfo;
+    public native deflateParamsNative(strm: ZStream, level: CompressLevel, strategy: CompressStrategy): ReturnStatus;
+    public native deflatePrimeNative(strm: ZStream, bits: int, value: int): ReturnStatus;
+
+    public getZStream(): Promise<ZStream | undefined> {
+      let p = new Promise<ZStream | undefined>((resolve: (v: ZStream | undefined) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ZStream | undefined => {
+          return this.getZStreamNative();
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          if (e) {
+            let result: ZStream = e as ZStream;
+            resolve(result);
+          } else {
+            resolve(undefined);
+          }
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public zlibVersion(): Promise<string> {
+      let p = new Promise<string>((resolve: (v: string) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): string => {
+          return this.zlibVersionNative();
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: string = e as string;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public zlibCompileFlags(): Promise<int> {
+      let p = new Promise<int>((resolve: (v: int) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): int => {
+          return this.zlibCompileFlagsNative();
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: int = e as int;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public compress(dest: ArrayBuffer, source: ArrayBuffer, sourceLen?: long): Promise<ZipOutputInfo> {
+      let p = new Promise<ZipOutputInfo>((resolve: (v: ZipOutputInfo) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ZipOutputInfo => {
+          return sourceLen === undefined ? this.compressNative(dest, source) :
+                                           this.compressWithSourceLenNative(dest, source, sourceLen);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ZipOutputInfo = e as ZipOutputInfo;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public compress2(dest: ArrayBuffer, source: ArrayBuffer, level: CompressLevel, sourceLen?: long,): Promise<ZipOutputInfo> {
+      let p = new Promise<ZipOutputInfo>((resolve: (v: ZipOutputInfo) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ZipOutputInfo => {
+          return sourceLen === undefined ? this.compress2Native(dest, source, level) :
+                                           this.compress2WithSourceLenNative(dest, source, level, sourceLen);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ZipOutputInfo = e as ZipOutputInfo;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public compressBound(sourceLen: int): Promise<int> {
+      let p = new Promise<int>((resolve: (v: int) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): int => {
+          return this.compressBoundNative(sourceLen);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: int = e as int;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public uncompress(dest: ArrayBuffer, source: ArrayBuffer, sourceLen?: long): Promise<ZipOutputInfo> {
+      let p = new Promise<ZipOutputInfo>((resolve: (v: ZipOutputInfo) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ZipOutputInfo => {
+          return sourceLen === undefined ? this.uncompressNative(dest, source) :
+                                           this.uncompressWithSourceLenNative(dest, source, sourceLen);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ZipOutputInfo = e as ZipOutputInfo;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public uncompress2(dest: ArrayBuffer, source: ArrayBuffer, sourceLen?: long): Promise<DecompressionOutputInfo> {
+      let p = new Promise<DecompressionOutputInfo>((resolve: (v: DecompressionOutputInfo) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): DecompressionOutputInfo => {
+          return sourceLen === undefined ? this.uncompress2Native(dest, source) :
+                                           this.uncompress2WithSourceLenNative(dest, source, sourceLen);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: DecompressionOutputInfo = e as DecompressionOutputInfo;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateValidate(strm: ZStream, check: int): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateValidateNative(strm, check);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateSyncPoint(strm: ZStream): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateSyncPointNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateSync(strm: ZStream): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateSyncNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateSetDictionary(strm: ZStream, dictionary: ArrayBuffer): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateSetDictionaryNative(strm, dictionary);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateResetKeep(strm: ZStream): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateResetKeepNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateReset2(strm: ZStream, windowBits: int): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateReset2Native(strm, windowBits);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateReset(strm: ZStream): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateResetNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflatePrime(strm: ZStream, bits: int, value: int): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflatePrimeNative(strm, bits, value);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateMark(strm: ZStream): Promise<int> {
+      let p = new Promise<int>((resolve: (v: int) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): int => {
+          return this.inflateMarkNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: int = e as int;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateInit2(strm: ZStream, windowBits: int): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateInit2Native(strm, windowBits);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateInit(strm: ZStream): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateInitNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateGetHeader(strm: ZStream, header: GzHeader): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateGetHeaderNative(strm, header);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateGetDictionary(strm: ZStream, dictionary: ArrayBuffer): Promise<DictionaryOutputInfo> {
+      let p = new Promise<DictionaryOutputInfo>((resolve: (v: DictionaryOutputInfo) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): DictionaryOutputInfo => {
+          return this.inflateGetDictionaryNative(strm, dictionary);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: DictionaryOutputInfo = e as DictionaryOutputInfo;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateEnd(strm: ZStream): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateEndNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateCopy(source: Zip): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateCopyNative(source);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateCodesUsed(strm: ZStream): Promise<long> {
+      let p = new Promise<long>((resolve: (v: long) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): long => {
+          return this.inflateCodesUsedNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: long = e as long;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateBackInit(strm: ZStream, windowBits: long, window: ArrayBuffer): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateBackInitNative(strm, windowBits, window);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateBackEnd(strm: ZStream): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateBackEndNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflateBack(strm: ZStream, backIn: InflateBackInputCallback, inDesc: RecordData, backOut: InflateBackOutputCallback, outDesc: RecordData): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateBackNative(strm, backIn, inDesc, backOut, outDesc);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public inflate(strm: ZStream, flush: CompressFlushMode): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.inflateNative(strm, flush);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateInit(strm: ZStream, level: CompressLevel): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflateInitNative(strm, level);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateInit2(strm: ZStream, level: CompressLevel, method: CompressMethod, windowBits: int, memLevel: MemLevel, strategy: CompressStrategy): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflateInit2Native(strm, level, method, windowBits, memLevel, strategy);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflate(strm: ZStream, flush: CompressFlushMode): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflateNative(strm, flush);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateEnd(strm: ZStream): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflateEndNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateBound(strm: ZStream, sourceLength: long): Promise<int> {
+      let p = new Promise<int>((resolve: (v: int) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): int => {
+          return this.deflateBoundNative(strm, sourceLength);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: int = e as int;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateSetHeader(strm: ZStream, head: GzHeader): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflateSetHeaderNative(strm, head);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateCopy(source: Zip): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflateCopyNative(source);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateSetDictionary(strm: ZStream, dictionary: ArrayBuffer): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflateSetDictionaryNative(strm, dictionary);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateGetDictionary(strm: ZStream, dictionary: ArrayBuffer): Promise<DictionaryOutputInfo> {
+      let p = new Promise<DictionaryOutputInfo>((resolve: (v: DictionaryOutputInfo) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): DictionaryOutputInfo => {
+          return this.deflateGetDictionaryNative(strm, dictionary);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: DictionaryOutputInfo = e as DictionaryOutputInfo;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateTune(strm: ZStream, goodLength: int, maxLazy: int, niceLength: int, maxChain: int): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflateTuneNative(strm, goodLength, maxLazy, niceLength, maxChain);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateReset(strm: ZStream): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflateResetNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateResetKeep(strm: ZStream): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflateResetKeepNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflatePending(strm: ZStream): Promise<DeflatePendingOutputInfo> {
+      let p = new Promise<DeflatePendingOutputInfo>((resolve: (v: DeflatePendingOutputInfo) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): DeflatePendingOutputInfo => {
+          return this.deflatePendingNative(strm);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: DeflatePendingOutputInfo = e as DeflatePendingOutputInfo;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflateParams(strm: ZStream, level: CompressLevel, strategy: CompressStrategy): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflateParamsNative(strm, level, strategy);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+
+    public deflatePrime(strm: ZStream, bits: int, value: int): Promise<ReturnStatus> {
+      let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
+        let execFun = (): ReturnStatus => {
+          return this.deflatePrimeNative(strm, bits, value);
+        };
+        let p1 = taskpool.execute(execFun);
+        p1.then((e: NullishType) => {
+          let result: ReturnStatus = e as ReturnStatus;
+          resolve(result);
+        }, (err: Error): void => {
+          reject(err as BusinessError);
+        });
+      });
+      return p;
+    }
+  }
+
   export native function compressFilesNative(inFiles: Array<string>, outFile: string, options: Options): void;
 
   export function compressFiles(inFiles: Array<string>, outFile: string, options: Options): Promise<void> {
@@ -858,5 +1820,27 @@ export default namespace zlib {
 
   function createGZipSync(): GZip {
     return zlib.createGZipNative(true);
+  }
+
+  export native function createZipNative(isSync: boolean): Zip;
+
+  function createZip(): Promise<Zip> {
+    let p: Promise<Zip> = new Promise<Zip>((resolve: (v:Zip) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): Zip => {
+        return zlib.createZipNative(false);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: NullishType) => {
+        let result: Zip = e as Zip;
+        resolve(result);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function createZipSync(): Zip {
+    return zlib.createZipNative(true);
   }
 }
