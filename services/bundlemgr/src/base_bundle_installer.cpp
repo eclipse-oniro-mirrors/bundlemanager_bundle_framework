@@ -5276,8 +5276,12 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 signatureFileMap_.at(hapPathRecord.first));
             CHECK_RESULT(result, "Copy hap to install path failed or code signature hap failed %{public}d");
         } else {
-            if (InstalldClient::GetInstance()->MoveHapToCodeDir(
-                hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
+            result = InstalldClient::GetInstance()->MoveHapToCodeDir(hapPathRecord.first, hapPathRecord.second);
+            if (result == ERR_APPEXECFWK_INSTALLD_MOVE_FILE_CROSS_DEV) {
+                LOG_W(BMS_TAG_INSTALLER, "rename hap failed, try to copy instead");
+                result = InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second);
+            }
+            if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "Move hap to install path failed");
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }
