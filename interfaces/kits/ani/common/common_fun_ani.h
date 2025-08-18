@@ -216,29 +216,6 @@ public:
     static bool ParseCreateAppCloneParam(ani_env* env, ani_object object, int32_t& userId, int32_t& appIdx);
     static bool ParseDestroyAppCloneParam(ani_env* env, ani_object object, DestroyAppCloneParam& destroyAppCloneParam);
     static bool ParsePluginParam(ani_env* env, ani_object object, InstallPluginParam& installPluginParam);
-    static bool ParseMetadata(ani_env* env, ani_object object, Metadata& metadata);
-    static bool ParseResource(ani_env* env, ani_object object, Resource& resource);
-    static bool ParseMultiAppMode(ani_env* env, ani_object object, MultiAppModeData& multiAppMode);
-    static bool ParseApplicationInfo(ani_env* env, ani_object object, ApplicationInfo& appInfo);
-    static bool ParseWindowSize(ani_env* env, ani_object object, AbilityInfo& abilityInfo);
-    static bool ParseAbilitySkillUriInner(ani_env* env, ani_object object, SkillUri& skillUri, bool isExtension);
-    static inline bool ParseAbilitySkillUri(ani_env* env, ani_object object, SkillUri& skillUri)
-    {
-        return ParseAbilitySkillUriInner(env, object, skillUri, false);
-    }
-    static inline bool ParseExtensionAbilitySkillUri(ani_env* env, ani_object object, SkillUri& skillUri)
-    {
-        return ParseAbilitySkillUriInner(env, object, skillUri, true);
-    }
-    static bool ParseAbilitySkillInner(ani_env* env, ani_object object, Skill& skill, bool isExtension);
-    static inline bool ParseAbilitySkill(ani_env* env, ani_object object, Skill& skill)
-    {
-        return ParseAbilitySkillInner(env, object, skill, false);
-    }
-    static inline bool ParseExtensionAbilitySkill(ani_env* env, ani_object object, Skill& skill)
-    {
-        return ParseAbilitySkillInner(env, object, skill, true);
-    }
     static bool ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo& abilityInfo);
 
     template<typename toType>
@@ -365,10 +342,10 @@ public:
         RETURN_FALSE_IF_NULL(env);
         RETURN_FALSE_IF_NULL(aniArray);
 
-        ani_double length;
-        ani_status status = env->Object_GetPropertyByName_Double(aniArray, "length", &length);
+        ani_size length = 0;
+        ani_status status = env->Array_GetLength(reinterpret_cast<ani_array>(aniArray), &length);
         if (status != ANI_OK) {
-            APP_LOGE("Object_GetPropertyByName_Double failed %{public}d", status);
+            APP_LOGE("Array_GetLength failed %{public}d", status);
             return false;
         }
         for (ani_int i = 0; i < static_cast<ani_int>(length); ++i) {
