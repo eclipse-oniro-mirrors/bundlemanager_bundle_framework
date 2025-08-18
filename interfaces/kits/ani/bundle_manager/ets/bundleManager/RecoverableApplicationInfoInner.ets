@@ -24,4 +24,21 @@ export class RecoverableApplicationInfoInner implements RecoverableApplicationIn
   public readonly systemApp: boolean;
   public readonly bundleType: bundleManager.BundleType = bundleManager.BundleType.APP;
   public readonly codePaths: Array<string> = new Array<string>;
+
+  constructor() { }
+  constructor(bundleName: string,
+    moduleName: string,
+    labelId: long,
+    iconId: long,
+    systemApp: boolean,
+    bundleType: bundleManager.BundleType,
+    codePaths: Array<string>) {
+      this.bundleName = bundleName;
+      this.moduleName = moduleName;
+      this.labelId = labelId;
+      this.iconId = iconId;
+      this.systemApp = systemApp;
+      this.bundleType = bundleType;
+      this.codePaths = codePaths;
+  }
 }

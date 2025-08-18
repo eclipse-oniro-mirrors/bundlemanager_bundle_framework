@@ -75,5 +75,18 @@ export class ExtensionAbilityInfoInner implements ExtensionAbilityInfo {
       this.skills = skills;
       this.appIndex = appIndex;
   }
+  constructor(bundleName: string,
+    moduleName: string,
+    name: string,
+    labelId: long,
+    descriptionId: long,
+    iconId: long) {
+      this.bundleName = bundleName;
+      this.moduleName = moduleName;
+      this.name = name;
+      this.labelId = labelId;
+      this.descriptionId = descriptionId;
+      this.iconId = iconId;
+  }
 }
 

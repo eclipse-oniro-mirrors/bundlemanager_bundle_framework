@@ -26,179 +26,112 @@ namespace AppExecFwk {
 using namespace arkts::ani_signature;
 using Want = OHOS::AAFwk::Want;
 namespace {
-constexpr const char* RAW_CLASSNAME_INT = "std.core.Int";
-constexpr const char* RAW_CLASSNAME_LONG = "std.core.Long";
-constexpr const char* RAW_CLASSNAME_ARRAY = "escompat.Array";
-constexpr const char* RAW_CLASSNAME_STRING = "std.core.String";
-constexpr const char* RAW_CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE = "@ohos.bundle.bundleManager.bundleManager.BundleType";
-constexpr const char* RAW_CLASSNAME_BUNDLEMANAGER_MULTIAPPMODE_TYPE =
-    "@ohos.bundle.bundleManager.bundleManager.MultiAppModeType";
-constexpr const char* RAW_CLASSNAME_BUNDLEMANAGER_DISPLAYORIENTATION =
-    "@ohos.bundle.bundleManager.bundleManager.DisplayOrientation";
-constexpr const char* RAW_CLASSNAME_BUNDLEMANAGER_LAUNCH_TYPE = "@ohos.bundle.bundleManager.bundleManager.LaunchType";
-constexpr const char* RAW_CLASSNAME_BUNDLEMANAGER_EXTENSIONABILITY_TYPE =
-    "@ohos.bundle.bundleManager.bundleManager.ExtensionAbilityType";
-constexpr const char* RAW_CLASSNAME_BUNDLEMANAGER_MODULE_TYPE = "@ohos.bundle.bundleManager.bundleManager.ModuleType";
-
-constexpr const char* CLASSNAME_ABILITYINFO_INNER = "bundleManager.AbilityInfoInner.AbilityInfoInner";
-constexpr const char* CLASSNAME_EXTENSIONABILITYINFO_INNER =
+constexpr const char* CLASSNAME_ABILITY_INFO_INNER = "bundleManager.AbilityInfoInner.AbilityInfoInner";
+constexpr const char* CLASSNAME_EXTENSION_ABILITY_INFO_INNER =
     "bundleManager.ExtensionAbilityInfoInner.ExtensionAbilityInfoInner";
-constexpr const char* RAW_CLASSNAME_WINDOWSIZE = "bundleManager.AbilityInfo.WindowSize";
-constexpr const char* CLASSNAME_WINDOWSIZE_INNER = "bundleManager.AbilityInfoInner.WindowSizeInner";
-constexpr const char* RAW_CLASSNAME_APPLICATIONINFO = "bundleManager.ApplicationInfo.ApplicationInfo";
-constexpr const char* CLASSNAME_APPLICATIONINFO_INNER = "bundleManager.ApplicationInfoInner.ApplicationInfoInner";
-constexpr const char* CLASSNAME_MODULEMETADATA_INNER = "bundleManager.ApplicationInfoInner.ModuleMetadataInner";
-constexpr const char* RAW_CLASSNAME_MULTIAPPMODE = "bundleManager.ApplicationInfo.MultiAppMode";
-constexpr const char* CLASSNAME_MULTIAPPMODE_INNER = "bundleManager.ApplicationInfoInner.MultiAppModeInner";
-constexpr const char* CLASSNAME_BUNDLEINFO_INNER = "bundleManager.BundleInfoInner.BundleInfoInner";
+constexpr const char* CLASSNAME_WINDOW_SIZE = "bundleManager.AbilityInfo.WindowSize";
+constexpr const char* CLASSNAME_WINDOW_SIZE_INNER = "bundleManager.AbilityInfoInner.WindowSizeInner";
+constexpr const char* CLASSNAME_APPLICATION_INFO = "bundleManager.ApplicationInfo.ApplicationInfo";
+constexpr const char* CLASSNAME_APPLICATION_INFO_INNER = "bundleManager.ApplicationInfoInner.ApplicationInfoInner";
+constexpr const char* CLASSNAME_MODULE_METADATA_INNER = "bundleManager.ApplicationInfoInner.ModuleMetadataInner";
+constexpr const char* CLASSNAME_MULTI_APP_MODE = "bundleManager.ApplicationInfo.MultiAppMode";
+constexpr const char* CLASSNAME_MULTI_APP_MODE_INNER = "bundleManager.ApplicationInfoInner.MultiAppModeInner";
+constexpr const char* CLASSNAME_BUNDLE_INFO_INNER = "bundleManager.BundleInfoInner.BundleInfoInner";
 constexpr const char* CLASSNAME_PERMISSION_INNER = "bundleManager.BundleInfoInner.ReqPermissionDetailInner";
-constexpr const char* RAW_CLASSNAME_USEDSCENE = "bundleManager.BundleInfo.UsedScene";
-constexpr const char* CLASSNAME_USEDSCENE_INNER = "bundleManager.BundleInfoInner.UsedSceneInner";
-constexpr const char* RAW_CLASSNAME_SIGNATUREINFO = "bundleManager.BundleInfo.SignatureInfo";
-constexpr const char* CLASSNAME_SIGNATUREINFO_INNER = "bundleManager.BundleInfoInner.SignatureInfoInner";
-constexpr const char* CLASSNAME_APPCLONEIDENTITY_INNER = "bundleManager.BundleInfoInner.AppCloneIdentityInner";
-constexpr const char* CLASSNAME_DYNAMICICONINFO_INNER = "bundleManager.BundleInfoInner.DynamicIconInfoInner";
-constexpr const char* CLASSNAME_PERMISSIONDEF_INNER = "bundleManager.PermissionDefInner.PermissionDefInner";
-constexpr const char* CLASSNAME_SHAREDBUNDLEINFO_INNER = "bundleManager.SharedBundleInfoInner.SharedBundleInfoInner";
-constexpr const char* CLASSNAME_SHAREDMODULEINFO_INNER = "bundleManager.SharedBundleInfoInner.SharedModuleInfoInner";
-constexpr const char* CLASSNAME_APPPROVISIONINFO_INNER = "bundleManager.AppProvisionInfoInner.AppProvisionInfoInner";
+constexpr const char* CLASSNAME_USED_SCENE = "bundleManager.BundleInfo.UsedScene";
+constexpr const char* CLASSNAME_USED_SCENE_INNER = "bundleManager.BundleInfoInner.UsedSceneInner";
+constexpr const char* CLASSNAME_SIGNATURE_INFO = "bundleManager.BundleInfo.SignatureInfo";
+constexpr const char* CLASSNAME_SIGNATURE_INFO_INNER = "bundleManager.BundleInfoInner.SignatureInfoInner";
+constexpr const char* CLASSNAME_APP_CLONE_IDENTITY_INNER = "bundleManager.BundleInfoInner.AppCloneIdentityInner";
+constexpr const char* CLASSNAME_DYNAMIC_ICON_INFO_INNER = "bundleManager.BundleInfoInner.DynamicIconInfoInner";
+constexpr const char* CLASSNAME_PERMISSION_DEF_INNER = "bundleManager.PermissionDefInner.PermissionDefInner";
+constexpr const char* CLASSNAME_SHARED_BUNDLE_INFO_INNER = "bundleManager.SharedBundleInfoInner.SharedBundleInfoInner";
+constexpr const char* CLASSNAME_SHARED_MODULE_INFO_INNER = "bundleManager.SharedBundleInfoInner.SharedModuleInfoInner";
+constexpr const char* CLASSNAME_APP_PROVISION_INFO_INNER = "bundleManager.AppProvisionInfoInner.AppProvisionInfoInner";
+constexpr const char* CLASSNAME_VALIDITY = "bundleManager.AppProvisionInfo.Validity";
 constexpr const char* CLASSNAME_VALIDITY_INNER = "bundleManager.AppProvisionInfoInner.ValidityInner";
-constexpr const char* CLASSNAME_RECOVERABLEAPPLICATIONINFO_INNER =
+constexpr const char* CLASSNAME_RECOVERABLE_APPLICATION_INFO_INNER =
     "bundleManager.RecoverableApplicationInfoInner.RecoverableApplicationInfoInner";
-constexpr const char* CLASSNAME_PREINSTALLEDAPPLICATIONINFO_INNER =
+constexpr const char* CLASSNAME_PREINSTALLED_APPLICATION_INFO_INNER =
     "bundleManager.ApplicationInfoInner.PreinstalledApplicationInfoInner";
-constexpr const char* CLASSNAME_PLUGINBUNDLEINFO_INNER = "bundleManager.PluginBundleInfoInner.PluginBundleInfoInner";
-constexpr const char* CLASSNAME_PLUGINMODULEINFO_INNER = "bundleManager.PluginBundleInfoInner.PluginModuleInfoInner";
+constexpr const char* CLASSNAME_PLUGIN_BUNDLE_INFO_INNER = "bundleManager.PluginBundleInfoInner.PluginBundleInfoInner";
+constexpr const char* CLASSNAME_PLUGIN_MODULE_INFO_INNER = "bundleManager.PluginBundleInfoInner.PluginModuleInfoInner";
 constexpr const char* CLASSNAME_METADATA_INNER = "bundleManager.MetadataInner.MetadataInner";
-constexpr const char* RAW_CLASSNAME_RESOURCE = "global.resource.Resource";
+constexpr const char* CLASSNAME_RESOURCE = "global.resource.Resource";
 constexpr const char* CLASSNAME_RESOURCE_INNER = "global.resourceInner.ResourceInner";
-constexpr const char* CLASSNAME_ROUTERITEM_INNER = "bundleManager.HapModuleInfoInner.RouterItemInner";
-constexpr const char* CLASSNAME_PRELOADITEM_INNER = "bundleManager.HapModuleInfoInner.PreloadItemInner";
+constexpr const char* CLASSNAME_ROUTER_ITEM_INNER = "bundleManager.HapModuleInfoInner.RouterItemInner";
+constexpr const char* CLASSNAME_PRELOAD_ITEM_INNER = "bundleManager.HapModuleInfoInner.PreloadItemInner";
 constexpr const char* CLASSNAME_DEPENDENCY_INNER = "bundleManager.HapModuleInfoInner.DependencyInner";
-constexpr const char* CLASSNAME_HAPMODULEINFO_INNER = "bundleManager.HapModuleInfoInner.HapModuleInfoInner";
-constexpr const char* CLASSNAME_DATAITEM_INNER = "bundleManager.HapModuleInfoInner.DataItemInner";
-constexpr const char* CLASSNAME_ELEMENTNAME_INNER = "bundleManager.ElementNameInner.ElementNameInner";
+constexpr const char* CLASSNAME_HAP_MODULE_INFO_INNER = "bundleManager.HapModuleInfoInner.HapModuleInfoInner";
+constexpr const char* CLASSNAME_DATA_ITEM_INNER = "bundleManager.HapModuleInfoInner.DataItemInner";
+constexpr const char* CLASSNAME_ELEMENT_NAME = "bundleManager.ElementName.ElementNam";
+constexpr const char* CLASSNAME_ELEMENT_NAME_INNER = "bundleManager.ElementNameInner.ElementNameInner";
 constexpr const char* CLASSNAME_SKILL_INNER = "bundleManager.SkillInner.SkillInner";
-constexpr const char* CLASSNAME_SKILLURI_INNER = "bundleManager.SkillInner.SkillUriInner";
-constexpr const char* CLASSNAME_SHORTCUTINFO_INNER = "bundleManager.ShortcutInfo.ShortcutInfoInner";
-constexpr const char* CLASSNAME_SHORTCUTWANT_INNER = "bundleManager.ShortcutInfo.ShortcutWantInner";
-constexpr const char* CLASSNAME_SHORTCUT_PARAMETERITEM_INNER = "bundleManager.ShortcutInfo.ParameterItemInner";
+constexpr const char* CLASSNAME_SKILL_URI_INNER = "bundleManager.SkillInner.SkillUriInner";
+constexpr const char* CLASSNAME_SHORTCUT_INFO_INNER = "bundleManager.ShortcutInfo.ShortcutInfoInner";
+constexpr const char* CLASSNAME_SHORTCUT_WANT_INNER = "bundleManager.ShortcutInfo.ShortcutWantInner";
+constexpr const char* CLASSNAME_SHORTCUT_PARAMETER_ITEM_INNER = "bundleManager.ShortcutInfo.ParameterItemInner";
 constexpr const char* CLASSNAME_LAUNCHER_ABILITY_INFO_INNER =
     "bundleManager.LauncherAbilityInfoInner.LauncherAbilityInfoInner";
 constexpr const char* CLASSNAME_BUNDLE_CHANGED_INFO_INNER =
     "@ohos.bundle.bundleMonitor.bundleMonitor.BundleChangedInfoInner";
 constexpr const char* CLASSNAME_BUNDLE_PACK_INFO_INNER = "bundleManager.BundlePackInfoInner.BundlePackInfoInner";
 constexpr const char* CLASSNAME_PACKAGE_CONFIG_INNER = "bundleManager.BundlePackInfoInner.PackageConfigInner";
+constexpr const char* CLASSNAME_PACKAGE_SUMMARY = "bundleManager.BundlePackInfo.PackageSummary";
 constexpr const char* CLASSNAME_PACKAGE_SUMMARY_INNER = "bundleManager.BundlePackInfoInner.PackageSummaryInner";
+constexpr const char* CLASSNAME_BUNDLE_CONFIG_INFO = "bundleManager.BundlePackInfo.BundleConfigInfo";
 constexpr const char* CLASSNAME_BUNDLE_CONFIG_INFO_INNER = "bundleManager.BundlePackInfoInner.BundleConfigInfoInner";
 constexpr const char* CLASSNAME_EXTENSION_ABILITY_INNER = "bundleManager.BundlePackInfoInner.ExtensionAbilityInner";
 constexpr const char* CLASSNAME_MODULE_CONFIG_INFO_INNER = "bundleManager.BundlePackInfoInner.ModuleConfigInfoInner";
+constexpr const char* CLASSNAME_MODULE_DISTRO_INFO = "bundleManager.BundlePackInfo.ModuleDistroInfo";
 constexpr const char* CLASSNAME_MODULE_DISTRO_INFO_INNER = "bundleManager.BundlePackInfoInner.ModuleDistroInfoInner";
 constexpr const char* CLASSNAME_MODULE_ABILITY_INFO_INNER =
     "bundleManager.BundlePackInfoInner.ModuleAbilityInfoInner";
 constexpr const char* CLASSNAME_ABILITY_FORM_INFO_INNER = "bundleManager.BundlePackInfoInner.AbilityFormInfoInner";
+constexpr const char* CLASSNAME_VERSION = "bundleManager.BundlePackInfo.Version";
 constexpr const char* CLASSNAME_VERSION_INNER = "bundleManager.BundlePackInfoInner.VersionInner";
+constexpr const char* CLASSNAME_API_VERSION = "bundleManager.BundlePackInfo.ApiVersion";
 constexpr const char* CLASSNAME_API_VERSION_INNER = "bundleManager.BundlePackInfoInner.ApiVersionInner";
 constexpr const char* CLASSNAME_DISPATCH_INFO_INNER = "bundleManager.DispatchInfoInner.DispatchInfoInner";
-constexpr const char* CLASSNAME_OVERLAY_MOUDLE_INFO_INNER =
+constexpr const char* CLASSNAME_OVERLAY_MODULE_INFO_INNER =
     "bundleManager.OverlayModuleInfoInner.OverlayModuleInfoInner";
 constexpr const char* CLASSNAME_WANT = "@ohos.app.ability.Want.Want";
+constexpr const char* CLASSNAME_ZLIB_CHECKSUM_INTERNAL = "@ohos.zlib.zlib.ChecksumInternal";
+constexpr const char* CLASSNAME_ZLIB_GZIP_INTERNAL = "@ohos.zlib.zlib.GZipInternal";
 
 constexpr const char* PROPERTYNAME_NAME = "name";
-constexpr const char* PROPERTYNAME_VERSIONCODE = "versionCode";
-constexpr const char* PROPERTYNAME_VERSIONNAME = "versionName";
-constexpr const char* PROPERTYNAME_MINCOMPATIBLEVERSIONCODE = "minCompatibleVersionCode";
-constexpr const char* PROPERTYNAME_HAPMODULESINFO = "hapModulesInfo";
-constexpr const char* PROPERTYNAME_INSTALLTIME = "installTime";
-constexpr const char* PROPERTYNAME_APPINDEX = "appIndex";
+constexpr const char* PROPERTYNAME_VERSION_CODE = "versionCode";
+constexpr const char* PROPERTYNAME_APP_INDEX = "appIndex";
 constexpr const char* PROPERTYNAME_KEY = "key";
 constexpr const char* PROPERTYNAME_VALUE = "value";
-constexpr const char* PROPERTYNAME_MODULENAME = "moduleName";
-constexpr const char* PROPERTYNAME_DESCRIPTION = "description";
-constexpr const char* PROPERTYNAME_DESCRIPTIONID = "descriptionId";
+constexpr const char* PROPERTYNAME_MODULE_NAME = "moduleName";
 constexpr const char* PROPERTYNAME_LABEL = "label";
-constexpr const char* PROPERTYNAME_LABELID = "labelId";
+constexpr const char* PROPERTYNAME_LABEL_ID = "labelId";
 constexpr const char* PROPERTYNAME_ICON = "icon";
-constexpr const char* PROPERTYNAME_ICONID = "iconId";
-constexpr const char* PROPERTYNAME_APPDISTRIBUTIONTYPE = "appDistributionType";
-constexpr const char* PROPERTYNAME_SYSTEMAPP = "systemApp";
-constexpr const char* PROPERTYNAME_BUNDLETYPE = "bundleType";
-constexpr const char* PROPERTYNAME_RELEASETYPE = "releaseType";
-constexpr const char* PROPERTYNAME_BUNDLENAME = "bundleName";
-constexpr const char* PROPERTYNAME_EXPORTED = "exported";
-constexpr const char* PROPERTYNAME_TYPE = "type";
-constexpr const char* PROPERTYNAME_URI = "uri";
-constexpr const char* PROPERTYNAME_DEVICETYPES = "deviceTypes";
-constexpr const char* PROPERTYNAME_APPLICATIONINFO = "applicationInfo";
+constexpr const char* PROPERTYNAME_ICON_ID = "iconId";
+constexpr const char* PROPERTYNAME_BUNDLE_NAME = "bundleName";
 constexpr const char* PROPERTYNAME_ID = "id";
-constexpr const char* PROPERTYNAME_APPIDENTIFIER = "appIdentifier";
-constexpr const char* PROPERTYNAME_CERTIFICATE = "certificate";
-constexpr const char* PROPERTYNAME_ABILITIES = "abilities";
-constexpr const char* PROPERTYNAME_ABILITIESINFO = "abilitiesInfo";
-constexpr const char* PROPERTYNAME_EXTENSIONABILITIESINFO = "extensionAbilitiesInfo";
-constexpr const char* PROPERTYNAME_INSTALLATIONFREE = "installationFree";
-constexpr const char* PROPERTYNAME_HASHVALUE = "hashValue";
-constexpr const char* PROPERTYNAME_DEVICEID = "deviceId";
-constexpr const char* PROPERTYNAME_ABILITYNAME = "abilityName";
-constexpr const char* PROPERTYNAME_SHORTNAME = "shortName";
+constexpr const char* PROPERTYNAME_HASH_VALUE = "hashValue";
+constexpr const char* PROPERTYNAME_DEVICE_ID = "deviceId";
+constexpr const char* PROPERTYNAME_ABILITY_NAME = "abilityName";
 constexpr const char* PROPERTYNAME_ENTITIES = "entities";
-constexpr const char* PROPERTYNAME_HOSTABILITY = "hostAbility";
+constexpr const char* PROPERTYNAME_HOST_ABILITY = "hostAbility";
 constexpr const char* PROPERTYNAME_WANTS = "wants";
-constexpr const char* PROPERTYNAME_SOURCETYPE = "sourceType";
-constexpr const char* PROPERTYNAME_TARGETBUNDLE = "targetBundle";
-constexpr const char* PROPERTYNAME_TARGETMODULE = "targetModule";
-constexpr const char* PROPERTYNAME_TARGETABILITY = "targetAbility";
+constexpr const char* PROPERTYNAME_SOURCE_TYPE = "sourceType";
+constexpr const char* PROPERTYNAME_TARGET_BUNDLE = "targetBundle";
+constexpr const char* PROPERTYNAME_TARGET_MODULE = "targetModule";
+constexpr const char* PROPERTYNAME_TARGET_ABILITY = "targetAbility";
 constexpr const char* PROPERTYNAME_PARAMETERS = "parameters";
-constexpr const char* PROPERTYNAME_ELEMENTNAME = "elementName";
-constexpr const char* PROPERTYNAME_USERID = "userId";
-constexpr const char* PROPERTYNAME_HASHPARAMS = "hashParams";
-constexpr const char* PROPERTYNAME_PGOFILEPATH = "pgoFilePath";
-constexpr const char* PROPERTYNAME_PGOPARAMS = "pgoParams";
-constexpr const char* PROPERTYNAME_SPECIFIEDDISTRIBUTIONTYPE = "specifiedDistributionType";
-constexpr const char* PROPERTYNAME_ISKEEPDATA = "isKeepData";
-constexpr const char* PROPERTYNAME_INSTALLFLAG = "installFlag";
-constexpr const char* PROPERTYNAME_CROWDTESTDEADLINE = "crowdtestDeadline";
-constexpr const char* PROPERTYNAME_SHAREDBUNDLEDIRPATHS = "sharedBundleDirPaths";
-constexpr const char* PROPERTYNAME_ADDITIONALINFO = "additionalInfo";
-constexpr const char* PROPERTYNAME_CODE = "code";
-constexpr const char* PROPERTYNAME_VERSION = "version";
-constexpr const char* PROPERTYNAME_UPDATEENABLED = "updateEnabled";
-constexpr const char* PROPERTYNAME_SCHEDULEDUPDATETIME = "scheduledUpdateTime";
-constexpr const char* PROPERTYNAME_UPDATEDURATION = "updateDuration";
-constexpr const char* PROPERTYNAME_SUPPORTDIMENSIONS = "supportDimensions";
-constexpr const char* PROPERTYNAME_DEFAULTDIMENSION = "defaultDimension";
-constexpr const char* PROPERTYNAME_FORMS = "forms";
-constexpr const char* PROPERTYNAME_DELIVERYWITHINSTALL = "deliveryWithInstall";
-constexpr const char* PROPERTYNAME_MODULETYPE = "moduleType";
-constexpr const char* PROPERTYNAME_COMPATIBLE = "compatible";
-constexpr const char* PROPERTYNAME_TARGET = "target";
-constexpr const char* PROPERTYNAME_MAINABILITY = "mainAbility";
-constexpr const char* PROPERTYNAME_APIVERSION = "apiVersion";
-constexpr const char* PROPERTYNAME_DISTRO = "distro";
-constexpr const char* PROPERTYNAME_EXTENSIONABILITIES = "extensionAbilities";
-constexpr const char* PROPERTYNAME_APP = "app";
-constexpr const char* PROPERTYNAME_MODULES = "modules";
-constexpr const char* PROPERTYNAME_PACKAGES = "packages";
-constexpr const char* PROPERTYNAME_SUMMARY = "summary";
-constexpr const char* PROPERTYNAME_DISPATCHAPIVERSION = "dispatchAPIVersion";
-constexpr const char* PROPERTYNAME_TARGETMOUDLENAME = "targetModuleName";
-constexpr const char* PROPERTYNAME_PRIORITY = "priority";
-constexpr const char* PROPERTYNAME_STATE = "state";
-constexpr const char* PROPERTYNAME_PERMISSIONNAME = "permissionName";
-constexpr const char* PROPERTYNAME_GRANTMODE = "grantMode";
-constexpr const char* PROPERTYNAME_COMPATIBLEPOLICY = "compatiblePolicy";
-constexpr const char* PROPERTYNAME_SHAREDMODULEINFO = "sharedModuleInfo";
-constexpr const char* PROPERTYNAME_UUID = "uuid";
-constexpr const char* PROPERTYNAME_NOTBEFORE = "notBefore";
-constexpr const char* PROPERTYNAME_NOTAFTER = "notAfter";
-constexpr const char* PROPERTYNAME_VALIDITY = "validity";
-constexpr const char* PROPERTYNAME_DEVELOPERID = "developerId";
-constexpr const char* PROPERTYNAME_APL = "apl";
-constexpr const char* PROPERTYNAME_ISSUER = "issuer";
-constexpr const char* PROPERTYNAME_ORGANIZATION = "organization";
-constexpr const char* PROPERTYNAME_CODEPATHS = "codePaths";
-constexpr const char* PROPERTYNAME_PLUGINBUNDLENAME = "pluginBundleName";
-constexpr const char* PROPERTYNAME_PLUGINMODULEINFOS = "pluginModuleInfos";
+constexpr const char* PROPERTYNAME_USER_ID = "userId";
+constexpr const char* PROPERTYNAME_HASH_PARAMS = "hashParams";
+constexpr const char* PROPERTYNAME_PGO_FILE_PATH = "pgoFilePath";
+constexpr const char* PROPERTYNAME_PGO_PARAMS = "pgoParams";
+constexpr const char* PROPERTYNAME_SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
+constexpr const char* PROPERTYNAME_IS_KEEP_DATA = "isKeepData";
+constexpr const char* PROPERTYNAME_INSTALL_FLAG = "installFlag";
+constexpr const char* PROPERTYNAME_CROWD_TEST_DEADLINE = "crowdtestDeadline";
+constexpr const char* PROPERTYNAME_SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
+constexpr const char* PROPERTYNAME_ADDITIONAL_INFO = "additionalInfo";
 constexpr const char* PROPERTYNAME_VISIBLE = "visible";
 constexpr const char* PROPERTYNAME_ACTION = "action";
 
@@ -217,21 +150,24 @@ static std::map<std::string, ANIClassCacheItem> g_aniClassCache = {
     { CommonFunAniNS::CLASSNAME_LONG, { } },
     { CommonFunAniNS::CLASSNAME_DOUBLE, { } },
     { CommonFunAniNS::CLASSNAME_ARRAY, { } },
-    { CLASSNAME_BUNDLEINFO_INNER, { } },
-    { CLASSNAME_APPLICATIONINFO_INNER, { } },
-    { CLASSNAME_MODULEMETADATA_INNER, { } },
+    { CLASSNAME_BUNDLE_INFO_INNER, { } },
+    { CLASSNAME_APPLICATION_INFO_INNER, { } },
+    { CLASSNAME_MODULE_METADATA_INNER, { } },
     { CLASSNAME_METADATA_INNER, { } },
     { CLASSNAME_RESOURCE_INNER, { } },
-    { CLASSNAME_MULTIAPPMODE_INNER, { } },
-    { CLASSNAME_HAPMODULEINFO_INNER, { } },
-    { CLASSNAME_ABILITYINFO_INNER, { } },
+    { CLASSNAME_MULTI_APP_MODE_INNER, { } },
+    { CLASSNAME_HAP_MODULE_INFO_INNER, { } },
+    { CLASSNAME_ABILITY_INFO_INNER, { } },
     { CLASSNAME_SKILL_INNER, { } },
-    { CLASSNAME_WINDOWSIZE_INNER, { } },
-    { CLASSNAME_EXTENSIONABILITYINFO_INNER, { } },
+    { CLASSNAME_WINDOW_SIZE_INNER, { } },
+    { CLASSNAME_EXTENSION_ABILITY_INFO_INNER, { } },
     { CLASSNAME_DEPENDENCY_INNER, { } },
-    { CLASSNAME_PRELOADITEM_INNER, { } },
-    { CLASSNAME_ROUTERITEM_INNER, { } },
-    { CLASSNAME_DATAITEM_INNER, { } },
+    { CLASSNAME_PRELOAD_ITEM_INNER, { } },
+    { CLASSNAME_ROUTER_ITEM_INNER, { } },
+    { CLASSNAME_DATA_ITEM_INNER, { } },
+    { CLASSNAME_APP_PROVISION_INFO_INNER, { } },
+    { CLASSNAME_ZLIB_CHECKSUM_INTERNAL, { } },
+    { CLASSNAME_ZLIB_GZIP_INTERNAL, { } },
 };
 
 static ani_class GetCacheClass(ani_env* env, const std::string& className)
@@ -262,22 +198,18 @@ static ani_class GetCacheClass(ani_env* env, const std::string& className)
     return cls;
 }
 
-static ani_method GetCacheCtorMethod(
-    ani_env* env, ani_class cls, const std::string& ctorSig = Builder::BuildSignatureDescriptor({}))
+static ani_method GetCacheCtorMethod(ani_env* env, const std::string& className, ani_class cls,
+    const std::string& ctorSig = Builder::BuildSignatureDescriptor({}))
 {
     RETURN_NULL_IF_NULL(env);
     RETURN_NULL_IF_NULL(cls);
 
     std::lock_guard<std::mutex> lock(g_aniClassCacherMutex);
-    auto iter = std::find_if(g_aniClassCache.begin(), g_aniClassCache.end(), [env, cls](const auto& pair) {
-        ani_boolean equals = ANI_FALSE;
-        env->Reference_StrictEquals(pair.second.classRef, cls, &equals);
-        return equals == ANI_TRUE;
-    });
+    auto iter = g_aniClassCache.find(className);
     if (iter == g_aniClassCache.end()) {
         return nullptr;
     }
-    
+
     auto iterMethod = iter->second.classMethodMap.find(ctorSig);
     if (iterMethod != iter->second.classMethodMap.end() && iterMethod->second != nullptr) {
         return iterMethod->second;
@@ -295,13 +227,13 @@ static ani_method GetCacheCtorMethod(
     return method;
 }
 
-static ani_method GetCtorMethod(
-    ani_env* env, ani_class cls, const std::string& ctorSig = Builder::BuildSignatureDescriptor({}))
+static ani_method GetCtorMethod(ani_env* env, const std::string& className, ani_class cls,
+    const std::string& ctorSig = Builder::BuildSignatureDescriptor({}))
 {
     RETURN_NULL_IF_NULL(env);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_method method = GetCacheCtorMethod(env, cls, ctorSig);
+    ani_method method = GetCacheCtorMethod(env, className, cls, ctorSig);
     if (method != nullptr) {
         return method;
     }
@@ -384,12 +316,12 @@ ani_class CommonFunAni::CreateClassByName(ani_env* env, const std::string& class
     return cls;
 }
 
-ani_object CommonFunAni::CreateNewObjectByClass(ani_env* env, ani_class cls)
+ani_object CommonFunAni::CreateNewObjectByClass(ani_env* env, const std::string& className, ani_class cls)
 {
     RETURN_NULL_IF_NULL(env);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_method method = GetCtorMethod(env, cls);
+    ani_method method = GetCtorMethod(env, className, cls);
     RETURN_NULL_IF_NULL(method);
 
     ani_object object = nullptr;
@@ -402,13 +334,15 @@ ani_object CommonFunAni::CreateNewObjectByClass(ani_env* env, ani_class cls)
 }
 
 ani_object CommonFunAni::CreateNewObjectByClassV2(
-    ani_env* env, ani_class cls, const std::string& ctorSig, const ani_value* args)
+    ani_env* env, const std::string& className, const std::string& ctorSig, const ani_value* args)
 {
     RETURN_NULL_IF_NULL(env);
-    RETURN_NULL_IF_NULL(cls);
     RETURN_NULL_IF_NULL(args);
 
-    ani_method method = GetCtorMethod(env, cls, ctorSig.empty()? nullptr: ctorSig.c_str());
+    ani_class cls = CreateClassByName(env, className);
+    RETURN_NULL_IF_NULL(cls);
+
+    ani_method method = GetCtorMethod(env, className, cls, ctorSig);
     RETURN_NULL_IF_NULL(method);
     ani_object object = nullptr;
     ani_status status = env->Object_New_A(cls, method, &object, args);
@@ -422,9 +356,6 @@ ani_object CommonFunAni::CreateNewObjectByClassV2(
 ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundleInfo, int32_t flags)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLEINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -506,164 +437,165 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         { .i = bundleInfo.appIndex },
         { .r = firstInstallTime },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)          // moduleName: string
-        .AddClass(RAW_CLASSNAME_STRING)          // vendor: string
-        .AddLong()                               // versionCode: long
-        .AddClass(RAW_CLASSNAME_STRING)          // versionName: string
-        .AddInt()                                // minCompatibleVersionCode: int
-        .AddInt()                                // targetVersion: int
-        .AddClass(RAW_CLASSNAME_APPLICATIONINFO) // appInfo: ApplicationInfo
-        .AddClass(RAW_CLASSNAME_ARRAY)           // hapModulesInfo: Array<HapModuleInfo>
-        .AddClass(RAW_CLASSNAME_ARRAY)           // reqPermissionDetails: Array<ReqPermissionDetail>
-        .AddClass(RAW_CLASSNAME_ARRAY)           // permissionGrantStates: Array<bundleManager.PermissionGrantState>
-        .AddClass(RAW_CLASSNAME_SIGNATUREINFO)   // signatureInfo: SignatureInfo
-        .AddLong()                               // installTime: long
-        .AddLong()                               // updateTime: long
-        .AddClass(RAW_CLASSNAME_ARRAY)           // routerMap: Array<RouterItem>
-        .AddInt()                                // appIndex: int
-        .AddClass(RAW_CLASSNAME_LONG);           // firstInstallTime?: long
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // vendor: string
+        .AddLong()                                  // versionCode: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // versionName: string
+        .AddInt()                                   // minCompatibleVersionCode: int
+        .AddInt()                                   // targetVersion: int
+        .AddClass(CLASSNAME_APPLICATION_INFO)       // appInfo: ApplicationInfo
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // hapModulesInfo: Array<HapModuleInfo>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // reqPermissionDetails: Array<ReqPermissionDetail>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // permissionGrantStates: Array<bundleManager.PermissionGrantState>
+        .AddClass(CLASSNAME_SIGNATURE_INFO)         // signatureInfo: SignatureInfo
+        .AddLong()                                  // installTime: long
+        .AddLong()                                  // updateTime: long
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // routerMap: Array<RouterItem>
+        .AddInt()                                   // appIndex: int
+        .AddClass(CommonFunAniNS::CLASSNAME_LONG)   // firstInstallTime?: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertDefaultAppAbilityInfo(ani_env* env, const AbilityInfo& abilityInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_ABILITYINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.bundleName, bundleName));
 
     // moduleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.moduleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    ani_string moduleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.moduleName, moduleName));
 
     // name: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.name, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+    ani_string name = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.name, name));
 
     // label: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.label, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
-
-    // labelId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, abilityInfo.labelId));
+    ani_string label = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.label, label));
 
     // description: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.description, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string));
-
-    // descriptionId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, abilityInfo.descriptionId));
+    ani_string description = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.description, description));
 
     // icon: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.iconPath, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICON, string));
+    ani_string icon = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityInfo.iconPath, icon));
 
-    // iconId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, abilityInfo.iconId));
-
-    return object;
+    ani_value args[] = {
+        { .r = bundleName },
+        { .r = moduleName },
+        { .r = name },
+        { .r = label },
+        { .l = static_cast<ani_long>(abilityInfo.labelId) },
+        { .r = description },
+        { .l = static_cast<ani_long>(abilityInfo.descriptionId) },
+        { .r = icon },
+        { .l = static_cast<ani_long>(abilityInfo.iconId) },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // label: string
+        .AddLong()                                  // labelId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // description: string
+        .AddLong()                                  // descriptionId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // icon: string
+        .AddLong()                                  // iconId: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_ABILITY_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertDefaultAppExtensionInfo(ani_env* env, const ExtensionAbilityInfo& extensionInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_EXTENSIONABILITYINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.bundleName, bundleName));
 
     // moduleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.moduleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    ani_string moduleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.moduleName, moduleName));
 
     // name: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.name, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+    ani_string name = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionInfo.name, name));
 
-    // labelId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, extensionInfo.labelId));
-
-    // descriptionId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, extensionInfo.descriptionId));
-
-    // iconId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, extensionInfo.iconId));
-
-    return object;
+    ani_value args[] = {
+        { .r = bundleName },
+        { .r = moduleName },
+        { .r = name },
+        { .l = static_cast<ani_long>(extensionInfo.labelId) },
+        { .l = static_cast<ani_long>(extensionInfo.descriptionId) },
+        { .l = static_cast<ani_long>(extensionInfo.iconId) },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddLong()                                  // labelId: long
+        .AddLong()                                  // descriptionId: long
+        .AddLong()                                  // iconId: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_EXTENSION_ABILITY_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertDefaultAppHapModuleInfo(ani_env* env, const BundleInfo& bundleInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_HAPMODULEINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
     // abilitiesInfo: Array<AbilityInfo>
-    ani_object aAbilityInfoObject = ConvertAniArray(env, bundleInfo.abilityInfos, ConvertDefaultAppAbilityInfo);
-    RETURN_NULL_IF_NULL(aAbilityInfoObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ABILITIESINFO, aAbilityInfoObject));
+    ani_object abilitiesInfo = ConvertAniArray(env, bundleInfo.abilityInfos, ConvertDefaultAppAbilityInfo);
+    RETURN_NULL_IF_NULL(abilitiesInfo);
 
     // extensionAbilitiesInfo: Array<ExtensionAbilityInfo>
-    ani_object aExtensionInfoObject = ConvertAniArray(env, bundleInfo.extensionInfos, ConvertDefaultAppExtensionInfo);
-    RETURN_NULL_IF_NULL(aExtensionInfoObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_EXTENSIONABILITIESINFO, aExtensionInfoObject));
+    ani_object extensionAbilitiesInfo = ConvertAniArray(env, bundleInfo.extensionInfos, ConvertDefaultAppExtensionInfo);
+    RETURN_NULL_IF_NULL(extensionAbilitiesInfo);
 
-    return object;
+    ani_value args[] = {
+        { .r = abilitiesInfo },
+        { .r = extensionAbilitiesInfo },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // abilitiesInfo: Array<AbilityInfo>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // extensionAbilitiesInfo: Array<ExtensionAbilityInfo>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_HAP_MODULE_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertDefaultAppBundleInfo(ani_env* env, const BundleInfo& bundleInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLEINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // name: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleInfo.name, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+    ani_string name = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleInfo.name, name));
 
     // hapModulesInfo: Array<HapModuleInfo>
     std::vector<BundleInfo> bundleInfos = { bundleInfo };
-    ani_object aHapModuleInfosObject = ConvertAniArray(env, bundleInfos, ConvertDefaultAppHapModuleInfo);
-    RETURN_NULL_IF_NULL(aHapModuleInfosObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_HAPMODULESINFO, aHapModuleInfosObject));
+    ani_object hapModulesInfo = ConvertAniArray(env, bundleInfos, ConvertDefaultAppHapModuleInfo);
+    RETURN_NULL_IF_NULL(hapModulesInfo);
 
-    return object;
+    ani_value args[] = {
+        { .r = name },
+        { .r = hapModulesInfo },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // hapModulesInfo: Array<HapModuleInfo>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertMetadata(ani_env* env, const Metadata& metadata)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_METADATA_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -687,39 +619,35 @@ ani_object CommonFunAni::ConvertMetadata(ani_env* env, const Metadata& metadata)
         { .r = resource },
         { .r = valueId },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING) // name: string
-        .AddClass(RAW_CLASSNAME_STRING) // value: string
-        .AddClass(RAW_CLASSNAME_STRING) // resource: string
-        .AddClass(RAW_CLASSNAME_LONG);  // valueId?: long
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // value: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // resource: string
+        .AddClass(CommonFunAniNS::CLASSNAME_LONG)   // valueId?: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_METADATA_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertMultiAppMode(ani_env* env, const MultiAppModeData& multiAppMode)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_MULTIAPPMODE_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
     ani_value args[] = {
         { .r = EnumUtils::EnumNativeToETS_BundleManager_MultiAppModeType(
             env, static_cast<int32_t>(multiAppMode.multiAppModeType)) },
         { .i = multiAppMode.maxCount },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_BUNDLEMANAGER_MULTIAPPMODE_TYPE) // multiAppModeType: bundleManager.MultiAppModeType
-        .AddInt();                                               // maxCount: int
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_MULTI_APP_MODE_TYPE) // multiAppModeType
+        .AddInt()                                                              // maxCount: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_MULTI_APP_MODE_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertModuleMetaInfosItem(
     ani_env* env, const std::pair<std::string, std::vector<Metadata>>& item)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_MODULEMETADATA_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // moduleName: string
     ani_string moduleName = nullptr;
@@ -733,18 +661,16 @@ ani_object CommonFunAni::ConvertModuleMetaInfosItem(
         { .r = moduleName },
         { .r = metadata },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING) // moduleName: string
-        .AddClass(RAW_CLASSNAME_ARRAY); // metadata: Array<Metadata>
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // metadata: Array<Metadata>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_MODULE_METADATA_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationInfo& appInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_APPLICATIONINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -855,47 +781,45 @@ ani_object CommonFunAni::ConvertApplicationInfo(ani_env* env, const ApplicationI
         { .z = BoolToAniBoolean(appInfo.cloudFileSyncEnabled) },
         { .r = flags },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)                    // name: string
-        .AddClass(RAW_CLASSNAME_STRING)                    // description: string
-        .AddLong()                                         // descriptionId: long
-        .AddBoolean()                                      // enabled: boolean
-        .AddClass(RAW_CLASSNAME_STRING)                    // label: string
-        .AddLong()                                         // labelId: long
-        .AddClass(RAW_CLASSNAME_STRING)                    // icon: string
-        .AddLong()                                         // iconId: long
-        .AddClass(RAW_CLASSNAME_STRING)                    // process: string
-        .AddClass(RAW_CLASSNAME_ARRAY)                     // permissions: Array<string>
-        .AddClass(RAW_CLASSNAME_STRING)                    // codePath: string
-        .AddClass(RAW_CLASSNAME_ARRAY)                     // metadataArray: Array<Metadata>
-        .AddBoolean()                                      // removable: boolean
-        .AddLong()                                         // accessTokenId: long
-        .AddInt()                                          // uid: int
-        .AddClass(RAW_CLASSNAME_RESOURCE)                  // iconResource: Resource
-        .AddClass(RAW_CLASSNAME_RESOURCE)                  // labelResource: Resource
-        .AddClass(RAW_CLASSNAME_RESOURCE)                  // descriptionResource: Resource
-        .AddClass(RAW_CLASSNAME_STRING)                    // appDistributionType: string
-        .AddClass(RAW_CLASSNAME_STRING)                    // appProvisionType: string
-        .AddBoolean()                                      // systemApp: boolean
-        .AddClass(RAW_CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE) // bundleType: bundleManager.BundleType
-        .AddBoolean()                                      // debug: boolean
-        .AddBoolean()                                      // dataUnclearable: boolean
-        .AddClass(RAW_CLASSNAME_STRING)                    // nativeLibraryPath: string
-        .AddClass(RAW_CLASSNAME_MULTIAPPMODE)              // multiAppMode: MultiAppMode
-        .AddInt()                                          // appIndex: int
-        .AddClass(RAW_CLASSNAME_STRING)                    // installSource: string
-        .AddClass(RAW_CLASSNAME_STRING)                    // releaseType: string
-        .AddBoolean()                                      // cloudFileSyncEnabled: boolean
-        .AddClass(RAW_CLASSNAME_INT);                      // flags?: int
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // description: string
+        .AddLong()                                                     // descriptionId: long
+        .AddBoolean()                                                  // enabled: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // label: string
+        .AddLong()                                                     // labelId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // icon: string
+        .AddLong()                                                     // iconId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // process: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                     // permissions: Array<string>
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // codePath: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                     // metadataArray: Array<Metadata>
+        .AddBoolean()                                                  // removable: boolean
+        .AddLong()                                                     // accessTokenId: long
+        .AddInt()                                                      // uid: int
+        .AddClass(CLASSNAME_RESOURCE)                                  // iconResource: Resource
+        .AddClass(CLASSNAME_RESOURCE)                                  // labelResource: Resource
+        .AddClass(CLASSNAME_RESOURCE)                                  // descriptionResource: Resource
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // appDistributionType: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // appProvisionType: string
+        .AddBoolean()                                                  // systemApp: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE) // bundleType: bundleManager.BundleType
+        .AddBoolean()                                                  // debug: boolean
+        .AddBoolean()                                                  // dataUnclearable: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // nativeLibraryPath: string
+        .AddClass(CLASSNAME_MULTI_APP_MODE)                            // multiAppMode: MultiAppMode
+        .AddInt()                                                      // appIndex: int
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // installSource: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // releaseType: string
+        .AddBoolean()                                                  // cloudFileSyncEnabled: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_INT)                       // flags?: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_APPLICATION_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abilityInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_ABILITYINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // bundleName: string
     ani_string bundleName = nullptr;
@@ -991,40 +915,38 @@ ani_object CommonFunAni::ConvertAbilityInfo(ani_env* env, const AbilityInfo& abi
         { .i = abilityInfo.appIndex },
         { .l = static_cast<ani_long>(abilityInfo.orientationId) },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)                           // bundleName: string
-        .AddClass(RAW_CLASSNAME_STRING)                           // moduleName: string
-        .AddClass(RAW_CLASSNAME_STRING)                           // name: string
-        .AddClass(RAW_CLASSNAME_STRING)                           // label: string
-        .AddLong()                                                // labelId: long
-        .AddClass(RAW_CLASSNAME_STRING)                           // description: string
-        .AddLong()                                                // descriptionId: long
-        .AddClass(RAW_CLASSNAME_STRING)                           // icon: string
-        .AddLong()                                                // iconId: long
-        .AddClass(RAW_CLASSNAME_STRING)                           // process: string
-        .AddBoolean()                                             // exported: boolean
-        .AddClass(RAW_CLASSNAME_BUNDLEMANAGER_DISPLAYORIENTATION) // orientation: bundleManager.DisplayOrientation
-        .AddClass(RAW_CLASSNAME_BUNDLEMANAGER_LAUNCH_TYPE)        // launchType: bundleManager.LaunchType
-        .AddClass(RAW_CLASSNAME_ARRAY)                            // permissions: Array<string>
-        .AddClass(RAW_CLASSNAME_ARRAY)                            // deviceTypes: Array<string>
-        .AddClass(RAW_CLASSNAME_APPLICATIONINFO)                  // applicationInfo: ApplicationInfo
-        .AddClass(RAW_CLASSNAME_ARRAY)                            // metadata: Array<Metadata>
-        .AddBoolean()                                             // enabled: boolean
-        .AddClass(RAW_CLASSNAME_ARRAY)      // supportWindowModes: Array<bundleManager.SupportWindowMode>
-        .AddClass(RAW_CLASSNAME_WINDOWSIZE) // windowSize: WindowSize
-        .AddBoolean()                       // excludeFromDock: boolean
-        .AddClass(RAW_CLASSNAME_ARRAY)      // skills: Array<Skill>
-        .AddInt()                           // appIndex: int
-        .AddLong();                         // orientationId: long
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                            // bundleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                            // moduleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                            // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                            // label: string
+        .AddLong()                                                             // labelId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                            // description: string
+        .AddLong()                                                             // descriptionId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                            // icon: string
+        .AddLong()                                                             // iconId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                            // process: string
+        .AddBoolean()                                                          // exported: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_DISPLAY_ORIENTATION) // orientation
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_LAUNCH_TYPE)         // launchType: bundleManager.LaunchType
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                             // permissions: Array<string>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                             // deviceTypes: Array<string>
+        .AddClass(CLASSNAME_APPLICATION_INFO)                                  // applicationInfo: ApplicationInfo
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                             // metadata: Array<Metadata>
+        .AddBoolean()                                                          // enabled: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // supportWindowModes: Array<bundleManager.SupportWindowMode>
+        .AddClass(CLASSNAME_WINDOW_SIZE)           // windowSize: WindowSize
+        .AddBoolean()                              // excludeFromDock: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // skills: Array<Skill>
+        .AddInt()                                  // appIndex: int
+        .AddLong()                                 // orientationId: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_ABILITY_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertWindowSize(ani_env* env, const AbilityInfo& abilityInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_WINDOWSIZE_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     ani_value args[] = {
         { .d = abilityInfo.maxWindowRatio },
@@ -1034,22 +956,20 @@ ani_object CommonFunAni::ConvertWindowSize(ani_env* env, const AbilityInfo& abil
         { .l = static_cast<ani_long>(abilityInfo.maxWindowHeight) },
         { .l = static_cast<ani_long>(abilityInfo.minWindowHeight) },
     };
-    SignatureBuilder sign {};
-    sign.AddDouble() // maxWindowRatio: double
+    static const std::string ctorSig = SignatureBuilder()
+        .AddDouble() // maxWindowRatio: double
         .AddDouble() // minWindowRatio: double
         .AddLong()   // maxWindowWidth: long
         .AddLong()   // minWindowWidth: long
         .AddLong()   // maxWindowHeight: long
-        .AddLong();  // minWindowHeight: long
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+        .AddLong()   // minWindowHeight: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_WINDOW_SIZE_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbilityInfo& extensionInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_EXTENSIONABILITYINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // bundleName: string
     ani_string bundleName = nullptr;
@@ -1120,25 +1040,26 @@ ani_object CommonFunAni::ConvertExtensionInfo(ani_env* env, const ExtensionAbili
         { .r = skills },
         { .i = extensionInfo.appIndex },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)                              // bundleName: string
-        .AddClass(RAW_CLASSNAME_STRING)                              // moduleName: string
-        .AddClass(RAW_CLASSNAME_STRING)                              // name: string
-        .AddLong()                                                   // labelId: long
-        .AddLong()                                                   // descriptionId: long
-        .AddLong()                                                   // iconId: long
-        .AddBoolean()                                                // exported: boolean
-        .AddClass(RAW_CLASSNAME_BUNDLEMANAGER_EXTENSIONABILITY_TYPE) // extensionAbilityType
-        .AddClass(RAW_CLASSNAME_STRING)                              // extensionAbilityTypeName: string
-        .AddClass(RAW_CLASSNAME_ARRAY)                               // permissions: Array<string>
-        .AddClass(RAW_CLASSNAME_APPLICATIONINFO)                     // applicationInfo: ApplicationInfo
-        .AddClass(RAW_CLASSNAME_ARRAY)                               // metadata: Array<Metadata>
-        .AddBoolean()                                                // enabled: boolean
-        .AddClass(RAW_CLASSNAME_STRING)                              // readPermission: string
-        .AddClass(RAW_CLASSNAME_STRING)                              // writePermission: string
-        .AddClass(RAW_CLASSNAME_ARRAY)                               // skills: Array<Skill>
-        .AddInt();                                                   // appIndex: int
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                               // bundleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                               // moduleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                               // name: string
+        .AddLong()                                                                // labelId: long
+        .AddLong()                                                                // descriptionId: long
+        .AddLong()                                                                // iconId: long
+        .AddBoolean()                                                             // exported: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_EXTENSION_ABILITY_TYPE) // extensionAbilityType
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                               // extensionAbilityTypeName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                                // permissions: Array<string>
+        .AddClass(CLASSNAME_APPLICATION_INFO)                                     // applicationInfo: ApplicationInfo
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                                // metadata: Array<Metadata>
+        .AddBoolean()                                                             // enabled: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                               // readPermission: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                               // writePermission: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                                // skills: Array<Skill>
+        .AddInt()                                                                 // appIndex: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_EXTENSION_ABILITY_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertResource(ani_env* env, const Resource& resource)
@@ -1148,18 +1069,18 @@ ani_object CommonFunAni::ConvertResource(ani_env* env, const Resource& resource)
     ani_class cls = CreateClassByName(env, CLASSNAME_RESOURCE_INNER);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_RESOURCE_INNER, cls);
     RETURN_NULL_IF_NULL(object);
 
     ani_string string = nullptr;
 
     // bundleName: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, resource.bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLE_NAME, string));
 
     // moduleName: string
     RETURN_NULL_IF_FALSE(StringToAniStr(env, resource.moduleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULE_NAME, string));
 
     // id: long
     RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ID, resource.id));
@@ -1170,9 +1091,6 @@ ani_object CommonFunAni::ConvertResource(ani_env* env, const Resource& resource)
 ani_object CommonFunAni::ConvertSignatureInfo(ani_env* env, const SignatureInfo& signatureInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_SIGNATUREINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // appId: string
     ani_string appId = nullptr;
@@ -1201,45 +1119,19 @@ ani_object CommonFunAni::ConvertSignatureInfo(ani_env* env, const SignatureInfo&
         { .r = appIdentifier },
         { .r = certificateRef },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)  // appId: string
-        .AddClass(RAW_CLASSNAME_STRING)  // fingerprint: string
-        .AddClass(RAW_CLASSNAME_STRING)  // appIdentifier: string
-        .AddClass(RAW_CLASSNAME_STRING); // certificate?: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // appId: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // fingerprint: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // appIdentifier: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // certificate?: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_SIGNATURE_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertKeyValuePair(
     ani_env* env, const std::pair<std::string, std::string>& item, const std::string& className)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, className);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
-    // key: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, item.first, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_KEY, string));
-
-    // value: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, item.second, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VALUE, string));
-
-    return object;
-}
-
-ani_object CommonFunAni::ConvertKeyValuePairV2(
-    ani_env* env, const std::pair<std::string, std::string>& item, const std::string& className)
-{
-    RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, className);
-    RETURN_NULL_IF_NULL(cls);
 
     // key: string
     ani_string key = nullptr;
@@ -1253,23 +1145,21 @@ ani_object CommonFunAni::ConvertKeyValuePairV2(
         { .r = key },
         { .r = value },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)  // key: string
-        .AddClass(RAW_CLASSNAME_STRING); // value: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // key: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // value: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, className, ctorSig, args);
 }
 
 inline ani_object CommonFunAni::ConvertDataItem(ani_env* env, const std::pair<std::string, std::string>& item)
 {
-    return ConvertKeyValuePairV2(env, item, CLASSNAME_DATAITEM_INNER);
+    return ConvertKeyValuePair(env, item, CLASSNAME_DATA_ITEM_INNER);
 }
 
 ani_object CommonFunAni::ConvertRouterItem(ani_env* env, const RouterItem& routerItem)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_ROUTERITEM_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -1298,21 +1188,19 @@ ani_object CommonFunAni::ConvertRouterItem(ani_env* env, const RouterItem& route
         { .r = customData },
         { .r = aDataArrayObject },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING) // name: string
-        .AddClass(RAW_CLASSNAME_STRING) // pageSourceFile: string
-        .AddClass(RAW_CLASSNAME_STRING) // buildFunction: string
-        .AddClass(RAW_CLASSNAME_STRING) // customData: string
-        .AddClass(RAW_CLASSNAME_ARRAY); // data: Array<DataItem>
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // pageSourceFile: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // buildFunction: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // customData: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // data: Array<DataItem>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_ROUTER_ITEM_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertRequestPermission(ani_env* env, const RequestPermission& requestPermission)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_PERMISSION_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -1337,22 +1225,20 @@ ani_object CommonFunAni::ConvertRequestPermission(ani_env* env, const RequestPer
         { .l = static_cast<ani_long>(requestPermission.reasonId) },
         { .r = usedScene },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)     // name: string
-        .AddClass(RAW_CLASSNAME_STRING)     // moduleName: string
-        .AddClass(RAW_CLASSNAME_STRING)     // reason: string
-        .AddLong()                          // reasonId: long
-        .AddClass(RAW_CLASSNAME_USEDSCENE); // usedScene: UsedScene
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // reason: string
+        .AddLong()                                  // reasonId: long
+        .AddClass(CLASSNAME_USED_SCENE)             // usedScene: UsedScene
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_PERMISSION_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertRequestPermissionUsedScene(
     ani_env* env, const RequestPermissionUsedScene& requestPermissionUsedScene)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_USEDSCENE_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // abilities: Array<string>
     ani_object abilities = ConvertAniArrayString(env, requestPermissionUsedScene.abilities);
@@ -1366,18 +1252,16 @@ ani_object CommonFunAni::ConvertRequestPermissionUsedScene(
         { .r = abilities },
         { .r = when },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_ARRAY)   // abilities: Array<string>
-        .AddClass(RAW_CLASSNAME_STRING); // when: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)   // abilities: Array<string>
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // when: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_USED_SCENE_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertPreloadItem(ani_env* env, const PreloadItem& preloadItem)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_PRELOADITEM_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // moduleName: string
     ani_string moduleName = nullptr;
@@ -1386,17 +1270,15 @@ ani_object CommonFunAni::ConvertPreloadItem(ani_env* env, const PreloadItem& pre
     ani_value args[] = {
         { .r = moduleName },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING); // moduleName: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // moduleName: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_PRELOAD_ITEM_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertDependency(ani_env* env, const Dependency& dependency)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_DEPENDENCY_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // moduleName: string
     ani_string moduleName = nullptr;
@@ -1411,19 +1293,17 @@ ani_object CommonFunAni::ConvertDependency(ani_env* env, const Dependency& depen
         { .r = bundleName },
         { .l = static_cast<ani_long>(dependency.versionCode) },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING) // moduleName: string
-        .AddClass(RAW_CLASSNAME_STRING) // bundleName: string
-        .AddLong();                     // versionCode: long
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+        .AddLong()                                  // versionCode: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_DEPENDENCY_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo& hapModuleInfo)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_HAPMODULEINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // name: string
     ani_string name = nullptr;
@@ -1526,80 +1406,101 @@ ani_object CommonFunAni::ConvertHapModuleInfo(ani_env* env, const HapModuleInfo&
         { .r = nativeLibraryPath },
         { .r = codePath },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)                    // name: string
-        .AddClass(RAW_CLASSNAME_STRING)                    // icon: string
-        .AddLong()                                         // iconId: long
-        .AddClass(RAW_CLASSNAME_STRING)                    // label: string
-        .AddLong()                                         // labelId: long
-        .AddClass(RAW_CLASSNAME_STRING)                    // description: string
-        .AddLong()                                         // descriptionId: long
-        .AddClass(RAW_CLASSNAME_STRING)                    // mainElementName: string
-        .AddClass(RAW_CLASSNAME_ARRAY)                     // abilitiesInfo: Array<AbilityInfo>
-        .AddClass(RAW_CLASSNAME_ARRAY)                     // extensionAbilitiesInfo: Array<ExtensionAbilityInfo>
-        .AddClass(RAW_CLASSNAME_ARRAY)                     // metadata: Array<Metadata>
-        .AddClass(RAW_CLASSNAME_ARRAY)                     // deviceTypes: Array<string>
-        .AddBoolean()                                      // installationFree: boolean
-        .AddClass(RAW_CLASSNAME_STRING)                    // hashValue: string
-        .AddClass(RAW_CLASSNAME_BUNDLEMANAGER_MODULE_TYPE) // type: bundleManager.ModuleType
-        .AddClass(RAW_CLASSNAME_ARRAY)                     // dependencies: Array<Dependency>
-        .AddClass(RAW_CLASSNAME_ARRAY)                     // preloads: Array<PreloadItem>
-        .AddClass(RAW_CLASSNAME_STRING)                    // fileContextMenuConfig: string
-        .AddClass(RAW_CLASSNAME_ARRAY)                     // routerMap: Array<RouterItem>
-        .AddClass(RAW_CLASSNAME_STRING)                    // nativeLibraryPath: string
-        .AddClass(RAW_CLASSNAME_STRING);                   // codePath: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // icon: string
+        .AddLong()                                  // iconId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // label: string
+        .AddLong()                                  // labelId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // description: string
+        .AddLong()                                  // descriptionId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // mainElementName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // abilitiesInfo: Array<AbilityInfo>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // extensionAbilitiesInfo: Array<ExtensionAbilityInfo>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // metadata: Array<Metadata>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // deviceTypes: Array<string>
+        .AddBoolean()                               // installationFree: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // hashValue: string
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_MODULE_TYPE) // type: bundleManager.ModuleType
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                     // dependencies: Array<Dependency>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                     // preloads: Array<PreloadItem>
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // fileContextMenuConfig: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                     // routerMap: Array<RouterItem>
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // nativeLibraryPath: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // codePath: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_HAP_MODULE_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertElementName(ani_env* env, const ElementName& elementName)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_ELEMENTNAME_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
+    ani_ref refUndefined = nullptr;
+    ani_status status = env->GetUndefined(&refUndefined);
+    if (status != ANI_OK) {
+        APP_LOGE("GetUndefined failed %{public}d", status);
+        return nullptr;
+    }
 
     // deviceId?: string
-    if (StringToAniStr(env, elementName.GetDeviceID(), string)) {
-        RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_DEVICEID, string));
+    ani_ref deviceId = refUndefined;
+    ani_string deviceIdString = nullptr;
+    if (StringToAniStr(env, elementName.GetDeviceID(), deviceIdString)) {
+        deviceId = deviceIdString;
     }
 
     // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, elementName.GetBundleName(), string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, elementName.GetBundleName(), bundleName));
 
     // moduleName?: string
-    if (StringToAniStr(env, elementName.GetModuleName(), string)) {
-        RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    ani_ref moduleName = refUndefined;
+    ani_string moduleNameString = nullptr;
+    if (StringToAniStr(env, elementName.GetModuleName(), moduleNameString)) {
+        moduleName = moduleNameString;
     }
 
     // abilityName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, elementName.GetAbilityName(), string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ABILITYNAME, string));
+    ani_string abilityName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, elementName.GetAbilityName(), abilityName));
 
     // uri?: string
-    if (StringToAniStr(env, elementName.GetURI(), string)) {
-        RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_URI, string));
+    ani_ref uri = refUndefined;
+    ani_string uriString = nullptr;
+    if (StringToAniStr(env, elementName.GetURI(), uriString)) {
+        uri = uriString;
     }
 
     // shortName?: string
-    if (StringToAniStr(env, "", string)) {
-        RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_SHORTNAME, string));
+    ani_ref shortName = refUndefined;
+    ani_string shortNameString = nullptr;
+    if (StringToAniStr(env, "", shortNameString)) {
+        shortName = shortNameString;
     }
 
-    return object;
+    ani_value args[] = {
+        { .r = bundleName },
+        { .r = abilityName },
+        { .r = deviceId },
+        { .r = moduleName },
+        { .r = uri },
+        { .r = shortName },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // abilityName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // deviceId?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // uri?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // shortName?: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_ELEMENT_NAME_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUri& skillUri, bool isExtension)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_SKILLURI_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // scheme: string
     ani_string scheme = nullptr;
@@ -1655,26 +1556,24 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
         { .i = skillUri.maxFileSupported },
         { .r = linkFeature },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_STRING)  // scheme: string
-        .AddClass(RAW_CLASSNAME_STRING)  // host: string
-        .AddInt()                        // port: int
-        .AddClass(RAW_CLASSNAME_STRING)  // path: string
-        .AddClass(RAW_CLASSNAME_STRING)  // pathStartWith: string
-        .AddClass(RAW_CLASSNAME_STRING)  // pathRegex: string
-        .AddClass(RAW_CLASSNAME_STRING)  // type: string
-        .AddClass(RAW_CLASSNAME_STRING)  // utd: string
-        .AddInt()                        // maxFileSupported: int
-        .AddClass(RAW_CLASSNAME_STRING); // linkFeature: string
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // scheme: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // host: string
+        .AddInt()                                   // port: int
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // path: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // pathStartWith: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // pathRegex: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // type: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // utd: string
+        .AddInt()                                   // maxFileSupported: int
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // linkFeature: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_SKILL_URI_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertAbilitySkillInner(ani_env* env, const Skill& skill, bool isExtension)
 {
     RETURN_NULL_IF_NULL(env);
-
-    ani_class cls = CreateClassByName(env, CLASSNAME_SKILL_INNER);
-    RETURN_NULL_IF_NULL(cls);
 
     // actions: Array<string>
     ani_object actions = ConvertAniArrayString(env, skill.actions);
@@ -1695,207 +1594,209 @@ ani_object CommonFunAni::ConvertAbilitySkillInner(ani_env* env, const Skill& ski
         { .r = uris },
         { .z = BoolToAniBoolean(isExtension? false: skill.domainVerify) },
     };
-    SignatureBuilder sign {};
-    sign.AddClass(RAW_CLASSNAME_ARRAY) // actions: Array<string>
-        .AddClass(RAW_CLASSNAME_ARRAY) // entities: Array<string>
-        .AddClass(RAW_CLASSNAME_ARRAY) // uris: Array<SkillUri>
-        .AddBoolean();                 // domainVerify: boolean
-    return CreateNewObjectByClassV2(env, cls, sign.BuildSignatureDescriptor(), args);
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // actions: Array<string>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // entities: Array<string>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // uris: Array<SkillUri>
+        .AddBoolean()                              // domainVerify: boolean
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_SKILL_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertAppCloneIdentity(ani_env* env, const std::string& bundleName, const int32_t appIndex)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_APPCLONEIDENTITY_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // name: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string name = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleName, name));
 
-    // appIndex: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, appIndex));
-
-    return object;
+    ani_value args[] = {
+        { .r = name },
+        { .i = appIndex },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddInt()                                   // appIndex: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_APP_CLONE_IDENTITY_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertPermissionDef(ani_env* env, const PermissionDef& permissionDef)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_PERMISSIONDEF_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // permissionName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, permissionDef.permissionName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PERMISSIONNAME, string));
+    ani_string permissionName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, permissionDef.permissionName, permissionName));
 
-    // grantMode: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_GRANTMODE, permissionDef.grantMode));
-
-    // labelId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, permissionDef.labelId));
-
-    // descriptionId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, permissionDef.descriptionId));
-
-    return object;
+    ani_value args[] = {
+        { .r = permissionName },
+        { .i = permissionDef.grantMode },
+        { .l = static_cast<ani_long>(permissionDef.labelId) },
+        { .l = static_cast<ani_long>(permissionDef.descriptionId) },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // permissionName: string
+        .AddInt()                                   // grantMode: int
+        .AddLong()                                  // labelId: long
+        .AddLong()                                  // descriptionId: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_PERMISSION_DEF_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertSharedBundleInfo(ani_env* env, const SharedBundleInfo& sharedBundleInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_SHAREDBUNDLEINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // name: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedBundleInfo.name, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
-
-    // bundleType: bundleManager.CompatiblePolicy
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_COMPATIBLEPOLICY,
-        EnumUtils::EnumNativeToETS_BundleManager_CompatiblePolicy(
-            env, static_cast<int32_t>(CompatiblePolicy::BACKWARD_COMPATIBILITY))));
+    ani_string name = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedBundleInfo.name, name));
 
     // sharedModuleInfo: Array<SharedModuleInfo>
-    ani_object aSharedModuleInfosObject =
+    ani_object sharedModuleInfo =
         ConvertAniArray(env, sharedBundleInfo.sharedModuleInfos, ConvertSharedModuleInfo);
-    RETURN_NULL_IF_NULL(aSharedModuleInfosObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SHAREDMODULEINFO, aSharedModuleInfosObject));
+    RETURN_NULL_IF_NULL(sharedModuleInfo);
 
-    return object;
+    ani_value args[] = {
+        { .r = name },
+        { .r = EnumUtils::EnumNativeToETS_BundleManager_CompatiblePolicy(
+            env, static_cast<int32_t>(CompatiblePolicy::BACKWARD_COMPATIBILITY)) },
+        { .r = sharedModuleInfo },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                          // permissionName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_COMPATIBLE_POLICY) // compatiblePolicy
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // sharedModuleInfo: Array<SharedModuleInfo>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_SHARED_BUNDLE_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertSharedModuleInfo(ani_env* env, const SharedModuleInfo& sharedModuleInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_SHAREDMODULEINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // name: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.name, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
-
-    // versionCode: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONCODE, sharedModuleInfo.versionCode));
+    ani_string name = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.name, name));
 
     // versionName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.versionName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONNAME, string));
+    ani_string versionName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.versionName, versionName));
 
     // description: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.description, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string));
+    ani_string description = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, sharedModuleInfo.description, description));
 
-    // descriptionId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, sharedModuleInfo.descriptionId));
-
-    return object;
+    ani_value args[] = {
+        { .r = name },
+        { .l = static_cast<ani_long>(sharedModuleInfo.versionCode) },
+        { .r = versionName },
+        { .r = description },
+        { .l = static_cast<ani_long>(sharedModuleInfo.descriptionId) },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddLong()                                  // versionCode: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // versionName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // description: string
+        .AddLong()                                  // descriptionId: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_SHARED_MODULE_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisionInfo& appProvisionInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_APPPROVISIONINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
-    // versionCode: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONCODE, appProvisionInfo.versionCode));
-
     // versionName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.versionName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONNAME, string));
+    ani_string versionName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.versionName, versionName));
 
     // uuid: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.uuid, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_UUID, string));
+    ani_string uuid = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.uuid, uuid));
 
     // type: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.type, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TYPE, string));
+    ani_string type = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.type, type));
 
     // appDistributionType: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.appDistributionType, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPDISTRIBUTIONTYPE, string));
+    ani_string appDistributionType = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.appDistributionType, appDistributionType));
 
     // validity: Validity
-    ani_object aniValidityObject = ConvertValidity(env, appProvisionInfo.validity);
-    RETURN_NULL_IF_NULL(aniValidityObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VALIDITY, aniValidityObject));
+    ani_object validity = ConvertValidity(env, appProvisionInfo.validity);
+    RETURN_NULL_IF_NULL(validity);
 
     // developerId: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.developerId, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DEVELOPERID, string));
+    ani_string developerId = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.developerId, developerId));
 
     // certificate: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.certificate, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_CERTIFICATE, string));
+    ani_string certificate = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.certificate, certificate));
 
     // apl: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.apl, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APL, string));
+    ani_string apl = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.apl, apl));
 
     // issuer: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.issuer, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ISSUER, string));
+    ani_string issuer = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.issuer, issuer));
 
     // appIdentifier: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.appIdentifier, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPIDENTIFIER, string));
+    ani_string appIdentifier = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.appIdentifier, appIdentifier));
 
     // organization: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.organization, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ORGANIZATION, string));
+    ani_string organization = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.organization, organization));
 
-    return object;
+    ani_value args[] = {
+        { .l = static_cast<ani_long>(appProvisionInfo.versionCode) },
+        { .r = versionName },
+        { .r = uuid },
+        { .r = type },
+        { .r = appDistributionType },
+        { .r = validity },
+        { .r = developerId },
+        { .r = certificate },
+        { .r = apl },
+        { .r = issuer },
+        { .r = appIdentifier },
+        { .r = organization },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddLong()                                  // versionCode: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // versionName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // uuid: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // type: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // appDistributionType: string
+        .AddClass(CLASSNAME_VALIDITY)               // validity: Validity
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // developerId: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // certificate: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // apl: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // issuer: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // appIdentifier: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // organization: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_APP_PROVISION_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertValidity(ani_env* env, const Validity& validity)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_VALIDITY_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    // notBefore: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NOTBEFORE, validity.notBefore));
-
-    // notAfter: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NOTAFTER, validity.notAfter));
-
-    return object;
+    ani_value args[] = {
+        { .l = validity.notBefore },
+        { .l = validity.notAfter },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddLong() // notBefore: long
+        .AddLong() // notAfter: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_VALIDITY_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertRecoverableApplicationInfo(
@@ -1903,43 +1804,38 @@ ani_object CommonFunAni::ConvertRecoverableApplicationInfo(
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_RECOVERABLEAPPLICATIONINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, recoverableApplicationInfo.bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, recoverableApplicationInfo.bundleName, bundleName));
 
     // moduleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, recoverableApplicationInfo.moduleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
-
-    // labelId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, recoverableApplicationInfo.labelId));
-
-    // iconId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, recoverableApplicationInfo.iconId));
-
-    // systemApp: boolean
-    RETURN_NULL_IF_FALSE(
-        CallSetter(env, cls, object, PROPERTYNAME_SYSTEMAPP, BoolToAniBoolean(recoverableApplicationInfo.systemApp)));
-
-    // bundleType: bundleManager.BundleType
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLETYPE,
-        EnumUtils::EnumNativeToETS_BundleManager_BundleType(
-            env, static_cast<int32_t>(recoverableApplicationInfo.bundleType))));
+    ani_string moduleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, recoverableApplicationInfo.moduleName, moduleName));
 
     // codePaths: Array<string>
-    ani_ref aCodePaths = ConvertAniArrayString(env, recoverableApplicationInfo.codePaths);
-    RETURN_NULL_IF_NULL(aCodePaths);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_CODEPATHS, aCodePaths));
+    ani_ref codePaths = ConvertAniArrayString(env, recoverableApplicationInfo.codePaths);
+    RETURN_NULL_IF_NULL(codePaths);
 
-    return object;
+    ani_value args[] = {
+        { .r = bundleName },
+        { .r = moduleName },
+        { .l = static_cast<ani_long>(recoverableApplicationInfo.labelId) },
+        { .l = static_cast<ani_long>(recoverableApplicationInfo.iconId) },
+        { .z = BoolToAniBoolean(recoverableApplicationInfo.systemApp) },
+        { .r = EnumUtils::EnumNativeToETS_BundleManager_BundleType(
+            env, static_cast<int32_t>(recoverableApplicationInfo.bundleType)) },
+        { .r = codePaths },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // bundleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)                    // moduleName: string
+        .AddLong()                                                     // labelId: long
+        .AddLong()                                                     // iconId: long
+        .AddBoolean()                                                  // systemApp: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_BUNDLE_TYPE) // bundleType: bundleManager.BundleType
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)                     // codePaths: Array<string>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_RECOVERABLE_APPLICATION_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertPreinstalledApplicationInfo(
@@ -1947,272 +1843,309 @@ ani_object CommonFunAni::ConvertPreinstalledApplicationInfo(
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_PREINSTALLEDAPPLICATIONINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, reinstalledApplicationInfo.bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, reinstalledApplicationInfo.bundleName, bundleName));
 
     // moduleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, reinstalledApplicationInfo.moduleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    ani_string moduleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, reinstalledApplicationInfo.moduleName, moduleName));
 
-    // iconId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, reinstalledApplicationInfo.iconId));
-
-    // labelId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, reinstalledApplicationInfo.labelId));
-
-    return object;
+    ani_value args[] = {
+        { .r = bundleName },
+        { .r = moduleName },
+        { .l = static_cast<ani_long>(reinstalledApplicationInfo.iconId) },
+        { .l = static_cast<ani_long>(reinstalledApplicationInfo.labelId) },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+        .AddLong()                                  // iconId: long
+        .AddLong()                                  // labelId: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_PREINSTALLED_APPLICATION_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertPluginBundleInfo(ani_env* env, const PluginBundleInfo& pluginBundleInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_PLUGINBUNDLEINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // label: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.label, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
-
-    // labelId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, pluginBundleInfo.labelId));
+    ani_string label = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.label, label));
 
     // icon: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.icon, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICON, string));
-
-    // iconId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, pluginBundleInfo.iconId));
+    ani_string icon = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.icon, icon));
 
     // pluginBundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.pluginBundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PLUGINBUNDLENAME, string));
-
-    // versionCode: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONCODE, pluginBundleInfo.versionCode));
+    ani_string pluginBundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.pluginBundleName, pluginBundleName));
 
     // versionName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.versionName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSIONNAME, string));
+    ani_string versionName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginBundleInfo.versionName, versionName));
 
     // pluginModuleInfos: Array<PluginModuleInfo>
-    ani_object apluginModuleInfosObject =
+    ani_object pluginModuleInfos =
         ConvertAniArray(env, pluginBundleInfo.pluginModuleInfos, ConvertPluginModuleInfo);
-    RETURN_NULL_IF_NULL(apluginModuleInfosObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PLUGINMODULEINFOS, apluginModuleInfosObject));
+    RETURN_NULL_IF_NULL(pluginModuleInfos);
 
-    return object;
+    ani_value args[] = {
+        { .r = label },
+        { .l = static_cast<ani_long>(pluginBundleInfo.labelId) },
+        { .r = icon },
+        { .l = static_cast<ani_long>(pluginBundleInfo.iconId) },
+        { .r = pluginBundleName },
+        { .l = static_cast<ani_long>(pluginBundleInfo.versionCode) },
+        { .r = versionName },
+        { .r = pluginModuleInfos },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // label: string
+        .AddLong()                                  // labelId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // icon: string
+        .AddLong()                                  // iconId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // pluginBundleName: string
+        .AddLong()                                  // versionCode: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // versionName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // pluginModuleInfos: Array<PluginModuleInfo>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_PLUGIN_BUNDLE_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertPluginModuleInfo(ani_env* env, const PluginModuleInfo& pluginModuleInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_PLUGINMODULEINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // moduleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginModuleInfo.moduleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
-
-    // descriptionId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTIONID, pluginModuleInfo.descriptionId));
+    ani_string moduleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginModuleInfo.moduleName, moduleName));
 
     // description: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginModuleInfo.description, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DESCRIPTION, string));
+    ani_string description = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, pluginModuleInfo.description, description));
 
-    return object;
+    ani_value args[] = {
+        { .r = moduleName },
+        { .l = static_cast<ani_long>(pluginModuleInfo.descriptionId) },
+        { .r = description },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+        .AddLong()                                  // descriptionId: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // description: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_PLUGIN_MODULE_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertShortcutInfo(ani_env* env, const ShortcutInfo& shortcutInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_SHORTCUTINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
+    ani_ref refUndefined = nullptr;
+    ani_status status = env->GetUndefined(&refUndefined);
+    if (status != ANI_OK) {
+        APP_LOGE("GetUndefined failed %{public}d", status);
+        return nullptr;
+    }
 
     // id: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutInfo.id, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ID, string));
+    ani_string id = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutInfo.id, id));
 
     // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutInfo.bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutInfo.bundleName, bundleName));
 
     // moduleName?: string
-    if (StringToAniStr(env, shortcutInfo.moduleName, string)) {
-        RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    ani_ref moduleName = refUndefined;
+    ani_string moduleNameString = nullptr;
+    if (StringToAniStr(env, shortcutInfo.moduleName, moduleNameString)) {
+        moduleName = moduleNameString;
     }
 
     // hostAbility?: string
-    if (StringToAniStr(env, shortcutInfo.hostAbility, string)) {
-        RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_HOSTABILITY, string));
+    ani_ref hostAbility = refUndefined;
+    ani_string hostAbilityString = nullptr;
+    if (StringToAniStr(env, shortcutInfo.hostAbility, hostAbilityString)) {
+        hostAbility = hostAbilityString;
     }
 
     // icon?: string
-    if (StringToAniStr(env, shortcutInfo.icon, string)) {
-        RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_ICON, string));
+    ani_ref icon = refUndefined;
+    ani_string iconString = nullptr;
+    if (StringToAniStr(env, shortcutInfo.icon, iconString)) {
+        icon = iconString;
     }
 
     // iconId?: long
-    RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_ICONID, shortcutInfo.iconId));
+    ani_object iconId = BoxValue(env, static_cast<ani_long>(shortcutInfo.iconId));
+    RETURN_NULL_IF_FALSE(iconId);
 
     // label?: string
-    if (StringToAniStr(env, shortcutInfo.label, string)) {
-        RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_LABEL, string));
+    ani_ref label = refUndefined;
+    ani_string labelString = nullptr;
+    if (StringToAniStr(env, shortcutInfo.label, labelString)) {
+        label = labelString;
     }
 
     // labelId?: long
-    RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_LABELID, shortcutInfo.labelId));
+    ani_object labelId = BoxValue(env, static_cast<ani_long>(shortcutInfo.labelId));
+    RETURN_NULL_IF_FALSE(labelId);
 
     // wants?: Array<ShortcutWant>
-    ani_object aShortcutWantObject = ConvertAniArray(env, shortcutInfo.intents, ConvertShortcutIntent);
-    RETURN_NULL_IF_NULL(aShortcutWantObject);
-    RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_WANTS, aShortcutWantObject));
-
-    // appIndex: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, shortcutInfo.appIndex));
-
-    // sourceType: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SOURCETYPE, shortcutInfo.sourceType));
+    ani_object wants = ConvertAniArray(env, shortcutInfo.intents, ConvertShortcutIntent);
+    RETURN_NULL_IF_NULL(wants);
 
     // visible?: boolean
-    RETURN_NULL_IF_FALSE(CallSetterOptional(
-        env, cls, object, PROPERTYNAME_VISIBLE, BoolToAniBoolean(shortcutInfo.visible)));
+    ani_object visible = BoxValue(env, BoolToAniBoolean(shortcutInfo.visible));
+    RETURN_NULL_IF_FALSE(visible);
 
-    return object;
+    ani_value args[] = {
+        { .r = id },
+        { .r = bundleName },
+        { .i = shortcutInfo.appIndex },
+        { .i = shortcutInfo.sourceType },
+        { .r = moduleName },
+        { .r = hostAbility },
+        { .r = icon },
+        { .r = iconId },
+        { .r = label },
+        { .r = labelId },
+        { .r = wants },
+        { .r = visible },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // id: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // bundleName: string
+        .AddInt()                                    // appIndex: int
+        .AddInt()                                    // sourceType: int
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // moduleName?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // hostAbility?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // icon?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_LONG)    // iconId?: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // label?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_LONG)    // labelId?: long
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)   // wants?: Array<ShortcutWant>
+        .AddClass(CommonFunAniNS::CLASSNAME_BOOLEAN) // visible?: boolean
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_SHORTCUT_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertShortcutIntent(ani_env* env, const ShortcutIntent& shortcutIntent)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_SHORTCUTWANT_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
+    ani_ref refUndefined = nullptr;
+    ani_status status = env->GetUndefined(&refUndefined);
+    if (status != ANI_OK) {
+        APP_LOGE("GetUndefined failed %{public}d", status);
+        return nullptr;
+    }
 
     // targetBundle: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutIntent.targetBundle, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TARGETBUNDLE, string));
+    ani_string targetBundle = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutIntent.targetBundle, targetBundle));
 
     // targetModule?: string
-    if (StringToAniStr(env, shortcutIntent.targetModule, string)) {
-        RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_TARGETMODULE, string));
+    ani_ref targetModule = refUndefined;
+    ani_string targetModuleString = nullptr;
+    if (StringToAniStr(env, shortcutIntent.targetModule, targetModuleString)) {
+        targetModule = targetModuleString;
     }
 
     // targetAbility: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutIntent.targetClass, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TARGETABILITY, string));
+    ani_string targetAbility = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, shortcutIntent.targetClass, targetAbility));
 
     // parameters?: Array<ParameterItem>
-    ani_object aParameters = ConvertAniArray(env, shortcutIntent.parameters, ConvertShortcutIntentParameter);
-    RETURN_NULL_IF_NULL(aParameters);
-    RETURN_NULL_IF_FALSE(CallSetterOptional(env, cls, object, PROPERTYNAME_PARAMETERS, aParameters));
+    ani_object parameters = ConvertAniArray(env, shortcutIntent.parameters, ConvertShortcutIntentParameter);
+    RETURN_NULL_IF_NULL(parameters);
 
-    return object;
+    ani_value args[] = {
+        { .r = targetBundle },
+        { .r = targetAbility },
+        { .r = targetModule },
+        { .r = parameters },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // targetBundle: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // targetAbility: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // targetModule?: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // parameters?: Array<ParameterItem>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_SHORTCUT_WANT_INNER, ctorSig, args);
 }
 
 inline ani_object CommonFunAni::ConvertShortcutIntentParameter(
     ani_env* env, const std::pair<std::string, std::string>& item)
 {
-    return ConvertKeyValuePair(env, item, CLASSNAME_SHORTCUT_PARAMETERITEM_INNER);
+    return ConvertKeyValuePair(env, item, CLASSNAME_SHORTCUT_PARAMETER_ITEM_INNER);
 }
 
 ani_object CommonFunAni::ConvertLauncherAbilityInfo(ani_env* env, const LauncherAbilityInfo& launcherAbility)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_LAUNCHER_ABILITY_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
     // applicationInfo: ApplicationInfo
-    ani_object aObject = ConvertApplicationInfo(env, launcherAbility.applicationInfo);
-    RETURN_NULL_IF_NULL(aObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPLICATIONINFO, aObject));
+    ani_object applicationInfo = ConvertApplicationInfo(env, launcherAbility.applicationInfo);
+    RETURN_NULL_IF_NULL(applicationInfo);
 
     // elementName: ElementName
-    ani_object aElementNameObject = ConvertElementName(env, launcherAbility.elementName);
-    RETURN_NULL_IF_NULL(aElementNameObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ELEMENTNAME, aElementNameObject));
+    ani_object elementName = ConvertElementName(env, launcherAbility.elementName);
+    RETURN_NULL_IF_NULL(elementName);
 
-    // labelId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABELID, launcherAbility.labelId));
-
-    // iconId: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ICONID, launcherAbility.iconId));
-
-    // userId: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_USERID, launcherAbility.userId));
-
-    // installTime: long
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_INSTALLTIME, launcherAbility.installTime));
-
-    return object;
+    ani_value args[] = {
+        { .r = applicationInfo },
+        { .r = elementName },
+        { .l = static_cast<ani_long>(launcherAbility.labelId) },
+        { .l = static_cast<ani_long>(launcherAbility.iconId) },
+        { .i = launcherAbility.userId },
+        { .l = launcherAbility.installTime },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CLASSNAME_APPLICATION_INFO) // applicationInfo: ApplicationInfo
+        .AddClass(CLASSNAME_ELEMENT_NAME)     // elementName: ElementName
+        .AddLong()                            // labelId: long
+        .AddLong()                            // iconId: long
+        .AddInt()                             // userId: int
+        .AddLong()                            // installTime: long
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_LAUNCHER_ABILITY_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertOverlayModuleInfo(ani_env* env, const OverlayModuleInfo& overlayModuleInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_OVERLAY_MOUDLE_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.bundleName, bundleName));
 
     // moduleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.moduleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    ani_string moduleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.moduleName, moduleName));
 
     // targetModuleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.targetModuleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TARGETMOUDLENAME, string));
+    ani_string targetModuleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, overlayModuleInfo.targetModuleName, targetModuleName));
 
-    // priority: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PRIORITY, overlayModuleInfo.priority));
-
-    // state: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_STATE, overlayModuleInfo.state));
-
-    return object;
+    ani_value args[] = {
+        { .r = bundleName },
+        { .r = moduleName },
+        { .r = targetModuleName },
+        { .i = overlayModuleInfo.priority },
+        { .i = overlayModuleInfo.state },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // targetModuleName: string
+        .AddInt()                                   // priority: int
+        .AddInt()                                   // state: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_OVERLAY_MODULE_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::CreateBundleChangedInfo(
@@ -2220,375 +2153,385 @@ ani_object CommonFunAni::CreateBundleChangedInfo(
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLE_CHANGED_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string aniBundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleName, aniBundleName));
 
-    // userId: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_USERID, userId));
-
-    // appIndex: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, appIndex));
-
-    return object;
+    ani_value args[] = {
+        { .r = aniBundleName },
+        { .i = userId },
+        { .i = appIndex },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+        .AddInt()                                   // userId: int
+        .AddInt()                                   // appIndex: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_CHANGED_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertVersion(ani_env* env, const Version& version)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_VERSION_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
-    // minCompatibleVersionCode: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MINCOMPATIBLEVERSIONCODE,
-        static_cast<ani_int>(version.minCompatibleVersionCode)));
-
     // name: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, version.name, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+    ani_string name = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, version.name, name));
 
-    // code: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_CODE, static_cast<ani_int>(version.code)));
-
-    return object;
+    ani_value args[] = {
+        { .i = static_cast<ani_int>(version.minCompatibleVersionCode) },
+        { .r = name },
+        { .i = static_cast<ani_int>(version.code) },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddInt()                                   // minCompatibleVersionCode: int
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddInt()                                   // code: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_VERSION_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertPackageApp(ani_env* env, const PackageApp& packageApp)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLE_CONFIG_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, packageApp.bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, packageApp.bundleName, bundleName));
 
     // version: Version
-    ani_object aObject = ConvertVersion(env, packageApp.version);
-    RETURN_NULL_IF_NULL(aObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSION, aObject));
+    ani_object version = ConvertVersion(env, packageApp.version);
+    RETURN_NULL_IF_NULL(version);
 
-    return object;
+    ani_value args[] = {
+        { .r = bundleName },
+        { .r = version },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+        .AddClass(CLASSNAME_VERSION)                // version: Version
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_CONFIG_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertAbilityFormInfo(ani_env* env, const AbilityFormInfo& abilityFormInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_ABILITY_FORM_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // name: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.name, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+    ani_string name = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.name, name));
 
     // type: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.type, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TYPE, string));
-
-    // updateEnabled: boolean
-    RETURN_NULL_IF_FALSE(
-        CallSetter(env, cls, object, PROPERTYNAME_UPDATEENABLED, BoolToAniBoolean(abilityFormInfo.updateEnabled)));
+    ani_string type = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.type, type));
 
     // scheduledUpdateTime: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.scheduledUpdateTime, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SCHEDULEDUPDATETIME, string));
-
-    // updateDuration: int
-    RETURN_NULL_IF_FALSE(CallSetter(
-        env, cls, object, PROPERTYNAME_UPDATEDURATION, static_cast<ani_int>(abilityFormInfo.updateDuration)));
+    ani_string scheduledUpdateTime = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.scheduledUpdateTime, scheduledUpdateTime));
 
     // supportDimensions: Array<string>
-    ani_ref aSupportDimensions = ConvertAniArrayString(env, abilityFormInfo.supportDimensions);
-    RETURN_NULL_IF_NULL(aSupportDimensions);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SUPPORTDIMENSIONS, aSupportDimensions));
+    ani_ref supportDimensions = ConvertAniArrayString(env, abilityFormInfo.supportDimensions);
+    RETURN_NULL_IF_NULL(supportDimensions);
 
     // defaultDimension: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.defaultDimension, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DEFAULTDIMENSION, string));
+    ani_string defaultDimension = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, abilityFormInfo.defaultDimension, defaultDimension));
 
-    return object;
+    ani_value args[] = {
+        { .r = name },
+        { .r = type },
+        { .z = BoolToAniBoolean(abilityFormInfo.updateEnabled) },
+        { .r = scheduledUpdateTime },
+        { .i = static_cast<ani_int>(abilityFormInfo.updateDuration) },
+        { .r = supportDimensions },
+        { .r = defaultDimension },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // type: string
+        .AddBoolean()                               // updateEnabled: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // scheduledUpdateTime: string
+        .AddInt()                                   // updateDuration: int
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // supportDimensions: Array<string>
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // defaultDimension: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_ABILITY_FORM_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertModuleAbilityInfo(ani_env* env, const ModuleAbilityInfo& moduleAbilityInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_MODULE_ABILITY_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // name: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleAbilityInfo.name, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+    ani_string name = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleAbilityInfo.name, name));
 
     // label: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleAbilityInfo.label, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
-
-    // exported: boolean
-    RETURN_NULL_IF_FALSE(
-        CallSetter(env, cls, object, PROPERTYNAME_EXPORTED, BoolToAniBoolean(moduleAbilityInfo.visible)));
+    ani_string label = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleAbilityInfo.label, label));
 
     // forms: Array<AbilityFormInfo>
-    ani_object aAbilityFormInfoObject = ConvertAniArray(env, moduleAbilityInfo.forms, ConvertAbilityFormInfo);
-    RETURN_NULL_IF_NULL(aAbilityFormInfoObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_FORMS, aAbilityFormInfoObject));
+    ani_object forms = ConvertAniArray(env, moduleAbilityInfo.forms, ConvertAbilityFormInfo);
+    RETURN_NULL_IF_NULL(forms);
 
-    return object;
+    ani_value args[] = {
+        { .r = name },
+        { .r = label },
+        { .z = BoolToAniBoolean(moduleAbilityInfo.visible) },
+        { .r = forms },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // label: string
+        .AddBoolean()                               // exported: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // forms: Array<AbilityFormInfo>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_MODULE_ABILITY_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertModuleDistro(ani_env* env, const ModuleDistro& moduleDistro)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_MODULE_DISTRO_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
-    // deliveryWithInstall: boolean
-    RETURN_NULL_IF_FALSE(CallSetter(
-        env, cls, object, PROPERTYNAME_DELIVERYWITHINSTALL, BoolToAniBoolean(moduleDistro.deliveryWithInstall)));
-
-    // installationFree: boolean
-    RETURN_NULL_IF_FALSE(
-        CallSetter(env, cls, object, PROPERTYNAME_INSTALLATIONFREE, BoolToAniBoolean(moduleDistro.installationFree)));
-
     // moduleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleDistro.moduleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    ani_string moduleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleDistro.moduleName, moduleName));
 
     // moduleType: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleDistro.moduleType, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULETYPE, string));
+    ani_string moduleType = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, moduleDistro.moduleType, moduleType));
 
-    return object;
+    ani_value args[] = {
+        { .z = BoolToAniBoolean(moduleDistro.deliveryWithInstall) },
+        { .z = BoolToAniBoolean(moduleDistro.installationFree) },
+        { .r = moduleName },
+        { .r = moduleType },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddBoolean()                               // deliveryWithInstall: boolean
+        .AddBoolean()                               // installationFree: boolean
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleType: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_MODULE_DISTRO_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertApiVersion(ani_env* env, const ApiVersion& apiVersion)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_API_VERSION_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // releaseType: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, apiVersion.releaseType, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_RELEASETYPE, string));
+    ani_string releaseType = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, apiVersion.releaseType, releaseType));
 
-    // compatible: int
-    RETURN_NULL_IF_FALSE(
-        CallSetter(env, cls, object, PROPERTYNAME_COMPATIBLE, static_cast<ani_int>(apiVersion.compatible)));
-
-    // target: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_TARGET, static_cast<ani_int>(apiVersion.target)));
-
-    return object;
+    ani_value args[] = {
+        { .r = releaseType },
+        { .i = static_cast<ani_int>(apiVersion.compatible) },
+        { .i = static_cast<ani_int>(apiVersion.target) },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // releaseType: string
+        .AddInt()                                   // compatible: int
+        .AddInt()                                   // target: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_API_VERSION_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertExtensionAbilities(ani_env* env, const ExtensionAbilities& extensionAbilities)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_EXTENSION_ABILITY_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // name: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionAbilities.name, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+    ani_string name = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, extensionAbilities.name, name));
 
     // forms: Array<AbilityFormInfo>
-    ani_object aAbilityFormInfoObject = ConvertAniArray(env, extensionAbilities.forms, ConvertAbilityFormInfo);
-    RETURN_NULL_IF_NULL(aAbilityFormInfoObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_FORMS, aAbilityFormInfoObject));
+    ani_object forms = ConvertAniArray(env, extensionAbilities.forms, ConvertAbilityFormInfo);
+    RETURN_NULL_IF_NULL(forms);
 
-    return object;
+    ani_value args[] = {
+        { .r = name },
+        { .r = forms },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // forms: Array<AbilityFormInfo>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_EXTENSION_ABILITY_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertPackageModule(ani_env* env, const PackageModule& packageModule)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_MODULE_CONFIG_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // mainAbility: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, packageModule.mainAbility, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MAINABILITY, string));
+    ani_string mainAbility = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, packageModule.mainAbility, mainAbility));
 
     // apiVersion: ApiVersion
-    ani_object aApiVersionObject = ConvertApiVersion(env, packageModule.apiVersion);
-    RETURN_NULL_IF_NULL(aApiVersionObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APIVERSION, aApiVersionObject));
+    ani_object apiVersion = ConvertApiVersion(env, packageModule.apiVersion);
+    RETURN_NULL_IF_NULL(apiVersion);
 
     // deviceTypes: Array<string>
-    ani_ref aDeviceTypes = ConvertAniArrayString(env, packageModule.deviceType);
-    RETURN_NULL_IF_NULL(aDeviceTypes);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DEVICETYPES, aDeviceTypes));
+    ani_ref deviceTypes = ConvertAniArrayString(env, packageModule.deviceType);
+    RETURN_NULL_IF_NULL(deviceTypes);
 
     // distro: ModuleDistroInfo
-    ani_object aModuleDistroInfoObject = ConvertModuleDistro(env, packageModule.distro);
-    RETURN_NULL_IF_NULL(aModuleDistroInfoObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DISTRO, aModuleDistroInfoObject));
+    ani_object distro = ConvertModuleDistro(env, packageModule.distro);
+    RETURN_NULL_IF_NULL(distro);
 
     // abilities: Array<ModuleAbilityInfo>
-    ani_object aModuleAbilityInfoObject = ConvertAniArray(env, packageModule.abilities, ConvertModuleAbilityInfo);
-    RETURN_NULL_IF_NULL(aModuleAbilityInfoObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_ABILITIES, aModuleAbilityInfoObject));
+    ani_object abilities = ConvertAniArray(env, packageModule.abilities, ConvertModuleAbilityInfo);
+    RETURN_NULL_IF_NULL(abilities);
 
     // extensionAbilities: Array<ExtensionAbility>
-    ani_object aExtensionAbilityObject =
+    ani_object extensionAbilities =
         ConvertAniArray(env, packageModule.extensionAbilities, ConvertExtensionAbilities);
-    RETURN_NULL_IF_NULL(aExtensionAbilityObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_EXTENSIONABILITIES, aExtensionAbilityObject));
+    RETURN_NULL_IF_NULL(extensionAbilities);
 
-    return object;
+    ani_value args[] = {
+        { .r = mainAbility },
+        { .r = apiVersion },
+        { .r = deviceTypes },
+        { .r = distro },
+        { .r = abilities },
+        { .r = extensionAbilities },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // mainAbility: string
+        .AddClass(CLASSNAME_API_VERSION)            // apiVersion: ApiVersion
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // deviceTypes: Array<string>
+        .AddClass(CLASSNAME_MODULE_DISTRO_INFO)     // distro: ModuleDistroInfo
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // abilities: Array<ModuleAbilityInfo>
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // extensionAbilities: Array<ExtensionAbility>
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_MODULE_CONFIG_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertSummary(ani_env* env, const Summary& summary, bool withApp)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_PACKAGE_SUMMARY_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
+    // app: BundleConfigInfo
+    ani_object app = nullptr;
     if (withApp) {
-        // app: BundleConfigInfo
-        ani_object aBundleConfigInfoObject = ConvertPackageApp(env, summary.app);
-        RETURN_NULL_IF_NULL(aBundleConfigInfoObject);
-        RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APP, aBundleConfigInfoObject));
+        app = ConvertPackageApp(env, summary.app);
+        RETURN_NULL_IF_NULL(app);
     }
 
     // modules: Array<ModuleConfigInfo>
-    ani_object aModuleConfigInfoObject = ConvertAniArray(env, summary.modules, ConvertPackageModule);
-    RETURN_NULL_IF_NULL(aModuleConfigInfoObject);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULES, aModuleConfigInfoObject));
+    ani_object modules = ConvertAniArray(env, summary.modules, ConvertPackageModule);
+    RETURN_NULL_IF_NULL(modules);
 
-    return object;
+    ani_value args[] = {
+        { .r = modules },
+        { .r = app },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // modules: Array<ModuleConfigInfo>
+        .BuildSignatureDescriptor();
+    static const std::string ctorSigWithApp = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // modules: Array<ModuleConfigInfo>
+        .AddClass(CLASSNAME_BUNDLE_CONFIG_INFO)    // app: BundleConfigInfo
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_PACKAGE_SUMMARY_INNER, withApp ? ctorSigWithApp : ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertPackages(ani_env* env, const Packages& packages)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_PACKAGE_CONFIG_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // deviceTypes: Array<string>
-    ani_ref aDeviceTypes = ConvertAniArrayString(env, packages.deviceType);
-    RETURN_NULL_IF_NULL(aDeviceTypes);
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DEVICETYPES, aDeviceTypes));
+    ani_ref deviceTypes = ConvertAniArrayString(env, packages.deviceType);
+    RETURN_NULL_IF_NULL(deviceTypes);
 
     // name: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, packages.name, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_NAME, string));
+    ani_string name = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, packages.name, name));
 
     // moduleType: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, packages.moduleType, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULETYPE, string));
+    ani_string moduleType = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, packages.moduleType, moduleType));
 
-    // deliveryWithInstall: boolean
-    RETURN_NULL_IF_FALSE(
-        CallSetter(env, cls, object, PROPERTYNAME_DELIVERYWITHINSTALL, BoolToAniBoolean(packages.deliveryWithInstall)));
-
-    return object;
+    ani_value args[] = {
+        { .r = deviceTypes },
+        { .r = name },
+        { .r = moduleType },
+        { .z = BoolToAniBoolean(packages.deliveryWithInstall) },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // deviceTypes: Array<string>
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // name: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleType: string
+        .AddBoolean()                               // deliveryWithInstall: boolean
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_PACKAGE_CONFIG_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertBundlePackInfo(ani_env* env, const BundlePackInfo& bundlePackInfo, const uint32_t flag)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_BUNDLE_PACK_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    // packages: Array<PackageConfig>
-    ani_object aPackageConfigObject = ConvertAniArray(env, bundlePackInfo.packages, ConvertPackages);
-    RETURN_NULL_IF_NULL(aPackageConfigObject);
-
     if (flag & BundlePackFlag::GET_PACKAGES) {
-        RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PACKAGES, aPackageConfigObject));
-        return object;
+        // packages: Array<PackageConfig>
+        ani_object packages = ConvertAniArray(env, bundlePackInfo.packages, ConvertPackages);
+        RETURN_NULL_IF_NULL(packages);
+
+        ani_value args[] = {
+            { .r = packages },
+        };
+        static const std::string ctorSigPackages = SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // packages: Array<PackageConfig>
+            .BuildSignatureDescriptor();
+        return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_PACK_INFO_INNER, ctorSigPackages, args);
     }
 
-    // summary: PackageSummary
-    ani_object aPackageSummaryObject = ConvertSummary(env, bundlePackInfo.summary, true);
-    RETURN_NULL_IF_NULL(aPackageSummaryObject);
-
     if (flag & BundlePackFlag::GET_BUNDLE_SUMMARY) {
-        RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SUMMARY, aPackageSummaryObject));
-        return object;
+        // summary: PackageSummary
+        ani_object summary = ConvertSummary(env, bundlePackInfo.summary, true);
+        RETURN_NULL_IF_NULL(summary);
+
+        ani_value args[] = {
+            { .r = summary },
+        };
+        static const std::string ctorSigBundleSummary = SignatureBuilder()
+            .AddClass(CLASSNAME_PACKAGE_SUMMARY) // summary: PackageSummary
+            .BuildSignatureDescriptor();
+        return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_PACK_INFO_INNER, ctorSigBundleSummary, args);
     }
 
     if (flag & BundlePackFlag::GET_MODULE_SUMMARY) {
-        ani_object aPackageSummaryWithoutApp = ConvertSummary(env, bundlePackInfo.summary, false);
-        RETURN_NULL_IF_NULL(aPackageSummaryWithoutApp);
-        RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SUMMARY, aPackageSummaryWithoutApp));
-        return object;
+        // summary: PackageSummary
+        ani_object summary = ConvertSummary(env, bundlePackInfo.summary, false);
+        RETURN_NULL_IF_NULL(summary);
+
+        ani_value args[] = {
+            { .r = summary },
+        };
+        static const std::string ctorSigModuleSummary = SignatureBuilder()
+            .AddClass(CLASSNAME_PACKAGE_SUMMARY) // summary: PackageSummary
+            .BuildSignatureDescriptor();
+        return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_PACK_INFO_INNER, ctorSigModuleSummary, args);
     }
 
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_PACKAGES, aPackageConfigObject));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_SUMMARY, aPackageSummaryObject));
+    // packages: Array<PackageConfig>
+    ani_object packages = ConvertAniArray(env, bundlePackInfo.packages, ConvertPackages);
+    RETURN_NULL_IF_NULL(packages);
 
-    return object;
+    // summary: PackageSummary
+    ani_object summary = ConvertSummary(env, bundlePackInfo.summary, true);
+    RETURN_NULL_IF_NULL(summary);
+
+    ani_value args[] = {
+        { .r = packages },
+        { .r = summary },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_ARRAY) // packages: Array<PackageConfig>
+        .AddClass(CLASSNAME_PACKAGE_SUMMARY)       // summary: PackageSummary
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_PACK_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::CreateDispatchInfo(
@@ -2596,52 +2539,50 @@ ani_object CommonFunAni::CreateDispatchInfo(
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_DISPATCH_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // version: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, version, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_VERSION, string));
+    ani_string aniVersion = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, version, aniVersion));
 
     // dispatchAPIVersion: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, dispatchAPIVersion, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_DISPATCHAPIVERSION, string));
+    ani_string aniDispatchAPIVersion = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, dispatchAPIVersion, aniDispatchAPIVersion));
 
-    return object;
+    ani_value args[] = {
+        { .r = aniVersion },
+        { .r = aniDispatchAPIVersion },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // version: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // dispatchAPIVersion: string
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_DISPATCH_INFO_INNER, ctorSig, args);
 }
 
 ani_object CommonFunAni::ConvertDynamicIconInfo(ani_env* env, const DynamicIconInfo& dynamicIconInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CreateClassByName(env, CLASSNAME_DYNAMICICONINFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // bundleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, dynamicIconInfo.bundleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, dynamicIconInfo.bundleName, bundleName));
 
     // moduleName: string
-    RETURN_NULL_IF_FALSE(StringToAniStr(env, dynamicIconInfo.moduleName, string));
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    ani_string moduleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, dynamicIconInfo.moduleName, moduleName));
 
-    // userId: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_USERID, dynamicIconInfo.userId));
-
-    // appIndex: int
-    RETURN_NULL_IF_FALSE(CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, dynamicIconInfo.appIndex));
-
-    return object;
+    ani_value args[] = {
+        { .r = bundleName },
+        { .r = moduleName },
+        { .i = dynamicIconInfo.userId },
+        { .i = dynamicIconInfo.appIndex },
+    };
+    static const std::string ctorSig = SignatureBuilder()
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+        .AddInt()                                   // userId: int
+        .AddInt()                                   // appIndex: int
+        .BuildSignatureDescriptor();
+    return CreateNewObjectByClassV2(env, CLASSNAME_DYNAMIC_ICON_INFO_INNER, ctorSig, args);
 }
 
 bool CommonFunAni::ParseBundleOptions(ani_env* env, ani_object object, int32_t& appIndex, int32_t& userId)
@@ -2653,7 +2594,7 @@ bool CommonFunAni::ParseBundleOptions(ani_env* env, ani_object object, int32_t& 
     bool isDefault = true;
 
     // userId?: int
-    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_USER_ID, &intValue)) {
         if (intValue < 0) {
             intValue = Constants::INVALID_USERID;
         }
@@ -2662,7 +2603,7 @@ bool CommonFunAni::ParseBundleOptions(ani_env* env, ani_object object, int32_t& 
     }
 
     // appIndex?: int
-    if (CallGetterOptional(env, object, PROPERTYNAME_APPINDEX, &intValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_APP_INDEX, &intValue)) {
         appIndex = intValue;
         isDefault = false;
     }
@@ -2677,23 +2618,23 @@ ani_object CommonFunAni::ConvertWantInfo(ani_env* env, const Want& want)
     ani_class cls = CreateClassByName(env, CLASSNAME_WANT);
     RETURN_NULL_IF_NULL(cls);
 
-    ani_object object = CreateNewObjectByClass(env, cls);
+    ani_object object = CreateNewObjectByClass(env, CLASSNAME_WANT, cls);
     RETURN_NULL_IF_NULL(object);
 
     // bundleName?: string
     ani_string string = nullptr;
     if (StringToAniStr(env, want.GetElement().GetBundleName(), string)) {
-        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_BUNDLE_NAME, string));
     }
 
     // abilityName?: string
     if (StringToAniStr(env, want.GetElement().GetAbilityName(), string)) {
-        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_ABILITYNAME, string));
+        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_ABILITY_NAME, string));
     }
 
     // deviceId?: string
     if (StringToAniStr(env, want.GetElement().GetDeviceID(), string)) {
-        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_DEVICEID, string));
+        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_DEVICE_ID, string));
     }
 
     // action?: string
@@ -2711,7 +2652,7 @@ ani_object CommonFunAni::ConvertWantInfo(ani_env* env, const Want& want)
 
     // moduleName?: string
     if (StringToAniStr(env, want.GetElement().GetModuleName(), string)) {
-        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_MODULENAME, string));
+        RETURN_NULL_IF_FALSE(CallSetField(env, cls, object, PROPERTYNAME_MODULE_NAME, string));
     }
 
     return object;
@@ -2731,16 +2672,16 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
     shortcutInfo.id = AniStrToString(env, string);
 
     // bundleName: string
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLE_NAME, &string));
     shortcutInfo.bundleName = AniStrToString(env, string);
 
     // moduleName?: string
-    if (CallGetterOptional(env, object, PROPERTYNAME_MODULENAME, &string)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_MODULE_NAME, &string)) {
         shortcutInfo.moduleName = AniStrToString(env, string);
     }
 
     // hostAbility?: string
-    if (CallGetterOptional(env, object, PROPERTYNAME_HOSTABILITY, &string)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_HOST_ABILITY, &string)) {
         shortcutInfo.hostAbility = AniStrToString(env, string);
     }
 
@@ -2750,7 +2691,7 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
     }
 
     // iconId?: long
-    if (CallGetterOptional(env, object, PROPERTYNAME_ICONID, &uintValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_ICON_ID, &uintValue)) {
         shortcutInfo.iconId = uintValue;
     }
 
@@ -2760,7 +2701,7 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
     }
 
     // labelId?: long
-    if (CallGetterOptional(env, object, PROPERTYNAME_LABELID, &uintValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_LABEL_ID, &uintValue)) {
         shortcutInfo.labelId = uintValue;
     }
 
@@ -2771,11 +2712,11 @@ bool CommonFunAni::ParseShortcutInfo(ani_env* env, ani_object object, ShortcutIn
     }
 
     // appIndex: int
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APPINDEX, &intValue));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_APP_INDEX, &intValue));
     shortcutInfo.appIndex = intValue;
 
     // sourceType: int
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SOURCETYPE, &intValue));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_SOURCE_TYPE, &intValue));
     shortcutInfo.sourceType = intValue;
 
     ani_boolean boolValue = false;
@@ -2795,16 +2736,16 @@ bool CommonFunAni::ParseShortcutIntent(ani_env* env, ani_object object, Shortcut
     ani_string string = nullptr;
 
     // targetBundle: string
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_TARGETBUNDLE, &string));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_TARGET_BUNDLE, &string));
     shortcutIntent.targetBundle = AniStrToString(env, string);
 
     // targetModule?: string
-    if (CallGetterOptional(env, object, PROPERTYNAME_TARGETMODULE, &string)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_TARGET_MODULE, &string)) {
         shortcutIntent.targetModule = AniStrToString(env, string);
     }
 
     // targetAbility: string
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_TARGETABILITY, &string));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_TARGET_ABILITY, &string));
     shortcutIntent.targetClass = AniStrToString(env, string);
 
     // parameters?: Array<ParameterItem>
@@ -2846,12 +2787,12 @@ bool CommonFunAni::ParseKeyValuePair(ani_env* env, ani_object object, std::pair<
 
 bool CommonFunAni::ParseHashParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
 {
-    return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULENAME, PROPERTYNAME_HASHVALUE);
+    return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULE_NAME, PROPERTYNAME_HASH_VALUE);
 }
 
 bool CommonFunAni::ParsePgoParams(ani_env* env, ani_object object, std::pair<std::string, std::string>& pair)
 {
-    return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULENAME, PROPERTYNAME_PGOFILEPATH);
+    return ParseKeyValuePairWithName(env, object, pair, PROPERTYNAME_MODULE_NAME, PROPERTYNAME_PGO_FILE_PATH);
 }
 
 bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallParam& installParam)
@@ -2861,7 +2802,7 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
 
     ani_array array = nullptr;
     // hashParams?
-    if (CallGetterOptional(env, object, PROPERTYNAME_HASHPARAMS, &array)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_HASH_PARAMS, &array)) {
         std::vector<std::pair<std::string, std::string>> hashParams;
         RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, hashParams, ParseHashParams));
         for (const auto& parameter : hashParams) {
@@ -2887,7 +2828,7 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
     }
 
     // pgoParams?
-    if (CallGetterOptional(env, object, PROPERTYNAME_PGOPARAMS, &array)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_PGO_PARAMS, &array)) {
         std::vector<std::pair<std::string, std::string>> pgoParams;
         RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, pgoParams, ParsePgoParams));
         for (const auto& parameter : pgoParams) {
@@ -2901,13 +2842,13 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
 
     ani_int intValue = 0;
     // userId?: int
-    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_USER_ID, &intValue)) {
         installParam.userId = intValue;
     } else {
         APP_LOGW("Parse userId failed,using default value");
     }
     // installFlag?: int
-    if (CallGetterOptional(env, object, PROPERTYNAME_INSTALLFLAG, &intValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_INSTALL_FLAG, &intValue)) {
         if ((intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::NORMAL)) &&
             (intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::REPLACE_EXISTING)) &&
             (intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::FREE_INSTALL))) {
@@ -2921,7 +2862,7 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
 
     ani_boolean boolValue = false;
     // isKeepData?: boolean
-    if (CallGetterOptional(env, object, PROPERTYNAME_ISKEEPDATA, &boolValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_IS_KEEP_DATA, &boolValue)) {
         installParam.isKeepData = boolValue;
     } else {
         APP_LOGW("Parse isKeepData failed,using default value");
@@ -2929,28 +2870,28 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
 
     ani_long longValue = 0;
     // crowdtestDeadline?: long
-    if (CallGetterOptional(env, object, PROPERTYNAME_CROWDTESTDEADLINE, &longValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_CROWD_TEST_DEADLINE, &longValue)) {
         installParam.crowdtestDeadline = longValue;
     } else {
         APP_LOGW("Parse crowdtestDeadline failed,using default value");
     }
 
     // sharedBundleDirPaths?: Array<string>
-    if (CallGetterOptional(env, object, PROPERTYNAME_SHAREDBUNDLEDIRPATHS, &array)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_SHARED_BUNDLE_DIR_PATHS, &array)) {
         RETURN_FALSE_IF_FALSE(ParseStrArray(env, array, installParam.sharedBundleDirPaths));
     }
 
     ani_string string = nullptr;
 
     // specifiedDistributionType?: string
-    if (CallGetterOptional(env, object, PROPERTYNAME_SPECIFIEDDISTRIBUTIONTYPE, &string)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_SPECIFIED_DISTRIBUTION_TYPE, &string)) {
         installParam.specifiedDistributionType = AniStrToString(env, string);
     } else {
         APP_LOGW("Parse specifiedDistributionType failed,using default value");
     }
 
     // additionalInfo?: string
-    if (CallGetterOptional(env, object, PROPERTYNAME_ADDITIONALINFO, &string)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_ADDITIONAL_INFO, &string)) {
         installParam.additionalInfo = AniStrToString(env, string);
     } else {
         APP_LOGW("Parse additionalInfo failed,using default value");
@@ -2964,11 +2905,11 @@ bool CommonFunAni::ParseUninstallParam(ani_env* env, ani_object object, Uninstal
     RETURN_FALSE_IF_NULL(object);
     ani_string string = nullptr;
     // bundleName: string
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLE_NAME, &string));
     uninstallParam.bundleName = AniStrToString(env, string);
     ani_int intValue = 0;
     // versionCode?: int
-    if (CallGetterOptional(env, object, PROPERTYNAME_VERSIONCODE, &intValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_VERSION_CODE, &intValue)) {
         uninstallParam.versionCode = intValue;
     } else {
         APP_LOGW("Parse crowdtestDeadline failed,using default value");
@@ -2983,7 +2924,7 @@ bool CommonFunAni::ParseDestroyAppCloneParam(
     RETURN_FALSE_IF_NULL(object);
     ani_int intValue = 0;
     // userId?: int
-    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_USER_ID, &intValue)) {
         destroyAppCloneParam.userId = intValue;
     } else {
         destroyAppCloneParam.userId = Constants::UNSPECIFIED_USERID;
@@ -3010,7 +2951,7 @@ bool CommonFunAni::ParsePluginParam(ani_env* env, ani_object object, InstallPlug
     ani_array array = nullptr;
 
     // userId?: int
-    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_USER_ID, &intValue)) {
         installPluginParam.userId = intValue;
     } else {
         installPluginParam.userId = Constants::UNSPECIFIED_USERID;
@@ -3035,7 +2976,7 @@ bool CommonFunAni::ParseCreateAppCloneParam(ani_env* env, ani_object object, int
     RETURN_FALSE_IF_NULL(object);
     ani_int intValue = 0;
     // userId?: int
-    if (CallGetterOptional(env, object, PROPERTYNAME_USERID, &intValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_USER_ID, &intValue)) {
         userId = intValue;
     } else {
         userId = Constants::UNSPECIFIED_USERID;
@@ -3043,7 +2984,7 @@ bool CommonFunAni::ParseCreateAppCloneParam(ani_env* env, ani_object object, int
     }
 
     // appIdx?: int
-    if (CallGetterOptional(env, object, PROPERTYNAME_APPINDEX, &intValue)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_APP_INDEX, &intValue)) {
         appIdx = intValue;
     } else {
         appIdx = Constants::INITIAL_APP_INDEX;
@@ -3059,11 +3000,11 @@ bool CommonFunAni::ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo
 
     ani_string string = nullptr;
     // bundleName: string
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLE_NAME, &string));
     abilityInfo.bundleName = AniStrToString(env, string);
 
     // moduleName: string
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MODULENAME, &string));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_MODULE_NAME, &string));
     abilityInfo.moduleName = AniStrToString(env, string);
 
     // name: string
@@ -3081,21 +3022,21 @@ bool CommonFunAni::ParseElementName(ani_env* env, ani_object object, ElementName
     ani_string string = nullptr;
 
     // deviceId?: string
-    if (CallGetterOptional(env, object, PROPERTYNAME_DEVICEID, &string)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_DEVICE_ID, &string)) {
         elementName.SetDeviceID(AniStrToString(env, string));
     }
 
     // bundleName: string
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLENAME, &string));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_BUNDLE_NAME, &string));
     elementName.SetBundleName(AniStrToString(env, string));
 
     // moduleName?: string
-    if (CallGetterOptional(env, object, PROPERTYNAME_MODULENAME, &string)) {
+    if (CallGetterOptional(env, object, PROPERTYNAME_MODULE_NAME, &string)) {
         elementName.SetModuleName(AniStrToString(env, string));
     }
 
     // abilityName: string
-    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ABILITYNAME, &string));
+    RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ABILITY_NAME, &string));
     elementName.SetAbilityName(AniStrToString(env, string));
 
     return true;

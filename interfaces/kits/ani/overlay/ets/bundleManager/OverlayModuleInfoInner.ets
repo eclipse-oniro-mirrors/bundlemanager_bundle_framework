@@ -26,4 +26,17 @@ export class OverlayModuleInfoInner implements OverlayModuleInfo {
     public readonly targetModuleName: string = '';
     public readonly priority: int;
     public readonly state: int;
+
+    constructor() { }
+    constructor(bundleName: string,
+        moduleName: string,
+        targetModuleName: string,
+        priority: int,
+        state: int) {
+            this.bundleName = bundleName;
+            this.moduleName = moduleName;
+            this.targetModuleName = targetModuleName;
+            this.priority = priority;
+            this.state = state;
+  }
 }

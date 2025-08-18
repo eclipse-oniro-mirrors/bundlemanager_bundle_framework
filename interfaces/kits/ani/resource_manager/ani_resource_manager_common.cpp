@@ -12,6 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <ani_signature_builder.h>
+
 #include "ani_resource_manager_common.h"
 #include "ani_resource_manager_drawable_utils.h"
 #include "common_fun_ani.h"
@@ -24,53 +26,55 @@ constexpr const char* CLASSNAME_BUNDLE_RES_INFO_INNER =
     "bundleManager.BundleResourceInfoInner.BundleResourceInfoInner";
 constexpr const char* CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER =
     "bundleManager.LauncherAbilityResourceInfoInner.LauncherAbilityResourceInfoInner";
-constexpr const char* PROPERTYNAME_BUNDLENAME = "bundleName";
-constexpr const char* PROPERTYNAME_MODULENAME = "moduleName";
-constexpr const char* PROPERTYNAME_ABILITYNAME = "abilityName";
-constexpr const char* PROPERTYNAME_ICON = "icon";
-constexpr const char* PROPERTYNAME_LABEL = "label";
-constexpr const char* PROPERTYNAME_DRAWABLEDESCRIPTOR = "drawableDescriptor";
-constexpr const char* PROPERTYNAME_APPINDEX = "appIndex";
+constexpr const char* CLASSNAME_DRAWABLE_DESCRIPTOR = "@ohos.arkui.drawableDescriptor.DrawableDescriptor";
 }
 
 ani_object AniResourceManagerCommon::ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo)
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_BUNDLE_RES_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CommonFunAni::CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // bundleName: string
-    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, bundleResInfo.bundleName, string));
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, bundleResInfo.bundleName, bundleName));
 
     // icon: string
-    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, bundleResInfo.icon, string));
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_ICON, string));
+    ani_string icon = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, bundleResInfo.icon, icon));
 
     // label: string
-    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, bundleResInfo.label, string));
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
+    ani_string label = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, bundleResInfo.label, label));
 
     // drawableDecriptor: DrawableDescriptor
-    ani_object aDrawableDescriptor = AniResourceManagerDrawableUtils::ConvertDrawableDescriptor(env,
+    ani_ref drawableDecriptor = nullptr;
+    ani_object drawableDecriptorObj = AniResourceManagerDrawableUtils::ConvertDrawableDescriptor(env,
         bundleResInfo.foreground, bundleResInfo.background);
-    if (aDrawableDescriptor == nullptr) {
-        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterNull(env, cls, object, PROPERTYNAME_DRAWABLEDESCRIPTOR));
+    if (drawableDecriptorObj == nullptr) {
+        ani_status status = env->GetNull(&drawableDecriptor);
+        if (status != ANI_OK) {
+            APP_LOGE("GetNull failed %{public}d", status);
+            return nullptr;
+        }
     } else {
-        RETURN_NULL_IF_FALSE(
-            CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_DRAWABLEDESCRIPTOR, aDrawableDescriptor));
+        drawableDecriptor = drawableDecriptorObj;
     }
 
-    // appIndex: int
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, bundleResInfo.appIndex));
-
-    return object;
+    ani_value args[] = {
+        { .r = bundleName },
+        { .r = icon },
+        { .r = label },
+        { .r = drawableDecriptor },
+        { .i = bundleResInfo.appIndex },
+    };
+    static const std::string ctorSig =
+        arkts::ani_signature::SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING) // icon: string
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING) // label: string
+            .AddClass(CLASSNAME_DRAWABLE_DESCRIPTOR)    // drawableDecriptor: DrawableDescriptor
+            .AddInt()                                   // appIndex: int
+            .BuildSignatureDescriptor();
+    return CommonFunAni::CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_RES_INFO_INNER, ctorSig, args);
 }
 
 ani_object AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo(ani_env* env,
@@ -78,49 +82,60 @@ ani_object AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo(ani_env*
 {
     RETURN_NULL_IF_NULL(env);
 
-    ani_class cls = CommonFunAni::CreateClassByName(env, CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER);
-    RETURN_NULL_IF_NULL(cls);
-
-    ani_object object = CommonFunAni::CreateNewObjectByClass(env, cls);
-    RETURN_NULL_IF_NULL(object);
-
-    ani_string string = nullptr;
-
     // bundleName: string
-    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, launcherAbilityResourceInfo.bundleName, string));
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_BUNDLENAME, string));
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, launcherAbilityResourceInfo.bundleName, bundleName));
 
     // moduleName: string
-    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, launcherAbilityResourceInfo.moduleName, string));
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_MODULENAME, string));
+    ani_string moduleName = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, launcherAbilityResourceInfo.moduleName, moduleName));
 
     // abilityName: string
-    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, launcherAbilityResourceInfo.abilityName, string));
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_ABILITYNAME, string));
+    ani_string abilityName = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, launcherAbilityResourceInfo.abilityName, abilityName));
 
     // icon: string
-    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, launcherAbilityResourceInfo.icon, string));
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_ICON, string));
+    ani_string icon = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, launcherAbilityResourceInfo.icon, icon));
 
     // label: string
-    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, launcherAbilityResourceInfo.label, string));
-    RETURN_NULL_IF_FALSE(CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_LABEL, string));
+    ani_string label = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, launcherAbilityResourceInfo.label, label));
 
     // drawableDescriptor: DrawableDescriptor
-    ani_object aDrawableDescriptor = AniResourceManagerDrawableUtils::ConvertDrawableDescriptor(env,
+    ani_ref drawableDecriptor = nullptr;
+    ani_object drawableDecriptorObj = AniResourceManagerDrawableUtils::ConvertDrawableDescriptor(env,
         launcherAbilityResourceInfo.foreground, launcherAbilityResourceInfo.background);
-    if (aDrawableDescriptor == nullptr) {
-        RETURN_NULL_IF_FALSE(CommonFunAni::CallSetterNull(env, cls, object, PROPERTYNAME_DRAWABLEDESCRIPTOR));
+    if (drawableDecriptorObj == nullptr) {
+        ani_status status = env->GetNull(&drawableDecriptor);
+        if (status != ANI_OK) {
+            APP_LOGE("GetNull failed %{public}d", status);
+            return nullptr;
+        }
     } else {
-        RETURN_NULL_IF_FALSE(
-            CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_DRAWABLEDESCRIPTOR, aDrawableDescriptor));
+        drawableDecriptor = drawableDecriptorObj;
     }
 
-    // appIndex: int
-    RETURN_NULL_IF_FALSE(
-        CommonFunAni::CallSetter(env, cls, object, PROPERTYNAME_APPINDEX, launcherAbilityResourceInfo.appIndex));
-
-    return object;
+    ani_value args[] = {
+        { .r = bundleName },
+        { .r = moduleName },
+        { .r = abilityName },
+        { .r = icon },
+        { .r = label },
+        { .r = drawableDecriptor },
+        { .i = launcherAbilityResourceInfo.appIndex },
+    };
+    static const std::string ctorSig =
+        arkts::ani_signature::SignatureBuilder()
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING) // abilityName: string
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING) // icon: string
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING) // label: string
+            .AddClass(CLASSNAME_DRAWABLE_DESCRIPTOR)    // drawableDecriptor: DrawableDescriptor
+            .AddInt()                                   // appIndex: int
+            .BuildSignatureDescriptor();
+    return CommonFunAni::CreateNewObjectByClassV2(env, CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER, ctorSig, args);
 }
 } // AppExecFwk
 } // OHOS
