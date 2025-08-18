@@ -2805,6 +2805,14 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
         std::vector<std::pair<std::string, std::string>> hashParams;
         RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, hashParams, ParseHashParams));
         for (const auto& parameter : hashParams) {
+            if (parameter.first.empty() || parameter.second.empty()) {
+                APP_LOGE("key or value is empty");
+                return false;
+            }
+            if (installParam.hashParams.find(parameter.first) != installParam.hashParams.end()) {
+                APP_LOGE("duplicate key found");
+                return false;
+            }
             installParam.hashParams[parameter.first] = parameter.second;
         }
     }
@@ -2823,6 +2831,10 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
         std::vector<std::pair<std::string, std::string>> pgoParams;
         RETURN_FALSE_IF_FALSE(ParseAniArray(env, array, pgoParams, ParsePgoParams));
         for (const auto& parameter : pgoParams) {
+            if (parameter.first.empty() || parameter.second.empty()) {
+                APP_LOGE("key or value is empty");
+                return false;
+            }
             installParam.pgoParams[parameter.first] = parameter.second;
         }
     }
@@ -2840,8 +2852,9 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
             (intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::REPLACE_EXISTING)) &&
             (intValue != static_cast<int32_t>(OHOS::AppExecFwk::InstallFlag::FREE_INSTALL))) {
             APP_LOGE("invalid installFlag param");
+        } else {
+            installParam.installFlag = static_cast<OHOS::AppExecFwk::InstallFlag>(intValue);
         }
-        installParam.installFlag = static_cast<OHOS::AppExecFwk::InstallFlag>(intValue);
     } else {
         APP_LOGW("Parse installFlag failed,using default value");
     }
@@ -2878,7 +2891,7 @@ bool CommonFunAni::ParseInstallParam(ani_env* env, ani_object object, InstallPar
 
     // additionalInfo?: string
     if (CallGetterOptional(env, object, PROPERTYNAME_ADDITIONAL_INFO, &string)) {
-        installParam.specifiedDistributionType = AniStrToString(env, string);
+        installParam.additionalInfo = AniStrToString(env, string);
     } else {
         APP_LOGW("Parse additionalInfo failed,using default value");
     }
