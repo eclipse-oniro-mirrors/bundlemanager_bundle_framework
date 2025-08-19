@@ -5581,8 +5581,13 @@ HWTEST_F(BmsBundleResourceTest, AddResourceInfosWhenSystemLanguageChanged_0010, 
         ResourceInfo resourceInfo;
         resourceInfosMap[BUNDLE_NAME].push_back(resourceInfo);
         manager->currentTaskNum_ = 100;
+        manager->currentChangeType_ = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE);
         ret = manager->AddResourceInfosWhenSystemLanguageChanged(resourceInfosMap, USERID, 6000000);
         EXPECT_FALSE(ret);
+
+        manager->currentChangeType_ = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE);
+        ret = manager->AddResourceInfosWhenSystemLanguageChanged(resourceInfosMap, USERID, 6000000);
+        EXPECT_TRUE(ret);
 
         ret = manager->AddResourceInfosWhenSystemLanguageChanged(resourceInfosMap, USERID, 100);
         EXPECT_TRUE(ret);
@@ -5638,8 +5643,13 @@ HWTEST_F(BmsBundleResourceTest, AddResourceInfosWhenSystemThemeChanged_0010, Fun
         ResourceInfo resourceInfo;
         resourceInfosMap[BUNDLE_NAME].push_back(resourceInfo);
         manager->currentTaskNum_ = 100;
+        manager->currentChangeType_ = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE);
         ret = manager->AddResourceInfosWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID, 1000000);
         EXPECT_FALSE(ret);
+
+        manager->currentChangeType_ = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE);
+        ret = manager->AddResourceInfosWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID, 1000000);
+        EXPECT_TRUE(ret);
 
         ret = manager->AddResourceInfosWhenSystemThemeChanged(resourceInfosMap, THEME_TEST_USERID, 100);
         EXPECT_TRUE(ret);
@@ -5936,6 +5946,34 @@ HWTEST_F(BmsBundleResourceTest, ProcessThemeAndDynamicIconWhenOta_0010, Function
 
         ret = manager->ProcessThemeAndDynamicIconWhenOta(updateBundleNames);
         EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: IsNeedInterrupted_0010
+ * Function: IsNeedInterrupted
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test IsNeedInterrupted
+ */
+HWTEST_F(BmsBundleResourceTest, IsNeedInterrupted_0010, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        manager->currentTaskNum_ = 100;
+        manager->currentChangeType_ = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE);
+        bool ret = manager->IsNeedInterrupted(manager->currentTaskNum_,
+            BundleResourceChangeType::SYSTEM_LANGUE_CHANGE);
+        EXPECT_FALSE(ret);
+
+        ret = manager->IsNeedInterrupted(manager->currentTaskNum_ + 100,
+            BundleResourceChangeType::SYSTEM_LANGUE_CHANGE);
+        EXPECT_TRUE(ret);
+
+        ret = manager->IsNeedInterrupted(manager->currentTaskNum_ + 100,
+            BundleResourceChangeType::SYSTEM_THEME_CHANGE);
+        EXPECT_FALSE(ret);
     }
 }
 } // OHOS
