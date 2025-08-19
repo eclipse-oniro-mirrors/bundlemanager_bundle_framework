@@ -2924,4 +2924,18 @@ HWTEST_F(BmsEventHandlerTest, ProcessAppTmpPath_0100, Function | SmallTest | Lev
     BundleUtil::CreateDir(ServiceConstants::BMS_APP_COPY_TEMP_PATH);
     EXPECT_NO_THROW(handler->ProcessAppTmpPath());
 }
+
+#ifdef WEBVIEW_ENABLE
+/**
+ * @tc.number: NotifyFWKAfterBmsStart_0100
+ * @tc.name: NotifyFWKAfterBmsStart
+ * @tc.desc: test NotifyFWKAfterBmsStart
+ */
+HWTEST_F(BmsEventHandlerTest, NotifyFWKAfterBmsStart_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    EXPECT_NO_THROW(handler->NotifyFWKAfterBmsStart());
+}
+#endif
 } // OHOS
