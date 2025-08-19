@@ -31,7 +31,7 @@ export class LauncherAbilityResourceInfoInner implements LauncherAbilityResource
         abilityName: string,
         icon: string,
         label: string,
-        drawableDescriptor: DrawableDescriptor | null,
+        drawableDescriptor: DrawableDescriptor,
         appIndex: int) {
             this.bundleName = bundleName;
             this.moduleName = moduleName;

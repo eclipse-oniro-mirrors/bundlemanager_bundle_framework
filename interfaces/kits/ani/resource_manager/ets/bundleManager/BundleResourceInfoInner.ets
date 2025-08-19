@@ -27,7 +27,7 @@ export class BundleResourceInfoInner implements BundleResourceInfo {
     constructor(bundleName: string,
         icon: string,
         label: string,
-        drawableDescriptor: DrawableDescriptor | null,
+        drawableDescriptor: DrawableDescriptor,
         appIndex: int) {
             this.bundleName = bundleName;
             this.icon = icon;
