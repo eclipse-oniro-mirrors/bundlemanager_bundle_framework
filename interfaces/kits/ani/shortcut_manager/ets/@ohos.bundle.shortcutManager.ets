@@ -20,6 +20,19 @@ namespace shortcutManager {
 
   loadLibrary("ani_shortcut_manager.z");
 
+  function createBusinessError(code: int, message: string) {
+    let err = new BusinessError();
+    err.code = code;
+    err.name = 'Error';
+    err.message = message;
+    return err;
+  }
+  
+  const ERROR_SOURCETYPE : int = -1;
+  const MAIN_APP_INDEX: int = 0;
+  const ERROR_PARAM_CHECK_ERROR: int = 401;
+  const INVALID_SHORTCUT_INFO_ERROR: string = "invalid ShortcutInfo: parameter type error, or appIndex is less than 0";
+
   export native function addDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: int): void;
   export native function deleteDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: int): void;
   export native function getAllDesktopShortcutInfoNative(userId: int): Array<ShortcutInfo>;
@@ -27,6 +40,9 @@ namespace shortcutManager {
   export native function getAllShortcutInfoForSelfNative(): Array<ShortcutInfo>;
 
   function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
+    if (shortcutInfo.appIndex < MAIN_APP_INDEX || shortcutInfo?.sourceType === ERROR_SOURCETYPE) {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
+    }
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
       let cb = (): NullishType => {
         return shortcutManager.addDesktopShortcutInfoNative(shortcutInfo, userId);
@@ -42,6 +58,9 @@ namespace shortcutManager {
   }
 
   function deleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
+    if (shortcutInfo.appIndex < MAIN_APP_INDEX || shortcutInfo.sourceType === ERROR_SOURCETYPE) {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
+    }
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
       let cb = (): NullishType => {
         return shortcutManager.deleteDesktopShortcutInfoNative(shortcutInfo, userId)
