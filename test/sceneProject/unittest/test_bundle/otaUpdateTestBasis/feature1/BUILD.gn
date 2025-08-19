@@ -24,7 +24,7 @@ ohos_app("otaUpdateTestBasisFeature1") {
   js_build_mode = "release"
   sdk_home = "//prebuilts/ohos-sdk/linux"
   sdk_type_name = [ "sdk.dir" ]
-  assemble_type = "assembleHar"
+  assemble_type = "assembleHap"
   build_level = "module"
   build_modules = [ "feature1" ]
   system_lib_deps = [
