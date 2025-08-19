@@ -67,6 +67,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
     "appFeature":"hos_system_app",
     "appIndex":0,
     "appType":0,
+    "bundleStatus":1,
     "baseAbilityInfos":{
         "com.example.myapplication.entry.MainAbility":{
             "applicationInfo":{
