@@ -113,7 +113,7 @@ export class SignatureInfoInner implements SignatureInfo {
   readonly certificate?: string | undefined;
 
   constructor() { }
-  constructor(appId: string, fingerprint: string, appIdentifier: string, certificate: string | undefined) {
+  constructor(appId: string, fingerprint: string, appIdentifier: string, certificate?: string) {
     this.appId = appId;
     this.fingerprint = fingerprint;
     this.appIdentifier = appIdentifier;
