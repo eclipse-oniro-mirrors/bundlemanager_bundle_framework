@@ -43,6 +43,7 @@
 #include "inner_patch_info.h"
 #include "installd_client.h"
 #include "install_exception_mgr.h"
+#include "module_json_updater.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "patch_data_mgr.h"
@@ -390,6 +391,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::PROCESS_THEME_AND_DYNAMIC_ICON);
     (void)SaveBmsSystemTimeForShortcut();
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
+    UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON);
     (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }
@@ -409,6 +411,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         SaveSystemFingerprint();
         (void)SaveBmsSystemTimeForShortcut();
         AOTHandler::GetInstance().HandleOTA();
+        ModuleJsonUpdater::UpdateModuleJsonAsync();
     } else {
         HandlePreInstallException();
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
@@ -2268,6 +2271,12 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     UpdatePreinstallDB(needInstallMap);
     // process bundle theme and dynamic resource
     InnerProcessAllThemeAndDynamicIconInfoWhenOta(needInstallMap);
+
+    std::set<std::string> updateBundleNames;
+    for (const auto &item : needInstallMap) {
+        updateBundleNames.insert(item.first);
+    }
+    ModuleJsonUpdater::SetIgnoreBundleNames(updateBundleNames);
 }
 
 bool BMSEventHandler::CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo)
@@ -2582,30 +2591,6 @@ bool BMSEventHandler::InnerProcessUninstallAppServiceModule(const InnerBundleInf
     return true;
 }
 
-void BMSEventHandler::UpdateExtensionType()
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
-        return;
-    }
-    std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
-    for (auto &[bundleName, innerBundleInfo] : infos) {
-        bool needUpdate = false;
-        for (auto &[key, innerExtensionInfo] : innerBundleInfo.FetchInnerExtensionInfos()) {
-            if (innerExtensionInfo.type == ExtensionAbilityType::UNSPECIFIED) {
-                LOG_I(BMS_TAG_DEFAULT, "update extension type, -b : %{public}s, -e : %{public}s",
-                    bundleName.c_str(), innerExtensionInfo.name.c_str());
-                needUpdate = true;
-                innerExtensionInfo.type = ConvertToExtensionAbilityType(innerExtensionInfo.extensionTypeName);
-            }
-        }
-        if (needUpdate) {
-            dataMgr->UpdateInnerBundleInfo(innerBundleInfo, true);
-        }
-    }
-}
-
 void BMSEventHandler::ProcessCheckAppExtensionAbility()
 {
     bool checkExtensionAbility = false;
@@ -2615,7 +2600,6 @@ void BMSEventHandler::ProcessCheckAppExtensionAbility()
         return;
     }
     LOG_I(BMS_TAG_DEFAULT, "Need to check extension ability");
-    UpdateExtensionType();
     InnerProcessCheckAppExtensionAbility();
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
 }
