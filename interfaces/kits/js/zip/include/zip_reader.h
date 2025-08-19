@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -128,6 +128,7 @@ public:
     };
 
     ZipReader();
+    ZipReader(bool needChangePathSeparator);
     ~ZipReader();
 
     // Opens the zip file specified by |zipFilePath|. Returns true on
@@ -195,6 +196,7 @@ private:
     unzFile zipFile_;
     int numEntries_;
     bool reachedEnd_;
+    bool needChangePathSeparator_ = false;
     std::unique_ptr<EntryInfo> currentEntryInfo_;
 
     DISALLOW_COPY_AND_ASSIGN(ZipReader);
@@ -203,6 +205,7 @@ private:
 class ZipParallelReader : public ZipReader {
 public:
     ZipParallelReader() : ZipReader() {}
+    ZipParallelReader(bool needChangePathSeparator) : ZipReader(needChangePathSeparator) {}
     ~ZipParallelReader();
 
     // Opens th zip file multi times specified by |zipFilePath|. Returns true on

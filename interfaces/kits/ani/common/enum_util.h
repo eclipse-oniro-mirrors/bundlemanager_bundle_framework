@@ -50,6 +50,7 @@ constexpr const char* CLASSNAME_BUNDLE_LAUNCHMODE = "L@ohos/bundle/bundle/Launch
 constexpr const char* CLASSNAME_ZLIB_COMPRESSLEVEL = "L@ohos/zlib/zlib/CompressLevel;";
 constexpr const char* CLASSNAME_ZLIB_MEMLEVEL = "L@ohos/zlib/zlib/MemLevel;";
 constexpr const char* CLASSNAME_ZLIB_COMPRESSSTRATEGY = "L@ohos/zlib/zlib/CompressStrategy;";
+constexpr const char* CLASSNAME_ZLIB_PATHSEPARATORSTRATRGY = "L@ohos/zlib/zlib/PathSeparatorStrategy;";
 } // namespace CommonFunAniNS
 class EnumUtils {
 private:
@@ -445,6 +446,16 @@ public:
     static inline ani_enum_item EnumNativeToETS_Zlib_CompressStrategy(ani_env* env, const int32_t value)
     {
         return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_ZLIB_COMPRESSSTRATEGY, value, 0);
+    }
+
+    /* zlib.PathSeparatorStrategy
+    enum PathSeparatorStrategy {
+        PATH_SEPARATOR_STRATEGY_DEFAULT = 0,
+        PATH_SEPARATOR_STRATEGY_REPLACE_BACKSLASH = 1
+    } */
+    static inline ani_enum_item EnumNativeToETS_Zlib_PathSeparatorStrategy(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_ZLIB_PATHSEPARATORSTRATRGY, value, 0);
     }
 };
 } // namespace AppExecFwk

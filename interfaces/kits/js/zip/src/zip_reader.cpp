@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -59,6 +59,12 @@ ZipReader::EntryInfo::EntryInfo(const std::string &fileNameInZip, const unz_file
 
 ZipReader::ZipReader()
 {
+    Reset();
+}
+
+ZipReader::ZipReader(bool needChangePathSeparator)
+{
+    needChangePathSeparator_ = needChangePathSeparator;
     Reset();
 }
 
@@ -179,7 +185,11 @@ bool ZipReader::OpenCurrentEntryInZip()
     if (raw_file_name_in_zip[0] == '\0') {
         return false;
     }
-    EntryInfo *entryInfo = new (std::nothrow) EntryInfo(std::string(raw_file_name_in_zip), raw_file_info);
+    std::string originalFileNameInZip(raw_file_name_in_zip);
+    if (needChangePathSeparator_) {
+        std::replace(originalFileNameInZip.begin(), originalFileNameInZip.end(), '\\', '/');
+    }
+    EntryInfo *entryInfo = new (std::nothrow) EntryInfo(originalFileNameInZip, raw_file_info);
     if (entryInfo == nullptr) {
         return false;
     }
