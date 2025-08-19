@@ -32,6 +32,22 @@ namespace bundleManager {
 
   const EMPTY_VALUE: int = -500;
   const EMPTY_STRING: string = "ani empty string";
+  const MAIN_APP_INDEX: int = 0;
+  const CLONE_APP_INDEX_MAX: int = 5;
+  const ERROR_INVALID_APPINDEX_CODE: int = 17700061;
+  const ERROR_INVALID_APPINDEX_MSG: string = "BusinessError 17700061: The specified app index is invalid.";
+  const ERROR_PARAM_CHECK_ERROR: int = 401;
+  const PARAM_BUNDLENAME_EMPTY_ERROR: string = "BusinessError 401: Parameter error. parameter bundleName is empty";
+  const ERROR_ABILITY_NOT_EXIST: int = 17700003;
+  const GETABILITYINFO_ERROR_MSG: string = "BusinessError 17700003: The specified ability is not found.";
+
+  function createBusinessError(code: int, message: string) {
+    let err = new BusinessError();
+    err.code = code;
+    err.name = 'Error';
+    err.message = message;
+    return err;
+  }
 
   enum BundleFlag {
     GET_BUNDLE_INFO_DEFAULT = 0x00000000,
@@ -1280,6 +1296,9 @@ namespace bundleManager {
   }
 
   function cleanBundleCacheFiles(bundleName: string, appIndex: int): Promise<void> {
+    if (appIndex < MAIN_APP_INDEX || appIndex > CLONE_APP_INDEX_MAX) {
+      throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
+    }
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
         return bundleManager.cleanBundleCacheFilesNative(bundleName, appIndex);
@@ -1329,6 +1348,9 @@ namespace bundleManager {
   }
   
   function getAppProvisionInfo(bundleName: string, userId?: int): Promise<AppProvisionInfo> {
+    if (bundleName === "") {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+    }
     let p = new Promise<AppProvisionInfo>((resolve: (appProvisionInfo: AppProvisionInfo)
       => void, reject: (error: Error) => void) => {
       let userIdInfo: int = userId ?? EMPTY_VALUE;
@@ -1348,6 +1370,9 @@ namespace bundleManager {
   }
 
   function getAppProvisionInfo(bundleName: string, userId: int, callback: AsyncCallback<AppProvisionInfo>): void {
+    if (bundleName === "") {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+    }
     let execFun = (): AppProvisionInfo => {
       return bundleManager.getAppProvisionInfoNative(bundleName, userId, false);
     };
@@ -1361,6 +1386,9 @@ namespace bundleManager {
   }
 
   function getAppProvisionInfo(bundleName: string, callback: AsyncCallback<AppProvisionInfo>): void {
+    if (bundleName === "") {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+    }
     let execFun = (): AppProvisionInfo => {
       return bundleManager.getAppProvisionInfoNative(bundleName, EMPTY_VALUE, false);
     };
@@ -1674,6 +1702,9 @@ namespace bundleManager {
   }
 
   function getAbilityInfo(uri: string, abilityFlags: int): Promise<Array<AbilityInfo>> {
+    if (uri === "") {
+      throw createBusinessError(ERROR_ABILITY_NOT_EXIST, GETABILITYINFO_ERROR_MSG);
+    }
     let p = new Promise<Array<AbilityInfo>>((resolve: (abilityInfos: Array<AbilityInfo>)
       => void, reject: (error: BusinessError) => void) => {
       let execFun = (): Array<AbilityInfo> => {
