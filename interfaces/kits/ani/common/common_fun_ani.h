@@ -85,6 +85,7 @@ constexpr const char* CLASSNAME_BOOLEAN = "std.core.Boolean";
 constexpr const char* CLASSNAME_INT = "std.core.Int";
 constexpr const char* CLASSNAME_LONG = "std.core.Long";
 constexpr const char* CLASSNAME_DOUBLE = "std.core.Double";
+constexpr const char* CLASSNAME_OBJECT = "std.core.Object";
 constexpr const char* CLASSNAME_ARRAY = "escompat.Array";
 constexpr const char* CLASSNAME_STRING = "std.core.String";
 } // namespace CommonFunAniNS
@@ -281,14 +282,14 @@ public:
         RETURN_NULL_IF_NULL(env);
         RETURN_NULL_IF_NULL(converter);
 
-        ani_size length = cArray.size();
-        ani_value arg = { .i = static_cast<ani_int>(length) };
+        ani_int length = static_cast<ani_int>(cArray.size());
+        ani_value arg = { .i = length };
         ani_object arrayObj = CreateNewObjectByClassV2(env, CommonFunAniNS::CLASSNAME_ARRAY, "i:", &arg);
         RETURN_NULL_IF_NULL(arrayObj);
 
         ani_status status = ANI_OK;
         if (length > 0) {
-            for (ani_size i = 0; i < length; ++i) {
+            for (ani_int i = 0; i < length; ++i) {
                 ani_enum_item item = converter(env, static_cast<int32_t>(cArray[i]));
                 if (item == nullptr) {
                     APP_LOGE("convert failed");
@@ -319,7 +320,7 @@ public:
         RETURN_NULL_IF_NULL(arrayObj);
 
         ani_status status = ANI_OK;
-        ani_size i = 0;
+        ani_int i = 0;
         for (const auto& iter : nativeArray) {
             ani_object item = converter(env, iter, std::forward<Args>(args)...);
             RETURN_NULL_IF_NULL(item);
