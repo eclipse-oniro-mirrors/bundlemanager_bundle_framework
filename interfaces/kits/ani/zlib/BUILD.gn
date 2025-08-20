@@ -41,10 +41,12 @@ ohos_shared_library("ani_zlib") {
     "${kits_path}/js/common",
     "${kits_path}/js/zip/include",
     "${kits_path}/js/zip/napi",
+    "${kits_path}/js/zip/napi/class_checksum",
     "${kits_path}/js/zip/napi/common",
   ]
 
   sources = [
+    "${kits_path}/js/zip/napi/class_checksum/checksum_common_func.cpp",
     "${kits_path}/js/zip/src/file_path.cpp",
     "${kits_path}/js/zip/src/zip.cpp",
     "${kits_path}/js/zip/src/zip_internal.cpp",
