@@ -6033,6 +6033,9 @@ bool BundleMgrHostImpl::SendQueryBundleInfoEvent(
     }
     
     size_t infoSize = infos.size();
+    if (infoSize <= 0) {
+        return false;
+    }
     int32_t lastReportEventTime = infos[0].lastReportEventTime;
     if (infoSize >= MAX_QUERY_EVENT_REPORT_ONCE ||
         (BundleUtil::GetCurrentTime() - lastReportEventTime) >= intervalTime) {
