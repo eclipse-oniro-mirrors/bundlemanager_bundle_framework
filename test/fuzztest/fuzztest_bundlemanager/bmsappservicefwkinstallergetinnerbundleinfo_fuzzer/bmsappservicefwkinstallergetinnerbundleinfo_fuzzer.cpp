@@ -34,12 +34,12 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     appServiceFwk.bundleName_ = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     InnerBundleInfo info;
     bool isAppExist = false;
-    appServiceFwk.GetInnerBundleInfoWithDisable(info, isAppExist);
+    appServiceFwk.FetchInnerBundleInfo(info, isAppExist);
 
     std::vector<std::string> hspPaths = GenerateStringArray(fdp);
     InstallParam installParam;
     appServiceFwk.BeforeInstall(hspPaths, installParam);
-    appServiceFwk.GetInnerBundleInfoWithDisable(info, isAppExist);
+    appServiceFwk.FetchInnerBundleInfo(info, isAppExist);
     return true;
 }
 }
@@ -50,4 +50,4 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     /* Run your code on data */
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
-}
+}

@@ -213,7 +213,7 @@ ErrCode QuickFixDeleter::RemoveDeployingInfo(const std::string &bundleName)
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     InnerBundleInfo innerBundleInfo;
-    auto isExisted = dataMgr_->GetInnerBundleInfoWithDisable(bundleName, innerBundleInfo);
+    auto isExisted = dataMgr_->FetchInnerBundleInfo(bundleName, innerBundleInfo);
     if (isExisted) {
         AppQuickFix appQuickFix = innerBundleInfo.GetAppQuickFix();
         if (appQuickFix.deployingAppqfInfo.hqfInfos.empty()) {

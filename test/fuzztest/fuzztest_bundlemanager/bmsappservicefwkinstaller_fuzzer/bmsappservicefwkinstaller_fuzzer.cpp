@@ -112,7 +112,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     appServiceFwkInstaller.RollBack();
     appServiceFwkInstaller.ProcessNewModuleInstall(newInfo, innerBundleInfo, bundlePath, installParam);
     bool isAppExist = false;
-    appServiceFwkInstaller.GetInnerBundleInfoWithDisable(emptyInfo, isAppExist);
+    appServiceFwkInstaller.FetchInnerBundleInfo(emptyInfo, isAppExist);
 
     uint32_t versionCode = fdp.ConsumeIntegral<uint32_t>();
     appServiceFwkInstaller.versionUpgrade_ = true;

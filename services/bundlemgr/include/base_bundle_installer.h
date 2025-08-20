@@ -497,7 +497,7 @@ private:
      * @param isAppExist Indicates if the innerBundleInfo is existed or not.
      * @return Returns ERR_OK if the innerBundleInfo is obtained successfully; returns error code otherwise.
      */
-    bool GetInnerBundleInfoWithDisable(InnerBundleInfo &info, bool &isAppExist);
+    bool FetchInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
     /**
      * @brief To check whether the version code is compatible for application or not.
      * @param oldInfo Indicates the original innerBundleInfo of the bundle.

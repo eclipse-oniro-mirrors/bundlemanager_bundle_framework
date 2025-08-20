@@ -1612,7 +1612,7 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     }
     InnerBundleInfo preInfo;
     bool isExist = false;
-    if (!GetInnerBundleInfoWithDisable(preInfo, isExist) || !isExist) {
+    if (!FetchInnerBundleInfo(preInfo, isExist) || !isExist) {
         LOG_I(BMS_TAG_INSTALLER, "finish rollback due to install failed");
         return;
     }
@@ -1657,7 +1657,7 @@ void BaseBundleInstaller::RemoveInfo(const std::string &bundleName, const std::s
     } else {
         InnerBundleInfo innerBundleInfo;
         bool isExist = false;
-        if (!GetInnerBundleInfoWithDisable(innerBundleInfo, isExist) || !isExist) {
+        if (!FetchInnerBundleInfo(innerBundleInfo, isExist) || !isExist) {
             LOG_I(BMS_TAG_INSTALLER, "finish rollback due to install failed");
             return;
         }
@@ -1675,7 +1675,7 @@ void BaseBundleInstaller::RollBackModuleInfo(const std::string &bundleName, Inne
     }
     InnerBundleInfo innerBundleInfo;
     bool isExist = false;
-    if (!GetInnerBundleInfoWithDisable(innerBundleInfo, isExist) || !isExist) {
+    if (!FetchInnerBundleInfo(innerBundleInfo, isExist) || !isExist) {
         return;
     }
     dataMgr_->UpdateBundleInstallState(bundleName, InstallState::ROLL_BACK);
@@ -4609,12 +4609,12 @@ ErrCode BaseBundleInstaller::CheckMDMUpdateBundleForSelf(const InstallParam &ins
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::GetInnerBundleInfoWithDisable(InnerBundleInfo &info, bool &isAppExist)
+bool BaseBundleInstaller::FetchInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist)
 {
     if (!InitDataMgr()) {
         return false;
     }
-    isAppExist = dataMgr_->GetInnerBundleInfoWithDisable(bundleName_, info);
+    isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName_, info);
     return true;
 }
 
@@ -5361,11 +5361,11 @@ void BaseBundleInstaller::OnSingletonChange(bool killProcess)
 
     InnerBundleInfo info;
     bool isExist = false;
-    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
+    if (!FetchInnerBundleInfo(info, isExist) || !isExist) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed when singleton changed");
         return;
     }
-
+    dataMgr_->DisableBundle(bundleName_);
     InstallParam installParam;
     installParam.needSendEvent = false;
     installParam.SetForceExecuted(true);
