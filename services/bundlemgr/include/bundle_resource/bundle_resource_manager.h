@@ -164,8 +164,10 @@ private:
 
     void PrepareSysRes();
 
-    std::atomic<bool> isInterrupted_ = false;
+    bool IsNeedInterrupted(const uint32_t tempTaskNumber, const BundleResourceChangeType type);
+
     std::atomic_uint currentTaskNum_ = 0;
+    std::atomic_uint currentChangeType_ = 0;
     std::mutex mutex_;
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
     std::shared_ptr<BundleResourceIconRdb> bundleResourceIconRdb_;

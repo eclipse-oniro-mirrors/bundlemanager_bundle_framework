@@ -797,6 +797,7 @@ bool BundleResourceManager::AddAllResourceInfo(
     EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_UPDATE_RESOURCE);
     ++currentTaskNum_;
     uint32_t tempTaskNum = currentTaskNum_;
+    currentChangeType_ = type;
     std::lock_guard<std::mutex> guard(mutex_);
     APP_LOGI("bundle resource hold mutex");
     std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
@@ -824,6 +825,14 @@ bool BundleResourceManager::AddAllResourceInfo(
     return true;
 }
 
+bool BundleResourceManager::IsNeedInterrupted(const uint32_t tempTaskNumber, const BundleResourceChangeType type)
+{
+    if (tempTaskNumber == currentTaskNum_) {
+        return false;
+    }
+    return static_cast<uint32_t>(currentChangeType_) == static_cast<uint32_t>(type);
+}
+
 bool BundleResourceManager::AddResourceInfosWhenSystemLanguageChanged(
     std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
     const int32_t userId, const uint32_t tempTaskNumber)
@@ -838,7 +847,7 @@ bool BundleResourceManager::AddResourceInfosWhenSystemLanguageChanged(
     threadPool->Start(MAX_TASK_NUMBER);
     threadPool->SetMaxTaskNum(MAX_TASK_NUMBER);
     for (const auto &item : resourceInfosMap) {
-        if (tempTaskNumber != currentTaskNum_) {
+        if (IsNeedInterrupted(tempTaskNumber, BundleResourceChangeType::SYSTEM_LANGUE_CHANGE)) {
             APP_LOGI("need stop current task, new first");
             threadPool->Stop();
             return false;
@@ -941,7 +950,7 @@ bool BundleResourceManager::AddResourceInfosWhenSystemThemeChanged(
     threadPool->Start(MAX_TASK_NUMBER);
     threadPool->SetMaxTaskNum(MAX_TASK_NUMBER);
     for (const auto &item : resourceInfosMap) {
-        if (tempTaskNumber != currentTaskNum_) {
+        if (IsNeedInterrupted(tempTaskNumber, BundleResourceChangeType::SYSTEM_THEME_CHANGE)) {
             APP_LOGI("need stop current task, new first");
             threadPool->Stop();
             return false;
