@@ -578,7 +578,7 @@ private:
     static std::string GetOldSystemFingerprint();
     bool GetSystemParameter(const std::string &key, std::string &value);
     void SaveSystemFingerprint();
-    void HandlePreInstallException();
+    void HandlePreInstallException(bool needDeleteRecord = true);
     static bool IsHapPathExist(const BundleInfo &bundleInfo);
     static bool IsHspPathExist(const InnerBundleInfo &innerBundleInfo);
 
@@ -613,13 +613,13 @@ private:
     void DeletePreInstallExceptionAppService(const std::string &bundleDir);
     void SavePreInstallExceptionAppService(const std::string &bundleDir);
     void HandlePreInstallAppServicePathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
-        const std::set<std::string> &exceptionAppServicePaths);
-    void HandlePreInstallAppPathsException(
-        std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr, const std::set<std::string> &exceptionPaths);
+        const std::set<std::string> &exceptionAppServicePaths, bool needDeleteRecord = true);
+    void HandlePreInstallAppPathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionPaths, bool needDeleteRecord = true);
     void HandlePreInstallAppServiceBundleNamesException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
-        const std::set<std::string> &exceptionAppServiceBundleNames);
+        const std::set<std::string> &exceptionAppServiceBundleNames, bool needDeleteRecord = true);
     void HandlePreInstallBundleNamesException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
-        const std::set<std::string> &exceptionBundleNames);
+        const std::set<std::string> &exceptionBundleNames, bool needDeleteRecord = true);
     bool IsModuleUpdate();
     void HandleModuleUpdate();
     bool GetModuleUpdatePathList(

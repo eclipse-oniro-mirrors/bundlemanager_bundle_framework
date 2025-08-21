@@ -406,6 +406,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     if (IsSystemUpgrade()) {
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
         OnBundleRebootStart();
+        HandlePreInstallException(false);
         HandleOTACodeEncryption();
         SaveSystemFingerprint();
         (void)SaveBmsSystemTimeForShortcut();
@@ -3399,7 +3400,7 @@ void BMSEventHandler::DeletePreInstallExceptionAppService(const std::string &bun
     preInstallExceptionMgr->DeletePreInstallExceptionAppServicePath(bundleDir);
 }
 
-void BMSEventHandler::HandlePreInstallException()
+void BMSEventHandler::HandlePreInstallException(bool needDeleteRecord)
 {
     auto preInstallExceptionMgr =
         DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
@@ -3421,22 +3422,25 @@ void BMSEventHandler::HandlePreInstallException()
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "handle exception %{public}zu %{public}zu %{public}zu %{public}zu",
         exceptionPaths.size(), exceptionBundleNames.size(),
         exceptionAppServicePaths.size(), exceptionAppServiceBundleNames.size());
-    HandlePreInstallAppServicePathsException(preInstallExceptionMgr, exceptionAppServicePaths);
-    HandlePreInstallAppPathsException(preInstallExceptionMgr, exceptionPaths);
+    HandlePreInstallAppServicePathsException(preInstallExceptionMgr, exceptionAppServicePaths, needDeleteRecord);
+    HandlePreInstallAppPathsException(preInstallExceptionMgr, exceptionPaths, needDeleteRecord);
     if (!exceptionBundleNames.empty() || !exceptionAppServiceBundleNames.empty()) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Loading all pre-install bundle infos");
         LoadAllPreInstallBundleInfos();
     }
-    HandlePreInstallAppServiceBundleNamesException(preInstallExceptionMgr, exceptionAppServiceBundleNames);
-    HandlePreInstallBundleNamesException(preInstallExceptionMgr, exceptionBundleNames);
+    HandlePreInstallAppServiceBundleNamesException(
+        preInstallExceptionMgr, exceptionAppServiceBundleNames, needDeleteRecord);
+    HandlePreInstallBundleNamesException(preInstallExceptionMgr, exceptionBundleNames, needDeleteRecord);
 
-    preInstallExceptionMgr->ClearAll();
+    if (needDeleteRecord) {
+        preInstallExceptionMgr->ClearAll();
+    }
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Pre-install exception information cleared successfully");
 }
 
 void BMSEventHandler::HandlePreInstallAppServicePathsException(
     std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
-    const std::set<std::string> &exceptionAppServicePaths)
+    const std::set<std::string> &exceptionAppServicePaths, bool needDeleteRecord)
 {
     if (preInstallExceptionMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
@@ -3449,12 +3453,14 @@ void BMSEventHandler::HandlePreInstallAppServicePathsException(
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "ota install fwk path(%{public}s) error", pathIter.c_str());
         }
 
-        preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
+        if (needDeleteRecord) {
+            preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
+        }
     }
 }
 
-void BMSEventHandler::HandlePreInstallAppPathsException(
-    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr, const std::set<std::string> &exceptionPaths)
+void BMSEventHandler::HandlePreInstallAppPathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+    const std::set<std::string> &exceptionPaths, bool needDeleteRecord)
 {
     if (preInstallExceptionMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
@@ -3468,13 +3474,15 @@ void BMSEventHandler::HandlePreInstallAppPathsException(
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException path(%{public}s) error", pathIter.c_str());
         }
 
-        preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
+        if (needDeleteRecord) {
+            preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
+        }
     }
 }
 
 void BMSEventHandler::HandlePreInstallAppServiceBundleNamesException(
     std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
-    const std::set<std::string> &exceptionAppServiceBundleNames)
+    const std::set<std::string> &exceptionAppServiceBundleNames, bool needDeleteRecord)
 {
     if (preInstallExceptionMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
@@ -3493,12 +3501,15 @@ void BMSEventHandler::HandlePreInstallAppServiceBundleNamesException(
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "ota install fwk(%{public}s) error", bundleNameIter.c_str());
         }
 
-        preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+        if (needDeleteRecord) {
+            preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+        }
     }
 }
 
 void BMSEventHandler::HandlePreInstallBundleNamesException(
-    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr, const std::set<std::string> &exceptionBundleNames)
+    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+    const std::set<std::string> &exceptionBundleNames, bool needDeleteRecord)
 {
     if (preInstallExceptionMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
@@ -3520,7 +3531,9 @@ void BMSEventHandler::HandlePreInstallBundleNamesException(
                 bundleNameIter.c_str());
         }
 
-        preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+        if (needDeleteRecord) {
+            preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+        }
     }
 }
 
