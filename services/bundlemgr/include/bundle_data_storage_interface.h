@@ -38,6 +38,13 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     virtual bool SaveStorageBundleInfo(const InnerBundleInfo &innerBundleInfo) = 0;
+
+    /**
+     * @brief Save the bundle data corresponding to the device Id of the bundle name to KvStore.
+     * @param innerBundleInfo Indicates the InnerBundleInfo object to be save.
+     * @return Returns true if this function is successfully called; returns false otherwise.
+     */
+    virtual ErrCode SaveStorageBundleInfoWithCode(const InnerBundleInfo &innerBundleInfo) = 0;
     /**
      * @brief Delete the bundle data corresponding to the device Id of the bundle name to KvStore.
      * @param innerBundleInfo Indicates the InnerBundleInfo object to be Delete.

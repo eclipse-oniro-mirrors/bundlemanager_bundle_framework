@@ -78,7 +78,7 @@ const std::string ROUTER_MAP_TEST_HAP = "/data/test/bms_bundle/hapIncludeso1.hap
 const std::string ROUTER_MAP_TEST_BUNDLE_NAME = "com.example.testhapso1";
 const std::string ROUTER_INDEX_ZERO_URL = "DynamicPage1";
 const std::string ROUTER_INDEX_ZERO_MDOULE_NAME = "entry";
-const std::string ROUTER_INDEX_ZERO_PATH = "entry/src/index";
+const std::string ROUTER_INDEX_ZERO_PATH = "src/main/ets/pages/index.ets";
 const std::string ROUTER_INDEX_ZERO_BUILD_FUNCTION = "myFunction";
 const std::string ROUTER_INDEX_ONE_URL = "DynamicPage2";
 const std::string ROUTER_INDEX_ONE_BUILD_FUNCTION = "myBuilder";
@@ -1489,7 +1489,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0026, Function | MediumTest | Lev
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_FALSE(bundleInfo.hapModuleInfos.empty());
-    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].formExtensionModule.empty());
+    EXPECT_TRUE(bundleInfo.hapModuleInfos[0].formExtensionModule.empty());
     EXPECT_FALSE(bundleInfo.hapModuleInfos[0].formWidgetModule.empty());
     resvec.clear();
     Uninstall(appName, resvec);

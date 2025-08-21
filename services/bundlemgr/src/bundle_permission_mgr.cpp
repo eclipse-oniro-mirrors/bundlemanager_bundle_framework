@@ -511,7 +511,7 @@ bool BundlePermissionMgr::IsNativeTokenType()
         LOG_D(BMS_TAG_DEFAULT, "caller is root or foundation or BMS_UID, verify success");
         return true;
     }
-    LOG_E(BMS_TAG_DEFAULT, "caller tokenType not native, verify failed");
+    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "caller tokenType not native");
     return false;
 }
 
@@ -541,7 +541,7 @@ bool BundlePermissionMgr::VerifyCallingUid()
         LOG_D(BMS_TAG_DEFAULT, "caller is root or foundation, verify success");
         return true;
     }
-    LOG_E(BMS_TAG_DEFAULT, "verify calling uid failed");
+    LOG_D(BMS_TAG_DEFAULT, "verify calling uid failed");
     return false;
 }
 

@@ -1,0 +1,189 @@
+/*
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{
+    "module": {
+        "abilities": [
+            {
+                "description": "$string:phone_entry_main",
+                "icon": "$media:icon",
+                "label": "$string:entry_label",
+                "metadata": [
+                    {
+                        "name": "ohos.ability.shortcuts",
+                        "resource": "$profile:shortcuts_config"
+                    }
+                ],
+                "name": "MainAbility",
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "exported": true
+            },
+            {
+                "name": "MainAbility1",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "unspecified",
+                "supportWindowMode": [
+                    "fullscreen"
+                ]
+            },
+            {
+                "name": "MainAbility2",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "landscape",
+                "supportWindowMode": [
+                    "split"
+                ]
+            },
+            {
+                "name": "MainAbility3",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "portrait",
+                "supportWindowMode": [
+                    "floating"
+                ]
+            },
+            {
+                "name": "MainAbility4",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "landscape_inverted",
+                "supportWindowMode": [
+                    "fullscreen",
+                    "split",
+                    "floating"
+                ]
+            },
+            {
+                "name": "MainAbility5",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "portrait_inverted",
+                "maxWindowRatio": 3.5
+            },
+            {
+                "name": "MainAbility6",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation",
+                "minWindowRatio": 0.5
+            },
+            {
+                "name": "MainAbility7",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation_landscape",
+                "maxWindowWidth": 2560
+            },
+            {
+                "name": "MainAbility8",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation_portrait",
+                "minWindowWidth": 1400
+            },
+            {
+                "name": "MainAbility9",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation_restricted",
+                "maxWindowHeight": 300
+            },
+            {
+                "name": "MainAbility10",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation_landscape_restricted",
+                "minWindowHeight": 200
+            },
+            {
+                "name": "MainAbility11",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "auto_rotation_portrait_restricted"
+            },
+            {
+                "name": "MainAbility12",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "startWindowIcon": "$media:icon",
+                "startWindowBackground": "$color:icon",
+                "orientation": "locked"
+            }
+        ],
+        "deliveryWithInstall": true,
+        "description": "$string:phone_entry_dsc",
+        "deviceTypes": [
+            "2in1",
+            "tablet",
+            "default",
+            "tv",
+            "wearable"
+        ],
+        "extensionAbilities": [
+            {
+                "description": "$string:form_description",
+                "icon": "$media:icon",
+                "metadata": [
+                    {
+                        "name": "ohos.extension.form",
+                        "resource": "$profile:form_config"
+                    }
+                ],
+                "name": "Form",
+                "srcEntry": "./ets/Application/AbilityStage.ts",
+                "type": "form",
+                "visible": true
+            },
+            {
+                "description": "$string:serviceability_description",
+                "icon": "$media:icon",
+                "name": "WeatherFormAbility",
+                "srcEntry": "./ets/Application/AbilityStage.ts",
+                "type": "service"
+            }
+        ],
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "name": "entry_phone",
+        "pages": "$profile:main_pages",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
+        "type": "entry"
+    }
+}

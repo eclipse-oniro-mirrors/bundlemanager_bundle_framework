@@ -43,6 +43,12 @@ bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBun
     return true;
 }
 
+ErrCode BundleDataStorageRdb::SaveStorageBundleInfoWithCode(const InnerBundleInfo &innerBundleInfo)
+{
+    INNER_BUNDLE_INFOS[innerBundleInfo.GetBundleName()] = innerBundleInfo;
+    return ERR_OK;
+}
+
 bool BundleDataStorageRdb::DeleteStorageBundleInfo(const InnerBundleInfo &innerBundleInfo)
 {
     auto ret = INNER_BUNDLE_INFOS.erase(innerBundleInfo.GetBundleName());

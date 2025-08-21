@@ -36,26 +36,25 @@ bool LauncherAbilityResourceInfo::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, abilityNameVal);
     abilityName = Str16ToStr8(abilityNameVal);
 
-    std::u16string labelVal;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, labelVal);
-    label = Str16ToStr8(labelVal);
-
-    std::u16string iconVal;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, iconVal);
-    icon = Str16ToStr8(iconVal);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, label);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, icon);
 
     int32_t foregroundSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, foregroundSize);
     CONTAINER_SECURITY_VERIFY(parcel, foregroundSize, &foreground);
+    uint8_t foregroundVal = 0;
     for (auto i = 0; i < foregroundSize; i++) {
-        foreground.emplace_back(parcel.ReadUint8());
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8Unaligned, parcel, foregroundVal);
+        foreground.emplace_back(foregroundVal);
     }
 
     int32_t backgroundSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, backgroundSize);
     CONTAINER_SECURITY_VERIFY(parcel, backgroundSize, &background);
+    uint8_t backgroundVal = 0;
     for (auto i = 0; i < backgroundSize; i++) {
-        background.emplace_back(parcel.ReadUint8());
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8Unaligned, parcel, backgroundVal);
+        background.emplace_back(backgroundVal);
     }
 
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
@@ -67,15 +66,15 @@ bool LauncherAbilityResourceInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilityName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(icon));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, label);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, icon);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, foreground.size());
     for (const auto &data : foreground) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, data);
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8Unaligned, parcel, data);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, background.size());
     for (const auto &data : background) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, data);
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8Unaligned, parcel, data);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     return true;

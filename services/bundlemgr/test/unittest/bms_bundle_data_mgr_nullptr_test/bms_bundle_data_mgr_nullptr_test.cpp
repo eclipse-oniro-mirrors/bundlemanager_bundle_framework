@@ -1330,7 +1330,8 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, RdbDataManager_0001, Function | MediumTest
     bmsRdbConfig.tableName = TABLE_NAME;
     auto rdbDataManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
     ASSERT_NE(rdbDataManager, nullptr);
-    auto ptr = rdbDataManager->GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto ptr = rdbDataManager->GetRdbStore(ret);
     EXPECT_EQ(ptr, nullptr);
 }
 

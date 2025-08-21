@@ -349,6 +349,10 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
         if (needToSkipPreBundleInstall && !preInfo.GetBundlePaths().empty() &&
             (preInfo.GetBundlePaths().front().find(PRELOAD_APP) == 0)) {
             APP_LOGI("-n %{public}s -u %{public}d skip install", preInfo.GetBundleName().c_str(), userId);
+            preInfo.SetIsUninstalled(true);
+            if (!dataMgr->SavePreInstallBundleInfo(preInfo.GetBundleName(), preInfo)) {
+                APP_LOGW("save pre bundle %{public}s failed", preInfo.GetBundleName().c_str());
+            }
             continue;
         }
         if (SkipThirdPreloadAppInstallation(userId, preInfo)) {
@@ -464,7 +468,7 @@ void BundleUserMgrHostImpl::RemoveArkProfile(int32_t userId)
 {
     std::string arkProfilePath = AOTHandler::BuildArkProfilePath(userId);
     APP_LOGI("DeleteArkProfile %{public}s when remove user", arkProfilePath.c_str());
-    InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
+    InstalldClient::GetInstance()->ClearDir(arkProfilePath);
 }
 
 void BundleUserMgrHostImpl::RemoveAsanLogDirectory(int32_t userId)

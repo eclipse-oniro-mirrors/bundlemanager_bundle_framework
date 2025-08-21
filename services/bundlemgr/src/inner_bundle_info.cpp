@@ -35,6 +35,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* APP_TYPE = "appType";
+constexpr const char* BUNDLE_STATUS = "bundleStatus";
 constexpr const char* BASE_APPLICATION_INFO = "baseApplicationInfo";
 constexpr const char* BASE_BUNDLE_INFO = "baseBundleInfo";
 constexpr const char* BASE_ABILITY_INFO = "baseAbilityInfos";
@@ -254,6 +255,22 @@ AOTCompileStatus InnerBundleInfo::GetAOTCompileStatus(const std::string &moduleN
         return AOTCompileStatus::NOT_COMPILED;
     }
     return item->second.aotCompileStatus;
+}
+
+bool InnerBundleInfo::IsAOTFlagsInitial() const
+{
+    if (!baseApplicationInfo_->arkNativeFilePath.empty()) {
+        return false;
+    }
+    if (!baseApplicationInfo_->arkNativeFileAbi.empty()) {
+        return false;
+    }
+    for (const auto &item : innerModuleInfos_) {
+        if (item.second.aotCompileStatus != AOTCompileStatus::NOT_COMPILED) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void InnerBundleInfo::ResetAOTFlags()
@@ -505,6 +522,7 @@ void to_json(nlohmann::json &jsonObject, const InstallMark &installMark)
 void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
 {
     jsonObject[APP_TYPE] = appType_;
+    jsonObject[BUNDLE_STATUS] = InnerBundleInfo::BundleStatus::ENABLED;
     jsonObject[ALLOWED_ACLS] = allowedAcls_;
     jsonObject[BASE_APPLICATION_INFO] = *baseApplicationInfo_;
     jsonObject[BASE_BUNDLE_INFO] = *baseBundleInfo_;
@@ -1312,6 +1330,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         appType_,
         JsonType::NUMBER,
         true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<BundleStatus>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_STATUS,
+        bundleStatus_,
+        JsonType::NUMBER,
+        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,

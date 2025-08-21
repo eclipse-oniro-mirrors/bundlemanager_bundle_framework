@@ -109,6 +109,7 @@ constexpr int8_t ROOT_MODE = 1;
 constexpr const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 constexpr const char* IS_ROOT_MODE_PARAM = "const.debuggable";
 constexpr const char* BMS_ACTIVATION_LOCK = "persist.bms.activation-lock";
+constexpr const char* APPSPAWN_PRELOAD_ARKWEB_ENGINE = "const.startup.appspawn.preload.arkwebEngine";
 constexpr const char* BMS_TRUE = "true";
 constexpr const char* BMS_FALSE = "false";
 constexpr int8_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
@@ -1116,15 +1117,18 @@ ErrCode BaseBundleInstaller::VerifyArkWebInstall()
 
 void BaseBundleInstaller::RestoreconForArkweb()
 {
+    if (!OHOS::system::GetBoolParameter(APPSPAWN_PRELOAD_ARKWEB_ENGINE, false)) {
+        LOG_D(BMS_TAG_INSTALLER, "APPSPAWN_PRELOAD_ARKWEB_ENGINE is false");
+        return;
+    }
+
     if (!IsArkWeb(bundleName_)) {
         return;
     }
     const std::string arkWebLibPath = std::string(APP_INSTALL_PATH) + "/public/" + bundleName_ + "/libs/arm64/";
     LOG_I(BMS_TAG_INSTALLER, "RestoreconPath, arkWebLibPath: %{public}s", arkWebLibPath.c_str());
     ErrCode result = InstalldClient::GetInstance()->RestoreconPath(arkWebLibPath);
-    if (result == ERR_OK) {
-        NWeb::AppFwkUpdateClient::GetInstance().NotifyArkWebInstallSuccess(bundleName_);
-    } else {
+    if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "Failed to restorecon arkweb dir, error code: %{public}d", result);
     }
 }
@@ -2259,7 +2263,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
             if (oldInfo.HasInnerBundleUserInfo(userId_)) {
                 LOG_E(BMS_TAG_INSTALLER, "App is exist in user(%{public}d)", userId_);
-                return ERR_APPEXECFWK_INSTALL_ALREADY_EXIST;
+                return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
             }
 
             ErrCode ret = InstallNormalAppControl(oldInfo.GetAppId(), userId_, installParam.isPreInstallApp);
@@ -5272,8 +5276,12 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 signatureFileMap_.at(hapPathRecord.first));
             CHECK_RESULT(result, "Copy hap to install path failed or code signature hap failed %{public}d");
         } else {
-            if (InstalldClient::GetInstance()->MoveHapToCodeDir(
-                hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
+            result = InstalldClient::GetInstance()->MoveHapToCodeDir(hapPathRecord.first, hapPathRecord.second);
+            if (result == ERR_APPEXECFWK_INSTALLD_MOVE_FILE_CROSS_DEV) {
+                LOG_W(BMS_TAG_INSTALLER, "rename hap failed, try to copy instead");
+                result = InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second);
+            }
+            if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "Move hap to install path failed");
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }

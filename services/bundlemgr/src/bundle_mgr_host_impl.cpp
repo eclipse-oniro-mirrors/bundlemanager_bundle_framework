@@ -252,7 +252,6 @@ bool BundleMgrHostImpl::GetApplicationInfos(
 bool BundleMgrHostImpl::GetApplicationInfos(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
-    LOG_D(BMS_TAG_QUERY, "GetApplicationInfos flags:%{public}d userId:%{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
@@ -268,6 +267,8 @@ bool BundleMgrHostImpl::GetApplicationInfos(
             "GetApplicationInfos return empty, not support target level greater than or equal to api9");
         return true;
     }
+    APP_LOGI_NOFUNC("GetApplicationInfos -p:%{public}d, -f:%{public}d, -u:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags, userId);
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
@@ -279,7 +280,6 @@ bool BundleMgrHostImpl::GetApplicationInfos(
 ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
-    LOG_D(BMS_TAG_QUERY, "GetApplicationInfosV9 flags:%{public}d userId:%{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -288,6 +288,8 @@ ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
         LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    APP_LOGI_NOFUNC("GetApplicationInfosV9 -p:%{public}d, -f:%{public}d, -u:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags, userId);
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
@@ -550,8 +552,6 @@ bool BundleMgrHostImpl::GetBundleInfos(const BundleFlag flag, std::vector<Bundle
 
 bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    LOG_I(BMS_TAG_QUERY, "-f: %{public}d, -u: %{public}d uid:%{public}d", flags,
-        userId, IPCSkeleton::GetCallingUid());
     // API9 need to be system app
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
@@ -562,7 +562,8 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
-    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfos");
+    APP_LOGI_NOFUNC("GetBundleInfos -p:%{public}d, -f:%{public}d, -u:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags, userId);
     if (!BundlePermissionMgr::IsNativeTokenType() &&
         (BundlePermissionMgr::GetHapApiVersion() >= ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY,
@@ -585,8 +586,6 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
 
 ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    LOG_I(BMS_TAG_QUERY, "-f: %{public}d, -u: %{public}d uid:%{public}d", flags,
-        userId, IPCSkeleton::GetCallingUid());
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -595,7 +594,8 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         LOG_E(BMS_TAG_QUERY, "permission denied");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfosV9");
+    APP_LOGI_NOFUNC("GetBundleInfosV9 -p:%{public}d, -f:%{public}d, -u:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags, userId);
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
@@ -698,7 +698,7 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
         return false;
     }();
     if (!permissionVerify) {
-        APP_LOGE("verify permission failed");
+        APP_LOGE_NOFUNC("GetNameForUid permission denied");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     int64_t intervalTime = ONE_DAY;
@@ -5493,7 +5493,7 @@ ErrCode BundleMgrHostImpl::GetCompatibleDeviceTypeNative(std::string &deviceType
     dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName);
     BmsExtensionDataMgr bmsExtensionDataMgr;
     deviceType = bmsExtensionDataMgr.GetCompatibleDeviceType(bundleName);
-    APP_LOGI("deviceType : %{public}s", deviceType.c_str());
+    APP_LOGD("deviceType : %{public}s", deviceType.c_str());
     return ERR_OK;
 }
 
@@ -5748,13 +5748,15 @@ ErrCode BundleMgrHostImpl::GetPluginAbilityInfo(const std::string &hostBundleNam
     LOG_D(BMS_TAG_QUERY,
         "start GetPluginAbilityInfo bundleName:%{public}s pluginName:%{public}s abilityName:%{public}s",
         hostBundleName.c_str(), pluginBundleName.c_str(), pluginAbilityName.c_str());
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("Verify permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    if (!BundlePermissionMgr::IsBundleSelfCalling(hostBundleName)) {
+        if (!BundlePermissionMgr::IsSystemApp()) {
+            APP_LOGE("non-system app calling system api");
+            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        }
+        if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            APP_LOGE("Verify permission failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -5772,14 +5774,15 @@ ErrCode BundleMgrHostImpl::GetPluginHapModuleInfo(const std::string &hostBundleN
     LOG_D(BMS_TAG_QUERY,
         "start GetPluginHapModuleInfo bundleName:%{public}s pluginName:%{public}s moduleName:%{public}s",
         hostBundleName.c_str(), pluginBundleName.c_str(), pluginModuleName.c_str());
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)
-        && !BundlePermissionMgr::IsBundleSelfCalling(hostBundleName)) {
-        APP_LOGE("Verify permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    if (!BundlePermissionMgr::IsBundleSelfCalling(hostBundleName)) {
+        if (!BundlePermissionMgr::IsSystemApp()) {
+            APP_LOGE("non-system app calling system api");
+            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        }
+        if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            APP_LOGE("Verify permission failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -6016,6 +6019,9 @@ bool BundleMgrHostImpl::SendQueryBundleInfoEvent(
     }
     
     size_t infoSize = infos.size();
+    if (infoSize <= 0) {
+        return false;
+    }
     int32_t lastReportEventTime = infos[0].lastReportEventTime;
     if (infoSize >= MAX_QUERY_EVENT_REPORT_ONCE ||
         (BundleUtil::GetCurrentTime() - lastReportEventTime) >= intervalTime) {
@@ -6033,13 +6039,15 @@ ErrCode BundleMgrHostImpl::GetPluginInfo(const std::string &hostBundleName, cons
     const int32_t userId, PluginBundleInfo &pluginBundleInfo)
 {
     APP_LOGD("start GetPluginInfo");
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("Verify permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    if (!BundlePermissionMgr::IsBundleSelfCalling(hostBundleName)) {
+        if (!BundlePermissionMgr::IsSystemApp()) {
+            APP_LOGE("non-system app calling system api");
+            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        }
+        if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            APP_LOGE("Verify permission failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {

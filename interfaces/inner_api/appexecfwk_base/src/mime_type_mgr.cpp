@@ -101,6 +101,15 @@ bool MimeTypeMgr::GetUtdVectorByUri(const std::string &uri, std::vector<std::str
         APP_LOGD("Get suffix failed %{private}s", uri.c_str());
         return false;
     }
+
+    if (suffix.empty()) {
+        return false;
+    }
+    if (suffix[0] != '.' || suffix.find("?") != std::string::npos ||
+        suffix.find(":") != std::string::npos || suffix.find("=") != std::string::npos ||
+        suffix.find("\\") != std::string::npos) {
+            return false;
+    }
     auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypesByFilenameExtension(suffix, utdVector);
     if (ret != UDMF::E_OK  || utdVector.empty()) {
         APP_LOGD("Get utd vector by suffix %{public}s failed. err %{public}d", suffix.c_str(), ret);

@@ -322,7 +322,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let emptyParam = new CreateAppCloneParamInner();
       let params = createAppCloneParam ?? emptyParam;
       let p = new Promise<number>((resolve: (v:number) => void, reject: (error: BusinessError) => void):void => {
-      let execFun = ():number=>{ return this.createAppCloneNative(bundleName, emptyParam); }
+      let execFun = ():number=>{ return this.createAppCloneNative(bundleName, params); }
       let p1 = taskpool.execute(execFun);
       p1.then((appIdx: NullishType) => {
           resolve(appIdx as number);

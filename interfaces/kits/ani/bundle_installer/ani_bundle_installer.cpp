@@ -113,6 +113,7 @@ static void ExecuteInstall(const std::vector<std::string>& hapFiles, InstallPara
         APP_LOGD("InnerInstall resultCode %{public}d", installResult.resultCode);
         installResult.resultMsg = callback->GetResultMsg();
         APP_LOGD("InnerInstall resultMsg %{public}s", installResult.resultMsg.c_str());
+        installResult.innerCode = callback->GetInnerCode();
         return;
     }
     APP_LOGE("install failed due to %{public}d", res);
@@ -120,6 +121,8 @@ static void ExecuteInstall(const std::vector<std::string>& hapFiles, InstallPara
     InstallerHelper::CreateProxyErrCode(proxyErrCodeMap);
     if (proxyErrCodeMap.find(res) != proxyErrCodeMap.end()) {
         installResult.resultCode = proxyErrCodeMap.at(res);
+        // append inner error code to TS interface result message
+        installResult.innerCode = res;
     } else {
         installResult.resultCode = IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR;
     }
@@ -131,7 +134,7 @@ static void ProcessResult(ani_env* env, InstallResult& result, const InstallOpti
     if (result.resultCode != SUCCESS) {
         switch (option) {
             case InstallOption::INSTALL:
-                BusinessErrorAni::ThrowCommonError(env, result.resultCode,
+                BusinessErrorAni::ThrowInstallError(env, result.resultCode, result.innerCode,
                     RESOURCE_NAME_OF_INSTALL, INSTALL_PERMISSION);
                 break;
             case InstallOption::RECOVER:
@@ -215,6 +218,9 @@ static void AniInstall(ani_env* env, [[maybe_unused]] ani_object installerObj,
     InstallParam installParam;
     if (!GetInstallParamForInstall(env, arrayObj, aniInstParam, hapFiles, installParam)) {
         return;
+    }
+    if (installParam.installFlag == InstallFlag::NORMAL) {
+        installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     }
     InstallResult result;
     ExecuteInstall(hapFiles, installParam, result);

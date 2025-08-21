@@ -633,7 +633,7 @@ bool BundleDataMgr::RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundl
     return true;
 }
 
-bool BundleDataMgr::AddInnerBundleUserInfo(
+ErrCode BundleDataMgr::AddInnerBundleUserInfo(
     const std::string &bundleName, const InnerBundleUserInfo& newUserInfo)
 {
     APP_LOGD("AddInnerBundleUserInfo:%{public}s", bundleName.c_str());
@@ -641,18 +641,19 @@ bool BundleDataMgr::AddInnerBundleUserInfo(
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("bundleName: %{public}s bundle info not exist", bundleName.c_str());
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     std::lock_guard<ffrt::mutex> stateLock(stateMutex_);
     auto& info = bundleInfos_.at(bundleName);
     info.AddInnerBundleUserInfo(newUserInfo);
     info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-    if (!dataStorage_->SaveStorageBundleInfo(info)) {
-        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
-        return false;
+    ErrCode ret = dataStorage_->SaveStorageBundleInfoWithCode(info);
+    if (ret != ERR_OK) {
+        APP_LOGW("update storage failed bundle:%{public}s, errcode:%{public}d", bundleName.c_str(), ret);
+        return ret;
     }
-    return true;
+    return ERR_OK;
 }
 
 bool BundleDataMgr::RemoveInnerBundleUserInfo(
@@ -3282,7 +3283,7 @@ bool BundleDataMgr::GetAdaptBaseShareBundleInfo(
         auto item = shareBundles.find(dependency.bundleName);
         if ((item != shareBundles.end()) && innerBundleInfo.GetBaseSharedBundleInfo(dependency.moduleName,
             item->second, baseSharedBundleInfo)) {
-            APP_LOGI("get share bundle by pid -n %{public}s -v %{public}u succeed",
+            APP_LOGI_NOFUNC("get share bundle by pid -n %{public}s -v %{public}u succeed",
                 dependency.bundleName.c_str(), item->second);
             return true;
         }
@@ -7746,6 +7747,9 @@ void BundleDataMgr::ResetAOTFlags()
     APP_LOGI("ResetAOTFlags begin");
     std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     std::for_each(bundleInfos_.begin(), bundleInfos_.end(), [this](auto &item) {
+        if (item.second.IsAOTFlagsInitial()) {
+            return;
+        }
         item.second.ResetAOTFlags();
         if (!dataStorage_->SaveStorageBundleInfo(item.second)) {
             APP_LOGW("SaveStorageBundleInfo failed, bundleName : %{public}s", item.second.GetBundleName().c_str());
@@ -7761,6 +7765,9 @@ void BundleDataMgr::ResetAOTFlagsCommand(const std::string &bundleName)
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+        return;
+    }
+    if (item->second.IsAOTFlagsInitial()) {
         return;
     }
     item->second.ResetAOTFlags();

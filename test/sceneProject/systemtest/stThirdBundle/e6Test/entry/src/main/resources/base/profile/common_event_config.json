@@ -1,0 +1,20 @@
+{
+  "commonEvents": [
+    {
+      "name": ".MainAbility",
+      "permission": "string",
+      "filter": [
+        "string",
+        "string"
+      ],
+      "types": [
+        "string",
+        "string"
+      ],
+      "events": [
+        "string",
+        "string"
+      ]
+    }
+  ]
+}

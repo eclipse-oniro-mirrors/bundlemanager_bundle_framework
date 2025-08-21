@@ -71,6 +71,10 @@ ohos_unittest("BmsEventHandlerTest") {
   if (current_cpu == "arm64") {
     defines += [ "USE_EXTENSION_DATA" ]
   }
+  if (webview_enable) {
+    external_deps += [ "webview:app_fwk_update_service" ]
+    defines += [ "WEBVIEW_ENABLE" ]
+  }
   if (account_enable) {
     external_deps += [ "os_account:os_account_innerkits" ]
     defines += [ "ACCOUNT_ENABLE" ]

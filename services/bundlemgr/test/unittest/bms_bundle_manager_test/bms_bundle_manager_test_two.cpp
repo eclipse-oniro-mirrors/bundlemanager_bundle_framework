@@ -2221,9 +2221,9 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleDataMgr_0021, Function | SmallTest | Le
     innerBundleUserInfo.bundleUserInfo.enabled = true;
     innerBundleUserInfo.bundleUserInfo.userId = Constants::INVALID_USERID;
     innerBundleUserInfo.uid = 65535;
-    bool res = GetBundleDataMgr()->AddInnerBundleUserInfo(
+    ErrCode res = GetBundleDataMgr()->AddInnerBundleUserInfo(
         TEST_BUNDLE_NAME, innerBundleUserInfo);
-    EXPECT_EQ(res, false);
+    EXPECT_NE(res, ERR_OK);
 }
 
 /**

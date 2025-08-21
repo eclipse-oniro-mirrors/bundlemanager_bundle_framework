@@ -38,6 +38,38 @@ constexpr int32_t RETRY_TIMES = 3;
 constexpr int32_t RETRY_INTERVAL = 500; // 500ms
 constexpr const char* INTEGRITY_CHECK = "PRAGMA integrity_check";
 constexpr const char* CHECK_OK = "ok";
+const std::unordered_map<int32_t, int32_t> RDB_ERR_MAP = {
+    {NativeRdb::E_OK, ERR_OK},
+    {NativeRdb::E_NOT_SELECT, ERR_APPEXECFWK_DB_SQL_MUST_BE_QUERY_STATEMENT},
+    {NativeRdb::E_COLUMN_OUT_RANGE, ERR_APPEXECFWK_DB_COLUMN_OUT_OF_BOUNDS},
+    {NativeRdb::E_INVALID_FILE_PATH, ERR_APPEXECFWK_DB_INVALID_DATABASE_PATH},
+    {NativeRdb::E_ROW_OUT_RANGE, ERR_APPEXECFWK_DB_ROW_OUT_OF_BOUNDS},
+    {NativeRdb::E_NO_ROW_IN_QUERY, ERR_APPEXECFWK_DB_NO_DATA_MEETS_CONDITION},
+    {NativeRdb::E_ALREADY_CLOSED, ERR_APPEXECFWK_DB_ALREADY_CLOSED},
+    {NativeRdb::E_DATABASE_BUSY, ERR_APPEXECFWK_DB_DO_NOT_RESPOND},
+    {NativeRdb::E_WAL_SIZE_OVER_LIMIT, ERR_APPEXECFWK_DB_THE_WAL_FILE_SIZE_OVER_DEFAULT_LIMIT},
+    {NativeRdb::E_GET_DATAOBSMGRCLIENT_FAIL, ERR_APPEXECFWK_DB_FAILED_TO_GET_DATA_OBS_MGR_CLIENT},
+    {NativeRdb::E_TYPE_MISMATCH, ERR_APPEXECFWK_DB_THE_TYPE_OF_DISTRIBUTED_TABLE_NOT_MATCH},
+    {NativeRdb::E_SQLITE_FULL, ERR_APPEXECFWK_DB_IS_FULL},
+    {NativeRdb::E_NOT_SUPPORT_THE_SQL, ERR_APPEXECFWK_DB_NOT_SUPPORT_THS_SQL},
+    {NativeRdb::E_ATTACHED_DATABASE_EXIST, ERR_APPEXECFWK_DB_IS_ALREADY_ATTACHED},
+    {NativeRdb::E_SQLITE_ERROR, ERR_APPEXECFWK_DB_SQL_GENERIC_ERROR},
+    {NativeRdb::E_SQLITE_CORRUPT, ERR_APPEXECFWK_DB_SQL_CORRUPTED},
+    {NativeRdb::E_SQLITE_ABORT, ERR_APPEXECFWK_DB_SQL_CALLBACK_ROUTINE_REQUESTED_AN_ABORT},
+    {NativeRdb::E_SQLITE_PERM, ERR_APPEXECFWK_DB_SQL_ACCESS_PERMISSION_DENIED},
+    {NativeRdb::E_SQLITE_BUSY, ERR_APPEXECFWK_DB_SQL_FILE_IS_LOCKED},
+    {NativeRdb::E_SQLITE_LOCKED, ERR_APPEXECFWK_DB_SQL_TABLE_IS_LOCKED},
+    {NativeRdb::E_SQLITE_NOMEM, ERR_APPEXECFWK_DB_SQL_DB_IS_OUT_OF_MEMORY},
+    {NativeRdb::E_SQLITE_READONLY, ERR_APPEXECFWK_DB_SQL_ATTEMPT_WRITE_READONLY_DB},
+    {NativeRdb::E_SQLITE_IOERR, ERR_APPEXECFWK_DB_SQL_SOME_KIND_OF_DISK_IO_ERROR},
+    {NativeRdb::E_SQLITE_CANTOPEN, ERR_APPEXECFWK_DB_SQL_UNABLE_OPEN_DB_FILE},
+    {NativeRdb::E_SQLITE_TOOBIG, ERR_APPEXECFWK_DB_SQL_TEXT_OR_BLOB_EXCEED_SIZE_LIMIT},
+    {NativeRdb::E_SQLITE_CONSTRAINT, ERR_APPEXECFWK_DB_SQL_ABORT_DUE_TO_CONSTRAINT_VIOLATION},
+    {NativeRdb::E_SQLITE_MISMATCH, ERR_APPEXECFWK_DB_SQL_DATA_TYPE_MISMATCH},
+    {NativeRdb::E_SQLITE_MISUSE, ERR_APPEXECFWK_DB_SQL_LIBRARY_USED_INCORRECTLY},
+    {NativeRdb::E_CONFIG_INVALID_CHANGE, ERR_APPEXECFWK_DB_CONFIG_CHANGED},
+    {NativeRdb::E_NOT_SUPPORT, ERR_APPEXECFWK_DB_CAPABILITY_NOT_SUPPORT},
+};
 }
 
 ffrt::mutex RdbDataManager::restoreRdbMapMutex_;
@@ -68,7 +100,7 @@ ffrt::mutex &RdbDataManager::GetRdbRestoreMutex(const std::string &dbName)
     return restoreRdbMap_[dbName];
 }
 
-void RdbDataManager::GetRdbStoreFromNative()
+ErrCode RdbDataManager::GetRdbStoreFromNative()
 {
     auto &mutex = GetRdbRestoreMutex(bmsRdbConfig_.dbName);
     std::lock_guard<ffrt::mutex> restoreLock(mutex);
@@ -91,7 +123,7 @@ void RdbDataManager::GetRdbStoreFromNative()
     if (rdbStore_ == nullptr) {
         APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
         SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::OPEN), errCode);
-        return;
+        return errCode;
     }
     CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
     bool isNeedRebuildDb = false;
@@ -109,14 +141,22 @@ void RdbDataManager::GetRdbStoreFromNative()
             APP_LOGE("rdb restore failed ret:%{public}d", restoreRet);
         }
         SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), rebuildCode);
+        return restoreRet;
     }
+    return ERR_OK;
 }
 
-std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
+std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore(ErrCode &result)
 {
     std::lock_guard<ffrt::mutex> lock(rdbMutex_);
     if (rdbStore_ == nullptr) {
-        GetRdbStoreFromNative();
+        result = GetRdbStoreFromNative();
+    }
+    auto it = RDB_ERR_MAP.find(result);
+    if (it != RDB_ERR_MAP.end()) {
+        result = it->second;
+    } else {
+        result = ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
     if (rdbStore_ != nullptr) {
@@ -157,7 +197,8 @@ void RdbDataManager::SendDbErrorEvent(const std::string &dbName, int32_t operati
 bool RdbDataManager::InsertData(const std::string &key, const std::string &value)
 {
     APP_LOGD("InsertData start");
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
@@ -167,40 +208,60 @@ bool RdbDataManager::InsertData(const std::string &key, const std::string &value
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BMS_KEY, key);
     valuesBucket.PutString(BMS_VALUE, value);
-    auto ret = InsertWithRetry(rdbStore, rowId, valuesBucket);
+    ret = InsertWithRetry(rdbStore, rowId, valuesBucket);
     return ret == NativeRdb::E_OK;
+}
+
+ErrCode RdbDataManager::InsertDataWithCode(const std::string &key, const std::string &value)
+{
+    APP_LOGD("InsertData start");
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
+    if (rdbStore == nullptr) {
+        APP_LOGE("RdbStore is null");
+        return ret;
+    }
+
+    int64_t rowId = -1;
+    NativeRdb::ValuesBucket valuesBucket;
+    valuesBucket.PutString(BMS_KEY, key);
+    valuesBucket.PutString(BMS_VALUE, value);
+    return InsertWithRetry(rdbStore, rowId, valuesBucket);
 }
 
 bool RdbDataManager::InsertData(const NativeRdb::ValuesBucket &valuesBucket)
 {
     APP_LOGD("InsertData start");
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
     }
 
     int64_t rowId = -1;
-    auto ret = InsertWithRetry(rdbStore, rowId, valuesBucket);
+    ret = InsertWithRetry(rdbStore, rowId, valuesBucket);
     return ret == NativeRdb::E_OK;
 }
 
 bool RdbDataManager::BatchInsert(int64_t &outInsertNum, const std::vector<NativeRdb::ValuesBucket> &valuesBuckets)
 {
     APP_LOGD("BatchInsert start");
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
     }
-    auto ret = rdbStore->BatchInsert(outInsertNum, bmsRdbConfig_.tableName, valuesBuckets);
+    ret = rdbStore->BatchInsert(outInsertNum, bmsRdbConfig_.tableName, valuesBuckets);
     return ret == NativeRdb::E_OK;
 }
 
 bool RdbDataManager::UpdateData(const std::string &key, const std::string &value)
 {
     APP_LOGD("UpdateData start");
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
@@ -212,7 +273,7 @@ bool RdbDataManager::UpdateData(const std::string &key, const std::string &value
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BMS_KEY, key);
     valuesBucket.PutString(BMS_VALUE, value);
-    auto ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
+    ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
     return ret == NativeRdb::E_OK;
 }
 
@@ -220,7 +281,8 @@ bool RdbDataManager::UpdateData(
     const NativeRdb::ValuesBucket &valuesBucket, const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
     APP_LOGD("UpdateData start");
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
@@ -230,7 +292,7 @@ bool RdbDataManager::UpdateData(
         return false;
     }
     int32_t rowId = -1;
-    auto ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
+    ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
     return ret == NativeRdb::E_OK;
 }
 
@@ -238,7 +300,8 @@ bool RdbDataManager::UpdateOrInsertData(
     const NativeRdb::ValuesBucket &valuesBucket, const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
     APP_LOGD("UpdateOrInsertData start");
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
@@ -248,7 +311,7 @@ bool RdbDataManager::UpdateOrInsertData(
         return false;
     }
     int32_t rowId = -1;
-    auto ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
+    ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
     if ((ret == NativeRdb::E_OK) && (rowId == 0)) {
         APP_LOGI_NOFUNC("data not exist, need insert data");
         int64_t rowIdInsert = -1;
@@ -261,7 +324,8 @@ bool RdbDataManager::UpdateOrInsertData(
 bool RdbDataManager::DeleteData(const std::string &key)
 {
     APP_LOGD("DeleteData start");
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
@@ -270,13 +334,14 @@ bool RdbDataManager::DeleteData(const std::string &key)
     int32_t rowId = -1;
     NativeRdb::AbsRdbPredicates absRdbPredicates(bmsRdbConfig_.tableName);
     absRdbPredicates.EqualTo(BMS_KEY, key);
-    auto ret = rdbStore->Delete(rowId, absRdbPredicates);
+    ret = rdbStore->Delete(rowId, absRdbPredicates);
     return ret == NativeRdb::E_OK;
 }
 
 bool RdbDataManager::DeleteData(const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
@@ -286,14 +351,15 @@ bool RdbDataManager::DeleteData(const NativeRdb::AbsRdbPredicates &absRdbPredica
         return false;
     }
     int32_t rowId = -1;
-    auto ret = rdbStore->Delete(rowId, absRdbPredicates);
+    ret = rdbStore->Delete(rowId, absRdbPredicates);
     return ret == NativeRdb::E_OK;
 }
 
 bool RdbDataManager::QueryData(const std::string &key, std::string &value)
 {
     APP_LOGD("QueryData start");
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
@@ -307,9 +373,9 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
         return false;
     }
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
-    auto ret = absSharedResultSet->GoToFirstRow();
+    ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        APP_LOGE_NOFUNC("GoToFirstRow failed, ret: %{public}d", ret);
         return false;
     }
 
@@ -326,7 +392,8 @@ std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryData(
     const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
     APP_LOGD("QueryData start");
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return nullptr;
@@ -346,7 +413,8 @@ std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryData(
 bool RdbDataManager::QueryAllData(std::map<std::string, std::string> &datas)
 {
     APP_LOGD("QueryAllData start");
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
@@ -394,12 +462,13 @@ bool RdbDataManager::CreateTable()
     } else {
         createTableSql = bmsRdbConfig_.createTableSql;
     }
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
     }
-    int ret = rdbStore->ExecuteSql(createTableSql);
+    ret = rdbStore->ExecuteSql(createTableSql);
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("CreateTable %{public}s failed, ret: %{public}d", bmsRdbConfig_.tableName.c_str(), ret);
         return false;
@@ -454,7 +523,8 @@ std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryByStep(
     const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
     APP_LOGD("QueryByStep start");
-    auto rdbStore = GetRdbStore();
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
     if (rdbStore == nullptr) {
         APP_LOGE("RdbStore is null");
         return nullptr;
@@ -487,7 +557,12 @@ int32_t RdbDataManager::InsertWithRetry(std::shared_ptr<NativeRdb::RdbStore> rdb
         }
         APP_LOGW("rdb insert failed, retry count: %{public}d, ret: %{public}d", retryCnt, ret);
     } while (retryCnt < RETRY_TIMES);
-    return ret;
+    auto it = RDB_ERR_MAP.find(ret);
+    if (it != RDB_ERR_MAP.end()) {
+        ret = it->second;
+        return ret;
+    }
+    return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
 }
 
 bool RdbDataManager::IsRetryErrCode(int32_t errCode)

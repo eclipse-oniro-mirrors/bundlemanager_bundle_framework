@@ -2140,4 +2140,49 @@ HWTEST_F(BmsAOTMgrTest, EnforceCodeSignForHap_0100, Function | SmallTest | Level
     bool ret = AOTSignDataCacheMgr::GetInstance().EnforceCodeSignForHap();
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: IsAOTFlagsInitial_0100
+ * @tc.name: Test IsAOTFlagsInitial
+ * @tc.desc: 1.IsAOTFlagsInitial testcase
+ */
+HWTEST_F(BmsAOTMgrTest, IsAOTFlagsInitial_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
+
+    bool ret = info.IsAOTFlagsInitial();
+    EXPECT_TRUE(ret);
+
+    info.baseApplicationInfo_->arkNativeFilePath = "arkNativeFilePath";
+    ret = info.IsAOTFlagsInitial();
+    EXPECT_FALSE(ret);
+
+    info.baseApplicationInfo_->arkNativeFileAbi = "arkNativeFileAbi";
+    ret = info.IsAOTFlagsInitial();
+    EXPECT_FALSE(ret);
+
+    std::string bundleName = "bundleName";
+    info.innerModuleInfos_[bundleName].aotCompileStatus = AOTCompileStatus::COMPILE_SUCCESS;
+    ret = info.IsAOTFlagsInitial();
+    EXPECT_FALSE(ret);
+
+    info.innerModuleInfos_[bundleName].aotCompileStatus = AOTCompileStatus::COMPILE_FAILED;
+    ret = info.IsAOTFlagsInitial();
+    EXPECT_FALSE(ret);
+
+    info.innerModuleInfos_[bundleName].aotCompileStatus = AOTCompileStatus::COMPILE_CRASH;
+    ret = info.IsAOTFlagsInitial();
+    EXPECT_FALSE(ret);
+
+    info.innerModuleInfos_[bundleName].aotCompileStatus = AOTCompileStatus::COMPILE_CANCELLED;
+    ret = info.IsAOTFlagsInitial();
+    EXPECT_FALSE(ret);
+
+    info.baseApplicationInfo_->arkNativeFilePath.clear();
+    info.baseApplicationInfo_->arkNativeFileAbi.clear();
+    info.innerModuleInfos_[bundleName].aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
+    ret = info.IsAOTFlagsInitial();
+    EXPECT_TRUE(ret);
+}
 } // OHOS

@@ -39,7 +39,6 @@
 #include "code_sign_utils.h"
 #endif
 #include "installd/installd_operator.h"
-#include "installd/installd_host_impl.h"
 #include "system_ability_definition.h"
 
 namespace OHOS {
@@ -230,9 +229,12 @@ void AOTExecutor::MapHapArgs(const AOTArgs &aotArgs, std::unordered_map<std::str
     argsMap.emplace(Constants::MODULE_ARKTS_MODE, aotArgs.moduleArkTSMode);
     argsMap.emplace(IS_SYS_COMP, IS_SYS_COMP_FALSE);
 
+    std::string log;
     for (const auto &arg : argsMap) {
-        LOG_NOFUNC_I(BMS_TAG_AOT, "%{public}s: %{public}s", arg.first.c_str(), arg.second.c_str());
+        std::string argString = arg.first + ":" + arg.second + " ";
+        log += argString;
     }
+    LOG_NOFUNC_I(BMS_TAG_AOT, "MapHapArgs: %{public}s", log.c_str());
 }
 
 ErrCode AOTExecutor::PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData) const
@@ -275,10 +277,13 @@ ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_
     } else {
         MapHapArgs(aotArgs, argsMap);
         std::string aotFilePath = ServiceConstants::ARK_CACHE_PATH + aotArgs.bundleName;
-        ErrCode result = InstalldHostImpl().Mkdir(aotFilePath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH,
-            aotArgs.bundleUid, aotArgs.bundleGid);
-        if (result != ERR_OK) {
-            APP_LOGE("make aot file output directory fail");
+        if (!InstalldOperator::IsExistDir(ServiceConstants::ARK_CACHE_PATH)) {
+            APP_LOGE("ark cache dir not exist");
+            return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+        }
+        if (!InstalldOperator::MkOwnerDir(aotFilePath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH,
+            aotArgs.bundleUid, aotArgs.bundleGid)) {
+            APP_LOGE("mk bundle ark cache dir failed");
             return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
         }
     }
