@@ -830,7 +830,7 @@ bool BundleResourceManager::IsNeedInterrupted(const uint32_t tempTaskNumber, con
     if (tempTaskNumber == currentTaskNum_) {
         return false;
     }
-    return ((static_cast<uint32_t>(currentChangeType_) & static_cast<uint32_t>(type)) == static_cast<uint32_t>(type));
+    return static_cast<uint32_t>(currentChangeType_) == static_cast<uint32_t>(type);
 }
 
 bool BundleResourceManager::AddResourceInfosWhenSystemLanguageChanged(
