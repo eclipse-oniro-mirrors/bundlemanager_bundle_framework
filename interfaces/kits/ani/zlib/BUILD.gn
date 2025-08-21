@@ -55,7 +55,9 @@ ohos_shared_library("ani_zlib") {
     "${kits_path}/js/zip/src/zip_writer.cpp",
     "ani_zlib.cpp",
     "checksum/ani_checksum.cpp",
+    "common/ani_zlib_common.cpp",
     "gzip/ani_gzip.cpp",
+    "zip/ani_zip.cpp",
   ]
 
   cflags = [

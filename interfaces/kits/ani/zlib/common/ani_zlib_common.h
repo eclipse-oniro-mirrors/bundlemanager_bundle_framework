@@ -16,8 +16,13 @@
 #ifndef BUNDLE_FRAMEWORK_INTERFACES_KITS_ANI_ZLIB_COMMON_H
 #define BUNDLE_FRAMEWORK_INTERFACES_KITS_ANI_ZLIB_COMMON_H
 
+#include <ani.h>
+#include "app_log_wrapper.h"
+#include "common/common_func.h"
 #include "napi_business_error.h"
 #include "napi_constants.h"
+#include "zip_utils.h"
+#include "zlib.h"
 
 #define CHECK_PARAM_NULL(param)          \
     do {                                 \
@@ -53,13 +58,35 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace AniZLibCommon {
+void ThrowZLibNapiError(ani_env* env, int posixError);
 
-inline void ThrowZLibNapiError(ani_env* env, int posixError)
+bool ParseOptions(ani_env* env, ani_object object, LIBZIP::OPTIONS& options);
+bool ParseZStream(ani_env* env, ani_object object, LIBZIP::HasZStreamMember& hasZStreamMember, z_stream& result);
+bool ParseGzHeader(ani_env* env, ani_object object, gz_header& result);
+
+ani_object ConvertZStream(ani_env* env, const z_streamp zStream);
+ani_object ConvertZipOutputInfo(ani_env* env, const int32_t errCode, const uLong destLen);
+ani_object ConvertDecompressionOutputInfo(ani_env* env,
+    const int32_t errCode, const uLong destLen, const ulong sourceLen);
+ani_object ConvertDictionaryOutputInfo(ani_env* env, const int32_t errCode, const uInt dictionaryLen);
+ani_object ConvertDeflatePendingOutputInfo(ani_env* env,
+    const int32_t errCode, const uint32_t pending, const int32_t bits);
+
+template<typename valueType>
+bool ParseArrayBuffer(ani_env* env, ani_arraybuffer aniBuf, void*& buf, valueType& bufLen, const int throws)
 {
-    auto errorPair = LIBZIP::errCodeTable.find(posixError) == LIBZIP::errCodeTable.end()
-                         ? LIBZIP::errCodeTable.at(ENOSTR)
-                         : LIBZIP::errCodeTable.at(posixError);
-    BusinessErrorAni::ThrowError(env, errorPair.first, errorPair.second);
+    size_t tmpLen = 0;
+    ani_status status = env->ArrayBuffer_GetInfo(aniBuf, &buf, &tmpLen);
+    if (status != ANI_OK) {
+        APP_LOGE("ArrayBuffer_GetInfo failed: %{public}d", status);
+        AniZLibCommon::ThrowZLibNapiError(env, throws);
+        return false;
+    }
+    bufLen = static_cast<valueType>(tmpLen);
+    if (bufLen == 0) {
+        buf = nullptr;
+    }
+    return true;
 }
 } // namespace AniZLibCommon
 } // namespace AppExecFwk

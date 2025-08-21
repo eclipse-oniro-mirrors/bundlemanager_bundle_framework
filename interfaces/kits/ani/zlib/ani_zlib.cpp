@@ -15,6 +15,7 @@
 
 #include "ani_signature_builder.h"
 #include "ani_zlib_callback_info.h"
+#include "ani_zlib_common.h"
 #include "business_error_ani.h"
 #include "checksum/ani_checksum.h"
 #include "common_fun_ani.h"
@@ -24,55 +25,24 @@
 #include "napi_business_error.h"
 #include "napi_constants.h"
 #include "zip.h"
+#include "zip/ani_zip.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* NS_NAME_ZLIB = "@ohos.zlib.zlib";
-constexpr const char* PROPERTY_NAME_LEVEL = "level";
-constexpr const char* PROPERTY_NAME_MEMLEVEL = "memLevel";
-constexpr const char* PROPERTY_NAME_STRATEGY = "strategy";
-constexpr const char* PROPERTY_NAME_PARALLEL = "parallel";
 constexpr const char* TYPE_NAME_CHECKSUMINTERNAL = "ChecksumInternal";
 constexpr const char* TYPE_NAME_GZIPINTERNAL = "GZipInternal";
+constexpr const char* TYPE_NAME_ZIPINTERNAL = "ZipInternal";
+constexpr const char* TYPE_NAME_ZIPCLEANER = "ZipCleaner";
 constexpr const char* PARAM_NAME_IN_FILE = "inFile";
 constexpr const char* PARAM_NAME_IN_FILES = "inFiles";
 constexpr const char* PARAM_NAME_OUT_FILE = "outFile";
 constexpr const char* PARAM_NAME_OPTIONS = "options";
+constexpr const char* PARAM_NAME_PTR = "ptr";
 } // namespace
 
 using namespace arkts::ani_signature;
-
-static bool ANIParseOptions(ani_env* env, ani_object object, LIBZIP::OPTIONS& options)
-{
-    APP_LOGD("ANIParseOptions entry");
-
-    RETURN_FALSE_IF_NULL(env);
-    RETURN_FALSE_IF_NULL(object);
-
-    ani_enum_item enumItem = nullptr;
-    // level?: CompressLevel
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTY_NAME_LEVEL, &enumItem)) {
-        RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, options.level));
-    }
-
-    // memLevel?: MemLevel
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTY_NAME_MEMLEVEL, &enumItem)) {
-        RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, options.memLevel));
-    }
-
-    // strategy?: CompressStrategy
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTY_NAME_STRATEGY, &enumItem)) {
-        RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, options.strategy));
-    }
-
-    // parallel?: ParallelStrategy
-    if (CommonFunAni::CallGetterOptional(env, object, PROPERTY_NAME_PARALLEL, &enumItem)) {
-        RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, options.parallel));
-    }
-
-    return true;
-}
 
 static void compressFileNative(ani_env* env, ani_string aniInFile, ani_string aniOutFile, ani_object aniOptions)
 {
@@ -98,7 +68,7 @@ static void compressFileNative(ani_env* env, ani_string aniInFile, ani_string an
     }
 
     LIBZIP::OPTIONS options;
-    if (!ANIParseOptions(env, aniOptions, options)) {
+    if (!AniZLibCommon::ParseOptions(env, aniOptions, options)) {
         APP_LOGE("options parse failed.");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OPTIONS);
         return;
@@ -137,7 +107,7 @@ static void compressFilesNative(ani_env* env, ani_object aniInFiles, ani_string 
     }
 
     LIBZIP::OPTIONS options;
-    if (!ANIParseOptions(env, aniOptions, options)) {
+    if (!AniZLibCommon::ParseOptions(env, aniOptions, options)) {
         APP_LOGE("options parse failed.");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OPTIONS);
         return;
@@ -176,7 +146,7 @@ static void decompressFileNative(ani_env* env, ani_string aniInFile, ani_string 
     }
 
     LIBZIP::OPTIONS options;
-    if (!ANIParseOptions(env, aniOptions, options)) {
+    if (!AniZLibCommon::ParseOptions(env, aniOptions, options)) {
         APP_LOGE("options parse failed.");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_OPTIONS);
         return;
@@ -257,6 +227,47 @@ static ani_object createGZipNative(ani_env* env, ani_boolean)
     return objGZip;
 }
 
+static ani_object CreateZipNative(ani_env* env, ani_boolean)
+{
+    APP_LOGD("CreateZipNative entry");
+
+    ani_object objZip = nullptr;
+    Namespace zlibNS = Builder::BuildNamespace(NS_NAME_ZLIB);
+    Type zipType = Builder::BuildClass({ zlibNS.Name(), TYPE_NAME_ZIPINTERNAL });
+    ani_class clsZip = CommonFunAni::CreateClassByName(env, zipType.Descriptor());
+    if (clsZip != nullptr) {
+        objZip = CommonFunAni::CreateNewObjectByClass(env, zipType.Descriptor(), clsZip);
+    }
+    if (objZip == nullptr) {
+        auto errorPair = LIBZIP::errCodeTable.at(EFAULT);
+        BusinessErrorAni::ThrowError(env, errorPair.first, errorPair.second);
+    }
+    return objZip;
+}
+
+static void ZipCleanNative(ani_env *env, ani_object instance)
+{
+    APP_LOGD("ZipCleanNative entry");
+
+    RETURN_IF_NULL(env);
+    RETURN_IF_NULL(instance);
+
+    ani_long ptr = 0;
+    ani_status status = env->Object_GetFieldByName_Long(instance, PARAM_NAME_PTR, &ptr);
+    if (status != ANI_OK) {
+        APP_LOGE("Object_GetFieldByName_Long failed: %{public}d", status);
+        return;
+    }
+    if (ptr != 0) {
+        delete reinterpret_cast<z_streamp>(ptr);
+        ptr = 0;
+        status = env->Object_SetFieldByName_Long(instance, PARAM_NAME_PTR, ptr);
+        if (status != ANI_OK) {
+            APP_LOGE("Object_SetFieldByName_Long failed: %{public}d", status);
+        }
+    }
+}
+
 static ani_status BindNSMethods(ani_env* env)
 {
     APP_LOGD("BindNSMethods entry");
@@ -276,6 +287,7 @@ static ani_status BindNSMethods(ani_env* env)
         ani_native_function { "getOriginalSizeNative", nullptr, reinterpret_cast<void*>(getOriginalSizeNative) },
         ani_native_function { "createChecksumNative", nullptr, reinterpret_cast<void*>(createChecksumNative) },
         ani_native_function { "createGZipNative", nullptr, reinterpret_cast<void*>(createGZipNative) },
+        ani_native_function { "createZipNative", nullptr, reinterpret_cast<void*>(CreateZipNative) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
@@ -370,6 +382,122 @@ static ani_status BindGZipMethods(ani_env* env)
     return status;
 }
 
+static ani_status BindZipCleanerMethods(ani_env* env)
+{
+    APP_LOGD("BindZipCleanerMethods entry");
+
+    Type zipCleanerType = Builder::BuildClass({ NS_NAME_ZLIB, TYPE_NAME_ZIPCLEANER });
+    ani_class clsZipCleaner = CommonFunAni::CreateClassByName(env, zipCleanerType.Descriptor());
+    if (clsZipCleaner == nullptr) {
+        APP_LOGE("CreateClassByName: %{public}s fail", TYPE_NAME_ZIPCLEANER);
+        return ANI_ERROR;
+    }
+
+    std::array methodsZipCleaner = {
+        ani_native_function { "zipClean", nullptr, reinterpret_cast<void*>(ZipCleanNative) },
+    };
+
+    ani_status status = env->Class_BindNativeMethods(clsZipCleaner, methodsZipCleaner.data(), methodsZipCleaner.size());
+    if (status != ANI_OK) {
+        APP_LOGE("Class_BindNativeMethods: %{public}s fail with %{public}d", TYPE_NAME_ZIPCLEANER, status);
+        return ANI_ERROR;
+    }
+
+    return status;
+}
+
+static ani_status BindZipMethods(ani_env* env)
+{
+    APP_LOGD("BindZipMethods entry");
+
+    Type zipType = Builder::BuildClass({ NS_NAME_ZLIB, TYPE_NAME_ZIPINTERNAL });
+    ani_class clsZip = CommonFunAni::CreateClassByName(env, zipType.Descriptor());
+    if (clsZip == nullptr) {
+        APP_LOGE("CreateClassByName: %{public}s fail", TYPE_NAME_ZIPINTERNAL);
+        return ANI_ERROR;
+    }
+
+    std::array methodsZip = {
+        ani_native_function { "getZStreamNative", nullptr, reinterpret_cast<void*>(AniZLibZip::GetZStreamNative) },
+        ani_native_function { "zlibVersionNative", nullptr, reinterpret_cast<void*>(AniZLibZip::ZlibVersionNative) },
+        ani_native_function { "zlibCompileFlagsNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::ZlibCompileFlagsNative) },
+        ani_native_function { "compressNative", nullptr, reinterpret_cast<void*>(AniZLibZip::CompressNative) },
+        ani_native_function { "compressWithSourceLenNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::CompressWithSourceLenNative) },
+        ani_native_function { "compress2Native", nullptr, reinterpret_cast<void*>(AniZLibZip::Compress2Native) },
+        ani_native_function { "compress2WithSourceLenNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::Compress2WithSourceLenNative) },
+        ani_native_function { "compressBoundNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::CompressBoundNative) },
+        ani_native_function { "uncompressNative", nullptr, reinterpret_cast<void*>(AniZLibZip::UncompressNative) },
+        ani_native_function { "uncompressWithSourceLenNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::UncompressWithSourceLenNative) },
+        ani_native_function { "uncompress2Native", nullptr, reinterpret_cast<void*>(AniZLibZip::Uncompress2Native) },
+        ani_native_function { "uncompress2WithSourceLenNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::Uncompress2WithSourceLenNative) },
+        ani_native_function { "inflateValidateNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::InflateValidateNative) },
+        ani_native_function { "inflateSyncPointNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::InflateSyncPointNative) },
+        ani_native_function { "inflateSyncNative", nullptr, reinterpret_cast<void*>(AniZLibZip::InflateSyncNative) },
+        ani_native_function { "inflateSetDictionaryNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::InflateSetDictionaryNative) },
+        ani_native_function { "inflateResetKeepNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::InflateResetKeepNative) },
+        ani_native_function { "inflateReset2Native", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::InflateReset2Native) },
+        ani_native_function { "inflateResetNative", nullptr, reinterpret_cast<void*>(AniZLibZip::InflateResetNative) },
+        ani_native_function { "inflatePrimeNative", nullptr, reinterpret_cast<void*>(AniZLibZip::InflatePrimeNative) },
+        ani_native_function { "inflateMarkNative", nullptr, reinterpret_cast<void*>(AniZLibZip::InflateMarkNative) },
+        ani_native_function { "inflateInit2Native", nullptr, reinterpret_cast<void*>(AniZLibZip::InflateInit2Native) },
+        ani_native_function { "inflateInitNative", nullptr, reinterpret_cast<void*>(AniZLibZip::InflateInitNative) },
+        ani_native_function { "inflateGetHeaderNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::InflateGetHeaderNative) },
+        ani_native_function { "inflateGetDictionaryNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::InflateGetDictionaryNative) },
+        ani_native_function { "inflateEndNative", nullptr, reinterpret_cast<void*>(AniZLibZip::InflateEndNative) },
+        ani_native_function { "inflateCopyNative", nullptr, reinterpret_cast<void*>(AniZLibZip::InflateCopyNative) },
+        ani_native_function { "inflateCodesUsedNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::InflateCodesUsedNative) },
+        ani_native_function { "inflateBackInitNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::InflateBackInitNative) },
+        ani_native_function { "inflateBackEndNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::InflateBackEndNative) },
+        ani_native_function { "inflateBackNative", nullptr, reinterpret_cast<void*>(AniZLibZip::InflateBackNative) },
+        ani_native_function { "inflateNative", nullptr, reinterpret_cast<void*>(AniZLibZip::InflateNative) },
+        ani_native_function { "deflateInitNative", nullptr, reinterpret_cast<void*>(AniZLibZip::DeflateInitNative) },
+        ani_native_function { "deflateInit2Native", nullptr, reinterpret_cast<void*>(AniZLibZip::DeflateInit2Native) },
+        ani_native_function { "deflateNative", nullptr, reinterpret_cast<void*>(AniZLibZip::DeflateNative) },
+        ani_native_function { "deflateEndNative", nullptr, reinterpret_cast<void*>(AniZLibZip::DeflateEndNative) },
+        ani_native_function { "deflateBoundNative", nullptr, reinterpret_cast<void*>(AniZLibZip::DeflateBoundNative) },
+        ani_native_function { "deflateSetHeaderNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::DeflateSetHeaderNative) },
+        ani_native_function { "deflateCopyNative", nullptr, reinterpret_cast<void*>(AniZLibZip::DeflateCopyNative) },
+        ani_native_function { "deflateSetDictionaryNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::DeflateSetDictionaryNative) },
+        ani_native_function { "deflateGetDictionaryNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::DeflateGetDictionaryNative) },
+        ani_native_function { "deflateTuneNative", nullptr, reinterpret_cast<void*>(AniZLibZip::DeflateTuneNative) },
+        ani_native_function { "deflateResetNative", nullptr, reinterpret_cast<void*>(AniZLibZip::DeflateResetNative) },
+        ani_native_function { "deflateResetKeepNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::DeflateResetKeepNative) },
+        ani_native_function { "deflatePendingNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::DeflatePendingNative) },
+        ani_native_function { "deflateParamsNative", nullptr,
+            reinterpret_cast<void*>(AniZLibZip::DeflateParamsNative) },
+        ani_native_function { "deflatePrimeNative", nullptr, reinterpret_cast<void*>(AniZLibZip::DeflatePrimeNative) },
+    };
+
+    ani_status status = env->Class_BindNativeMethods(clsZip, methodsZip.data(), methodsZip.size());
+    if (status != ANI_OK) {
+        APP_LOGE("Class_BindNativeMethods: %{public}s fail with %{public}d", TYPE_NAME_ZIPINTERNAL, status);
+        return ANI_ERROR;
+    }
+
+    return status;
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -396,6 +524,18 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
     status = BindGZipMethods(env);
     if (status != ANI_OK) {
         APP_LOGE("BindGZipMethods: %{public}d", status);
+        return status;
+    }
+
+    status = BindZipCleanerMethods(env);
+    if (status != ANI_OK) {
+        APP_LOGE("BindZipCleanerMethods: %{public}d", status);
+        return status;
+    }
+
+    status = BindZipMethods(env);
+    if (status != ANI_OK) {
+        APP_LOGE("BindZipMethods: %{public}d", status);
         return status;
     }
 

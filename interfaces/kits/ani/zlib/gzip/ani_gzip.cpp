@@ -52,7 +52,7 @@ static bool TrySetNativeGZFile(ani_env* env, ani_object instance, gzFile nativeG
     ani_status status =
         env->Object_SetFieldByName_Long(instance, FIELD_NAME_NATIVE_GZFILE, reinterpret_cast<ani_long>(nativeGZFile));
     if (status != ANI_OK) {
-        APP_LOGE("Object_GetFieldByName_Long failed %{public}d", status);
+        APP_LOGE("Object_SetFieldByName_Long failed %{public}d", status);
         return false;
     }
     return true;
@@ -542,7 +542,7 @@ ani_long gzfreadNative(ani_env* env, ani_object instance, ani_arraybuffer aniBuf
     ani_status status = env->ArrayBuffer_GetInfo(aniBuf, &buf, &bufLen);
     if (status != ANI_OK) {
         APP_LOGE("ArrayBuffer_GetInfo failed: %{public}d", status);
-        AniZLibCommon::ThrowZLibNapiError(env, EFAULT);
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return 0;
     }
     CHECK_PARAM_NULL_THROW_RETURN(buf, EINVAL, 0);
@@ -821,7 +821,7 @@ ani_long gzreadNative(ani_env* env, ani_object instance, ani_arraybuffer aniBuf)
     ani_status status = env->ArrayBuffer_GetInfo(aniBuf, &buf, &bufLen);
     if (status != ANI_OK) {
         APP_LOGE("ArrayBuffer_GetInfo failed: %{public}d", status);
-        AniZLibCommon::ThrowZLibNapiError(env, EFAULT);
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return -1;
     }
     CHECK_PARAM_NULL_THROW_RETURN(buf, EINVAL, -1);
@@ -987,7 +987,7 @@ ani_string gzgetsNative(ani_env* env, ani_object instance, ani_arraybuffer aniBu
     ani_status status = env->ArrayBuffer_GetInfo(aniBuf, &buf, &bufLen);
     if (status != ANI_OK) {
         APP_LOGE("ArrayBuffer_GetInfo failed: %{public}d", status);
-        AniZLibCommon::ThrowZLibNapiError(env, EFAULT);
+        AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return 0;
     }
     CHECK_PARAM_NULL_THROW_RETURN(buf, EINVAL, nullptr);
