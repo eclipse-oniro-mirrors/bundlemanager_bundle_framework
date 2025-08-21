@@ -93,6 +93,8 @@ constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr const char* LIBS_TMP = "libs_tmp";
 constexpr const char* PRIVILEGE_ALLOW_HDC_INSTALL = "AllowHdcInstall";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
+constexpr const char* DEDUPLICATEHAR_NOTE =
+    "App contains HSP that supports har deduplication, requires entry module to run properly";
 
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
@@ -1553,6 +1555,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     SetHybridSpawn();
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
+    CheckAddResultMsg(newInfos, oldInfo, isContainEntry_);
     return result;
 }
 
@@ -7959,6 +7962,24 @@ bool BaseBundleInstaller::IsBundleCrossAppSharedConfig(const std::unordered_map<
 {
     for (const auto &item : newInfos) {
         if (item.second.IsBundleCrossAppSharedConfig()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool BaseBundleInstaller::CheckAddResultMsg(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &oldInfo, bool isContainEntry)
+{
+    if (!isContainEntry) {
+        for (auto &item : newInfos) {
+            if (item.second.GetModuleDeduplicateHar()) {
+                SetCheckResultMsg(DEDUPLICATEHAR_NOTE);
+                return true;
+            }
+        }
+        if (oldInfo.GetModuleDeduplicateHar()) {
+            SetCheckResultMsg(DEDUPLICATEHAR_NOTE);
             return true;
         }
     }

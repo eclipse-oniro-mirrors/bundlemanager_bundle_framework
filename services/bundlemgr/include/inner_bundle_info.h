@@ -86,7 +86,6 @@ struct InnerModuleInfo {
     bool needDelete = false;
     bool debug = false;
     bool resizeable = false;
-    bool deduplicateHar = false;
     uint8_t boolSet = 0;
     uint32_t innerModuleInfoFlag = 0;
     uint32_t labelId = 0;
@@ -189,6 +188,7 @@ enum class GetInnerModuleInfoFlag : uint8_t {
 enum InnerModuleInfoBoolFlag : uint8_t {
     HAS_INTENT = 0,
     HAS_CLOUD_KIT_CONFIG = 1,
+    HAS_DEDUPLICATE_HAR = 2,
 };
 
 struct InstallMark {
@@ -2355,6 +2355,7 @@ public:
     std::string GetApplicationArkTSMode() const;
     void UpdateHasCloudkitConfig();
     int32_t GetModuleSize() const;
+    bool GetModuleDeduplicateHar() const;
 
 private:
     bool IsExistLauncherAbility() const;

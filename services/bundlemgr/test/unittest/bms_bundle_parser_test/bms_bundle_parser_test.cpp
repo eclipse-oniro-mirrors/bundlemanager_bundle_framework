@@ -1820,6 +1820,7 @@ protected:
     ErrCode CheckProfileDefaultPermission(const nlohmann::json &checkedProfileJson,
         std::set<DefaultPermission> &defaultPermissions) const;
     bool WriteToConfigFile(const std::string &bundleName) const;
+    void UpdateDeduplicateHarConfig(InnerBundleInfo info, bool deduplicateHar);
 protected:
     std::ostringstream pathStream_;
 };
@@ -1836,6 +1837,21 @@ void BmsBundleParserTest::SetUp()
 void BmsBundleParserTest::TearDown()
 {
     pathStream_.clear();
+}
+
+void BmsBundleParserTest::UpdateDeduplicateHarConfig(InnerBundleInfo info, bool deduplicateHar)
+{
+    std::string entryModuleName = info.GetEntryModuleName();
+    auto item = info.innerModuleInfos_.find(entryModuleName);
+    if (item == info.innerModuleInfos_.end()) {
+        APP_LOGE("entry module info is not found");
+        return;
+    }
+    if (deduplicateHar) {
+        BundleUtil::SetBit(InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR, item->second.boolSet);
+    } else {
+        BundleUtil::ResetBit(InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR, item->second.boolSet);
+    }
 }
 
 void BmsBundleParserTest::GetProfileTypeErrorProps(nlohmann::json &typeErrorProps) const
@@ -4203,6 +4219,18 @@ HWTEST_F(BmsBundleParserTest, TestParse_7400, Function | SmallTest | Level1)
     hapModule = innerBundleInfo2.FindHapModuleInfo("entry");
     EXPECT_NE(hapModule, std::nullopt);
     EXPECT_FALSE(hapModule->deduplicateHar);
+
+    // update deduplicateHar by UpdateDeduplicateHarConfig
+    InnerBundleInfo info;
+    UpdateDeduplicateHarConfig(info, hapModule->deduplicateHar);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    innerModuleInfo.isEntry = true;
+    info.innerModuleInfos_.try_emplace(MODULE_NAME, innerModuleInfo);
+    UpdateDeduplicateHarConfig(info, hapModule->deduplicateHar);
+    EXPECT_EQ(info.innerModuleInfos_[MODULE_NAME].boolSet, 0);
 }
 
 /**

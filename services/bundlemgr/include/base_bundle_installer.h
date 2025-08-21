@@ -860,6 +860,8 @@ private:
     bool IsBundleCrossAppSharedConfig(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode ProcessDynamicIconFileWhenUpdate(const InnerBundleInfo &oldInfo, const std::string &oldPath,
         const std::string &newPath);
+    bool CheckAddResultMsg(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InnerBundleInfo &oldInfo, bool isContainEntry);
     void ProcessUpdateShortcut();
     ErrCode CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 

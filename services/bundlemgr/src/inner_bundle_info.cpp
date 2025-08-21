@@ -129,7 +129,6 @@ constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
 constexpr const char* MODULE_IS_ENCRYPTED = "isEncrypted";
 constexpr const char* MODULE_RESIZEABLE = "resizeable";
 constexpr const char* MODULE_ROUTER_MAP = "routerMap";
-constexpr const char* MODULE_DEDUPLICATE_HAR = "deduplicateHar";
 constexpr const char* EXT_RESOURCE_MODULE_NAME = "moduleName";
 constexpr const char* EXT_RESOURCE_ICON_ID = "iconId";
 constexpr const char* EXT_RESOURCE_FILE_PATH = "filePath";
@@ -505,8 +504,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_UBSAN_ENABLED, static_cast<bool>(info.innerModuleInfoFlag &
             InnerBundleInfo::GetSanitizerFlag(GetInnerModuleInfoFlag::GET_INNER_MODULE_INFO_WITH_UBSANENABLED))},
         {MODULE_DEBUG, info.debug},
-        {MODULE_BOOL_SET, info.boolSet},
-        {MODULE_DEDUPLICATE_HAR, info.deduplicateHar},
+        {MODULE_BOOL_SET, info.boolSet}
     };
 }
 
@@ -939,12 +937,6 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_RESIZEABLE,
         info.resizeable,
-        false,
-        parseResult);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        MODULE_DEDUPLICATE_HAR,
-        info.deduplicateHar,
         false,
         parseResult);
     GetValueIfFindKey<BundleType>(jsonObject,
@@ -1652,6 +1644,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.formExtensionModule = it->second.formExtensionModule;
     hapInfo.formWidgetModule = it->second.formWidgetModule;
     hapInfo.hasIntent = BundleUtil::GetBitValue(it->second.boolSet, InnerModuleInfoBoolFlag::HAS_INTENT);
+    hapInfo.deduplicateHar = BundleUtil::GetBitValue(it->second.boolSet, InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR);
     std::string moduleType = it->second.distro.moduleType;
     if (moduleType == Profile::MODULE_TYPE_ENTRY) {
         hapInfo.moduleType = ModuleType::ENTRY;
@@ -1713,7 +1706,6 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.abilityStageSrcEntryDelegator = it->second.abilityStageSrcEntryDelegator;
     hapInfo.moduleArkTSMode = it->second.moduleArkTSMode;
     hapInfo.arkTSMode = it->second.arkTSMode;
-    hapInfo.deduplicateHar = it->second.deduplicateHar;
     return hapInfo;
 }
 
@@ -5418,6 +5410,19 @@ void InnerBundleInfo::UpdateHasCloudkitConfig()
     } else {
         BundleUtil::ResetBit(InnerModuleInfoBoolFlag::HAS_CLOUD_KIT_CONFIG, item->second.boolSet);
     }
+}
+
+bool InnerBundleInfo::GetModuleDeduplicateHar() const
+{
+    bool hasDedupLicateHarInHsp = false;
+    for (auto it : innerModuleInfos_) {
+        if (it.second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
+            if (BundleUtil::GetBitValue(it.second.boolSet, InnerModuleInfoBoolFlag::HAS_DEDUPLICATE_HAR)) {
+                return true;
+            }
+        }
+    }
+    return hasDedupLicateHarInHsp;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
