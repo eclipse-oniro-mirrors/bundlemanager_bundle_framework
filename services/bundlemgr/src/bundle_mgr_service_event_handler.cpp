@@ -2126,7 +2126,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         bool removable = IsPreInstallRemovable(scanPathIter);
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
-            LOG_E(BMS_TAG_DEFAULT, "obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
+            LOG_NOFUNC_E(BMS_TAG_DEFAULT, "obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
             BmsKeyEventMgr::ProcessMainBundleInstallFailed(scanPathIter, ERR_APPEXECFWK_PARSE_UNEXPECTED);
             SavePreInstallException(scanPathIter);
             continue;
@@ -2159,7 +2159,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
             hasInstalledInfo, Constants::ANY_USERID);
         if (!hasBundleInstalled && mapIter->second.IsUninstalled()) {
-            LOG_W(BMS_TAG_DEFAULT, "app(%{public}s) has been uninstalled and do not OTA install",
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "app(%{public}s) has been uninstalled and do not OTA install",
                 bundleName.c_str());
             continue;
         }
@@ -2468,7 +2468,7 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
         if (mapIter == loadExistData_.end()) {
             SavePreInstallExceptionAppService(scanPath);
             auto ret = OTAInstallSystemHsp({scanPath});
-            LOG_I(BMS_TAG_DEFAULT, "OTA Install new system hsp(%{public}s) by path(%{public}s) ret %{public}d",
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA Install new system hsp(%{public}s) by path(%{public}s) ret %{public}d",
                 bundleName.c_str(), scanPath.c_str(), ret);
             if (ret == ERR_OK) {
                 DeletePreInstallExceptionAppService(scanPath);
@@ -2478,13 +2478,13 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
         InnerBundleInfo oldBundleInfo;
         bool hasInstalled = dataMgr->FetchInnerBundleInfo(bundleName, oldBundleInfo);
         if (hasInstalled && oldBundleInfo.GetVersionCode() > versionCode) {
-            LOG_W(BMS_TAG_DEFAULT, "%{public}s the installed version %{public}d is greater then curVer %{public}d",
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "%{public}s installed version %{public}d is greater then curVer %{public}d",
                 bundleName.c_str(), oldBundleInfo.GetVersionCode(), versionCode);
             continue;
         }
         SavePreInstallExceptionAppService(scanPath);
         auto ret = OTAInstallSystemHsp({scanPath});
-        LOG_I(BMS_TAG_DEFAULT, "OTA Install system hsp(%{public}s) by path(%{public}s) ret %{public}d",
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA Install system hsp(%{public}s) by path(%{public}s) ret %{public}d",
             bundleName.c_str(), scanPath.c_str(), ret);
         if (ret == ERR_OK) {
             DeletePreInstallExceptionAppService(scanPath);
@@ -4509,22 +4509,21 @@ bool BMSEventHandler::IsQuickfixPatchApp(const std::string &bundleName, uint32_t
     // 1. check whether a patch has been installed on the app
     InnerPatchInfo innerPatchInfo;
     if (!PatchDataMgr::GetInstance().GetInnerPatchInfo(bundleName, innerPatchInfo)) {
-        LOG_W(BMS_TAG_DEFAULT, "the app is not patch, bundleName: %{public}s", bundleName.c_str());
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "app is not patch -n %{public}s", bundleName.c_str());
         return false;
     }
     // 2. check appType, current only Internal app types can be uninstall
     if (innerPatchInfo.GetAppPatchType() != AppPatchType::INTERNAL) {
-        LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s, app patch type err", bundleName.c_str());
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "-n %{public}s app patch type err", bundleName.c_str());
         return false;
     }
     // 3. check version
     if (innerPatchInfo.GetVersionCode() != versionCode) {
-        LOG_W(BMS_TAG_DEFAULT,
-            "bundleName: %{public}s is not patch app, patchVersionCode: %{public}u, versionCode: %{public}u",
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "-n %{public}s is not patch app patchVersion %{public}u version %{public}u",
             bundleName.c_str(), innerPatchInfo.GetVersionCode(), versionCode);
         return false;
     }
-    LOG_I(BMS_TAG_DEFAULT, "bundleName: %{public}s is patch app", bundleName.c_str());
+    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "-n %{public}s is patch app", bundleName.c_str());
     return true;
 }
 

@@ -722,6 +722,7 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
         }
     }
     if (ret != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_COMMON, "uid(%{public}d) invalid", uid);
         QueryEventInfo info = PrepareQueryEvent(ret, "None",
             "GetNameForUid", uid, -1, 0, -1);
         SendQueryBundleInfoEvent(info, intervalTime, false);

@@ -56,7 +56,7 @@ void DriverInstallExtHandler::GetDriverExecuteExtPaths(std::vector<std::string> 
         getDriverExecuteExtPathsFunc_(paths);
         return;
     }
-    APP_LOGW_NOFUNC("getDriverExecuteExtPathsFunc_ func is nullptr");
+    APP_LOGD("getDriverExecuteExtPathsFunc_ func is nullptr");
 }
 
 bool DriverInstallExtHandler::IsExtSpaceEnable()
