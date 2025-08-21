@@ -44,6 +44,11 @@ export default namespace zlib {
     PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION = 1
   }
 
+  export enum PathSeparatorStrategy {
+    PATH_SEPARATOR_STRATEGY_DEFAULT = 0,
+    PATH_SEPARATOR_STRATEGY_REPLACE_BACKSLASH = 1
+  }
+
   export enum MemLevel {
     MEM_LEVEL_MIN = 1,
     MEM_LEVEL_MAX = 9,
@@ -55,6 +60,7 @@ export default namespace zlib {
     memLevel?: MemLevel;
     strategy?: CompressStrategy;
     parallel?: ParallelStrategy;
+    pathSeparatorStrategy?: PathSeparatorStrategy;
   }
 
   class OptionsInner implements Options {
@@ -62,6 +68,7 @@ export default namespace zlib {
     memLevel?: MemLevel | undefined;
     strategy?: CompressStrategy | undefined;
     parallel?: ParallelStrategy | undefined;
+    pathSeparatorStrategy?: PathSeparatorStrategy | undefined;
   }
 
   export function compressFile(inFile: string, outFile: string, options: Options, callback: AsyncCallback<void>): void {

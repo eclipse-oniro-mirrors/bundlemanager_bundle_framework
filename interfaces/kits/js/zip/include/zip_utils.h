@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -103,6 +103,13 @@ using PARALLEL_STRATEGY = enum ParallelStrategy;
 enum MemoryLevel { MEM_LEVEL_MIN_MEMLEVEL = 1, MEM_LEVEL_DEFAULT_MEMLEVEL = 8, MEM_LEVEL_MAX_MEMLEVEL = 9 };
 using MEMORY_LEVEL = enum MemoryLevel;
 
+// Path Separator Strategy
+enum PathSeparatorStrategy {
+    PATH_SEPARATOR_STRATEGY_DEFAULT = 0,
+    PATH_SEPARATOR_STRATEGY_REPLACE_BACKSLASH = 1
+};
+using PATH_SEPARATOR_STRATEGY = enum PathSeparatorStrategy;
+
 // Compression Options
 struct Options {
     FLUSH_TYPE flush;
@@ -114,6 +121,7 @@ struct Options {
     MEMORY_LEVEL memLevel;  // Internal compression status, how much memory should be allocated
     COMPRESS_STRATEGY strategy;  // CompressStrategy
     PARALLEL_STRATEGY parallel;  // ParallelStrategy
+    PATH_SEPARATOR_STRATEGY pathSeparatorStrategy;  // PathSeparatorStrategy
 
     // default constructor
     Options()
@@ -131,6 +139,7 @@ struct Options {
         memLevel = MEM_LEVEL_DEFAULT_MEMLEVEL;
         strategy = COMPRESS_STRATEGY_DEFAULT_STRATEGY;
         parallel = PARALLEL_STRATEGY_SEQUENTIAL;
+        pathSeparatorStrategy = PATH_SEPARATOR_STRATEGY_DEFAULT;
     }
 };
 using OPTIONS = struct Options;

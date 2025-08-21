@@ -241,10 +241,10 @@ bool Zips(const ZipParams &params, const OPTIONS &options)
 }
 
 ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir, WriterFactory writerFactory,
-    DirectoryCreator directoryCreator, UnzipParam &unzipParam)
+    DirectoryCreator directoryCreator, UnzipParam &unzipParam, bool needChangePathSeparator)
 {
     APP_LOGD("destDir=%{private}s", destDir.Value().c_str());
-    ZipReader reader;
+    ZipReader reader(needChangePathSeparator);
     if (!reader.OpenFromPlatformFile(srcFile)) {
         APP_LOGI("Failed to open srcFile");
         return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
@@ -291,10 +291,10 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
 }
 
 ErrCode UnzipWithFilterAndWritersParallel(const FilePath &srcFile, FilePath &destDir, WriterFactory writerFactory,
-    DirectoryCreator directoryCreator, UnzipParam &unzipParam)
+    DirectoryCreator directoryCreator, UnzipParam &unzipParam, bool needChangePathSeparator)
 {
     APP_LOGD("destDir=%{private}s", destDir.Value().c_str());
-    ZipParallelReader reader;
+    ZipParallelReader reader(needChangePathSeparator);
     FilePath src = srcFile;
 
     if (!reader.Open(src)) {
@@ -387,12 +387,17 @@ ErrCode UnzipWithFilterCallback(
     }
 
     ErrCode ret = ERR_OK;
+    bool needChangePathSeparator = false;
+    if (options.pathSeparatorStrategy == PathSeparatorStrategy::PATH_SEPARATOR_STRATEGY_REPLACE_BACKSLASH) {
+        needChangePathSeparator = true;
+    }
     if (options.parallel == PARALLEL_STRATEGY_PARALLEL_DECOMPRESSION) {
         ret = UnzipWithFilterAndWritersParallel(src,
             dest,
             std::bind(&CreateFilePathWriterDelegate, std::placeholders::_1, std::placeholders::_2),
             std::bind(&CreateDirectory, std::placeholders::_1, std::placeholders::_2),
-            unzipParam);
+            unzipParam,
+            needChangePathSeparator);
     } else {
         PlatformFile zipFd = open(src.Value().c_str(), S_IREAD, O_CREAT);
         if (zipFd == kInvalidPlatformFile) {
@@ -403,7 +408,8 @@ ErrCode UnzipWithFilterCallback(
             dest,
             std::bind(&CreateFilePathWriterDelegate, std::placeholders::_1, std::placeholders::_2),
             std::bind(&CreateDirectory, std::placeholders::_1, std::placeholders::_2),
-            unzipParam);
+            unzipParam,
+            needChangePathSeparator);
         close(zipFd);
     }
     return ret;

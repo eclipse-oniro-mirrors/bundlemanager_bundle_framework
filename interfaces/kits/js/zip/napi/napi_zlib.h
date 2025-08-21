@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -83,6 +83,16 @@ napi_value CompressStrategyInit(napi_env env, napi_value exports);
  * @return The return value from Init is treated as the exports object for the module.
  */
 napi_value ParallelStrategyInit(napi_env env, napi_value exports);
+
+/**
+ * @brief PathSeparatorStrategy data initialization.
+ *
+ * @param env The environment that the Node-API call is invoked under.
+ * @param exports An empty object via the exports parameter as a convenience.
+ *
+ * @return The return value from Init is treated as the exports object for the module.
+ */
+napi_value PathSeparatorStrategyInit(napi_env env, napi_value exports);
 
 /**
  * @brief MemLevel data initialization.

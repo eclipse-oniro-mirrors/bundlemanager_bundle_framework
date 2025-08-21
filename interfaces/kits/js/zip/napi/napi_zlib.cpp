@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -91,6 +91,14 @@ enum ReturnStatus {
     if (!(mem == MEM_LEVEL_MIN_MEMLEVEL || mem == MEM_LEVEL_DEFAULT_MEMLEVEL || mem == MEM_LEVEL_MAX_MEMLEVEL)) { \
         APP_LOGE("memLevel parameter =[%{public}d] value is incorrect", static_cast<int>(mem));                   \
         return ret;                                                                                               \
+    }
+
+#define PATH_SEPARATOR_STRATEGY_CHECK(path_separator, false)                          \
+    if (!((path_separator) == PATH_SEPARATOR_STRATEGY_DEFAULT ||                      \
+            (path_separator) == PATH_SEPARATOR_STRATEGY_REPLACE_BACKSLASH)) {         \
+        APP_LOGE("pathSeparatorStrategy parameter =[%{public}d] value is incorrect",  \
+            static_cast<int>(path_separator));                                        \
+        return ret;                                                                   \
     }
 
 void CompressExcute(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo);
@@ -263,6 +271,32 @@ napi_value ParallelStrategyInit(napi_env env, napi_value exports)
 
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("ParallelStrategy", parallelStrategy),
+    };
+    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
+
+    return exports;
+}
+/**
+ * @brief PathSeparatorStrategy data initialization.
+ *
+ * @param env The environment that the Node-API call is invoked under.
+ * @param exports An empty object via the exports parameter as a convenience.
+ *
+ * @return The return value from Init is treated as the exports object for the module.
+ */
+napi_value PathSeparatorStrategyInit(napi_env env, napi_value exports)
+{
+    const int PATH_SEPARATOR_STRATEGY_DEFAULT = 0;
+    const int PATH_SEPARATOR_STRATEGY_REPLACE_BACKSLASH = 1;
+
+    napi_value pathSeparatorStrategy = nullptr;
+    napi_create_object(env, &pathSeparatorStrategy);
+    SetNamedProperty(env, pathSeparatorStrategy, "PATH_SEPARATOR_STRATEGY_DEFAULT", PATH_SEPARATOR_STRATEGY_DEFAULT);
+    SetNamedProperty(env, pathSeparatorStrategy, "PATH_SEPARATOR_STRATEGY_REPLACE_BACKSLASH",
+        PATH_SEPARATOR_STRATEGY_REPLACE_BACKSLASH);
+
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_PROPERTY("PathSeparatorStrategy", pathSeparatorStrategy),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
 
@@ -568,6 +602,11 @@ bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
             if (UnwrapIntValue(env, jsProValue, ret)) {
                 PARALLEL_STRATEGY_CHECK(ret, false)
                 options.parallel = static_cast<PARALLEL_STRATEGY>(ret);
+            }
+        } else if (strProName == std::string("pathSeparatorStrategy")) {
+            if (UnwrapIntValue(env, jsProValue, ret)) {
+                PATH_SEPARATOR_STRATEGY_CHECK(ret, false)
+                options.pathSeparatorStrategy = static_cast<PATH_SEPARATOR_STRATEGY>(ret);
             }
         }
     }
