@@ -1098,6 +1098,30 @@ static void EnableDynamicIconNative(ani_env* env, ani_string aniBundleName, ani_
     }
 }
 
+static void CleanBundleCacheFilesForSelfNative(ani_env* env)
+{
+    APP_LOGD("ani CleanBundleCacheFilesForSelf called");
+    OHOS::sptr<CleanCacheCallback> cleanCacheCallback = new (std::nothrow) CleanCacheCallback();
+    if (cleanCacheCallback == nullptr) {
+        APP_LOGE("CleanCacheCallback is nullptr");
+        return;
+    }
+    
+    ErrCode ret = BundleManagerHelper::InnerCleanBundleCacheForSelfCallback(cleanCacheCallback);
+    if (ret == ERR_OK) {
+        // wait for OnCleanCacheFinished
+        APP_LOGI("ani clean wait");
+        if (cleanCacheCallback->WaitForCompletion()) {
+            ret = cleanCacheCallback->GetErr() ? ERR_OK : ERROR_BUNDLE_SERVICE_EXCEPTION;
+        } else {
+            ret = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        }
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("CleanBundleCacheFilesForSelf failed ret: %{public}d", ret);
+    }
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -1147,6 +1171,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "queryAbilityInfoWithWantsNative", nullptr,
             reinterpret_cast<void*>(QueryAbilityInfoWithWantsNative) },
         ani_native_function { "enableDynamicIconNative", nullptr, reinterpret_cast<void*>(EnableDynamicIconNative) },
+        ani_native_function { "cleanBundleCacheFilesForSelfNative", nullptr,
+            reinterpret_cast<void*>(CleanBundleCacheFilesForSelfNative) },
     };
 
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
