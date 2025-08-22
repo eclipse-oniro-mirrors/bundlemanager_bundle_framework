@@ -2695,10 +2695,8 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     }
 
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_EXISTED_START);
-
     result = CheckArkProfileDir(newInfo, oldInfo);
     CHECK_RESULT(result, "CheckArkProfileDir failed %{public}d");
-
     auto hnpPackageOldInfos = oldInfo.GetInnerModuleInfoHnpInfo(oldInfo.GetCurModuleName());
     auto hnpPackageNewInfos = newInfo.GetInnerModuleInfoHnpInfo(newInfo.GetCurModuleName());
     if (hnpPackageOldInfos) {
