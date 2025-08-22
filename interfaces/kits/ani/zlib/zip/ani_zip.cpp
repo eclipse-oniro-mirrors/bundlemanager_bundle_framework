@@ -48,13 +48,16 @@ struct InOutDesc {
 };
 } // namespace
 
-static bool GetNativeZStream(ani_env* env, ani_object instance, z_streamp& zStream, const int throws)
+static bool GetNativeZStream(ani_env* env, ani_object instance, z_streamp& zStream, const int errCode)
 {
+    CHECK_PARAM_NULL_THROW_RETURN(env, errCode, false);
+    CHECK_PARAM_NULL_THROW_RETURN(instance, errCode, false);
+
     ani_long longValue = 0;
     ani_status status = env->Object_GetFieldByName_Long(instance, FIELD_NAME_NATIVEZSTREAM, &longValue);
     if (status != ANI_OK) {
         APP_LOGE("Object_GetFieldByName_Long failed %{public}d", status);
-        AniZLibCommon::ThrowZLibNapiError(env, throws);
+        AniZLibCommon::ThrowZLibNapiError(env, errCode);
         return false;
     }
 
@@ -64,6 +67,9 @@ static bool GetNativeZStream(ani_env* env, ani_object instance, z_streamp& zStre
 
 static bool SetNativeZStream(ani_env* env, ani_object instance, const z_streamp zStream)
 {
+    CHECK_PARAM_NULL_RETURN(env, false);
+    CHECK_PARAM_NULL_RETURN(instance, false);
+
     ani_status status =
         env->Object_SetFieldByName_Long(instance, FIELD_NAME_NATIVEZSTREAM, reinterpret_cast<ani_long>(zStream));
     if (status != ANI_OK) {
@@ -71,14 +77,14 @@ static bool SetNativeZStream(ani_env* env, ani_object instance, const z_streamp 
         return false;
     }
     ani_class cls = CommonFunAni::CreateClassByName(env, CLASS_NAME_ZIPINTERNAL);
-    RETURN_FALSE_IF_NULL(cls);
+    CHECK_PARAM_NULL_RETURN(cls, false);
     ani_method method = nullptr;
     status = env->Class_FindMethod(cls, METHOD_NAME_REGISTERZIPCLEANER, ":", &method);
     if (status != ANI_OK) {
         APP_LOGE("Class_FindMethod failed %{public}d", status);
         return false;
     }
-    RETURN_FALSE_IF_NULL(method);
+    CHECK_PARAM_NULL_RETURN(method, false);
     status = env->Object_CallMethod_Void(instance, method);
     if (status != ANI_OK) {
         APP_LOGE("Object_CallMethod_Void failed %{public}d", status);
@@ -89,6 +95,9 @@ static bool SetNativeZStream(ani_env* env, ani_object instance, const z_streamp 
 
 static bool SetZStream(ani_env* env, ani_object instance, ani_object aniStrm, z_streamp& zStream)
 {
+    CHECK_PARAM_NULL_RETURN(env, false);
+    CHECK_PARAM_NULL_RETURN(instance, false);
+
     z_stream zs = {};
     LIBZIP::HasZStreamMember hasZStreamMember;
     if (!AniZLibCommon::ParseZStream(env, aniStrm, hasZStreamMember, zs)) {
@@ -98,7 +107,7 @@ static bool SetZStream(ani_env* env, ani_object instance, ani_object aniStrm, z_
     }
 
     if (zStream == nullptr) {
-        zStream = new (std::nothrow)z_stream();
+        zStream = new (std::nothrow)z_stream(zs);
         if (zStream == nullptr) {
             APP_LOGE("create zStream failed");
             return false;
@@ -141,10 +150,10 @@ static bool SetZStream(ani_env* env, ani_object instance, ani_object aniStrm, z_
 static unsigned InFunc(void* inDesc, unsigned char** buf)
 {
     InOutDesc* in = static_cast<InOutDesc*>(inDesc);
-    if (in == nullptr) {
-        APP_LOGE("The in function callback is nullptr");
-        return 0;
-    }
+    CHECK_PARAM_NULL_RETURN(in, 0);
+    CHECK_PARAM_NULL_RETURN(in->env, 0);
+    CHECK_PARAM_NULL_RETURN(in->func, 0);
+    CHECK_PARAM_NULL_RETURN(in->desc, 0);
 
     std::vector<ani_ref> callbackArgs = { in->desc };
     ani_ref result = nullptr;
@@ -169,10 +178,10 @@ static unsigned InFunc(void* inDesc, unsigned char** buf)
 static int32_t OutFunc(void* outDesc, unsigned char* buf, unsigned len)
 {
     InOutDesc* out = static_cast<InOutDesc*>(outDesc);
-    if (out == nullptr) {
-        APP_LOGE("The out function callback is nullptr");
-        return -1;
-    }
+    CHECK_PARAM_NULL_RETURN(out, -1);
+    CHECK_PARAM_NULL_RETURN(out->env, -1);
+    CHECK_PARAM_NULL_RETURN(out->func, -1);
+    CHECK_PARAM_NULL_RETURN(out->desc, -1);
 
     void* data = nullptr;
     ani_arraybuffer buffer = nullptr;
