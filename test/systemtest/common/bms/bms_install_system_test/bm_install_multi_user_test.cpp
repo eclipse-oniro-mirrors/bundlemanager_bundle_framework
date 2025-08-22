@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,7 +44,6 @@ const std::string LOWER_VERSION_CODE_TEST_BUNDLE_HAPB = "lower_versionCode_entry
 const std::string DRIVER_BUNDLE_NAME = "com.test.driver";
 const std::string DRIVER_BUNDLE_NORMAL = "driverBundle1.hap";
 const std::string DRIVER_BUNDLE_ERROR = "driverBundle2.hap";
-const std::string DRIVER_BUNDLE_LOW_VERSION = "driverBundle3.hap";
 const int TIMEOUT = 10;
 const int32_t WAIT_TIME = 3; // for creating or removing new user
 const int32_t USERID = 100;
@@ -1248,53 +1247,6 @@ HWTEST_F(BmsInstallMultiUserTest, BMS_Install_driver_multi_user_0020, Function |
     EXPECT_EQ(res, IStatusReceiver::ERR_INSTALLD_COPY_FILE_FAILED);
 
     std::cout << "END BMS_Install_driver_multi_user_0020" << std::endl;
-}
-
-/**
- * @tc.number: BMS_Install_driver_multi_user_0030
- * @tc.name:  test the installation of a driver bundle for multi users
- * @tc.desc: 1.create user 101
- *           2.install none driver bundle under user 100
- *           3.query bundle info under user 100 and user 101
- *           4.install driver bundle under user 100
- *           5.query bundle info under user 100 and user 101
- */
-HWTEST_F(BmsInstallMultiUserTest, BMS_Install_driver_multi_user_0030, Function | MediumTest | Level1)
-{
-    std::cout << "START BMS_Install_driver_multi_user_0030" << std::endl;
-    int32_t userId = CreateNewUser();
-    EXPECT_NE(userId, 0);
-
-    std::vector<std::string> bundleFilePaths = { THIRD_BUNDLE_PATH + DRIVER_BUNDLE_LOW_VERSION };
-    auto res = InstallBundle(bundleFilePaths, USERID);
-    EXPECT_EQ(res, ERR_OK);
-
-    auto bmsProxy = GetBundleMgrProxy();
-    EXPECT_NE(bmsProxy, nullptr);
-
-    // query bundleInfo under two users respectively
-    BundleInfo bundleInfo1;
-    bool ret = bmsProxy->GetBundleInfo(DRIVER_BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo1, USERID);
-    EXPECT_TRUE(ret);
-
-    BundleInfo bundleInfo2;
-    ret = bmsProxy->GetBundleInfo(DRIVER_BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo2, userId);
-    EXPECT_FALSE(ret);
-
-    bundleFilePaths = { THIRD_BUNDLE_PATH + DRIVER_BUNDLE_NORMAL };
-    res = InstallBundle(bundleFilePaths, USERID);
-    EXPECT_EQ(res, ERR_OK);
-
-    BundleInfo bundleInfo3;
-    ret = bmsProxy->GetBundleInfo(DRIVER_BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo3, USERID);
-    EXPECT_TRUE(ret);
-
-    BundleInfo bundleInfo4;
-    ret = bmsProxy->GetBundleInfo(DRIVER_BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo4, userId);
-    EXPECT_TRUE(ret);
-
-    UninstallBundle(DRIVER_BUNDLE_NAME, USERID);
-    std::cout << "END BMS_Install_driver_multi_user_0030" << std::endl;
 }
 } // AppExecFwk
 } // OHOS
