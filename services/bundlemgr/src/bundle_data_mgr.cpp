@@ -4299,7 +4299,7 @@ ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
     int32_t appIndex = 0;
     ErrCode ret = GetBundleNameAndIndex(uid, name, appIndex);
     if (ret != ERR_OK) {
-        LOG_NOFUNC_W(BMS_TAG_COMMON, "uid(%{public}d) invalid", uid);
+        APP_LOGD("uid(%{public}d) invalid", uid);
         return ret;
     }
     APP_LOGD("GetBundleNameForUid, uid %{public}d, bundleName %{public}s, appIndex %{public}d",
@@ -11042,7 +11042,7 @@ ErrCode BundleDataMgr::SetShortcutVisibleForSelf(const std::string &shortcutId, 
     std::string bundleName;
     auto ret = GetBundleNameAndIndex(uid, bundleName, appIndex);
     if (ret != ERR_OK) {
-        APP_LOGE("get inner bundle info failed");
+        APP_LOGE("get bundleName failed uid %{public}d", uid);
         return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
     int32_t userId = GetUserIdByCallingUid();

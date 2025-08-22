@@ -864,7 +864,7 @@ ErrCode AppServiceFwkInstaller::ProcessBundleUpdateStatus(InnerBundleInfo &oldIn
     // 1. bundle exist, module exist, update module
     // 2. bundle exist, install new hsp
     bool isModuleExist = oldInfo.FindModule(moduleName);
-    APP_LOGI("module %{public}s isModuleExist %{public}d", moduleName.c_str(), isModuleExist);
+    APP_LOGI_NOFUNC("app service module %{public}s isModuleExist %{public}d", moduleName.c_str(), isModuleExist);
 
     auto result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo, hspPath, installParam) :
         ProcessNewModuleInstall(newInfo, oldInfo, hspPath, installParam);

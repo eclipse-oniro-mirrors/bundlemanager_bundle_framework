@@ -786,7 +786,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    LOG_I(BMS_TAG_INSTALLER, "-n %{public}s -u %{public}d -f %{public}hhd isAppExist:%{public}d",
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER,
+        "InnerProcessBundleInstall -n %{public}s -u %{public}d -f %{public}hhd isAppExist:%{public}d",
         bundleName_.c_str(), userId_, installParam.installFlag, isAppExist_);
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_NULL_PTR;
@@ -5705,7 +5706,7 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         }
     }
 
-    LOG_I(BMS_TAG_INSTALLER, "extract module %{public}s targetSo %{public}s abi:%{public}s compress %{public}d",
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "extract module %{public}s targetSo %{public}s abi:%{public}s compress %{public}d",
         modulePath.c_str(), targetSoPath.c_str(), cpuAbi.c_str(), isCompressNativeLibrary);
     std::string signatureFileDir = "";
     auto ret = FindSignatureFileDir(info.GetCurModuleName(), signatureFileDir);
@@ -5878,7 +5879,7 @@ void BaseBundleInstaller::RemoveOldHapIfOTA(const InstallParam &installParam,
         if (oldHapPath == newHapPath || oldHapPath.find(Constants::BUNDLE_CODE_DIR) == std::string::npos) {
             continue;
         }
-        LOG_W(BMS_TAG_INSTALLER, "remove old hap %{public}s", oldHapPath.c_str());
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "remove old hap %{public}s", oldHapPath.c_str());
         if (InstalldClient::GetInstance()->RemoveDir(oldHapPath) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove old hap failed, errno: %{public}d", errno);
         }
@@ -6048,7 +6049,7 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
 ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos,
     const InnerBundleInfo &oldInfo, bool isHapCopied)
 {
-    LOG_I(BMS_TAG_INSTALLER, "begin");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CheckHapEncryption begin");
     InnerBundleInfo newInfo;
     if (!GetTempBundleInfo(newInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
@@ -6093,7 +6094,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         LOG_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed");
         return ERR_APPEXECFWK_SET_INSTALL_TEMP_BUNDLE_ERROR;
     }
-    LOG_I(BMS_TAG_INSTALLER, "end");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CheckHapEncryption end");
     return ERR_OK;
 }
 
@@ -6222,7 +6223,7 @@ ErrCode BaseBundleInstaller::FinalProcessHapAndSoForBundleUpdate(
     }
     if (needDeleteOldLibraryPath) {
         // move so file from temp dir to real installation dir
-        LOG_I(BMS_TAG_INSTALLER, "-n %{public}s process so start", bundleName.c_str());
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "-n %{public}s process so start", bundleName.c_str());
         std::string nativeLibraryPath = "";
         for (const auto &info : infos) {
             if (info.second.GetNativeLibraryPath().empty() ||
@@ -6247,7 +6248,7 @@ ErrCode BaseBundleInstaller::FinalProcessHapAndSoForBundleUpdate(
                 return result;
             }
         }
-        LOG_I(BMS_TAG_INSTALLER, "-n %{public}s process so end", bundleName.c_str());
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "-n %{public}s process so end", bundleName.c_str());
     }
     return ERR_OK;
 }
@@ -6271,7 +6272,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
     for (const auto &info : infos) {
         if (info.second.IsLibIsolated(info.second.GetCurModuleName()) ||
             !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
-            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "-n %{public}s so files are isolated or decompressed no necessary to move",
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "-n %{public}s so isolated or decompressed no necessary to move",
                 bundleName.c_str());
             continue;
         }
@@ -6855,7 +6856,7 @@ ErrCode BaseBundleInstaller::CreateArkStartupCache(const ArkStartupCache &create
     std::unordered_set<std::string> startupBundles;
     BundleParser::ParseArkStartupCacheConfig(ServiceConstants::APP_STARTUP_CACHE_CONG, startupBundles);
     if (startupBundles.find(createArk.bundleName) == startupBundles.end()) {
-        LOG_W(BMS_TAG_INSTALLER, "%{public}s is not in startupBundles", createArk.bundleName.c_str());
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s is not in startupBundles", createArk.bundleName.c_str());
         return ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST;
     }
     
@@ -7717,7 +7718,7 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
         CHECK_RESULT(result, "rename temp dirs failed with result %{public}d");
         return result;
     }
-    LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s processBundleCodePath start", bundleName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBundleCodePath start -n %{public}s", bundleName.c_str());
     // rename real code path to +old- code path
     std::string realAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         bundleName;
@@ -7757,7 +7758,7 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     if (result != ERR_OK) {
         APP_LOGE("copy extend resource to install path failed %{public}d", result);
     }
-    LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s processBundleCodePath end", bundleName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBundleCodePath end -n %{public}s", bundleName.c_str());
     return ERR_OK;
 }
 
@@ -7806,7 +7807,7 @@ void BaseBundleInstaller::ProcessOldCodePath(
     if (!isBundleUpdate) {
         return;
     }
-    LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s ProcessOldCodePath start", bundleName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessOldCodePath start -n %{public}s", bundleName.c_str());
     InstallExceptionInfo exceptionInfo;
     exceptionInfo.status = InstallRenameExceptionStatus::DELETE_OLD_PATH;
     ErrCode result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->SaveBundleExceptionInfo(bundleName,
@@ -7827,7 +7828,7 @@ void BaseBundleInstaller::ProcessOldCodePath(
         LOG_W(BMS_TAG_INSTALLER, "delete bundle %{public}s exception error is %{public}d",
             bundleName.c_str(), result);
     }
-    LOG_I(BMS_TAG_INSTALLER, "bundle %{public}s ProcessOldCodePath end", bundleName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessOldCodePath end -n %{public}s", bundleName.c_str());
 }
 
 void BaseBundleInstaller::RollbackCodePath(const std::string &bundleName, bool isBundleUpdate)
