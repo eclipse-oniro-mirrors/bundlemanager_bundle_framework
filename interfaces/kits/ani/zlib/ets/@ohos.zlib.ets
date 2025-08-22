@@ -24,6 +24,18 @@ export default namespace zlib {
 
   loadLibrary("ani_zlib.z");
 
+  const MIN_ASCII: int = 0;
+  const MAX_ASCII: int = 255;
+  const ERROR_PARAM_CHECK_ERROR: int = 401;
+  const PARAM_CHECK_FAILED: string = 'The parameter check failed';
+  function createBusinessError(code: int, message: string) {
+    let err = new BusinessError();
+    err.code = code;
+    err.name = 'Error';
+    err.message = message;
+    return err;
+  }
+
   export enum CompressLevel {
     COMPRESS_LEVEL_NO_COMPRESSION = 0,
     COMPRESS_LEVEL_BEST_SPEED = 1,
@@ -104,7 +116,7 @@ export default namespace zlib {
         this.statusMsg = statusMsg;
     }
   }
-  
+
   export function compressFile(inFile: string, outFile: string, options: Options, callback: AsyncCallback<void>): void {
     let execFun = (): void => {
       zlib.compressFileNative(inFile, outFile, options);
@@ -187,13 +199,13 @@ export default namespace zlib {
   }
 
   export class ChecksumInternal implements Checksum {
-    public native adler32Native(adler: long, buf: ArrayBuffer): long;
-    public native adler32CombineNative(adler1: long, adler2: long, len2: long): long;
-    public native crc32Native(crc: long, buf: ArrayBuffer): long;
-    public native crc32CombineNative(crc1: long, crc2: long, len2: long): long;
-    public native crc64Native(crc: long, buf: ArrayBuffer): long;
-    public native getCrcTableNative(): Array<long>;
-    public native getCrc64TableNative(): Array<long>;
+    private native adler32Native(adler: long, buf: ArrayBuffer): long;
+    private native adler32CombineNative(adler1: long, adler2: long, len2: long): long;
+    private native crc32Native(crc: long, buf: ArrayBuffer): long;
+    private native crc32CombineNative(crc1: long, crc2: long, len2: long): long;
+    private native crc64Native(crc: long, buf: ArrayBuffer): long;
+    private native getCrcTableNative(): Array<long>;
+    private native getCrc64TableNative(): Array<long>;
 
     public adler32(adler: long, buf: ArrayBuffer): Promise<long> {
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
@@ -212,6 +224,9 @@ export default namespace zlib {
     }
 
     public adler32Combine(adler1: long, adler2: long, len2: long): Promise<long> {
+      if (len2 < 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.adler32CombineNative(adler1, adler2, len2);
@@ -244,6 +259,9 @@ export default namespace zlib {
     }
 
     public crc32Combine(crc1: long, crc2: long, len2: long): Promise<long> {
+      if (len2 < 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.crc32CombineNative(crc1, crc2, len2);
@@ -338,34 +356,35 @@ export default namespace zlib {
   }
 
   export class GZipInternal implements GZip {
-    nativeGZFile : long = 0;
+    @JSONStringifyIgnore
+    private nativeGZFile : long = 0;
     
-    public native gzdopenNative(fd: int, mode: string): void;
-    public native gzbufferNative(size: long): int;
-    public native gzopenNative(path: string, mode: string): void;
-    public native gzeofNative(): int;
-    public native gzdirectNative(): int;
-    public native gzcloseNative(): ReturnStatus;
-    public native gzclearerrNative(): void;
-    public native gzerrorNative(): GzErrorOutputInfo;
-    public native gzgetcNative(): int;
-    public native gzflushNative(flush: CompressFlushMode): ReturnStatus;
-    public native gzfwriteNative(buf: ArrayBuffer, size: long, nitems: long): long;
-    public native gzfreadNative(buf: ArrayBuffer, size: long, nitems: long): long;
-    public native gzclosewNative(): ReturnStatus;
-    public native gzcloserNative(): ReturnStatus;
-    public native gzwriteNative(buf: ArrayBuffer, len: long): long;
-    public native gzungetcNative(c: int): int;
-    public native gztellNative(): long;
-    public native gzsetparamsNative(level: CompressLevel, strategy: CompressStrategy): ReturnStatus;
-    public native gzseekNative(offset: long, whence: OffsetReferencePoint): long;
-    public native gzrewindNative(): ReturnStatus;
-    public native gzreadNative(buf: ArrayBuffer): long;
-    public native gzputsNative(str: string): int;
-    public native gzputcNative(c: int): int;
-    public native gzprintfNative(format: string, ...args: Array<string | number>): int;
-    public native gzoffsetNative(): long;
-    public native gzgetsNative(buf: ArrayBuffer): string;
+    private native gzdopenNative(fd: int, mode: string): void;
+    private native gzbufferNative(size: long): int;
+    private native gzopenNative(path: string, mode: string): void;
+    private native gzeofNative(): int;
+    private native gzdirectNative(): int;
+    private native gzcloseNative(): ReturnStatus;
+    private native gzclearerrNative(): void;
+    private native gzerrorNative(): GzErrorOutputInfo;
+    private native gzgetcNative(): int;
+    private native gzflushNative(flush: CompressFlushMode): ReturnStatus;
+    private native gzfwriteNative(buf: ArrayBuffer, size: long, nitems: long): long;
+    private native gzfreadNative(buf: ArrayBuffer, size: long, nitems: long): long;
+    private native gzclosewNative(): ReturnStatus;
+    private native gzcloserNative(): ReturnStatus;
+    private native gzwriteNative(buf: ArrayBuffer, len: long): long;
+    private native gzungetcNative(c: int): int;
+    private native gztellNative(): long;
+    private native gzsetparamsNative(level: CompressLevel, strategy: CompressStrategy): ReturnStatus;
+    private native gzseekNative(offset: long, whence: OffsetReferencePoint): long;
+    private native gzrewindNative(): ReturnStatus;
+    private native gzreadNative(buf: ArrayBuffer): long;
+    private native gzputsNative(str: string): int;
+    private native gzputcNative(c: int): int;
+    private native gzprintfNative(format: string, ...args: Array<string | number>): int;
+    private native gzoffsetNative(): long;
+    private native gzgetsNative(buf: ArrayBuffer): string;
 
     public gzdopen(fd: int, mode: string): Promise<void> {
       let p: Promise<void> = new Promise<void>((resolve: (v:PromiseLike<void>) => void, reject: (error: Error) => void) : void => {
@@ -525,6 +544,9 @@ export default namespace zlib {
     }
 
     public gzfwrite(buf: ArrayBuffer, size: long, nitems: long): Promise<long> {
+      if (buf.byteLength == 0 || size < 0 || nitems < 0 || BigInt(buf.byteLength) < BigInt(size) * BigInt(nitems)) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.gzfwriteNative(buf, size, nitems);
@@ -541,6 +563,9 @@ export default namespace zlib {
     }
 
     public gzfread(buf: ArrayBuffer, size: long, nitems: long): Promise<long> {
+      if (buf.byteLength == 0 || size < 0 || nitems < 0 || BigInt(buf.byteLength) < BigInt(size) * BigInt(nitems)) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.gzfreadNative(buf, size, nitems);
@@ -589,6 +614,9 @@ export default namespace zlib {
     }
 
     public gzwrite(buf: ArrayBuffer, len: long): Promise<long> {
+      if (buf.byteLength == 0 || len > (buf.byteLength as long)) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.gzwriteNative(buf, len);
@@ -605,6 +633,9 @@ export default namespace zlib {
     }
 
     public gzungetc(c: int): Promise<int> {
+      if (c < MIN_ASCII || c > MAX_ASCII) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<int> = new Promise<int>((resolve: (v:int) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): int => {
           return this.gzungetcNative(c);
@@ -685,6 +716,9 @@ export default namespace zlib {
     }
 
     public gzread(buf: ArrayBuffer): Promise<long> {
+      if (buf.byteLength == 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.gzreadNative(buf);
@@ -717,6 +751,9 @@ export default namespace zlib {
     }
 
     public gzputc(c: int): Promise<int> {
+      if (c < MIN_ASCII || c > MAX_ASCII) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<int> = new Promise<int>((resolve: (v:int) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): int => {
           return this.gzputcNative(c);
