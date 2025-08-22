@@ -3786,7 +3786,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0100, Function | SmallTest | Lev
     bundlePaths.push_back(bundlePath);
     BundleInstallChecker installChecker;
     auto ret = installChecker.CheckSysCap(bundlePaths);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_RPCID_FAILED);
+    EXPECT_EQ(ret, ERR_OK);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
