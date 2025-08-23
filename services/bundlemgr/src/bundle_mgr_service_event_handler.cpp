@@ -2163,6 +2163,12 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 bundleName.c_str());
             continue;
         }
+        if (!hasBundleInstalled && scanPathIter.find(ServiceConstants::PRELOAD_APP_DIR) == 0 &&
+            dataMgr->GetAllUser().size() > USER_ID_SIZE) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "app(%{public}s) is new preload app and do not need OTA install",
+                bundleName.c_str());
+            continue;
+        }
         std::vector<int32_t> currentBundleUserIds;
         if (HotPatchAppProcessing(bundleName, hasInstalledInfo.versionCode, hapVersionCode, currentBundleUserIds)) {
             LOG_I(BMS_TAG_DEFAULT, "OTA Install prefab bundle(%{public}s) by path(%{public}s) for hotPatch upgrade",
