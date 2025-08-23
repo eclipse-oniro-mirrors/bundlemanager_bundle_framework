@@ -2267,7 +2267,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
             if (oldInfo.HasInnerBundleUserInfo(userId_)) {
                 LOG_E(BMS_TAG_INSTALLER, "App is exist in user(%{public}d)", userId_);
-                return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+                return ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME;
             }
 
             ErrCode ret = InstallNormalAppControl(oldInfo.GetAppId(), userId_, installParam.isPreInstallApp);
