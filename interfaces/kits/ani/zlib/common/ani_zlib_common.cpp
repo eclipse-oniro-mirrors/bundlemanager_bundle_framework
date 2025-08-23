@@ -235,6 +235,7 @@ bool ParseGzHeader(ani_env* env, ani_object object, gz_header& result)
 ani_object ConvertZStream(ani_env* env, const z_streamp zStream)
 {
     RETURN_NULL_IF_NULL(env);
+    RETURN_NULL_IF_NULL(zStream);
 
     // availableIn?: int
     ani_object availableIn = CommonFunAni::BoxValue(env, static_cast<ani_int>(zStream->avail_in));

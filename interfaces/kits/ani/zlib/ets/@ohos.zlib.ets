@@ -24,6 +24,22 @@ export default namespace zlib {
 
   loadLibrary("ani_zlib.z");
 
+  const MIN_ASCII: int = 0;
+  const MAX_ASCII: int = 255;
+  const MIN_WINDOWBITS: long = 8;
+  const MAX_WINDOWBITS: long = 15;
+  const MIN_BITS: int = 0;
+  const MAX_BITS: int = 16;
+  const ERROR_PARAM_CHECK_ERROR: int = 401;
+  const PARAM_CHECK_FAILED: string = 'The parameter check failed';
+  function createBusinessError(code: int, message: string) {
+    let err = new BusinessError();
+    err.code = code;
+    err.name = 'Error';
+    err.message = message;
+    return err;
+  }
+
   export enum CompressLevel {
     COMPRESS_LEVEL_NO_COMPRESSION = 0,
     COMPRESS_LEVEL_BEST_SPEED = 1,
@@ -352,6 +368,9 @@ export default namespace zlib {
     }
 
     public adler32Combine(adler1: long, adler2: long, len2: long): Promise<long> {
+      if (len2 < 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.adler32CombineNative(adler1, adler2, len2);
@@ -384,6 +403,9 @@ export default namespace zlib {
     }
 
     public crc32Combine(crc1: long, crc2: long, len2: long): Promise<long> {
+      if (len2 < 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.crc32CombineNative(crc1, crc2, len2);
@@ -666,6 +688,9 @@ export default namespace zlib {
     }
 
     public gzfwrite(buf: ArrayBuffer, size: long, nitems: long): Promise<long> {
+      if (buf.byteLength == 0 || size < 0 || nitems < 0 || BigInt(buf.byteLength) < BigInt(size) * BigInt(nitems)) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.gzfwriteNative(buf, size, nitems);
@@ -682,6 +707,9 @@ export default namespace zlib {
     }
 
     public gzfread(buf: ArrayBuffer, size: long, nitems: long): Promise<long> {
+      if (buf.byteLength == 0 || size < 0 || nitems < 0 || BigInt(buf.byteLength) < BigInt(size) * BigInt(nitems)) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.gzfreadNative(buf, size, nitems);
@@ -730,6 +758,9 @@ export default namespace zlib {
     }
 
     public gzwrite(buf: ArrayBuffer, len: long): Promise<long> {
+      if (buf.byteLength == 0 || len > (buf.byteLength as long)) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.gzwriteNative(buf, len);
@@ -746,6 +777,9 @@ export default namespace zlib {
     }
 
     public gzungetc(c: int): Promise<int> {
+      if (c < MIN_ASCII || c > MAX_ASCII) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<int> = new Promise<int>((resolve: (v:int) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): int => {
           return this.gzungetcNative(c);
@@ -826,6 +860,9 @@ export default namespace zlib {
     }
 
     public gzread(buf: ArrayBuffer): Promise<long> {
+      if (buf.byteLength == 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): long => {
           return this.gzreadNative(buf);
@@ -858,6 +895,9 @@ export default namespace zlib {
     }
 
     public gzputc(c: int): Promise<int> {
+      if (c < MIN_ASCII || c > MAX_ASCII) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p: Promise<int> = new Promise<int>((resolve: (v:int) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): int => {
           return this.gzputcNative(c);
@@ -1104,6 +1144,9 @@ export default namespace zlib {
     }
 
     public compress(dest: ArrayBuffer, source: ArrayBuffer, sourceLen?: long): Promise<ZipOutputInfo> {
+      if (sourceLen !== undefined && sourceLen < 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p = new Promise<ZipOutputInfo>((resolve: (v: ZipOutputInfo) => void, reject: (error: BusinessError) => void): void => {
         let execFun = (): ZipOutputInfo => {
           return sourceLen === undefined ? this.compressNative(dest, source) :
@@ -1121,6 +1164,9 @@ export default namespace zlib {
     }
 
     public compress2(dest: ArrayBuffer, source: ArrayBuffer, level: CompressLevel, sourceLen?: long,): Promise<ZipOutputInfo> {
+      if (sourceLen !== undefined && sourceLen < 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p = new Promise<ZipOutputInfo>((resolve: (v: ZipOutputInfo) => void, reject: (error: BusinessError) => void): void => {
         let execFun = (): ZipOutputInfo => {
           return sourceLen === undefined ? this.compress2Native(dest, source, level) :
@@ -1138,6 +1184,9 @@ export default namespace zlib {
     }
 
     public compressBound(sourceLen: int): Promise<int> {
+      if (sourceLen < 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p = new Promise<int>((resolve: (v: int) => void, reject: (error: BusinessError) => void): void => {
         let execFun = (): int => {
           return this.compressBoundNative(sourceLen);
@@ -1154,6 +1203,9 @@ export default namespace zlib {
     }
 
     public uncompress(dest: ArrayBuffer, source: ArrayBuffer, sourceLen?: long): Promise<ZipOutputInfo> {
+      if (sourceLen !== undefined && sourceLen < 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p = new Promise<ZipOutputInfo>((resolve: (v: ZipOutputInfo) => void, reject: (error: BusinessError) => void): void => {
         let execFun = (): ZipOutputInfo => {
           return sourceLen === undefined ? this.uncompressNative(dest, source) :
@@ -1171,6 +1223,9 @@ export default namespace zlib {
     }
 
     public uncompress2(dest: ArrayBuffer, source: ArrayBuffer, sourceLen?: long): Promise<DecompressionOutputInfo> {
+      if (sourceLen !== undefined && sourceLen < 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p = new Promise<DecompressionOutputInfo>((resolve: (v: DecompressionOutputInfo) => void, reject: (error: BusinessError) => void): void => {
         let execFun = (): DecompressionOutputInfo => {
           return sourceLen === undefined ? this.uncompress2Native(dest, source) :
@@ -1444,6 +1499,9 @@ export default namespace zlib {
     }
 
     public inflateBackInit(strm: ZStream, windowBits: long, window: ArrayBuffer): Promise<ReturnStatus> {
+      if (windowBits < MIN_WINDOWBITS || windowBits > MAX_WINDOWBITS) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
         let execFun = (): ReturnStatus => {
           return this.inflateBackInitNative(strm, windowBits, window);
@@ -1572,6 +1630,9 @@ export default namespace zlib {
     }
 
     public deflateBound(strm: ZStream, sourceLength: long): Promise<int> {
+      if (sourceLength < 0) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p = new Promise<int>((resolve: (v: int) => void, reject: (error: BusinessError) => void): void => {
         let execFun = (): int => {
           return this.deflateBoundNative(strm, sourceLength);
@@ -1732,6 +1793,9 @@ export default namespace zlib {
     }
 
     public deflatePrime(strm: ZStream, bits: int, value: int): Promise<ReturnStatus> {
+      if (bits < MIN_BITS || bits > MAX_BITS) {
+        throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_CHECK_FAILED);
+      }
       let p = new Promise<ReturnStatus>((resolve: (v: ReturnStatus) => void, reject: (error: BusinessError) => void): void => {
         let execFun = (): ReturnStatus => {
           return this.deflatePrimeNative(strm, bits, value);
