@@ -600,63 +600,7 @@ public:
     }
 
     template<typename valueType>
-    static bool CallSetter(ani_env* env, ani_class cls, ani_object object, const char* propertyName, valueType value,
-        const char* valueClassName = nullptr)
-    {
-        RETURN_FALSE_IF_NULL(env);
-        RETURN_FALSE_IF_NULL(cls);
-        RETURN_FALSE_IF_NULL(object);
-
-        std::string setterSig;
-        ani_value setterParam { };
-        if constexpr (std::is_same_v<valueType, ani_boolean>) {
-            setterSig = "z:";
-            setterParam.z = value;
-        } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
-                             std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
-            setterSig = "i:";
-            setterParam.i = static_cast<ani_int>(value);
-        } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
-            setterSig = "l:";
-            setterParam.l = static_cast<ani_long>(value);
-        } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
-                             std::is_same_v<valueType, uint64_t>) {
-            setterSig = "d:";
-            setterParam.d = static_cast<ani_double>(value);
-        } else if constexpr (std::is_pointer_v<valueType> &&
-                             std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
-            if constexpr (std::is_same_v<valueType, ani_string>) {
-                valueClassName = CommonFunAniNS::CLASSNAME_STRING;
-            }
-            if (valueClassName != nullptr) {
-                setterSig.append("C{");
-                setterSig.append(valueClassName);
-                setterSig.append("}:");
-            }
-            setterParam.r = value;
-        } else {
-            APP_LOGE("Classname %{public}s Unsupported", propertyName);
-            return false;
-        }
-
-        std::string setterName("<set>");
-        setterName.append(propertyName);
-        ani_method setter;
-        ani_status status =
-            env->Class_FindMethod(cls, setterName.c_str(), setterSig.empty() ? nullptr : setterSig.c_str(), &setter);
-        if (status != ANI_OK) {
-            APP_LOGE("Class_FindMethod %{public}s failed %{public}d", propertyName, status);
-            return false;
-        }
-
-        status = env->Object_CallMethod_Void_A(object, setter, &setterParam);
-        if (status != ANI_OK) {
-            APP_LOGE("Object_CallMethod_Void_A %{public}s failed %{public}d", propertyName, status);
-            return false;
-        }
-
-        return true;
-    }
+    static bool CallSetter(ani_env* env, ani_class cls, ani_object object, const char* propertyName, valueType value);
 
     template<typename valueType>
     static ani_object BoxValue(ani_env* env, valueType value, const char** pValueClassName = nullptr)
