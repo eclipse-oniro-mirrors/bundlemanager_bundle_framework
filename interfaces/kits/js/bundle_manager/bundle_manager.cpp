@@ -1626,12 +1626,27 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
             return nullptr;
         }
+        if (asyncCallbackInfo->bundleName.empty()) {
+            APP_LOGW("bundleName is empty");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+            return nullptr;
+        }
         if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], asyncCallbackInfo->moduleName)) {
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
             return nullptr;
         }
+        if (asyncCallbackInfo->moduleName.empty()) {
+            APP_LOGW("moduleName is empty");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
+            return nullptr;
+        }
         if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], asyncCallbackInfo->abilityName)) {
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
+            return nullptr;
+        }
+        if (asyncCallbackInfo->abilityName.empty()) {
+            APP_LOGW("abilityName is empty");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_ABILITYNAME_EMPTY_ERROR);
             return nullptr;
         }
         if (args.GetMaxArgc() == ARGS_SIZE_FOUR) {
@@ -1872,12 +1887,16 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
             }
         }
     }
+    if (asyncCallbackInfo->bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
+    }
     if (callCloneFunc && (args.GetMaxArgc() == ARGS_SIZE_TWO)) {
         APP_LOGE("params are too few for clone app");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationEnableCallbackInfo>(
         env, asyncCallbackInfo, "SetApplicationEnabled", SetApplicationEnabledExec, SetApplicationEnabledComplete);
     callbackPtr.release();
@@ -4526,7 +4545,11 @@ napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
+    }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("iBundleMgr is null");
