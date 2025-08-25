@@ -574,7 +574,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GetInnerBundleInfo_0010, Function 
 
     InnerBundleInfo info;
     bool isAppExist;
-    auto res = appServiceFwkInstaller.GetInnerBundleInfoWithDisable(info, isAppExist);
+    auto res = appServiceFwkInstaller.FetchInnerBundleInfo(info, isAppExist);
     EXPECT_FALSE(isAppExist);
     EXPECT_TRUE(res);
 }
@@ -1062,7 +1062,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GetInnerBundleInfo_0020, Function 
     ClearDataMgr();
     InnerBundleInfo info;
     bool isAppExist;
-    auto res = appServiceFwkInstaller.GetInnerBundleInfoWithDisable(info, isAppExist);
+    auto res = appServiceFwkInstaller.FetchInnerBundleInfo(info, isAppExist);
     EXPECT_TRUE(res);
     ResetDataMgr();
 }

@@ -168,7 +168,7 @@ ErrCode AppServiceFwkInstaller::UnInstall(
         return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
     }
     InnerBundleInfo info;
-    if (!dataMgr_->GetInnerBundleInfoWithDisable(bundleName, info)) {
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, info)) {
         APP_LOGE("get bundle info for %{public}s failed", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
@@ -177,6 +177,7 @@ ErrCode AppServiceFwkInstaller::UnInstall(
         return UnInstall(bundleName);
     }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
+    dataMgr_->DisableBundle(bundleName);
     std::vector<std::string> installedModules;
     info.GetModuleNames(installedModules);
     if (std::find(installedModules.begin(), installedModules.end(), moduleName) == installedModules.end()) {
@@ -947,7 +948,7 @@ ErrCode AppServiceFwkInstaller::UninstallLowerVersion(const std::vector<std::str
     APP_LOGI_NOFUNC("start to uninstall lower version module");
     InnerBundleInfo info;
     bool isExist = false;
-    if (!GetInnerBundleInfoWithDisable(info, isExist) || !isExist) {
+    if (!FetchInnerBundleInfo(info, isExist) || !isExist) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
@@ -975,7 +976,7 @@ ErrCode AppServiceFwkInstaller::UninstallLowerVersion(const std::vector<std::str
     return ERR_OK;
 }
 
-bool AppServiceFwkInstaller::GetInnerBundleInfoWithDisable(InnerBundleInfo &info, bool &isAppExist)
+bool AppServiceFwkInstaller::FetchInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist)
 {
     if (dataMgr_ == nullptr) {
         dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -984,7 +985,7 @@ bool AppServiceFwkInstaller::GetInnerBundleInfoWithDisable(InnerBundleInfo &info
             return false;
         }
     }
-    isAppExist = dataMgr_->GetInnerBundleInfoWithDisable(bundleName_, info);
+    isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName_, info);
     return true;
 }
 

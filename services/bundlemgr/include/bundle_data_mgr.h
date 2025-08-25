@@ -145,13 +145,6 @@ public:
     bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
     bool UpdateEl5KeyId(const CreateDirParam &el5Param, const std::string keyId, bool needSaveStorage = true);
     /**
-     * @brief Get an InnerBundleInfo if exist (will change the status to DISABLED).
-     * @param bundleName Indicates the bundle name.
-     * @param info Indicates the obtained InnerBundleInfo object.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    bool GetInnerBundleInfoWithDisable(const std::string &bundleName, InnerBundleInfo &info);
-    /**
      * @brief Generate UID and GID for a bundle.
      * @param innerBundleUserInfo Indicates the InnerBundleUserInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.

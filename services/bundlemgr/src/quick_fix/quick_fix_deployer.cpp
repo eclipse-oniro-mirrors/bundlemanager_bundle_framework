@@ -649,11 +649,12 @@ ErrCode QuickFixDeployer::SaveToInnerBundleInfo(const InnerAppQuickFix &newInner
     const std::string &bundleName = newInnerAppQuickFix.GetAppQuickFix().bundleName;
     InnerBundleInfo innerBundleInfo;
     // obtain innerBundleInfo and enableGuard used to enable bundle which is under disable status
-    if (!dataMgr->GetInnerBundleInfoWithDisable(bundleName, innerBundleInfo)) {
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
         LOG_E(BMS_TAG_DEFAULT, "cannot obtain the innerbundleInfo from data mgr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
     }
     ScopeGuard enableGuard([&bundleName, &dataMgr] { dataMgr->EnableBundle(bundleName); });
+    dataMgr->DisableBundle(bundleName);
     AppQuickFix appQuickFix = newInnerAppQuickFix.GetAppQuickFix();
     appQuickFix.deployedAppqfInfo = innerBundleInfo.GetAppQuickFix().deployedAppqfInfo;
     // add apply quick fix frequency

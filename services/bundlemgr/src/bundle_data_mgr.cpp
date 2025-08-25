@@ -4774,26 +4774,6 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
     return ERR_OK;
 }
 
-bool BundleDataMgr::GetInnerBundleInfoWithDisable(const std::string &bundleName, InnerBundleInfo &info)
-{
-    APP_LOGD("GetInnerBundleInfoWithDisable %{public}s", bundleName.c_str());
-    if (bundleName.empty()) {
-        APP_LOGW("bundleName is empty");
-        return false;
-    }
-
-    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem == bundleInfos_.end()) {
-        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
-        return false;
-    }
-    infoItem->second.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
-    info = infoItem->second;
-    info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-    return true;
-}
-
 bool BundleDataMgr::DisableBundle(const std::string &bundleName)
 {
     APP_LOGD("DisableBundle %{public}s", bundleName.c_str());

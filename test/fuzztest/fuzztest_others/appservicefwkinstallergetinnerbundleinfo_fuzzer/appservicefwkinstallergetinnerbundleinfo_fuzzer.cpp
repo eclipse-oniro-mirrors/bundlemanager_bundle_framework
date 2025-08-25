@@ -32,7 +32,7 @@ namespace OHOS {
         InnerBundleInfo info;
         info.SetBundleInstallTime(reinterpret_cast<uintptr_t>(data));
         bool isAppExist;
-        appServiceFwk.GetInnerBundleInfoWithDisable(info, isAppExist);
+        appServiceFwk.FetchInnerBundleInfo(info, isAppExist);
         return true;
     }
 }
