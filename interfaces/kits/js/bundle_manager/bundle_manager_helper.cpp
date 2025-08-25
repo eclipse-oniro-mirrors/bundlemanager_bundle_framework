@@ -458,5 +458,24 @@ ErrCode BundleManagerHelper::InnerGetAbilityInfos(
     APP_LOGD("GetAbilityInfos ErrCode : %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }
+
+ErrCode BundleManagerHelper::InnerCleanBundleCacheForSelfCallback(
+    const OHOS::sptr<CleanCacheCallback> cleanCacheCallback)
+{
+    if (cleanCacheCallback == nullptr) {
+        APP_LOGE("callback nullptr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode result = iBundleMgr->CleanBundleCacheFilesForSelf(cleanCacheCallback);
+    if (result != ERR_OK) {
+        APP_LOGE("call error");
+    }
+    return CommonFunc::ConvertErrCode(result);
+}
 } // AppExecFwk
 } // OHOS

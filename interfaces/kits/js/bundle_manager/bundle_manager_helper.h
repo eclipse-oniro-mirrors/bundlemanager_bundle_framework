@@ -64,6 +64,7 @@ public:
     static ErrCode InnerGetAllPluginInfo(
         std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos);
     static ErrCode InnerGetAbilityInfos(const std::string& uri, uint32_t flags, std::vector<AbilityInfo>& abilityInfos);
+    static ErrCode InnerCleanBundleCacheForSelfCallback(const OHOS::sptr<CleanCacheCallback> cleanCacheCallback);
 };
 } // AppExecFwk
 } // OHOS

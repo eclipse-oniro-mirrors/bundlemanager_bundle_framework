@@ -1330,8 +1330,10 @@ ohos_unittest("BmsCleanAllBundleCacheTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = []
+  include_dirs = [ "mock/include" ]
   sources = bundle_mgr_source
+
+  sources += [ "mock/src/mock_ipc_skeleton.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]

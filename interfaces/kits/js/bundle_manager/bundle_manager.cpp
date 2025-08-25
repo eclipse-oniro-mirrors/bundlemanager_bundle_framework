@@ -2200,6 +2200,33 @@ void CleanBundleCacheFilesExec(napi_env env, void *data)
     APP_LOGI("clean exec end");
 }
 
+void CleanBundleCacheFilesForSelfExec(napi_env env, void *data)
+{
+    CleanBundleCacheForSelfCallbackInfo* asyncCallbackInfo =
+        reinterpret_cast<CleanBundleCacheForSelfCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("error CleanBundleCacheForSelfCallbackInfo is nullptr");
+        return;
+    }
+    if (asyncCallbackInfo->cleanCacheCallback == nullptr) {
+        asyncCallbackInfo->cleanCacheCallback = new (std::nothrow) CleanCacheCallback();
+    }
+    asyncCallbackInfo->err = BundleManagerHelper::InnerCleanBundleCacheForSelfCallback(
+        asyncCallbackInfo->cleanCacheCallback);
+    if ((asyncCallbackInfo->err == NO_ERROR) && (asyncCallbackInfo->cleanCacheCallback != nullptr)) {
+        // wait for OnCleanCacheFinished
+        APP_LOGI("cleanforself exec wait");
+        if (asyncCallbackInfo->cleanCacheCallback->WaitForCompletion()) {
+            asyncCallbackInfo->err = asyncCallbackInfo->cleanCacheCallback->GetErr() ?
+                NO_ERROR : ERROR_BUNDLE_SERVICE_EXCEPTION;
+        } else {
+            APP_LOGI("cleanforself exec timeout");
+            asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        }
+    }
+    APP_LOGI("cleanforself exec end");
+}
+
 void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
 {
     CleanBundleCacheCallbackInfo* asyncCallbackInfo = reinterpret_cast<CleanBundleCacheCallbackInfo*>(data);
@@ -2213,6 +2240,26 @@ void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
             CLEAN_BUNDLE_CACHE_FILES, Constants::PERMISSION_REMOVECACHEFILE);
     }
     CommonFunc::NapiReturnDeferred<CleanBundleCacheCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+void CleanBundleCacheFilesForSelfComplete(napi_env env, napi_status status, void *data)
+{
+    CleanBundleCacheForSelfCallbackInfo* asyncCallbackInfo =
+        reinterpret_cast<CleanBundleCacheForSelfCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("CleanBundleCacheForSelfCallbackInfo is nullptr");
+        return;
+    }
+    std::unique_ptr<CleanBundleCacheForSelfCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_ONE] = { 0 };
+    // implement callback or promise
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        APP_LOGE("CleanBundleCacheFilesForSelf failed with error: %{public}d", asyncCallbackInfo->err);
+        asyncCallbackInfo->err = NO_ERROR;
+    }
+        
+    NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+    CommonFunc::NapiReturnDeferred<CleanBundleCacheForSelfCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 bool ParseCleanBundleCacheFilesAppIndex(napi_env env, napi_value args, int32_t &appIndex)
@@ -2273,6 +2320,24 @@ napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, "CleanBundleCacheFiles", CleanBundleCacheFilesExec, CleanBundleCacheFilesComplete);
     callbackPtr.release();
     APP_LOGD("napi call CleanBundleCacheFiles done");
+    return promise;
+}
+
+napi_value CleanBundleCacheFilesForSelf(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("napi begin to CleanBundleCacheFilesForSelf");
+    NapiArg args(env, info);
+    CleanBundleCacheForSelfCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) CleanBundleCacheForSelfCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("CleanBundleCacheFilesForSelf asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<CleanBundleCacheForSelfCallbackInfo> callbackPtr {asyncCallbackInfo};
+    auto promise = CommonFunc::AsyncCallNativeMethod<CleanBundleCacheForSelfCallbackInfo>(env, asyncCallbackInfo,
+        CLEAN_BUNDLE_CACHE_FILES_FOR_SELF, CleanBundleCacheFilesForSelfExec, CleanBundleCacheFilesForSelfComplete);
+    callbackPtr.release();
+    APP_LOGD("napi call CleanBundleCacheFilesForSelf done");
     return promise;
 }
 

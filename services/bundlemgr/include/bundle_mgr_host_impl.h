@@ -569,6 +569,12 @@ public:
         const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) override;
     /**
+     * @brief Clears cache data of the current application.
+     * @param cleanCacheCallback Indicates the callback to be invoked for returning the operation result.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundleCacheFilesForSelf(const sptr<ICleanCacheCallback> cleanCacheCallback) override;
+    /**
      * @brief Clears application running data of a specified application.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.
      * @param userId Indicates the user id.
