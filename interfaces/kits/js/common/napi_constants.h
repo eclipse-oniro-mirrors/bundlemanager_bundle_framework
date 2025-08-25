@@ -234,7 +234,7 @@ constexpr const char* RESOURCE_NAME_OF_INSTALL = "Install";
 constexpr const char* RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
 constexpr const char* RESOURCE_NAME_OF_RECOVER = "Recover";
 constexpr const char* RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
-constexpr const char* RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER = "UninstallAndRecover";
+constexpr const char* RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER = "UninstallUpdates";
 constexpr const char* INSTALL_PERMISSION =
     "ohos.permission.INSTALL_BUNDLE or "
     "ohos.permission.INSTALL_ENTERPRISE_BUNDLE or "
