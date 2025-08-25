@@ -660,7 +660,7 @@ ErrCode BmsExtensionDataMgr::GetBundleNamesForUidExt(const int32_t uid, std::vec
     return bundleMgrExtPtr->GetBundleNamesForUidExt(uid, bundleNames);
 }
 
-ErrCode BmsExtensionDataMgr::RegisterPreInstallWithCard()
+ErrCode BmsExtensionDataMgr::BmsExtensionInit()
 {
     if ((Init() != ERR_OK) || handler_ == nullptr) {
         APP_LOGW("link failed");
@@ -672,7 +672,7 @@ ErrCode BmsExtensionDataMgr::RegisterPreInstallWithCard()
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
-    return bundleMgrExtPtr->RegisterPreInstallWithCard();
+    return bundleMgrExtPtr->BmsExtensionInit();
 }
 
 bool BmsExtensionDataMgr::IsMCFlagSet()

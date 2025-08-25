@@ -175,7 +175,7 @@ public:
     {
         return false;
     }
-    virtual ErrCode RegisterPreInstallWithCard()
+    virtual ErrCode BmsExtensionInit()
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }

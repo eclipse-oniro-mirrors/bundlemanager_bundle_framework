@@ -1308,13 +1308,13 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0036, Function | SmallTest | Leve
 
 /**
  * @tc.number: BundleMgrExt_0037
- * @tc.name: RegisterPreInstallWithCard
- * @tc.desc: RegisterPreInstallWithCard
+ * @tc.name: BmsExtensionInit
+ * @tc.desc: BmsExtensionInit
  */
 HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0037, Function | SmallTest | Level0)
 {
     BundleMgrExtTest bundleMgrExtTest;
-    ErrCode res = bundleMgrExtTest.RegisterPreInstallWithCard();
+    ErrCode res = bundleMgrExtTest.BmsExtensionInit();
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
 }
 
@@ -2105,15 +2105,15 @@ HWTEST_F(BmsExtensionDataMgrTest, IsNeedToSkipPreBundleInstall_001, Function | S
 }
 
 /**
- * @tc.number: RegisterPreInstallWithCard_001
- * @tc.name: RegisterPreInstallWithCard
- * @tc.desc: RegisterPreInstallWithCard
+ * @tc.number: BmsExtensionInit_001
+ * @tc.name: BmsExtensionInit
+ * @tc.desc: BmsExtensionInit
  */
-HWTEST_F(BmsExtensionDataMgrTest, RegisterPreInstallWithCard_001, Function | SmallTest | Level0)
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionInit_001, Function | SmallTest | Level0)
 {
     BmsExtensionDataMgr bmsExtensionDataMgrTest;
     bmsExtensionDataMgrTest.handler_ = nullptr;
-    ErrCode res = bmsExtensionDataMgrTest.RegisterPreInstallWithCard();
+    ErrCode res = bmsExtensionDataMgrTest.BmsExtensionInit();
     #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(res, ERR_OK);
     #else
@@ -2121,7 +2121,7 @@ HWTEST_F(BmsExtensionDataMgrTest, RegisterPreInstallWithCard_001, Function | Sma
     #endif
     int16_t handleTest = 1;
     bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.RegisterPreInstallWithCard();
+    res = bmsExtensionDataMgrTest.BmsExtensionInit();
     #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(res, ERR_OK);
     #else

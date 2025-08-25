@@ -331,7 +331,7 @@ void BMSEventHandler::AfterBmsStart()
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    bmsExtensionDataMgr.RegisterPreInstallWithCard();
+    bmsExtensionDataMgr.BmsExtensionInit();
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
     ProcessCheckAppEl1Dir();
