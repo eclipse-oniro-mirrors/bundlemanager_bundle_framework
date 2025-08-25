@@ -81,7 +81,7 @@ public:
     ErrCode VerifyActivationLockToken(bool &res);
     bool IsNeedToSkipPreBundleInstall();
     ErrCode GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames);
-    ErrCode RegisterPreInstallWithCard();
+    ErrCode BmsExtensionInit();
     bool IsMCFlagSet();
 private:
     bool OpenHandler();
