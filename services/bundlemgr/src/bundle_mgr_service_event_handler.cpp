@@ -85,6 +85,8 @@ constexpr const char* MODULE_UPDATE_PARAM_EMPTY = "";
 constexpr const char* FINGERPRINT = "fingerprint";
 constexpr const char* UNKNOWN = "";
 constexpr const char* VALUE_TRUE = "true";
+constexpr const char* DEVICE_TYPE_PHONE = "phone";
+
 constexpr int8_t VERSION_LEN = 64;
 const std::vector<std::string> FINGERPRINTS = {
     "const.product.software.version",
@@ -1254,6 +1256,11 @@ void BMSEventHandler::FilterVersionSpecialCustomApps(std::set<PreScanInfo> &inst
 {
     const bool isRetailMode = system::GetBoolParameter(ServiceConstants::RETAIL_MODE_KEY, false);
     if (!isRetailMode) {
+        return;
+    }
+    std::string deviceType = OHOS::system::GetDeviceType();
+    if (deviceType != DEVICE_TYPE_PHONE) {
+        LOG_D(BMS_TAG_DEFAULT, "deviceType not phone");
         return;
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
