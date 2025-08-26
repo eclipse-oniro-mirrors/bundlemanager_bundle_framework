@@ -6539,6 +6539,7 @@ HWTEST_F(BmsBundleKitServiceTest, PluginModuleInfoTest_0100, Function | SmallTes
     EXPECT_EQ(result.moduleName, MODULE_NAME);
     EXPECT_EQ(result.hapPath, HAP_FILE_PATH);
     EXPECT_EQ(result.description, DESCRIPTION);
+    EXPECT_EQ(result.moduleArkTSMode, Constants::ARKTS_MODE_DYNAMIC);
 }
 
 /**
@@ -6561,6 +6562,53 @@ HWTEST_F(BmsBundleKitServiceTest, PluginModuleInfoTest_0200, Function | SmallTes
     EXPECT_NE(ret2, nullptr);
     EXPECT_EQ(info1.moduleName, ret2->moduleName);
     EXPECT_EQ(info1.hapPath, ret2->hapPath);
+    EXPECT_EQ(info1.moduleArkTSMode, ret2->moduleArkTSMode);
+}
+
+/**
+ * @tc.number: PluginModuleInfoTest
+ * @tc.name: PluginModuleInfo to_json and from_json branch cover
+ * @tc.desc: 1.Test to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, PluginModuleInfoTest_0300, Function | SmallTest | Level1)
+{
+    PluginModuleInfo pluginModuleInfo;
+    pluginModuleInfo.moduleName = MODULE_NAME;
+    pluginModuleInfo.hapPath = HAP_FILE_PATH;
+    pluginModuleInfo.description = DESCRIPTION;
+    pluginModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    nlohmann::json jsonObj;
+    to_json(jsonObj, pluginModuleInfo);
+    PluginModuleInfo result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.moduleName, MODULE_NAME);
+    EXPECT_EQ(result.hapPath, HAP_FILE_PATH);
+    EXPECT_EQ(result.description, DESCRIPTION);
+    EXPECT_EQ(result.moduleArkTSMode, Constants::ARKTS_MODE_STATIC);
+}
+
+/**
+ * @tc.number: PluginModuleInfoTest
+ * @tc.name: PluginModuleInfo Marshalling and Unmarshalling
+ * @tc.desc: 1.Test Marshalling and Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, PluginModuleInfoTest_0400, Function | SmallTest | Level1)
+{
+    PluginModuleInfo info1;
+    info1.moduleName = MODULE_NAME;
+    info1.hapPath = HAP_FILE_PATH;
+    info1.description = DESCRIPTION;
+    info1.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    Parcel parcel;
+    auto ret1 = info1.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+
+    PluginModuleInfo info2;
+    auto ret2 = info2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(info1.moduleName, ret2->moduleName);
+    EXPECT_EQ(info1.hapPath, ret2->hapPath);
+    EXPECT_EQ(info1.moduleArkTSMode, ret2->moduleArkTSMode);
 }
 
 /**

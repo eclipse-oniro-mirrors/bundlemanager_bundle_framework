@@ -643,7 +643,41 @@ HWTEST_F(BmsBundleManagerTest3, SharedModuleInfoTest_002, Function | SmallTest |
     sharedModuleInfo.Marshalling(parcel);
     auto ret = sharedModuleInfo.Unmarshalling(parcel);
     EXPECT_NE(ret, nullptr);
-    EXPECT_EQ(sharedModuleInfo.name, MODULE_NAME);
+    EXPECT_EQ(ret->name, MODULE_NAME);
+    EXPECT_EQ(ret->moduleArkTSMode, Constants::ARKTS_MODE_DYNAMIC);
+}
+
+/**
+ * @tc.number: SharedModuleInfoTest_003
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest3, SharedModuleInfoTest_003, Function | SmallTest | Level1)
+{
+    SharedModuleInfo sharedModuleInfo;
+    sharedModuleInfo.name = MODULE_NAME;
+    sharedModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    Parcel parcel;
+    bool ret = sharedModuleInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SharedModuleInfoTest_004
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest3, SharedModuleInfoTest_004, Function | SmallTest | Level1)
+{
+    SharedModuleInfo sharedModuleInfo;
+    sharedModuleInfo.name = MODULE_NAME;
+    sharedModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    Parcel parcel;
+    sharedModuleInfo.Marshalling(parcel);
+    auto ret = sharedModuleInfo.Unmarshalling(parcel);
+    EXPECT_NE(ret, nullptr);
+    EXPECT_EQ(ret->name, MODULE_NAME);
+    EXPECT_EQ(ret->moduleArkTSMode, Constants::ARKTS_MODE_STATIC);
 }
 
 /**
