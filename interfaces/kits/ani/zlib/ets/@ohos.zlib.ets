@@ -22,7 +22,7 @@ import { AsyncCallback, BusinessError } from '@ohos.base';
 
 export default namespace zlib {
 
-  loadLibrary("ani_zlib.z");
+  loadLibraryWithPermissionCheck("ani_zlib.z", "@ohos.zlib");
 
   export enum CompressLevel {
     COMPRESS_LEVEL_NO_COMPRESSION = 0,

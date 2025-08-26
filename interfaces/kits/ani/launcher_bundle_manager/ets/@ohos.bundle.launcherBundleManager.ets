@@ -19,7 +19,7 @@ import { LauncherAbilityInfo } from 'bundleManager.LauncherAbilityInfo';
 import StartOptions from '@ohos.app.ability.StartOptions';
 
 export default namespace launcherBundleManager {
-  loadLibrary("ani_launcher_bundle_manager.z");
+  loadLibraryWithPermissionCheck("ani_launcher_bundle_manager.z", "@ohos.bundle.launcherBundleManager");
 
   const EMPTY_USER_ID: number = -500;
 

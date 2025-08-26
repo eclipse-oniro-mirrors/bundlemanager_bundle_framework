@@ -24,7 +24,7 @@ import { LauncherAbilityResourceInfo } from 'bundleManager.LauncherAbilityResour
 
 export default namespace bundleResourceManager {
 
-  loadLibrary("ani_bundle_res_manager.z");
+  loadLibraryWithPermissionCheck("ani_bundle_res_manager.z", "@ohos.bundle.bundleResourceManager");
 
   const INVALID_INT: number = -500;
 

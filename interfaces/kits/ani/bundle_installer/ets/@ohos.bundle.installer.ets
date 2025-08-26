@@ -21,7 +21,7 @@
 import { AsyncCallback, BusinessError } from '@ohos.base';
 
 namespace installer {
-  loadLibrary("ani_bundle_installer.z");
+  loadLibraryWithPermissionCheck("ani_bundle_installer.z", "@ohos.bundle.installer");
 
   export native function getBundleInstallerNative(isSync: boolean): BundleInstaller;
 
