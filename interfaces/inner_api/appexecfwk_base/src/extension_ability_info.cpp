@@ -101,6 +101,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "assetAcceleration", ExtensionAbilityType::ASSET_ACCELERATION },
     { "formEdit", ExtensionAbilityType::FORM_EDIT },
     { "liveForm", ExtensionAbilityType::LIVE_FORM },
+    { "webNativeMessaging", ExtensionAbilityType::WEB_NATIVE_MESSAGING },
     { "awc/webpage", ExtensionAbilityType::AWC_WEBPAGE },
     { "awc/newsfeed", ExtensionAbilityType::AWC_NEWSFEED }
 };

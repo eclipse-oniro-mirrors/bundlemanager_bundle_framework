@@ -1807,6 +1807,10 @@ HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfosV9_0001, TestSize.
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(1, infos.size());
 
+    ErrCode ret1 = GetBundleMgrProxy()->QueryExtensionAbilityInfosV9(want, ExtensionAbilityType::WEB_NATIVE_MESSAGING,
+        ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_DEFAULT, DEFAULT_USERID, infos);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
