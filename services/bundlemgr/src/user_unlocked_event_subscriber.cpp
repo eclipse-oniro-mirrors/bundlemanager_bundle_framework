@@ -113,11 +113,6 @@ void UpdateAppDataMgr::CheckPathAttribute(const std::string &path, const BundleI
             path.c_str(), static_cast<int32_t>(fileStat.uid), bundleInfo.uid);
         isExist = false;
     }
-    if (fileStat.gid != ServiceConstants::DATABASE_DIR_GID) {
-        APP_LOGW("path: %{public}s gid is not same, fileStat.gid:%{public}d, gid:%{public}d",
-            path.c_str(), static_cast<int32_t>(fileStat.gid), ServiceConstants::DATABASE_DIR_GID);
-        isExist = false;
-    }
     uint32_t fileMode = static_cast<uint32_t>(fileStat.mode);
     if ((fileMode & MODE_BASE) != (S_IRWXU | S_IRWXG | S_ISGID)) {
         APP_LOGW("path: %{public}s mode is not same, fileStat.mode:%{public}d, mode:%{public}d",
