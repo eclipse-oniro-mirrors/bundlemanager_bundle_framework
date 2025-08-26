@@ -372,7 +372,7 @@ static void AniRemoveExtResource(ani_env* env, [[maybe_unused]] ani_object insta
     ErrCode err = InstallerHelper::InnerRemoveExtResource(bundleName, moduleNames);
     if (err != NO_ERROR) {
         BusinessErrorAni::ThrowCommonError(
-            env, err, REMOVE_EXT_RESOURCE, Constants::PERMISSION_INSTALL_BUNDLE);
+            env, err, REMOVE_EXT_RESOURCE, UNINSTALL_PERMISSION);
     }
 }
 
@@ -442,16 +442,19 @@ static void AniInstallPreexistingApp(ani_env* env, [[maybe_unused]] ani_object i
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return;
     }
-    int32_t userId = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
     if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
         APP_LOGE("Cast appIdx failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
         return;
     }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
     ErrCode result = CommonFunc::ConvertErrCode(InstallerHelper::InnerInstallPreexistingApp(bundleName, userId));
     if (result != SUCCESS) {
         BusinessErrorAni::ThrowCommonError(env, result,
-            INSTALL_PREEXISTING_APP, Constants::PERMISSION_UNINSTALL_CLONE_BUNDLE);
+            INSTALL_PREEXISTING_APP, Constants::PERMISSION_INSTALL_BUNDLE);
     }
 }
 

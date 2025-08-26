@@ -77,6 +77,8 @@ export class PluginParamInner implements installer.PluginParam {
   parameters?: Array<installer.Parameters>;
 }
 
+const UNSPECIFIED_USERID: number = -2;
+
 export class BundleInstallerInner implements installer.BundleInstaller {
   native installNative(hapFilePaths: Array<string>, installParam: installer.InstallParam): void;
   native uninstallNative(bundleName: string, installParam: installer.InstallParam): void;
@@ -356,7 +358,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   }
 
   installPreexistingApp(bundleName: string, userId?: number): Promise<void> {
-      let userIdNum = userId ?? -500;
+      let userIdNum = userId ?? UNSPECIFIED_USERID;
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
       let execFun = ():NullishType=>{ this.installPreexistingAppNative(bundleName, userIdNum); }
       let p1 = taskpool.execute(execFun);
