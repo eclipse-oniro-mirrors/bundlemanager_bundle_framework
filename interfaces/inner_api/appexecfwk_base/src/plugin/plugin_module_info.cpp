@@ -48,6 +48,7 @@ bool PluginModuleInfo::ReadFromParcel(Parcel &parcel)
     cpuAbi = parcel.ReadString();
     nativeLibraryPath = parcel.ReadString();
     packageName = parcel.ReadString();
+    moduleArkTSMode = parcel.ReadString();
     int32_t nativeLibraryFileNamesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNamesSize);
     CONTAINER_SECURITY_VERIFY(parcel, nativeLibraryFileNamesSize, &nativeLibraryFileNames);
@@ -68,6 +69,7 @@ bool PluginModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, cpuAbi);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, nativeLibraryPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, packageName);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, moduleArkTSMode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNames.size());
     for (auto &fileName : nativeLibraryFileNames) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, fileName);
@@ -99,6 +101,7 @@ void to_json(nlohmann::json &jsonObject, const PluginModuleInfo &pluginModuleInf
         {PLUGIN_MODULE_INFO_COMPRESS_NATIVE_LIBS, pluginModuleInfo.compressNativeLibs},
         {PLUGIN_MODULE_INFO_IS_LIB_ISOLATED, pluginModuleInfo.isLibIsolated},
         {PLUGIN_MODULE_INFO_PACKAGE_NAME, pluginModuleInfo.packageName},
+        {Constants::MODULE_ARKTS_MODE, pluginModuleInfo.moduleArkTSMode}
     };
 }
 
@@ -138,6 +141,9 @@ void from_json(const nlohmann::json &jsonObject, PluginModuleInfo &pluginModuleI
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         PLUGIN_MODULE_INFO_PACKAGE_NAME,
         pluginModuleInfo.packageName, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
+        Constants::MODULE_ARKTS_MODE,
+        pluginModuleInfo.moduleArkTSMode, false, parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read pluginModuleInfo error : %{public}d", parseResult);
     }
