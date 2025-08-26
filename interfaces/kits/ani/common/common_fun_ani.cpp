@@ -235,6 +235,7 @@ constexpr const char* PROPERTYNAME_ACTION = "action";
 constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
 constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
 constexpr const char* CONTEXT_DATA_STORAGE_BUNDLE = "/data/storage/el1/bundle/";
+constexpr int32_t ILLEGAL_APP_INDEX = -1;
 } // namespace
 
 std::string CommonFunAni::AniStrToString(ani_env* env, ani_string aniStr)
@@ -2380,6 +2381,10 @@ bool CommonFunAni::ParseCreateAppCloneParam(ani_env* env, ani_object object, int
     // appIdx?: number
     if (CallGetterOptional(env, object, PROPERTYNAME_APPINDEX, &intValue)) {
         appIdx = intValue;
+        if (appIdx == 0) {
+            APP_LOGI("parse appIndex success, but appIndex is 0, assign a value: %{public}d", ILLEGAL_APP_INDEX);
+            appIdx = ILLEGAL_APP_INDEX;
+        }
     } else {
         appIdx = Constants::INITIAL_APP_INDEX;
         APP_LOGW("Parse appIdx failed,using default value");
