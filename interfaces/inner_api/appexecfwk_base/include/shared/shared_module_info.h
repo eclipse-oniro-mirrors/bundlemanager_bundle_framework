@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "bundle_constants.h"
 #include "parcel.h"
 
 namespace OHOS {
@@ -33,6 +34,7 @@ struct SharedModuleInfo : public Parcelable {
     std::string hapPath;
     std::string cpuAbi;
     std::string nativeLibraryPath;
+    std::string moduleArkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     std::vector<std::string> nativeLibraryFileNames;
 
     bool ReadFromParcel(Parcel &parcel);
