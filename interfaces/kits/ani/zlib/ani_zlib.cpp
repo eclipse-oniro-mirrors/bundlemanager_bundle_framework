@@ -265,7 +265,7 @@ static void CompressFiles(ani_env* env, ani_object aniInFiles, ani_string aniOut
     RETURN_IF_NULL(aniOptions);
 
     std::vector<std::string> inFiles;
-    if (aniInFiles == nullptr || !CommonFunAni::ParseStrArray(env, aniInFiles, inFiles)) {
+    if (aniInFiles == nullptr || !CommonFunAni::ParseStrArray(env, aniInFiles, inFiles) || inFiles.size() == 0) {
         APP_LOGE("inFiles parse failed.");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILES, TYPE_ARRAY);
         return;
@@ -386,10 +386,8 @@ static ani_double Adler32(
         return 0;
     }
 
-    if (buffer == nullptr) {
-        APP_LOGE("native buf is nullptr");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_BUF, TYPE_ARRAYBUFFER);
-        return 0;
+    if (bufferLength == 0) {
+        buffer = nullptr;
     }
 
     return adler32(static_cast<uLong>(adler), reinterpret_cast<Bytef*>(buffer), static_cast<uInt>(bufferLength));
@@ -414,7 +412,7 @@ static ani_double Adler32Combine(ani_env* env,
         return 0;
     }
 
-    if (!CommonFunAni::TryCastDoubleTo(aniLen2, &len2)) {
+    if (!CommonFunAni::TryCastDoubleTo(aniLen2, &len2) || len2 < 0) {
         APP_LOGE("Cast aniLen2 failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_LEN2, TYPE_NUMBER);
         return 0;
@@ -452,10 +450,8 @@ static ani_double Crc32(ani_env* env, [[maybe_unused]] ani_object checksumObj, a
         return 0;
     }
 
-    if (buffer == nullptr) {
-        APP_LOGE("native buf is nullptr");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_BUF, TYPE_ARRAYBUFFER);
-        return 0;
+    if (bufferLength == 0) {
+        buffer = nullptr;
     }
 
     return crc32(static_cast<uLong>(crc), reinterpret_cast<Bytef*>(buffer), static_cast<uInt>(bufferLength));
@@ -480,7 +476,7 @@ static ani_double Crc32Combine(ani_env* env,
         return 0;
     }
 
-    if (!CommonFunAni::TryCastDoubleTo(aniLen2, &len2)) {
+    if (!CommonFunAni::TryCastDoubleTo(aniLen2, &len2) || len2 < 0) {
         APP_LOGE("Cast aniLen2 failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_LEN2, TYPE_NUMBER);
         return 0;
