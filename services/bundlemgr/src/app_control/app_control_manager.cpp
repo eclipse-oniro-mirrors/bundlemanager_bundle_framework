@@ -414,7 +414,6 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &
         LOG_E(BMS_TAG_DEFAULT, "rdb delete failed ret:%{public}d, appId:%{private}s", ret, appId.c_str());
         return ret;
     }
-    DeleteAbilityRunningRuleBmsCache(appId);
     std::string key = appId + std::string("_") + std::to_string(userId);
     DeleteAppRunningRuleCache(key);
     key = key + std::string("_");
@@ -580,16 +579,6 @@ void AppControlManager::DeleteDisposedRuleOnlyForBms(const std::string &appId)
         }
     }
 
-    auto iterBms = abilityRunningControlRuleCacheForBms_.find(appId);
-    if (iterBms != abilityRunningControlRuleCacheForBms_.end()) {
-        abilityRunningControlRuleCacheForBms_.erase(iterBms);
-    }
-}
-
-
-void AppControlManager::DeleteAbilityRunningRuleBmsCache(const std::string &appId)
-{
-    std::lock_guard<std::mutex> cacheLock(abilityRunningControlRuleMutex_);
     auto iterBms = abilityRunningControlRuleCacheForBms_.find(appId);
     if (iterBms != abilityRunningControlRuleCacheForBms_.end()) {
         abilityRunningControlRuleCacheForBms_.erase(iterBms);
