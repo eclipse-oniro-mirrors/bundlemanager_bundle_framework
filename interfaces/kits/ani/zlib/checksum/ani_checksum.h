@@ -24,13 +24,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace AniZLibChecksum {
-ani_long adler32Native(ani_env* env, ani_object, ani_long aniAdler, ani_arraybuffer buf);
-ani_long adler32CombineNative(ani_env* env, ani_object, ani_long aniAdler1, ani_long aniAdler2, ani_long aniLen2);
-ani_long crc32Native(ani_env* env, ani_object, ani_long aniCrc, ani_arraybuffer buf);
-ani_long crc32CombineNative(ani_env* env, ani_object, ani_long aniCrc1, ani_long aniCrc2, ani_long aniLen2);
-ani_long crc64Native(ani_env* env, ani_object, ani_long aniCrc, ani_arraybuffer buf);
-ani_object getCrcTableNative(ani_env* env, ani_object);
-ani_object getCrc64TableNative(ani_env* env, ani_object);
+ani_long adler32Native(ani_env* env, ani_object instance, ani_long aniAdler, ani_arraybuffer aniBuf);
+ani_long adler32CombineNative(ani_env* env, ani_object instance,
+    ani_long aniAdler1, ani_long aniAdler2, ani_long aniLen2);
+ani_long crc32Native(ani_env* env, ani_object instance, ani_long aniCrc, ani_arraybuffer aniBuf);
+ani_long crc32CombineNative(ani_env* env, ani_object instance, ani_long aniCrc1, ani_long aniCrc2, ani_long aniLen2);
+ani_long crc64Native(ani_env* env, ani_object instance, ani_long aniCrc, ani_arraybuffer aniBuf);
+ani_object getCrcTableNative(ani_env* env, ani_object instance);
+ani_object getCrc64TableNative(ani_env* env, ani_object instance);
 } // namespace AniZLibChecksum
 } // namespace AppExecFwk
 } // namespace OHOS
