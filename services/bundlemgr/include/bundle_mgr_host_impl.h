@@ -644,6 +644,13 @@ public:
      */
     virtual ErrCode CopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results) override;
     /**
+     * @brief Checks whether a specified application is a debug application.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param isDebuggable Indicates the application is a debug application.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode IsDebuggableApplication(const std::string &bundleName, bool &isDebuggable) override;
+    /**
      * @brief Checks whether a specified application is enabled.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Indicates the application status is enabled.

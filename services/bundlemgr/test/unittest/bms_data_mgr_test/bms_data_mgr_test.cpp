@@ -2328,6 +2328,21 @@ HWTEST_F(BmsDataMgrTest, GetAllBundleStats_0100, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: IsDebuggableApplication_0100
+ * @tc.name: test IsDebuggableApplication
+ * @tc.desc: 1.test is debug application
+ */
+HWTEST_F(BmsDataMgrTest, IsDebuggableApplication_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string bundleName = BUNDLE_NAME;
+    bool isDebuggable = false;
+    bool ret = dataMgr->IsDebuggableApplication(bundleName, isDebuggable);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: IsApplicationEnabled_0100
  * @tc.name: test IsApplicationEnabled
  * @tc.desc: 1.test enable application

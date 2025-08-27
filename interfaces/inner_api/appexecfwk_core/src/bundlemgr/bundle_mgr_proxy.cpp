@@ -2265,6 +2265,36 @@ ErrCode BundleMgrProxy::SetModuleUpgradeFlag(const std::string &bundleName,
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::IsDebuggableApplication(const std::string &bundleName, bool &isDebuggable)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to IsDebuggableApplication of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsDebuggableApplication due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to IsDebuggableApplication due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to IsDebuggableApplication due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_DEBUG_INFO, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    int32_t ret = reply.ReadInt32();
+    if (ret != NO_ERROR) {
+        return ret;
+    }
+    isDebuggable = reply.ReadBool();
+    return NO_ERROR;
+}
+
 ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool &isEnable)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

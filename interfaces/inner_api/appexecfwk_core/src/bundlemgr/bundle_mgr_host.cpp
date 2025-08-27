@@ -713,6 +713,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES_FOR_SELF):
             errCode = HandleCleanBundleCacheFilesForSelf(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DEBUG_INFO):
+            errCode = HandleIsDebuggableApplication(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -4962,6 +4965,27 @@ ErrCode BundleMgrHost::HandleGetTestRunner(MessageParcel &data, MessageParcel &r
     if (ret == ERR_OK) {
         reply.SetDataCapacity(Constants::CAPACITY_SIZE);
         return WriteParcelInfoIntelligent<ModuleTestRunner>(testRunner, reply);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleIsDebuggableApplication(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsDebuggableApplication due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    bool isDebuggable = false;
+    ErrCode ret = IsDebuggableApplication(bundleName, isDebuggable);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(isDebuggable)) {
+        APP_LOGE("WriteBool failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
