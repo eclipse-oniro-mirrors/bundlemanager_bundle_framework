@@ -47,6 +47,7 @@ bool SharedModuleInfo::ReadFromParcel(Parcel &parcel)
     hapPath = Str16ToStr8(parcel.ReadString16());
     cpuAbi = Str16ToStr8(parcel.ReadString16());
     nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
+    moduleArkTSMode = parcel.ReadString();
     int32_t nativeLibraryFileNamesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNamesSize);
     CONTAINER_SECURITY_VERIFY(parcel, nativeLibraryFileNamesSize, &nativeLibraryFileNames);
@@ -67,6 +68,7 @@ bool SharedModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(nativeLibraryPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, moduleArkTSMode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNames.size());
     for (auto &fileName : nativeLibraryFileNames) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileName));
@@ -97,7 +99,8 @@ void to_json(nlohmann::json &jsonObject, const SharedModuleInfo &sharedModuleInf
         {SHARED_MODULE_INFO_HAP_PATH, sharedModuleInfo.hapPath},
         {SHARED_MODULE_INFO_CPU_ABI, sharedModuleInfo.cpuAbi},
         {SHARED_MODULE_INFO_NATIVE_LIBRARY_PATH, sharedModuleInfo.nativeLibraryPath},
-        {SHARED_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, sharedModuleInfo.nativeLibraryFileNames}
+        {SHARED_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, sharedModuleInfo.nativeLibraryFileNames},
+        {Constants::MODULE_ARKTS_MODE, sharedModuleInfo.moduleArkTSMode}
     };
 }
 
@@ -134,6 +137,9 @@ void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleI
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_NATIVE_LIBRARY_PATH,
         sharedModuleInfo.nativeLibraryPath, false, parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject, jsonObjectEnd,
+        Constants::MODULE_ARKTS_MODE,
+        sharedModuleInfo.moduleArkTSMode, false, parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES,
         sharedModuleInfo.nativeLibraryFileNames, JsonType::ARRAY, false, parseResult,

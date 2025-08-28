@@ -2182,6 +2182,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
             sharedModuleInfo.hapPath = info.hapPath;
             sharedModuleInfo.cpuAbi = info.cpuAbi;
             sharedModuleInfo.nativeLibraryPath = info.nativeLibraryPath;
+            sharedModuleInfo.moduleArkTSMode = info.moduleArkTSMode;
             sharedModuleInfo.nativeLibraryFileNames = info.nativeLibraryFileNames;
             sharedModuleInfos.emplace_back(sharedModuleInfo);
         }
@@ -5057,6 +5058,7 @@ bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
         pluginModuleInfo.compressNativeLibs = info.second.compressNativeLibs;
         pluginModuleInfo.isLibIsolated =  info.second.isLibIsolated;
         pluginModuleInfo.packageName = info.second.packageName;
+        pluginModuleInfo.moduleArkTSMode = info.second.moduleArkTSMode;
         pluginBundleInfo.pluginModuleInfos.emplace_back(pluginModuleInfo);
     }
     return true;
