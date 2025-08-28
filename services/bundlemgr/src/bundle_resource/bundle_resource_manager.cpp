@@ -1154,10 +1154,8 @@ int32_t BundleResourceManager::GetUserId()
 {
     int32_t userId = BundleUtil::GetUserIdByCallingUid();
     if (userId == Constants::DEFAULT_USERID) {
-        // check is sa call
-        if (BundlePermissionMgr::IsNativeTokenType()) {
-            userId = AccountHelper::GetCurrentActiveUserId();
-        }
+        // sa call or U0 app
+        userId = AccountHelper::GetCurrentActiveUserId();
     }
     if (userId < Constants::DEFAULT_USERID) {
         APP_LOGE("userId %{public}d is invalid", userId);
