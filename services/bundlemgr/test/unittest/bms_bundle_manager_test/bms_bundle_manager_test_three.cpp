@@ -707,10 +707,10 @@ HWTEST_F(BmsBundleManagerTest3, InstallParamTest_002, Function | SmallTest | Lev
     InstallParam installParam;
     Parcel parcel;
     installParam.userId = USERID;
-    installParam.Marshalling(parcel);
+    auto res = installParam.Marshalling(parcel);
+    EXPECT_EQ(res, true);
     auto ret = installParam.Unmarshalling(parcel);
     EXPECT_NE(ret, nullptr);
-    EXPECT_EQ(installParam.userId, USERID);
 }
 
 /**

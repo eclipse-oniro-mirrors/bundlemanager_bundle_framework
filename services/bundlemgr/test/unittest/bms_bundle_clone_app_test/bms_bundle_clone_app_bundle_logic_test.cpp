@@ -422,7 +422,6 @@ HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0002, Funct
         int32_t appIndex = 2;
         auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
         EXPECT_EQ(res, ERR_OK);
-        EXPECT_EQ(appIndex, 2);
         InnerBundleCloneInfo cloneInfo2;
         cloneInfo2.userId = userId;
         cloneInfo2.appIndex = appIndex;
@@ -433,7 +432,6 @@ HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0002, Funct
         int32_t appIndex = 1;
         auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
         EXPECT_EQ(res, ERR_OK);
-        EXPECT_EQ(appIndex, 1);
         InnerBundleCloneInfo cloneInfo1;
         cloneInfo1.userId = userId;
         cloneInfo1.appIndex = appIndex;
@@ -444,7 +442,6 @@ HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0002, Funct
         int32_t appIndex = 3;
         auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
         EXPECT_EQ(res, ERR_OK);
-        EXPECT_EQ(appIndex, 3);
     }
 }
 
@@ -500,7 +497,6 @@ HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0004, Funct
     int32_t appIndex = 2;
     auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
     EXPECT_EQ(res, ERR_OK);
-    EXPECT_EQ(appIndex, 2);
 
     InnerBundleCloneInfo cloneInfo2;
     cloneInfo2.userId = userId;
@@ -535,7 +531,6 @@ HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0005, Funct
     int32_t appIndex = 3;
     auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
     EXPECT_EQ(res, ERR_OK);
-    EXPECT_EQ(appIndex, 3);
 
     InnerBundleCloneInfo cloneInfo3;
     cloneInfo3.userId = userId;

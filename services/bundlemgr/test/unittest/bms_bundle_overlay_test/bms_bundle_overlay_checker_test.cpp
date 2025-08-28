@@ -1293,7 +1293,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2300, Function | SmallTest 
     userInfo.bundleUserInfo.userId = USERID;
     innerBundleInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
     overlayDataMgr.AddOverlayModuleStates(innerBundleInfo, userInfo);
-    EXPECT_EQ(userInfo.bundleUserInfo.userId, USERID);
+    EXPECT_EQ(innerBundleInfo.overlayType_, OverlayType::OVERLAY_EXTERNAL_BUNDLE);
 }
 
 /**
@@ -1315,7 +1315,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2400, Function | SmallTest 
     innerBundleInfo.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
     innerBundleInfo.SetTargetBundleName(TEST_BUNDLE_NAME);
     overlayDataMgr.AddOverlayModuleStates(innerBundleInfo, userInfo);
-    EXPECT_EQ(userInfo.bundleUserInfo.userId, USERID);
+    EXPECT_EQ(innerBundleInfo.overlayType_, OverlayType::OVERLAY_INTERNAL_BUNDLE);
     UninstallBundleInfo();
 }
 
@@ -3048,7 +3048,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0100, Function | Sm
     userInfo.bundleUserInfo.userId = USERID;
     innerBundleInfo.innerBundleUserInfos_.emplace(TEST_BUNDLE_NAME, userInfo);
     overlayDataMgr.AddOverlayModuleStates(innerBundleInfo, userInfo);
-    EXPECT_EQ(userInfo.bundleUserInfo.userId, USERID);
+    EXPECT_NE(innerBundleInfo.innerBundleUserInfos_.begin(), innerBundleInfo.innerBundleUserInfos_.end());
     dataMgr->RemoveUserId(userIdNew);
 }
 
@@ -3073,7 +3073,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0200, Function | Sm
     userInfo.bundleUserInfo.overlayModulesState.push_back(item);
     innerBundleInfo.innerBundleUserInfos_.emplace(TEST_BUNDLE_NAME, userInfo);
     overlayDataMgr.AddOverlayModuleStates(innerBundleInfo, userInfo);
-    EXPECT_EQ(userInfo.bundleUserInfo.userId, USERID);
+    EXPECT_NE(innerBundleInfo.innerBundleUserInfos_.begin(), innerBundleInfo.innerBundleUserInfos_.end());
     dataMgr->RemoveUserId(userIdNew);
 }
 
@@ -3103,7 +3103,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0300, Function | Sm
     innerBundleInfo.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
     innerBundleInfo.SetTargetBundleName(TEST_BUNDLE_NAME);
     overlayDataMgr.AddOverlayModuleStates(innerBundleInfo, userInfo);
-    EXPECT_EQ(userInfo.bundleUserInfo.userId, USERID);
+    EXPECT_EQ(innerBundleInfo.baseApplicationInfo_->targetBundleName, TEST_BUNDLE_NAME);
     dataMgr->RemoveUserId(userIdNew);
 }
 
@@ -3133,7 +3133,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0400, Function | Sm
     innerBundleInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
     innerBundleInfo.SetTargetBundleName(TEST_BUNDLE_NAME);
     overlayDataMgr.AddOverlayModuleStates(innerBundleInfo, userInfo);
-    EXPECT_EQ(userInfo.bundleUserInfo.userId, USERID);
+    EXPECT_EQ(innerBundleInfo.baseApplicationInfo_->targetBundleName, TEST_BUNDLE_NAME);
     dataMgr->RemoveUserId(userIdNew);
 }
 

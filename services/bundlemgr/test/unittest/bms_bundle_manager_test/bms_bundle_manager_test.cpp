@@ -2015,9 +2015,9 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0008, Function | SmallTest | Level1)
     SkillUri skillUri;
     skillUri.type = "image/*";
     skill.uris.emplace_back(skillUri);
-    size_t matchUriIndex = 0;
+    size_t matchUriIndex = 1;
     bool ret = skill.MatchMimeType(".jpg", matchUriIndex);
-    EXPECT_EQ(true, ret);
+    EXPECT_EQ(ret, true);
     EXPECT_EQ(matchUriIndex, 0);
 }
 

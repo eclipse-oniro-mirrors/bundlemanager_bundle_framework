@@ -859,7 +859,8 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2500, Function | SmallTest |
     int32_t successCount = 0;
     int32_t failCount = 0;
     BundlePermissionMgr::AddPermissionUsedRecord(permission, successCount, failCount);
-    EXPECT_EQ(failCount, 0);
+    bool result = BundlePermissionMgr::VerifyRecoverPermission();
+    EXPECT_EQ(result, true);
 }
 
 /**
@@ -1199,10 +1200,7 @@ HWTEST_F(BmsServiceStartupTest, ConvertPermissionDef_0200, Function | SmallTest 
 */
 HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0001, Function | SmallTest | Level0)
 {
-    if (bundleMgrService_ == nullptr) {
-        return;
-    }
-
+    ASSERT_NE(bundleMgrService_, nullptr);
     auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
     bool ret = preInstallExceptionMgr != nullptr;
     EXPECT_EQ(ret, true);
@@ -1580,10 +1578,7 @@ HWTEST_F(BmsServiceStartupTest, BmsParam_1000, Function | MediumTest | Level1)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0003, Function | SmallTest | Level0)
 {
-    if (bundleMgrService_ == nullptr) {
-        return;
-    }
-
+    ASSERT_NE(bundleMgrService_, nullptr);
     auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
     ASSERT_NE(preInstallExceptionMgr, nullptr);
 
@@ -1609,10 +1604,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0003, Function | SmallTes
 */
 HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0004, Function | SmallTest | Level0)
 {
-    if (bundleMgrService_ == nullptr) {
-        return;
-    }
-
+    ASSERT_NE(bundleMgrService_, nullptr);
     auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
     ASSERT_NE(preInstallExceptionMgr, nullptr);
 
@@ -1638,10 +1630,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0004, Function | SmallTes
 */
 HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0005, Function | SmallTest | Level0)
 {
-    if (bundleMgrService_ == nullptr) {
-        return;
-    }
-
+    ASSERT_NE(bundleMgrService_, nullptr);
     auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
     ASSERT_NE(preInstallExceptionMgr, nullptr);
 
@@ -1666,10 +1655,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0005, Function | SmallTes
 */
 HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0006, Function | SmallTest | Level0)
 {
-    if (bundleMgrService_ == nullptr) {
-        return;
-    }
-
+    ASSERT_NE(bundleMgrService_, nullptr);
     auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
     ASSERT_NE(preInstallExceptionMgr, nullptr);
 

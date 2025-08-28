@@ -1145,12 +1145,15 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6400, Function | Sma
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     ASSERT_NE(installdProxy, nullptr);
-
     int32_t  userid = 0;
-    std::string extensionBundleDir = "com.acts.extension";
+    std::string dir = "";
     bool isExist = true;
-    installdProxy->IsExistExtensionDir(userid, extensionBundleDir, isExist);
-    EXPECT_EQ(isExist,  true);
+    ErrCode ret = installdProxy->IsExistExtensionDir(userid, dir, isExist);
+    EXPECT_EQ(ret,  ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+
+    std::string extensionBundleDir = "com.acts.extension";
+    ret = installdProxy->IsExistExtensionDir(userid, extensionBundleDir, isExist);
+    EXPECT_EQ(ret,  ERR_OK);
 }
 
 /**

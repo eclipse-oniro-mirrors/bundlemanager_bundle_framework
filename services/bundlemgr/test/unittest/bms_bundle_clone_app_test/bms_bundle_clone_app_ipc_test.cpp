@@ -113,11 +113,7 @@ sptr<IBundleInstaller> BmsBundleCloneAppIPCTest::GetInstallerProxy()
 HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_AppIndexNotValid, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    EXPECT_NE(installerProxy, nullptr);
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(installerProxy, nullptr);
     const std::string bundleName = "com.example.myapplication";
     const int32_t userId = 100;
     int32_t appIndex = 0;
@@ -128,11 +124,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_AppIndexNotValid, Func
 HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_BundleNameEmpty, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    EXPECT_NE(installerProxy, nullptr);
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(installerProxy, nullptr);
     const std::string bundleName = "";
     const int32_t userId = 100;
     int32_t appIndex = 0;
@@ -143,12 +135,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_BundleNameEmpty, Funct
 HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest001_UserNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    EXPECT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
-
+    ASSERT_NE(bundleMgrProxy, nullptr);
     const std::string bundleName = "ohos.samples.etsclock";
     const std::string abilityName = "MainAbility";
     const int32_t userId = 200;
@@ -167,12 +154,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest001_UserNotFound, Fun
 HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest002_AppNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    EXPECT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
-
+    ASSERT_NE(bundleMgrProxy, nullptr);
     const std::string bundleName = "ohos.samples.appnotfound";
     const std::string abilityName = "MainAbility";
     const int32_t userId = 100;
@@ -191,12 +173,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest002_AppNotFound, Func
 HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest003_AppIndexNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    EXPECT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
-
+    ASSERT_NE(bundleMgrProxy, nullptr);
     const std::string bundleName = "ohos.samples.notfoundapp";
     const std::string abilityName = "MainAbility";
     const int32_t userId = 100;
@@ -215,11 +192,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest003_AppIndexNotFound,
 HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest001_AppNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    EXPECT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
     const std::string bundleName = "ohos.samples.appnotfound";
     const int32_t userId = 100;
     int32_t appIndex = 1;
@@ -231,11 +204,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest001_AppNotFound, Functi
 HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest002_UserNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    EXPECT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
     const std::string bundleName = "ohos.samples.etsclock";
     const int32_t userId = 201;
     int32_t appIndex = 1;
@@ -247,11 +216,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest002_UserNotFound, Funct
 HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest003_AppIndexNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    EXPECT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
     const std::string bundleName = "ohos.samples.etsclock";
     const int32_t userId = 100;
     int32_t appIndex = 10;
@@ -264,11 +229,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest003_AppIndexNotFound, F
 HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoExtTest001_AppNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    EXPECT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
     const std::string bundleName = "ohos.samples.appnotfound";
     const int32_t userId = 100;
     int32_t appIndex = 1;
@@ -283,11 +244,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoExtTest001_AppNotFound, Fun
 HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoExtTest002_UserNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    EXPECT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
     const std::string bundleName = "ohos.samples.etsclock";
     const int32_t userId = 200;
     int32_t appIndex = 1;
@@ -302,11 +259,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoExtTest002_UserNotFound, Fu
 HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoExtTest003_AppIndexNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    EXPECT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
     const std::string bundleName = "ohos.samples.etsclock";
     const int32_t userId = 100;
     int32_t appIndex = 10;
@@ -322,11 +275,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoExtTest003_AppIndexNotFound
 HWTEST_F(BmsBundleCloneAppIPCTest, UninstallCloneAppTest001_AppNotExist, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    EXPECT_NE(installerProxy, nullptr);
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(installerProxy, nullptr);
     const std::string bundleName = "";
     const int32_t userId = 100;
     int32_t appIndex = 1;
@@ -338,11 +287,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, UninstallCloneAppTest001_AppNotExist, Functio
 HWTEST_F(BmsBundleCloneAppIPCTest, QueryExtensionAbility_001, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
-    EXPECT_NE(bundleMgrProxy, nullptr);
-    if (!bundleMgrProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
     const std::string abilityName = "MainAbility";
     const std::string bundleName = "ohos.samples.etsclock";
     {

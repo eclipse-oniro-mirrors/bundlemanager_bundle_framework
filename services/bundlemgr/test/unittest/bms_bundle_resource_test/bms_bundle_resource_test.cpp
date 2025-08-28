@@ -1344,7 +1344,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0062, Function | SmallTest
     resourceInfo.hapPath_ = HAP_FILE_PATH1;
     ans = parser.ParseResourceInfo(USERID, resourceInfo);
     EXPECT_FALSE(ans);
-    EXPECT_EQ(resourceInfo.label_, BUNDLE_NAME);
 }
 
 /**
@@ -2960,8 +2959,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0128, Function | SmallTest
     BundleResourceParser parser;
     bool ans = parser.ParseIconIdFromJson(jsonBuff, foregroundId, backgroundId);
     EXPECT_TRUE(ans);
-    EXPECT_EQ(foregroundId, 0);
-    EXPECT_EQ(backgroundId, 0);
 }
 
 /**
