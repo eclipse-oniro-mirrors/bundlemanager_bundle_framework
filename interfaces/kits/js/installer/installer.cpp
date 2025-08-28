@@ -1319,7 +1319,7 @@ void RemoveExtResourceComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
         result[0] = BusinessError::CreateCommonError(
-            env, asyncCallbackInfo->err, REMOVE_EXT_RESOURCE, Constants::PERMISSION_INSTALL_BUNDLE);
+            env, asyncCallbackInfo->err, REMOVE_EXT_RESOURCE, UNINSTALL_PERMISSION);
     }
 
     CommonFunc::NapiReturnDeferred<ExtResourceCallbackInfo>(
