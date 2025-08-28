@@ -120,6 +120,17 @@ void BusinessErrorAni::ThrowCommonError(ani_env *env, int32_t err,
     ThrowError(env, error);
 }
 
+void BusinessErrorAni::ThrowInstallError(ani_env *env, int32_t err, int32_t innerCode,
+    const std::string &parameter, const std::string &type)
+{
+    if (env == nullptr) {
+        APP_LOGE("err is nullptr");
+        return;
+    }
+    ani_object error = CreateInstallError(env, err, innerCode, parameter, type);
+    ThrowError(env, error);
+}
+
 void BusinessErrorAni::ThrowTooFewParametersError(ani_env *env, int32_t err)
 {
     if (env == nullptr) {
@@ -146,6 +157,35 @@ ani_object BusinessErrorAni::CreateCommonError(
     if (errMap.find(err) != errMap.end()) {
         errMessage += errMap[err];
     }
+    iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, functionName);
+        iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
+        if (iter != std::string::npos) {
+            errMessage = errMessage.replace(iter, 1, permissionName);
+        }
+    }
+    return CreateError(env, err, errMessage);
+}
+
+ani_object BusinessErrorAni::CreateInstallError(ani_env *env, int32_t err, int32_t innerCode,
+    const std::string &functionName, const std::string &permissionName)
+{
+    if (env == nullptr) {
+        APP_LOGE("err is nullptr");
+        return nullptr;
+    }
+    std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
+    auto iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, std::to_string(err));
+    }
+    std::unordered_map<int32_t, const char*> errMap;
+    BusinessErrorMap::GetErrMap(errMap);
+    if (errMap.find(err) != errMap.end()) {
+        errMessage += errMap[err];
+    }
+    errMessage += "[" + std::to_string(innerCode) + "]";
     iter = errMessage.find(ERROR_MESSAGE_PLACEHOLDER);
     if (iter != std::string::npos) {
         errMessage = errMessage.replace(iter, 1, functionName);
