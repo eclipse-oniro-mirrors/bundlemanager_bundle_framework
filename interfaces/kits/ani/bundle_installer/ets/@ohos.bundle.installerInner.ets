@@ -72,6 +72,7 @@ export class PluginParamInner implements installer.PluginParam {
   parameters?: Array<installer.Parameters>;
 }
 
+const UNSPECIFIED_USERID: int = -2;
 const SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE : int = 128;
 const ADDITIONAL_INFO_MAX_SIZE: int = 3000;
 const ERROR_PARAM_CHECK_ERROR: int = 401;
@@ -422,7 +423,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   }
 
   installPreexistingApp(bundleName: string, userId?: int): Promise<void> {
-      let userIdNum = userId ?? -500;
+      let userIdNum = userId ?? UNSPECIFIED_USERID;
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
       let execFun = ():NullishType=>{ this.installPreexistingAppNative(bundleName, userIdNum); }
       let p1 = taskpool.execute(execFun);
