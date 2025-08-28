@@ -440,9 +440,7 @@ HWTEST_F(BmsExtendResourceManagerTest, DynamicIconTest_0400, Function | SmallTes
     ExtendResourceManagerHostImpl impl;
     InnerBundleInfo info;
     bool hasBundle = impl.GetInnerBundleInfo(BUNDLE_NAME2, info);
-    if (!hasBundle) {
-        return;
-    }
+    ASSERT_EQ(hasBundle, false);
 
     auto ret = impl.DisableDynamicIcon(BUNDLE_NAME2);
     EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED);
@@ -463,9 +461,7 @@ HWTEST_F(BmsExtendResourceManagerTest, DynamicIconTest_0500, Function | SmallTes
     ExtendResourceManagerHostImpl impl;
     InnerBundleInfo info;
     bool hasBundle = impl.GetInnerBundleInfo(BUNDLE_NAME2, info);
-    if (!hasBundle) {
-        return;
-    }
+    ASSERT_EQ(hasBundle, false);
 
     std::string moudleName;
     auto ret = impl.GetDynamicIcon(BUNDLE_NAME2, moudleName);

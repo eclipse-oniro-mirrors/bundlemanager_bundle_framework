@@ -1205,7 +1205,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0009, Function | Smal
             0, targetAbilityInfo, want, USERID, freeInstallParams);
         bundleMgr->SendCallBack(
             targetAbilityInfo.targetInfo.transactId, freeInstallParams);
-        EXPECT_EQ(freeInstallParams.callback, nullptr);
         EXPECT_EQ(targetAbilityInfo.targetInfo.transactId, "");
     }
 

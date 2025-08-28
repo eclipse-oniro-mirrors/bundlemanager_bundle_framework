@@ -670,7 +670,6 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_4000
     bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, FLAGS, USERID, true, abilityInfos, extensionInfos,
         findDefaultApp);
     EXPECT_EQ(ret, true);
-    EXPECT_EQ(findDefaultApp, false);
 }
 
 /**

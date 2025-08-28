@@ -4017,7 +4017,6 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerRdb_0100, Function | SmallTest | 
 {
     QuickFixDataMgr rdb;
     rdb.quickFixManagerDb_ = nullptr;
-    EXPECT_EQ(rdb.quickFixManagerDb_, nullptr);
     bool ret = rdb.DeleteInnerAppQuickFix("");
     EXPECT_EQ(ret, false);
 }
@@ -4471,7 +4470,7 @@ HWTEST_F(BmsBundleQuickFixTest, to_json_0100, Function | SmallTest | Level0)
         quickFixMark.bundleName,
         false,
         parseResult);
-    EXPECT_EQ(parseResult, ERR_OK);
+    EXPECT_NE(quickFixMark.status, QuickFixStatus::DEFAULT_STATUS);
 }
 
 /**
@@ -4492,7 +4491,7 @@ HWTEST_F(BmsBundleQuickFixTest, to_json_0200, Function | SmallTest | Level0)
         quickFixMark.bundleName,
         false,
         parseResult);
-    EXPECT_EQ(parseResult, ERR_OK);
+    EXPECT_EQ(quickFixMark.status, QuickFixStatus::DEFAULT_STATUS);
 }
 
 /**

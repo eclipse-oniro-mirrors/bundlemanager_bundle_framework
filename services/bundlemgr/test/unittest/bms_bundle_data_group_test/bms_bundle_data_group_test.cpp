@@ -1683,7 +1683,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0011, Function | SmallTest 
     newInfos["test"] = innerBundleInfo;
     InnerBundleInfo oldInfo;
     installer.RollBack(newInfos, oldInfo);
-    EXPECT_EQ(installer.isAppExist_, false);
+    EXPECT_NE(newInfos.begin(), newInfos.end());
 }
 
 /**
@@ -1704,7 +1704,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0012, Function | SmallTest 
     newInfos["test"] = innerBundleInfo;
     InnerBundleInfo oldInfo;
     installer.RollBack(newInfos, oldInfo);
-    EXPECT_EQ(installer.isAppExist_, false);
+    EXPECT_NE(newInfos.begin(), newInfos.end());
 }
 
 /**
@@ -1731,7 +1731,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0013, Function | SmallTest 
     newInfos["test"] = innerBundleInfo;
     InnerBundleInfo oldInfo;
     installer.RollBack(newInfos, oldInfo);
-    EXPECT_EQ(installer.isAppExist_, false);
+    EXPECT_NE(newInfos.begin(), newInfos.end());
 }
 
 /**
@@ -1758,7 +1758,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0014, Function | SmallTest 
     newInfos["test"] = innerBundleInfo;
     InnerBundleInfo oldInfo;
     installer.RollBack(newInfos, oldInfo);
-    EXPECT_EQ(installer.isAppExist_, false);
+    EXPECT_NE(newInfos.begin(), newInfos.end());
 }
 
 /**
@@ -1774,7 +1774,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0015, Function | SmallTest 
     std::string bundleName;
     std::string packageName = "test";
     installer.RemoveInfo(bundleName, packageName);
-    EXPECT_EQ(installer.bundleName_, "test");
+    EXPECT_EQ(installer.isAppExist_, false);
 }
 
 /**

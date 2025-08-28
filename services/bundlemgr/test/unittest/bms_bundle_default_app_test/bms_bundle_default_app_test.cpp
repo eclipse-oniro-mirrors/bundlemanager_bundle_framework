@@ -1907,7 +1907,7 @@ HWTEST_F(BmsBundleDefaultAppTest, GetBrokerBundleInfo_0100, Function | SmallTest
 HWTEST_F(BmsBundleDefaultAppTest, IsDefaultApplication_0100, Function | SmallTest | Level1)
 {
     DefaultAppHostImpl impl;
-    bool isDefaultApp = false;
+    bool isDefaultApp = true;
     ClearDataMgr();
     auto res = impl.IsDefaultApplication(DEFAULT_FILE_TYPE_VIDEO_MP4, isDefaultApp);
     EXPECT_EQ(isDefaultApp, false);

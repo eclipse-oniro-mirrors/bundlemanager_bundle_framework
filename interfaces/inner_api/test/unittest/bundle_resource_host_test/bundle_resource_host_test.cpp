@@ -550,8 +550,10 @@ HWTEST_F(BundleResourceHostTest, ReadFromParcel_0001, Function | SmallTest | Lev
 HWTEST_F(BundleResourceHostTest, Unmarshalling_0001, Function | SmallTest | Level1)
 {
     AbilityInfo localAbilityInfo;
+    std::string prefix = "localPrefix";
+    int fd = 2;
+    localAbilityInfo.Dump(prefix, fd);
     Parcel parcel{};
-
     auto ret = localAbilityInfo.Unmarshalling(parcel);
     EXPECT_EQ(ret, nullptr);
 }
@@ -564,29 +566,12 @@ HWTEST_F(BundleResourceHostTest, Unmarshalling_0001, Function | SmallTest | Leve
 HWTEST_F(BundleResourceHostTest, Marshalling_0001, Function | SmallTest | Level1)
 {
     AbilityInfo localAbilityInfo;
-    Parcel parcel{};
-
-    auto ret = localAbilityInfo.Marshalling(parcel);
-    EXPECT_TRUE(ret);
-}
-
-/**
- * @tc.number: Dump_0001
- * @tc.name: Dump_0001
- * @tc.desc: test Dump
- */
-HWTEST_F(BundleResourceHostTest, Dump_0001, Function | SmallTest | Level1)
-{
-    AbilityInfo localAbilityInfo;
     std::string prefix = "localPrefix";
     int fd = -1;
-
     localAbilityInfo.Dump(prefix, fd);
-    EXPECT_EQ(fd, -1);
-
-    fd = 2;
-    localAbilityInfo.Dump(prefix, fd);
-    EXPECT_EQ(prefix, "localPrefix");
+    Parcel parcel{};
+    auto ret = localAbilityInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -892,8 +877,10 @@ HWTEST_F(BundleResourceHostTest, ApplicationInfo_ReadFromParcel_0001, Function |
 HWTEST_F(BundleResourceHostTest, ApplicationInfo_Unmarshalling_0001, Function | SmallTest | Level1)
 {
     ApplicationInfo localMetadata;
+    std::string prefix = "localPrefix";
+    int fd = 2;
+    localMetadata.Dump(prefix, fd);
     Parcel parcel {};
-
     auto ret = localMetadata.Unmarshalling(parcel);
     EXPECT_EQ(ret, nullptr);
 }
@@ -906,29 +893,12 @@ HWTEST_F(BundleResourceHostTest, ApplicationInfo_Unmarshalling_0001, Function | 
 HWTEST_F(BundleResourceHostTest, ApplicationInfo_Marshalling_0001, Function | SmallTest | Level1)
 {
     ApplicationInfo localApplicationInfo;
-    Parcel parcel {};
-
-    auto ret = localApplicationInfo.Marshalling(parcel);
-    EXPECT_TRUE(ret);
-}
-
-/**
- * @tc.number: ApplicationInfo_Dump_0001
- * @tc.name: ApplicationInfo_Dump_0001
- * @tc.desc: test Dump
- */
-HWTEST_F(BundleResourceHostTest, ApplicationInfo_Dump_0001, Function | SmallTest | Level1)
-{
-    ApplicationInfo localMetadata;
     std::string prefix = "localPrefix";
     int fd = -1;
-
-    localMetadata.Dump(prefix, fd);
-    EXPECT_EQ(fd, -1);
-
-    fd = 2;
-    localMetadata.Dump(prefix, fd);
-    EXPECT_EQ(prefix, "localPrefix");
+    localApplicationInfo.Dump(prefix, fd);
+    Parcel parcel {};
+    auto ret = localApplicationInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -1108,8 +1078,10 @@ HWTEST_F(BundleResourceHostTest, BundleUserInfo_ReadFromParcel_0001, Function | 
 HWTEST_F(BundleResourceHostTest, BundleUserInfo_Unmarshalling_0001, Function | SmallTest | Level1)
 {
     BundleUserInfo localBundleUserInfo;
+    std::string prefix = "loclaPrefix";
+    int fd = 2;
+    localBundleUserInfo.Dump(prefix, fd);
     Parcel parcel {};
-
     auto ret = localBundleUserInfo.Unmarshalling(parcel);
     EXPECT_EQ(ret, nullptr);
 }
@@ -1122,29 +1094,12 @@ HWTEST_F(BundleResourceHostTest, BundleUserInfo_Unmarshalling_0001, Function | S
 HWTEST_F(BundleResourceHostTest, BundleUserInfo_Marshalling_0001, Function | SmallTest | Level1)
 {
     BundleUserInfo localBundleUserInfo;
-    Parcel parcel {};
-
-    auto ret = localBundleUserInfo.Marshalling(parcel);
-    EXPECT_TRUE(ret);
-}
-
-/**
- * @tc.number: BundleUserInfo_Dump_0001
- * @tc.name: BundleUserInfo_Dump_0001
- * @tc.desc: test Dump
- */
-HWTEST_F(BundleResourceHostTest, BundleUserInfo_Dump_0001, Function | SmallTest | Level1)
-{
-    BundleUserInfo localBundleUserInfo;
     std::string prefix = "loclaPrefix";
     int fd = -1;
-
     localBundleUserInfo.Dump(prefix, fd);
-    EXPECT_EQ(fd, -1);
-
-    fd = 2;
-    localBundleUserInfo.Dump(prefix, fd);
-    EXPECT_EQ(prefix, "loclaPrefix");
+    Parcel parcel {};
+    auto ret = localBundleUserInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
 }
 
 /**

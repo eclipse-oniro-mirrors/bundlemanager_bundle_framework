@@ -280,22 +280,14 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0009, Function
 HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0011, Function | MediumTest | Level1)
 {
     PluginInstaller installer;
+    std::string hostBundleName;
+    std::string pluginDir;
     installer.isPluginExist_ = false;
     installer.RemoveOldInstallDir();
-    EXPECT_EQ(installer.isPluginExist_, false);
-}
-
-/**
- * @tc.number: PluginInstaller_0012
- * @tc.name: test RemoveOldInstallDir
- * @tc.desc: 1.Test RemoveOldInstallDir the PluginInstaller
-*/
-HWTEST_F(BmsBundleMultiuserInstallPermissionTest, PluginInstaller_0012, Function | MediumTest | Level1)
-{
-    PluginInstaller installer;
     installer.isPluginExist_ = true;
     installer.RemoveOldInstallDir();
-    EXPECT_EQ(installer.isPluginExist_, true);
+    auto ret = installer.CreatePluginDir(hostBundleName, pluginDir);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

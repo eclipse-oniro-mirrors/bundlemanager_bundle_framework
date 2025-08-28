@@ -1796,7 +1796,7 @@ HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0006, Function | SmallTest | 
         AbilityInfo abilityInfo;
         abilityInfo.iconId = ICON_ID;
         dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
-        EXPECT_EQ(abilityInfo.iconId, ICON_ID);
+        EXPECT_EQ(abilityInfo.label, abilityInfo.applicationInfo.label);
     }
 }
 
@@ -1837,7 +1837,7 @@ HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0008, Function | SmallTest | 
         AbilityInfo abilityInfo;
         abilityInfo.iconId = ICON_ID;
         dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
-        EXPECT_EQ(abilityInfo.iconId, ICON_ID);
+        EXPECT_EQ(abilityInfo.label, abilityInfo.bundleName);
     }
 }
 

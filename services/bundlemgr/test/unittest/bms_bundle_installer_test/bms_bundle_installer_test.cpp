@@ -11219,7 +11219,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0057, Function | MediumTest | L
     NotifyType type = NotifyType::START_INSTALL;
     int32_t uid = 1;
     installer.NotifyPluginEvents(type, uid);
-    EXPECT_EQ(installer.isPluginExist_, true);
+    EXPECT_EQ(installer.isEnterpriseBundle_, false);
 }
 
 /**

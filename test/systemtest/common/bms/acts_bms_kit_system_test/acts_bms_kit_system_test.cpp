@@ -10061,10 +10061,7 @@ HWTEST_F(ActsBmsKitSystemTest, InstallCloneAppTest001_AppNotExist, Function | Me
 {
     StartProcess();
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_EQ(installerProxy, nullptr);
     const std::string bundleName = "ohos.samples.appnotfound";
     const int32_t userId = 100;
     int32_t appIndex = TEST_APP_INDEX1;
@@ -10083,10 +10080,7 @@ HWTEST_F(ActsBmsKitSystemTest, InstallCloneAppTest001_AppNotExist, Function | Me
 HWTEST_F(ActsBmsKitSystemTest, InstallCloneAppTest002_UserNotFound, Function | MediumTest | Level1)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_EQ(installerProxy, nullptr);
     const std::string bundleName = "ohos.samples.etsclock";
     const int32_t userId = 200; // ensure userId 200 not in system
     int32_t appIndex = TEST_APP_INDEX1;

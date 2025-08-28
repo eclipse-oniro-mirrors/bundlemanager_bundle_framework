@@ -2722,7 +2722,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0400, Function | Smal
     info.SetBaseApplicationInfo(applicationInfo);
     nlohmann::json jsonObject;
     info.FromJson(jsonObject);
-    EXPECT_EQ(applicationInfo.bundleName, NAME);
+    EXPECT_EQ(info.baseApplicationInfo_->bundleName, NAME);
 }
 
 /**
@@ -2819,7 +2819,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0900, Function | Smal
     hapModuleInfo.name = NAME;
     const int32_t flags = 0;
     info.GetModuleWithHashValue(flags, "", hapModuleInfo);
-    EXPECT_EQ(hapModuleInfo.name, NAME);
+    EXPECT_FALSE(hapModuleInfo.isLibIsolated);
 }
 
 /**

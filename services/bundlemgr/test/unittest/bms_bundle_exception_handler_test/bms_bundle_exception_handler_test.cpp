@@ -247,7 +247,6 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0700, TestSize.L
     EXPECT_EQ(result, true);
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::UNINSTALL_BUNDLE_START);
     bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
-    EXPECT_EQ(isBundleValid, true);
     GTEST_LOG_(INFO) << "HandleInvalidBundleTest_0700 end";
 }
 

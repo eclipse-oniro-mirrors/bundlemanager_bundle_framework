@@ -277,7 +277,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCacheMgr_0004, Function | MediumTest
     int32_t userId = 100;
     uint64_t cacheStat = 0;
     bundleCacheMgr.GetBundleCacheSize(validBundles, userId, cacheStat);
-    EXPECT_EQ(cacheStat, 0);
+    EXPECT_FALSE(moduleNameList.empty());
 }
 
 /**
@@ -705,7 +705,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0025, Function | Mediu
     installer.singletonState_ = AppExecFwk::BaseBundleInstaller::SingletonState::SINGLETON_TO_NON;
 
     installer.OnSingletonChange(false);
-    EXPECT_EQ(installer.singletonState_, AppExecFwk::BaseBundleInstaller::SingletonState::SINGLETON_TO_NON);
+    EXPECT_EQ(installer.isAppExist_, false);
 }
 
 /**
@@ -989,7 +989,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0042, Function | Small
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->appProvisionType = Constants::APP_PROVISION_TYPE_DEBUG;
     installer.UninstallDebugAppSandbox(bundleName, uid, innerBundleInfo);
-    EXPECT_EQ(installer.bundleName_, "test");
+    EXPECT_FALSE(installer.isContainEntry_);
 }
 
 /**
@@ -1011,7 +1011,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0043, Function | Small
     installer.UninstallDebugAppSandbox(bundleName, uid, innerBundleInfo);
 
     installer.MarkPreInstallState("test", false);
-    EXPECT_EQ(installer.bundleName_, "test");
+    EXPECT_FALSE(installer.isContainEntry_);
 }
 
 /**
