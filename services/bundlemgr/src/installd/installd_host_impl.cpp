@@ -633,14 +633,13 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
         std::string databaseDir = databaseParentDir + createDirParam.bundleName;
-        int32_t gid;
+        int32_t gid = createDirParam.uid;
         if (createDirParam.bundleName == MEDIALIBRARYDATA) {
             mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH)
                                         : (S_IRWXU | S_IRWXG | S_ISGID);
             gid = ServiceConstants::DATABASE_DIR_GID;
         } else {
             mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
-            gid = createDirParam.uid;
         }
         if (!InstalldOperator::MkOwnerDir(
             databaseDir, mode, createDirParam.uid, gid)) {
@@ -797,14 +796,13 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
     // create database bundleName dir: /data/app/${elx}/${userId}/database/${bundleName}
     std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
     std::string databaseDir = databaseParentDir + createDirParam.bundleName;
-    int32_t gid;
+    int32_t gid = createDirParam.gid;
     if (createDirParam.bundleName == MEDIALIBRARYDATA) {
         mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH)
                                         : (S_IRWXU | S_IRWXG | S_ISGID);
         gid = ServiceConstants::DATABASE_DIR_GID;
     } else {
         mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
-        gid = createDirParam.gid;
     }
     if (!InstalldOperator::MkOwnerDir(databaseDir, mode, createDirParam.uid, gid)) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
@@ -2249,14 +2247,13 @@ ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDir
                 LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
             }
         }
-        int32_t gid;
+        int32_t gid = createDirParam.gid;
         if (createDirParam.bundleName == MEDIALIBRARYDATA) {
             mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH)
                                         : (S_IRWXU | S_IRWXG | S_ISGID);
             gid = ServiceConstants::DATABASE_DIR_GID;
         } else {
             mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
-            gid = createDirParam.gid;
         }
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
         if (CreateExtensionDir(createDirParam, databaseParentDir, mode, gid) != ERR_OK) {

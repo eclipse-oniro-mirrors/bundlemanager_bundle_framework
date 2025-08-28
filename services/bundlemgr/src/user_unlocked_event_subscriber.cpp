@@ -115,7 +115,7 @@ void UpdateAppDataMgr::CheckPathAttribute(const std::string &path, const BundleI
     }
     uint32_t fileMode = static_cast<uint32_t>(fileStat.mode);
     if ((fileMode & MODE_BASE) != (S_IRWXU | S_IRWXG | S_ISGID)) {
-        APP_LOGW("path: %{public}s mode is not same, fileStat.mode:%{public}d, mode:%{public}d",
+        APP_LOGD("path: %{public}s mode is not same, fileStat.mode:%{public}d, mode:%{public}d",
             path.c_str(), static_cast<int32_t>(fileStat.mode), static_cast<int32_t>((S_IRWXU | S_IRWXG | S_ISGID)));
     }
 }

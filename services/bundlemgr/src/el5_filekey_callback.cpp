@@ -153,13 +153,12 @@ void El5FilekeyCallback::CheckEl5Dir(const Security::AccessToken::AppKeyInfo &in
 
     std::string databaseDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
         ServiceConstants::PATH_SEPARATOR + std::to_string(info.userId) + ServiceConstants::DATABASE + info.bundleName;
-    int32_t gid;
+    int32_t gid = info.uid;
     if (info.bundleName == MEDIALIBRARYDATA) {
         mode = S_IRWXU | S_IRWXG | S_ISGID;
         gid = ServiceConstants::DATABASE_DIR_GID;
     } else {
         mode = S_IRWXU | S_IRWXG;
-        gid = info.uid;
     }
     if (InstalldClient::GetInstance()->Mkdir(databaseDir, mode, info.uid, gid) != ERR_OK) {
         APP_LOGW("create Screen Lock Protection dir %{public}s failed", databaseDir.c_str());
