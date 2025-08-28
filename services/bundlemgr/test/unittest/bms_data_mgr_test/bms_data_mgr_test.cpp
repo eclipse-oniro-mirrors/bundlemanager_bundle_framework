@@ -2339,7 +2339,7 @@ HWTEST_F(BmsDataMgrTest, IsDebuggableApplication_0100, Function | SmallTest | Le
     const std::string bundleName = BUNDLE_NAME;
     bool isDebuggable = false;
     bool ret = dataMgr->IsDebuggableApplication(bundleName, isDebuggable);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(isDebuggable, false);
 }
 
 /**

@@ -7186,7 +7186,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetFormsInfoByApp_0100, Function | SmallTest | Le
 
     bool isDebuggable = false;
     bool ret = bundleMgrProxy->IsDebuggableApplication(appName, isDebuggable);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(isDebuggable, false);
 
     resvec.clear();
     Uninstall(appName, resvec);
