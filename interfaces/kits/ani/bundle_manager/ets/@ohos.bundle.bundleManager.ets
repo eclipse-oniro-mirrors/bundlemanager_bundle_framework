@@ -25,6 +25,17 @@ namespace bundleManager {
   loadLibrary("ani_bundle_manager.z");
 
   const EMPTY_USER_ID: number = -500;
+  const ERROR_PARAM_CHECK_ERROR: int = 401;
+  const PARAM_BUNDLENAME_TYPE_ERROR: string = "BusinessError 401: Parameter error. The type of bundleName must be string.";
+  const PARAM_TYPE_CHECK_ERROR: string = "param type check error";
+
+  function createBusinessError(code: int, message: string) {
+    let err = new BusinessError();
+    err.code = code;
+    err.name = 'Error';
+    err.message = message;
+    return err;
+  }
 
   enum BundleFlag {
     GET_BUNDLE_INFO_DEFAULT = 0x00000000,
@@ -250,6 +261,9 @@ namespace bundleManager {
   }
 
   function getLaunchWantForBundleSync(bundleName: string, userId?: number): Want {
+    if (bundleName === "") {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+    }
     let userIdInfo: number = userId ?? EMPTY_USER_ID;
     return bundleManager.getLaunchWantForBundleNative(bundleName, userIdInfo, true);
   }
@@ -657,6 +671,9 @@ namespace bundleManager {
   }
 
   function getLaunchWantForBundle(bundleName: string, userId?: number): Promise<Want> {
+    if (bundleName === "") {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_TYPE_ERROR);
+    }
     let p = new Promise<Want>((
       resolve: (want: Want) => void, reject: (error: BusinessError) => void) => {
       let userIdInfo: number = userId ?? EMPTY_USER_ID;
@@ -676,6 +693,9 @@ namespace bundleManager {
   }
 
   function getLaunchWantForBundle(bundleName: string, userId: number, callback: AsyncCallback<Want>): void {
+    if (bundleName === "") {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_TYPE_ERROR);
+    }
     let execFun = (): Want => {
       return bundleManager.getLaunchWantForBundleNative(bundleName, userId, false);
     };
@@ -689,6 +709,9 @@ namespace bundleManager {
   }
 
   function getLaunchWantForBundle(bundleName: string, callback: AsyncCallback<Want>): void {
+    if (bundleName === "") {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_TYPE_ERROR);
+    }
     let execFun = (): Want => {
       return bundleManager.getLaunchWantForBundleNative(bundleName, EMPTY_USER_ID, false);
     };
