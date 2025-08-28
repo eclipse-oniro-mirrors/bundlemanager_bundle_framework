@@ -828,6 +828,26 @@ static void BenchmarkTestDumpInfos(benchmark::State &state)
 }
 
 /**
+ * @tc.name: BenchmarkTestIsDebuggableApplication
+ * @tc.desc: Testcase for testing IsDebuggableApplication.
+ * @tc.type: FUNC
+ * @tc.require: Issue Number
+ */
+
+static void BenchmarkTestIsDebuggableApplication(benchmark::State &state)
+{
+    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
+    for (auto _ : state) {
+        if (bundleMgrProxy == nullptr) {
+            break;
+        }
+        /* @tc.steps: step1.call IsDebuggableApplication in loop */
+        bool isDebuggable = false;
+        bundleMgrProxy->IsDebuggableApplication(BUNDLE_NAME, isDebuggable);
+    }
+}
+
+/**
  * @tc.name: BenchmarkTestIsApplicationEnabled
  * @tc.desc: Testcase for testing IsApplicationEnabled.
  * @tc.type: FUNC
@@ -1370,6 +1390,7 @@ BENCHMARK(BenchmarkTestRegisterBundleStatusCallback)->Iterations(BENCHMARK_TIMES
 BENCHMARK(BenchmarkTestClearBundleStatusCallback)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestUnregisterBundleStatusCallback)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestDumpInfos)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestIsDebuggableApplication)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestIsApplicationEnabled)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestSetApplicationEnabled)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestIsAbilityEnabled)->Iterations(BENCHMARK_TIMES);
