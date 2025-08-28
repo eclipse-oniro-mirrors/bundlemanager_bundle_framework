@@ -228,6 +228,8 @@ namespace bundleManager {
 
   export native function enableDynamicIconNative(bundleName: string, moduleName: string): void;
 
+  export native function cleanBundleCacheFilesForSelfNative(): void;
+
   function getBundleInfoForSelfSync(bundleFlags: number): BundleInfo {
     return bundleManager.getBundleInfoForSelfNative(bundleFlags, true);
   }
@@ -979,6 +981,21 @@ namespace bundleManager {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return bundleManager.enableDynamicIconNative(bundleName, moduleName);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+  function cleanBundleCacheFilesForSelf(): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return bundleManager.cleanBundleCacheFilesForSelfNative();
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
