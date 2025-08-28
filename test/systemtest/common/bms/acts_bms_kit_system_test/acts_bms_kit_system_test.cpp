@@ -7166,6 +7166,49 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0200, Function | SmallTest | Leve
     std::string ret = bundleMgrProxy->GetAbilityLabel(bundleName, abilityName);
     EXPECT_EQ(ret, "");
 }
+/**
+ * @tc.number: IsDebuggableApplication_0100
+ * @tc.name: test GetFormsInfoByApp proxy
+ * @tc.desc: 1.system run normally
+ *           2.return false
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetFormsInfoByApp_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    bool isDebuggable = false;
+    bool ret = bundleMgrProxy->IsDebuggableApplication(appName, isDebuggable);
+    EXPECT_EQ(ret, false);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: IsDebuggableApplication_0200
+ * @tc.name: test IsDebuggableApplication proxy
+ * @tc.desc: 1.system run normally
+ *           2.return false
+ */
+HWTEST_F(ActsBmsKitSystemTest, IsDebuggableApplication_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName = "invalid";
+    bool isDebuggable = false;
+    ErrCode ret = bundleMgrProxy->IsDebuggableApplication(bundleName, isDebuggablec);
+    EXPECT_NE(ret, ERR_OK);
+}
 
 /**
  * @tc.number: IsApplicationEnabled_0100
