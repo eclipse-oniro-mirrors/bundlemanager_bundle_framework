@@ -2781,12 +2781,12 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
         if (i == ARGS_POS_ZERO) {
             if (valueType != napi_string) {
                 APP_LOGE("GetLaunchWantForBundle bundleName is not a string");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, STRING_TYPE);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
             CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName);
             if (asyncCallbackInfo->bundleName.size() == 0) {
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, STRING_TYPE);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
