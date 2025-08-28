@@ -61,6 +61,7 @@
 #include "display_power_mgr_client.h"
 #include "display_power_info.h"
 #include "battery_srv_client.h"
+#include "bundle_manager_helper.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -946,5 +947,100 @@ HWTEST_F(BmsCleanAllBundleCacheTest, CleanBundleCacheFilesAutomatic_0200, Functi
     uint64_t cacheSize = 0;
     ErrCode result = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: InnerCleanBundleCacheForSelfCallback_0100
+ * @tc.name: test InnerCleanBundleCacheForSelfCallback with null callback
+ * @tc.desc: 1. system run normally
+ *           2. cleanCacheCallback is nullptr
+ *           3. return ERROR_BUNDLE_SERVICE_EXCEPTION
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, InnerCleanBundleCacheForSelfCallback_0100, Function | SmallTest | Level1)
+{
+    sptr<CleanCacheCallback> cleanCacheCallback = nullptr;
+    ErrCode result = BundleManagerHelper::InnerCleanBundleCacheForSelfCallback(cleanCacheCallback);
+    EXPECT_EQ(result, ERROR_BUNDLE_SERVICE_EXCEPTION);
+}
+
+/**
+ * @tc.number: InnerCleanBundleCacheForSelfCallback_0200
+ * @tc.name: test InnerCleanBundleCacheForSelfCallback with valid callback
+ * @tc.desc: 1. system run normally
+ *           2. cleanCacheCallback is valid
+ *           3. test successful execution path
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, InnerCleanBundleCacheForSelfCallback_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    CreateFileDir();
+
+    sptr<CleanCacheCallback> cleanCacheCallback = new (std::nothrow) CleanCacheCallback();
+    EXPECT_NE(cleanCacheCallback, nullptr);
+    
+    ErrCode result = BundleManagerHelper::InnerCleanBundleCacheForSelfCallback(cleanCacheCallback);
+    EXPECT_NE(result, ERROR_BUNDLE_SERVICE_EXCEPTION);
+
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: InnerCleanBundleCacheForSelfCallback_0300
+ * @tc.name: test InnerCleanBundleCacheForSelfCallback error handling
+ * @tc.desc: 1. system run normally
+ *           2. test error handling when bundle manager operations fail
+ *           3. verify error code conversion
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, InnerCleanBundleCacheForSelfCallback_0300, Function | SmallTest | Level1)
+{
+    sptr<CleanCacheCallback> cleanCacheCallback = new (std::nothrow) CleanCacheCallback();
+    EXPECT_NE(cleanCacheCallback, nullptr);
+    
+    ErrCode result = BundleManagerHelper::InnerCleanBundleCacheForSelfCallback(cleanCacheCallback);
+    EXPECT_NE(result, ERR_OK);
+    EXPECT_NE(result, ERROR_BUNDLE_SERVICE_EXCEPTION);
+}
+
+/**
+ * @tc.number: HandleCleanBundleCacheFilesForSelf_0100
+ * @tc.name: test with null remote object
+ * @tc.desc: 1. Prepare MessageParcel data without writing remote object
+ *           2. Call HandleCleanBundleCacheFilesForSelf
+ *           3. Expect ERR_APPEXECFWK_PARCEL_ERROR
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, HandleCleanBundleCacheFilesForSelf_0100, Function | SmallTest | Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+
+    BundleMgrHost host;
+    ErrCode result = host.HandleCleanBundleCacheFilesForSelf(data, reply);
+
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleCleanBundleCacheFilesForSelf_0200
+ * @tc.name: test with invalid remote object type
+ * @tc.desc: 1. Write a non-ICleanCacheCallback remote object to MessageParcel data
+ *           2. Call HandleCleanBundleCacheFilesForSelf
+ *           3. Expect iface_cast to fail and return ERR_APPEXECFWK_PARCEL_ERROR
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, HandleCleanBundleCacheFilesForSelf_0200, Function | SmallTest | Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    sptr<IRemoteObject> mockObject = hostImpl->AsObject();
+    ASSERT_NE(mockObject, nullptr);
+    
+    data.WriteRemoteObject(mockObject);
+
+    BundleMgrHost host;
+    ErrCode result = host.HandleCleanBundleCacheFilesForSelf(data, reply);
+
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 }

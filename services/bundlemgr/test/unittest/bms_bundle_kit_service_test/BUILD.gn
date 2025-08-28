@@ -1330,7 +1330,10 @@ ohos_unittest("BmsCleanAllBundleCacheTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "mock/include" ]
+  include_dirs = [ 
+    "mock/include",
+    "${kits_path}/js/bundle_manager",
+  ]
   sources = bundle_mgr_source
 
   sources += [ "mock/src/mock_ipc_skeleton.cpp" ]
@@ -1375,7 +1378,10 @@ ohos_unittest("BmsCleanAllBundleCacheTest") {
   }
 
   deps = [
+    "${base_path}:appexecfwk_base",
     "${core_path}:appexecfwk_core",
+    "${kits_path}/js/bundle_manager:bundle_manager_common",
+    "${kits_path}/js/common:bundle_napi_common",
   ]
   deps += bundle_install_deps
 
@@ -1394,13 +1400,14 @@ ohos_unittest("BmsCleanAllBundleCacheTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "jsoncpp:jsoncpp",
+    "napi:ace_napi",
     "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
-
+  public_external_deps = [ "libuv:uv" ]
   defines = []
   if (current_cpu == "arm64") {
     defines += [ "USE_ARM64" ]
