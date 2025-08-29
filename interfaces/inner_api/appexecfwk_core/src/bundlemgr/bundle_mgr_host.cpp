@@ -713,7 +713,7 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES_FOR_SELF):
             errCode = HandleCleanBundleCacheFilesForSelf(data, reply);
             break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DEBUG_INFO):
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_DEBUGGABLE_APPLICATION):
             errCode = HandleIsDebuggableApplication(data, reply);
             break;
         default :

@@ -2284,15 +2284,13 @@ ErrCode BundleMgrProxy::IsDebuggableApplication(const std::string &bundleName, b
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_DEBUG_INFO, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IS_DEBUGGABLE_APPLICATION, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     int32_t ret = reply.ReadInt32();
-    if (ret != NO_ERROR) {
-        return ret;
-    }
     isDebuggable = reply.ReadBool();
-    return NO_ERROR;
+    
+    return ret;
 }
 
 ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool &isEnable)

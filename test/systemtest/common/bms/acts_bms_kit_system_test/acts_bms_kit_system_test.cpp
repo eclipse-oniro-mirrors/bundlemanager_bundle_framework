@@ -7168,11 +7168,11 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0200, Function | SmallTest | Leve
 }
 /**
  * @tc.number: IsDebuggableApplication_0100
- * @tc.name: test GetFormsInfoByApp proxy
+ * @tc.name: test IsDebuggableApplication proxy
  * @tc.desc: 1.system run normally
  *           2.return false
  */
-HWTEST_F(ActsBmsKitSystemTest, GetFormsInfoByApp_0100, Function | SmallTest | Level1)
+HWTEST_F(ActsBmsKitSystemTest, IsDebuggableApplication_0100, Function | SmallTest | Level1)
 {
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
@@ -7185,7 +7185,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetFormsInfoByApp_0100, Function | SmallTest | Le
     ASSERT_NE(bundleMgrProxy, nullptr);
 
     bool isDebuggable = false;
-    bool ret = bundleMgrProxy->IsDebuggableApplication(appName, isDebuggable);
+    ErrCode ret = bundleMgrProxy->IsDebuggableApplication(appName, isDebuggable);
+    EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(isDebuggable, false);
 
     resvec.clear();
@@ -7206,7 +7207,7 @@ HWTEST_F(ActsBmsKitSystemTest, IsDebuggableApplication_0200, Function | SmallTes
     ASSERT_NE(bundleMgrProxy, nullptr);
     std::string bundleName = "invalid";
     bool isDebuggable = false;
-    ErrCode ret = bundleMgrProxy->IsDebuggableApplication(bundleName, isDebuggablec);
+    ErrCode ret = bundleMgrProxy->IsDebuggableApplication(bundleName, isDebuggable);
     EXPECT_NE(ret, ERR_OK);
 }
 

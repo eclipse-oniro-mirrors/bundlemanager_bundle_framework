@@ -4816,13 +4816,11 @@ ErrCode BundleDataMgr::IsDebuggableApplication(const std::string &bundleName, bo
     std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_OK;
     }
 
     const InnerBundleInfo &bundleInfo = infoItem->second;
-    ApplicationInfo appInfo = bundleInfo.GetBaseApplicationInfo();
-    isDebuggable = appInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    isDebuggable = bundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
 
     return ERR_OK;    
 }

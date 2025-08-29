@@ -225,7 +225,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     RESET_ALL_AOT = 199,
     GET_TEST_RUNNER = 200,
 	CLEAN_BUNDLE_CACHE_FILES_FOR_SELF = 201,
-    GET_DEBUG_INFO = 202,
+    IS_DEBUGGABLE_APPLICATION = 202,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
