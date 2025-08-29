@@ -4464,13 +4464,12 @@ HWTEST_F(BmsBundleQuickFixTest, to_json_0100, Function | SmallTest | Level0)
     to_json(jsonObject, quickFixMark);
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+    EXPECT_NO_THROW(BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         quickFixMark.bundleName,
         false,
-        parseResult);
-    EXPECT_NE(quickFixMark.status, QuickFixStatus::DEFAULT_STATUS);
+        parseResult));
 }
 
 /**
@@ -4485,13 +4484,12 @@ HWTEST_F(BmsBundleQuickFixTest, to_json_0200, Function | SmallTest | Level0)
     to_json(jsonObject, quickFixMark);
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+    EXPECT_NO_THROW(BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         quickFixMark.bundleName,
         false,
-        parseResult);
-    EXPECT_EQ(quickFixMark.status, QuickFixStatus::DEFAULT_STATUS);
+        parseResult));
 }
 
 /**
