@@ -98,6 +98,9 @@ static bool CheckInstallParam(ani_env* env, InstallParam& installParam)
 static void ExecuteInstall(const std::vector<std::string>& hapFiles, InstallParam& installParam,
     InstallResult& installResult)
 {
+    if (installParam.installFlag == InstallFlag::NORMAL) {
+        installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    }
     if (hapFiles.empty() && installParam.sharedBundleDirPaths.empty()) {
         installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID);
         return;
@@ -218,9 +221,6 @@ static void AniInstall(ani_env* env, [[maybe_unused]] ani_object installerObj,
     InstallParam installParam;
     if (!GetInstallParamForInstall(env, arrayObj, aniInstParam, hapFiles, installParam)) {
         return;
-    }
-    if (installParam.installFlag == InstallFlag::NORMAL) {
-        installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     }
     InstallResult result;
     ExecuteInstall(hapFiles, installParam, result);
