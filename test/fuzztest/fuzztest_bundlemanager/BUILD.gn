@@ -122,6 +122,7 @@ group("bundlemanagerfuzztest") {
     "bmsqueryallabilityinfos_fuzzer:BMSQueryAllAbilityInfosFuzzTest",
     "bmsquerykeepalivebundleinfos_fuzzer:BMSQueryKeepAliveBundleInfosFuzzTest",
     "bmsqueryrpcidbyabilitytoservicecenter_fuzzer:BMSQueryRpcIdByAbilityToServiceCenterFuzzTest",
+    "bmsquickfixbootscanner_fuzzer:BMSQuickFixBootScannerFuzzTest",
     "bmsquickfixchecker_fuzzer:BMSQuickFixCheckerFuzzTest",
     "bmsquickfixdatamgr_fuzzer:BMSQuickFixDataMgrFuzzTest",
     "bmsquickfixdeployer_fuzzer:BMSQuickFixDeployerFuzzTest",
@@ -132,6 +133,7 @@ group("bundlemanagerfuzztest") {
     "bmsshortcutdatastoragerdb_fuzzer:BMSShortCutDataStorageRdbFuzzTest",
     "bmsuninstalldatamgr_fuzzer:BMSUninstallDataMgrFuzzTest",
     "bmsverifymanagerhost_fuzzer:BMSVerifyManagerHostFuzzTest",
+    "bmssystemabilityhelper_fuzzer:BMSSystemAbilityHelperFuzzTest",
   ]
 
   if (bundle_framework_default_app) {
