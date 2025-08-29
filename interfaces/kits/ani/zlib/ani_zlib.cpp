@@ -123,7 +123,7 @@ static void compressFilesNative(ani_env* env, ani_object aniInFiles, ani_string 
     RETURN_IF_NULL(aniOptions);
 
     std::vector<std::string> inFiles;
-    if (aniInFiles == nullptr || !CommonFunAni::ParseStrArray(env, aniInFiles, inFiles)) {
+    if (aniInFiles == nullptr || !CommonFunAni::ParseStrArray(env, aniInFiles, inFiles) || inFiles.size() == 0) {
         APP_LOGE("inFiles parse failed.");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_IN_FILES, TYPE_ARRAY);
         return;

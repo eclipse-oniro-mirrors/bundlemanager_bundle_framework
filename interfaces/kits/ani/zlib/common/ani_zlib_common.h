@@ -61,6 +61,23 @@ inline void ThrowZLibNapiError(ani_env* env, int posixError)
                          : LIBZIP::errCodeTable.at(posixError);
     BusinessErrorAni::ThrowError(env, errorPair.first, errorPair.second);
 }
+
+template<typename valueType>
+bool ParseArrayBuffer(ani_env* env, ani_arraybuffer aniBuf, void*& buf, valueType& bufLen, const int errCode)
+{
+    size_t tmpLen = 0;
+    ani_status status = env->ArrayBuffer_GetInfo(aniBuf, &buf, &tmpLen);
+    if (status != ANI_OK) {
+        APP_LOGE("ArrayBuffer_GetInfo failed: %{public}d", status);
+        AniZLibCommon::ThrowZLibNapiError(env, errCode);
+        return false;
+    }
+    bufLen = static_cast<valueType>(tmpLen);
+    if (bufLen == 0) {
+        buf = nullptr;
+    }
+    return true;
+}
 } // namespace AniZLibCommon
 } // namespace AppExecFwk
 } // namespace OHOS
