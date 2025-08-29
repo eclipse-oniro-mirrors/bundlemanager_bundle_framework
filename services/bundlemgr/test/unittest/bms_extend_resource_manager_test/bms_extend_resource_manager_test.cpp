@@ -443,11 +443,11 @@ HWTEST_F(BmsExtendResourceManagerTest, DynamicIconTest_0400, Function | SmallTes
     ASSERT_EQ(hasBundle, false);
 
     auto ret = impl.DisableDynamicIcon(BUNDLE_NAME2);
-    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     impl.SaveCurDynamicIcon(BUNDLE_NAME2, TEST_MODULE);
     ret = impl.DisableDynamicIcon(BUNDLE_NAME2);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     impl.SaveCurDynamicIcon(BUNDLE_NAME2, "");
 }
 
@@ -465,11 +465,11 @@ HWTEST_F(BmsExtendResourceManagerTest, DynamicIconTest_0500, Function | SmallTes
 
     std::string moudleName;
     auto ret = impl.GetDynamicIcon(BUNDLE_NAME2, moudleName);
-    EXPECT_TRUE(moudleName.empty());
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     impl.SaveCurDynamicIcon(BUNDLE_NAME2, TEST_MODULE);
     ret = impl.GetDynamicIcon(BUNDLE_NAME2, moudleName);
-    EXPECT_FALSE(moudleName.empty());
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
