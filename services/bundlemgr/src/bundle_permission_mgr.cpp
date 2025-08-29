@@ -109,6 +109,10 @@ void BundlePermissionMgr::ConvertPermissionDef(
             Profile::DEFINEPERMISSION_GRANT_MODE_SYSTEM_GRANT) {
             return AccessToken::GrantMode::SYSTEM_GRANT;
         }
+        if (definePermission.grantMode ==
+            Profile::DEFINEPERMISSION_GRANT_MODE_MANUAL_SETTINGS) {
+            return AccessToken::GrantMode::MANUAL_SETTINGS;
+        }
         return AccessToken::GrantMode::USER_GRANT;
     }();
 

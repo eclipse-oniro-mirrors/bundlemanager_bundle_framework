@@ -485,6 +485,7 @@ constexpr const char* DEFINEPERMISSION_DISTRIBUTED_SCENE_ENABLE = "distributedSc
 constexpr const char* DEFINEPERMISSION_IS_KERNEL_EFFECT = "isKernelEffect";
 constexpr const char* DEFINEPERMISSION_HAS_VALUE = "hasValue";
 constexpr const char* DEFINEPERMISSION_GRANT_MODE_SYSTEM_GRANT = "system_grant";
+constexpr const char* DEFINEPERMISSION_GRANT_MODE_MANUAL_SETTINGS = "manual_settings";
 constexpr const char* DEFINEPERMISSION_AVAILABLE_LEVEL_DEFAULT_VALUE = "normal";
 constexpr const char* DEFINEPERMISSION_AVAILABLE_TYPE = "availableType";
 constexpr const char* DEFINEPERMISSION_AVAILABLE_TYPE_DEFAULT_VALUE = "normal";
