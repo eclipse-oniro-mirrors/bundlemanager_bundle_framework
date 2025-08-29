@@ -9069,6 +9069,9 @@ HWTEST_F(ActsBmsKitSystemTest, DumpInfos_0001, Function | SmallTest | Level1)
     auto ret = bundleMgrProxy->DumpInfos(DumpFlag::DUMP_BUNDLE_INFO, appName, USERID, result);
     EXPECT_EQ(ret, true);
 
+    ret = bundleMgrProxy->DumpInfos(DumpFlag::DUMP_BUNDLE_INFO, "not_exist", USERID, result);
+    EXPECT_EQ(ret, false);
+
     auto dumpLabelRes = bundleMgrProxy->DumpInfos(DumpFlag::DUMP_BUNDLE_LABEL, appName, USERID, result);
     EXPECT_EQ(dumpLabelRes, true);
 
