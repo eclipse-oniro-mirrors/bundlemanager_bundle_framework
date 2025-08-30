@@ -73,13 +73,13 @@ ani_object ConvertDeflatePendingOutputInfo(ani_env* env,
     const int32_t errCode, const uint32_t pending, const int32_t bits);
 
 template<typename valueType>
-bool ParseArrayBuffer(ani_env* env, ani_arraybuffer aniBuf, void*& buf, valueType& bufLen, const int throws)
+bool ParseArrayBuffer(ani_env* env, ani_arraybuffer aniBuf, void*& buf, valueType& bufLen, const int errCode)
 {
     size_t tmpLen = 0;
     ani_status status = env->ArrayBuffer_GetInfo(aniBuf, &buf, &tmpLen);
     if (status != ANI_OK) {
         APP_LOGE("ArrayBuffer_GetInfo failed: %{public}d", status);
-        AniZLibCommon::ThrowZLibNapiError(env, throws);
+        AniZLibCommon::ThrowZLibNapiError(env, errCode);
         return false;
     }
     bufLen = static_cast<valueType>(tmpLen);

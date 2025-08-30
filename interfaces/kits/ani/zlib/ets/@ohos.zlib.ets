@@ -343,13 +343,13 @@ export default namespace zlib {
   }
 
   export class ChecksumInternal implements Checksum {
-    public native adler32Native(adler: long, buf: ArrayBuffer): long;
-    public native adler32CombineNative(adler1: long, adler2: long, len2: long): long;
-    public native crc32Native(crc: long, buf: ArrayBuffer): long;
-    public native crc32CombineNative(crc1: long, crc2: long, len2: long): long;
-    public native crc64Native(crc: long, buf: ArrayBuffer): long;
-    public native getCrcTableNative(): Array<long>;
-    public native getCrc64TableNative(): Array<long>;
+    private native adler32Native(adler: long, buf: ArrayBuffer): long;
+    private native adler32CombineNative(adler1: long, adler2: long, len2: long): long;
+    private native crc32Native(crc: long, buf: ArrayBuffer): long;
+    private native crc32CombineNative(crc1: long, crc2: long, len2: long): long;
+    private native crc64Native(crc: long, buf: ArrayBuffer): long;
+    private native getCrcTableNative(): Array<long>;
+    private native getCrc64TableNative(): Array<long>;
 
     public adler32(adler: long, buf: ArrayBuffer): Promise<long> {
       let p: Promise<long> = new Promise<long>((resolve: (v:long) => void, reject: (error: BusinessError) => void) : void => {
@@ -501,34 +501,34 @@ export default namespace zlib {
 
   export class GZipInternal implements GZip {
     @JSONStringifyIgnore
-    nativeGZFile : long = 0;
-    
-    public native gzdopenNative(fd: int, mode: string): void;
-    public native gzbufferNative(size: long): int;
-    public native gzopenNative(path: string, mode: string): void;
-    public native gzeofNative(): int;
-    public native gzdirectNative(): int;
-    public native gzcloseNative(): ReturnStatus;
-    public native gzclearerrNative(): void;
-    public native gzerrorNative(): GzErrorOutputInfo;
-    public native gzgetcNative(): int;
-    public native gzflushNative(flush: CompressFlushMode): ReturnStatus;
-    public native gzfwriteNative(buf: ArrayBuffer, size: long, nitems: long): long;
-    public native gzfreadNative(buf: ArrayBuffer, size: long, nitems: long): long;
-    public native gzclosewNative(): ReturnStatus;
-    public native gzcloserNative(): ReturnStatus;
-    public native gzwriteNative(buf: ArrayBuffer, len: long): long;
-    public native gzungetcNative(c: int): int;
-    public native gztellNative(): long;
-    public native gzsetparamsNative(level: CompressLevel, strategy: CompressStrategy): ReturnStatus;
-    public native gzseekNative(offset: long, whence: OffsetReferencePoint): long;
-    public native gzrewindNative(): ReturnStatus;
-    public native gzreadNative(buf: ArrayBuffer): long;
-    public native gzputsNative(str: string): int;
-    public native gzputcNative(c: int): int;
-    public native gzprintfNative(format: string, ...args: Array<string | number>): int;
-    public native gzoffsetNative(): long;
-    public native gzgetsNative(buf: ArrayBuffer): string;
+    private nativeGZFile : long = 0;
+
+    private native gzdopenNative(fd: int, mode: string): void;
+    private native gzbufferNative(size: long): int;
+    private native gzopenNative(path: string, mode: string): void;
+    private native gzeofNative(): int;
+    private native gzdirectNative(): int;
+    private native gzcloseNative(): ReturnStatus;
+    private native gzclearerrNative(): void;
+    private native gzerrorNative(): GzErrorOutputInfo;
+    private native gzgetcNative(): int;
+    private native gzflushNative(flush: CompressFlushMode): ReturnStatus;
+    private native gzfwriteNative(buf: ArrayBuffer, size: long, nitems: long): long;
+    private native gzfreadNative(buf: ArrayBuffer, size: long, nitems: long): long;
+    private native gzclosewNative(): ReturnStatus;
+    private native gzcloserNative(): ReturnStatus;
+    private native gzwriteNative(buf: ArrayBuffer, len: long): long;
+    private native gzungetcNative(c: int): int;
+    private native gztellNative(): long;
+    private native gzsetparamsNative(level: CompressLevel, strategy: CompressStrategy): ReturnStatus;
+    private native gzseekNative(offset: long, whence: OffsetReferencePoint): long;
+    private native gzrewindNative(): ReturnStatus;
+    private native gzreadNative(buf: ArrayBuffer): long;
+    private native gzputsNative(str: string): int;
+    private native gzputcNative(c: int): int;
+    private native gzprintfNative(format: string, ...args: Array<string | number>): int;
+    private native gzoffsetNative(): long;
+    private native gzgetsNative(buf: ArrayBuffer): string;
 
     public gzdopen(fd: int, mode: string): Promise<void> {
       let p: Promise<void> = new Promise<void>((resolve: (v:PromiseLike<void>) => void, reject: (error: Error) => void) : void => {
@@ -1009,7 +1009,7 @@ export default namespace zlib {
   }
 
   class ZipCleaner {
-    public ptr: long = 0;
+    private ptr: long = 0;
 
     constructor(ptr: long) {
       this.ptr = ptr;
@@ -1027,7 +1027,7 @@ export default namespace zlib {
 
   export class ZipInternal implements Zip {
     @JSONStringifyIgnore
-    nativeZStream: long = 0;
+    private nativeZStream: long = 0;
     @JSONStringifyIgnore
     private zipCleaner: ZipCleaner | null = null;
 
@@ -1043,53 +1043,53 @@ export default namespace zlib {
       destroyRegister.unregister(unregisterToken);
     }
 
-    public native getZStreamNative(): ZStream | undefined;
-    public native zlibVersionNative(): string;
-    public native zlibCompileFlagsNative(): int;
-    public native compressNative(dest: ArrayBuffer, source: ArrayBuffer): ZipOutputInfo;
-    public native compressWithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, sourceLen: long): ZipOutputInfo;
-    public native compress2Native(dest: ArrayBuffer, source: ArrayBuffer, level: CompressLevel): ZipOutputInfo;
-    public native compress2WithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, level: CompressLevel, sourceLen: long): ZipOutputInfo;
-    public native compressBoundNative(sourceLen: int): int;
-    public native uncompressNative(dest: ArrayBuffer, source: ArrayBuffer): ZipOutputInfo;
-    public native uncompressWithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, sourceLen: long): ZipOutputInfo;
-    public native uncompress2Native(dest: ArrayBuffer, source: ArrayBuffer): DecompressionOutputInfo;
-    public native uncompress2WithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, sourceLen: long): DecompressionOutputInfo;
-    public native inflateValidateNative(strm: ZStream, check: int): ReturnStatus;
-    public native inflateSyncPointNative(strm: ZStream): ReturnStatus;
-    public native inflateSyncNative(strm: ZStream): ReturnStatus;
-    public native inflateSetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): ReturnStatus;
-    public native inflateResetKeepNative(strm: ZStream): ReturnStatus;
-    public native inflateReset2Native(strm: ZStream, windowBits: int): ReturnStatus;
-    public native inflateResetNative(strm: ZStream): ReturnStatus;
-    public native inflatePrimeNative(strm: ZStream, bits: int, value: int): ReturnStatus;
-    public native inflateMarkNative(strm: ZStream): int;
-    public native inflateInit2Native(strm: ZStream, windowBits: int): ReturnStatus;
-    public native inflateInitNative(strm: ZStream): ReturnStatus;
-    public native inflateGetHeaderNative(strm: ZStream, header: GzHeader): ReturnStatus;
-    public native inflateGetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): DictionaryOutputInfo;
-    public native inflateEndNative(strm: ZStream): ReturnStatus;
-    public native inflateCopyNative(source: Zip): ReturnStatus;
-    public native inflateCodesUsedNative(strm: ZStream): long;
-    public native inflateBackInitNative(strm: ZStream, windowBits: long, window: ArrayBuffer): ReturnStatus;
-    public native inflateBackEndNative(strm: ZStream): ReturnStatus;
-    public native inflateBackNative(strm: ZStream, backIn: InflateBackInputCallback, inDesc: RecordData, backOut: InflateBackOutputCallback, outDesc: RecordData): ReturnStatus;
-    public native inflateNative(strm: ZStream, flush: CompressFlushMode): ReturnStatus;
-    public native deflateInitNative(strm: ZStream, level: CompressLevel): ReturnStatus;
-    public native deflateInit2Native(strm: ZStream, level: CompressLevel, method: CompressMethod, windowBits: int, memLevel: MemLevel, strategy: CompressStrategy): ReturnStatus;
-    public native deflateNative(strm: ZStream, flush: CompressFlushMode): ReturnStatus;
-    public native deflateEndNative(strm: ZStream): ReturnStatus;
-    public native deflateBoundNative(strm: ZStream, sourceLength: long): int;
-    public native deflateSetHeaderNative(strm: ZStream, head: GzHeader): ReturnStatus;
-    public native deflateCopyNative(source: Zip): ReturnStatus;
-    public native deflateSetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): ReturnStatus;
-    public native deflateGetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): DictionaryOutputInfo;
-    public native deflateTuneNative(strm: ZStream, goodLength: int, maxLazy: int, niceLength: int, maxChain: int): ReturnStatus;
-    public native deflateResetNative(strm: ZStream): ReturnStatus;
-    public native deflateResetKeepNative(strm: ZStream): ReturnStatus;
-    public native deflatePendingNative(strm: ZStream): DeflatePendingOutputInfo;
-    public native deflateParamsNative(strm: ZStream, level: CompressLevel, strategy: CompressStrategy): ReturnStatus;
-    public native deflatePrimeNative(strm: ZStream, bits: int, value: int): ReturnStatus;
+    private native getZStreamNative(): ZStream | undefined;
+    private native zlibVersionNative(): string;
+    private native zlibCompileFlagsNative(): int;
+    private native compressNative(dest: ArrayBuffer, source: ArrayBuffer): ZipOutputInfo;
+    private native compressWithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, sourceLen: long): ZipOutputInfo;
+    private native compress2Native(dest: ArrayBuffer, source: ArrayBuffer, level: CompressLevel): ZipOutputInfo;
+    private native compress2WithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, level: CompressLevel, sourceLen: long): ZipOutputInfo;
+    private native compressBoundNative(sourceLen: int): int;
+    private native uncompressNative(dest: ArrayBuffer, source: ArrayBuffer): ZipOutputInfo;
+    private native uncompressWithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, sourceLen: long): ZipOutputInfo;
+    private native uncompress2Native(dest: ArrayBuffer, source: ArrayBuffer): DecompressionOutputInfo;
+    private native uncompress2WithSourceLenNative(dest: ArrayBuffer, source: ArrayBuffer, sourceLen: long): DecompressionOutputInfo;
+    private native inflateValidateNative(strm: ZStream, check: int): ReturnStatus;
+    private native inflateSyncPointNative(strm: ZStream): ReturnStatus;
+    private native inflateSyncNative(strm: ZStream): ReturnStatus;
+    private native inflateSetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): ReturnStatus;
+    private native inflateResetKeepNative(strm: ZStream): ReturnStatus;
+    private native inflateReset2Native(strm: ZStream, windowBits: int): ReturnStatus;
+    private native inflateResetNative(strm: ZStream): ReturnStatus;
+    private native inflatePrimeNative(strm: ZStream, bits: int, value: int): ReturnStatus;
+    private native inflateMarkNative(strm: ZStream): int;
+    private native inflateInit2Native(strm: ZStream, windowBits: int): ReturnStatus;
+    private native inflateInitNative(strm: ZStream): ReturnStatus;
+    private native inflateGetHeaderNative(strm: ZStream, header: GzHeader): ReturnStatus;
+    private native inflateGetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): DictionaryOutputInfo;
+    private native inflateEndNative(strm: ZStream): ReturnStatus;
+    private native inflateCopyNative(source: Zip): ReturnStatus;
+    private native inflateCodesUsedNative(strm: ZStream): long;
+    private native inflateBackInitNative(strm: ZStream, windowBits: long, window: ArrayBuffer): ReturnStatus;
+    private native inflateBackEndNative(strm: ZStream): ReturnStatus;
+    private native inflateBackNative(strm: ZStream, backIn: InflateBackInputCallback, inDesc: RecordData, backOut: InflateBackOutputCallback, outDesc: RecordData): ReturnStatus;
+    private native inflateNative(strm: ZStream, flush: CompressFlushMode): ReturnStatus;
+    private native deflateInitNative(strm: ZStream, level: CompressLevel): ReturnStatus;
+    private native deflateInit2Native(strm: ZStream, level: CompressLevel, method: CompressMethod, windowBits: int, memLevel: MemLevel, strategy: CompressStrategy): ReturnStatus;
+    private native deflateNative(strm: ZStream, flush: CompressFlushMode): ReturnStatus;
+    private native deflateEndNative(strm: ZStream): ReturnStatus;
+    private native deflateBoundNative(strm: ZStream, sourceLength: long): int;
+    private native deflateSetHeaderNative(strm: ZStream, head: GzHeader): ReturnStatus;
+    private native deflateCopyNative(source: Zip): ReturnStatus;
+    private native deflateSetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): ReturnStatus;
+    private native deflateGetDictionaryNative(strm: ZStream, dictionary: ArrayBuffer): DictionaryOutputInfo;
+    private native deflateTuneNative(strm: ZStream, goodLength: int, maxLazy: int, niceLength: int, maxChain: int): ReturnStatus;
+    private native deflateResetNative(strm: ZStream): ReturnStatus;
+    private native deflateResetKeepNative(strm: ZStream): ReturnStatus;
+    private native deflatePendingNative(strm: ZStream): DeflatePendingOutputInfo;
+    private native deflateParamsNative(strm: ZStream, level: CompressLevel, strategy: CompressStrategy): ReturnStatus;
+    private native deflatePrimeNative(strm: ZStream, bits: int, value: int): ReturnStatus;
 
     public getZStream(): Promise<ZStream | undefined> {
       let p = new Promise<ZStream | undefined>((resolve: (v: ZStream | undefined) => void, reject: (error: BusinessError) => void): void => {
