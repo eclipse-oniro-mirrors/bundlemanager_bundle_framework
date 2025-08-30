@@ -4809,6 +4809,21 @@ bool BundleDataMgr::EnableBundle(const std::string &bundleName)
     return true;
 }
 
+ErrCode BundleDataMgr::IsDebuggableApplication(const std::string &bundleName, bool &isDebuggable) const
+{
+    APP_LOGD("IsDebuggableApplication %{public}s", bundleName.c_str());
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        return ERR_OK;
+    }
+
+    const InnerBundleInfo &bundleInfo = infoItem->second;
+    isDebuggable = bundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+
+    return ERR_OK;    
+}
+
 ErrCode BundleDataMgr::IsApplicationEnabled(
     const std::string &bundleName, int32_t appIndex, bool &isEnabled, int32_t userId) const
 {

@@ -472,6 +472,13 @@ public:
      */
     bool EnableBundle(const std::string &bundleName);
     /**
+     * @brief Get whether the application is a debug applicaiton.
+     * @param bundleName Indicates the bundle name.
+     * @param isDebuggable Indicates the application is a debug applicaiton.
+     * @return Returns result of the operation.
+     */
+    ErrCode IsDebuggableApplication(const std::string &bundleName, bool &isDebuggable) const;
+    /**
      * @brief Get whether the application status is enabled.
      * @param bundleName Indicates the bundle name.
      * @param isEnable Indicates the application status is enabled.

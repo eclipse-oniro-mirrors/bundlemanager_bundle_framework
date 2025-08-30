@@ -795,6 +795,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetVerifyManager_0100, Function | MediumTes
 }
 
 /**
+ * @tc.number: HandleIsDebuggableApplication_0100
+ * @tc.name: test the HandleIsDebuggableApplication
+ * @tc.desc: 1. system running normally
+ *           2. test HandleIsDebuggableApplication
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleIsDebuggableApplication, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleIsDebuggableApplication(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
  * @tc.number: HandleIsApplicationEnabled_0100
  * @tc.name: test the HandleIsApplicationEnabled
  * @tc.desc: 1. system running normally

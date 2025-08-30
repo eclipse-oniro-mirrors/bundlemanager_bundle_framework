@@ -923,6 +923,16 @@ public:
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     /**
+     * @brief Checks whether a specified application is a debug application.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param isDebuggable Indicates the applicationis a debug application.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode IsDebuggableApplication(const std::string &bundleName, bool &isDebuggable)
+    {
+        return ERR_OK;
+    }
+    /**
      * @brief Checks whether a specified application is enabled.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Indicates the application status is enabled.

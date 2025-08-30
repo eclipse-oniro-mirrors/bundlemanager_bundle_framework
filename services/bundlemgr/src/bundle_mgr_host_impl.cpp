@@ -2513,6 +2513,20 @@ ErrCode BundleMgrHostImpl::SetModuleUpgradeFlag(const std::string &bundleName,
     return dataMgr->SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
 }
 
+//Only check whether the application is a debug app, with minimal risk and no permission control required.
+ErrCode BundleMgrHostImpl::IsDebuggableApplication(const std::string &bundleName, bool &isDebuggable)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("start IsDebuggableApplication, bundleName : %{public}s", bundleName.c_str());
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    return dataMgr->IsDebuggableApplication(bundleName, isDebuggable);
+}
+
 ErrCode BundleMgrHostImpl::IsApplicationEnabled(const std::string &bundleName, bool &isEnable)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
