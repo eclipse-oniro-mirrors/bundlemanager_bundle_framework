@@ -146,7 +146,7 @@ std::string AOTHandler::FindArkProfilePath(const std::string &bundleName, const 
         APP_LOGE("dataMgr is null");
         return Constants::EMPTY_STRING;
     }
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    int32_t userId = AccountHelper::GetUserIdByCallerType();
     if (userId <= 0) {
         userId = Constants::START_USERID;
     }
@@ -193,7 +193,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, con
     installedInfo.GetInternalDependentHspInfo(moduleName, aotArgs.hspVector);
 
     InnerBundleUserInfo newInnerBundleUserInfo;
-    int32_t curActiveUserId = AccountHelper::GetCurrentActiveUserId();
+    int32_t curActiveUserId = AccountHelper::GetUserIdByCallerType();
     int32_t activeUserId = curActiveUserId <= 0 ? Constants::START_USERID : curActiveUserId;
     if (!installedInfo.GetInnerBundleUserInfo(activeUserId, newInnerBundleUserInfo)) {
         APP_LOGE("bundle(%{public}s) get user (%{public}d) failed",
@@ -435,7 +435,7 @@ ErrCode AOTHandler::HandleCopyAp(const std::string &bundleName, bool isAllBundle
     if (errCode != ERR_OK) {
         return errCode;
     }
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    int32_t userId = AccountHelper::GetUserIdByCallerType();
     if (userId <= 0) {
         userId = Constants::START_USERID;
     }

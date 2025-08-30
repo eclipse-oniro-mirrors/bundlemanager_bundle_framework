@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -102,7 +102,7 @@ ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
-    auto userId = AccountHelper::GetCurrentActiveUserId();
+    auto userId = AccountHelper::GetUserIdByCallerType();
     if (userId <= Constants::U1) {
         APP_LOGE("Invalid userid: %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
@@ -165,7 +165,7 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
     if (dataMgr == nullptr) {
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    auto userId = AccountHelper::GetCurrentActiveUserId();
+    auto userId = AccountHelper::GetUserIdByCallerType();
     if (userId <= Constants::U1) {
         APP_LOGE("Invalid userid: %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;

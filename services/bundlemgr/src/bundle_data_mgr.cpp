@@ -3898,10 +3898,9 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int32_t uid, InnerBundleInf
     return GetInnerBundleInfoAndIndexByUid(uid, innerBundleInfo, appIndex);
 }
 
-const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallBundleInfos()
+const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallBundleInfos(int32_t userId)
 {
     std::vector<PreInstallBundleInfo> recoverablePreInstallBundleInfos;
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
     if (userId == Constants::INVALID_USERID) {
         APP_LOGW("userId %{public}d is invalid", userId);
         return recoverablePreInstallBundleInfos;
@@ -4206,7 +4205,7 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
-    return GetBundleSpaceSize(bundleName, AccountHelper::GetCurrentActiveUserId());
+    return GetBundleSpaceSize(bundleName, AccountHelper::GetUserIdByCallerType());
 }
 
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName, int32_t userId) const
@@ -4893,13 +4892,12 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
     return ERR_OK;
 }
 
-bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable)
+bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable, int32_t userId)
 {
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGW("bundleName or moduleName is empty");
         return false;
     }
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
     if (userId == Constants::INVALID_USERID) {
         APP_LOGW("get a invalid userid, bundleName: %{public}s", bundleName.c_str());
         return false;
@@ -4933,13 +4931,12 @@ bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std:
 }
 
 ErrCode BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const std::string &moduleName,
-    bool &isRemovable) const
+    bool &isRemovable, int32_t userId) const
 {
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGW("bundleName or moduleName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
     if (userId == Constants::INVALID_USERID) {
         APP_LOGW("get a invalid userid, bundleName: %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -8333,9 +8330,6 @@ bool BundleDataMgr::QueryDataGroupInfos(const std::string &bundleName, int32_t u
 
 bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir, int32_t userId) const
 {
-    if (userId == Constants::UNSPECIFIED_USERID) {
-        userId = AccountHelper::GetCurrentActiveUserId();
-    }
     std::string uuid;
     if (BundlePermissionMgr::IsSystemApp() &&
         BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {

@@ -5386,10 +5386,12 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosByUri_0400, Function | SmallT
 HWTEST_F(BmsBundleKitServiceTest, SetModuleRemovable_0300, Function | SmallTest | Level1)
 {
     ClearBundleInfo(BUNDLE_NAME_TEST_CLEAR);
-    bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST_CLEAR, MODULE_NAME_TEST_CLEAR, true);
+    bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST_CLEAR, MODULE_NAME_TEST_CLEAR, true,
+        DEFAULT_USER_ID_TEST);
     EXPECT_FALSE(testRet);
     bool isRemovable = false;
-    auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST_CLEAR, MODULE_NAME_TEST_CLEAR, isRemovable);
+    auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST_CLEAR, MODULE_NAME_TEST_CLEAR, isRemovable,
+        DEFAULT_USER_ID_TEST);
     EXPECT_EQ(testRet1, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     EXPECT_FALSE(isRemovable);
 }
