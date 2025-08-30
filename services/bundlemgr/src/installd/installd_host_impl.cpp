@@ -65,6 +65,7 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/preferences",
     "/haps"
 };
+constexpr const char* MEDIALIBRARYDATA = "com.ohos.medialibrary.medialibrarydata";
 constexpr const char* CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
 constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/bundles/";
@@ -632,9 +633,16 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
         std::string databaseDir = databaseParentDir + createDirParam.bundleName;
-        mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG | S_ISGID);
+        int32_t gid = createDirParam.uid;
+        if (createDirParam.bundleName == MEDIALIBRARYDATA) {
+            mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH)
+                                        : (S_IRWXU | S_IRWXG | S_ISGID);
+            gid = ServiceConstants::DATABASE_DIR_GID;
+        } else {
+            mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
+        }
         if (!InstalldOperator::MkOwnerDir(
-            databaseDir, mode, createDirParam.uid, ServiceConstants::DATABASE_DIR_GID)) {
+            databaseDir, mode, createDirParam.uid, gid)) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
@@ -646,8 +654,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             return ret;
         }
         // create database extension dir
-        if (CreateExtensionDir(createDirParam, databaseParentDir, mode,
-            ServiceConstants::DATABASE_DIR_GID) != ERR_OK) {
+        if (CreateExtensionDir(createDirParam, databaseParentDir, mode, gid) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
         }
         AclSetExtensionDirs(createDirParam.debug, databaseParentDir, createDirParam.extensionDirs, false, true);
@@ -789,9 +796,15 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
     // create database bundleName dir: /data/app/${elx}/${userId}/database/${bundleName}
     std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
     std::string databaseDir = databaseParentDir + createDirParam.bundleName;
-    mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG | S_ISGID);
-    if (!InstalldOperator::MkOwnerDir(
-        databaseDir, mode, createDirParam.uid, ServiceConstants::DATABASE_DIR_GID)) {
+    int32_t gid = createDirParam.gid;
+    if (createDirParam.bundleName == MEDIALIBRARYDATA) {
+        mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH)
+                                        : (S_IRWXU | S_IRWXG | S_ISGID);
+        gid = ServiceConstants::DATABASE_DIR_GID;
+    } else {
+        mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
+    }
+    if (!InstalldOperator::MkOwnerDir(databaseDir, mode, createDirParam.uid, gid)) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
@@ -804,8 +817,7 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
     }
 
     // create database extension dir: /data/app/${elx}/${userId}/database/${extensionDir}
-    if (CreateExtensionDir(createDirParam, databaseParentDir, mode,
-        ServiceConstants::DATABASE_DIR_GID) != ERR_OK) {
+    if (CreateExtensionDir(createDirParam, databaseParentDir, mode, gid) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
     }
     AclSetExtensionDirs(createDirParam.debug, databaseParentDir, createDirParam.extensionDirs, false, true);
@@ -2235,10 +2247,16 @@ ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDir
                 LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
             }
         }
-        mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG | S_ISGID);
+        int32_t gid = createDirParam.gid;
+        if (createDirParam.bundleName == MEDIALIBRARYDATA) {
+            mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH)
+                                        : (S_IRWXU | S_IRWXG | S_ISGID);
+            gid = ServiceConstants::DATABASE_DIR_GID;
+        } else {
+            mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
+        }
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
-        if (CreateExtensionDir(createDirParam, databaseParentDir, mode,
-            ServiceConstants::DATABASE_DIR_GID) != ERR_OK) {
+        if (CreateExtensionDir(createDirParam, databaseParentDir, mode, gid) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }

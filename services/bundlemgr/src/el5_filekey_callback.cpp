@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+constexpr const char* MEDIALIBRARYDATA = "com.ohos.medialibrary.medialibrarydata";
 ErrCode El5FilekeyCallback::OnRegenerateAppKey(std::vector<Security::AccessToken::AppKeyInfo> &infos)
 {
     APP_LOGI("el5 callback");
@@ -152,8 +153,13 @@ void El5FilekeyCallback::CheckEl5Dir(const Security::AccessToken::AppKeyInfo &in
 
     std::string databaseDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
         ServiceConstants::PATH_SEPARATOR + std::to_string(info.userId) + ServiceConstants::DATABASE + info.bundleName;
-    mode = S_IRWXU | S_IRWXG | S_ISGID;
-    int32_t gid = ServiceConstants::DATABASE_DIR_GID;
+    int32_t gid = info.uid;
+    if (info.bundleName == MEDIALIBRARYDATA) {
+        mode = S_IRWXU | S_IRWXG | S_ISGID;
+        gid = ServiceConstants::DATABASE_DIR_GID;
+    } else {
+        mode = S_IRWXU | S_IRWXG;
+    }
     if (InstalldClient::GetInstance()->Mkdir(databaseDir, mode, info.uid, gid) != ERR_OK) {
         APP_LOGW("create Screen Lock Protection dir %{public}s failed", databaseDir.c_str());
     }

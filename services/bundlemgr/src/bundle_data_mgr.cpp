@@ -112,6 +112,7 @@ constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_
 constexpr const char* ENTRY = "entry";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* RESOURCE_STRING_PREFIX = "$string:";
+constexpr const char* MEDIALIBRARYDATA = "com.ohos.medialibrary.medialibrarydata";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -9287,8 +9288,12 @@ void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
         uint32_t mode = S_IRWXU;
         int32_t gid = el5Param.uid;
         if (dir.find(ServiceConstants::DATABASE) != std::string::npos) {
-            mode = S_IRWXU | S_IRWXG | S_ISGID;
-            gid = ServiceConstants::DATABASE_DIR_GID;
+            if (el5Param.bundleName == MEDIALIBRARYDATA) {
+                mode = S_IRWXU | S_IRWXG | S_ISGID;
+                gid = ServiceConstants::DATABASE_DIR_GID;
+            } else {
+                mode = S_IRWXU | S_IRWXG;
+            }
         }
         if (InstalldClient::GetInstance()->Mkdir(dir, mode, el5Param.uid, gid) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "create el5 dir %{public}s failed", dir.c_str());
