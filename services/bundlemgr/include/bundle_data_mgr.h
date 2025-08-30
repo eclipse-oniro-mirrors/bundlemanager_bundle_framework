@@ -1055,6 +1055,14 @@ public:
      */
     ErrCode CanOpenLink(
         const std::string &link, bool &canOpen) const;
+    /**
+    * @brief Obtains all bundle names of a specified user.
+    * @param flags Indicates the flags to control the bundle list.
+    * @param userId Indicates the user ID.
+    * @param bundleNames Indicates the vector of the bundle names.
+    * @return Returns ERR_OK if successfully obtained; returns error code otherwise.
+    */
+    ErrCode GetAllBundleNames(uint32_t flags, int32_t userId, std::vector<std::string> &bundleNames);
     ErrCode GetAllBundleInfoByDeveloperId(const std::string &developerId,
         std::vector<BundleInfo> &bundleInfos, int32_t userId);
     ErrCode GetDeveloperIds(const std::string &appDistributionType,

@@ -4821,7 +4821,7 @@ ErrCode BundleDataMgr::IsDebuggableApplication(const std::string &bundleName, bo
     const InnerBundleInfo &bundleInfo = infoItem->second;
     isDebuggable = bundleInfo.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
 
-    return ERR_OK;    
+    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::IsApplicationEnabled(
@@ -10137,6 +10137,48 @@ std::string BundleDataMgr::AppIdAndAppIdentifierTransform(const std::string appI
         return it->second.GetAppIdentifier();
     }
     return it->second.GetAppId();
+}
+
+ErrCode BundleDataMgr::GetAllBundleNames(uint32_t flags, int32_t userId, std::vector<std::string> &bundleNames)
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("Input invalid userid, userId:%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    bool ofAnyUserFlag = (flags & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0;
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &[bundleName, innerInfo] : bundleInfos_) {
+        if (innerInfo.GetApplicationBundleType() == BundleType::SHARED) {
+            LOG_D(BMS_TAG_QUERY, "%{public}s is not app or atomic, ignore", bundleName.c_str());
+            continue;
+        }
+        int32_t responseUserId = innerInfo.GetResponseUserId(requestUserId);
+        auto flag = GET_BASIC_APPLICATION_INFO;
+        if ((flags & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
+            == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE)) {
+            flag = GET_APPLICATION_INFO_WITH_DISABLE;
+        }
+        if ((CheckInnerBundleInfoWithFlags(innerInfo, flag, responseUserId) != ERR_OK) &&
+            (!ofAnyUserFlag || innerInfo.GetInnerBundleUserInfos().empty())) {
+            continue;
+        }
+        uint32_t launchFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY);
+        if (((static_cast<uint32_t>(flags) & launchFlag) == launchFlag) && (innerInfo.IsHideDesktopIcon())) {
+            LOG_D(BMS_TAG_QUERY, "bundleName %{public}s is hide desktopIcon", bundleName.c_str());
+            continue;
+        }
+        uint32_t cloudFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT);
+        if (((static_cast<uint32_t>(flags) & cloudFlag) == cloudFlag) &&
+            !innerInfo.GetCloudFileSyncEnabled() &&
+            !innerInfo.GetCloudStructuredDataSyncEnabled()) {
+            APP_LOGD("bundle %{public}s does not enable cloud sync", bundleName.c_str());
+            continue;
+        }
+        bundleNames.emplace_back(bundleName);
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) const

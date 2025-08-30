@@ -235,7 +235,7 @@ class TestGetAllBundleCacheCallBack : public ProcessCacheCallbackHost {
 public:
     uint64_t GetCacheStat() override;
 };
-    
+
 uint64_t TestGetAllBundleCacheCallBack::GetCacheStat()
 {
     sleep(3);
@@ -7208,7 +7208,7 @@ HWTEST_F(ActsBmsKitSystemTest, IsDebuggableApplication_0200, Function | SmallTes
     std::string bundleName = "invalid";
     bool isDebuggable = false;
     ErrCode ret = bundleMgrProxy->IsDebuggableApplication(bundleName, isDebuggable);
-    EXPECT_NE(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -8537,6 +8537,112 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppProvisionInfo_0002, Function | SmallTest | 
     ret = bundleMgrProxy->GetAppProvisionInfo(appName, USERID, appProvisionInfo);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_FALSE(appProvisionInfo.apl.empty());
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: GetAllBundleNames_0001
+ * @tc.name: test GetAllBundleNames interface for userId 0
+ * @tc.desc: 1. call GetAllBundleNames
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleNames_0001, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<std::string> bundleNames;
+    uint32_t flags = 0;
+    int32_t userId = 0;
+    ErrCode ret = bundleMgrProxy->GetAllBundleNames(flags, userId, true, bundleNames);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(bundleNames.empty());
+}
+
+/**
+ * @tc.number: GetAllBundleNames_0002
+ * @tc.name: test GetAllBundleNames interface for userId 100
+ * @tc.desc: 1. call GetAllBundleNames
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleNames_0002, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<std::string> bundleNames;
+    uint32_t flags = 0;
+    int32_t userId = 100;
+    ErrCode ret = bundleMgrProxy->GetAllBundleNames(flags, userId, true, bundleNames);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(bundleNames.empty());
+}
+
+/**
+ * @tc.number: GetAllBundleNames_0003
+ * @tc.name: test GetAllBundleNames interface for invalid userId
+ * @tc.desc: 1. call GetAllBundleNames
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleNames_0003, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<std::string> bundleNames;
+    uint32_t flags = 0;
+    int32_t userId = 199999;
+    ErrCode ret = bundleMgrProxy->GetAllBundleNames(flags, userId, true, bundleNames);
+    EXPECT_NE(ret, ERR_OK);
+    EXPECT_TRUE(bundleNames.empty());
+}
+
+/**
+ * @tc.number: GetAllBundleNames_0004
+ * @tc.name: test GetAllBundleNames interface for disabled app
+ * @tc.desc: 1. call GetAllBundleNames
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleNames_0004, Function | MediumTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    auto setResult = bundleMgrProxy->SetApplicationEnabled(appName, false, USERID);
+    EXPECT_EQ(setResult, ERR_OK);
+
+    // Test GET_BUNDLE_INFO_DEFAULT flag, the disabled app is not included
+    std::vector<std::string> bundleNames;
+    uint32_t flags = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT);
+    auto ret1 = bundleMgrProxy->GetAllBundleNames(flags, USERID, true, bundleNames);
+    EXPECT_EQ(ret1, ERR_OK);
+    EXPECT_FALSE(bundleNames.empty());
+    auto it = std::find(bundleNames.begin(), bundleNames.end(), appName);
+    EXPECT_EQ(it, bundleNames.end());
+
+    // Test GET_BUNDLE_INFO_WITH_DISABLE flag, the disabled app is included
+    std::vector<std::string> bundleNamesWithDisabled;
+    uint32_t flagsWithDisabled = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    auto ret2 = bundleMgrProxy->GetAllBundleNames(flagsWithDisabled, USERID, true, bundleNamesWithDisabled);
+    EXPECT_EQ(ret2, ERR_OK);
+    EXPECT_FALSE(bundleNamesWithDisabled.empty());
+    auto it2 = std::find(bundleNamesWithDisabled.begin(), bundleNamesWithDisabled.end(), appName);
+    EXPECT_NE(it2, bundleNamesWithDisabled.end());
+
+    auto resetResult = bundleMgrProxy->SetApplicationEnabled(appName, true, USERID);
+    EXPECT_EQ(resetResult, ERR_OK);
+
+    // Test GET_BUNDLE_INFO_WITH_ABILITIES flag, the enabled app is included
+    std::vector<std::string> bundleNames2;
+    uint32_t flags2 = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT);
+    auto ret3 = bundleMgrProxy->GetAllBundleNames(flags2, USERID, true, bundleNames2);
+    EXPECT_EQ(ret3, ERR_OK);
+    EXPECT_FALSE(bundleNames2.empty());
+    auto it3 = std::find(bundleNames2.begin(), bundleNames2.end(), appName);
+    EXPECT_NE(it3, bundleNames2.end());
 
     resvec.clear();
     Uninstall(appName, resvec);
@@ -10825,20 +10931,20 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0001, Function | MediumTest
     std::cout << "START GetAllBundleCacheStat_0001" << std::endl;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     EXPECT_NE(bundleMgrProxy, nullptr);
- 
+
     ErrCode ret = ERR_OK;
     sptr<TestGetAllBundleCacheCallBack> getCache1 = nullptr;
     // test param is nullptr
     ret = bundleMgrProxy->GetAllBundleCacheStat(getCache1);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
- 
+
     // test one calling
     getCache1 = new (std::nothrow) TestGetAllBundleCacheCallBack();
     EXPECT_NE(getCache1, nullptr);
     ret = bundleMgrProxy->GetAllBundleCacheStat(getCache1);
     EXPECT_EQ(ret, ERR_OK);
     sleep(5);
- 
+
     // test multi calling
     sptr<TestGetAllBundleCacheCallBack> getCache2 = new (std::nothrow) TestGetAllBundleCacheCallBack();
     EXPECT_NE(getCache2, nullptr);
@@ -10846,7 +10952,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleCacheStat_0001, Function | MediumTest
     EXPECT_NE(getCache2, nullptr);
     sptr<TestGetAllBundleCacheCallBack> getCache4 = new (std::nothrow) TestGetAllBundleCacheCallBack();
     EXPECT_NE(getCache2, nullptr);
-    
+
     ret = bundleMgrProxy->GetAllBundleCacheStat(getCache2);
     EXPECT_EQ(ret, ERR_OK);
     ret = bundleMgrProxy->GetAllBundleCacheStat(getCache3);

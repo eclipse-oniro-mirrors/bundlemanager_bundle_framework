@@ -844,6 +844,13 @@ private:
 
     ErrCode HandleMigrateData(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the GetAllBundleNames function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetAllBundleNames(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the GetAllPreinstalledApplicationInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -914,7 +921,7 @@ private:
     ErrCode HandleIsBundleInstalled(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetCompatibleDeviceTypeNative(MessageParcel &data, MessageParcel &reply);
-    
+
     ErrCode HandleGetCompatibleDeviceType(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetBundleNameByAppId(MessageParcel &data, MessageParcel &reply);

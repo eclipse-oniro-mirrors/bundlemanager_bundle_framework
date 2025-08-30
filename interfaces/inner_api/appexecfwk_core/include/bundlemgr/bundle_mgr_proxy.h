@@ -577,7 +577,7 @@ public:
         int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) override;
 
     virtual ErrCode CleanBundleCacheFilesForSelf(const sptr<ICleanCacheCallback> cleanCacheCallback) override;
-    
+
     /**
      * @brief Clears application running data of a specified application through the proxy object.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.
@@ -1019,7 +1019,7 @@ public:
 #endif
 
     virtual sptr<IBundleMgrExt> GetBundleMgrExtProxy() override;
-    
+
     virtual ErrCode SetDebugMode(bool isDebug) override;
 
     virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION) override;
@@ -1044,7 +1044,7 @@ public:
 
     virtual ErrCode GetSpecifiedDistributionType(const std::string &bundleName,
         std::string &specifiedDistributionType) override;
-    
+
     virtual ErrCode BatchGetSpecifiedDistributionType(const std::vector<std::string> &bundleNames,
         std::vector<BundleDistributionType> &specifiedDistributionTypes) override;
 
@@ -1216,6 +1216,16 @@ public:
      */
     virtual bool GetBundleInfosForContinuation(int32_t flags, std::vector<BundleInfo> &bundleInfos,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    /**
+    * @brief Obtains all bundle names of a specified user.
+    * @param flags Indicates the flags to control the bundle list.
+    * @param userId Indicates the user ID.
+    * @param bundleNames Indicates the vector of the bundle names.
+    * @param withExtBundle Indicates whether to include the extension bundle.
+    * @return Returns ERR_OK if the operation is successful; returns other error codes otherwise.
+    */
+    virtual ErrCode GetAllBundleNames(const uint32_t flags, int32_t userId, bool withExtBundle,
+        std::vector<std::string> &bundleNames) override;
 
     /**
      * @brief Get a list of application package names that continue the specified package name.
@@ -1253,10 +1263,10 @@ public:
     virtual ErrCode GetPluginAbilityInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const std::string &pluginModuleName, const std::string &pluginAbilityName,
         const int32_t userId, AbilityInfo &abilityInfo) override;
-    
+
     virtual ErrCode GetPluginHapModuleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo) override;
-    
+
     virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible) override;
 
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
