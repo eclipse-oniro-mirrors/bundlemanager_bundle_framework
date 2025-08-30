@@ -4583,6 +4583,9 @@ ErrCode BaseBundleInstaller::CheckProxyDatas(
 ErrCode BaseBundleInstaller::CheckMDMUpdateBundleForSelf(const InstallParam &installParam,
     InnerBundleInfo &oldInfo, const std::unordered_map<std::string, InnerBundleInfo> &newInfos, bool isAppExist)
 {
+    if (!InitDataMgr()) {
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     if (!installParam.isSelfUpdate) {
         return ERR_OK;
     }
@@ -4601,10 +4604,14 @@ ErrCode BaseBundleInstaller::CheckMDMUpdateBundleForSelf(const InstallParam &ins
         LOG_E(BMS_TAG_INSTALLER, "not mdm app");
         return ERR_APPEXECFWK_INSTALL_SELF_UPDATE_NOT_MDM;
     }
-    std::string bundleName = oldInfo.GetBundleName();
+    std::string bundleName;
+    if (!dataMgr_->GetBundleNameForUid(sysEventInfo_.callingUid, bundleName)) {
+        bundleName = Constants::EMPTY_STRING;
+    }
     for (const auto &info : newInfos) {
         if (bundleName != info.second.GetBundleName()) {
-            LOG_E(BMS_TAG_INSTALLER, "bundleName %{public}s not same", info.second.GetBundleName().c_str());
+            LOG_E(BMS_TAG_INSTALLER, "callingBundleName %{public}s bundleName %{public}s not same",
+                bundleName.c_str(), info.second.GetBundleName().c_str());
             return ERR_APPEXECFWK_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME;
         }
     }
