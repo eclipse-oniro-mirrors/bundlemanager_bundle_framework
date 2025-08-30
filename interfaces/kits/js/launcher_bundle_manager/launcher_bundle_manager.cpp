@@ -317,7 +317,7 @@ napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
     std::unique_ptr<GetShortcutInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
         if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
             return nullptr;
         }
         if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
@@ -351,7 +351,7 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
     }
     std::string bundleName;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
     int32_t userId = Constants::UNSPECIFIED_USERID;
