@@ -97,7 +97,6 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.product.incremental.version",
     "const.comp.hl.product_base_version.real"
 };
-constexpr const char* HSP_VERSION_PREFIX = "v";
 constexpr const char* OTA_FLAG = "otaFlag";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
@@ -115,7 +114,6 @@ constexpr const char* SHARED_BUNDLE_PATH = "/shared_bundles";
 constexpr const char* VERSION_SPECIAL_CUSTOM_APP_DIR = "/version/special_cust/app/";
 constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
 constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
-constexpr const char* INNER_UNDER_LINE = "_";
 constexpr char SEPARATOR = '/';
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
@@ -1639,7 +1637,6 @@ void BMSEventHandler::CheckAllBundleEl1ShaderCacheLocal()
         for (auto &infoPair : infos) {
             auto &info = infoPair.second;
             std::string bundleName = info.GetBundleName();
-            BundleType type = info.GetApplicationBundleType();
             std::vector<int32_t> allAppIndexes = {0};
             std::vector<int32_t> cloneAppIndexes = dataMgr->GetCloneAppIndexesByInnerBundleInfo(info, userId);
             allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
@@ -1693,7 +1690,6 @@ void BMSEventHandler::CleanAllBundleEl1ShaderCacheLocal()
         for (auto &infoPair : infos) {
             auto &info = infoPair.second;
             std::string bundleName = info.GetBundleName();
-            BundleType type = info.GetApplicationBundleType();
             std::vector<int32_t> allAppIndexes = {0};
             std::vector<int32_t> cloneAppIndexes = dataMgr->GetCloneAppIndexesByInnerBundleInfo(info, userId);
             allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());

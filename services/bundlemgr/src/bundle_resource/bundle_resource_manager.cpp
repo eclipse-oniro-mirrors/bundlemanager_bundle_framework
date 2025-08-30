@@ -38,7 +38,6 @@ constexpr const char* THREAD_POOL_NAME = "BundleResourceThreadPool";
 constexpr int8_t CHECK_INTERVAL = 30; // 30ms
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
 constexpr int8_t SCENE_ID_UPDATE_RESOURCE = 1 << 1;
-constexpr const char* INNER_UNDER_LINE = "_";
 constexpr const char* TASK_NAME = "ReleaseResourceTask";
 constexpr uint64_t DELAY_TIME_MILLI_SECONDS = 3 * 60 * 1000; // 3mins
 constexpr const char* CONTACTS_BUNDLE_NAME = "com.ohos.contacts";

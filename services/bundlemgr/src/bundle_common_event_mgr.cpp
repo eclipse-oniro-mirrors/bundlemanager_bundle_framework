@@ -50,7 +50,6 @@ constexpr const char* ASSET_ACCESS_GROUPS = "assetAccessGroups";
 constexpr const char* DEVELOPERID = "developerId";
 constexpr const char* CHANGE_DEFAULT_APPLICATION = "ohos.permission.CHANGE_DEFAULT_APPLICATION";
 constexpr const char* UTD_IDS = "utdIds";
-constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* USER_ID = "userId";
 constexpr const char* SHORTCUT_CHANGED = "usual.event.SHORTCUT_CHANGED";
 constexpr const char* SHORTCUT_ID = "shortcutId";

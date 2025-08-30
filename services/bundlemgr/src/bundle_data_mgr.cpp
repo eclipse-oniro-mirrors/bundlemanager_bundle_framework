@@ -80,7 +80,6 @@ namespace AppExecFwk {
 namespace {
 constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
 constexpr int8_t DATA_GROUP_INDEX_START = 1;
-constexpr int8_t UUID_LENGTH = 36;
 constexpr int8_t PROFILE_PREFIX_LENGTH = 9;
 constexpr uint16_t UUID_LENGTH_MAX = 512;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
@@ -109,7 +108,6 @@ constexpr const char* JSON_SUFFIX = ".json";
 constexpr const char* SCHEME_HTTPS = "https";
 constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
-constexpr const char* ENTRY = "entry";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* RESOURCE_STRING_PREFIX = "$string:";
 
@@ -4078,7 +4076,6 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
 ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
     std::vector<BundleStorageStats> &bundleStats) const
 {
-    int32_t uid = -1;
     std::unordered_map<std::string, int32_t> uidMap;
     std::vector<std::string> bundleNameList = bundleNames;
     std::vector<BundleStorageStats> bundleStatsList;
