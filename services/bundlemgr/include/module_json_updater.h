@@ -31,9 +31,11 @@ public:
     static void SetIgnoreBundleNames(const std::set<std::string> &bundles);
 private:
     static void UpdateModuleJson();
-    static bool ParseBundleModuleJson(const InnerBundleInfo &curInfo, std::map<std::string, InnerBundleInfo> &moduleJsonMap);
+    static bool ParseBundleModuleJson(
+        const InnerBundleInfo &curInfo, std::map<std::string, InnerBundleInfo> &moduleJsonMap);
     static bool ParseHapModuleJson(const std::string &hapPath, InnerBundleInfo &jsonInfo);
-    static bool MergeInnerBundleInfo(const std::map<std::string, InnerBundleInfo> &moduleJsonMap, InnerBundleInfo &mergedInfo);
+    static bool MergeInnerBundleInfo(
+        const std::map<std::string, InnerBundleInfo> &moduleJsonMap, InnerBundleInfo &mergedInfo);
     static void UpdateExtensionType(const InnerBundleInfo &curInfo, InnerBundleInfo &mergedInfo);
     static bool CanUsePrivilegeExtension(const std::string &hapPath, const std::string &bundleName);
     static std::set<std::string> GetIgnoreBundleNames();

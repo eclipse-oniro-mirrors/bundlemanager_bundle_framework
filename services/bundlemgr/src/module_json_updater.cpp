@@ -165,7 +165,8 @@ void ModuleJsonUpdater::UpdateExtensionType(const InnerBundleInfo &curInfo, Inne
                 CanUsePrivilegeExtension(innerExtensionInfo.hapPath, innerExtensionInfo.bundleName);
         }
         if (!privilegeMap[innerExtensionInfo.hapPath]) {
-            APP_LOGE_NOFUNC("UpdateExtensionType failed, bundleName:%{public}s, extensionName:%{public}s, type:%{public}d",
+            APP_LOGE_NOFUNC(
+                "UpdateExtensionType failed, bundleName:%{public}s, extensionName:%{public}s, type:%{public}d",
                 innerExtensionInfo.bundleName.c_str(), innerExtensionInfo.name.c_str(),
                 static_cast<int>(item->second.type));
             item->second.type = ExtensionAbilityType::UNSPECIFIED;
