@@ -716,6 +716,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_DEBUGGABLE_APPLICATION):
             errCode = HandleIsDebuggableApplication(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_NAMES):
+            errCode = HandleGetAllBundleNames(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -4913,7 +4916,7 @@ ErrCode BundleMgrHost::HandleGreatOrEqualTargetAPIVersion(MessageParcel &data, M
     int32_t platformVersion = data.ReadInt32();
     int32_t minorVersion = data.ReadInt32();
     int32_t patchVersion = data.ReadInt32();
-    
+
     bool ret = GreatOrEqualTargetAPIVersion(platformVersion, minorVersion, patchVersion);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("WriteBool failed");
@@ -4982,6 +4985,26 @@ ErrCode BundleMgrHost::HandleIsDebuggableApplication(MessageParcel &data, Messag
     }
     if (!reply.WriteBool(isDebuggable)) {
         APP_LOGE("WriteBool failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllBundleNames(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    uint32_t flags = data.ReadUint32();
+    int32_t userId = data.ReadInt32();
+    bool withExtBundle = data.ReadBool();
+    std::vector<std::string> bundleNames;
+    ErrCode ret = GetAllBundleNames(flags, userId, withExtBundle, bundleNames);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("GetAllBundleNames write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
+    if (ret == ERR_OK && !reply.WriteStringVector(bundleNames)) {
+        APP_LOGE("Write all bundleNames results failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

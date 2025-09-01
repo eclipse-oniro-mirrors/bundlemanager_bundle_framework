@@ -1139,6 +1139,16 @@ public:
         bool isExisted, int32_t appIndex = 0) override;
     virtual bool GreatOrEqualTargetAPIVersion(int32_t platformVersion,
         int32_t minorVersion, int32_t patchVersion) override;
+    /**
+     * @brief Obtains all bundle names of a specified user.
+     * @param flags Indicates the flags to control the bundle list.
+     * @param userId Indicates the user ID.
+     * @param bundleNames Indicates the vector of the bundle names.
+     * @param withExtBundle Indicates whether to include extension bundles.
+     * @return Returns ERR_OK if successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetAllBundleNames(const uint32_t flags, int32_t userId, bool withExtBundle,
+        std::vector<std::string> &bundleNames) override;
 
     /**
      * @brief Obtains continuable BundleInfo of all bundles available in the system.

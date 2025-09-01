@@ -784,7 +784,7 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    
+
     /**
      * @brief Clears cache data of a specified size.
      * @param cacheSize Indicates the size of the cache data is to be cleared.
@@ -1084,7 +1084,7 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    
+
     /**
      * @brief Obtains the CommonEventInfo objects provided by an event key on the device.
      * @param eventKey Indicates the event of the subscribe.
@@ -1130,6 +1130,19 @@ public:
         DistributedBundleInfo &distributedBundleInfo)
     {
         return false;
+    }
+    /**
+    * @brief Obtains all bundle names of a specified user.
+    * @param flags Indicates the flags to control the bundle list.
+    * @param userId Indicates the user ID.
+    * @param bundleNames Indicates the vector of the bundle names.
+    * @param withExtBundle Indicates whether to include the extension bundle.
+    * @return Returns ERR_OK if the operation is successful; returns other error codes otherwise.
+    */
+    virtual ErrCode GetAllBundleNames(const uint32_t flags, int32_t userId, bool withExtBundle,
+        std::vector<std::string> &bundleNames)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     /**
      * @brief Get app privilege level.

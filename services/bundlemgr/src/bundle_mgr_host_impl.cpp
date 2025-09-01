@@ -2013,7 +2013,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
             callingUid, callingBundleName);
         return false;
     }
-    
+
     (void)dataMgr->GetBundleNameForUid(callingUid, callingBundleName);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES system api denied");
@@ -4241,7 +4241,7 @@ ErrCode BundleMgrHostImpl::BatchGetAdditionalInfo(const std::vector<std::string>
         APP_LOGE("dataMgr is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    
+
     for (const std::string &bundleName : bundleNames) {
         AppExecFwk::BundleAdditionalInfo additionalInfo;
         if (bundleName.empty()) {
@@ -4377,7 +4377,7 @@ bool BundleMgrHostImpl::GetLabelByBundleName(const std::string &bundleName, int3
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
-    
+
     if (!dataMgr->HasAppOrAtomicServiceInUser(bundleName, userId)) {
         APP_LOGE("find fail");
         return false;
@@ -5317,6 +5317,40 @@ ErrCode BundleMgrHostImpl::GetLaunchWant(Want &want)
     return dataMgr->GetLaunchWantForBundle(bundleName, want, userId);
 }
 
+ErrCode BundleMgrHostImpl::GetAllBundleNames(const uint32_t flags, int32_t userId, bool withExtBundle,
+    std::vector<std::string> &bundleNames)
+{
+    APP_LOGI("start for user:%{public}d, flags:%{public}d", userId, flags);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
+        APP_LOGE("verify calling permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    auto ret = dataMgr->GetAllBundleNames(flags, userId, bundleNames);
+    if (withExtBundle && isBrokerServiceExisted_) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        std::vector<BundleInfo> bundleInfos;
+        ErrCode res = bmsExtensionClient->GetBundleInfos(flags &
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY), bundleInfos, userId);
+        if (res == ERR_OK) {
+            std::for_each(bundleInfos.begin(), bundleInfos.end(), [&bundleNames](const auto& bundleInfo) {
+                bundleNames.push_back(bundleInfo.name);
+            });
+            return ERR_OK;
+        }
+    }
+    return ret;
+}
+
 ErrCode BundleMgrHostImpl::QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &element, int32_t flags,
     int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo, int32_t userId)
 {
@@ -6051,7 +6085,7 @@ bool BundleMgrHostImpl::SendQueryBundleInfoEvent(
     query.callingUid = callingUid;
     query.callingBundleName = callingBundleName;
     query.callingAppId = callingAppId;
-    
+
     InsertQueryEventInfo(errCode, query);
     auto infos = GetQueryEventInfo(errCode);
     // check report now
@@ -6063,7 +6097,7 @@ bool BundleMgrHostImpl::SendQueryBundleInfoEvent(
         EraseQueryEventInfo(errCode);
         return true;
     }
-    
+
     size_t infoSize = infos.size();
     if (infoSize <= 0) {
         return false;

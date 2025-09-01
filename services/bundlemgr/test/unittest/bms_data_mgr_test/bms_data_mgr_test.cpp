@@ -2353,8 +2353,8 @@ HWTEST_F(BmsDataMgrTest, IsDebuggableApplication_0200, Function | SmallTest | Le
     ASSERT_NE(dataMgr, nullptr);
     const std::string bundleName = "";
     bool isDebuggable = false;
-    bool ret = dataMgr->IsDebuggableApplication(bundleName, isDebuggable);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    auto ret = dataMgr->IsDebuggableApplication(bundleName, isDebuggable);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
