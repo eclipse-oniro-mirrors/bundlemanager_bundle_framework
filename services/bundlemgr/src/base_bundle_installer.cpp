@@ -609,7 +609,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
     return result;
 }
 
-bool BaseBundleInstaller::UninstallAppControl(const std::string &appId, int32_t userId)
+bool BaseBundleInstaller::UninstallAppControl(
+    const std::string &appId, const std::string &appIdentifier, int32_t userId)
 {
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     std::vector<std::string> appIds;
@@ -619,19 +620,24 @@ bool BaseBundleInstaller::UninstallAppControl(const std::string &appId, int32_t 
         LOG_E(BMS_TAG_INSTALLER, "GetAppInstallControlRule failed code:%{public}d", ret);
         return true;
     }
-    if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
-        return true;
+    if (!appIdentifier.empty() && std::find(appIds.begin(), appIds.end(), appIdentifier) != appIds.end()) {
+        LOG_W(BMS_TAG_INSTALLER, "appIdentifier :%{public}s is not removable", appIdentifier.c_str());
+        return false;
     }
-    LOG_W(BMS_TAG_INSTALLER, "appId is not removable");
-    return false;
+    if (std::find(appIds.begin(), appIds.end(), appId) != appIds.end()) {
+        LOG_W(BMS_TAG_INSTALLER, "appId :%{public}s is not removable", appId.c_str());
+        return false;
+    }
+    return true;
 #else
-    LOG_W(BMS_TAG_INSTALLER, "app control is disable");
+    LOG_W(BMS_TAG_INSTALLER, "appId is not removable");
     return true;
 #endif
 }
 
 ErrCode BaseBundleInstaller::InstallNormalAppControl(
     const std::string &installAppId,
+    const std::string &appIdentifier,
     int32_t userId,
     bool isPreInstallApp)
 {
@@ -662,10 +668,31 @@ ErrCode BaseBundleInstaller::InstallNormalAppControl(
         return ERR_OK;
     }
 
+    return CheckInstallPermission(installAppId, appIdentifier, allowedAppIds, disallowedAppIds);
+#else
+    LOG_W(BMS_TAG_INSTALLER, "app control is disable");
+    return ERR_OK;
+#endif
+}
+
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+ErrCode BaseBundleInstaller::CheckInstallPermission(
+    const std::string &appId,
+    const std::string &appIdentifier,
+    const std::vector<std::string> &allowedAppIds,
+    const std::vector<std::string> &disallowedAppIds)
+{
+    LOG_D(BMS_TAG_INSTALLER, "CheckInstallPermission start ");
+    std::string targetId = appIdentifier.empty() ? appId : appIdentifier;
     // only allowed list empty.
     if (allowedAppIds.empty()) {
-        if (std::find(disallowedAppIds.begin(), disallowedAppIds.end(), installAppId) != disallowedAppIds.end()) {
-            LOG_E(BMS_TAG_INSTALLER, "disallowedAppIds:%{public}s is disallow install", installAppId.c_str());
+        if (std::find(disallowedAppIds.begin(), disallowedAppIds.end(), targetId) != disallowedAppIds.end()) {
+            LOG_E(BMS_TAG_INSTALLER, "disallowedAppIds:%{public}s is disallow install", targetId.c_str());
+            return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+        }
+        if (!appIdentifier.empty() &&
+            std::find(disallowedAppIds.begin(), disallowedAppIds.end(), appId) != disallowedAppIds.end()) {
+            LOG_E(BMS_TAG_INSTALLER, "disallowedAppIds:%{public}s is disallow install", appId.c_str());
             return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
         }
         return ERR_OK;
@@ -673,27 +700,36 @@ ErrCode BaseBundleInstaller::InstallNormalAppControl(
 
     // only disallowed list empty.
     if (disallowedAppIds.empty()) {
-        if (std::find(allowedAppIds.begin(), allowedAppIds.end(), installAppId) == allowedAppIds.end()) {
-            LOG_E(BMS_TAG_INSTALLER, "allowedAppIds:%{public}s is disallow install", installAppId.c_str());
+        if (std::find(allowedAppIds.begin(), allowedAppIds.end(), targetId) != allowedAppIds.end()) {
+            return ERR_OK;
+        }
+        if (!appIdentifier.empty() &&
+            std::find(allowedAppIds.begin(), allowedAppIds.end(), appId) != allowedAppIds.end()) {
+            return ERR_OK;
+        }
+        LOG_E(BMS_TAG_INSTALLER, "allowedAppIds:%{public}s is disallow install", targetId.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+    }
+
+    // disallowed list and allowed list all not empty.
+    bool inDisallowed = std::find(disallowedAppIds.begin(), disallowedAppIds.end(), targetId) != disallowedAppIds.end();
+    bool inAllowed = std::find(allowedAppIds.begin(), allowedAppIds.end(), targetId) != allowedAppIds.end();
+    if (!appIdentifier.empty()) {
+        if (!inAllowed || inDisallowed) {
+            LOG_E(BMS_TAG_INSTALLER, "%{public}s is disallow install", targetId.c_str());
             return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
         }
         return ERR_OK;
     }
-
-    // disallowed list and allowed list all not empty.
-    if (std::find(allowedAppIds.begin(), allowedAppIds.end(), installAppId) == allowedAppIds.end()) {
-        LOG_E(BMS_TAG_INSTALLER, "allowedAppIds:%{public}s is disallow install", installAppId.c_str());
-        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
-    } else if (std::find(disallowedAppIds.begin(), disallowedAppIds.end(), installAppId) != disallowedAppIds.end()) {
-        LOG_E(BMS_TAG_INSTALLER, "disallowedAppIds:%{public}s is disallow install", installAppId.c_str());
+    inDisallowed = std::find(disallowedAppIds.begin(), disallowedAppIds.end(), appId) != disallowedAppIds.end();
+    inAllowed = std::find(allowedAppIds.begin(), allowedAppIds.end(), appId) != allowedAppIds.end();
+    if (!inAllowed || inDisallowed) {
+        LOG_E(BMS_TAG_INSTALLER, "%{public}s is disallow install", targetId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
     }
     return ERR_OK;
-#else
-    LOG_W(BMS_TAG_INSTALLER, "app control is disable");
-    return ERR_OK;
-#endif
 }
+#endif
 
 void BaseBundleInstaller::UpdateInstallerState(const InstallerState state)
 {
@@ -1388,7 +1424,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_PROXY_DATA_CHECKED);              // ---- 45%
 
     // check hap is allow install by app control
-    result = InstallNormalAppControl((newInfos.begin()->second).GetAppId(), userId_, installParam.isPreInstallApp);
+    result = InstallNormalAppControl((newInfos.begin()->second).GetAppId(),
+        (newInfos.begin()->second).GetAppIdentifier(), userId_, installParam.isPreInstallApp);
     CHECK_RESULT(result, "install app control failed %{public}d");
 
     auto &mtx = dataMgr_->GetBundleMutex(bundleName_);
@@ -1765,7 +1802,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         }
     }
 
-    if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
+    if (!UninstallAppControl(oldInfo.GetAppId(), oldInfo.GetAppIdentifier(), userId_)) {
         if (!isForcedUninstall) {
             LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s is not allow uninstall", bundleName.c_str());
             return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
@@ -2050,7 +2087,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
     isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
 
-    if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
+    if (!UninstallAppControl(oldInfo.GetAppId(), oldInfo.GetAppIdentifier(), userId_)) {
         LOG_D(BMS_TAG_INSTALLER, "bundleName: %{public}s is not allow uninstall", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
@@ -2270,7 +2307,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 return ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME;
             }
 
-            ErrCode ret = InstallNormalAppControl(oldInfo.GetAppId(), userId_, installParam.isPreInstallApp);
+            ErrCode ret = InstallNormalAppControl(
+                oldInfo.GetAppId(), oldInfo.GetAppIdentifier(), userId_, installParam.isPreInstallApp);
             if (ret != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "%{private}s check install app control failed", oldInfo.GetAppId().c_str());
                 return ret;
@@ -6338,10 +6376,18 @@ void BaseBundleInstaller::UpdateAppInstallControlled(int32_t userId)
     }
 
     std::string currentAppId = info.GetAppId();
+    std::string currentAppIdentifier = info.GetAppIdentifier();
     std::vector<std::string> appIds;
     ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
         AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
-    if ((ret == ERR_OK) && (std::find(appIds.begin(), appIds.end(), currentAppId) != appIds.end())) {
+    bool needUpdateInfo = false;
+    if (ret == ERR_OK) {
+        if ((std::find(appIds.begin(), appIds.end(), currentAppId) != appIds.end()) ||
+            (std::find(appIds.begin(), appIds.end(), currentAppIdentifier) != appIds.end())) {
+            needUpdateInfo = true;
+        }
+    }
+    if (needUpdateInfo) {
         LOG_W(BMS_TAG_INSTALLER, "bundle %{public}s cannot be removed", bundleName_.c_str());
         userInfo.isRemovable = false;
         info.AddInnerBundleUserInfo(userInfo);

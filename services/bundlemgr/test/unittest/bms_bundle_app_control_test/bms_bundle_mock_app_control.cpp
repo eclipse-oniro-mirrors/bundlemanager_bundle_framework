@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -180,6 +180,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0060, Function | Smal
     AppControlManagerRdb rdb;
     std::vector<AppRunningControlRule> controlRules;
     AppRunningControlRule appRunningControlRule;
+    appRunningControlRule.appId = "test";
     controlRules.push_back(appRunningControlRule);
     ErrCode res = rdb.AddAppRunningControlRule("", controlRules, USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
@@ -250,7 +251,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0110, Function | Smal
     std::vector<std::string> appIds;
     appIds.push_back("appId");
     AppRunningControlRuleResult controlRuleResult;
-    auto res = rdb.GetAppRunningControlRule("", USERID, controlRuleResult);
+    auto res = rdb.GetAppRunningControlRule(appIds, USERID, controlRuleResult);
     EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
@@ -723,5 +724,54 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0140, Function |
     setuid(AppControlConstants::EDM_UID);
     auto ret = impl.DeleteDisposedRuleForCloneApp(APPID, Constants::MAIN_APP_INDEX, Constants::UNSPECIFIED_USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_DB_DELETE_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerRdb_0180
+ * @tc.name: Test AddAppInstallControlRule with empty appId by AppControlManagerRdb
+ * @tc.desc: 1.AddAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0180, Function | SmallTest | Level1)
+{
+    AppControlManagerRdb rdb;
+    std::vector<std::string> appIds = { "", "appId" };
+    std::string targetBundleName = "bundleName";
+    auto res = rdb.AddAppInstallControlRule(targetBundleName, appIds, "", USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerRdb_0190
+ * @tc.name: Test DeleteAppInstallControlRule by AppControlManagerRdb
+ * @tc.desc: 1.AddAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0190, Function | SmallTest | Level1)
+{
+    AppControlManagerRdb rdb;
+    std::vector<std::string> appIds = { "", "appId" };
+    std::string targetBundleName = "bundleName";
+    auto res = rdb.AddAppInstallControlRule(targetBundleName, appIds, "", USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
+    res = rdb.DeleteAppInstallControlRule(targetBundleName, "", appIds, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerRdb_0210
+ * @tc.name: Test AddAppRunningControlRule with empty appId by AppControlManagerRdb
+ * @tc.desc: 1.AddAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0210, Function | SmallTest | Level1)
+{
+    AppControlManagerRdb rdb;
+    std::vector<AppRunningControlRule> controlRules;
+    AppRunningControlRule appRunningControlRule1;
+    appRunningControlRule1.appId = "";
+    AppRunningControlRule appRunningControlRule2;
+    appRunningControlRule2.appId = "test";
+    controlRules.push_back(appRunningControlRule1);
+    controlRules.push_back(appRunningControlRule2);
+    ErrCode res = rdb.AddAppRunningControlRule("", controlRules, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_DB_DELETE_ERROR);
 }
 } // OHOS
