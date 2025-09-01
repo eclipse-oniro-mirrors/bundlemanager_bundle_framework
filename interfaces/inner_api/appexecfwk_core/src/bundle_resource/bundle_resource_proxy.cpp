@@ -82,7 +82,7 @@ ErrCode BundleResourceProxy::GetBundleResourceInfo(const std::string &bundleName
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(appIndex)) {
-        APP_LOGE("fail to write flags");
+        APP_LOGE("fail to write appIndex");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelInfo<BundleResourceInfo>(
