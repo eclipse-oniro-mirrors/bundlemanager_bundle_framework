@@ -251,7 +251,7 @@ napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetAllLauncherAbilityCallbackInfo>(
-        env, asyncCallbackInfo, "GetLauncherAbilityInfo",
+        env, asyncCallbackInfo, "GetAllLauncherAbilityInfo",
         GetAllLauncherAbilityInfoExec, GetAllLauncherAbilityInfoComplete);
     callbackPtr.release();
     APP_LOGI_NOFUNC("call GetAllLauncherAbilityInfo done");
