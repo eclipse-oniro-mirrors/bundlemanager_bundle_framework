@@ -19,9 +19,11 @@
 #include <sstream>
 #include <string>
 
+#include "app_provision_info_manager.h"
 #include "bundle_info.h"
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
+#include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
 
 using namespace testing::ext;
@@ -273,5 +275,49 @@ HWTEST_F(BmsBundlePermissionGetRequestTest, BundleMgrHostImpl_0009, Function | S
     std::vector<Metadata> provisionMetadatas;
     bool ret = localBundleMgrHostImpl->GetProvisionMetadata(bundleName, userId, provisionMetadatas);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: ParseSizeFromProvision_0010
+ * @tc.name: ParseSizeFromProvision
+ * @tc.desc: test ParseSizeFromProvision
+ */
+HWTEST_F(BmsBundlePermissionGetRequestTest, ParseSizeFromProvision_0010, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    std::string bundleName = "com.example.test";
+    int32_t uid = 20020000;
+    int32_t sizeMb = 200;
+    AppProvisionInfo provisionInfo;
+
+    provisionInfo.appServiceCapabilities = "";
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, provisionInfo);
+    handler->ParseSizeFromProvision(bundleName, uid, sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.TEST\":{\"storageSize\": 1024}}";
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, provisionInfo);
+    handler->ParseSizeFromProvision(bundleName, uid, sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.atomicService.MANAGE_STORAGE\":{\"test\": 1024}}";
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, provisionInfo);
+    handler->ParseSizeFromProvision(bundleName, uid, sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.atomicService.MANAGE_STORAGE\":{\"storageSize\": 100}}";
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, provisionInfo);
+    handler->ParseSizeFromProvision(bundleName, uid, sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.atomicService.MANAGE_STORAGE\":{\"storageSize\": 1024}}";
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, provisionInfo);
+    handler->ParseSizeFromProvision(bundleName, uid, sizeMb);
+    EXPECT_EQ(sizeMb, 1024);
 }
 } // OHOS

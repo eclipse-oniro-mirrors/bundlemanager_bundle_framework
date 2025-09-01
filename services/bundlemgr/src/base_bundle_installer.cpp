@@ -3231,11 +3231,12 @@ void BaseBundleInstaller::PrepareBundleDirQuota(const std::string &bundleName, c
     }
 #endif // QUOTA_PARAM_SET_ENABLE
 #endif // STORAGE_SERVICE_ENABLE
-    ParseSizeFromProvision(atomicserviceDatasizeThreshold);
+    ParseSizeFromProvision(bundleName, uid, atomicserviceDatasizeThreshold);
     SendToStorageQuota(bundleName, uid, bundleDataDirPath, atomicserviceDatasizeThreshold);
 }
 
-void BaseBundleInstaller::ParseSizeFromProvision(int32_t &sizeMb) const
+void BaseBundleInstaller::ParseSizeFromProvision(
+    const std::string &bundleName, const int32_t uid, int32_t &sizeMb) const
 {
     std::string appServiceCapabilities = verifyRes_.GetProvisionInfo().appServiceCapabilities;
     if (appServiceCapabilities.empty()) {
@@ -3245,6 +3246,11 @@ void BaseBundleInstaller::ParseSizeFromProvision(int32_t &sizeMb) const
     for (auto &item : appServiceCapabilityMap) {
         if (item.first != ServiceConstants::PERMISSION_MANAGE_STORAGE) {
             continue;
+        }
+        if (BundlePermissionMgr::VerifyPermission(bundleName, ServiceConstants::PERMISSION_MANAGE_STORAGE,
+            uid / Constants::BASE_USER_RANGE) != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+            APP_LOGW("no manage storage permission for %{public}s", bundleName.c_str());
+            return;
         }
         std::unordered_map<std::string, std::string> storageMap = BundleUtil::ParseMapFromJson(item.second);
         auto it = storageMap.find(KEY_STORAGE_SIZE);
