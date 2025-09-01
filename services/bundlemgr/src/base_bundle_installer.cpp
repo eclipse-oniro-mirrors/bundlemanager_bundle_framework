@@ -107,7 +107,6 @@ constexpr int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 constexpr int16_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 200;
 constexpr int8_t SINGLE_HSP_VERSION = 1;
 constexpr int8_t USER_MODE = 0;
-constexpr int8_t ROOT_MODE = 1;
 constexpr const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 constexpr const char* IS_ROOT_MODE_PARAM = "const.debuggable";
 constexpr const char* BMS_ACTIVATION_LOCK = "persist.bms.activation-lock";
@@ -115,7 +114,6 @@ constexpr const char* APPSPAWN_PRELOAD_ARKWEB_ENGINE = "const.startup.appspawn.p
 constexpr const char* BMS_TRUE = "true";
 constexpr const char* BMS_FALSE = "false";
 constexpr int8_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
-constexpr const char* DATA_EXTENSION_PATH = "/extension/";
 const char* INSTALL_SOURCE_UNKNOWN = "unknown";
 const char* ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
 const char* OLD_ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
@@ -6857,8 +6855,7 @@ ErrCode BaseBundleInstaller::CreateArkStartupCache(const ArkStartupCache &create
         LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s is not in startupBundles", createArk.bundleName.c_str());
         return ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST;
     }
-    
-    bool isDirExist = false;
+
     ErrCode result = InstalldClient::GetInstance()->Mkdir(createArk.cacheDir,
         createArk.mode, createArk.uid, createArk.gid);
     if (result != ERR_OK) {

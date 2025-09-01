@@ -23,7 +23,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int16_t MAX_LEN = 128;
-constexpr const char* SYSTEM_LANGUAGE = "persist.global.locale";
 constexpr const char* DEFAULT_LANGUAGE = "zh-Hans";
 constexpr const char* DEFAULT_COLOR_MODE_LIGHT = "light";
 }

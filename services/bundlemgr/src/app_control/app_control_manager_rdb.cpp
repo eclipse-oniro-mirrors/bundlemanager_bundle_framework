@@ -30,7 +30,6 @@ namespace {
     constexpr const char* DISPOSED_RULE = "DisposedRule";
     constexpr const char* UNINSTALL_DISPOSED_RULE = "UninstallDisposedRule";
     constexpr const char* APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
-    constexpr const char* DEFAULT = "default";
     constexpr int8_t CALLING_NAME_INDEX = 1;
     constexpr int8_t APP_ID_INDEX = 4;
     constexpr int8_t CONTROL_MESSAGE_INDEX = 5;
