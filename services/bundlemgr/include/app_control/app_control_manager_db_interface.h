@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,7 +45,7 @@ public:
         const std::vector<AppRunningControlRule> &controlRules, int32_t userId) = 0;
     virtual ErrCode DeleteAppRunningControlRule(const std::string &callingName, int32_t userId) = 0;
     virtual ErrCode GetAppRunningControlRule(const std::string &callingName,
-        int32_t userId, std::vector<std::string> &appIds) = 0;
+        int32_t userId, std::vector<std::string> &appIds, bool &allowRunning) = 0;
     virtual ErrCode GetAppRunningControlRule(const std::string &appId,
         int32_t userId, AppRunningControlRuleResult &controlRuleResult) = 0;
 
@@ -72,6 +72,10 @@ public:
         int32_t appIndex, int32_t userId) = 0;
     virtual ErrCode GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
         int32_t userId, UninstallDisposedRule &rule) = 0;
+    virtual ErrCode GetAppRunningControlRuleByUserId(int32_t userId, std::string &appId,
+        AppRunningControlRule &controlRuleResult) = 0;
+    virtual ErrCode GetAllUserIdsForRunningControl(std::vector<int32_t> &outUserIds) = 0;
+    virtual ErrCode GetAppIdsByUserId(int32_t userId, std::vector<std::string> &appIds) = 0;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -249,13 +249,18 @@ ErrCode AppControlHost::HandleGetAppRunningControlRule(MessageParcel& data, Mess
 {
     int32_t userId = data.ReadInt32();
     std::vector<std::string> appIds;
-    int32_t ret = GetAppRunningControlRule(userId, appIds);
+    bool allowRunning;
+    int32_t ret = GetAppRunningControlRule(userId, appIds, allowRunning);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "HandleGetAppRunningControlRule failed");
         return ret;
     }
     if (!WriteStringVector(appIds, reply)) {
         LOG_E(BMS_TAG_DEFAULT, "write appIds failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(allowRunning)) {
+        LOG_E(BMS_TAG_DEFAULT, "write allowRunning failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

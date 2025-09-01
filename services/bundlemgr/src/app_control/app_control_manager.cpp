@@ -32,6 +32,7 @@ namespace {
     constexpr const char* APP_MARKET_CALLING = "app market";
     constexpr const char* INVALID_MESSAGE = "INVALID_MESSAGE";
     constexpr const char* ATOMIC_SERVICE = "atomicservice";
+    constexpr const char* APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
 }
 
 AppControlManager::AppControlManager()
@@ -43,10 +44,46 @@ AppControlManager::AppControlManager()
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "GetNoDisablingList failed");
     }
+    ret = GenerateRunningRuleSettingStatusMap();
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "GenerateRunningRuleSettingStatusMap failed");
+    }
 }
 
 AppControlManager::~AppControlManager()
 {
+}
+
+ErrCode AppControlManager::GenerateRunningRuleSettingStatusMap()
+{
+    std::vector<int32_t> userIds;
+    auto ret = appControlManagerDb_->GetAllUserIdsForRunningControl(userIds);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetAllUserIdsForRunningControl failed");
+        return ret;
+    }
+    if (userIds.empty()) {
+        return ERR_OK;
+    }
+    std::string appId;
+    AppRunningControlRule controlRuleResult;
+    for (auto userId : userIds) {
+        auto ret = appControlManagerDb_->GetAppRunningControlRuleByUserId(userId, appId, controlRuleResult);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_DEFAULT, "GetAppRunningControlRuleByUserId failed for userId=%d", userId);
+            continue;
+        }
+        if (appId.empty()) {
+            SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::NO_SET);
+            continue;
+        }
+        if (controlRuleResult.allowRunning) {
+            SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::WHITE_LIST);
+        } else {
+            SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::BLACK_LIST);
+        }
+    }
+    return ERR_OK;
 }
 
 ErrCode AppControlManager::AddAppInstallControlRule(const std::string &callingName,
@@ -93,34 +130,93 @@ ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingNa
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
     LOG_D(BMS_TAG_DEFAULT, "AddAppRunningControlRule");
-    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
-    ErrCode ret = appControlManagerDb_->AddAppRunningControlRule(callingName, controlRules, userId);
-    if (ret == ERR_OK) {
-        for (const auto &rule : controlRules) {
-            std::string key = rule.appId + std::string("_") + std::to_string(userId);
-            auto iter = appRunningControlRuleResult_.find(key);
-            if (iter != appRunningControlRuleResult_.end()) {
-                appRunningControlRuleResult_.erase(iter);
-            }
-        }
-        KillRunningApp(controlRules, userId);
+    ErrCode ret = CheckControlRules(controlRules, userId);
+    if (ret != ERR_OK) {
+        return ret;
     }
-    return ret;
+    ret = appControlManagerDb_->AddAppRunningControlRule(callingName, controlRules, userId);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (controlRules[0].allowRunning == true) {
+        SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::WHITE_LIST);
+    } else {
+        SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::BLACK_LIST);
+    }
+    for (const auto &rule : controlRules) {
+        std::string key = rule.appId + std::string("_") + std::to_string(userId);
+        DeleteAppRunningControlRuleCache(key);
+    }
+    KillRunningApp(controlRules, userId);
+    return ERR_OK;
+}
+
+ErrCode AppControlManager::CheckControlRules(
+    const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
+{
+    if (controlRules.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "controlRules is empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    auto firstAllowRunning = controlRules[0].allowRunning;
+    for (const auto &rule : controlRules) {
+        if (rule.allowRunning != firstAllowRunning) {
+            LOG_E(BMS_TAG_DEFAULT, "mixed rules are not allowed");
+            return ERR_BUNDLE_MANAGER_CONTROL_RULE_NOT_CONSISTENT;
+        }
+    }
+    RunningRuleSettingStatus runningRuleSettingStatus =
+        firstAllowRunning ? RunningRuleSettingStatus::WHITE_LIST : RunningRuleSettingStatus::BLACK_LIST;
+    auto status = GetRunningRuleSettingStatusByUserId(userId);
+    if (status != RunningRuleSettingStatus::NO_SET && status != runningRuleSettingStatus) {
+        LOG_E(BMS_TAG_DEFAULT, "rules are inconsistent with history");
+        return ERR_BUNDLE_MANAGER_CONTROL_RULE_NOT_CONSISTENT;
+    }
+    return ERR_OK;
+}
+
+AppControlManager::RunningRuleSettingStatus AppControlManager::GetRunningRuleSettingStatusByUserId(int32_t userId)
+{
+    std::lock_guard<std::mutex> lock(runningRuleSettingStatusMutex_);
+    auto it = runningRuleSettingStatusMap_.find(userId);
+    if (it != runningRuleSettingStatusMap_.end()) {
+        return it->second;
+    }
+    return RunningRuleSettingStatus::NO_SET;
+}
+
+void AppControlManager::SetRunningRuleSettingStatusByUserId(
+    int32_t userId, RunningRuleSettingStatus runningRuleSettingStatus)
+{
+    std::lock_guard<std::mutex> lock(runningRuleSettingStatusMutex_);
+    auto it = runningRuleSettingStatusMap_.find(userId);
+    if (it != runningRuleSettingStatusMap_.end()) {
+        runningRuleSettingStatusMap_.erase(it);
+    }
+    runningRuleSettingStatusMap_.emplace(userId, runningRuleSettingStatus);
 }
 
 ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName,
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
-    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
-    auto ret = appControlManagerDb_->DeleteAppRunningControlRule(callingName, controlRules, userId);
-    if (ret == ERR_OK) {
-        for (const auto &rule : controlRules) {
-            std::string key = rule.appId + std::string("_") + std::to_string(userId);
-            auto iter = appRunningControlRuleResult_.find(key);
-            if (iter != appRunningControlRuleResult_.end()) {
-                appRunningControlRuleResult_.erase(iter);
-            }
-        }
+    ErrCode ret = CheckControlRules(controlRules, userId);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    ret = appControlManagerDb_->DeleteAppRunningControlRule(callingName, controlRules, userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "DeleteAppRunningControlRule failed");
+        return ret;
+    }
+    for (const auto &rule : controlRules) {
+        std::string key = rule.appId + std::string("_") + std::to_string(userId);
+        DeleteAppRunningControlRuleCache(key);
+    }
+    std::vector<std::string> appIds;
+    ret = appControlManagerDb_->GetAppIdsByUserId(userId, appIds);
+    if (appIds.empty()) {
+        SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::NO_SET);
+        DeleteAppRunningControlRuleCacheForUserId(userId);
     }
     return ret;
 }
@@ -132,24 +228,15 @@ ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callin
         LOG_E(BMS_TAG_DEFAULT, "DeleteAppRunningControlRule failed");
         return res;
     }
-    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
-    for (auto it = appRunningControlRuleResult_.begin(); it != appRunningControlRuleResult_.end();) {
-        std::string key = it->first;
-        std::string targetUserId = std::to_string(userId);
-        if (key.size() >= targetUserId.size() &&
-            key.compare(key.size() - targetUserId.size(), targetUserId.size(), targetUserId) == 0) {
-            it = appRunningControlRuleResult_.erase(it);
-        } else {
-            ++it;
-        }
-    }
+    DeleteAppRunningControlRuleCacheForUserId(userId);
+    SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::NO_SET);
     return res;
 }
 
 ErrCode AppControlManager::GetAppRunningControlRule(
-    const std::string &callingName, int32_t userId, std::vector<std::string> &appIds)
+    const std::string &callingName, int32_t userId, std::vector<std::string> &appIds, bool &allowRunning)
 {
-    return appControlManagerDb_->GetAppRunningControlRule(callingName, userId, appIds);
+    return appControlManagerDb_->GetAppRunningControlRule(callingName, userId, appIds, allowRunning);
 }
 
 ErrCode AppControlManager::ConfirmAppJumpControlRule(const std::string &callerBundleName,
@@ -271,9 +358,8 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         return ret;
     }
     std::string key = appId + std::string("_") + std::to_string(userId);
-    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
-    if (appRunningControlRuleResult_.find(key) != appRunningControlRuleResult_.end()) {
-        controlRuleResult = appRunningControlRuleResult_[key];
+    auto statusRet = GetAppRunningControlRuleCache(key, controlRuleResult);
+    if (statusRet) {
         if (controlRuleResult.controlMessage == INVALID_MESSAGE) {
             controlRuleResult.controlMessage = std::string();
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
@@ -281,11 +367,91 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         return ERR_OK;
     }
     ret = appControlManagerDb_->GetAppRunningControlRule(appId, userId, controlRuleResult);
-    if (ret != ERR_OK) {
-        controlRuleResult.controlMessage = INVALID_MESSAGE;
-    }
-    appRunningControlRuleResult_.emplace(key, controlRuleResult);
+    bool findRule = (ret == ERR_OK);
+    ret = CheckAppControlRuleIntercept(bundleName, userId, findRule, controlRuleResult);
+    SetAppRunningControlRuleCache(key, controlRuleResult);
     return ret;
+}
+
+ErrCode AppControlManager::CheckAppControlRuleIntercept(const std::string &bundleName,
+    int32_t userId, bool findRule, AppRunningControlRuleResult &controlRuleResult)
+{
+    auto status = GetRunningRuleSettingStatusByUserId(userId);
+    if (findRule) {
+        if (!controlRuleResult.isEdm) {
+            return ERR_OK;
+        }
+        if (status == RunningRuleSettingStatus::NO_SET || status == RunningRuleSettingStatus::WHITE_LIST) {
+            controlRuleResult.controlMessage = INVALID_MESSAGE;
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
+        }
+        return ERR_OK;
+    }
+
+    if (status == RunningRuleSettingStatus::BLACK_LIST || status == RunningRuleSettingStatus::NO_SET) {
+        controlRuleResult.controlMessage = INVALID_MESSAGE;
+    } else {
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+        auto bundleInfos = dataMgr->GetAllInnerBundleInfos();
+        auto iter = bundleInfos.find(bundleName);
+        if (iter == bundleInfos.end()) {
+            APP_LOGW("%{public}s not found", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        if (iter->second.IsSystemApp()) {
+            controlRuleResult.controlMessage = INVALID_MESSAGE;
+        } else {
+            controlRuleResult.controlMessage = APP_CONTROL_EDM_DEFAULT_MESSAGE;
+            return ERR_OK;
+        }
+    }
+    return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
+}
+
+void AppControlManager::SetAppRunningControlRuleCache(
+    const std::string &key, AppRunningControlRuleResult controlRuleResult)
+{
+    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
+    appRunningControlRuleResult_.emplace(key, controlRuleResult);
+}
+
+bool AppControlManager::GetAppRunningControlRuleCache(
+    const std::string &key, AppRunningControlRuleResult &controlRuleResult)
+{
+    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
+    if (appRunningControlRuleResult_.find(key) != appRunningControlRuleResult_.end()) {
+        controlRuleResult = appRunningControlRuleResult_[key];
+        return true;
+    }
+    return false;
+}
+
+void AppControlManager::DeleteAppRunningControlRuleCache(const std::string &key)
+{
+    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
+    auto iter = appRunningControlRuleResult_.find(key);
+    if (iter != appRunningControlRuleResult_.end()) {
+        appRunningControlRuleResult_.erase(iter);
+    }
+}
+
+void AppControlManager::DeleteAppRunningControlRuleCacheForUserId(int32_t userId)
+{
+    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
+    for (auto it = appRunningControlRuleResult_.begin(); it != appRunningControlRuleResult_.end();) {
+        std::string key = it->first;
+        std::string targetUserId = std::to_string(userId);
+        if (key.size() >= targetUserId.size() &&
+            key.compare(key.size() - targetUserId.size(), targetUserId.size(), targetUserId) == 0) {
+            it = appRunningControlRuleResult_.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 void AppControlManager::KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const

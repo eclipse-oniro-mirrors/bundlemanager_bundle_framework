@@ -46,7 +46,8 @@ public:
     virtual ErrCode DeleteAppRunningControlRule(
         const std::vector<AppRunningControlRule> &controlRules, int32_t userId) override;
     virtual ErrCode DeleteAppRunningControlRule(int32_t userId) override;
-    virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds) override;
+    virtual ErrCode GetAppRunningControlRule(
+        int32_t userId, std::vector<std::string> &appIds, bool &allowRunning) override;
     virtual ErrCode GetAppRunningControlRule(
         const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule) override;
 

@@ -233,9 +233,10 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0090, Function | Smal
 HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0100, Function | SmallTest | Level1)
 {
     AppControlManagerRdb rdb;
+    bool allowRunning = false;
     std::vector<std::string> appIds;
     appIds.push_back("appId");
-    auto res = rdb.GetAppRunningControlRule("", USERID, appIds);
+    auto res = rdb.GetAppRunningControlRule("", USERID, appIds, allowRunning);
     EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 

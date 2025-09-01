@@ -36,6 +36,7 @@ namespace {
     constexpr int8_t CONTROL_MESSAGE_INDEX = 5;
     constexpr int8_t DISPOSED_STATUS_INDEX = 6;
     constexpr int8_t TIME_STAMP_INDEX = 8;
+    constexpr int8_t ALLOW_RUNNING_INDEX = 9;
     // app control table key
     constexpr const char* CALLING_NAME = "CALLING_NAME";
     constexpr const char* APP_CONTROL_LIST = "APP_CONTROL_LIST";
@@ -46,6 +47,7 @@ namespace {
     constexpr const char* PRIORITY = "PRIORITY";
     constexpr const char* TIME_STAMP = "TIME_STAMP";
     constexpr const char* APP_INDEX = "APP_INDEX";
+    constexpr const char* ALLOW_RUNNING = "ALLOW_RUNNING";
 
     enum class PRIORITY : uint16_t {
         EDM = 100,
@@ -63,7 +65,7 @@ AppControlManagerRdb::AppControlManagerRdb()
         + std::string(APP_CONTROL_RDB_TABLE_NAME)
         + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, CALLING_NAME TEXT NOT NULL, "
         + "APP_CONTROL_LIST TEXT, USER_ID INTEGER, APP_ID TEXT, CONTROL_MESSAGE TEXT, "
-        + "DISPOSED_STATUS TEXT, PRIORITY INTEGER, TIME_STAMP INTEGER);");
+        + "DISPOSED_STATUS TEXT, PRIORITY INTEGER, TIME_STAMP INTEGER, ALLOW_RUNNING INTEGER);");
     bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + std::string(APP_CONTROL_RDB_TABLE_NAME) +
         " ADD APP_INDEX INTEGER DEFAULT 0;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
@@ -183,6 +185,52 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
     return ERR_OK;
 }
 
+ErrCode AppControlManagerRdb::GetAllUserIdsForRunningControl(std::vector<int32_t> &outUserIds)
+{
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, RUNNING_CONTROL);
+    absRdbPredicates.EqualTo(CALLING_NAME, AppControlConstants::EDM_CALLING);
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (!absSharedResultSet) {
+        LOG_E(BMS_TAG_DEFAULT, "QueryData with absRdbPredicates failed: result set is null");
+        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
+    }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    outUserIds.clear();
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetRowCount failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    if (count == 0) {
+        LOG_D(BMS_TAG_DEFAULT, "GetAllUserIdsForRunningControl size 0");
+        return ERR_OK;
+    }
+
+    std::set<int32_t> uniqueUserIds;
+    ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GoToFirstRow failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    do {
+        int columnIndex = -1;
+        int32_t userIdValue = 0;
+        if (absSharedResultSet->GetColumnIndex(USER_ID, columnIndex) != 0 || columnIndex == -1) {
+            continue;
+        }
+        if (absSharedResultSet->GetInt(columnIndex, userIdValue) != 0) {
+            continue;
+        }
+        if (userIdValue != -1) {
+            uniqueUserIds.insert(userIdValue);
+        }
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    outUserIds.assign(uniqueUserIds.begin(), uniqueUserIds.end());
+    return ERR_OK;
+}
+
 ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callingName,
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
@@ -200,6 +248,7 @@ ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callin
         valuesBucket.PutInt(USER_ID, static_cast<int>(userId));
         valuesBucket.PutString(APP_ID, controlRule.appId);
         valuesBucket.PutString(CONTROL_MESSAGE, controlRule.controlMessage);
+        valuesBucket.PutInt(ALLOW_RUNNING, controlRule.allowRunning ? 1 : 0);
         valuesBucket.PutInt(PRIORITY, static_cast<int>(PRIORITY::EDM));
         valuesBucket.PutInt(TIME_STAMP, timeStamp);
         valuesBuckets.emplace_back(valuesBucket);
@@ -250,8 +299,92 @@ ErrCode AppControlManagerRdb::DeleteAppRunningControlRule(const std::string &cal
     return ERR_OK;
 }
 
+ErrCode AppControlManagerRdb::GetAppIdsByUserId(int32_t userId, std::vector<std::string> &appIds)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, RUNNING_CONTROL);
+    absRdbPredicates.EqualTo(CALLING_NAME, AppControlConstants::EDM_CALLING);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "QueryData failed");
+        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
+    }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetRowCount failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    if (count == 0) {
+        LOG_D(BMS_TAG_DEFAULT, "GetAppIdsByUserId size 0");
+        return ERR_OK;
+    }
+    ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GoToFirstRow failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    do {
+        std::string appId;
+        ret = absSharedResultSet->GetString(APP_ID_INDEX, appId);
+        if (ret != NativeRdb::E_OK) {
+            LOG_E(BMS_TAG_DEFAULT, "GetString appId failed, ret: %{public}d", ret);
+            return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+        }
+        appIds.push_back(appId);
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::GetAppRunningControlRuleByUserId(int32_t userId, std::string &appId,
+    AppRunningControlRule &controlRuleResult)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, RUNNING_CONTROL);
+    absRdbPredicates.EqualTo(CALLING_NAME, AppControlConstants::EDM_CALLING);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "QueryData failed");
+        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
+    }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetRowCount failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    if (count == 0) {
+        LOG_D(BMS_TAG_DEFAULT, "GetAppRunningControlRuleByUserId size 0");
+        return ERR_OK;
+    }
+    ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GoToFirstRow failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    int allowRunningInt = 0;
+    ret = absSharedResultSet->GetInt(ALLOW_RUNNING_INDEX, allowRunningInt);
+    if (ret != NativeRdb::E_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "GetInt allowRunning failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    controlRuleResult.allowRunning = (allowRunningInt == 1);
+    ret = absSharedResultSet->GetString(APP_ID_INDEX, appId);
+    if (ret != NativeRdb::E_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "GetString appId failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callingName,
-    int32_t userId, std::vector<std::string> &appIds)
+    int32_t userId, std::vector<std::string> &appIds, bool &allowRunning)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
@@ -279,6 +412,13 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
         LOG_E(BMS_TAG_DEFAULT, "GoToFirstRow failed, ret: %{public}d", ret);
         return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
+    int allowRunningInt = 0;
+    ret = absSharedResultSet->GetInt(ALLOW_RUNNING_INDEX, allowRunningInt);
+    if (ret != NativeRdb::E_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "GetInt allowRunning failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    allowRunning = (allowRunningInt == 1);
     do {
         std::string appId;
         ret = absSharedResultSet->GetString(APP_ID_INDEX, appId);

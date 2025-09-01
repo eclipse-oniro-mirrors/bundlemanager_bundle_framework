@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,11 @@ namespace AppExecFwk {
 class AppControlManager : public DelayedSingleton<AppControlManager> {
 public:
     using Want = OHOS::AAFwk::Want;
+    enum RunningRuleSettingStatus : int32_t {
+        NO_SET,
+        BLACK_LIST,
+        WHITE_LIST,
+    };
 
     AppControlManager();
     ~AppControlManager();
@@ -51,7 +56,8 @@ public:
     ErrCode DeleteAppRunningControlRule(const std::string &callingName,
         const std::vector<AppRunningControlRule> &controlRules, int32_t userId);
     ErrCode DeleteAppRunningControlRule(const std::string &callingName, int32_t userId);
-    ErrCode GetAppRunningControlRule(const std::string &callingName, int32_t userId, std::vector<std::string> &appIds);
+    ErrCode GetAppRunningControlRule(
+        const std::string &callingName, int32_t userId, std::vector<std::string> &appIds, bool &allowRunning);
     ErrCode GetAppRunningControlRule(
         const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule);
 
@@ -108,13 +114,25 @@ private:
     void SetAbilityRunningRuleCache(const std::string &key, const std::vector<DisposedRule> &disposedRules);
     void DeleteAbilityRunningRuleCache(const std::vector<std::string> &keyList);
     bool GetDisposedRuleOnlyForBms(const std::string &appId, std::vector<DisposedRule> &disposedRules);
+    void DeleteAbilityRunningRuleBmsCache(const std::string &appId);
     bool CheckCanDispose(const std::string &appId, int32_t userId);
     void PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules, const std::string &key);
     std::string GenerateAppRunningRuleCacheKey(const std::string &appId, int32_t userId, int32_t appIndex);
+    ErrCode GenerateRunningRuleSettingStatusMap();
+    ErrCode CheckControlRules(const std::vector<AppRunningControlRule> &controlRules, int32_t userId);
+    void SetRunningRuleSettingStatusByUserId(int32_t userId, RunningRuleSettingStatus runningRuleSettingStatus);
+    RunningRuleSettingStatus GetRunningRuleSettingStatusByUserId(int32_t userId);
+    void SetAppRunningControlRuleCache(const std::string &key, AppRunningControlRuleResult controlRuleResult);
+    bool GetAppRunningControlRuleCache(const std::string &key, AppRunningControlRuleResult &controlRuleResult);
+    void DeleteAppRunningControlRuleCache(const std::string &key);
+    void DeleteAppRunningControlRuleCacheForUserId(int32_t userId);
+    ErrCode CheckAppControlRuleIntercept(const std::string &bundleName,
+        int32_t userId, bool isSuccess, AppRunningControlRuleResult &controlRuleResult);
 
     bool isAppInstallControlEnabled_ = false;
     std::mutex appRunningControlMutex_;
     std::mutex abilityRunningControlRuleMutex_;
+    std::mutex runningRuleSettingStatusMutex_;
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
     std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb_;
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_;
@@ -122,6 +140,7 @@ private:
     std::unordered_map<std::string, std::vector<DisposedRule>> abilityRunningControlRuleCache_;
     std::unordered_map<std::string, DisposedRule> abilityRunningControlRuleCacheForBms_;
     std::vector<std::string> noControllingList_;
+    std::unordered_map<int32_t, AppControlManager::RunningRuleSettingStatus> runningRuleSettingStatusMap_;
 };
 } // AppExecFwk
 } // OHOS

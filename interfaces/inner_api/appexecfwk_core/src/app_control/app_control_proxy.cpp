@@ -207,7 +207,7 @@ ErrCode AppControlProxy::DeleteAppRunningControlRule(int32_t userId)
     return SendRequest(AppControlManagerInterfaceCode::CLEAN_APP_RUNNING_CONTROL_RULE, data, reply);
 }
 
-ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds)
+ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds, bool &allowRunning)
 {
     LOG_D(BMS_TAG_DEFAULT, "begin to call GetAppInstallControlRule");
     MessageParcel data;
@@ -219,7 +219,7 @@ ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<st
         LOG_E(BMS_TAG_DEFAULT, "write userId failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfos(AppControlManagerInterfaceCode::GET_APP_RUNNING_CONTROL_RULE, data, appIds);
+    return GetParcelableInfos(AppControlManagerInterfaceCode::GET_APP_RUNNING_CONTROL_RULE, data, appIds, allowRunning);
 }
 
 ErrCode AppControlProxy::GetAppRunningControlRule(
@@ -758,6 +758,29 @@ int32_t AppControlProxy::GetParcelableInfos(
     CONTAINER_SECURITY_VERIFY(reply, infoSize, &stringVector);
     for (int32_t i = 0; i < infoSize; i++) {
         stringVector.emplace_back(reply.ReadString());
+    }
+    LOG_D(BMS_TAG_DEFAULT, "Read string vector success");
+    return NO_ERROR;
+}
+
+int32_t AppControlProxy::GetParcelableInfos(AppControlManagerInterfaceCode code,
+    MessageParcel &data, std::vector<std::string> &stringVector, bool &allowRunning)
+{
+    MessageParcel reply;
+    int32_t ret = SendRequest(code, data, reply);
+    if (ret != NO_ERROR) {
+        return ret;
+    }
+
+    int32_t infoSize = reply.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(reply, infoSize, &stringVector);
+    for (int32_t i = 0; i < infoSize; i++) {
+        stringVector.emplace_back(reply.ReadString());
+    }
+
+    if (!reply.ReadBool(allowRunning)) {
+        LOG_E(BMS_TAG_DEFAULT, "read allowRunning failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     LOG_D(BMS_TAG_DEFAULT, "Read string vector success");
     return NO_ERROR;

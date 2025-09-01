@@ -231,14 +231,15 @@ ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(int32_t userId)
     return result;
 }
 
-ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds)
+ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(
+    int32_t userId, std::vector<std::string> &appIds, bool &allowRunning)
 {
     std::string callingName = GetCallingName();
     if (callingName.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "callingName is invalid");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    return appControlManager_->GetAppRunningControlRule(callingName, userId, appIds);
+    return appControlManager_->GetAppRunningControlRule(callingName, userId, appIds, allowRunning);
 }
 
 ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(
