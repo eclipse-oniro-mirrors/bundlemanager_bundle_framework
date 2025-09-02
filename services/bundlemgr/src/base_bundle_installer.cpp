@@ -269,7 +269,8 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
             .bundleName = bundleName,
             .appDistributionType = appDistributionType_,
-            .crossAppSharedConfig = isBundleCrossAppSharedConfig_
+            .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+            .isInstallByBundleName = true
         };
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
