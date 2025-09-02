@@ -4000,7 +4000,7 @@ void BMSEventHandler::RemoveUnreservedSandbox() const
             std::this_thread::sleep_for(std::chrono::milliseconds(eachTime));
             LOG_D(BMS_TAG_DEFAULT, "wait for account started");
             if (currentUserId == Constants::INVALID_USERID) {
-                currentUserId = AccountHelper::GetCurrentActiveUserId();
+                currentUserId = AccountHelper::GetUserIdByCallerType();
                 LOG_D(BMS_TAG_DEFAULT, "current active userId is %{public}d", currentUserId);
                 if (currentUserId == Constants::INVALID_USERID) {
                     continue;
