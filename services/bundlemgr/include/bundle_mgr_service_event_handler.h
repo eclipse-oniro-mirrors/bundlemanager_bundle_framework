@@ -560,7 +560,7 @@ private:
 
     void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
-    void ParseSizeFromProvision(const std::string &bundleName, int32_t &sizeMb) const;
+    void ParseSizeFromProvision(const std::string &bundleName, const int32_t uid, int32_t &sizeMb) const;
     void RefreshQuotaForAllUid();
     void InnerProcessStockBundleRouterInfo();
 
