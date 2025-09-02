@@ -852,7 +852,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     result = CheckU1Enable(newInfos.begin()->second, userId_);
     CHECK_RESULT(result, "Check u1Enable failed %{public}d");
-    
+
     bool isFreeInstallFlag = (installParam.installFlag == InstallFlag::FREE_INSTALL);
     CheckEnableRemovable(newInfos, oldInfo, userId_, isFreeInstallFlag, isAppExist_);
     // check MDM self update
@@ -1348,7 +1348,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     userId_ = GetConfirmUserId(userId_, newInfos);
     result = CheckUserId(userId_);
     CHECK_RESULT(result, "userId check failed %{public}d");
-    
+
     if (!installParam.isPreInstallApp && IsAppInBlocklist((newInfos.begin()->second).GetBundleName(), userId_)) {
         result = ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
         CHECK_RESULT(result, "app is in block list %{public}d");
@@ -3531,9 +3531,6 @@ bool BaseBundleInstaller::SaveFirstInstallBundleInfo(const std::string &bundleNa
 bool BaseBundleInstaller::CheckInstallOnKeepData(const std::string &bundleName, bool isOTA,
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    if (isOTA) {
-        return true;
-    }
     if (!InitDataMgr() || infos.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "init failed or empty infos");
         return true;
@@ -3543,6 +3540,9 @@ bool BaseBundleInstaller::CheckInstallOnKeepData(const std::string &bundleName, 
         return true;
     }
     existBeforeKeepDataApp_ = true;
+    if (isOTA) {
+        return true;
+    }
     LOG_I(BMS_TAG_INSTALLER, "this app was uninstalled with keep data before");
     if (!CheckAppIdentifier(uninstallBundleInfo.appIdentifier, infos.begin()->second.GetAppIdentifier(),
         uninstallBundleInfo.appId, infos.begin()->second.GetAppId())) {
