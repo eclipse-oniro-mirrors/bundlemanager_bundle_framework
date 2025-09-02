@@ -534,6 +534,7 @@ void PreBundleProfile::ProcessOnDemandList(std::set<PreScanInfo> &scanAppInfos,
 {
     for (auto iter = scanAppInfos.begin(); iter != scanAppInfos.end();) {
         if (iter->onDemandInstall) {
+            APP_LOGI("%{public}s is onDemandInstall", iter->bundleDir.c_str());
             PreScanInfo preScanInfo;
             preScanInfo.removable = iter->removable;
             preScanInfo.isDataPreloadHap = iter->isDataPreloadHap;
@@ -543,7 +544,6 @@ void PreBundleProfile::ProcessOnDemandList(std::set<PreScanInfo> &scanAppInfos,
             preScanInfo.onDemandInstall = iter->onDemandInstall;
             scanDemandInfos.insert(preScanInfo);
             iter = scanAppInfos.erase(iter);
-            APP_LOGI("%{public}s is onDemandInstall", iter->bundleDir.c_str());
         } else {
             ++iter;
         }
