@@ -42,7 +42,7 @@ int OverlayManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     std::u16string descriptor = OverlayManagerHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
-        APP_LOGE("fail to write reply message in bundle mgr host due to the reply is nullptr");
+        APP_LOGE("descriptor invalid");
         return OBJECT_NULL;
     }
 

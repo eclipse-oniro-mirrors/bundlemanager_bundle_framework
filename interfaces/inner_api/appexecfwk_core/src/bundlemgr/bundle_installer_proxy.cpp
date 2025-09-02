@@ -213,7 +213,7 @@ ErrCode BundleInstallerProxy::InstallSandboxApp(const std::string &bundleName, i
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(dlpType)) {
-        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write appIndex fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write dlpType fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
@@ -243,19 +243,19 @@ ErrCode BundleInstallerProxy::UninstallSandboxApp(const std::string &bundleName,
     MessageOption option(MessageOption::TF_SYNC);
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write MessageParcel fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallSandboxApp due to write MessageParcel fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteString16(Str8ToStr16(bundleName))) {
-        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write bundleName fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallSandboxApp due to write bundleName fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(appIndex)) {
-        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write appIndex fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallSandboxApp due to write appIndex fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write userId fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallSandboxApp due to write userId fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
 
