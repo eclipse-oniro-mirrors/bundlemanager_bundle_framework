@@ -36,7 +36,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int16_t LIMIT_PARCEL_SIZE = 1024;
 const int32_t MAX_LIMIT_SIZE = 100;
 const int8_t ASHMEM_LEN = 16;
 constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
@@ -50,19 +49,6 @@ constexpr int16_t MAX_GET_FOR_UIDS_SIZE = 1000;
 constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // max allow 1 GB resource size
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 const std::string BUNDLE_MANAGER_ASHMEM_NAME = "bundleManagerAshemeName";
-
-void SplitString(const std::string &source, std::vector<std::string> &strings)
-{
-    int splitSize = (source.size() / LIMIT_PARCEL_SIZE);
-    if ((source.size() % LIMIT_PARCEL_SIZE) != 0) {
-        splitSize++;
-    }
-    APP_LOGD("the dump string split into %{public}d size", splitSize);
-    for (int i = 0; i < splitSize; i++) {
-        int32_t start = LIMIT_PARCEL_SIZE * i;
-        strings.emplace_back(source.substr(start, LIMIT_PARCEL_SIZE));
-    }
-}
 
 bool GetData(void *&buffer, size_t size, const void *data)
 {
