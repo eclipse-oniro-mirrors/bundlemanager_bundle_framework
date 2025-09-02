@@ -1956,6 +1956,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyPermissionLevel_0003, Function |
 HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0001, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
     InstallParam param;
     param.isSelfUpdate = false;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -1972,6 +1973,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0001, Function
 HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0002, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
     InstallParam param;
     param.isSelfUpdate = true;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -1988,6 +1990,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0002, Function
 HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0003, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
     InstallParam param;
     param.isSelfUpdate = true;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -2006,6 +2009,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0003, Function
 HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0004, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
     InstallParam param;
     param.isSelfUpdate = true;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -2024,6 +2028,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0004, Function
 HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0005, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
     InstallParam param;
     param.isSelfUpdate = true;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -2034,7 +2039,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0005, Function
     innerBundleInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM);
     infos.emplace(BUNDLE_NAME, innerBundleInfo);
     auto ret = baseBundleInstaller.CheckMDMUpdateBundleForSelf(param, innerBundleInfo, infos, true);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME);
 }
 
 /**
@@ -2045,6 +2050,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0005, Function
 HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0006, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
     InstallParam param;
     param.isSelfUpdate = true;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -2055,12 +2061,28 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0006, Function
     innerBundleInfo.SetAppDistributionType(Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM);
     InnerBundleInfo innerBundleInfo2;
     ApplicationInfo applicationInfo2;
-    applicationInfo.bundleName = "wrong_name";
+    applicationInfo2.bundleName = "wrong_name";
     innerBundleInfo2.SetBaseApplicationInfo(applicationInfo2);
     infos.emplace(BUNDLE_NAME, innerBundleInfo2);
 
     auto ret = baseBundleInstaller.CheckMDMUpdateBundleForSelf(param, innerBundleInfo, infos, true);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckMDMUpdateBundleForSelf_0007
+ * @tc.name: test the start function of CheckMDMUpdateBundleForSelf
+ * @tc.desc: 1. test CheckMDMUpdateBundleForSelf
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0007, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    InstallParam param;
+    param.isSelfUpdate = false;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    auto ret = baseBundleInstaller.CheckMDMUpdateBundleForSelf(param, innerBundleInfo, infos, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
