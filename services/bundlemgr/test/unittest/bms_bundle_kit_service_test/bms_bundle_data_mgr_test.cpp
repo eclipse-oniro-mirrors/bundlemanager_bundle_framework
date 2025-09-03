@@ -3640,16 +3640,18 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessBundleChangedEventForOtherUsers_0100, Func
 {
     EventFwk::CommonEventData commonData;
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    bool ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(nullptr, "notExist", "", USERID, commonData);
+    NotifyBundleEvents installResult;
+    installResult.bundleName = "notExist";
+    installResult.type = NotifyType::UNINSTALL_BUNDLE;
+    bool ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(nullptr, installResult, USERID, commonData);
     EXPECT_FALSE(ret);
 
-    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(nullptr, "notExist",
-        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, USERID, commonData);
+    installResult.type = NotifyType::UPDATE;
+    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(nullptr, installResult, USERID, commonData);
     EXPECT_FALSE(ret);
 
     auto dataMgr = GetBundleDataMgr();
-    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, "notExist",
-        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, USERID, commonData);
+    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, installResult, USERID, commonData);
     EXPECT_FALSE(ret);
 }
 
@@ -3671,13 +3673,65 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessBundleChangedEventForOtherUsers_0200, Func
     dataMgr->bundleInfos_["bundleName"] = innerBundleInfo;
     EventFwk::CommonEventData commonData;
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    bool ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, "bundleName",
-        EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED, USERID, commonData);
+    NotifyBundleEvents installResult;
+    installResult.bundleName = "bundleName";
+    installResult.type = NotifyType::UPDATE;
+    bool ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, installResult, USERID, commonData);
     EXPECT_TRUE(ret);
     auto iter = dataMgr->bundleInfos_.find("bundleName");
     if (iter != dataMgr->bundleInfos_.end()) {
         dataMgr->bundleInfos_.erase(iter);
     }
+}
+
+/**
+ * @tc.number: ProcessBundleChangedEventForOtherUsers_0300
+ * @tc.name: test ProcessBundleChangedEventForOtherUsers
+ * @tc.desc: 1.ProcessBundleChangedEventForOtherUsers
+ */
+HWTEST_F(BmsBundleDataMgrTest, ProcessBundleChangedEventForOtherUsers_0300, Function | MediumTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    userInfo.bundleUserInfo.userId = 200;
+    innerBundleInfo.innerBundleUserInfos_["_200"] = userInfo;
+
+    auto dataMgr = GetBundleDataMgr();
+    dataMgr->AddUserId(200);
+    dataMgr->bundleInfos_["bundleName"] = innerBundleInfo;
+    EventFwk::CommonEventData commonData;
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    NotifyBundleEvents installResult;
+    installResult.bundleName = "bundleName";
+    installResult.type = NotifyType::INSTALL;
+    installResult.isInstallByBundleName = false;
+    installResult.isRecover = false;
+    bool ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, installResult, USERID, commonData);
+    EXPECT_TRUE(ret);
+    installResult.isInstallByBundleName = true;
+    installResult.isRecover = false;
+    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, installResult, USERID, commonData);
+    EXPECT_FALSE(ret);
+    installResult.isInstallByBundleName = false;
+    installResult.isRecover = true;
+    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, installResult, USERID, commonData);
+    EXPECT_FALSE(ret);
+    installResult.isInstallByBundleName = true;
+    installResult.isRecover = true;
+    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, installResult, USERID, commonData);
+    EXPECT_FALSE(ret);
+    installResult.isInstallByBundleName = false;
+    installResult.isRecover = false;
+    installResult.appIndex = 1;
+    ret = commonEventMgr->ProcessBundleChangedEventForOtherUsers(dataMgr, installResult, USERID, commonData);
+    EXPECT_FALSE(ret);
+    auto iter = dataMgr->bundleInfos_.find("bundleName");
+    if (iter != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(iter);
+    }
+    dataMgr->RemoveUserId(200);
 }
 
 /**
