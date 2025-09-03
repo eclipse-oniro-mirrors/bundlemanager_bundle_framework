@@ -105,7 +105,6 @@ private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
     void DeleteAppRunningRuleCache(std::string &key);
     void DeleteAbilityRunningRuleCache(std::string &key);
-    void DeleteAbilityRunningRuleBmsCache(const std::string &appId);
     bool CheckCanDispose(const std::string &appId, int32_t userId);
     void PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules);
 
