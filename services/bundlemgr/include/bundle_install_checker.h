@@ -198,6 +198,9 @@ public:
 
     ErrCode CheckNoU1Enable(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
+    bool GetIsAbcCompressed() const;
+    void SetIsAbcCompressed(const bool &isAbcCompressed);
+
     ErrCode CheckU1EnableSameInHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::string &bundleName, bool &u1Enable);
     bool DetermineCloneApp(InnerBundleInfo &innerBundleInfo);
@@ -260,6 +263,8 @@ private:
         uint32_t versionCode);
 
     bool isContainEntry_ = false;
+
+    bool isAbcCompressed_ = false;
 
     void SetAppProvisionMetadata(const std::vector<Security::Verify::Metadata> &provisionMetadatas,
         InnerBundleInfo &newInfo);

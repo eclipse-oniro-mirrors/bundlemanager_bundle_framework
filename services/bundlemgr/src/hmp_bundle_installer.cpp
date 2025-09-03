@@ -236,7 +236,8 @@ bool HmpBundleInstaller::ParseHapFiles(
     BundleParser bundleParser;
     for (auto realPath : realPaths) {
         InnerBundleInfo innerBundleInfo;
-        ret = bundleParser.Parse(realPath, innerBundleInfo);
+        bool isAbcCompressed = false;
+        ret = bundleParser.Parse(realPath, innerBundleInfo, isAbcCompressed);
         if (ret != ERR_OK) {
             APP_LOGE("Parse bundle info failed, error: %{public}d", ret);
             continue;
