@@ -3694,11 +3694,12 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessBundleChangedEventForOtherUsers_0300, Func
     InnerBundleUserInfo userInfo;
     userInfo.bundleUserInfo.userId = USERID;
     InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.innerBundleUserInfos_["100"] = userInfo;
-    userInfo.bundleUserInfo.userId = 101;
-    innerBundleInfo.innerBundleUserInfos_["101"] = userInfo;
+    innerBundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    userInfo.bundleUserInfo.userId = 200;
+    innerBundleInfo.innerBundleUserInfos_["_200"] = userInfo;
 
     auto dataMgr = GetBundleDataMgr();
+    dataMgr->AddUserId(200);
     dataMgr->bundleInfos_["bundleName"] = innerBundleInfo;
     EventFwk::CommonEventData commonData;
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
@@ -3730,6 +3731,7 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessBundleChangedEventForOtherUsers_0300, Func
     if (iter != dataMgr->bundleInfos_.end()) {
         dataMgr->bundleInfos_.erase(iter);
     }
+    dataMgr->RemoveUserId(200);
 }
 
 /**
