@@ -96,9 +96,20 @@ ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingNa
     std::lock_guard<std::mutex> lock(appRunningControlMutex_);
     ErrCode ret = appControlManagerDb_->AddAppRunningControlRule(callingName, controlRules, userId);
     if (ret == ERR_OK) {
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+            return ERR_APPEXECFWK_NULL_PTR;
+        }
         for (const auto &rule : controlRules) {
             std::string key = rule.appId + std::string("_") + std::to_string(userId);
             auto iter = appRunningControlRuleResult_.find(key);
+            if (iter != appRunningControlRuleResult_.end()) {
+                appRunningControlRuleResult_.erase(iter);
+            }
+            std::string transformedAppId = dataMgr->AppIdAndAppIdentifierTransform(rule.appId);
+            std::string transformedKey = transformedAppId + std::string("_") + std::to_string(userId);
+            iter = appRunningControlRuleResult_.find(transformedKey);
             if (iter != appRunningControlRuleResult_.end()) {
                 appRunningControlRuleResult_.erase(iter);
             }
@@ -114,9 +125,20 @@ ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callin
     std::lock_guard<std::mutex> lock(appRunningControlMutex_);
     auto ret = appControlManagerDb_->DeleteAppRunningControlRule(callingName, controlRules, userId);
     if (ret == ERR_OK) {
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+            return ERR_APPEXECFWK_NULL_PTR;
+        }
         for (const auto &rule : controlRules) {
             std::string key = rule.appId + std::string("_") + std::to_string(userId);
             auto iter = appRunningControlRuleResult_.find(key);
+            if (iter != appRunningControlRuleResult_.end()) {
+                appRunningControlRuleResult_.erase(iter);
+            }
+            std::string transformedAppId = dataMgr->AppIdAndAppIdentifierTransform(rule.appId);
+            std::string transformedKey = transformedAppId + std::string("_") + std::to_string(userId);
+            iter = appRunningControlRuleResult_.find(transformedKey);
             if (iter != appRunningControlRuleResult_.end()) {
                 appRunningControlRuleResult_.erase(iter);
             }
@@ -265,10 +287,15 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string appId;
-    ErrCode ret = dataMgr->GetAppIdByBundleName(bundleName, appId);
+    std::string appIdentifier;
+    ErrCode ret = dataMgr->GetAppIdAndAppIdentifierByBundleName(bundleName, appId, appIdentifier);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "getAppId failed,-n:%{public}s", bundleName.c_str());
         return ret;
+    }
+    std::vector<std::string> appIds = {appId};
+    if (!appIdentifier.empty()) {
+        appIds.emplace_back(appIdentifier);
     }
     std::string key = appId + std::string("_") + std::to_string(userId);
     std::lock_guard<std::mutex> lock(appRunningControlMutex_);
@@ -280,7 +307,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         }
         return ERR_OK;
     }
-    ret = appControlManagerDb_->GetAppRunningControlRule(appId, userId, controlRuleResult);
+    ret = appControlManagerDb_->GetAppRunningControlRule(appIds, userId, controlRuleResult);
     if (ret != ERR_OK) {
         controlRuleResult.controlMessage = INVALID_MESSAGE;
     }
