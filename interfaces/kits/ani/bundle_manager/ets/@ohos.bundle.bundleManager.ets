@@ -112,6 +112,7 @@ namespace bundleManager {
     DISTRIBUTED = 28,
     APP_SERVICE = 29,
     LIVE_FORM = 30,
+    WEB_NATIVE_MESSAGING = 32,
     UNSPECIFIED = 255
   }
 
