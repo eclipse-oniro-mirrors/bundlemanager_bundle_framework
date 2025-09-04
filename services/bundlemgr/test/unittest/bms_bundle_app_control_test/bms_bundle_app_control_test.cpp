@@ -60,6 +60,7 @@ const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_
 const std::string ABILITY_RUNNING_KEY = "ABILITY_RUNNING_KEY";
 const std::string INVALID_MESSAGE = "INVALID_MESSAGE";
 const int32_t USERID = 100;
+const int32_t TEST_USERID = 2000;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int NOT_EXIST_USERID = -5;
 const int ALL_USERID = -3;
@@ -4310,6 +4311,145 @@ HWTEST_F(BmsBundleAppControlTest, DeleteDisposedRules_0200, Function | SmallTest
     impl->appControlManager_ = DelayedSingleton<AppControlManager>::GetInstance();
     ErrCode res = impl->DeleteDisposedRules(disposedRuleConfigurations, USERID);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDisposedRules_0100
+ * @tc.name: test GetDisposedRules by AppControlProxy
+ * @tc.desc: 1.GetDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetDisposedRules_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    ErrCode ret = appControlProxy->GetDisposedRules(TEST_USERID, disposedRuleConfigurations);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetDisposedRules_0200
+ * @tc.name: test GetDisposedRules by AppControlManagerHostImpl
+ * @tc.desc: 1.GetDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetDisposedRules_0200, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto ret = impl->GetDisposedRules(TEST_USERID, disposedRuleConfigurations);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(disposedRuleConfigurations.size(), 0);
+}
+
+/**
+ * @tc.number: GetDisposedRules_0300
+ * @tc.name: test GetDisposedRules by AppControlManager
+ * @tc.desc: 1.GetDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetDisposedRules_0300, Function | SmallTest | Level1)
+{
+    AppControlManager appControlManager;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto ret = appControlManager.GetDisposedRules(CALLER_BUNDLE_NAME, TEST_USERID, disposedRuleConfigurations);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(disposedRuleConfigurations.size(), 0);
+}
+
+/**
+ * @tc.number: GetDisposedRules_0400
+ * @tc.name: test GetDisposedRules by AppControlManager
+ * @tc.desc: 1.GetDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetDisposedRules_0400, Function | SmallTest | Level1)
+{
+    AppControlManager appControlManager;
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    ASSERT_NE(rdb->rdbDataManager_, nullptr);
+    rdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
+    appControlManager.appControlManagerDb_ = rdb;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto ret = appControlManager.GetDisposedRules(CALLER_BUNDLE_NAME, TEST_USERID, disposedRuleConfigurations);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
+}
+
+/**
+ * @tc.number: GetDisposedRules_0500
+ * @tc.name: test GetDisposedRules by AppControlManagerRdb
+ * @tc.desc: 1.GetDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetDisposedRules_0500, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    ASSERT_NE(rdb->rdbDataManager_, nullptr);
+    rdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto ret = rdb->GetDisposedRules(CALLER_BUNDLE_NAME, TEST_USERID, disposedRuleConfigurations);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
+}
+
+/**
+ * @tc.number: GetDisposedRules_0600
+ * @tc.name: test GetDisposedRules by AppControlManagerRdb
+ * @tc.desc: 1.GetDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetDisposedRules_0600, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto ret = rdb->GetDisposedRules(CALLER_BUNDLE_NAME, TEST_USERID, disposedRuleConfigurations);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDisposedRules_0700
+ * @tc.name: test GetDisposedRules by AppControlManagerRdb
+ * @tc.desc: 1.GetDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetDisposedRules_0700, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    std::string appId = "appId";
+    int32_t appIndex = 100;
+    DisposedRule disposedRule;
+    disposedRule.componentType = ComponentType::UI_ABILITY;
+    disposedRule.disposedType = DisposedType::BLOCK_APPLICATION;
+    disposedRule.controlType = ControlType::DISALLOWED_LIST;
+    auto ret = rdb->SetDisposedRule(CALLER_BUNDLE_NAME, appId, disposedRule, appIndex, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    ret = rdb->GetDisposedRules(CALLER_BUNDLE_NAME, TEST_USERID, disposedRuleConfigurations);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(disposedRuleConfigurations.size(), 1);
+    EXPECT_EQ(disposedRuleConfigurations[0].appId, appId);
+    EXPECT_EQ(disposedRuleConfigurations[0].appIndex, appIndex);
+    EXPECT_EQ(disposedRuleConfigurations[0].disposedRule.componentType, disposedRule.componentType);
+    EXPECT_EQ(disposedRuleConfigurations[0].disposedRule.disposedType, disposedRule.disposedType);
+    EXPECT_EQ(disposedRuleConfigurations[0].disposedRule.controlType, disposedRule.controlType);
+
+    ret = rdb->DeleteDisposedRule(CALLER_BUNDLE_NAME, { appId }, appIndex, TEST_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ConvertToDisposedRuleConfiguration_0100
+ * @tc.name: Test ConvertToDisposedRuleConfiguration by AppControlManagerRdb
+ * @tc.desc: 1.ConvertToDisposedRuleConfiguration test
+ */
+HWTEST_F(BmsBundleAppControlTest, ConvertToDisposedRuleConfiguration_0100, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    auto ret = rdb->ConvertToDisposedRuleConfiguration(nullptr, disposedRuleConfiguration);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
 }
 
 /**

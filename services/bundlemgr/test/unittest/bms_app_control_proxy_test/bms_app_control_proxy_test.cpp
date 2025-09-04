@@ -501,6 +501,21 @@ HWTEST_F(BmsAppControlProxyTest, GetDisposedRule_0100, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: GetDisposedRules_0100
+ * @tc.name: test the GetDisposedRules
+ * @tc.desc: 1. system running normally
+ *           2. test GetDisposedRules
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRules_0100, Function | MediumTest | Level1)
+{
+    AppControlProxy appControlProxy(nullptr);
+    int32_t userId = 100;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRules(userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
  * @tc.number: GetAbilityRunningControlRule_0100
  * @tc.name: test the GetAbilityRunningControlRule
  * @tc.desc: 1. system running normally

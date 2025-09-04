@@ -137,6 +137,8 @@ int AppControlHost::OnRemoteRequest(
             return HandleGetUninstallDisposedRule(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_UNINSTALL_DISPOSED_RULE):
             return HandleDeleteUninstallDisposedRule(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_RULES):
+            return HandleGetDisposedRules(data, reply);
         default:
             LOG_W(BMS_TAG_DEFAULT, "AppControlHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -434,6 +436,24 @@ ErrCode AppControlHost::HandleGetDisposedRule(MessageParcel& data, MessageParcel
     return ERR_OK;
 }
 
+ErrCode AppControlHost::HandleGetDisposedRules(MessageParcel& data, MessageParcel &reply)
+{
+    int32_t userId = data.ReadInt32();
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    ErrCode ret = GetDisposedRules(userId, disposedRuleConfigurations);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (WriteVectorToParcel(disposedRuleConfigurations, reply) != ERR_OK) {
+            LOG_E(BMS_TAG_DEFAULT, "write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlHost::HandleSetDisposedRule(MessageParcel& data, MessageParcel& reply)
 {
     std::string appId = data.ReadString();
@@ -705,6 +725,41 @@ ErrCode AppControlHost::GetVectorParcelInfo(MessageParcel &data, std::vector<T> 
         parcelInfos.emplace_back(*info);
     }
 
+    return ERR_OK;
+}
+
+template<typename T>
+ErrCode AppControlHost::WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply)
+{
+    MessageParcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
+    if (!tempParcel.WriteInt32(static_cast<int32_t>(parcelVector.size()))) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    for (auto &parcel : parcelVector) {
+        if (!tempParcel.WriteParcelable(&parcel)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    std::vector<T>().swap(parcelVector);
+
+    size_t dataSize = tempParcel.GetDataSize();
+    if (!reply.WriteUint32(dataSize)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (dataSize > MAX_IPC_ALLOWED_CAPACITY) {
+        APP_LOGE("datasize is too large");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+        APP_LOGE("write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 } // AppExecFwk
