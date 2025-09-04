@@ -473,7 +473,7 @@ ErrCode BundleManagerHelper::InnerCleanBundleCacheForSelfCallback(
     }
     ErrCode result = iBundleMgr->CleanBundleCacheFilesForSelf(cleanCacheCallback);
     if (result != ERR_OK) {
-        APP_LOGE("call error");
+        APP_LOGE("CleanBundleCacheFilesForSelf ErrCode: %{public}d", result);
     }
     return CommonFunc::ConvertErrCode(result);
 }

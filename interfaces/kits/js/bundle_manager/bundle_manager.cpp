@@ -2224,6 +2224,10 @@ void CleanBundleCacheFilesForSelfExec(napi_env env, void *data)
     }
     if (asyncCallbackInfo->cleanCacheCallback == nullptr) {
         asyncCallbackInfo->cleanCacheCallback = new (std::nothrow) CleanCacheCallback();
+        if (asyncCallbackInfo->cleanCacheCallback == nullptr) {
+            APP_LOGE("error failed to allocate CleanCacheCallback");
+            return;
+        }
     }
     asyncCallbackInfo->err = BundleManagerHelper::InnerCleanBundleCacheForSelfCallback(
         asyncCallbackInfo->cleanCacheCallback);

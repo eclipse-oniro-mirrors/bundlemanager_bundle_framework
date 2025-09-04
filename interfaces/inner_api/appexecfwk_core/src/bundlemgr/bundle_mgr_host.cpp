@@ -1851,6 +1851,11 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFilesForSelf(MessageParcel &data, M
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     sptr<ICleanCacheCallback> cleanCacheCallback = iface_cast<ICleanCacheCallback>(object);
+    if (cleanCacheCallback == nullptr) {
+        APP_LOGE("iface_cast cleanCacheCallback failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    
     ErrCode ret = CleanBundleCacheFilesForSelf(cleanCacheCallback);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
