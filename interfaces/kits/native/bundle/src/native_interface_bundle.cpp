@@ -31,6 +31,7 @@ namespace {
 const size_t CHAR_MIN_LENGTH = 1;
 const size_t CHAR_MAX_LENGTH = 10240;
 const size_t MAX_ALLOWED_SIZE = 1024 * 1024;
+const size_t ARRAY_MAX_LENGTH = 1024;
 }
 
 // Helper function to release char* memory
@@ -540,4 +541,60 @@ OH_NativeBundle_ModuleMetadata* OH_NativeBundle_GetModuleMetadata(size_t* size)
     *size = bundleInfo.applicationInfo.metadata.size();
     APP_LOGD("OH_NativeBundle_GetModuleMetadata success");
     return moduleMetadata;
+}
+
+BundleManager_ErrorCode OH_NativeBundle_GetAbilityResourceInfo(
+    char* fileType, OH_NativeBundle_AbilityResourceInfo** abilityResourceInfo, size_t* size)
+{
+    if (fileType == nullptr || size == nullptr || abilityResourceInfo == nullptr) {
+        APP_LOGE("invalid param");
+        return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
+    }
+    *size = 0;
+    std::string fileTypeStr(fileType);
+    OHOS::AppExecFwk::BundleMgrProxyNative bundleMgrProxyNative;
+    std::vector<OHOS::AppExecFwk::LauncherAbilityResourceInfo> launcherAbilityResourceInfoArr;
+
+    if (bundleMgrProxyNative.GetLauncherAbilityResourceInfoNative(fileTypeStr, launcherAbilityResourceInfoArr) ==
+        BUNDLE_MANAGER_ERROR_CODE_PERMISSION_DENIED) {
+        APP_LOGE("failed to get launcher Ability Resource Info Arr because of permission denied");
+        return BUNDLE_MANAGER_ERROR_CODE_PERMISSION_DENIED;
+    }
+
+    size_t abilityResourceInfoSize = launcherAbilityResourceInfoArr.size();
+    if (abilityResourceInfoSize == 0 || abilityResourceInfoSize > ARRAY_MAX_LENGTH) {
+        APP_LOGW("failed due to the length of value is empty or too long");
+        return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
+    }
+
+    *abilityResourceInfo = OH_AbilityResourceInfo_Create(abilityResourceInfoSize);
+    if (*abilityResourceInfo == nullptr) {
+        APP_LOGE("failed to allocate memory for OH_NativeBundle_ModuleMetadata");
+        return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
+    }
+
+    size_t i = 0;
+    for (auto &info : launcherAbilityResourceInfoArr) {
+        auto p =
+            (OH_NativeBundle_AbilityResourceInfo *)((char *)(*abilityResourceInfo) + OH_NativeBundle_GetSize() * i);
+        if (OH_NativeBundle_SetAbilityResourceInfo_AppIndex(p, info.appIndex) != BUNDLE_MANAGER_ERROR_CODE_NO_ERROR ||
+            OH_NativeBundle_SetAbilityResourceInfo_IsDefaultApp(p, info.isDefaultApp) !=
+                BUNDLE_MANAGER_ERROR_CODE_NO_ERROR ||
+            OH_NativeBundle_SetAbilityResourceInfo_BundleName(p, info.bundleName.c_str()) !=
+                BUNDLE_MANAGER_ERROR_CODE_NO_ERROR ||
+            OH_NativeBundle_SetAbilityResourceInfo_ModuleName(p, info.moduleName.c_str()) !=
+                BUNDLE_MANAGER_ERROR_CODE_NO_ERROR ||
+            OH_NativeBundle_SetAbilityResourceInfo_AbilityName(p, info.abilityName.c_str()) !=
+                BUNDLE_MANAGER_ERROR_CODE_NO_ERROR ||
+            OH_NativeBundle_SetAbilityResourceInfo_Label(p, info.label.c_str()) != BUNDLE_MANAGER_ERROR_CODE_NO_ERROR ||
+            OH_NativeBundle_SetAbilityResourceInfo_Icon(p, info.icon.c_str()) != BUNDLE_MANAGER_ERROR_CODE_NO_ERROR) {
+            APP_LOGE("failed to set ability resource info");
+            OH_AbilityResourceInfo_Destroy(*abilityResourceInfo, i + 1);
+            return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
+        }
+        ++i;
+    }
+
+    *size = abilityResourceInfoSize;
+    return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
 }

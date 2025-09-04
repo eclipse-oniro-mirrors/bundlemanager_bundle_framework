@@ -26,5 +26,45 @@
     {
       "first_introduced": "20",
       "name": "OH_NativeBundle_GetModuleMetadata"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_NativeBundle_GetAbilityResourceInfo"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_NativeBundle_GetBundleName"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_NativeBundle_GetModuleName"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_NativeBundle_GetAbilityName"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_NativeBundle_GetIcon"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_NativeBundle_GetLabel"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_NativeBundle_GetAppIndex"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_NativeBundle_CheckDefaultApp"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_AbilityResourceInfo_Destroy"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_NativeBundle_GetSize"
     }
 ]

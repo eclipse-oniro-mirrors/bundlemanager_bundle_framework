@@ -33,6 +33,7 @@
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
+#include "mime_type_mgr.h"
 #include "parameter.h"
 #include "string_ex.h"
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
@@ -1221,6 +1222,29 @@ void BundleUtil::ResetBit(const uint8_t pos, uint8_t &num)
 bool BundleUtil::GetBitValue(const uint8_t num, const uint8_t pos)
 {
     return (num & (1U << pos)) != 0;
+}
+
+std::vector<std::string> BundleUtil::FileTypeNormalize(const std::string &fileType)
+{
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    if (BundleUtil::IsUtd(fileType)) {
+        return {fileType};
+    }
+    if (fileType[0] == '.') {
+        std::vector<std::string> utdVector;
+        if (!MimeTypeMgr::GetUtdVectorByUri(fileType, utdVector)) {
+            APP_LOGW("GetUtdVectorByUri failed");
+            return {};
+        } else {
+            return utdVector;
+        }
+    } else {
+        return BundleUtil::GetUtdVectorByMimeType(fileType);
+    }
+#else
+    APP_LOGI("UDMF not support");
+    return {};
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

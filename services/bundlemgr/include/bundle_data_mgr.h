@@ -1187,6 +1187,8 @@ public:
         const int32_t userId, PluginBundleInfo &pluginBundleInfo);
     bool SetBundleUserInfoRemovable(const std::string bundleName, int32_t userId, bool removable);
     ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName, ModuleTestRunner &testRunner);
+    ErrCode ImplicitQueryAbilityInfosWithDefault(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, AbilityInfo &defaultAbilityInfo, bool &findDefaultApp);
 
 private:
     /**

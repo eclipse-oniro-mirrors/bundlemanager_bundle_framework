@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,6 +58,7 @@ bool LauncherAbilityResourceInfo::ReadFromParcel(Parcel &parcel)
     }
 
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDefaultApp);
     return true;
 }
 
@@ -77,6 +78,7 @@ bool LauncherAbilityResourceInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8Unaligned, parcel, data);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDefaultApp);
     return true;
 }
 
