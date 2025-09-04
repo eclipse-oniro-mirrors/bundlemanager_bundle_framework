@@ -1332,7 +1332,7 @@ int64_t InstalldHostImpl::GetEl2CacheSize(const int32_t projectId, const std::st
     std::string cachePath = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + ServiceConstants::DIR_EL2 +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleNameDir +
         ServiceConstants::PATH_SEPARATOR + Constants::CACHE_DIR;
-    if (InstalldOperator::IsDirEmptyFast(cachePath)) {
+    if (!InstalldOperator::IsExistDir(cachePath) || InstalldOperator::IsDirEmptyFast(cachePath)) {
         LOG_I(BMS_TAG_INSTALLD, "%{public}s el2 cache dir empty", bundleNameDir.c_str());
         return 0;
     }
