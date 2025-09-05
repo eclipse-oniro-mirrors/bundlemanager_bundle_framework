@@ -940,6 +940,15 @@ private:
     ErrCode HandleGetAllShortcutInfoForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginInfo(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetTestRunner(MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Obtain a list of applications that support opening files in a certain format.
+     * @param fileType Indicates the file type.
+     * @param abilityResourceInfo Indicates the ability resource array.
+     * @param size Indicates the ability resource array size.
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

@@ -367,6 +367,10 @@ bool BundleResourceIconRdb::ConvertToLauncherAbilityResourceInfo(
     if (getIcon) {
         ret = absSharedResultSet->GetString(INDEX_ICON, launcherAbilityResourceInfo.icon);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString label icon, ret: %{public}d");
+        if (launcherAbilityResourceInfo.icon.empty()) {
+            APP_LOGE("-n %{public}s icon is empty", launcherAbilityResourceInfo.bundleName.c_str());
+            return false;
+        }
     }
 
     bool getDrawable = (resourceFlag & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR))
@@ -374,7 +378,10 @@ bool BundleResourceIconRdb::ConvertToLauncherAbilityResourceInfo(
     if (getDrawable) {
         ret = absSharedResultSet->GetBlob(INDEX_FOREGROUND, launcherAbilityResourceInfo.foreground);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob foreground, ret: %{public}d");
-
+        if (launcherAbilityResourceInfo.foreground.empty()) {
+            APP_LOGE("-n %{public}s foreground is empty", launcherAbilityResourceInfo.bundleName.c_str());
+            return false;
+        }
         ret = absSharedResultSet->GetBlob(INDEX_BACKGROUND, launcherAbilityResourceInfo.background);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob background, ret: %{public}d");
     }

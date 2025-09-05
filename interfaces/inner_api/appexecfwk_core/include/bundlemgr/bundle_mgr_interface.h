@@ -1884,6 +1884,12 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetAbilityResourceInfo(const std::string &fileType,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

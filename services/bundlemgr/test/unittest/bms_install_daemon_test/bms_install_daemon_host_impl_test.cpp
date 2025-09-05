@@ -1389,6 +1389,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8000, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     ASSERT_NE(hostImpl, nullptr);
     EXPECT_TRUE(InstalldOperator::DeleteDir("/data/app/el2/100/base/com.test.8000"));
+    EXPECT_EQ(hostImpl->GetEl2CacheSize(8000, "com.test.8000", 100, 0), 0);
 
     EXPECT_TRUE(InstalldOperator::MkRecursiveDir("/data/app/el2/100/base/com.test.8000/cache", true));
     EXPECT_EQ(hostImpl->GetEl2CacheSize(8000, "com.test.8000", 100, 0), 0);

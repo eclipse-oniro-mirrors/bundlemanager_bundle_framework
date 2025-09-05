@@ -1968,4 +1968,33 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetShortcutInfoByAppIndex_0001, Function 
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     EXPECT_TRUE(shortcutInfos.empty());
 }
+
+/**
+ * @tc.number: GetAbilityResourceInfo_0001
+ * @tc.name: test GetAbilityResourceInfo
+ * @tc.desc: test GetAbilityResourceInfo
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetAbilityResourceInfo_0001, Function | SmallTest | Level1)
+{
+    std::string fileType = "general.png";
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    auto testRet = bundleMgrHostImpl_->GetAbilityResourceInfo(fileType, launcherAbilityResourceInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(launcherAbilityResourceInfos.empty());
+}
+
+/**
+ * @tc.number: GetAbilityResourceInfo_0002
+ * @tc.name: test GetAbilityResourceInfo
+ * @tc.desc: test GetAbilityResourceInfo
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetAbilityResourceInfo_0002, Function | SmallTest | Level1)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    std::string fileType = "general.png";
+    data.WriteString(fileType);
+    ErrCode res = bundleMgrHostImpl_->HandleGetAbilityResourceInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS

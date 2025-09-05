@@ -11407,5 +11407,38 @@ ErrCode BundleDataMgr::GetTestRunner(const std::string &bundleName, const std::s
     BundleParser bundleParser;
     return bundleParser.ParseTestRunner(moduleInfo->hapPath, testRunner);
 }
+ErrCode BundleDataMgr::ImplicitQueryAbilityInfosWithDefault(const Want &want, int32_t flags, int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos, AbilityInfo &defaultAbilityInfo, bool &findDefaultApp)
+{
+    (void)ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos);
+    ImplicitQueryCloneAbilityInfos(want, flags, userId, abilityInfos);
+    if(abilityInfos.empty()) {
+        return ERR_BUNDLE_MANAGER_ABILITY_INFO_NOT_FOUND;
+    }
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    std::vector<AbilityInfo> defaultAbilityInfos;
+    std::vector<AbilityInfo> backupAbilityInfos;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    if (DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, defaultAbilityInfos, extensionInfos)) {
+        if (!defaultAbilityInfos.empty()) {
+            APP_LOGI("find default ability");
+            findDefaultApp = true;
+            defaultAbilityInfo = defaultAbilityInfos[0];
+            return ERR_OK;
+        }
+    }
+    if (DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, backupAbilityInfos, extensionInfos, true)) {
+        if (!backupAbilityInfos.empty()) {
+            APP_LOGI("find backup default ability");
+            findDefaultApp = true;
+            defaultAbilityInfo = backupAbilityInfos[0];
+            return ERR_OK;
+        }
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+#endif
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

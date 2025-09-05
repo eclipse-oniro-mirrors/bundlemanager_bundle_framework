@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -245,6 +245,7 @@ public:
     static bool StrToUint32(const std::string &str, uint32_t &value);
     static std::string ExtractStringFromJson(nlohmann::json &jsonObject, const std::string &key);
     static std::unordered_map<std::string, std::string> ParseMapFromJson(const std::string &jsonStr);
+    static std::vector<std::string> FileTypeNormalize(const std::string &fileType);
 private:
     static std::mutex g_mutex;
 };
