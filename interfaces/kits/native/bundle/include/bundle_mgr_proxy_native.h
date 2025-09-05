@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 
 #include "application_info.h"
 #include "bundle_info.h"
+#include "launcher_ability_resource_info.h"
 #include "iremote_broker.h"
 #include "iremote_object.h"
 
@@ -42,15 +43,25 @@ public:
 
     bool GetCompatibleDeviceTypeNative(std::string &deviceType);
 
+    ErrCode GetLauncherAbilityResourceInfoNative(std::string &fileType,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfoArr);
+
     enum {
         GET_BUNDLE_INFO_FOR_SELF_NATIVE = 98,
-        GET_COMPATIBLED_DEVICE_TYPE_NATIVE = 166
+        GET_COMPATIBLED_DEVICE_TYPE_NATIVE = 166,
+        GET_LAUNCHER_ABILITY_RESOURE_INFO_NATIVE = 204
     };
 private:
     sptr<IRemoteObject> GetBmsProxy();
     template <typename T>
     bool GetParcelableInfo(uint32_t code, MessageParcel &data, T &parcelableInfo);
     bool SendTransactCmd(uint32_t code, MessageParcel &data, MessageParcel &reply);
+    template<typename T>
+    ErrCode GetVectorFromParcelIntelligentWithErrCode(uint32_t code, MessageParcel &data,
+        std::vector<T> &parcelableInfos);
+    template<typename T>
+    ErrCode InnerGetVectorFromParcelIntelligent(MessageParcel &reply, std::vector<T> &parcelableInfos);
+    ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1195,6 +1195,8 @@ public:
         const int32_t userId, PluginBundleInfo &pluginBundleInfo) override;
     virtual ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName,
         ModuleTestRunner &testRunner) override;
+    virtual ErrCode GetAbilityResourceInfo(const std::string &fileType,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);
@@ -1256,6 +1258,13 @@ private:
         std::string &label);
     bool SendQueryBundleInfoEvent(QueryEventInfo &query, int64_t intervalTime, bool reportNow);
     bool GetCallingInfo(int32_t callingUid, std::string &callingBundleName, std::string &callingAppId);
+
+    bool GetAbilityResourceInfoWithAbilityInfo(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, int32_t appIndex,
+        const std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
+        LauncherAbilityResourceInfo &resultAbilityResourceInfo);
+    ErrCode ImplicitQueryAbilityInfosWithDefault(const std::string &normalizedType,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

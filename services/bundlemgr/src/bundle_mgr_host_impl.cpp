@@ -83,6 +83,7 @@ const std::string AUTH_TITLE = "      ";
 const std::string BUNDLE_NAME = "bundleName";
 const std::string LABEL = "label";
 const std::string NEW_LINE = "\n";
+const std::string ACTION_VIEW_DATA = "ohos.want.action.viewData";
 const std::string RESOURCE_NOT_SUPPORT =
     "warning: dump label failed due to the device not supporting bundle resource!";
 const uint8_t JSON_INDENTATION = 4;
@@ -6152,6 +6153,108 @@ ErrCode BundleMgrHostImpl::GetTestRunner(const std::string &bundleName, const st
         return ERR_APPEXECFWK_NULL_PTR;
     }
     return dataMgr->GetTestRunner(bundleName, moduleName, testRunner);
+}
+
+bool BundleMgrHostImpl::GetAbilityResourceInfoWithAbilityInfo(const std::string &bundleName,
+    const std::string &moduleName, const std::string &abilityName, int32_t appIndex,
+    const std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
+    LauncherAbilityResourceInfo &resultAbilityResourceInfo)
+{
+    for (auto &launcherAbilityResourceInfo : launcherAbilityResourceInfos) {
+        if (launcherAbilityResourceInfo.bundleName == bundleName
+            && launcherAbilityResourceInfo.moduleName == moduleName
+            && launcherAbilityResourceInfo.abilityName == abilityName
+            && launcherAbilityResourceInfo.appIndex == appIndex) {
+            resultAbilityResourceInfo = launcherAbilityResourceInfo;
+            return true;
+        }
+    }
+    return false;
+}
+
+ErrCode BundleMgrHostImpl::ImplicitQueryAbilityInfosWithDefault(const std::string &normalizedType,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    Want want;
+    want.SetType(normalizedType);
+    want.SetAction(ACTION_VIEW_DATA);
+    int32_t abilityInfoflags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    auto uid = IPCSkeleton::GetCallingUid();
+    int32_t userId = BundleUtil::GetUserIdByUid(uid);
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo defaultAbilityInfo;
+    bool findDefaultApp = false;
+    // query ability info and default ability info
+    auto res = dataMgr->ImplicitQueryAbilityInfosWithDefault(want, abilityInfoflags, userId, abilityInfos,
+        defaultAbilityInfo, findDefaultApp);
+    if (res != ERR_OK) {
+        APP_LOGE("ImplicitQueryAbilityInfosWithDefault failed");
+        return res;
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    uint32_t resourceInfoflags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    std::vector<LauncherAbilityResourceInfo> tmpResourceInfoVector;
+    LauncherAbilityResourceInfo tmpResourceInfo;
+    for (auto &abilityInfo : abilityInfos) {
+        tmpResourceInfoVector = {};
+        // get launcher ability resource info by ability info
+        if (!manager->GetLauncherAbilityResourceInfo(abilityInfo.bundleName, resourceInfoflags,
+            tmpResourceInfoVector, abilityInfo.appIndex)) {
+            APP_LOGW("get resource failed -n %{public}s -f %{public}u", abilityInfo.bundleName.c_str(),
+                resourceInfoflags);
+            continue;
+        }
+        if (!GetAbilityResourceInfoWithAbilityInfo(abilityInfo.bundleName, abilityInfo.moduleName,
+            abilityInfo.name, abilityInfo.appIndex, tmpResourceInfoVector, tmpResourceInfo)) {
+            continue;
+        }
+        // update default app flag in tmpResourceInfo
+        if (findDefaultApp && defaultAbilityInfo.bundleName == abilityInfo.bundleName
+            && defaultAbilityInfo.appIndex == abilityInfo.appIndex && defaultAbilityInfo.name == abilityInfo.name) {
+            findDefaultApp = false;
+            tmpResourceInfo.isDefaultApp = true;
+        }
+        launcherAbilityResourceInfos.push_back(tmpResourceInfo);
+    }
+#else
+    APP_LOGI("bundle resource not support");
+#endif
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetAbilityResourceInfo(const std::string &fileType,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+{
+    APP_LOGD("start GetLauncherAbilityResourceInfo, fileType: %{public}s", fileType.c_str());
+    if (fileType.empty()) {
+        APP_LOGW("fileType is empty");
+        return ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_ABILITY_INFO)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    std::vector<std::string> normalizedTypeVector = BundleUtil::FileTypeNormalize(fileType);
+    APP_LOGI("normalized:%{public}s", BundleUtil::ToString(normalizedTypeVector).c_str());
+    if (normalizedTypeVector.empty()) {
+        APP_LOGW("normalizedTypeVector empty");
+        return ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE;
+    }
+    for (const std::string& normalizedType : normalizedTypeVector) {
+        (void)ImplicitQueryAbilityInfosWithDefault(normalizedType, launcherAbilityResourceInfos);
+    }
+    APP_LOGI("GetAbilityResourceInfo end, size: %{public}zu", launcherAbilityResourceInfos.size());
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
