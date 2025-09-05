@@ -592,7 +592,11 @@ bool BundleResourceParser::ParseIconResourceInfosWithTheme(
             APP_LOGW_NOFUNC("ParseResourceInfo fail key:%{public}s", resourceInfos[index].GetKey().c_str());
         }
     }
-    if (resourceInfos[0].icon_.empty()) {
+    bool invalidIcon = std::all_of(resourceInfos.begin(), resourceInfos.end(),
+        [](const auto& resourceInfo) {
+            return resourceInfo.icon_.empty();
+        });
+    if (invalidIcon) {
         APP_LOGE_NOFUNC("ParseResourceInfos fail -n %{public}s -m %{public}s",
             resourceInfos[0].bundleName_.c_str(), resourceInfos[0].moduleName_.c_str());
         return false;

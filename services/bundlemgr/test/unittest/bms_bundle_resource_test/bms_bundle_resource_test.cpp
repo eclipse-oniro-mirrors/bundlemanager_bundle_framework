@@ -5294,6 +5294,11 @@ HWTEST_F(BmsBundleResourceTest, ParseResourceInfosWithTheme_0010, Function | Sma
     resourceInfos.push_back(resourceInfo);
     ans = parser.ParseIconResourceInfosWithTheme(USERID, resourceInfos);
     EXPECT_FALSE(ans);
+
+    resourceInfo.icon_ = "icon";
+    resourceInfos.push_back(resourceInfo);
+    ans = parser.ParseIconResourceInfosWithTheme(USERID, resourceInfos);
+    EXPECT_TRUE(ans);
 }
 
 /**

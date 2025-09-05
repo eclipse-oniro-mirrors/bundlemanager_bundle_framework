@@ -215,6 +215,41 @@ HWTEST_F(BmsBundleResourceIconRdbTest, DeleteResourceIconInfo_0002, Function | S
 }
 
 /**
+ * @tc.number: GetResourceIconInfos_0001
+ * Function: BundleResourceIconRdb
+ * @tc.name: test BundleResourceIconRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetResourceIconInfos
+ */
+HWTEST_F(BmsBundleResourceIconRdbTest, GetResourceIconInfos_0001, Function | SmallTest | Level0)
+{
+    BundleResourceIconRdb resourceIconRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName_test";
+    resourceInfo.appIndex_ = APP_INDEX;
+    resourceInfo.icon_ = "";
+    bool ans = resourceIconRdb.AddResourceIconInfo(USER_ID, IconResourceType::DYNAMIC_ICON, resourceInfo);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    ans = resourceIconRdb.GetResourceIconInfos(resourceInfo.bundleName_, USER_ID, APP_INDEX,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON),
+        launcherAbilityResourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(launcherAbilityResourceInfos.empty());
+
+    ans = resourceIconRdb.GetResourceIconInfos(resourceInfo.bundleName_, USER_ID, APP_INDEX,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+        launcherAbilityResourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(launcherAbilityResourceInfos.empty());
+
+    ans = resourceIconRdb.DeleteResourceIconInfo(resourceInfo.bundleName_, USER_ID,
+        APP_INDEX, IconResourceType::DYNAMIC_ICON);
+    EXPECT_TRUE(ans);
+}
+
+/**
  * @tc.number: DeleteResourceIconInfos_0001
  * Function: BundleResourceIconRdb
  * @tc.name: test BundleResourceIconRdb
