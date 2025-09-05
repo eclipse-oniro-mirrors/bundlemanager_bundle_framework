@@ -2122,6 +2122,11 @@ HWTEST_F(BmsBundleManagerTest3, FileTypeNormalize_0001, Function | MediumTest | 
     fileType = "image/png";
     normalizedTypeVector = BundleUtil::FileTypeNormalize(fileType);
     EXPECT_EQ(normalizedTypeVector, expectedTypeVector);
+
+    fileType = "";
+    expectedTypeVector = {};
+    normalizedTypeVector = BundleUtil::FileTypeNormalize(fileType);
+    EXPECT_EQ(normalizedTypeVector, expectedTypeVector);
 }
 
 /**
@@ -2156,11 +2161,11 @@ HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfo_0002, Function | MediumTe
 }
 
 /**
- * @tc.number: GetAbilityResourceInfoWithAbilityInfo_0001
- * @tc.name: test GetAbilityResourceInfoWithAbilityInfo
- * @tc.desc: 1.test GetAbilityResourceInfoWithAbilityInfo
+ * @tc.number: GetSpecificResourceInfo_0001
+ * @tc.name: test GetSpecificResourceInfo
+ * @tc.desc: 1.test GetSpecificResourceInfo
  */
-HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfoWithAbilityInfo_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest3, GetSpecificResourceInfo_0001, Function | MediumTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string bundleName1 = "bundleName1";
@@ -2169,7 +2174,7 @@ HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfoWithAbilityInfo_0001, Func
     int32_t appIndex1 = 0;
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
     LauncherAbilityResourceInfo resultAbilityResourceInfo;
-    bool res = hostImpl->GetAbilityResourceInfoWithAbilityInfo(bundleName1, moduleName1, abilityName1, appIndex1,
+    bool res = hostImpl->GetSpecificResourceInfo(bundleName1, moduleName1, abilityName1, appIndex1,
         launcherAbilityResourceInfos, resultAbilityResourceInfo);
     EXPECT_FALSE(res);
     LauncherAbilityResourceInfo launcherAbilityResourceInfo;
@@ -2183,7 +2188,7 @@ HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfoWithAbilityInfo_0001, Func
     launcherAbilityResourceInfo.abilityName = "abilityName1";
     launcherAbilityResourceInfo.appIndex = 0;
     launcherAbilityResourceInfos.push_back(launcherAbilityResourceInfo);
-    res = hostImpl->GetAbilityResourceInfoWithAbilityInfo(bundleName1, moduleName1, abilityName1, appIndex1,
+    res = hostImpl->GetSpecificResourceInfo(bundleName1, moduleName1, abilityName1, appIndex1,
         launcherAbilityResourceInfos, resultAbilityResourceInfo);
     EXPECT_TRUE(res);
     EXPECT_EQ(launcherAbilityResourceInfo.bundleName, resultAbilityResourceInfo.bundleName);

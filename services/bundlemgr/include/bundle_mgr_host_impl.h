@@ -1259,7 +1259,7 @@ private:
     bool SendQueryBundleInfoEvent(QueryEventInfo &query, int64_t intervalTime, bool reportNow);
     bool GetCallingInfo(int32_t callingUid, std::string &callingBundleName, std::string &callingAppId);
 
-    bool GetAbilityResourceInfoWithAbilityInfo(const std::string &bundleName, const std::string &moduleName,
+    bool GetSpecificResourceInfo(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, int32_t appIndex,
         const std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
         LauncherAbilityResourceInfo &resultAbilityResourceInfo);

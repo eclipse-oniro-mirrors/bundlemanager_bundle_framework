@@ -2426,4 +2426,40 @@ HWTEST_F(BmsBundleDefaultAppTest, CallerNameTest_0100, Function | SmallTest | Le
     UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(callerName, BUNDLE_NAME);
 }
+
+/**
+ * @tc.number: ImplicitQueryAbilityInfosWithDefault_0100
+ * @tc.name: test SetDefaultApplication, app type EMAIL
+ * @tc.desc: 1. call SetDefaultApplication
+ *           2. call ImplicitQueryAbilityInfosWithDefault
+ */
+HWTEST_F(BmsBundleDefaultAppTest, ImplicitQueryAbilityInfosWithDefault_0100, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_EMAIL, ABILITY_EMAIL);
+    EXPECT_EQ(result, ERR_OK);
+
+    BundleInfo bundleInfo;
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_EMAIL, bundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    ASSERT_EQ(bundleInfo.abilityInfos.size(), 1);
+    EXPECT_EQ(bundleInfo.abilityInfos[0].name, ABILITY_EMAIL);
+
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetAction(EMAIL_ACTION);
+    want.SetUri(EMAIL_SCHEME + ":test@test.com");
+    int32_t flags = 0;
+    int32_t userId = 100;
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo defaultAbilityInfo;
+    bool findDefaultApp = false;
+    auto ret = dataMgr->ImplicitQueryAbilityInfosWithDefault(
+        want, flags, userId, abilityInfos, defaultAbilityInfo, findDefaultApp);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(findDefaultApp, true);
+}
 } // OHOS

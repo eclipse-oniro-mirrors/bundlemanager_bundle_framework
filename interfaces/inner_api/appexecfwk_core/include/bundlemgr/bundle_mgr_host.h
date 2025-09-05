@@ -942,7 +942,7 @@ private:
     ErrCode HandleGetTestRunner(MessageParcel &data, MessageParcel &reply);
 
     /**
-     * @brief Obtain a list of applications that support opening files in a certain format.
+     * @brief Obtain a list of ability that support opening files in a certain format.
      * @param fileType Indicates the file type.
      * @param abilityResourceInfo Indicates the ability resource array.
      * @param size Indicates the ability resource array size.

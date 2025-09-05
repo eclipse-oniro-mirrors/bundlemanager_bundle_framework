@@ -11425,6 +11425,7 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosWithDefault(const Want &want, in
             APP_LOGI("find default ability");
             findDefaultApp = true;
             defaultAbilityInfo = defaultAbilityInfos[0];
+            IPCSkeleton::SetCallingIdentity(identity);
             return ERR_OK;
         }
     }
@@ -11433,6 +11434,7 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosWithDefault(const Want &want, in
             APP_LOGI("find backup default ability");
             findDefaultApp = true;
             defaultAbilityInfo = backupAbilityInfos[0];
+            IPCSkeleton::SetCallingIdentity(identity);
             return ERR_OK;
         }
     }
