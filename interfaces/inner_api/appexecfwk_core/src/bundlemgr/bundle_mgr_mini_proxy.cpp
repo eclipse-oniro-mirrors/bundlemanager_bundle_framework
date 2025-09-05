@@ -120,7 +120,7 @@ int32_t BundleMgrMiniProxy::GetUidByBundleName(const std::string &bundleName, co
         return Constants::INVALID_UID;
     }
     if (!data.WriteInt32(appIndex)) {
-        APP_LOGE("failed to GetUidByBundleName due to write uid fail");
+        APP_LOGE("failed to GetUidByBundleName due to write appIndex fail");
         return Constants::INVALID_UID;
     }
 

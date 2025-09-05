@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -173,7 +173,7 @@ void BundleSandboxExceptionHandler::RemoveDataDir()
             std::this_thread::sleep_for(std::chrono::milliseconds(eachTime));
             APP_LOGD("wait for account started");
             if (currentUserId == Constants::INVALID_USERID) {
-                currentUserId = AccountHelper::GetCurrentActiveUserId();
+                currentUserId = AccountHelper::GetUserIdByCallerType();
                 APP_LOGD("current active userId is %{public}d", currentUserId);
                 if (currentUserId == Constants::INVALID_USERID) {
                     continue;

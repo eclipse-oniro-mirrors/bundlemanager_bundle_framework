@@ -264,7 +264,7 @@ HWTEST_F(BmsBundleAppControlTest, AppInstallControlRule_0100, Function | SmallTe
     res = appControlProxy->
         GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, resultAppIds);
     EXPECT_EQ(res, ERR_OK);
-    EXPECT_EQ(appIds.size(), resultAppIds.size());
+    EXPECT_EQ(appIds.size() * 2, resultAppIds.size());
     for (size_t i = 0; i < AppControlConstants::LIST_MAX_SIZE; i++) {
         appIds.emplace_back(APPID);
     }
@@ -551,11 +551,12 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0600, Function | SmallTe
     controlRules.emplace_back(controlRule);
     AppRunningControlRuleResult controlRuleResult;
     bool allowRunning = false;
+    std::vector<std::string> runningAppIds = {APPID};
     auto RunningRes = appControlManagerDb_->AddAppRunningControlRule(
         AppControlConstants::EDM_CALLING, controlRules, 100);
     auto RunningRes1 = appControlManagerDb_->GetAppRunningControlRule(
         AppControlConstants::EDM_CALLING, 100, appIds, allowRunning);
-    auto RunningRes2 = appControlManagerDb_->GetAppRunningControlRule(APPID, 100, controlRuleResult);
+    auto RunningRes2 = appControlManagerDb_->GetAppRunningControlRule(runningAppIds, 100, controlRuleResult);
     auto RunningRes3 = appControlManagerDb_->DeleteAppRunningControlRule(
         AppControlConstants::EDM_CALLING, controlRules, 100);
     appControlManagerDb_->AddAppRunningControlRule(AppControlConstants::EDM_CALLING, controlRules, 100);
@@ -589,7 +590,8 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0700, Function | SmallTe
     ret = appControlManagerDb_->AddAppRunningControlRule(AppControlConstants::EDM_CALLING, controlRules, 100);
     EXPECT_EQ(ret, ERR_OK);
     AppRunningControlRuleResult controlRuleResult;
-    ret = appControlManagerDb_->GetAppRunningControlRule(APPID, 100, controlRuleResult);
+    std::vector<std::string> runningAppIds = {APPID};
+    ret = appControlManagerDb_->GetAppRunningControlRule(runningAppIds, 100, controlRuleResult);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(controlRuleResult.controlMessage, "test message");
     EXPECT_EQ(controlRuleResult.controlWant, nullptr);
@@ -600,7 +602,7 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0700, Function | SmallTe
     controlRules.emplace_back(controlRule);
     ret = appControlManagerDb_->AddAppRunningControlRule(AppControlConstants::EDM_CALLING, controlRules, 100);
     EXPECT_EQ(ret, ERR_OK);
-    ret = appControlManagerDb_->GetAppRunningControlRule(APPID, 100, controlRuleResult);
+    ret = appControlManagerDb_->GetAppRunningControlRule(runningAppIds, 100, controlRuleResult);
     EXPECT_EQ(controlRuleResult.controlMessage, APP_CONTROL_EDM_DEFAULT_MESSAGE);
     EXPECT_EQ(controlRuleResult.controlWant, nullptr);
     ret = appControlManagerDb_->DeleteAppRunningControlRule(AppControlConstants::EDM_CALLING, 100);
@@ -610,7 +612,7 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0700, Function | SmallTe
     ret = appControlManagerDb_->SetDisposedStatus(PERMISSION_DISPOSED_STATUS, APPID, want, 100);
     EXPECT_EQ(ret, ERR_OK);
     AppRunningControlRuleResult ruleResult;
-    ret = appControlManagerDb_->GetAppRunningControlRule(APPID, 100, ruleResult);
+    ret = appControlManagerDb_->GetAppRunningControlRule(runningAppIds, 100, ruleResult);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(ruleResult.controlMessage, "");
     EXPECT_NE(ruleResult.controlWant, nullptr);
@@ -627,7 +629,8 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0700, Function | SmallTe
 HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0800, Function | SmallTest | Level1)
 {
     AppRunningControlRuleResult controlRuleResult;
-    auto RunningRes = appControlManagerDb_->GetAppRunningControlRule(APPID, USERID, controlRuleResult);
+    std::vector<std::string> runningAppIds = {APPID};
+    auto RunningRes = appControlManagerDb_->GetAppRunningControlRule(runningAppIds, USERID, controlRuleResult);
     EXPECT_EQ(RunningRes, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
 }
 
@@ -4028,5 +4031,170 @@ HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0300, Function | Smal
     AppRunningControlRuleResult rule;
     auto ret = appControlManager->GetAppRunningControlRule(BUNDLE_NAME, USERID, rule);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_8100
+ * @tc.name: test DeleteAppInstallControlRule by AppControlManagerHostImpl
+ * @tc.desc: 1.DeleteAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_8100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    impl->callingNameMap_.insert(pair<int32_t, std::string>(0, AppControlConstants::EDM_CALLING));
+    std::vector<std::string> appIds;
+    appIds.emplace_back(APPID);
+    ErrCode res = impl->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, appIds, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->appId = APPID;
+    innerBundleInfo.SetAppIdentifier("appIdentifier");
+    impl->dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    res = impl->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, appIds, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME);
+
+    impl->dataMgr_ = nullptr;
+    res = impl->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, appIds, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    impl->dataMgr_ = std::make_shared<BundleDataMgr>();
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_8200
+ * @tc.name: test AddAppInstallControlRule by AppControlManagerHostImpl
+ * @tc.desc: 1.AddAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_8200, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    std::vector<std::string> appIds;
+    appIds.emplace_back(APPID);
+    impl->callingNameMap_.insert(pair<int32_t, std::string>(0, AppControlConstants::EDM_CALLING));
+    ErrCode res = impl->AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->appId = APPID;
+    innerBundleInfo.SetAppIdentifier("appIdentifier");
+    impl->dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    res = impl->AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME);
+
+    impl->dataMgr_ = nullptr;
+    res = impl->AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    impl->dataMgr_ = std::make_shared<BundleDataMgr>();
+
+    res = impl->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, appIds, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_8300
+ * @tc.name: test AddAppInstallControlRule by AppControlManagerHostImpl
+ * @tc.desc: 1.AddAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_8300, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    std::vector<std::string> appIds;
+    appIds.emplace_back(APPID);
+    impl->callingNameMap_.insert(pair<int32_t, std::string>(0, AppControlConstants::EDM_CALLING));
+    ErrCode res = impl->AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    std::vector<std::string> modifyAppIds;
+    res = impl->GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, modifyAppIds);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(modifyAppIds.size(), 2);
+    impl->dataMgr_ = nullptr;
+    res = impl->GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, modifyAppIds);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    impl->dataMgr_ = std::make_shared<BundleDataMgr>();
+
+    res = impl->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, appIds, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_8400
+ * @tc.name: test AddAppInstallControlRule by AppControlManagerHostImpl
+ * @tc.desc: 1.AddAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_8400, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    std::vector<std::string> appIds;
+    std::string appIdentifier = "appIdentifier";
+    appIds.emplace_back(appIdentifier);
+    impl->callingNameMap_.insert(pair<int32_t, std::string>(0, AppControlConstants::EDM_CALLING));
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->appId = APPID;
+    innerBundleInfo.SetAppIdentifier(appIdentifier);
+    impl->dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    ErrCode res = impl->AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    appIds.emplace_back(APPID);
+    res = impl->AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = impl->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, appIds, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: AppRunningControlRule_0900
+ * @tc.name: test running control rule
+ * @tc.desc: 1.AddAppRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_0900, Function | SmallTest | Level1)
+{
+    AppControlManager appControlManager;
+    std::vector<AppRunningControlRule> controlRules;
+    AppRunningControlRule controlRule;
+    controlRule.appId = APPID;
+    controlRule.controlMessage = CONTROL_MESSAGE;
+    controlRules.emplace_back(controlRule);
+    auto res = appControlManager.AddAppRunningControlRule(CALLER_BUNDLE_NAME, controlRules, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    std::string key = "" + std::string("_") + std::to_string(USERID);
+    AppRunningControlRuleResult controlRuleResult;
+    appControlManager.appRunningControlRuleResult_.emplace(key, controlRuleResult);
+    res = appControlManager.AddAppRunningControlRule(CALLER_BUNDLE_NAME, controlRules, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = appControlManager.DeleteAppRunningControlRule(CALLER_BUNDLE_NAME, controlRules, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    appControlManager.appRunningControlRuleResult_.clear();
+}
+
+/**
+ * @tc.number: AppRunningControlRule_1000
+ * @tc.name: test running control rule
+ * @tc.desc: 1.AddAppRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_1000, Function | SmallTest | Level1)
+{
+    AppControlManager appControlManager;
+    std::vector<AppRunningControlRule> controlRules;
+    AppRunningControlRule controlRule;
+    controlRule.appId = APPID;
+    controlRule.controlMessage = CONTROL_MESSAGE;
+    controlRules.emplace_back(controlRule);
+    auto res = appControlManager.DeleteAppRunningControlRule(CALLER_BUNDLE_NAME, controlRules, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    std::string key = "" + std::string("_") + std::to_string(USERID);
+    AppRunningControlRuleResult controlRuleResult;
+    appControlManager.appRunningControlRuleResult_.emplace(key, controlRuleResult);
+    res = appControlManager.DeleteAppRunningControlRule(CALLER_BUNDLE_NAME, controlRules, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    appControlManager.appRunningControlRuleResult_.clear();
 }
 } // OHOS

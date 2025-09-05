@@ -60,6 +60,7 @@ enum OTAFlag : uint32_t {
     PROCESS_DYNAMIC_ICON = 0x00020000,
     PROCESS_THEME_AND_DYNAMIC_ICON = 0x00040000,
     CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR = 0x00080000,
+    UPDATE_MODULE_JSON = 0x00100000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -559,7 +560,7 @@ private:
 
     void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
-    void ParseSizeFromProvision(const std::string &bundleName, int32_t &sizeMb) const;
+    void ParseSizeFromProvision(const std::string &bundleName, const int32_t uid, int32_t &sizeMb) const;
     void RefreshQuotaForAllUid();
     void InnerProcessStockBundleRouterInfo();
 
@@ -570,7 +571,6 @@ private:
 
     void ProcessCheckAppExtensionAbility();
     void InnerProcessCheckAppExtensionAbility();
-    void UpdateExtensionType();
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
     bool IsSystemFingerprintChanged();

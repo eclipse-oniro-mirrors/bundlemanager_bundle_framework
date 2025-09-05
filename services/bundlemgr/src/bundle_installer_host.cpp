@@ -37,7 +37,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* GET_MANAGER_FAIL = "fail to get bundle installer manager";
-constexpr const char* MODULE_UPDATE_DIR = "/module_update/";
 constexpr const char* BMS_PARA_BUNDLE_NAME = "ohos.bms.param.bundleName";
 constexpr const char* BMS_PARA_IS_KEEP_DATA = "ohos.bms.param.isKeepData";
 constexpr const char* BMS_PARA_USER_ID = "ohos.bms.param.userId";

@@ -41,7 +41,6 @@ BundleResourceEventSubscriber::~BundleResourceEventSubscriber()
 void BundleResourceEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
     std::string action = data.GetWant().GetAction();
-    BundleResourceCallback callback;
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
         int32_t oldUserId = Constants::UNSPECIFIED_USERID;
         std::string oldId = data.GetWant().GetStringParam(OLD_USER_ID);

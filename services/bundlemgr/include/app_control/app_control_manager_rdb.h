@@ -43,9 +43,8 @@ public:
     virtual ErrCode DeleteAppRunningControlRule(const std::string &callingName, int32_t userId) override;
     virtual ErrCode GetAppRunningControlRule(const std::string &callingName,
         int32_t userId, std::vector<std::string> &appIds, bool &allowRunning) override;
-    virtual ErrCode GetAppRunningControlRule(const std::string &appId,
+    virtual ErrCode GetAppRunningControlRule(const std::vector<std::string> &appIds,
         int32_t userId, AppRunningControlRuleResult &controlRuleResult) override;
-
     virtual ErrCode SetDisposedStatus(const std::string &callingName,
         const std::string &appId, const Want& want, int32_t userId) override;
     virtual ErrCode DeleteDisposedStatus(const std::string &callingName,

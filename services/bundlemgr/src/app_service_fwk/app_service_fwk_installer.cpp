@@ -27,7 +27,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* HSP_VERSION_PREFIX = "v";
-constexpr const char* HSP_PATH = ", path: ";
 constexpr const char* SHARED_MODULE_TYPE = "shared";
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";

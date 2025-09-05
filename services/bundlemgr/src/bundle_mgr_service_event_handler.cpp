@@ -43,6 +43,7 @@
 #include "inner_patch_info.h"
 #include "installd_client.h"
 #include "install_exception_mgr.h"
+#include "module_json_updater.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "patch_data_mgr.h"
@@ -97,7 +98,6 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.product.incremental.version",
     "const.comp.hl.product_base_version.real"
 };
-constexpr const char* HSP_VERSION_PREFIX = "v";
 constexpr const char* OTA_FLAG = "otaFlag";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
@@ -115,7 +115,6 @@ constexpr const char* SHARED_BUNDLE_PATH = "/shared_bundles";
 constexpr const char* VERSION_SPECIAL_CUSTOM_APP_DIR = "/version/special_cust/app/";
 constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
 constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
-constexpr const char* INNER_UNDER_LINE = "_";
 constexpr char SEPARATOR = '/';
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
@@ -393,6 +392,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::PROCESS_THEME_AND_DYNAMIC_ICON);
     (void)SaveBmsSystemTimeForShortcut();
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
+    UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON);
     (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }
@@ -413,6 +413,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         SaveSystemFingerprint();
         (void)SaveBmsSystemTimeForShortcut();
         AOTHandler::GetInstance().HandleOTA();
+        ModuleJsonUpdater::UpdateModuleJsonAsync();
     } else {
         HandlePreInstallException();
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
@@ -1639,7 +1640,6 @@ void BMSEventHandler::CheckAllBundleEl1ShaderCacheLocal()
         for (auto &infoPair : infos) {
             auto &info = infoPair.second;
             std::string bundleName = info.GetBundleName();
-            BundleType type = info.GetApplicationBundleType();
             std::vector<int32_t> allAppIndexes = {0};
             std::vector<int32_t> cloneAppIndexes = dataMgr->GetCloneAppIndexesByInnerBundleInfo(info, userId);
             allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
@@ -1693,7 +1693,6 @@ void BMSEventHandler::CleanAllBundleEl1ShaderCacheLocal()
         for (auto &infoPair : infos) {
             auto &info = infoPair.second;
             std::string bundleName = info.GetBundleName();
-            BundleType type = info.GetApplicationBundleType();
             std::vector<int32_t> allAppIndexes = {0};
             std::vector<int32_t> cloneAppIndexes = dataMgr->GetCloneAppIndexesByInnerBundleInfo(info, userId);
             allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
@@ -1978,11 +1977,11 @@ void BMSEventHandler::PrepareBundleDirQuota(const std::string &bundleName, const
     }
 #endif // QUOTA_PARAM_SET_ENABLE
 #endif // STORAGE_SERVICE_ENABLE
-    ParseSizeFromProvision(bundleName, atomicserviceDatasizeThreshold);
+    ParseSizeFromProvision(bundleName, uid, atomicserviceDatasizeThreshold);
     SendToStorageQuota(bundleName, uid, bundleDataDirPath, atomicserviceDatasizeThreshold);
 }
 
-void BMSEventHandler::ParseSizeFromProvision(const std::string &bundleName, int32_t &sizeMb) const
+void BMSEventHandler::ParseSizeFromProvision(const std::string &bundleName, const int32_t uid, int32_t &sizeMb) const
 {
     AppProvisionInfo provisionInfo;
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName, provisionInfo)) {
@@ -1996,6 +1995,11 @@ void BMSEventHandler::ParseSizeFromProvision(const std::string &bundleName, int3
     for (auto &item : appServiceCapabilityMap) {
         if (item.first != ServiceConstants::PERMISSION_MANAGE_STORAGE) {
             continue;
+        }
+        if (BundlePermissionMgr::VerifyPermission(bundleName, ServiceConstants::PERMISSION_MANAGE_STORAGE,
+            uid / Constants::BASE_USER_RANGE) != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+            APP_LOGW("no manage storage permission for %{public}s", bundleName.c_str());
+            return;
         }
         std::unordered_map<std::string, std::string> storageMap = BundleUtil::ParseMapFromJson(item.second);
         auto it = storageMap.find(KEY_STORAGE_SIZE);
@@ -2288,6 +2292,12 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     UpdatePreinstallDB(needInstallMap);
     // process bundle theme and dynamic resource
     InnerProcessAllThemeAndDynamicIconInfoWhenOta(needInstallMap);
+
+    std::set<std::string> updateBundleNames;
+    for (const auto &item : needInstallMap) {
+        updateBundleNames.insert(item.first);
+    }
+    ModuleJsonUpdater::SetIgnoreBundleNames(updateBundleNames);
 }
 
 bool BMSEventHandler::CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo)
@@ -2602,30 +2612,6 @@ bool BMSEventHandler::InnerProcessUninstallAppServiceModule(const InnerBundleInf
     return true;
 }
 
-void BMSEventHandler::UpdateExtensionType()
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
-        return;
-    }
-    std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
-    for (auto &[bundleName, innerBundleInfo] : infos) {
-        bool needUpdate = false;
-        for (auto &[key, innerExtensionInfo] : innerBundleInfo.FetchInnerExtensionInfos()) {
-            if (innerExtensionInfo.type == ExtensionAbilityType::UNSPECIFIED) {
-                LOG_I(BMS_TAG_DEFAULT, "update extension type, -b : %{public}s, -e : %{public}s",
-                    bundleName.c_str(), innerExtensionInfo.name.c_str());
-                needUpdate = true;
-                innerExtensionInfo.type = ConvertToExtensionAbilityType(innerExtensionInfo.extensionTypeName);
-            }
-        }
-        if (needUpdate) {
-            dataMgr->UpdateInnerBundleInfo(innerBundleInfo, true);
-        }
-    }
-}
-
 void BMSEventHandler::ProcessCheckAppExtensionAbility()
 {
     bool checkExtensionAbility = false;
@@ -2635,7 +2621,6 @@ void BMSEventHandler::ProcessCheckAppExtensionAbility()
         return;
     }
     LOG_I(BMS_TAG_DEFAULT, "Need to check extension ability");
-    UpdateExtensionType();
     InnerProcessCheckAppExtensionAbility();
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
 }
@@ -4004,7 +3989,7 @@ void BMSEventHandler::RemoveUnreservedSandbox() const
             std::this_thread::sleep_for(std::chrono::milliseconds(eachTime));
             LOG_D(BMS_TAG_DEFAULT, "wait for account started");
             if (currentUserId == Constants::INVALID_USERID) {
-                currentUserId = AccountHelper::GetCurrentActiveUserId();
+                currentUserId = AccountHelper::GetUserIdByCallerType();
                 LOG_D(BMS_TAG_DEFAULT, "current active userId is %{public}d", currentUserId);
                 if (currentUserId == Constants::INVALID_USERID) {
                     continue;

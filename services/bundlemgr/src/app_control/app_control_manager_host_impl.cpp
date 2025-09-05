@@ -68,13 +68,28 @@ ErrCode AppControlManagerHostImpl::AddAppInstallControlRule(const std::vector<st
         LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    auto ret = appControlManager_->AddAppInstallControlRule(callingName, appIds, ruleType, userId);
+    std::vector<std::string> modifyAppIds = appIds;
+    modifyAppIds.erase(std::remove_if(modifyAppIds.begin(), modifyAppIds.end(),
+                                      [](const auto& appId) { return appId.empty(); }),
+                       modifyAppIds.end());
+    auto ret = appControlManager_->AddAppInstallControlRule(callingName, modifyAppIds, ruleType, userId);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "AddAppInstallControlRule failed due to error %{public}d", ret);
         return ret;
     }
     if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
-        UpdateAppControlledInfo(userId, appIds);
+        std::vector<std::string> transformAppIds = modifyAppIds;
+        if (dataMgr_ == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "dataMgr_ is nullptr");
+            return ERR_APPEXECFWK_NULL_PTR;
+        }
+        for (auto &appId : appIds) {
+            std::string transformAppId = dataMgr_->AppIdAndAppIdentifierTransform(appId);
+            if (!transformAppId.empty()) {
+                transformAppIds.emplace_back(transformAppId);
+            }
+        }
+        UpdateAppControlledInfo(userId, transformAppIds);
     }
     SendAppControlEvent(ControlActionType::INSTALL, ControlOperationType::ADD_RULE,
         callingName, userId, Constants::MAIN_APP_INDEX, appIds, ruleType);
@@ -99,13 +114,28 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
         LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    auto ret = appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, appIds, userId);
+    std::vector<std::string> modifyAppIds = appIds;
+    modifyAppIds.erase(std::remove_if(modifyAppIds.begin(), modifyAppIds.end(),
+                                      [](const auto& appId) { return appId.empty(); }),
+                       modifyAppIds.end());
+    auto ret = appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, modifyAppIds, userId);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "DeleteAppInstallControlRule failed due to error %{public}d", ret);
         return ret;
     }
     if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
-        UpdateAppControlledInfo(userId, appIds);
+        std::vector<std::string> transformAppIds = modifyAppIds;
+        if (dataMgr_ == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "dataMgr_ is nullptr");
+            return ERR_APPEXECFWK_NULL_PTR;
+        }
+        for (auto &appId : appIds) {
+            std::string transformAppId = dataMgr_->AppIdAndAppIdentifierTransform(appId);
+            if (!transformAppId.empty()) {
+                transformAppIds.emplace_back(transformAppId);
+            }
+        }
+        UpdateAppControlledInfo(userId, transformAppIds);
     }
     SendAppControlEvent(ControlActionType::INSTALL, ControlOperationType::REMOVE_RULE,
         callingName, userId, Constants::MAIN_APP_INDEX, appIds, ruleType);
@@ -169,7 +199,18 @@ ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
         LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    return appControlManager_->GetAppInstallControlRule(callingName, ruleType, userId, appIds);
+    ErrCode ret = appControlManager_->GetAppInstallControlRule(callingName, ruleType, userId, appIds);
+    std::vector<std::string> transformAppIds = appIds;
+    for (auto &appId : appIds) {
+        if (dataMgr_ == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "dataMgr_ is nullptr");
+            return ERR_APPEXECFWK_NULL_PTR;
+        }
+        std::string transformAppId = dataMgr_->AppIdAndAppIdentifierTransform(appId);
+        transformAppIds.emplace_back(transformAppId);
+    }
+    appIds = transformAppIds;
+    return ret;
 }
 
 ErrCode AppControlManagerHostImpl::AddAppRunningControlRule(
@@ -184,10 +225,14 @@ ErrCode AppControlManagerHostImpl::AddAppRunningControlRule(
         LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    ErrCode result = appControlManager_->AddAppRunningControlRule(callingName, controlRules, userId);
+    std::vector<AppRunningControlRule> modifyControlRules = controlRules;
+    modifyControlRules.erase(std::remove_if(modifyControlRules.begin(), modifyControlRules.end(),
+                                            [](const auto& controlRule) { return controlRule.appId.empty(); }),
+                             modifyControlRules.end());
+    ErrCode result = appControlManager_->AddAppRunningControlRule(callingName, modifyControlRules, userId);
     std::vector<std::string> appIds;
     std::string rules;
-    for (const auto &rule : controlRules) {
+    for (const auto &rule : modifyControlRules) {
         appIds.emplace_back(rule.appId);
         rules += (rule.controlMessage + " ");
     }
@@ -204,9 +249,13 @@ ErrCode AppControlManagerHostImpl::DeleteAppRunningControlRule(
         LOG_E(BMS_TAG_DEFAULT, "callingName is invalid");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    ErrCode result = appControlManager_->DeleteAppRunningControlRule(callingName, controlRules, userId);
+    std::vector<AppRunningControlRule> modifyControlRules = controlRules;
+    modifyControlRules.erase(std::remove_if(modifyControlRules.begin(), modifyControlRules.end(),
+                                            [](const auto& controlRule) { return controlRule.appId.empty(); }),
+                             modifyControlRules.end());
+    ErrCode result = appControlManager_->DeleteAppRunningControlRule(callingName, modifyControlRules, userId);
     std::vector<std::string> appIds;
-    for (const auto &rule : controlRules) {
+    for (const auto &rule : modifyControlRules) {
         appIds.emplace_back(rule.appId);
     }
     SendAppControlEvent(ControlActionType::RUNUING, ControlOperationType::REMOVE_RULE,
@@ -472,15 +521,22 @@ void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId,
     }
     auto bundleInfos = dataMgr_->GetAllInnerBundleInfos();
     for (const auto &info : bundleInfos) {
-        auto iterator = std::find(appIds.begin(), appIds.end(), info.second.GetAppId());
-        bool isRemovable = (iterator != appIds.end()) ? false : true;
+        bool isRemovable = false;
+        if ((std::find(appIds.begin(), appIds.end(), info.second.GetAppIdentifier()) == appIds.end())
+            && (std::find(appIds.begin(), appIds.end(), info.second.GetAppId()) == appIds.end())) {
+            isRemovable = true;
+        }
         if (!dataMgr_->SetBundleUserInfoRemovable(info.first, userId, isRemovable)) {
             LOG_W(BMS_TAG_DEFAULT, "UpdateAppControlledInfo fail -n %{public}s -u %{public}d removable:%{public}d",
                 info.first.c_str(), userId, isRemovable);
             continue;
         }
-        auto modifyAppIdsIterator = std::find(modifyAppIds.begin(), modifyAppIds.end(), info.second.GetAppId());
-        if (modifyAppIdsIterator != modifyAppIds.end()) {
+        bool needUpdate = true;
+        if ((std::find(modifyAppIds.begin(), modifyAppIds.end(), info.second.GetAppIdentifier()) == modifyAppIds.end())
+            && (std::find(modifyAppIds.begin(), modifyAppIds.end(), info.second.GetAppId()) == modifyAppIds.end())) {
+            needUpdate = false;
+        }
+        if (needUpdate) {
             AbilityInfo mainAbilityInfo;
             info.second.GetMainAbilityInfo(mainAbilityInfo);
             NotifyBundleEvents installRes = {

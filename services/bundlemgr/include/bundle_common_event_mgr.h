@@ -73,6 +73,7 @@ struct NotifyBundleEvents {
     bool isBundleExist = false;
     bool crossAppSharedConfig = false;
     bool isRecover = false;
+    bool isInstallByBundleName = false;
 };
 
 class BundleCommonEventMgr {
@@ -100,7 +101,7 @@ private:
     bool PublishCommonEvent(const std::string &bundleName, const std::string &action,
         const int32_t publishUserId, const EventFwk::CommonEventData &commonData);
     bool ProcessBundleChangedEventForOtherUsers(const std::shared_ptr<BundleDataMgr> &dataMgr,
-        const std::string &bundleName, const std::string &action, const int32_t publishUserId,
+        const NotifyBundleEvents &event, const int32_t publishUserId,
         const EventFwk::CommonEventData &commonData);
     void Init();
 

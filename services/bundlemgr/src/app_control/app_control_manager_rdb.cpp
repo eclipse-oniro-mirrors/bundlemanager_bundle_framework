@@ -30,7 +30,6 @@ namespace {
     constexpr const char* DISPOSED_RULE = "DisposedRule";
     constexpr const char* UNINSTALL_DISPOSED_RULE = "UninstallDisposedRule";
     constexpr const char* APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
-    constexpr const char* DEFAULT = "default";
     constexpr int8_t CALLING_NAME_INDEX = 1;
     constexpr int8_t APP_ID_INDEX = 4;
     constexpr int8_t CONTROL_MESSAGE_INDEX = 5;
@@ -431,12 +430,12 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
     return ERR_OK;
 }
 
-ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
+ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::vector<std::string> &appIds,
     int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
-    absRdbPredicates.EqualTo(APP_ID, appId);
+    absRdbPredicates.In(APP_ID, appIds);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, RUNNING_CONTROL);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     absRdbPredicates.OrderByAsc(PRIORITY); // ascending

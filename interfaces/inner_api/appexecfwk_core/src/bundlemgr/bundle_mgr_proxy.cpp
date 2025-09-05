@@ -6078,7 +6078,7 @@ ErrCode BundleMgrProxy::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> 
     }
     return ret;
 }
- 
+
 ErrCode BundleMgrProxy::GetAllBundleCacheStatExec(const sptr<IProcessCacheCallback> processCacheCallback)
 {
     APP_LOGI("start");
@@ -6091,7 +6091,7 @@ ErrCode BundleMgrProxy::GetAllBundleCacheStatExec(const sptr<IProcessCacheCallba
         APP_LOGE("failed for write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
- 
+
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ALL_BUNDLE_CACHE, data, reply)) {
         APP_LOGE("fail to from server");
@@ -6200,6 +6200,46 @@ ErrCode BundleMgrProxy::GetPluginInfosForSelf(std::vector<PluginBundleInfo> &plu
     }
     return GetVectorFromParcelIntelligentWithErrCode<PluginBundleInfo>(
         BundleMgrInterfaceCode::GET_PLUGIN_INFOS_FOR_SELF, data, pluginBundleInfos);
+}
+
+ErrCode BundleMgrProxy::GetAllBundleNames(const uint32_t flags, int32_t userId, bool withExtBundle,
+    std::vector<std::string> &bundleNames)
+{
+    APP_LOGD("GetAllBundleNames: userId: %{public}d", userId);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Fail to GetAllBundleNames due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(flags)) {
+        APP_LOGE("Fail to GetAllBundleNames due to write flags fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Fail to GetAllBundleNames due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(withExtBundle)) {
+        APP_LOGE("Fail to GetAllBundleNames due to write withExtBundle fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ALL_BUNDLE_NAMES, data, reply)) {
+        APP_LOGE("Fail to GetAllBundleNames from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("Reply err : %{public}d", ret);
+        return ret;
+    }
+    if (!reply.ReadStringVector(&bundleNames)) {
+        APP_LOGE("Fail to GetAllBundleNames from reply");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    APP_LOGD("GetAllBundleNames size: %{public}zu", bundleNames.size());
+    return ERR_OK;
 }
 
 ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs)

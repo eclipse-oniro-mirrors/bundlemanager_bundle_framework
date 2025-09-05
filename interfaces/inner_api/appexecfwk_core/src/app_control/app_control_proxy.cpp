@@ -209,7 +209,7 @@ ErrCode AppControlProxy::DeleteAppRunningControlRule(int32_t userId)
 
 ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds, bool &allowRunning)
 {
-    LOG_D(BMS_TAG_DEFAULT, "begin to call GetAppInstallControlRule");
+    LOG_D(BMS_TAG_DEFAULT, "begin to call GetAppRunningControlRule");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
@@ -232,7 +232,7 @@ ErrCode AppControlProxy::GetAppRunningControlRule(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        LOG_E(BMS_TAG_DEFAULT, "fail to GetMediaData due to write bundleName fail");
+        LOG_E(BMS_TAG_DEFAULT, "write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
@@ -274,7 +274,7 @@ ErrCode AppControlProxy::ConfirmAppJumpControlRule(const std::string &callerBund
 ErrCode AppControlProxy::AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
 {
     if (controlRules.empty()) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteAppJumpControlRule failed due to params error");
+        LOG_E(BMS_TAG_DEFAULT, "AddAppJumpControlRule failed due to params error");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
@@ -362,11 +362,11 @@ ErrCode AppControlProxy::GetAppJumpControlRule(const std::string &callerBundleNa
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(callerBundleName)) {
-        LOG_E(BMS_TAG_DEFAULT, "fail to write callerBundleName fail");
+        LOG_E(BMS_TAG_DEFAULT, "fail to write callerBundleName");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(targetBundleName)) {
-        LOG_E(BMS_TAG_DEFAULT, "fail to write targetBundleName fail");
+        LOG_E(BMS_TAG_DEFAULT, "fail to write targetBundleName");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
@@ -451,7 +451,7 @@ ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want,
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(appId)) {
-        LOG_E(BMS_TAG_DEFAULT, "write bundleName failed");
+        LOG_E(BMS_TAG_DEFAULT, "write appId failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {

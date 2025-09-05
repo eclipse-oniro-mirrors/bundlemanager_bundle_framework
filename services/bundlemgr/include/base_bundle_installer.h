@@ -547,9 +547,10 @@ private:
     ErrCode CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
-    bool UninstallAppControl(const std::string &appId, int32_t userId);
+    bool UninstallAppControl(const std::string &appId, const std::string &appIdentifier, int32_t userId);
 
-    ErrCode InstallNormalAppControl(const std::string &installAppId, int32_t userId, bool isPreInstallApp = false);
+    ErrCode InstallNormalAppControl(const std::string &installAppId,
+        const std::string &appIdentifier, int32_t userId, bool isPreInstallApp = false);
 
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
@@ -764,7 +765,7 @@ private:
 #endif
     void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
-    void ParseSizeFromProvision(int32_t &sizeMb) const;
+    void ParseSizeFromProvision(const std::string &bundleName, const int32_t uid, int32_t &sizeMb) const;
     void VerifyDomain();
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
     bool IsRdDevice() const;
@@ -864,6 +865,10 @@ private:
         const InnerBundleInfo &oldInfo, bool isContainEntry);
     void ProcessUpdateShortcut();
     ErrCode CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    ErrCode CheckInstallPermission(const std::string &appId, const std::string &appIdentifier,
+        const std::vector<std::string> &allowedAppIds, const std::vector<std::string> &disallowedAppIds);
+#endif
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

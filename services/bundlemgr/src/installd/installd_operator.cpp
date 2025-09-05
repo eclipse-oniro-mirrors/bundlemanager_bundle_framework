@@ -1709,7 +1709,6 @@ ErrCode InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncry
         return CheckHapEncryption(checkEncryptionParam, isEncryption);
     }
     const std::string cpuAbi = checkEncryptionParam.cpuAbi;
-    const int32_t bundleId = checkEncryptionParam.bundleId;
     InstallBundleType installBundleType = checkEncryptionParam.installBundleType;
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
     LOG_D(BMS_TAG_INSTALLD, "a %{public}s, t %{public}d, p %{public}s", checkEncryptionParam.appIdentifier.c_str(),
@@ -1758,7 +1757,6 @@ ErrCode InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncry
 ErrCode InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
 {
     const std::string hapPath = checkEncryptionParam.modulePath;
-    const int32_t bundleId = checkEncryptionParam.bundleId;
     InstallBundleType installBundleType = checkEncryptionParam.installBundleType;
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
     LOG_D(BMS_TAG_INSTALLD, "p %{public}s, t %{public}d, "
