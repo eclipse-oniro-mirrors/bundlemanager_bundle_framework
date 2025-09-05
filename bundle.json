@@ -150,6 +150,13 @@
                   },
                   {
                     "header": {
+                      "header_base": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core/include",
+                      "header_files": []
+                    },
+                    "name": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core:appexecfwk_core_headers"
+                  },
+                  {
+                    "header": {
                       "header_base": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/bundlemgr_extension/include",
                       "header_files": [
                         "bms_extension_data_mgr.h",
