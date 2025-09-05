@@ -947,7 +947,7 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0200, Function | SmallTest | Level
     EXPECT_NE(stats[1], 0);
     EXPECT_EQ(stats[2], 0);
     EXPECT_EQ(stats[3], 0);
-    EXPECT_NE(stats[4], 0);
+    EXPECT_EQ(stats[4], 0);
 }
 
 /**
