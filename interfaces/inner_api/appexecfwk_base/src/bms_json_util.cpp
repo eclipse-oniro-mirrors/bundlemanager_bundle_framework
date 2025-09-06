@@ -61,5 +61,19 @@ void BMSJsonUtil::GetBoolValueIfFindKey(const nlohmann::json &jsonObject,
         parseResult = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
     }
 }
+
+bool BMSJsonUtil::CheckMapValueType(JsonType valueType, const nlohmann::json &value)
+{
+    switch (valueType) {
+        case JsonType::BOOLEAN:
+            return value.is_boolean();
+        case JsonType::NUMBER:
+            return value.is_number();
+        case JsonType::STRING:
+            return value.is_string();
+        default:
+            return false;
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

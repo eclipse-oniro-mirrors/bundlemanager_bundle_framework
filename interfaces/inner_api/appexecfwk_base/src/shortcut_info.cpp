@@ -192,14 +192,13 @@ void from_json(const nlohmann::json &jsonObject, ShortcutIntent &shortcutIntent)
         shortcutIntent.targetClass,
         false,
         parseResult);
-    GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
+    GetMapValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_PARAMETERS,
         shortcutIntent.parameters,
-        JsonType::OBJECT,
         false,
         parseResult,
-        ArrayType::NOT_ARRAY);
+        JsonType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read shortcutIntent jsonObject error : %{public}d", parseResult);
     }
@@ -344,14 +343,13 @@ void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant)
         shortcutWant.abilityName,
         false,
         parseResult);
-    GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
+    GetMapValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_BUNDLE_PARAMETERS,
         shortcutWant.parameters,
-        JsonType::OBJECT,
         false,
         parseResult,
-        ArrayType::NOT_ARRAY);
+        JsonType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read shortcutWant module.json error : %{public}d", parseResult);
     }
