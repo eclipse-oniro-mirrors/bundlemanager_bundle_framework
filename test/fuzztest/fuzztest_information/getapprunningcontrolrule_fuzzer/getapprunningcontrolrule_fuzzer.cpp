@@ -29,9 +29,10 @@ namespace OHOS {
         AppRunningControlRuleResult controlRuleResult;
         std::string bundleName (reinterpret_cast<const char*>(data), size);
         std::vector<std::string> appIds;
+        bool allowRunning = false;
         std::string appId (reinterpret_cast<const char*>(data), size);
         appIds.push_back(appId);
-        appControl.GetAppRunningControlRule(reinterpret_cast<uintptr_t>(data), appIds);
+        appControl.GetAppRunningControlRule(reinterpret_cast<uintptr_t>(data), appIds, allowRunning);
         appControl.GetAppRunningControlRule(bundleName, reinterpret_cast<uintptr_t>(data), controlRuleResult);
         return true;
     }

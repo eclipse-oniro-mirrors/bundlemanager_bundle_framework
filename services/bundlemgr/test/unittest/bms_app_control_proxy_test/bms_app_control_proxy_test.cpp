@@ -271,7 +271,8 @@ HWTEST_F(BmsAppControlProxyTest, GetAppRunningControlRule_0100, Function | Mediu
     AppControlProxy appControlProxy(nullptr);
     int32_t userId = 100;
     std::vector<std::string> appIds;
-    auto res = appControlProxy.GetAppRunningControlRule(userId, appIds);
+    bool allowRunning = false;
+    auto res = appControlProxy.GetAppRunningControlRule(userId, appIds, allowRunning);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -595,6 +596,24 @@ HWTEST_F(BmsAppControlProxyTest, GetParcelableInfos_0100, Function | MediumTest 
     MessageParcel data;
     std::vector<std::string> stringVector;
     auto res = appControlProxy.GetParcelableInfos(code, data, stringVector);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetParcelableInfos_0200
+ * @tc.name: test the GetParcelableInfos
+ * @tc.desc: 1. system running normally
+ *           2. test GetParcelableInfos
+ */
+HWTEST_F(BmsAppControlProxyTest, GetParcelableInfos_0200, Function | MediumTest | Level1)
+{
+    AppControlProxy appControlProxy(nullptr);
+    AppControlManagerInterfaceCode code = AppControlManagerInterfaceCode::DELETE_APP_INSTALL_CONTROL_RULE;
+    MessageParcel data;
+    std::vector<std::string> stringVector;
+    bool allowRunning = false;
+
+    auto res = appControlProxy.GetParcelableInfos(code, data, stringVector, allowRunning);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 

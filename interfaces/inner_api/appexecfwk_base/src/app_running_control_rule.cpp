@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,7 @@ bool AppRunningControlRule::ReadFromParcel(Parcel &parcel)
 {
     appId = Str16ToStr8(parcel.ReadString16());
     controlMessage = Str16ToStr8(parcel.ReadString16());
+    allowRunning = parcel.ReadBool();
     return true;
 }
 
@@ -32,6 +33,7 @@ bool AppRunningControlRule::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appId));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(controlMessage));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowRunning);
     return true;
 }
 

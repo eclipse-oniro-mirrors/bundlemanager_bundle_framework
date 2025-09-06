@@ -33,8 +33,9 @@ namespace OHOS {
         FuzzedDataProvider fdp(data, size);
         std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         std::vector<std::string> appIds;
+        bool allowRunning = false;
         int32_t userId = BMSFuzzTestUtil::GenerateRandomUser(fdp);
-        appControl.GetAppRunningControlRule(userId, appIds);
+        appControl.GetAppRunningControlRule(userId, appIds, allowRunning);
         appControl.GetAppRunningControlRule(bundleName, userId, controlRuleResult);
         return true;
     }

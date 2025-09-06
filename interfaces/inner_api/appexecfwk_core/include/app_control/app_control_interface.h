@@ -80,7 +80,7 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds)
+    virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds, bool &allowRunning)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

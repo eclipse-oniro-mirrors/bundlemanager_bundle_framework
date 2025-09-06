@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,10 +42,9 @@ public:
         const std::vector<AppRunningControlRule> &controlRules, int32_t userId) override;
     virtual ErrCode DeleteAppRunningControlRule(const std::string &callingName, int32_t userId) override;
     virtual ErrCode GetAppRunningControlRule(const std::string &callingName,
-        int32_t userId, std::vector<std::string> &appIds) override;
+        int32_t userId, std::vector<std::string> &appIds, bool &allowRunning) override;
     virtual ErrCode GetAppRunningControlRule(const std::vector<std::string> &appIds,
         int32_t userId, AppRunningControlRuleResult &controlRuleResult) override;
-
     virtual ErrCode SetDisposedStatus(const std::string &callingName,
         const std::string &appId, const Want& want, int32_t userId) override;
     virtual ErrCode DeleteDisposedStatus(const std::string &callingName,
@@ -69,6 +68,10 @@ public:
         int32_t appIndex, int32_t userId) override;
     virtual ErrCode GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
         int32_t userId, UninstallDisposedRule &rule) override;
+    virtual ErrCode GetAppRunningControlRuleByUserId(int32_t userId, std::string &appId,
+        AppRunningControlRule &controlRuleResult) override;
+    virtual ErrCode GetAllUserIdsForRunningControl(std::vector<int32_t> &outUserIds) override;
+    virtual ErrCode GetAppIdsByUserId(int32_t userId, std::vector<std::string> &appIds) override;
 
 private:
     ErrCode DeleteOldControlRule(const std::string &callingName, const std::string &controlRuleType,
