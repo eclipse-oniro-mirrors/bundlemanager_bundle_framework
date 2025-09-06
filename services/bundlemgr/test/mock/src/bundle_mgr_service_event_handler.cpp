@@ -660,7 +660,7 @@ void BMSEventHandler::CheckALLResourceInfo() {}
 void BMSEventHandler::InnerProcessAllDynamicIconInfoWhenOta() {}
 
 void BMSEventHandler::InnerProcessAllThemeAndDynamicIconInfoWhenOta(
-    const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap) {}
+    const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap) {}
 
 void BMSEventHandler::ProcessBundleResourceInfo() {}
 
