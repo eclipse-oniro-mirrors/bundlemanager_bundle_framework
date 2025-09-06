@@ -138,6 +138,10 @@ ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingNa
     if (ret != ERR_OK) {
         return ret;
     }
+    auto status = GetRunningRuleSettingStatusByUserId(userId);
+    if (status == RunningRuleSettingStatus::NO_SET) {
+        DeleteAppRunningControlRuleCacheForUserId(userId);
+    }
     if (controlRules[0].allowRunning == true) {
         SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::WHITE_LIST);
     } else {

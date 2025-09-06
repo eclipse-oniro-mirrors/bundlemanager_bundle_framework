@@ -64,9 +64,11 @@ AppControlManagerRdb::AppControlManagerRdb()
         + std::string(APP_CONTROL_RDB_TABLE_NAME)
         + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, CALLING_NAME TEXT NOT NULL, "
         + "APP_CONTROL_LIST TEXT, USER_ID INTEGER, APP_ID TEXT, CONTROL_MESSAGE TEXT, "
-        + "DISPOSED_STATUS TEXT, PRIORITY INTEGER, TIME_STAMP INTEGER, ALLOW_RUNNING INTEGER);");
+        + "DISPOSED_STATUS TEXT, PRIORITY INTEGER, TIME_STAMP INTEGER);");
     bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + std::string(APP_CONTROL_RDB_TABLE_NAME) +
         " ADD APP_INDEX INTEGER DEFAULT 0;"));
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + std::string(APP_CONTROL_RDB_TABLE_NAME) +
+        " ADD ALLOW_RUNNING INTEGER;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }

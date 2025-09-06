@@ -3639,6 +3639,31 @@ HWTEST_F(BmsBundleAppControlTest, AddAppRunningControlRule_0300, Function | Smal
 }
 
 /**
+ * @tc.number: AddAppRunningControlRule_0400
+ * @tc.name: Test AddAppRunningControlRule by AppControlManager
+ * @tc.desc: 1.AddAppRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AddAppRunningControlRule_0400, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    std::vector<AppRunningControlRule> controlRules;
+    AppRunningControlRule ruleParam;
+    ruleParam.appId = APPID;
+    ruleParam.controlMessage = CONTROL_MESSAGE;
+    ruleParam.allowRunning = false;
+    for (int i = 0; i < 1024; i++) {
+        ruleParam.appId = APPID + "_" + std::to_string(i);
+        controlRules.clear();
+        controlRules.emplace_back(ruleParam);
+        auto res = appControlManager->AddAppRunningControlRule(AppControlConstants::EDM_CALLING, controlRules, USERID);
+        EXPECT_EQ(res, ERR_OK);
+    }
+    auto res = appControlManager->DeleteAppRunningControlRule(AppControlConstants::EDM_CALLING, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: CheckControlRules_0100
  * @tc.name: Test CheckControlRules by AppControlManager
  * @tc.desc: 1.CheckControlRules test
