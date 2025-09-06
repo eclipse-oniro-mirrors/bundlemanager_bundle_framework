@@ -63,6 +63,24 @@ config("appexecfwk_core_config") {
   ]
 }
 
+ohos_shared_headers("appexecfwk_core_headers") {
+  include_dirs = [
+    "include",
+    "include/app_control",
+    "include/bundle_resource",
+    "include/bundlemgr",
+    "include/default_app",
+    "include/extend_resource",
+    "include/overlay",
+    "include/quick_fix",
+    "include/verify",
+    "include/bundlemgr_ext",
+    "${target_gen_dir}",
+  ]
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
+
 ohos_shared_library("appexecfwk_core") {
   branch_protector_ret = "pac_ret"
 
