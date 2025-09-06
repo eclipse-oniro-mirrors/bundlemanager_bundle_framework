@@ -6548,4 +6548,24 @@ HWTEST_F(BmsDataMgrTest, SetBundleUserInfoRemovable_0001, TestSize.Level1)
     bundleDataMgr.GetInnerBundleUserInfoByUserId(bundleName, userId, getUserInfo);
     EXPECT_FALSE(getUserInfo.isRemovable);
 }
+
+/**
+ * @tc.number: OtaNewInstallBundleName_0001
+ * @tc.name: OtaNewInstallBundleName
+ * @tc.desc: test OtaNewInstallBundleName
+ */
+HWTEST_F(BmsDataMgrTest, OtaNewInstallBundleName_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    EXPECT_EQ(bundleDataMgr.otaNewInstallBundleNames_.size(), 0);
+    bundleDataMgr.AddOtaNewInstallBundleName(BUNDLE_NAME);
+    EXPECT_EQ(bundleDataMgr.otaNewInstallBundleNames_.size(), 1);
+
+    std::set<std::string> otaNewInstallBundleNames = bundleDataMgr.GetOtaNewInstallBundleNames();
+    EXPECT_EQ(otaNewInstallBundleNames.size(), 1);
+    EXPECT_EQ(bundleDataMgr.otaNewInstallBundleNames_.size(), 1);
+
+    bundleDataMgr.ClearOtaNewInstallBundleNames();
+    EXPECT_EQ(bundleDataMgr.otaNewInstallBundleNames_.size(), 0);
+}
 } // OHOS

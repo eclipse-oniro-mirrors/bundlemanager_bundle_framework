@@ -2159,6 +2159,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
                 LOG_E(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) error", bundleName.c_str());
                 SavePreInstallException(scanPathIter);
+            } else {
+                dataMgr->AddOtaNewInstallBundleName(bundleName);
             }
             continue;
         }

@@ -1189,6 +1189,9 @@ public:
     ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName, ModuleTestRunner &testRunner);
     ErrCode ImplicitQueryAbilityInfosWithDefault(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, AbilityInfo &defaultAbilityInfo, bool &findDefaultApp);
+    void AddOtaNewInstallBundleName(const std::string &bundleName);
+    std::set<std::string> GetOtaNewInstallBundleNames();
+    void ClearOtaNewInstallBundleNames();
 
 private:
     /**
@@ -1420,6 +1423,7 @@ private:
     mutable ffrt::shared_mutex bundleIdMapMutex_;
     mutable ffrt::shared_mutex callbackMutex_;
     mutable ffrt::shared_mutex bundleMutex_;
+    mutable ffrt::shared_mutex otaNewInstallMutex_;
     std::shared_ptr<IBundleDataStorage> dataStorage_;
     std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;
@@ -1453,6 +1457,7 @@ private:
     std::set<std::string> appServiceHspBundleName_;
     // using for plugin event callback
     std::vector<sptr<IBundleEventCallback>> pluginCallbackList_;
+    std::set<std::string> otaNewInstallBundleNames_;
 
     static bool HasAppLinkingFlag(uint32_t flags);
 };
