@@ -10974,6 +10974,24 @@ void BundleDataMgr::NotifyPluginEventCallback(const EventFwk::CommonEventData &e
     APP_LOGI("end");
 }
 
+void BundleDataMgr::AddOtaNewInstallBundleName(const std::string &bundleName)
+{
+    std::lock_guard lock(otaNewInstallMutex_);
+    otaNewInstallBundleNames_.insert(bundleName);
+}
+
+std::set<std::string> BundleDataMgr::GetOtaNewInstallBundleNames()
+{
+    std::lock_guard lock(otaNewInstallMutex_);
+    return otaNewInstallBundleNames_;
+}
+
+void BundleDataMgr::ClearOtaNewInstallBundleNames()
+{
+    std::lock_guard lock(otaNewInstallMutex_);
+    otaNewInstallBundleNames_.clear();
+}
+
 ErrCode BundleDataMgr::GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos)
 {
     APP_LOGI("start userId %{public}d", userId);
