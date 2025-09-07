@@ -638,6 +638,41 @@ ErrCode AppControlManagerHostImpl::SetDisposedRules(
     return ERR_OK;
 }
 
+ErrCode AppControlManagerHostImpl::DeleteDisposedRules(
+    std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId)
+{
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "begin DeleteDisposedRules -u %{public}d", userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
+        LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!appControlManager_) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManager_ is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    for (auto &disposedRuleConfiguration : disposedRuleConfigurations) {
+        ErrCode ret = appControlManager_->DeleteDisposedRule(
+            callerName, disposedRuleConfiguration.appId, disposedRuleConfiguration.appIndex, userId);
+        if (ret != ERR_OK) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "DeleteDisposedRules err:%{public}d appId:%{private}s -i %{public}d",
+                ret, disposedRuleConfiguration.appId.c_str(), disposedRuleConfiguration.appIndex);
+            continue;
+        }
+        SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::REMOVE_RULE,
+            callerName, userId, disposedRuleConfiguration.appIndex, { disposedRuleConfiguration.appId },
+            Constants::EMPTY_STRING);
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
 {
     LOG_D(BMS_TAG_DEFAULT, "host begin to SetDisposedRule");

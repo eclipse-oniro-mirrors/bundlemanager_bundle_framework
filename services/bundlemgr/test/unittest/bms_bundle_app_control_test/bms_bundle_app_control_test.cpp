@@ -3308,6 +3308,59 @@ HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_3000, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: OnRemoteRequest_3100
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_3100, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    data.WriteInterfaceToken(AppControlHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    ErrCode res = appControlHost.OnRemoteRequest(
+        static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_DISPOSED_RULES), data, reply, option);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_3200
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_3200, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(2);
+    ErrCode res = appControlHost.HandleDeleteDisposedRules(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_3300
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ *           2. test OnRemoteRequest
+ */
+HWTEST_F(BmsBundleAppControlTest, OnRemoteRequest_3300, Function | MediumTest | Level0)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(1);
+    DisposedRuleConfiguration config;
+    data.WriteParcelable(&config);
+    data.WriteInt32(100);
+    ErrCode res = appControlHost.HandleDeleteDisposedRules(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
  * @tc.number: DisposeRuleCacheOnlyForBms_1000
  * @tc.name: test DisposeRuleCacheOnlyForBms
  * @tc.desc: test cache
@@ -4196,5 +4249,43 @@ HWTEST_F(BmsBundleAppControlTest, AppRunningControlRule_1000, Function | SmallTe
     res = appControlManager.DeleteAppRunningControlRule(CALLER_BUNDLE_NAME, controlRules, USERID);
     EXPECT_EQ(res, ERR_OK);
     appControlManager.appRunningControlRuleResult_.clear();
+}
+
+/**
+ * @tc.number: DeleteDisposedRules_0100
+ * @tc.name: test DeleteDisposedRules_0100
+ * @tc.desc: test DeleteDisposedRules_0100
+ */
+HWTEST_F(BmsBundleAppControlTest, DeleteDisposedRules_0100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    disposedRuleConfiguration.appId = APPID;
+    disposedRuleConfiguration.appIndex = APP_INDEX;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+
+    impl->appControlManager_ = nullptr;
+    ErrCode res = impl->DeleteDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: DeleteDisposedRules_0200
+ * @tc.name: test DeleteDisposedRules_0200
+ * @tc.desc: test DeleteDisposedRules_0200
+ */
+HWTEST_F(BmsBundleAppControlTest, DeleteDisposedRules_0200, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    disposedRuleConfiguration.appId = APPID;
+    disposedRuleConfiguration.appIndex = APP_INDEX;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+
+    impl->appControlManager_ = DelayedSingleton<AppControlManager>::GetInstance();
+    ErrCode res = impl->DeleteDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_OK);
 }
 } // OHOS

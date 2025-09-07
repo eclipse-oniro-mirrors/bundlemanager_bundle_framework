@@ -77,6 +77,9 @@ public:
     virtual ErrCode SetDisposedRules(
         std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId) override;
 
+    virtual ErrCode DeleteDisposedRules(
+        std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId) override;
+
     virtual ErrCode GetDisposedRule(
         const std::string &appId, DisposedRule &DisposedRule, int32_t userId) override;
 

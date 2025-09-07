@@ -119,6 +119,8 @@ int AppControlHost::OnRemoteRequest(
             return HandleSetDisposedRule(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_DISPOSED_RULES):
             return HandleSetDisposedRules(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_DISPOSED_RULES):
+            return HandleDeleteDisposedRules(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE):
             return HandleGetDisposedRule(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_ABILITY_RUNNING_CONTROL_RULE):
@@ -463,6 +465,27 @@ ErrCode AppControlHost::HandleSetDisposedRules(MessageParcel& data, MessageParce
     }
     int32_t userId = data.ReadInt32();
     ret = SetDisposedRules(disposedRuleConfigurations, userId);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleDeleteDisposedRules(MessageParcel& data, MessageParcel& reply)
+{
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto ret = GetVectorParcelInfo(data, disposedRuleConfigurations);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "read DisposedRuleConfiguration failed");
+        return ret;
+    }
+    if (disposedRuleConfigurations.empty() || disposedRuleConfigurations.size() > MAX_VECTOR_NUM) {
+        LOG_E(BMS_TAG_DEFAULT, "disposedRuleConfiguration count is error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    ret = DeleteDisposedRules(disposedRuleConfigurations, userId);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
