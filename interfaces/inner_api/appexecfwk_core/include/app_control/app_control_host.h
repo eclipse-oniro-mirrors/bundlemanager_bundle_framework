@@ -60,6 +60,7 @@ private:
     ErrCode HandleGetDisposedRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleSetDisposedRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleSetDisposedRules(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleDeleteDisposedRules(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleGetAbilityRunningControlRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleGetDisposedRuleForCloneApp(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleSetDisposedRuleForCloneApp(MessageParcel& data, MessageParcel& reply);

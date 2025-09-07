@@ -939,6 +939,9 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5800
 
     res = impl->SetDisposedRules(disposedRuleConfigurations, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    res = impl->DeleteDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
 /**

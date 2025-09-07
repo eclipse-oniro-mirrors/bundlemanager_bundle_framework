@@ -537,6 +537,41 @@ ErrCode AppControlProxy::SetDisposedRules(
     return ERR_OK;
 }
 
+ErrCode AppControlProxy::DeleteDisposedRules(
+    std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId)
+{
+    if (disposedRuleConfigurations.empty() || disposedRuleConfigurations.size() > MAX_VECTOR_NUM) {
+        LOG_E(BMS_TAG_DEFAULT, "params error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = WriteVectorToParcel(disposedRuleConfigurations, data);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "write DisposedRuleConfiguration failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ret = SendRequest(AppControlManagerInterfaceCode::DELETE_DISPOSED_RULES, data, reply);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlProxy::GetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
 {
     LOG_D(BMS_TAG_DEFAULT, "proxy begin to GetDisposedRule");
