@@ -41,7 +41,7 @@ int ProcessCacheCallbackHost::OnRemoteRequest(
     std::u16string descripter = ProcessCacheCallbackHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
-        APP_LOGE("fail to write reply message in process cache host due to the reply is nullptr");
+        APP_LOGE("fail to write reply message in process cache host due to the descripter is not same");
         return OBJECT_NULL;
     }
 

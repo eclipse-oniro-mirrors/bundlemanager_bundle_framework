@@ -465,7 +465,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(installParam, statusReceiver, realPaths);
     if (streamInstaller == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "stream install failed due to nullptr stream installer");
-        return ERR_OK;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
     ErrCode res = ERR_OK;
     // copy hap or hsp file to bms service

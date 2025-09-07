@@ -393,8 +393,8 @@ void BundleInstallerHost::HandleCreateStreamInstaller(MessageParcel &data, Messa
 void BundleInstallerHost::HandleDestoryBundleStreamInstaller(MessageParcel &data, MessageParcel &reply)
 {
     LOG_D(BMS_TAG_INSTALLER, "handle destory stream installer message begin");
-    uint32_t installeId = data.ReadUint32();
-    DestoryBundleStreamInstaller(installeId);
+    uint32_t installerId = data.ReadUint32();
+    DestoryBundleStreamInstaller(installerId);
     LOG_D(BMS_TAG_INSTALLER, "handle destoy stream installer message finish");
 }
 
