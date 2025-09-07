@@ -35,7 +35,7 @@ namespace {
     constexpr int8_t CONTROL_MESSAGE_INDEX = 5;
     constexpr int8_t DISPOSED_STATUS_INDEX = 6;
     constexpr int8_t TIME_STAMP_INDEX = 8;
-    constexpr int8_t ALLOW_RUNNING_INDEX = 9;
+    constexpr int8_t ALLOW_RUNNING_INDEX = 10;
     // app control table key
     constexpr const char* CALLING_NAME = "CALLING_NAME";
     constexpr const char* APP_CONTROL_LIST = "APP_CONTROL_LIST";
