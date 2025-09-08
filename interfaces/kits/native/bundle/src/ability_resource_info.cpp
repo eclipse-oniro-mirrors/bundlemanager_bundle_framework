@@ -22,6 +22,10 @@
 #include "app_log_wrapper.h"
 #include "securec.h"
 
+namespace {
+const size_t CHAR_MIN_LENGTH = 1;
+}
+
 struct OH_NativeBundle_AbilityResourceInfo {
     int appIndex;
     bool isDefaultApp;
@@ -45,11 +49,18 @@ bool CopyChar(char* &name, char* value)
 {
     if (value == nullptr) {
         APP_LOGE("value is null");
+        return false;
     }
     size_t length = strlen(value);
     if (length == 0) {
-        APP_LOGE("failed due to the length of value is empty or too long");
-        return false;
+        APP_LOGW("failed due to the length of value is empty or too long");
+        name = static_cast<char *>(malloc(CHAR_MIN_LENGTH));
+        if (name == nullptr) {
+            APP_LOGE("failed due to malloc error");
+            return false;
+        }
+        name[0] = '\0';
+        return true;
     }
     name = static_cast<char*>(malloc(length + 1));
     if (name == nullptr) {
@@ -68,11 +79,18 @@ bool CopyConstChar(char* &name, const char* value)
 {
     if (value == nullptr) {
         APP_LOGE("value is null");
+        return false;
     }
     size_t length = strlen(value);
     if (length == 0) {
-        APP_LOGE("failed due to the length of value is empty or too long");
-        return false;
+        APP_LOGW("failed due to the length of value is empty or too long");
+        name = static_cast<char *>(malloc(CHAR_MIN_LENGTH));
+        if (name == nullptr) {
+            APP_LOGE("failed due to malloc error");
+            return false;
+        }
+        name[0] = '\0';
+        return true;
     }
     name = static_cast<char*>(malloc(length + 1));
     if (name == nullptr) {
@@ -179,7 +197,7 @@ BundleManager_ErrorCode OH_NativeBundle_CheckDefaultApp(
     OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, bool* isDefault)
 {
     if (abilityResourceInfo == nullptr || isDefault == nullptr) {
-        APP_LOGE("abilityResourceInfo or appIndex is nullptr");
+        APP_LOGE("abilityResourceInfo or isDefault is nullptr");
         return BUNDLE_MANAGER_ERROR_CODE_PARAM_INVALID;
     }
     *isDefault = abilityResourceInfo->isDefaultApp;

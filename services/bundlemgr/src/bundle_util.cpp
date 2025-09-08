@@ -1227,6 +1227,10 @@ bool BundleUtil::GetBitValue(const uint8_t num, const uint8_t pos)
 std::vector<std::string> BundleUtil::FileTypeNormalize(const std::string &fileType)
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    if (fileType.empty()) {
+        APP_LOGW("fileType is empty");
+        return {};
+    }
     if (BundleUtil::IsUtd(fileType)) {
         return {fileType};
     }

@@ -229,7 +229,7 @@ bool OH_NativeBundle_IsDebugMode(bool* isDebugMode);
 OH_NativeBundle_ModuleMetadata* OH_NativeBundle_GetModuleMetadata(size_t* size);
 
 /**
- * @brief Obtain a list of applications that support opening files in a certain format.
+ * @brief Obtain a list of ability that support opening files in a certain format.
  *
  * @permisssion {@code ohos.permission.GET_ABILITY_INFO}.
  * @param fileType Indicates the file type.

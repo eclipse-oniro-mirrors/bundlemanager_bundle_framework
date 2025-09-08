@@ -6155,7 +6155,7 @@ ErrCode BundleMgrHostImpl::GetTestRunner(const std::string &bundleName, const st
     return dataMgr->GetTestRunner(bundleName, moduleName, testRunner);
 }
 
-bool BundleMgrHostImpl::GetAbilityResourceInfoWithAbilityInfo(const std::string &bundleName,
+bool BundleMgrHostImpl::GetSpecificResourceInfo(const std::string &bundleName,
     const std::string &moduleName, const std::string &abilityName, int32_t appIndex,
     const std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
     LauncherAbilityResourceInfo &resultAbilityResourceInfo)
@@ -6214,7 +6214,7 @@ ErrCode BundleMgrHostImpl::ImplicitQueryAbilityInfosWithDefault(const std::strin
                 resourceInfoflags);
             continue;
         }
-        if (!GetAbilityResourceInfoWithAbilityInfo(abilityInfo.bundleName, abilityInfo.moduleName,
+        if (!GetSpecificResourceInfo(abilityInfo.bundleName, abilityInfo.moduleName,
             abilityInfo.name, abilityInfo.appIndex, tmpResourceInfoVector, tmpResourceInfo)) {
             continue;
         }
