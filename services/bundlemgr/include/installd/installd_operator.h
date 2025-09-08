@@ -231,6 +231,8 @@ public:
 
     static bool SetProjectIdForDir(const std::string &path, uint32_t projectId);
 
+    static bool HasProjectIdForDir(const std::string &path);
+
     static int64_t GetProjectUsage(uint32_t projectId);
 
     static bool ScanDir(

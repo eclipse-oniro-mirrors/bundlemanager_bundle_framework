@@ -1336,6 +1336,10 @@ int64_t InstalldHostImpl::GetEl2CacheSize(const int32_t projectId, const std::st
         LOG_I(BMS_TAG_INSTALLD, "%{public}s el2 cache dir empty", bundleNameDir.c_str());
         return 0;
     }
+    if (!InstalldOperator::HasProjectIdForDir(cachePath)) {
+        LOG_I(BMS_TAG_INSTALLD, "%{public}s has no project id", bundleNameDir.c_str());
+        return InstalldOperator::GetDiskUsage(cachePath);
+    }
     // quota result contains the size of base dir
     int64_t projectQuotaSize = InstalldOperator::GetProjectUsage(projectId) - EMPTY_FILE_SIZE;
     if (projectQuotaSize >= 0) {
