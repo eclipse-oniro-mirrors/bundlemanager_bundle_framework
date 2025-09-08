@@ -1553,7 +1553,7 @@ ani_int DeflateBoundNative(ani_env* env, ani_object instance, ani_object aniStrm
         return -1;
     }
 
-    return static_cast<ani_int>(deflateBound(zStream, aniSourceLength));
+    return static_cast<ani_int>(deflateBound(zStream, static_cast<uint32_t>(aniSourceLength)));
 }
 
 ani_enum_item DeflateSetHeaderNative(ani_env* env, ani_object instance, ani_object aniStrm, ani_object aniHead)
