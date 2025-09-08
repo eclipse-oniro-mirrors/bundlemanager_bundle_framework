@@ -108,7 +108,6 @@ private:
     void SetAbilityRunningRuleCache(const std::string &key, const std::vector<DisposedRule> &disposedRules);
     void DeleteAbilityRunningRuleCache(const std::vector<std::string> &keyList);
     bool GetDisposedRuleOnlyForBms(const std::string &appId, std::vector<DisposedRule> &disposedRules);
-    void DeleteAbilityRunningRuleBmsCache(const std::string &appId);
     bool CheckCanDispose(const std::string &appId, int32_t userId);
     void PrintDisposedRuleInfo(const std::vector<DisposedRule> &disposedRules, const std::string &key);
     std::string GenerateAppRunningRuleCacheKey(const std::string &appId, int32_t userId, int32_t appIndex);
