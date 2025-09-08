@@ -104,6 +104,7 @@ group("bundlemanagerfuzztest") {
     "bmsgetlaunchwantforbundle_fuzzer:BMSGetLaunchWantForBundleFuzzTest",
     "bmsgetnameforuid_fuzzer:BMSGetNameForUidFuzzTest",
     "bmsgetpermissiondef_fuzzer:BMSGetPermissionDefFuzzTest",
+    "bmsgetshortcutinfos_fuzzer:BMSGetShortcutInfosFuzzTest",
     "bmshapmoduleinfo_fuzzer:BMSHapModuleInfoFuzzTest",
     "bmshmpbundleinstaller_fuzzer:BMSHmpBundleInstallerFuzzTest",
     "bmsinstalldloadcallback_fuzzer:BMSInstalldLoadCallbackFuzzTest",
