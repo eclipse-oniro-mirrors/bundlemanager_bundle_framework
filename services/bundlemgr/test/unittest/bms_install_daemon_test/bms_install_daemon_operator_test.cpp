@@ -2367,4 +2367,22 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14000, Function | Sm
         "/data/app/el1/100/base/InstalldOperatorTest_14000/test1.txt", 14000));
     EXPECT_TRUE(InstalldOperator::DeleteDir("/data/app/el1/100/base/InstalldOperatorTest_14000"));
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_14100
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling HasProjectIdForDir and GetProjectUsage of InstalldOperator
+ */
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14100, Function | SmallTest | Level0)
+{
+    EXPECT_FALSE(InstalldOperator::HasProjectIdForDir("/invalid/path"));
+
+    EXPECT_TRUE(InstalldOperator::MkRecursiveDir("/data/app/el1/100/base/InstalldOperatorTest_14100", true));
+    EXPECT_FALSE(InstalldOperator::HasProjectIdForDir("/data/app/el1/100/base/InstalldOperatorTest_14100"));
+
+    EXPECT_TRUE(InstalldOperator::SetProjectIdForDir("/data/app/el1/100/base/InstalldOperatorTest_14100", 14000));
+    EXPECT_TRUE(InstalldOperator::HasProjectIdForDir("/data/app/el1/100/base/InstalldOperatorTest_14100"));
+
+    EXPECT_TRUE(InstalldOperator::DeleteDir("/data/app/el1/100/base/InstalldOperatorTest_14100"));
+}
 } // OHOS
