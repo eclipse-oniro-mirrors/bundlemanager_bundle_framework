@@ -23,7 +23,7 @@ import { OverlayModuleInfo as _OverlayModuleInfo } from 'bundleManager.OverlayMo
 
 export default namespace overlay {
 
-  loadLibrary("ani_overlay.z");
+  loadLibraryWithPermissionCheck("ani_overlay.z", "@ohos.bundle.overlay");
 
   export native function setOverlayEnabledNative(moduleName: string, isEnabled: boolean): void;
   export native function setOverlayEnabledByBundleNameNative(bundleName: string, moduleName: string, isEnabled: boolean): void;

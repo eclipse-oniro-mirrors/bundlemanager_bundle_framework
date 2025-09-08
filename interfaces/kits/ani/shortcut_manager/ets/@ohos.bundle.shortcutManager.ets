@@ -18,7 +18,7 @@ import { BusinessError } from '@ohos.base';
 
 namespace shortcutManager {
 
-  loadLibrary("ani_shortcut_manager.z");
+  loadLibraryWithPermissionCheck("ani_shortcut_manager.z", "@ohos.bundle.shortcutManager");
 
   export native function addDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;
   export native function deleteDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;

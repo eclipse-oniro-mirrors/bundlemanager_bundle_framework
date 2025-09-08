@@ -22,7 +22,7 @@ import Want from '@ohos.app.ability.Want';
 
 namespace bundleManager {
 
-  loadLibrary("ani_bundle_manager.z");
+  loadLibraryWithPermissionCheck("ani_bundle_manager.z", "@ohos.bundle.bundleManager");
 
   const EMPTY_USER_ID: number = -500;
   const ERROR_PARAM_CHECK_ERROR: int = 401;

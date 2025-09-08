@@ -17,7 +17,7 @@ import { Callback } from '@ohos.base';
 
 export default namespace bundleMonitor {
 
-  loadLibrary("ani_bundle_monitor.z");
+  loadLibraryWithPermissionCheck("ani_bundle_monitor.z", "@ohos.bundle.bundleMonitor");
 
   export interface BundleChangedInfo {
     readonly bundleName: string;

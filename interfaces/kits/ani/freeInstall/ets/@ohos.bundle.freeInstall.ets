@@ -22,7 +22,7 @@ import { BundlePackInfo as _BundlePackInfo, PackageConfig as _PackageConfig, Pac
 
 namespace freeInstall {
 
-  loadLibrary("ani_freeInstall.z");
+  loadLibraryWithPermissionCheck("ani_freeInstall.z", "@ohos.bundle.freeInstall");
 
   export enum UpgradeFlag {
     NOT_UPGRADE = 0,
