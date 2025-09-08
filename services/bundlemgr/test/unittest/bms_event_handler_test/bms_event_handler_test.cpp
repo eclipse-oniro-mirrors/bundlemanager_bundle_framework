@@ -1353,10 +1353,31 @@ HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstall_0100, Function | Sm
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     EXPECT_NE(handler, nullptr);
     if (handler) {
-        std::unordered_map<std::string, std::pair<std::string, bool>> needInstallMap;
+        std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
         bool ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP);
         EXPECT_TRUE(ret);
-        needInstallMap["testName"] = std::make_pair("notExist", true);
+        std::vector<std::string> filePaths = {"notExist"};
+        needInstallMap["testName"] = std::make_pair(filePaths, true);
+        ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: InnerMultiProcessBundleInstall_0200
+ * @tc.name: InnerMultiProcessBundleInstall
+ * @tc.desc: test InnerMultiProcessBundleInstall
+ */
+HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstall_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
+        bool ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP);
+        EXPECT_TRUE(ret);
+        std::vector<std::string> filePaths = {"notExist", "notExist2"};
+        needInstallMap["testName"] = std::make_pair(filePaths, true);
         ret = handler->InnerMultiProcessBundleInstall(needInstallMap, Constants::AppType::SYSTEM_APP);
         EXPECT_TRUE(ret);
     }
