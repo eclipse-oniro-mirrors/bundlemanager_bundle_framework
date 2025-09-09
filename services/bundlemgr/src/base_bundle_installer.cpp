@@ -1592,7 +1592,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     SetHybridSpawn();
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
-    CheckAddResultMsg(newInfos, oldInfo, isContainEntry_);
+    CheckAddResultMsg(cacheInfo, isContainEntry_);
     return result;
 }
 
@@ -8024,17 +8024,10 @@ bool BaseBundleInstaller::IsBundleCrossAppSharedConfig(const std::unordered_map<
     return false;
 }
 
-bool BaseBundleInstaller::CheckAddResultMsg(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
-    const InnerBundleInfo &oldInfo, bool isContainEntry)
+bool BaseBundleInstaller::CheckAddResultMsg(const InnerBundleInfo &info, bool isContainEntry)
 {
     if (!isContainEntry) {
-        for (auto &item : newInfos) {
-            if (item.second.GetModuleDeduplicateHar()) {
-                SetCheckResultMsg(DEDUPLICATEHAR_NOTE);
-                return true;
-            }
-        }
-        if (oldInfo.GetModuleDeduplicateHar()) {
+        if (info.GetModuleDeduplicateHar()) {
             SetCheckResultMsg(DEDUPLICATEHAR_NOTE);
             return true;
         }

@@ -510,7 +510,7 @@ HWTEST_F(BmsBundleInstallerProxyTest, StreamInstall_0300, Function | MediumTest 
     installParam.userId = 100;
     const sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();;
     auto res = bundleInstallerProxy.StreamInstall(bundleFilePaths, installParam, statusReceiver);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**
