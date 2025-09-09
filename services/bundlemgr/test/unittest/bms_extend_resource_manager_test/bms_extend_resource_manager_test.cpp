@@ -374,7 +374,7 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1000, Function | SmallTes
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 
     std::vector<ExtendResourceInfo> extendResourceInfos;
-    ret = impl.UpateExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
+    ret = impl.UpdateExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -1277,7 +1277,7 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1001, Function | SmallTes
     };
     auto ret = impl.CopyToTempDir(BUNDLE_NAME, oldFilePaths, newFilePaths);
     std::vector<ExtendResourceInfo> extendResourceInfos;
-    ret = impl.UpateExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
+    ret = impl.UpdateExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
     EXPECT_TRUE(ret);
 }
 

@@ -203,7 +203,7 @@ void ExtendResourceManagerHostImpl::InnerSaveExtendResourceInfo(
 
         newExtendResourceInfos.emplace_back(extendResourceInfos[i]);
     }
-    UpateExtResourcesDb(bundleName, newExtendResourceInfos);
+    UpdateExtResourcesDb(bundleName, newExtendResourceInfos);
 }
 
 ErrCode ExtendResourceManagerHostImpl::ParseExtendResourceFile(
@@ -286,7 +286,7 @@ bool ExtendResourceManagerHostImpl::GetInnerBundleInfo(
     return dataMgr->FetchInnerBundleInfo(bundleName, info);
 }
 
-bool ExtendResourceManagerHostImpl::UpateExtResourcesDb(const std::string &bundleName,
+bool ExtendResourceManagerHostImpl::UpdateExtResourcesDb(const std::string &bundleName,
     const std::vector<ExtendResourceInfo> &extendResourceInfos)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -294,7 +294,7 @@ bool ExtendResourceManagerHostImpl::UpateExtResourcesDb(const std::string &bundl
         APP_LOGE("Get dataMgr shared_ptr nullptr");
         return false;
     }
-    return dataMgr->UpateExtResources(bundleName, extendResourceInfos);
+    return dataMgr->UpdateExtResources(bundleName, extendResourceInfos);
 }
 
 bool ExtendResourceManagerHostImpl::RemoveExtResourcesDb(const std::string &bundleName,
