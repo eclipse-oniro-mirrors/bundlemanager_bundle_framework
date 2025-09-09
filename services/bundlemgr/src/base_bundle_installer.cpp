@@ -1590,6 +1590,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         LOG_W(BMS_TAG_INSTALLER, "ProcessExtProfile failed");
     }
     SetHybridSpawn();
+    // set api and sdk version to systemevent
+    SetAPIAndSdkVersions(cacheInfo.GetBaseApplicationInfo().apiTargetVersion,
+        cacheInfo.GetBaseApplicationInfo().apiCompatibleVersion,
+        cacheInfo.GetBaseApplicationInfo().compileSdkVersion);
+    SetUid(uid);
+    SetIsAbcCompressed();
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     CheckAddResultMsg(cacheInfo, isContainEntry_);
@@ -8033,6 +8039,24 @@ bool BaseBundleInstaller::CheckAddResultMsg(const InnerBundleInfo &info, bool is
         }
     }
     return false;
+}
+
+void BaseBundleInstaller::SetAPIAndSdkVersions(int32_t targetAPIVersion,
+    uint32_t minAPIVersion, const std::string &compileSdlVersion)
+{
+    sysEventInfo_.minAPIVersion = minAPIVersion;
+    sysEventInfo_.targetAPIVersion = targetAPIVersion;
+    sysEventInfo_.compileSdkVersion = compileSdlVersion;
+}
+
+void BaseBundleInstaller::SetUid(int32_t uid)
+{
+    sysEventInfo_.uid = uid;
+}
+
+void BaseBundleInstaller::SetIsAbcCompressed()
+{
+    sysEventInfo_.isAbcCompressed = bundleInstallChecker_->GetIsAbcCompressed();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -840,7 +840,7 @@ ErrCode BundleInstallChecker::ParseBundleInfo(
     BundlePackInfo &packInfo)
 {
     BundleParser bundleParser;
-    ErrCode result = bundleParser.Parse(bundleFilePath, info);
+    ErrCode result = bundleParser.Parse(bundleFilePath, info, isAbcCompressed_);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "parse bundle info failed, error: %{public}d", result);
         if (result == ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED) {
@@ -851,7 +851,6 @@ ErrCode BundleInstallChecker::ParseBundleInfo(
         }
         return result;
     }
-
     const auto extensions = info.GetInnerExtensionInfos();
     for (const auto &item : extensions) {
         if (item.second.type == ExtensionAbilityType::UNSPECIFIED &&
@@ -1812,6 +1811,16 @@ bool BundleInstallChecker::DetermineCloneApp(InnerBundleInfo &innerBundleInfo)
         innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     }
     return true;
+}
+
+bool BundleInstallChecker::GetIsAbcCompressed() const
+{
+    return isAbcCompressed_;
+}
+
+void BundleInstallChecker::SetIsAbcCompressed(const bool &isAbcCompressed)
+{
+    isAbcCompressed_ = isAbcCompressed;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

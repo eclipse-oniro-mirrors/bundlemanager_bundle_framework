@@ -219,7 +219,8 @@ ErrCode ExtendResourceManagerHostImpl::ParseExtendResourceFile(
     for (uint32_t i = 0; i < filePaths.size(); ++i) {
         BundleParser bundleParser;
         InnerBundleInfo innerBundleInfo;
-        ErrCode result = bundleParser.Parse(filePaths[i], innerBundleInfo);
+        bool isAbcCompressed = false;
+        ErrCode result = bundleParser.Parse(filePaths[i], innerBundleInfo, isAbcCompressed);
         if (result != ERR_OK) {
             APP_LOGE("parse bundle info %{public}s failed, err %{public}d",
                 filePaths[i].c_str(), result);

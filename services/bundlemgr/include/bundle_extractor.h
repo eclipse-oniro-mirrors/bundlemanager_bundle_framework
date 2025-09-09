@@ -44,6 +44,8 @@ public:
      * @return Returns true if the Profile is successfully extracted; returns false otherwise.
      */
     bool ExtractModuleProfile(std::ostream &dest) const;
+
+    void IsHapCompress(bool &isAbcCompressed) const;
 };
 
 class BundleParallelExtractor : public BundleExtractor {

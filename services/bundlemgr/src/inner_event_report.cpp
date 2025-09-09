@@ -95,6 +95,12 @@ const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
 const char* USER_DATA_SIZE = "USER_DATA_SIZE";
 const char* EVENT_PARAM_WANT = "WANT";
 const char* EVENT_PARAM_UTD = "UTD";
+// API and SDK version
+const char* EVENT_PARAM_MIN_API_VERSION = "MIN_API_VERSION";
+const char* EVENT_PARAM_TARGET_API_VERSION = "TARGET_API_VERSION";
+const char* EVENT_PARAM_COMPILE_SDK_VERSION = "COMPILE_SDK_VERSION";
+const char* EVENT_PARAM_UID = "UID";
+const char* EVENT_PARAM_IS_ABC_COMPRESSED = "IS_ABC_COMPRESSED";
 
 const char* FREE_INSTALL_TYPE = "FreeInstall";
 const char* PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -493,7 +499,12 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
         EVENT_PARAM_SCENE, GetInstallScene(eventInfo),
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
-        EVENT_PARAM_IS_PATCH, eventInfo.isPatch);
+        EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
+        EVENT_PARAM_MIN_API_VERSION, eventInfo.minAPIVersion,
+        EVENT_PARAM_TARGET_API_VERSION, eventInfo.targetAPIVersion,
+        EVENT_PARAM_COMPILE_SDK_VERSION, eventInfo.compileSdkVersion,
+        EVENT_PARAM_UID, eventInfo.uid,
+        EVENT_PARAM_IS_ABC_COMPRESSED, eventInfo.isAbcCompressed);
 }
 
 void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
@@ -533,7 +544,12 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
         EVENT_PARAM_FINGERPRINT, eventInfo.fingerprint,
         EVENT_PARAM_HIDE_DESKTOP_ICON, eventInfo.hideDesktopIcon,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
-        EVENT_PARAM_IS_PATCH, eventInfo.isPatch);
+        EVENT_PARAM_IS_PATCH, eventInfo.isPatch,
+        EVENT_PARAM_MIN_API_VERSION, eventInfo.minAPIVersion,
+        EVENT_PARAM_TARGET_API_VERSION, eventInfo.targetAPIVersion,
+        EVENT_PARAM_COMPILE_SDK_VERSION, eventInfo.compileSdkVersion,
+        EVENT_PARAM_UID, eventInfo.uid,
+        EVENT_PARAM_IS_ABC_COMPRESSED, eventInfo.isAbcCompressed);
 }
 
 void InnerEventReport::InnerSendPreBundleRecoverEvent(const EventInfo& eventInfo)
