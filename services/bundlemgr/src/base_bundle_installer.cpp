@@ -1844,7 +1844,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
     }
 
-    DeleteEncryptionKeyId(curInnerBundleUserInfo, installParam.isKeepData);
+    DeleteEncryptionKeyId(oldInfo, installParam.isKeepData);
     if (!installParam.isRemoveUser &&
         !SaveFirstInstallBundleInfo(bundleName, userId_, oldInfo.IsPreInstallApp(), curInnerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "save first install bundle info failed");
@@ -3599,28 +3599,28 @@ bool BaseBundleInstaller::CheckInstallOnKeepData(const std::string &bundleName, 
     return true;
 }
 
-void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleUserInfo &userInfo, bool isKeepData) const
+void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &info, bool isKeepData) const
 {
-    if (userInfo.bundleName.empty()) {
+    if (info.GetBundleName().empty()) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName is empty");
         return;
     }
     if (isKeepData) {
-        LOG_I(BMS_TAG_INSTALLER, "keep el5 dir -n %{public}s", userInfo.bundleName.c_str());
+        LOG_I(BMS_TAG_INSTALLER, "keep el5 dir -n %{public}s", info.GetBundleName().c_str());
         return;
     }
-    LOG_D(BMS_TAG_INSTALLER, "delete el5 dir -n %{public}s", userInfo.bundleName.c_str());
-    std::vector<std::string> dirs = GenerateScreenLockProtectionDir(userInfo.bundleName);
+    LOG_D(BMS_TAG_INSTALLER, "delete el5 dir -n %{public}s", info.GetBundleName().c_str());
+    std::vector<std::string> dirs = GenerateScreenLockProtectionDir(info.GetBundleName());
     for (const std::string &dir : dirs) {
         if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
         }
     }
 
-    if (userInfo.keyId.empty()) {
+    if (!info.NeedCreateEl5Dir()) {
         return;
     }
-    EncryptionParam encryptionParam(userInfo.bundleName, "", 0, userId_, EncryptionDirType::APP);
+    EncryptionParam encryptionParam(info.GetBundleName(), "", 0, userId_, EncryptionDirType::APP);
     if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(encryptionParam) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "delete encryption key id failed");
     }
