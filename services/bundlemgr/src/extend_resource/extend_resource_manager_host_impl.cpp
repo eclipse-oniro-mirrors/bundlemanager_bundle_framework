@@ -181,11 +181,15 @@ ErrCode ExtendResourceManagerHostImpl::ProcessAddExtResource(
         return ERR_EXT_RESOURCE_MANAGER_PARSE_FILE_FAILED;
     }
 
-    InnerSaveExtendResourceInfo(bundleName, newFilePaths, extendResourceInfos);
+    if (!InnerSaveExtendResourceInfo(bundleName, newFilePaths, extendResourceInfos)) {
+        APP_LOGE("save %{public}s extendResource failed", bundleName.c_str());
+        RollBack(newFilePaths);
+        return ERR_EXT_RESOURCE_MANAGER_PARSE_FILE_FAILED;
+    }
     return ERR_OK;
 }
 
-void ExtendResourceManagerHostImpl::InnerSaveExtendResourceInfo(
+bool ExtendResourceManagerHostImpl::InnerSaveExtendResourceInfo(
     const std::string &bundleName,
     const std::vector<std::string> &filePaths,
     const std::vector<ExtendResourceInfo> &extendResourceInfos)
@@ -203,7 +207,7 @@ void ExtendResourceManagerHostImpl::InnerSaveExtendResourceInfo(
 
         newExtendResourceInfos.emplace_back(extendResourceInfos[i]);
     }
-    UpdateExtResourcesDb(bundleName, newExtendResourceInfos);
+    return UpdateExtResourcesDb(bundleName, newExtendResourceInfos);
 }
 
 ErrCode ExtendResourceManagerHostImpl::ParseExtendResourceFile(
