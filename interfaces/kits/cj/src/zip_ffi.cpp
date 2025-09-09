@@ -328,7 +328,76 @@ ErrCode GetOriginalSize(const std::string& srcFile, int64_t& originalSize)
 }
 
 extern "C" {
-FFI_EXPORT int32_t FfiBundleManagerCompressFile(const char* inFile, const char* outFile, RetOptions options)
+int32_t FfiBundleManagerCompressFile(CArrUI8 inFile, CArrUI8 outFile, RetOptions options)
+{
+    std::vector<uint8_t> inBytesVec;
+    for (int i = 0; i < inFile.len; i++) {
+        inBytesVec.push_back(inFile.data[i]);
+    }
+    std::string strInFile(inBytesVec.begin(), inBytesVec.end());
+    std::vector<uint8_t> outBytesVec;
+    for (int i = 0; i < outFile.len; i++) {
+        outBytesVec.push_back(outFile.data[i]);
+    }
+    std::string strOutFile(outBytesVec.begin(), outBytesVec.end());
+    int32_t code = ERROR_CODE_ERRNO;
+    OPTIONS cOptions;
+    cOptions.level = static_cast<COMPRESS_LEVEL>(options.level);
+    cOptions.memLevel = static_cast<MEMORY_LEVEL>(options.memLevel);
+    cOptions.strategy = static_cast<COMPRESS_STRATEGY>(options.strategy);
+
+    code = Zip(strInFile, strOutFile, cOptions);
+    int32_t err = CommonFunc::ConvertErrCode(code);
+
+    return err;
+}
+
+int32_t FfiBundleManagerDeCompressFileOptions(CArrUI8 inFile, CArrUI8 outFile, RetOptions options)
+{
+    std::vector<uint8_t> inBytesVec;
+    for (int i = 0; i < inFile.len; i++) {
+        inBytesVec.push_back(inFile.data[i]);
+    }
+    std::string strInFile(inBytesVec.begin(), inBytesVec.end());
+    std::vector<uint8_t> outBytesVec;
+    for (int i = 0; i < outFile.len; i++) {
+        outBytesVec.push_back(outFile.data[i]);
+    }
+    std::string strOutFile(outBytesVec.begin(), outBytesVec.end());
+    int32_t code = ERROR_CODE_ERRNO;
+    OPTIONS cOptions;
+    cOptions.level = static_cast<COMPRESS_LEVEL>(options.level);
+    cOptions.memLevel = static_cast<MEMORY_LEVEL>(options.memLevel);
+    cOptions.strategy = static_cast<COMPRESS_STRATEGY>(options.strategy);
+
+    code = UnZip(strInFile, strOutFile, cOptions);
+    int32_t err = CommonFunc::ConvertErrCode(code);
+
+    return err;
+}
+
+int32_t FfiBundleManagerDeCompressFile(CArrUI8 inFile, CArrUI8 outFile)
+{
+    std::vector<uint8_t> inBytesVec;
+    for (int i = 0; i < inFile.len; i++) {
+        inBytesVec.push_back(inFile.data[i]);
+    }
+    std::string strInFile(inBytesVec.begin(), inBytesVec.end());
+    std::vector<uint8_t> outBytesVec;
+    for (int i = 0; i < outFile.len; i++) {
+        outBytesVec.push_back(outFile.data[i]);
+    }
+    std::string strOutFile(outBytesVec.begin(), outBytesVec.end());
+    int32_t code = ERROR_CODE_ERRNO;
+    OPTIONS cOptions;
+
+    code = UnZip(strInFile, strOutFile, cOptions);
+    int32_t err = CommonFunc::ConvertErrCode(code);
+
+    return err;
+}
+
+FFI_EXPORT int32_t FfiBundleManagerCompressFileV2(const char* inFile, const char* outFile, RetOptions options)
 {
     std::string strInFile(inFile);
     std::string strOutFile(outFile);
@@ -344,7 +413,7 @@ FFI_EXPORT int32_t FfiBundleManagerCompressFile(const char* inFile, const char* 
     return err;
 }
 
-FFI_EXPORT int32_t FfiBundleManagerDeCompressFileOptions(const char* inFile, const char* outFile, RetOptions options)
+FFI_EXPORT int32_t FfiBundleManagerDeCompressFileOptionsV2(const char* inFile, const char* outFile, RetOptions options)
 {
     std::string strInFile(inFile);
     std::string strOutFile(outFile);
@@ -360,7 +429,7 @@ FFI_EXPORT int32_t FfiBundleManagerDeCompressFileOptions(const char* inFile, con
     return err;
 }
 
-FFI_EXPORT int32_t FfiBundleManagerDeCompressFile(const char* inFile, const char* outFile)
+FFI_EXPORT int32_t FfiBundleManagerDeCompressFileV2(const char* inFile, const char* outFile)
 {
     std::string strInFile(inFile);
     std::string strOutFile(outFile);
