@@ -121,10 +121,10 @@ void ResetResourceInfo(OH_NativeBundle_AbilityResourceInfo* resourceInfo, size_t
     }
 }
 
-void ReleaseResourceInfo(OH_NativeBundle_AbilityResourceInfo* resourceInfo, size_t count)
+bool ReleaseResourceInfo(OH_NativeBundle_AbilityResourceInfo* resourceInfo, size_t count)
 {
     if (resourceInfo == nullptr) {
-        return;
+        return false;
     }
     for (size_t i = 0; i < count; ++i) {
         ReleaseChar(resourceInfo[i].bundleName);
@@ -134,6 +134,7 @@ void ReleaseResourceInfo(OH_NativeBundle_AbilityResourceInfo* resourceInfo, size
         ReleaseChar(resourceInfo[i].icon);
     }
     free(resourceInfo);
+    return true;
 }
 
 OH_NativeBundle_AbilityResourceInfo* OH_AbilityResourceInfo_Create(size_t elementSize)
@@ -156,7 +157,10 @@ OH_NativeBundle_AbilityResourceInfo* OH_AbilityResourceInfo_Create(size_t elemen
 
 BundleManager_ErrorCode OH_AbilityResourceInfo_Destroy(OH_NativeBundle_AbilityResourceInfo* resourceInfo, size_t count)
 {
-    ReleaseResourceInfo(resourceInfo, count);
+    if (!ReleaseResourceInfo(resourceInfo, count)) {
+        APP_LOGE("parameter is invalid");
+        return BUNDLE_MANAGER_ERROR_CODE_PARAM_INVALID;
+    }
     return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
 }
 
