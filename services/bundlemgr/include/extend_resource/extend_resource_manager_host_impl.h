@@ -67,11 +67,11 @@ private:
         const std::string &bundleName,
         const std::vector<std::string> &filePaths,
         std::vector<ExtendResourceInfo> &extendResourceInfos);
-    bool UpateExtResourcesDb(const std::string &bundleName,
+    bool UpdateExtResourcesDb(const std::string &bundleName,
         const std::vector<ExtendResourceInfo> &extendResourceInfos);
     bool RemoveExtResourcesDb(
         const std::string &bundleName, const std::vector<std::string> &moduleNames);
-    void InnerSaveExtendResourceInfo(
+    bool InnerSaveExtendResourceInfo(
         const std::string &bundleName, const std::vector<std::string> &filePaths,
         const std::vector<ExtendResourceInfo> &extendResourceInfos);
     ErrCode CheckModuleExist(

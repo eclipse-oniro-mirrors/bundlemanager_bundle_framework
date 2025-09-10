@@ -29,7 +29,7 @@ namespace {
         auto ret = impl.ProcessAddExtResource(TEST_BUNDLE, filePaths);
         std::vector<ExtendResourceInfo> extendResourceInfos;
         impl.InnerSaveExtendResourceInfo(TEST_BUNDLE, filePaths, extendResourceInfos);
-        impl.UpateExtResourcesDb(TEST_BUNDLE, extendResourceInfos);
+        impl.UpdateExtResourcesDb(TEST_BUNDLE, extendResourceInfos);
         std::vector<std::string> moduleNames;
         impl.RemoveExtResourcesDb(TEST_BUNDLE, moduleNames);
         impl.InnerRemoveExtendResources(TEST_BUNDLE, moduleNames, extendResourceInfos);
