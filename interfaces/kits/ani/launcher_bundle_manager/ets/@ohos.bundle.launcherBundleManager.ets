@@ -36,7 +36,7 @@ export default namespace launcherBundleManager {
       if (options != undefined) {
         startOptions = options;
       }
-      let cb = (): NullishType => {
+      let cb = (): Any => {
         launcherBundleManager.startShortcutNative(shortcutInfo, startOptions);
       }
       let p1 = taskpool.execute(cb);
@@ -62,7 +62,7 @@ export default namespace launcherBundleManager {
       return launcherBundleManager.getShortcutInfoNative(bundleName, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultShortcutInfo: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
       callback(null, resultShortcutInfo);
     }, (err: Error): void => {
@@ -76,7 +76,7 @@ export default namespace launcherBundleManager {
         return launcherBundleManager.getShortcutInfoNative(bundleName, EMPTY_USER_ID, false);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultShortcutInfo: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
         resolve(resultShortcutInfo);
       }, (err: Error): void => {
@@ -91,7 +91,7 @@ export default namespace launcherBundleManager {
       return launcherBundleManager.getLauncherAbilityInfoNative(bundleName, userId, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
       callback(null, resultArray);
     }, (err: Error): void => {
@@ -105,7 +105,7 @@ export default namespace launcherBundleManager {
         return launcherBundleManager.getLauncherAbilityInfoNative(bundleName, userId, false);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
         resolve(resultArray);
       }, (err: Error): void => {
@@ -124,7 +124,7 @@ export default namespace launcherBundleManager {
       return launcherBundleManager.getAllLauncherAbilityInfoNative(userId);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
       callback(null, resultArray);
     }, (err: Error): void => {
@@ -138,7 +138,7 @@ export default namespace launcherBundleManager {
         return launcherBundleManager.getAllLauncherAbilityInfoNative(userId);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
         resolve(resultArray);
       }, (err: Error): void => {
@@ -154,7 +154,7 @@ export default namespace launcherBundleManager {
       if (options != undefined) {
         startOptions = options;
       }
-      let cb = (): NullishType => {
+      let cb = (): Any => {
         launcherBundleManager.startShortcutWithReasonNative(shortcutInfo, startReason, startOptions);
       }
       let p1 = taskpool.execute(cb);

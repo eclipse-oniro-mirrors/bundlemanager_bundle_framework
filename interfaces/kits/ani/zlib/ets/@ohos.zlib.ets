@@ -357,7 +357,7 @@ export default namespace zlib {
           return this.adler32Native(adler, buf);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -376,7 +376,7 @@ export default namespace zlib {
           return this.adler32CombineNative(adler1, adler2, len2);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -392,7 +392,7 @@ export default namespace zlib {
           return this.crc32Native(crc, buf);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -411,7 +411,7 @@ export default namespace zlib {
           return this.crc32CombineNative(crc1, crc2, len2);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -427,7 +427,7 @@ export default namespace zlib {
           return this.crc64Native(crc, buf);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -443,7 +443,7 @@ export default namespace zlib {
           return this.getCrcTableNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let resultArray: Array<long> = e as Array<long>;
           resolve(resultArray);
         }, (err: Error): void => {
@@ -459,7 +459,7 @@ export default namespace zlib {
           return this.getCrc64TableNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let resultArray: Array<long> = e as Array<long>;
           resolve(resultArray);
         }, (err: Error): void => {
@@ -551,7 +551,7 @@ export default namespace zlib {
           return this.gzbufferNative(size);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -582,7 +582,7 @@ export default namespace zlib {
           return this.gzeofNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -598,7 +598,7 @@ export default namespace zlib {
           return this.gzdirectNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -614,7 +614,7 @@ export default namespace zlib {
           return this.gzcloseNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -645,7 +645,7 @@ export default namespace zlib {
           return this.gzerrorNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: GzErrorOutputInfo = e as GzErrorOutputInfo;
           resolve(result);
         }, (err: Error): void => {
@@ -661,7 +661,7 @@ export default namespace zlib {
           return this.gzgetcNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -677,7 +677,7 @@ export default namespace zlib {
           return this.gzflushNative(flush);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -696,7 +696,7 @@ export default namespace zlib {
           return this.gzfwriteNative(buf, size, nitems);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -715,7 +715,7 @@ export default namespace zlib {
           return this.gzfreadNative(buf, size, nitems);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -731,7 +731,7 @@ export default namespace zlib {
           return this.gzclosewNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -747,7 +747,7 @@ export default namespace zlib {
           return this.gzcloserNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -766,7 +766,7 @@ export default namespace zlib {
           return this.gzwriteNative(buf, len);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -785,7 +785,7 @@ export default namespace zlib {
           return this.gzungetcNative(c);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -801,7 +801,7 @@ export default namespace zlib {
           return this.gztellNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -817,7 +817,7 @@ export default namespace zlib {
           return this.gzsetparamsNative(level, strategy);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -833,7 +833,7 @@ export default namespace zlib {
           return this.gzseekNative(offset, whence);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -849,7 +849,7 @@ export default namespace zlib {
           return this.gzrewindNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -868,7 +868,7 @@ export default namespace zlib {
           return this.gzreadNative(buf);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -884,7 +884,7 @@ export default namespace zlib {
           return this.gzputsNative(str);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -903,7 +903,7 @@ export default namespace zlib {
           return this.gzputcNative(c);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -919,7 +919,7 @@ export default namespace zlib {
           return this.gzprintfNative(format, ...args);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -935,7 +935,7 @@ export default namespace zlib {
           return this.gzoffsetNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -951,7 +951,7 @@ export default namespace zlib {
           return this.gzgetsNative(buf);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: string = e as string;
           resolve(result);
         }, (err: Error): void => {
@@ -1097,7 +1097,7 @@ export default namespace zlib {
           return this.getZStreamNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           if (e) {
             let result: ZStream = e as ZStream;
             resolve(result);
@@ -1117,7 +1117,7 @@ export default namespace zlib {
           return this.zlibVersionNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: string = e as string;
           resolve(result);
         }, (err: Error): void => {
@@ -1133,7 +1133,7 @@ export default namespace zlib {
           return this.zlibCompileFlagsNative();
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -1153,7 +1153,7 @@ export default namespace zlib {
                                            this.compressWithSourceLenNative(dest, source, sourceLen);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ZipOutputInfo = e as ZipOutputInfo;
           resolve(result);
         }, (err: Error): void => {
@@ -1173,7 +1173,7 @@ export default namespace zlib {
                                            this.compress2WithSourceLenNative(dest, source, level, sourceLen);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ZipOutputInfo = e as ZipOutputInfo;
           resolve(result);
         }, (err: Error): void => {
@@ -1192,7 +1192,7 @@ export default namespace zlib {
           return this.compressBoundNative(sourceLen);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -1212,7 +1212,7 @@ export default namespace zlib {
                                            this.uncompressWithSourceLenNative(dest, source, sourceLen);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ZipOutputInfo = e as ZipOutputInfo;
           resolve(result);
         }, (err: Error): void => {
@@ -1232,7 +1232,7 @@ export default namespace zlib {
                                            this.uncompress2WithSourceLenNative(dest, source, sourceLen);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: DecompressionOutputInfo = e as DecompressionOutputInfo;
           resolve(result);
         }, (err: Error): void => {
@@ -1248,7 +1248,7 @@ export default namespace zlib {
           return this.inflateValidateNative(strm, check);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1264,7 +1264,7 @@ export default namespace zlib {
           return this.inflateSyncPointNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1280,7 +1280,7 @@ export default namespace zlib {
           return this.inflateSyncNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1296,7 +1296,7 @@ export default namespace zlib {
           return this.inflateSetDictionaryNative(strm, dictionary);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1312,7 +1312,7 @@ export default namespace zlib {
           return this.inflateResetKeepNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1328,7 +1328,7 @@ export default namespace zlib {
           return this.inflateReset2Native(strm, windowBits);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1344,7 +1344,7 @@ export default namespace zlib {
           return this.inflateResetNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1360,7 +1360,7 @@ export default namespace zlib {
           return this.inflatePrimeNative(strm, bits, value);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1376,7 +1376,7 @@ export default namespace zlib {
           return this.inflateMarkNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -1392,7 +1392,7 @@ export default namespace zlib {
           return this.inflateInit2Native(strm, windowBits);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1408,7 +1408,7 @@ export default namespace zlib {
           return this.inflateInitNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1424,7 +1424,7 @@ export default namespace zlib {
           return this.inflateGetHeaderNative(strm, header);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1440,7 +1440,7 @@ export default namespace zlib {
           return this.inflateGetDictionaryNative(strm, dictionary);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: DictionaryOutputInfo = e as DictionaryOutputInfo;
           resolve(result);
         }, (err: Error): void => {
@@ -1456,7 +1456,7 @@ export default namespace zlib {
           return this.inflateEndNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1472,7 +1472,7 @@ export default namespace zlib {
           return this.inflateCopyNative(source);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1488,7 +1488,7 @@ export default namespace zlib {
           return this.inflateCodesUsedNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: long = e as long;
           resolve(result);
         }, (err: Error): void => {
@@ -1507,7 +1507,7 @@ export default namespace zlib {
           return this.inflateBackInitNative(strm, windowBits, window);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1523,7 +1523,7 @@ export default namespace zlib {
           return this.inflateBackEndNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1539,7 +1539,7 @@ export default namespace zlib {
           return this.inflateBackNative(strm, backIn, inDesc, backOut, outDesc);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1555,7 +1555,7 @@ export default namespace zlib {
           return this.inflateNative(strm, flush);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1571,7 +1571,7 @@ export default namespace zlib {
           return this.deflateInitNative(strm, level);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1587,7 +1587,7 @@ export default namespace zlib {
           return this.deflateInit2Native(strm, level, method, windowBits, memLevel, strategy);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1603,7 +1603,7 @@ export default namespace zlib {
           return this.deflateNative(strm, flush);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1619,7 +1619,7 @@ export default namespace zlib {
           return this.deflateEndNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1638,7 +1638,7 @@ export default namespace zlib {
           return this.deflateBoundNative(strm, sourceLength);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: int = e as int;
           resolve(result);
         }, (err: Error): void => {
@@ -1654,7 +1654,7 @@ export default namespace zlib {
           return this.deflateSetHeaderNative(strm, head);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1670,7 +1670,7 @@ export default namespace zlib {
           return this.deflateCopyNative(source);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1686,7 +1686,7 @@ export default namespace zlib {
           return this.deflateSetDictionaryNative(strm, dictionary);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1702,7 +1702,7 @@ export default namespace zlib {
           return this.deflateGetDictionaryNative(strm, dictionary);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: DictionaryOutputInfo = e as DictionaryOutputInfo;
           resolve(result);
         }, (err: Error): void => {
@@ -1718,7 +1718,7 @@ export default namespace zlib {
           return this.deflateTuneNative(strm, goodLength, maxLazy, niceLength, maxChain);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1734,7 +1734,7 @@ export default namespace zlib {
           return this.deflateResetNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1750,7 +1750,7 @@ export default namespace zlib {
           return this.deflateResetKeepNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1766,7 +1766,7 @@ export default namespace zlib {
           return this.deflatePendingNative(strm);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: DeflatePendingOutputInfo = e as DeflatePendingOutputInfo;
           resolve(result);
         }, (err: Error): void => {
@@ -1782,7 +1782,7 @@ export default namespace zlib {
           return this.deflateParamsNative(strm, level, strategy);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1801,7 +1801,7 @@ export default namespace zlib {
           return this.deflatePrimeNative(strm, bits, value);
         };
         let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let result: ReturnStatus = e as ReturnStatus;
           resolve(result);
         }, (err: Error): void => {
@@ -1837,7 +1837,7 @@ export default namespace zlib {
         return zlib.getOriginalSizeNative(compressedFile);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: long = e as long;
         resolve(result);
       }, (err: Error): void => {
@@ -1855,7 +1855,7 @@ export default namespace zlib {
         return zlib.createChecksumNative(false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: Checksum = e as Checksum;
         resolve(result);
       }, (err: Error): void => {
@@ -1877,7 +1877,7 @@ export default namespace zlib {
         return zlib.createGZipNative(false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: GZip = e as GZip;
         resolve(result);
       }, (err: Error): void => {
@@ -1899,7 +1899,7 @@ export default namespace zlib {
         return zlib.createZipNative(false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: Zip = e as Zip;
         resolve(result);
       }, (err: Error): void => {

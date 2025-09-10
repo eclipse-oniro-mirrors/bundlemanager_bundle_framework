@@ -50,7 +50,7 @@ export default namespace defaultAppManager {
       return defaultAppManager.isDefaultApplicationNative(type, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: boolean = e as boolean;
       callback(null, result);
     }, (err: Error): void => {
@@ -65,7 +65,7 @@ export default namespace defaultAppManager {
         return defaultAppManager.isDefaultApplicationNative(type, false);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: boolean = e as boolean;
         resolve(result);
       }, (err: Error): void => {
@@ -85,7 +85,7 @@ export default namespace defaultAppManager {
       return defaultAppManager.getDefaultApplicationNative(type, userId, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: BundleInfo = e as BundleInfo;
       callback(null, result);
     }, (err: Error): void => {
@@ -98,7 +98,7 @@ export default namespace defaultAppManager {
       return defaultAppManager.getDefaultApplicationNative(type, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: BundleInfo = e as BundleInfo;
       callback(null, result);
     }, (err: Error): void => {
@@ -113,7 +113,7 @@ export default namespace defaultAppManager {
         return defaultAppManager.getDefaultApplicationNative(type, userIdInfo, false);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: BundleInfo = e as BundleInfo;
         resolve(result);
       }, (err: Error): void => {
