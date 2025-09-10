@@ -37,6 +37,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "inner_bundle_info.h"
+#include "launcher_ability_resource_info.h"
 #include "mime_type_mgr.h"
 #include "mock_status_receiver.h"
 #include "module_test_runner.h"
@@ -2161,6 +2162,22 @@ HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfo_0002, Function | MediumTe
 }
 
 /**
+ * @tc.number: GetAbilityResourceInfo_0003
+ * @tc.name: test GetAbilityResourceInfo
+ * @tc.desc: 1.test GetAbilityResourceInfo
+             2.text fileType
+ */
+HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfo_0003, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string fileType = ".?";
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    auto testRet = hostImpl->GetAbilityResourceInfo(fileType, launcherAbilityResourceInfos);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE);
+    EXPECT_TRUE(launcherAbilityResourceInfos.empty());
+}
+
+/**
  * @tc.number: GetSpecificResourceInfo_0001
  * @tc.name: test GetSpecificResourceInfo
  * @tc.desc: 1.test GetSpecificResourceInfo
@@ -2199,7 +2216,7 @@ HWTEST_F(BmsBundleManagerTest3, GetSpecificResourceInfo_0001, Function | MediumT
  * @tc.name: test ImplicitQueryAbilityInfosWithDefault
  * @tc.desc: 1.system run normally
  *           2.want param is empty
-*/
+ */
 HWTEST_F(BmsBundleManagerTest3, ImplicitQueryAbilityInfosWithDefault_0001, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
@@ -2211,5 +2228,49 @@ HWTEST_F(BmsBundleManagerTest3, ImplicitQueryAbilityInfosWithDefault_0001, Funct
     auto testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfosWithDefault(
         want, 0, USERID, abilityInfos, defaultAbilityInfo, findDefaultApp);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_INFO_NOT_FOUND);
+}
+
+/**
+ * @tc.number: ImplicitQueryAbilityInfosWithDefault_0002
+ * @tc.name: test ImplicitQueryAbilityInfosWithDefault in HostImpl
+ * @tc.desc: 1.system run normally
+ *           2.not defined BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+ */
+HWTEST_F(BmsBundleManagerTest3, ImplicitQueryAbilityInfosWithDefault_0002, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string fileType = "text/html";
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    ErrCode ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(fileType, launcherAbilityResourceInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: RemoveSameAbilityResourceInfo_0001
+ * @tc.name: test RemoveSameAbilityResourceInfo in HostImpl
+ * @tc.desc: 1.system run normally
+ *           2.not defined BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+ */
+HWTEST_F(BmsBundleManagerTest3, RemoveSameAbilityResourceInfo_0001, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    hostImpl->RemoveSameAbilityResourceInfo(launcherAbilityResourceInfos);
+    EXPECT_EQ(launcherAbilityResourceInfos.size(), 0);
+    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+    launcherAbilityResourceInfo.bundleName = "bundleName";
+    launcherAbilityResourceInfo.moduleName = "moduleName";
+    launcherAbilityResourceInfo.abilityName = "abilityName";
+    launcherAbilityResourceInfo.appIndex = 0;
+    launcherAbilityResourceInfos.push_back(launcherAbilityResourceInfo);
+    launcherAbilityResourceInfos.push_back(launcherAbilityResourceInfo);
+    launcherAbilityResourceInfo.bundleName = "bundleName1";
+    launcherAbilityResourceInfo.moduleName = "moduleName1";
+    launcherAbilityResourceInfo.abilityName = "abilityName1";
+    launcherAbilityResourceInfo.appIndex = 0;
+    launcherAbilityResourceInfos.push_back(launcherAbilityResourceInfo);
+    EXPECT_EQ(launcherAbilityResourceInfos.size(), 3);
+    hostImpl->RemoveSameAbilityResourceInfo(launcherAbilityResourceInfos);
+    EXPECT_EQ(launcherAbilityResourceInfos.size(), 2);
 }
 } // OHOS
