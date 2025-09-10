@@ -2462,4 +2462,57 @@ HWTEST_F(BmsBundleDefaultAppTest, ImplicitQueryAbilityInfosWithDefault_0100, Fun
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(findDefaultApp, true);
 }
+
+/**
+ * @tc.number: ImplicitQueryAbilityInfosWithDefault_0200
+ * @tc.name: test ImplicitQueryAbilityInfosWithDefault
+ * @tc.desc: 1. test ImplicitQueryAbilityInfosWithDefault success in HostImpl
+ */
+HWTEST_F(BmsBundleDefaultAppTest, ImplicitQueryAbilityInfosWithDefault_0200, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    ErrCode ret = SetDefaultApplicationWrap(defaultAppProxy, PDF_MIME_TYPE, ABILITY_PDF);
+    EXPECT_EQ(ret, ERR_OK);
+
+    BundleInfo bundleInfo;
+    ret = defaultAppProxy->GetDefaultApplication(USER_ID, PDF_MIME_TYPE, bundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ASSERT_EQ(bundleInfo.abilityInfos.size(), 1);
+    EXPECT_EQ(bundleInfo.abilityInfos[0].name, ABILITY_PDF);
+
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    int32_t flags = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    AbilityInfo defaultAbilityInfo;
+    bool findDefaultApp = false;
+    AAFwk::Want want;
+    want.SetType(PDF_MIME_TYPE);
+    want.SetAction(ACTION_VIEW_DATA);
+    bool result = DefaultAppMgr::GetInstance().GetDefaultApplication(
+        want, USER_ID, abilityInfos, extensionInfos, false);
+    EXPECT_EQ(result, true);
+    ASSERT_EQ(abilityInfos.size(), 1);
+    EXPECT_EQ(extensionInfos.size(), 0);
+    EXPECT_EQ(abilityInfos[0].name, ABILITY_PDF);
+
+    abilityInfos = {};
+    ret = dataMgr->ImplicitQueryAbilityInfosWithDefault(
+        want, flags, USER_ID, abilityInfos, defaultAbilityInfo, findDefaultApp);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(findDefaultApp, true);
+    ASSERT_NE(abilityInfos.size(), 0);
+    EXPECT_EQ(abilityInfos[0].name, ABILITY_PDF);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    setuid(20000001);
+    ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(PDF_MIME_TYPE, launcherAbilityResourceInfos);
+    setuid(0);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_NE(launcherAbilityResourceInfos.size(), 0);
+}
 } // OHOS

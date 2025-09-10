@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -3008,6 +3008,24 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1650, Function | SmallTest | 
 {
     BundleMgrHost bundleMgrHost;
     uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCH_WANT);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1660
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1660, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_RESOURCE_INFO);
     MessageParcel data;
     std::u16string descriptor = BundleMgrHost::GetDescriptor();
     data.WriteInterfaceToken(descriptor);

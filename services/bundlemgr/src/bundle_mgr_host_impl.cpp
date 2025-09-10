@@ -6232,6 +6232,35 @@ ErrCode BundleMgrHostImpl::ImplicitQueryAbilityInfosWithDefault(const std::strin
     return ERR_OK;
 }
 
+void BundleMgrHostImpl::RemoveSameAbilityResourceInfo(
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+{
+    if (launcherAbilityResourceInfos.size() <= 1) {
+        return;
+    }
+    // remove the same items
+    std::sort(launcherAbilityResourceInfos.begin(), launcherAbilityResourceInfos.end(),
+        [](const LauncherAbilityResourceInfo &infoA, const LauncherAbilityResourceInfo &infoB) {
+            if (infoA.bundleName != infoB.bundleName) {
+                return infoA.bundleName < infoB.bundleName;
+            }
+            if (infoA.moduleName != infoB.moduleName) {
+                return infoA.moduleName < infoB.moduleName;
+            }
+            if (infoA.abilityName != infoB.abilityName) {
+                return infoA.abilityName < infoB.abilityName;
+            }
+            return infoA.appIndex < infoB.appIndex;
+        });
+    std::vector<LauncherAbilityResourceInfo>::iterator unque_it = std::unique(
+        launcherAbilityResourceInfos.begin(), launcherAbilityResourceInfos.end(),
+        [](const LauncherAbilityResourceInfo &infoA, const LauncherAbilityResourceInfo &infoB) {
+            return (infoA.bundleName == infoB.bundleName) && (infoA.moduleName == infoB.moduleName)
+                && (infoA.abilityName == infoB.abilityName) && (infoA.appIndex == infoB.appIndex);
+        });
+    launcherAbilityResourceInfos.erase(unque_it, launcherAbilityResourceInfos.end());
+}
+
 ErrCode BundleMgrHostImpl::GetAbilityResourceInfo(const std::string &fileType,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
@@ -6253,6 +6282,7 @@ ErrCode BundleMgrHostImpl::GetAbilityResourceInfo(const std::string &fileType,
     for (const std::string& normalizedType : normalizedTypeVector) {
         (void)ImplicitQueryAbilityInfosWithDefault(normalizedType, launcherAbilityResourceInfos);
     }
+    RemoveSameAbilityResourceInfo(launcherAbilityResourceInfos);
     APP_LOGI("GetAbilityResourceInfo end, size: %{public}zu", launcherAbilityResourceInfos.size());
     return ERR_OK;
 }

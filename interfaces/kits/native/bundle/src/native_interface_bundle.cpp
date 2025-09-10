@@ -32,6 +32,7 @@ const size_t CHAR_MIN_LENGTH = 1;
 const size_t CHAR_MAX_LENGTH = 10240;
 const size_t MAX_ALLOWED_SIZE = 1024 * 1024;
 const size_t ARRAY_MAX_LENGTH = 1024;
+const size_t ERR_APPEXECFWK_PERMISSION_DENIED = 8521226;
 }
 
 // Helper function to release char* memory
@@ -556,7 +557,7 @@ BundleManager_ErrorCode OH_NativeBundle_GetAbilityResourceInfo(
     std::vector<OHOS::AppExecFwk::LauncherAbilityResourceInfo> launcherAbilityResourceInfoArr;
 
     if (bundleMgrProxyNative.GetLauncherAbilityResourceInfoNative(fileTypeStr, launcherAbilityResourceInfoArr) ==
-        BUNDLE_MANAGER_ERROR_CODE_PERMISSION_DENIED) {
+        ERR_APPEXECFWK_PERMISSION_DENIED) {
         APP_LOGE("failed to get launcher Ability Resource Info Arr because of permission denied");
         return BUNDLE_MANAGER_ERROR_CODE_PERMISSION_DENIED;
     }

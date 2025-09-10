@@ -3201,4 +3201,37 @@ HWTEST_F(BmsBundleManagerTest, GetBundleInfosV9_0001, Function | MediumTest | Le
     EXPECT_EQ(ret2, ERR_OK);
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
+
+/**
+ * @tc.number: ImplicitQueryAbilityInfosWithDefault_0001
+ * @tc.name: test ImplicitQueryAbilityInfosWithDefault in HostImpl
+ * @tc.desc: 1.system run normally
+ *           2.want param is empty
+ */
+HWTEST_F(BmsBundleManagerTest, ImplicitQueryAbilityInfosWithDefault_0001, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string fileType = "general.general";
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    ErrCode ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(fileType, launcherAbilityResourceInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_INFO_NOT_FOUND);
+}
+
+/**
+ * @tc.number: ImplicitQueryAbilityInfosWithDefault_0002
+ * @tc.name: test ImplicitQueryAbilityInfosWithDefault in HostImpl
+ * @tc.desc: 1.dataMgr is null
+ */
+HWTEST_F(BmsBundleManagerTest, ImplicitQueryAbilityInfosWithDefault_0002, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    std::string fileType = "text/html";
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    ErrCode ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(fileType, launcherAbilityResourceInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+    EXPECT_EQ(launcherAbilityResourceInfos.size(), 0);
+}
 } // OHOS
