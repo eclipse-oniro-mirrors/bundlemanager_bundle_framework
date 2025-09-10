@@ -2083,12 +2083,11 @@ bool BundleMgrProxy::DumpInfos(
         APP_LOGE("readParcelableInfo failed");
         return false;
     }
-    std::vector<std::string> dumpInfos;
-    if (!reply.ReadStringVector(&dumpInfos)) {
-        APP_LOGE("fail to dump from reply");
+    auto ret = InnerGetBigString(reply, result);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to dump from reply err:%{public}d", ret);
         return false;
     }
-    result = std::accumulate(dumpInfos.begin(), dumpInfos.end(), result);
     return true;
 }
 

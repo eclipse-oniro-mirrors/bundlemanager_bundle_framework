@@ -2044,12 +2044,9 @@ ErrCode BundleMgrHost::HandleDumpInfos(MessageParcel &data, MessageParcel &reply
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret) {
-        std::vector<std::string> dumpInfos;
-        SplitString(result, dumpInfos);
-        if (!reply.WriteStringVector(dumpInfos)) {
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
+    if (ret && (WriteBigString(result, reply) != ERR_OK)) {
+        APP_LOGE("write big string failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
