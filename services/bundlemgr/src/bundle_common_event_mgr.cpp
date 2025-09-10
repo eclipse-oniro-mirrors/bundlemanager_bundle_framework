@@ -329,7 +329,7 @@ std::string BundleCommonEventMgr::GetCommonEventData(const NotifyType &type)
     return iter->second;
 }
 
-void BundleCommonEventMgr::NotifySetDiposedRule(
+void BundleCommonEventMgr::NotifySetDisposedRule(
     const std::string &appId, int32_t userId, const std::string &data, int32_t appIndex)
 {
     OHOS::AAFwk::Want want;
@@ -349,7 +349,7 @@ void BundleCommonEventMgr::NotifySetDiposedRule(
     IPCSkeleton::SetCallingIdentity(identity);
 }
 
-void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int32_t userId, int32_t appIndex)
+void BundleCommonEventMgr::NotifyDeleteDisposedRule(const std::string &appId, int32_t userId, int32_t appIndex)
 {
     OHOS::AAFwk::Want want;
     want.SetAction(DISPOSED_RULE_DELETED);

@@ -335,7 +335,7 @@ ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Wan
         appRunningControlRuleResult_.erase(iter);
     }
 
-    commonEventMgr_->NotifySetDiposedRule(appId, userId, want.ToString(), Constants::MAIN_APP_INDEX);
+    commonEventMgr_->NotifySetDisposedRule(appId, userId, want.ToString(), Constants::MAIN_APP_INDEX);
     return ERR_OK;
 }
 
@@ -352,7 +352,7 @@ ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId, int32_
     if (iter != appRunningControlRuleResult_.end()) {
         appRunningControlRuleResult_.erase(iter);
     }
-    commonEventMgr_->NotifyDeleteDiposedRule(appId, userId, Constants::MAIN_APP_INDEX);
+    commonEventMgr_->NotifyDeleteDisposedRule(appId, userId, Constants::MAIN_APP_INDEX);
     return ERR_OK;
 }
 
@@ -554,7 +554,7 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
     DeleteAbilityRunningRuleCache({ appIdKey, transformedAppIdKey });
     LOG_D(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
         callerName.c_str(), userId, appIndex);
-    commonEventMgr_->NotifySetDiposedRule(appId, userId, rule.ToString(), appIndex);
+    commonEventMgr_->NotifySetDisposedRule(appId, userId, rule.ToString(), appIndex);
     return ERR_OK;
 }
 
@@ -587,7 +587,7 @@ ErrCode AppControlManager::DeleteDisposedRule(
     std::string appIdKey = GenerateAppRunningRuleCacheKey(appId, userId, appIndex);
     std::string transformedAppIdKey = GenerateAppRunningRuleCacheKey(transformedAppId, userId, appIndex);
     DeleteAbilityRunningRuleCache({ appIdKey, transformedAppIdKey});
-    commonEventMgr_->NotifyDeleteDiposedRule(appId, userId, appIndex);
+    commonEventMgr_->NotifyDeleteDisposedRule(appId, userId, appIndex);
     return ERR_OK;
 }
 
@@ -610,7 +610,7 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &
     key = key + std::string("_");
     std::string cacheKey = key + std::to_string(appIndex);
     DeleteAbilityRunningRuleCache({ cacheKey });
-    commonEventMgr_->NotifyDeleteDiposedRule(appId, userId, appIndex);
+    commonEventMgr_->NotifyDeleteDisposedRule(appId, userId, appIndex);
     if (appIndex != Constants::MAIN_APP_INDEX) {
         return ERR_OK;
     }
@@ -625,7 +625,7 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &
     for (const int32_t index : appIndexVec) {
         std::string ruleCacheKey = key + std::to_string(index);
         DeleteAbilityRunningRuleCache({ ruleCacheKey });
-        commonEventMgr_->NotifyDeleteDiposedRule(appId, userId, index);
+        commonEventMgr_->NotifyDeleteDisposedRule(appId, userId, index);
     }
     return ERR_OK;
 }

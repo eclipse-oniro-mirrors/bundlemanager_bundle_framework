@@ -504,7 +504,7 @@ void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "priority", nPriority));
 }
 
-bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
+bool ParseDisposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
 {
     napi_valuetype valueType;
     NAPI_CALL_BASE(env, napi_typeof(env, nRule, &valueType), false);
@@ -626,7 +626,7 @@ bool ParseDisposedRuleConfiguration(napi_env env, napi_value nDisposedRuleConfig
 
     napi_get_named_property(env, nDisposedRuleConfiguration, "disposedRule", &prop);
     DisposedRule disposedRule;
-    if (!ParseDiposedRule(env, prop, disposedRule)) {
+    if (!ParseDisposedRule(env, prop, disposedRule)) {
         APP_LOGE("disposedRule invalid!");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
         return false;
@@ -791,7 +791,7 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
         return nullptr;
     }
     DisposedRule rule;
-    if (!ParseDiposedRule(env, args[ARGS_POS_ONE], rule)) {
+    if (!ParseDisposedRule(env, args[ARGS_POS_ONE], rule)) {
         APP_LOGE("rule invalid!");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
         return nRet;
@@ -867,7 +867,7 @@ void ConvertRuleInfo(napi_env env, napi_value nRule, const UninstallDisposedRule
 }
 
 
-bool ParseUninstallDiposedRule(napi_env env, napi_value nRule, UninstallDisposedRule &rule)
+bool ParseUninstallDisposedRule(napi_env env, napi_value nRule, UninstallDisposedRule &rule)
 {
     napi_valuetype valueType;
     NAPI_CALL_BASE(env, napi_typeof(env, nRule, &valueType), false);
@@ -1017,7 +1017,7 @@ napi_value SetUninstallDisposedRule(napi_env env, napi_callback_info info)
         return nullptr;
     }
     UninstallDisposedRule rule;
-    if (!ParseUninstallDiposedRule(env, args[ARGS_POS_ONE], rule)) {
+    if (!ParseUninstallDisposedRule(env, args[ARGS_POS_ONE], rule)) {
         APP_LOGE("rule invalid!");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR,
             UNINSTALL_DISPOSED_RULE, UNINSTALL_DISPOSED_RULE_TYPE);
