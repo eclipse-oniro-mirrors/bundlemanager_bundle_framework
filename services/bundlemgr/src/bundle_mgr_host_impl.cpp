@@ -86,6 +86,7 @@ const std::string NEW_LINE = "\n";
 const std::string ACTION_VIEW_DATA = "ohos.want.action.viewData";
 const std::string RESOURCE_NOT_SUPPORT =
     "warning: dump label failed due to the device not supporting bundle resource!";
+const std::string FILE_URI = "file";
 const uint8_t JSON_INDENTATION = 4;
 const uint64_t BAD_CONTEXT_ID = 0;
 const uint64_t VECTOR_SIZE_MAX = 200;
@@ -6196,6 +6197,7 @@ ErrCode BundleMgrHostImpl::ImplicitQueryAbilityInfosWithDefault(const std::strin
     Want want;
     want.SetType(normalizedType);
     want.SetAction(ACTION_VIEW_DATA);
+    want.SetUri(FILE_URI);
     int32_t abilityInfoflags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
     auto uid = IPCSkeleton::GetCallingUid();
     int32_t userId = BundleUtil::GetUserIdByUid(uid);
