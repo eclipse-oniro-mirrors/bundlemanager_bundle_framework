@@ -2780,7 +2780,7 @@ bool ToInnerBundleInfo(
                 // get launcher application and ability
                 bool isLauncherEntity = std::find(skill.entities.begin(), skill.entities.end(),
                     ServiceConstants::FLAG_HOME_INTENT_FROM_SYSTEM) != skill.entities.end();
-                if (isLauncherEntity && transformParam.isPreInstallApp) {
+                if (isLauncherEntity && transformParam.isPreInstallApp && transformParam.isSystemApp) {
                     applicationInfo.isLauncherApp = true;
                     abilityInfo.isLauncherAbility = true;
                     APP_LOGI_NOFUNC("startWindowIconId %{public}s_%{public}s_%{public}s_%{public}d",
