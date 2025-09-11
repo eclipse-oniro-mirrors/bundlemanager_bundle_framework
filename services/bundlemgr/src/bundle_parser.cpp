@@ -112,6 +112,9 @@ ErrCode BundleParser::Parse(
         APP_LOGE("bundle extractor init failed");
         return ERR_APPEXECFWK_PARSE_UNEXPECTED;
     }
+    
+    // check abc is compressed or not
+    bundleExtractor.IsHapCompress(isAbcCompressed);
 
     // to extract config.json
     std::ostringstream outStream;
@@ -144,8 +147,6 @@ ErrCode BundleParser::Parse(
             iter->second.isStageBasedModel = info.second.isStageBasedModel;
         }
     }
-
-    bundleExtractor.IsHapCompress(isAbcCompressed);
     return ERR_OK;
 }
 

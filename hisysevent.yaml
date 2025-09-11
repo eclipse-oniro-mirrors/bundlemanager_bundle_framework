@@ -124,6 +124,11 @@ BUNDLE_INSTALL:
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
   INSTALL_TIME: {type: INT64, desc: the install time or the bundle}
   APP_INDEX: {type: INT32, desc: app index}
+  MIN_API_VERSION: {type: INT32, desc: minApiVersion}
+  TARGET_API_VERSION: {type: INT32, desc: targetApiVersion}
+  COMPILE_SDK_VERSION: {type: STRING, arrsize: 99, desc: compileSdkVersion}
+  UID: {type: INT32, desc: uid}
+  IS_ABC_COMPRESSED: {type: BOOL, desc: isAbcCompressed}
 
 BUNDLE_UNINSTALL:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle uninstall}
@@ -155,6 +160,11 @@ BUNDLE_UPDATE:
   FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hap file}
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
   INSTALL_TIME: {type: INT64, desc: the install time or the bundle}
+  MIN_API_VERSION: {type: INT32, desc: minApiVersion}
+  TARGET_API_VERSION: {type: INT32, desc: targetApiVersion}
+  COMPILE_SDK_VERSION: {type: STRING, arrsize: 99, desc: compileSdkVersion}
+  UID: {type: INT32, desc: uid}
+  IS_ABC_COMPRESSED: {type: BOOL, desc: isAbcCompressed}
 
 PRE_BUNDLE_RECOVER:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: prebundle recover}
