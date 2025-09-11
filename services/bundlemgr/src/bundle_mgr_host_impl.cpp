@@ -6185,7 +6185,7 @@ bool BundleMgrHostImpl::GetSpecificResourceInfo(const std::string &bundleName,
     return false;
 }
 
-ErrCode BundleMgrHostImpl::ImplicitQueryAbilityInfosWithDefault(const std::string &normalizedType,
+ErrCode BundleMgrHostImpl::ImplicitQueryAbilityInfosWithDefault(const Want &want,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -6194,10 +6194,6 @@ ErrCode BundleMgrHostImpl::ImplicitQueryAbilityInfosWithDefault(const std::strin
         APP_LOGE("dataMgr is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    Want want;
-    want.SetType(normalizedType);
-    want.SetAction(ACTION_VIEW_DATA);
-    want.SetUri(FILE_URI);
     int32_t abilityInfoflags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
     auto uid = IPCSkeleton::GetCallingUid();
     int32_t userId = BundleUtil::GetUserIdByUid(uid);
@@ -6287,16 +6283,28 @@ ErrCode BundleMgrHostImpl::GetAbilityResourceInfo(const std::string &fileType,
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    std::vector<std::string> normalizedTypeVector = BundleUtil::FileTypeNormalize(fileType);
-    APP_LOGI("normalized:%{public}s", BundleUtil::ToString(normalizedTypeVector).c_str());
-    if (normalizedTypeVector.empty()) {
-        APP_LOGW("normalizedTypeVector empty");
-        return ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE;
+    if (fileType[0] != '.') {
+        std::vector<std::string> normalizedTypeVector = BundleUtil::FileTypeNormalize(fileType);
+        APP_LOGI("normalized:%{public}s", BundleUtil::ToString(normalizedTypeVector).c_str());
+        if (normalizedTypeVector.empty()) {
+            APP_LOGW("normalizedTypeVector empty");
+            return ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE;
+        }
+        for (const std::string& normalizedType : normalizedTypeVector) {
+            Want want;
+            want.SetType(normalizedType);
+            want.SetAction(ACTION_VIEW_DATA);
+            want.SetUri(FILE_URI);
+            (void)ImplicitQueryAbilityInfosWithDefault(want, launcherAbilityResourceInfos);
+        }
+        RemoveSameAbilityResourceInfo(launcherAbilityResourceInfos);
+    } else {
+        Want want;
+        want.SetAction(ACTION_VIEW_DATA);
+        want.SetUri(FILE_URI + Constants::SCHEME_SEPARATOR + fileType);
+        (void)ImplicitQueryAbilityInfosWithDefault(want, launcherAbilityResourceInfos);
     }
-    for (const std::string& normalizedType : normalizedTypeVector) {
-        (void)ImplicitQueryAbilityInfosWithDefault(normalizedType, launcherAbilityResourceInfos);
-    }
-    RemoveSameAbilityResourceInfo(launcherAbilityResourceInfos);
+
     APP_LOGI("GetAbilityResourceInfo end, size: %{public}zu", launcherAbilityResourceInfos.size());
     return ERR_OK;
 }

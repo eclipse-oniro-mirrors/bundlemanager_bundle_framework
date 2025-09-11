@@ -186,6 +186,7 @@ constexpr const char* VERIFY_UNINSTALL_RULE_KEY = "ohos.bms.param.verifyUninstal
 constexpr const char* VERIFY_UNINSTALL_RULE_VALUE = "true";
 
 constexpr const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
+constexpr const char* SCHEME_SEPARATOR = "://";
 constexpr const char* APP_DISTRIBUTION_TYPE_WHITE_LIST = "appDistributionTypeWhiteList";
 
 constexpr const char* ARKTS_MODE = "arkTSMode";

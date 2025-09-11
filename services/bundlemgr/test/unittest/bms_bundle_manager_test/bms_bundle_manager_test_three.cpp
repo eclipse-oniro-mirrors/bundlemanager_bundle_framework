@@ -92,6 +92,8 @@ const uint32_t BUNDLE_BACKUP_ICON_ID = 16777221;
 const std::string CALLER_NAME_UT = "ut";
 const std::string DEVICETYPE = "deviceType";
 const int32_t APPINDEX = 10;
+constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
+const std::string FILE_URI = "file";
 }  // namespace
 
 class BmsBundleManagerTest3 : public testing::Test {
@@ -2170,11 +2172,26 @@ HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfo_0002, Function | MediumTe
 HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfo_0003, Function | MediumTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string fileType = ".?";
+    std::string fileType = "image/?";
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
     auto testRet = hostImpl->GetAbilityResourceInfo(fileType, launcherAbilityResourceInfos);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE);
     EXPECT_TRUE(launcherAbilityResourceInfos.empty());
+}
+
+/**
+ * @tc.number: GetAbilityResourceInfo_0004
+ * @tc.name: test GetAbilityResourceInfo
+ * @tc.desc: 1.test GetAbilityResourceInfo
+             2.text fileType
+ */
+HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfo_0004, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string fileType = ".jpg";
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    auto testRet = hostImpl->GetAbilityResourceInfo(fileType, launcherAbilityResourceInfos);
+    EXPECT_EQ(testRet, ERR_OK);
 }
 
 /**
@@ -2241,7 +2258,11 @@ HWTEST_F(BmsBundleManagerTest3, ImplicitQueryAbilityInfosWithDefault_0002, Funct
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string fileType = "text/html";
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    ErrCode ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(fileType, launcherAbilityResourceInfos);
+    AAFwk::Want want;
+    want.SetType(fileType);
+    want.SetAction(ACTION_VIEW_DATA);
+    want.SetUri(FILE_URI);
+    ErrCode ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(want, launcherAbilityResourceInfos);
     EXPECT_EQ(ret, ERR_OK);
 }
 

@@ -91,6 +91,8 @@ const uint32_t BUNDLE_BACKUP_ICON_ID = 16777221;
 const std::string CALLER_NAME_UT = "ut";
 const std::string DEVICETYPE = "deviceType";
 const int32_t APPINDEX = 10;
+constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
+const std::string FILE_URI = "file";
 }  // namespace
 
 class BmsBundleManagerTest : public testing::Test {
@@ -3213,7 +3215,11 @@ HWTEST_F(BmsBundleManagerTest, ImplicitQueryAbilityInfosWithDefault_0001, Functi
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string fileType = "general.general";
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    ErrCode ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(fileType, launcherAbilityResourceInfos);
+    AAFwk::Want want;
+    want.SetType(fileType);
+    want.SetAction(ACTION_VIEW_DATA);
+    want.SetUri(FILE_URI);
+    ErrCode ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(want, launcherAbilityResourceInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_INFO_NOT_FOUND);
 }
 
@@ -3230,7 +3236,11 @@ HWTEST_F(BmsBundleManagerTest, ImplicitQueryAbilityInfosWithDefault_0002, Functi
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     std::string fileType = "text/html";
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    ErrCode ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(fileType, launcherAbilityResourceInfos);
+    AAFwk::Want want;
+    want.SetType(fileType);
+    want.SetAction(ACTION_VIEW_DATA);
+    want.SetUri(FILE_URI);
+    ErrCode ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(want, launcherAbilityResourceInfos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
     EXPECT_EQ(launcherAbilityResourceInfos.size(), 0);
 }
