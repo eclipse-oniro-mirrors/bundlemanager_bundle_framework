@@ -426,11 +426,17 @@ group("unittest") {
 
   if (ability_runtime_enable) {
     deps = [
-      ":BmsInstallDaemonHostImplTest",
       ":BmsInstallDaemonIpcTest",
-      ":BmsInstallDaemonOperatorTest",
       ":BmsInstallDaemonTest",
       ":BmsInstalldOperatorTest"
     ]
+    if (is_emulator) {
+      defines += [ "X86_EMULATOR_MODE" ]
+    } else {
+      deps += [
+        ":BmsInstallDaemonHostImplTest",
+        ":BmsInstallDaemonOperatorTest",
+      ]
+    }
   }
 }
