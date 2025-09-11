@@ -560,7 +560,7 @@ public:
             if constexpr (std::is_same_v<valueType, ani_int>) {
                 ani_int i = 0;
                 status = env->Object_CallMethodByName_Int(
-                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":I", &i);
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":i", &i);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_CallMethodByName_Int %{public}s failed %{public}d", name, status);
                     return false;
