@@ -546,7 +546,7 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelfWithOutCache(int32_t flags, BundleIn
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
     if (res != ERR_OK) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForSelfWithOutCache failed err:%{public}d", res);
+        LOG_D(BMS_TAG_QUERY, "GetBundleInfoForSelfWithOutCache failed err:%{public}d", res);
         return res;
     }
     return ERR_OK;
@@ -5450,7 +5450,7 @@ ErrCode BundleMgrProxy::CanOpenLink(
     }
     ErrCode res = reply.ReadInt32();
     if (res != ERR_OK) {
-        APP_LOGE("host reply err: %{public}d", res);
+        APP_LOGD("host reply err: %{public}d", res);
         return res;
     }
     canOpen = reply.ReadBool();

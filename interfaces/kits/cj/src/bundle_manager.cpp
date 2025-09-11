@@ -226,7 +226,7 @@ bool BundleManagerImpl::InnerCanOpenLink(std::string link, int32_t& code)
     code = AppExecFwk::CommonFunc::ConvertErrCode(
         iBundleMgr->CanOpenLink(link, canOpen));
     if (code != NO_ERROR) {
-        APP_LOGE("CanOpenLink failed");
+        APP_LOGD("CanOpenLink failed");
         return canOpen;
     }
     return canOpen;
