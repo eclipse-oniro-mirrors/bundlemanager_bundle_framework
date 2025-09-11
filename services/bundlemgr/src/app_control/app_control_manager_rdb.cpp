@@ -432,12 +432,12 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
     return ERR_OK;
 }
 
-ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::vector<std::string> &appIds,
+ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
-    absRdbPredicates.In(APP_ID, appIds);
+    absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, RUNNING_CONTROL);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     absRdbPredicates.OrderByAsc(PRIORITY); // ascending
