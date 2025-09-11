@@ -1597,6 +1597,17 @@ void GetAbilityLabelComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->abilityLabel.c_str(),
             NAPI_AUTO_LENGTH, &result[1]));
+    } else if (asyncCallbackInfo->err == ERROR_PARAM_CHECK_ERROR) {
+        if (asyncCallbackInfo->bundleName.empty()) {
+            APP_LOGW("bundleName is empty");
+            result[0] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        } else if (asyncCallbackInfo->moduleName.empty()) {
+            APP_LOGW("moduleName is empty");
+            result[0] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
+        } else {
+            APP_LOGW("abilityName is empty");
+            result[0] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR, PARAM_ABILITYNAME_EMPTY_ERROR);
+        }
     } else {
         APP_LOGE("asyncCallbackInfo is null");
         result[0] = BusinessError::CreateCommonError(
@@ -1767,6 +1778,9 @@ void SetApplicationEnabledComplete(napi_env env, napi_status status, void *data)
     napi_value result[1] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else if (asyncCallbackInfo->err == ERROR_PARAM_CHECK_ERROR && asyncCallbackInfo->bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        result[0] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
     } else {
         APP_LOGE("asyncCallbackInfo is null");
         result[0] = BusinessError::CreateCommonError(
@@ -4533,6 +4547,11 @@ napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
     std::string specifiedDistributionType;
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType));
+    if (ret == ERROR_PARAM_CHECK_ERROR && bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
+    }
     if (ret != SUCCESS) {
         APP_LOGE_NOFUNC("GetSpecifiedDistributionType failed -n %{public}s ret:%{public}d",
             bundleName.c_str(), ret);
