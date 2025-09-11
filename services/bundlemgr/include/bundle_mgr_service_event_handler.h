@@ -530,7 +530,7 @@ private:
         int32_t taskPriority, const std::vector<PreScanInfo> &tasks, int32_t userId);
 
     bool InnerMultiProcessBundleInstall(
-        const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap,
+        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap,
         Constants::AppType appType);
 
     void ProcessCheckAppDataDir();
@@ -652,7 +652,7 @@ private:
     void CheckALLResourceInfo();
     void InnerProcessAllDynamicIconInfoWhenOta();
     void InnerProcessAllThemeAndDynamicIconInfoWhenOta(
-        const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap);
+        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap);
     // Used to add bundle resource Info that does not exist in rdb when OTA.
     void static ProcessBundleResourceInfo();
     // scan all bundle data group info
@@ -661,7 +661,8 @@ private:
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo, const int32_t errorCode);
     void ProcessAppTmpPath();
-    void UpdatePreinstallDB(const std::unordered_map<std::string, std::pair<std::string, bool>> &needInstallMap);
+    void UpdatePreinstallDB(
+        const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap);
     void UpdatePreinstallDBForNotUpdatedBundle(const std::string &bundleName,
         const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);
     void InnerProcessRebootUninstallWrongBundle();
