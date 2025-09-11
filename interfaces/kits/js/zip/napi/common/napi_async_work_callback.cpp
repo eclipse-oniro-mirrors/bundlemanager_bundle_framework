@@ -45,11 +45,16 @@ static void CallbackExecute(napi_env env, void *data)
 
 static void CallbackComplete(napi_env env, napi_status status, void *data)
 {
-    napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env, &scope);
     auto ctx = static_cast<NAsyncContextCallback *>(data);
     if (ctx == nullptr) {
-        napi_close_handle_scope(env, scope);
+        return;
+    }
+    napi_handle_scope scope = nullptr;
+    napi_status ret = napi_open_handle_scope(env, &scope);
+    if (ret != napi_ok || scope == nullptr) {
+        APP_LOGE("Failed to open handle scope for %{public}d", ret);
+        napi_delete_async_work(env, ctx->awork_);
+        delete ctx;
         return;
     }
 
