@@ -365,7 +365,7 @@ ohos_unittest("BmsAOTHandlerTest") {
 group("unittest") {
   testonly = true
 
-  if (ability_runtime_enable) {
+  if (ability_runtime_enable && !is_emulator) {
     deps = [
       ":BmsAOTHandlerTest",
       ":BmsAOTMgrTest",
