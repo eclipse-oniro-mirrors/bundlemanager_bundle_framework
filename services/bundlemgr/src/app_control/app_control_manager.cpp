@@ -378,10 +378,6 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         LOG_W(BMS_TAG_DEFAULT, "getAppId failed,-n:%{public}s", bundleName.c_str());
         return ret;
     }
-    std::vector<std::string> appIds = {appId};
-    if (!appIdentifier.empty()) {
-        appIds.emplace_back(appIdentifier);
-    }
     std::string key = appId + std::string("_") + std::to_string(userId);
     auto statusRet = GetAppRunningControlRuleCache(key, controlRuleResult);
     if (statusRet) {
@@ -391,7 +387,11 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         }
         return ERR_OK;
     }
-    ret = appControlManagerDb_->GetAppRunningControlRule(appIds, userId, controlRuleResult);
+    ret = appIdentifier.empty() ? appControlManagerDb_->GetAppRunningControlRule(appId, userId, controlRuleResult) :
+        appControlManagerDb_->GetAppRunningControlRule(appIdentifier, userId, controlRuleResult);
+    if (ret != ERR_OK && !appIdentifier.empty()) {
+        ret = appControlManagerDb_->GetAppRunningControlRule(appId, userId, controlRuleResult);
+    }
     bool findRule = (ret == ERR_OK);
     ret = CheckAppControlRuleIntercept(bundleName, userId, findRule, controlRuleResult);
     SetAppRunningControlRuleCache(key, controlRuleResult);

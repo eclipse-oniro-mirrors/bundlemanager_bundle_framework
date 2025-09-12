@@ -4931,6 +4931,58 @@ HWTEST_F(BmsBundleInstallerTest, UnInstallAppControl_0100, Function | SmallTest 
     ret = installer.UninstallAppControl(installAppId, appIdentifier, userId);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: UpdateAppInstallControlled_0100
+ * @tc.name: test UpdateAppInstallControlled
+ * @tc.desc: test UpdateAppInstallControlled when set appIdentifier
+ */
+HWTEST_F(BmsBundleInstallerTest, UpdateAppInstallControlled_0100, Function | SmallTest | Level0)
+{
+    std::vector<std::string> appIds = {APPID};
+    auto result = DelayedSingleton<AppControlManager>::GetInstance()->AddAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, appIds, AppControlConstants::APP_DISALLOWED_UNINSTALL, -5);
+    EXPECT_EQ(result, OHOS::ERR_OK);
+
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    installer.isAppExist_ = true;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    info.SetAppIdentifier(APPID);
+    InnerBundleUserInfo innerUserInfo;
+    BundleUserInfo userInfo;
+    userInfo.userId = -5;
+    innerUserInfo.bundleUserInfo = userInfo;
+    info.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    bool ret = installer.tempInfo_.SetTempBundleInfo(info);
+    EXPECT_TRUE(ret);
+
+    InnerBundleInfo tempInfo;
+    installer.tempInfo_.GetTempBundleInfo(tempInfo);
+    installer.UpdateAppInstallControlled(-5);
+    info.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    ret = installer.tempInfo_.SetTempBundleInfo(info);
+    EXPECT_TRUE(ret);
+
+    info.baseBundleInfo_->appId = APPID;
+    ret = installer.tempInfo_.SetTempBundleInfo(info);
+    EXPECT_TRUE(ret);
+    installer.UpdateAppInstallControlled(-5);
+    installer.tempInfo_.GetTempBundleInfo(tempInfo);
+    EXPECT_EQ(tempInfo.GetBundleStatus(), InnerBundleInfo::BundleStatus::ENABLED);
+    info.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    ret = installer.tempInfo_.SetTempBundleInfo(info);
+    EXPECT_TRUE(ret);
+
+    info.SetAppIdentifier("appIdentifier");
+    ret = installer.tempInfo_.SetTempBundleInfo(info);
+    EXPECT_TRUE(ret);
+    installer.UpdateAppInstallControlled(-5);
+    installer.tempInfo_.GetTempBundleInfo(tempInfo);
+    EXPECT_EQ(tempInfo.GetBundleStatus(), InnerBundleInfo::BundleStatus::ENABLED);
+}
 #endif
 
 /**

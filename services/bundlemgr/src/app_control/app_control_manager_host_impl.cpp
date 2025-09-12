@@ -83,7 +83,7 @@ ErrCode AppControlManagerHostImpl::AddAppInstallControlRule(const std::vector<st
             LOG_E(BMS_TAG_DEFAULT, "dataMgr_ is nullptr");
             return ERR_APPEXECFWK_NULL_PTR;
         }
-        for (auto &appId : appIds) {
+        for (auto &appId : modifyAppIds) {
             std::string transformAppId = dataMgr_->AppIdAndAppIdentifierTransform(appId);
             if (!transformAppId.empty()) {
                 transformAppIds.emplace_back(transformAppId);
@@ -129,7 +129,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
             LOG_E(BMS_TAG_DEFAULT, "dataMgr_ is nullptr");
             return ERR_APPEXECFWK_NULL_PTR;
         }
-        for (auto &appId : appIds) {
+        for (auto &appId : modifyAppIds) {
             std::string transformAppId = dataMgr_->AppIdAndAppIdentifierTransform(appId);
             if (!transformAppId.empty()) {
                 transformAppIds.emplace_back(transformAppId);
@@ -201,11 +201,11 @@ ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
     }
     ErrCode ret = appControlManager_->GetAppInstallControlRule(callingName, ruleType, userId, appIds);
     std::vector<std::string> transformAppIds = appIds;
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr_ is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     for (auto &appId : appIds) {
-        if (dataMgr_ == nullptr) {
-            LOG_E(BMS_TAG_DEFAULT, "dataMgr_ is nullptr");
-            return ERR_APPEXECFWK_NULL_PTR;
-        }
         std::string transformAppId = dataMgr_->AppIdAndAppIdentifierTransform(appId);
         transformAppIds.emplace_back(transformAppId);
     }
