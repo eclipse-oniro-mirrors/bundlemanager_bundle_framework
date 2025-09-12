@@ -1264,6 +1264,29 @@ bool InstalldOperator::SetProjectIdForDir(const std::string &path, uint32_t proj
     return true;
 }
 
+bool InstalldOperator::HasProjectIdForDir(const std::string &path)
+{
+    std::string realPath;
+    if (!PathToRealPath(path, realPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "path(%{public}s) is not real path", path.c_str());
+        return false;
+    }
+    int32_t fd = open(realPath.c_str(), O_RDONLY | O_DIRECTORY);
+    if (fd < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Failed to open directory: %{public}s, errno: %{public}d", realPath.c_str(), errno);
+        return false;
+    }
+
+    struct fsxattr fsx;
+    if (ioctl(fd, FS_IOC_FSGETXATTR, &fsx) < 0) {
+        LOG_W(BMS_TAG_INSTALLD, "Failed to get fsxattr for %{public}s, errno: %{public}d", path.c_str(), errno);
+        close(fd);
+        return false;
+    }
+    close(fd);
+    return (fsx.fsx_xflags & FS_XFLAG_PROJINHERIT) != 0;
+}
+
 int64_t InstalldOperator::GetProjectUsage(uint32_t projectId)
 {
     std::lock_guard<std::recursive_mutex> lock(mMountsLock);
