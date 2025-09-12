@@ -2416,7 +2416,7 @@ bool ToInnerBundleInfo(
                 if (std::find(skill.entities.begin(), skill.entities.end(),
                     ServiceConstants::FLAG_HOME_INTENT_FROM_SYSTEM) !=
                     skill.entities.end() && transformParam.isPreInstallApp &&
-                    (abilityInfo.type == AbilityType::PAGE)) {
+                    (abilityInfo.type == AbilityType::PAGE) && transformParam.isSystemApp) {
                     applicationInfo.isLauncherApp = true;
                     abilityInfo.isLauncherAbility = true;
                 }
