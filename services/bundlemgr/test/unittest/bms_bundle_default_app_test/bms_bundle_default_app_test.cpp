@@ -2510,7 +2510,7 @@ HWTEST_F(BmsBundleDefaultAppTest, ImplicitQueryAbilityInfosWithDefault_0200, Fun
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
     setuid(20000001);
-    ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(PDF_MIME_TYPE, launcherAbilityResourceInfos);
+    ret = hostImpl->ImplicitQueryAbilityInfosWithDefault(want, launcherAbilityResourceInfos);
     setuid(0);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_NE(launcherAbilityResourceInfos.size(), 0);

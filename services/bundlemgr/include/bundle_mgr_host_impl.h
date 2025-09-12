@@ -1263,7 +1263,7 @@ private:
         const std::string &abilityName, int32_t appIndex,
         const std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
         LauncherAbilityResourceInfo &resultAbilityResourceInfo);
-    ErrCode ImplicitQueryAbilityInfosWithDefault(const std::string &normalizedType,
+    ErrCode ImplicitQueryAbilityInfosWithDefault(const Want &want,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
 
     std::atomic<bool> isBrokerServiceExisted_ = false;

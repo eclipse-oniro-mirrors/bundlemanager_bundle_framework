@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,7 +48,6 @@ constexpr const char* JSON_KEY_DOMAINVERIFY = "domainVerify";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_PATHREGX = "pathRegx";
 constexpr const char* PARAM_SEPARATOR = "?";
 constexpr const char* PORT_SEPARATOR = ":";
-constexpr const char* SCHEME_SEPARATOR = "://";
 constexpr const char* PATH_SEPARATOR = "/";
 constexpr const char* TYPE_WILDCARD = "*/*";
 const char WILDCARD = '*';
@@ -263,7 +262,7 @@ bool Skill::MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::
         }
         for (const std::string &paramUtd : paramUtdVector) {
             if ((MatchUri(paramUriString, skillUri) ||
-                (skillUri.scheme.empty() && paramUriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+                (skillUri.scheme.empty() && paramUriString.find(Constants::SCHEME_SEPARATOR) == std::string::npos)) &&
                 MatchType(paramUtd, skillUri.type)) {
                 matchUriIndex = uriIndex;
                 return true;
@@ -343,7 +342,7 @@ std::string Skill::GetOptParamUri(const std::string &uriString)
 
 std::string Skill::ConvertUriToLower(const std::string& uri) const
 {
-    size_t protocolEnd = uri.find(SCHEME_SEPARATOR);
+    size_t protocolEnd = uri.find(Constants::SCHEME_SEPARATOR);
     if (protocolEnd == std::string::npos || protocolEnd + PROTOCOL_OFFSET == uri.size()) {
         return ConvertToLower(uri);
     }
@@ -360,7 +359,7 @@ std::string Skill::ConvertUriToLower(const std::string& uri) const
     std::string path = (endHost == std::string::npos) ? "" : uri.substr(endHost);
     std::transform(protocol.begin(), protocol.end(), protocol.begin(), [](unsigned char c) { return std::tolower(c); });
     std::transform(host.begin(), host.end(), host.begin(), [](unsigned char c) { return std::tolower(c); });
-    return protocol + SCHEME_SEPARATOR + host + path;
+    return protocol + Constants::SCHEME_SEPARATOR + host + path;
 }
 
 inline std::string Skill::ConvertToLower(const std::string &str) const
@@ -393,7 +392,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
     }
     std::string optParamUri = ConvertUriToLower(GetOptParamUri(uriString));
     std::string skillUriTmpString;
-    skillUriTmpString.append(skillUri.scheme).append(SCHEME_SEPARATOR).append(skillUri.host);
+    skillUriTmpString.append(skillUri.scheme).append(Constants::SCHEME_SEPARATOR).append(skillUri.host);
     std::string skillUriString = ConvertUriToLower(skillUriTmpString);
 
     if (!skillUri.port.empty()) {
@@ -583,7 +582,7 @@ bool Skill::MatchMimeType(const std::string & uriString) const
     for (const SkillUri &skillUri : uris) {
         for (const std::string &paramUtd : paramUtdVector) {
             if ((MatchUri(uriString, skillUri) ||
-                (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+                (skillUri.scheme.empty() && uriString.find(Constants::SCHEME_SEPARATOR) == std::string::npos)) &&
                 MatchType(paramUtd, skillUri.type)) {
                 return true;
             }
@@ -603,7 +602,7 @@ bool Skill::MatchMimeType(const std::string & uriString, size_t &matchUriIndex) 
         const SkillUri &skillUri = uris[uriIndex];
         for (const std::string &paramUtd : paramUtdVector) {
             if ((MatchUri(uriString, skillUri) ||
-                (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+                (skillUri.scheme.empty() && uriString.find(Constants::SCHEME_SEPARATOR) == std::string::npos)) &&
                 MatchType(paramUtd, skillUri.type)) {
                 matchUriIndex = uriIndex;
                 return true;
