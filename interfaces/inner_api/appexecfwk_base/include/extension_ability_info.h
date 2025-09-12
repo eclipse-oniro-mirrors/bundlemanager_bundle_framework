@@ -81,6 +81,7 @@ enum class ExtensionAbilityType {
     LIVE_FORM = 30,
     SELECTION = 31,
     WEB_NATIVE_MESSAGING = 32,
+    FAULT_LOG = 33,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
