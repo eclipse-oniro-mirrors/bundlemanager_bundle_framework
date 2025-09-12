@@ -2487,6 +2487,10 @@ void InstalldOperator::AddDeleteDfx(const std::string &path)
 
 void InstalldOperator::RmvDeleteDfx(const std::string &path)
 {
+    if (path.find(BUNDLE_BASE_CODE_DIR)) {
+        LOG_D(BMS_TAG_INSTALLD, "codeDir:%{public}s not need delete", path.c_str());
+        return;
+    }
     int32_t fd = open(path.c_str(), O_RDONLY);
     if (fd < 0) {
         LOG_D(BMS_TAG_INSTALLD, "open dfx path %{public}s failed", path.c_str());
