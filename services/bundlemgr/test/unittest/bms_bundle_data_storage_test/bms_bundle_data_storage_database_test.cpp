@@ -6214,4 +6214,19 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ConvertToAbilityInfo_0001, Function |
     AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(innerAbilityInfo);
     CheckAbilityInfo(abilityInfo);
 }
+
+/**
+ * @tc.number: InnerBundleInfoToString_0001
+ * @tc.name: test InnerBundleInfoToString_0001
+ * @tc.desc: 1. test InnerBundleInfo::ToString()
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfoToString_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::string data = innerBundleInfo.ToString();
+    EXPECT_FALSE(data.empty());
+    innerBundleInfo.baseBundleInfo_->description = "\xC4\xE3\xBA\xCA";
+    std::string dataEmpty =  innerBundleInfo.ToString();
+    EXPECT_TRUE(dataEmpty.empty());
+}
 } // OHOS
