@@ -954,8 +954,7 @@ size_t BundleInstallerHost::GetCurTaskNum()
 
 ErrCode BundleInstallerHost::InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex)
 {
-    if (OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false) &&
-        OHOS::system::GetBoolParameter(ServiceConstants::IS_APP_CLONE_DISABLE, false)) {
+    if (OHOS::system::GetBoolParameter(ServiceConstants::IS_APP_CLONE_DISABLE, false)) {
         LOG_E(BMS_TAG_INSTALLER, "the enterprise device does not support the creation of an appClone instance.");
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE;
     }
