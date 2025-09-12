@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,7 +48,8 @@ public:
     static void GetBoolValueIfFindKey(const nlohmann::json &jsonObject,
         const nlohmann::detail::iter_impl<const nlohmann::json> &end,
         const std::string &key, bool &data, bool isNecessary, int32_t &parseResult);
-    static bool CheckMapValueType(JsonType valueType, const nlohmann::json &value);
+    static bool CheckArrayValueType(const nlohmann::json &value, ArrayType arrayType);
+    static bool CheckMapValueType(const nlohmann::json &value, JsonType valueType, ArrayType arrayType);
 };
 
 template<typename T, typename dataType>
@@ -211,10 +212,17 @@ void GetBigStringIfFindKey(const nlohmann::json &jsonObject,
     }
 }
 
+/**
+ * @brief Retrieves a map value from a JSON object if the specified key exists, with type validation.
+ * @param valueType The expected type of map values.
+ *                  Supported types: [BOOLEAN, NUMBER, STRING, ARRAY]. Returns an error if the type is not supported.
+ * @param arrayType If valueType is ARRAY, specifies the expected type of array items.
+ *                  Supported types: [NUMBER, STRING]. Returns an error if the type is not supported.
+ */
 template<typename T, typename dataType>
 void GetMapValueIfFindKey(const nlohmann::json &jsonObject,
     const nlohmann::detail::iter_impl<const nlohmann::json> &end, const std::string &key, dataType &data,
-    bool isNecessary, int32_t &parseResult, JsonType valueType)
+    bool isNecessary, int32_t &parseResult, JsonType valueType, ArrayType arrayType)
 {
     if (parseResult != ERR_OK) {
         return;
@@ -226,7 +234,7 @@ void GetMapValueIfFindKey(const nlohmann::json &jsonObject,
             return;
         }
         for (const auto& [mapKey, mapValue] : jsonObject.at(key).items()) {
-            if (!BMSJsonUtil::CheckMapValueType(valueType, mapValue)) {
+            if (!BMSJsonUtil::CheckMapValueType(mapValue, valueType, arrayType)) {
                 APP_LOGE("type error key:%{public}s", mapKey.c_str());
                 parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                 return;

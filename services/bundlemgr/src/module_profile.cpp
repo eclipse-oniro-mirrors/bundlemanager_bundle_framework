@@ -1435,14 +1435,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         true,
         g_parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
+    GetMapValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
         jsonObjectEnd,
         MODULE_REQUIRED_DEVICE_FEATURES,
         module.requiredDeviceFeatures,
-        JsonType::OBJECT,
         false,
         g_parseResult,
-        ArrayType::NOT_ARRAY);
+        JsonType::ARRAY,
+        ArrayType::STRING);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_DELIVERY_WITH_INSTALL,

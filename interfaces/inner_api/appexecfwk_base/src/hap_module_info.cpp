@@ -401,13 +401,13 @@ void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
         routerItem.moduleName,
         false,
         parseResult);
-    GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
+    GetMapValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
         jsonObjectEnd,
         ROUTER_ITEM_KEY_DATA,
         routerItem.data,
-        JsonType::OBJECT,
         false,
         parseResult,
+        JsonType::STRING,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read RouterItem jsonObject error : %{public}d", parseResult);
@@ -1023,14 +1023,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
+    GetMapValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_REQUIRED_DEVICE_FEATURES,
         hapModuleInfo.requiredDeviceFeatures,
-        JsonType::OBJECT,
         false,
         parseResult,
-        ArrayType::NOT_ARRAY);
+        JsonType::ARRAY,
+        ArrayType::STRING);
     GetValueIfFindKey<std::vector<AbilityInfo>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_ABILITY_INFOS,
@@ -1125,13 +1125,13 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         hapModuleInfo.isStageBasedModel,
         false,
         parseResult);
-    GetValueIfFindKey<std::map<std::string, bool>>(jsonObject,
+    GetMapValueIfFindKey<std::map<std::string, bool>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_IS_REMOVABLE,
         hapModuleInfo.isRemovable,
-        JsonType::OBJECT,
         false,
         parseResult,
+        JsonType::BOOLEAN,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,

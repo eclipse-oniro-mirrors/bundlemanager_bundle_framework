@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,13 +55,13 @@ void from_json(const nlohmann::json &jsonObject, TargetExtSetting &targetExtSett
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
+    GetMapValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_EXTINFO,
         targetExtSetting.extValues,
-        JsonType::OBJECT,
         false,
         parseResult,
+        JsonType::STRING,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "read module targetExtSetting from jsonObject error: %{public}d", parseResult);
