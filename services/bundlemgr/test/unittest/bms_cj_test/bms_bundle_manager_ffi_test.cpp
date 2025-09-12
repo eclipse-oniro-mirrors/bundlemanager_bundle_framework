@@ -18,7 +18,6 @@
 #include "bundle_error.h"
 #include "bundle_manager_ffi.h"
 #include "bundle_manager_utils.h"
-#include "zip_ffi.h"
 
 using namespace testing::ext;
 
@@ -102,47 +101,6 @@ HWTEST_F(BundleManagerFfiTest, FfiBundleManagerCanOpenLink_0001, Function | Smal
     int32_t code = 0;
     bool canOpen = CJSystemapi::BundleManager::FfiBundleManagerCanOpenLink(&link, code);
     EXPECT_FALSE(canOpen);
-}
-
-/**
- * @tc.number: FfiBundleManagerCompressFile_0001
- * @tc.name: FfiBundleManagerCompressFile
- * @tc.desc: FfiBundleManagerCompressFile
- */
-HWTEST_F(BundleManagerFfiTest, FfiBundleManagerCompressFile_0001, Function | SmallTest | Level0)
-{
-    LIBZIP::CArrUI8 inFile = LIBZIP::CArrUI8{nullptr, 0};
-    LIBZIP::CArrUI8 outFile = LIBZIP::CArrUI8{nullptr, 0};
-    LIBZIP::RetOptions options = LIBZIP::RetOptions{0, 1, 0};
-    int code = FfiBundleManagerCompressFile(inFile, outFile, options);
-    EXPECT_EQ(code, CJSystemapi::BundleManager::ERR_ZLIB_SRC_FILE_INVALID);
-}
-
-/**
- * @tc.number: FfiBundleManagerDeCompressFileOptions_0001
- * @tc.name: FfiBundleManagerDeCompressFileOptions
- * @tc.desc: FfiBundleManagerDeCompressFileOptions
- */
-HWTEST_F(BundleManagerFfiTest, FfiBundleManagerDeCompressFileOptions_0001, Function | SmallTest | Level0)
-{
-    LIBZIP::CArrUI8 inFile = LIBZIP::CArrUI8{nullptr, 0};
-    LIBZIP::CArrUI8 outFile = LIBZIP::CArrUI8{nullptr, 0};
-    LIBZIP::RetOptions options = LIBZIP::RetOptions{0, 1, 0};
-    int code = FfiBundleManagerDeCompressFileOptions(inFile, outFile, options);
-    EXPECT_EQ(code, CJSystemapi::BundleManager::ERR_ZLIB_DEST_FILE_INVALID);
-}
-
-/**
- * @tc.number: FfiBundleManagerDeCompressFile_0001
- * @tc.name: FfiBundleManagerDeCompressFile
- * @tc.desc: FfiBundleManagerDeCompressFile
- */
-HWTEST_F(BundleManagerFfiTest, FfiBundleManagerDeCompressFile_0001, Function | SmallTest | Level0)
-{
-    LIBZIP::CArrUI8 inFile = LIBZIP::CArrUI8{nullptr, 0};
-    LIBZIP::CArrUI8 outFile = LIBZIP::CArrUI8{nullptr, 0};
-    int code = FfiBundleManagerDeCompressFile(inFile, outFile);
-    EXPECT_EQ(code, CJSystemapi::BundleManager::ERR_ZLIB_DEST_FILE_INVALID);
 }
 } // namespace AppExecFwk
 } // namespace OHOS
