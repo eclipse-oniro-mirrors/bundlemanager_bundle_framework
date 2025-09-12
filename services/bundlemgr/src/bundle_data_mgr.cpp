@@ -9356,7 +9356,7 @@ void BundleDataMgr::SetEl5DirPolicy(const CreateDirParam &el5Param, InnerBundleI
 ErrCode BundleDataMgr::CanOpenLink(
     const std::string &link, bool &canOpen) const
 {
-    APP_LOGI("link: %{public}s", link.c_str());
+    APP_LOGD("link: %{public}s", link.c_str());
     auto uid = IPCSkeleton::GetCallingUid();
     InnerBundleInfo innerBundleInfo;
     if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
@@ -9371,7 +9371,7 @@ ErrCode BundleDataMgr::CanOpenLink(
 
     size_t pos = link.find(SCHEME_END);
     if (pos == std::string::npos) {
-        APP_LOGE("parse link : %{public}s failed", link.c_str());
+        APP_LOGD("parse link : %{public}s failed", link.c_str());
         return ERR_BUNDLE_MANAGER_INVALID_SCHEME;
     }
     std::string scheme = link.substr(0, pos);
@@ -9393,7 +9393,7 @@ ErrCode BundleDataMgr::CanOpenLink(
     }
 
     canOpen = !abilityInfos.empty();
-    APP_LOGI("canOpen : %{public}d", canOpen);
+    APP_LOGI_NOFUNC("link:%{public}s canOpen:%{public}d", link.c_str(), canOpen);
     return ERR_OK;
 }
 
