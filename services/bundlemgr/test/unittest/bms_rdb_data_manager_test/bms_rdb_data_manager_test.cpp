@@ -263,6 +263,31 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0400, Function | SmallTest 
 }
 
 /**
+ * @tc.number: SaveStorageBundleInfo_0100
+ * @tc.name: SaveStorageBundleInfo_0100
+ * @tc.desc: 1.SaveStorageBundleInfo_0100
+ * @tc.require: SaveStorageBundleInfo_0100
+ */
+HWTEST_F(BmsRdbDataManagerTest, SaveStorageBundleInfo_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    ASSERT_NE(dataStorage, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    bool ret = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
+    EXPECT_TRUE(ret);
+
+    ErrCode errCode = dataStorage->SaveStorageBundleInfoWithCode(innerBundleInfo);
+    EXPECT_EQ(errCode, ERR_OK);
+
+    innerBundleInfo.baseBundleInfo_->description = "\xC4\xE3\xBA\xCA";
+    ret = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
+    EXPECT_FALSE(ret);
+
+    errCode = dataStorage->SaveStorageBundleInfoWithCode(innerBundleInfo);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
  * @tc.number: BundleDataStorageRdb_0500
  * @tc.name: DeleteStorageBundleInfo
  * @tc.desc: 1.DeleteStorageBundleInfo

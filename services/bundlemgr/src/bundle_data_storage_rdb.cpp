@@ -132,8 +132,13 @@ bool BundleDataStorageRdb::SaveStorageBundleInfo(const InnerBundleInfo &innerBun
     }
 
     LOG_NOFUNC_I(BMS_TAG_COMMON, "rdb SaveStorageBundleInfo -n %{public}s", innerBundleInfo.GetBundleName().c_str());
+    std::string value = innerBundleInfo.ToString();
+    if (value.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_COMMON, "err: empty str");
+        return false;
+    }
     bool ret = rdbDataManager_->InsertData(
-        innerBundleInfo.GetBundleName(), innerBundleInfo.ToString());
+        innerBundleInfo.GetBundleName(), value);
     return ret;
 }
 
@@ -146,8 +151,13 @@ ErrCode BundleDataStorageRdb::SaveStorageBundleInfoWithCode(const InnerBundleInf
     }
 
     LOG_NOFUNC_I(BMS_TAG_COMMON, "rdb SaveStorageBundleInfo -n %{public}s", innerBundleInfo.GetBundleName().c_str());
+    std::string value = innerBundleInfo.ToString();
+    if (value.empty()) {
+        LOG_NOFUNC_E(BMS_TAG_COMMON, "err: empty str");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     return rdbDataManager_->InsertDataWithCode(
-        innerBundleInfo.GetBundleName(), innerBundleInfo.ToString());
+        innerBundleInfo.GetBundleName(), value);
 }
 
 

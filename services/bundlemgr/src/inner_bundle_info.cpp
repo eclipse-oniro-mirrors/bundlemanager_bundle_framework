@@ -23,6 +23,7 @@
 #endif
 #include "app_log_tag_wrapper.h"
 #include "bms_extension_data_mgr.h"
+#include "bundle_constants.h"
 #include "bundle_extractor.h"
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
@@ -1314,269 +1315,274 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
 
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
 {
-    const auto &jsonObjectEnd = jsonObject.end();
-    int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<Constants::AppType>(jsonObject,
-        jsonObjectEnd,
-        APP_TYPE,
-        appType_,
-        JsonType::NUMBER,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<BundleStatus>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_STATUS,
-        bundleStatus_,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        ALLOWED_ACLS,
-        allowedAcls_,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::STRING);
-    GetValueIfFindKey<BundleInfo>(jsonObject,
-        jsonObjectEnd,
-        BASE_BUNDLE_INFO,
-        *baseBundleInfo_,
-        JsonType::OBJECT,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<ApplicationInfo>(jsonObject,
-        jsonObjectEnd,
-        BASE_APPLICATION_INFO,
-        *baseApplicationInfo_,
-        JsonType::OBJECT,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, InnerAbilityInfo>>(jsonObject,
-        jsonObjectEnd,
-        BASE_ABILITY_INFO,
-        baseAbilityInfos_,
-        JsonType::OBJECT,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, InnerModuleInfo>>(jsonObject,
-        jsonObjectEnd,
-        INNER_MODULE_INFO,
-        innerModuleInfos_,
-        JsonType::OBJECT,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, std::vector<InnerModuleInfo>>>(jsonObject,
-        jsonObjectEnd,
-        INNER_SHARED_MODULE_INFO,
-        innerSharedModuleInfos_,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
-        jsonObjectEnd,
-        SKILL_INFOS,
-        skillInfos_,
-        JsonType::OBJECT,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
-        jsonObjectEnd,
-        USER_ID,
-        userId_,
-        JsonType::NUMBER,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        APP_FEATURE,
-        appFeature_,
-        true,
-        parseResult);
-    GetValueIfFindKey<std::map<std::string, std::vector<FormInfo>>>(jsonObject,
-        jsonObjectEnd,
-        MODULE_FORMS,
-        formInfos_,
-        JsonType::OBJECT,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, ShortcutInfo>>(jsonObject,
-        jsonObjectEnd,
-        MODULE_SHORTCUT,
-        shortcutInfos_,
-        JsonType::OBJECT,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, CommonEventInfo>>(jsonObject,
-        jsonObjectEnd,
-        MODULE_COMMON_EVENT,
-        commonEvents_,
-        JsonType::OBJECT,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<InstallMark>(jsonObject,
-        jsonObjectEnd,
-        INSTALL_MARK,
-        mark_,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    int32_t isOldVersion = ERR_OK;
-    GetValueIfFindKey<std::map<std::string, InnerBundleUserInfo>>(jsonObject,
-        jsonObjectEnd,
-        INNER_BUNDLE_USER_INFOS,
-        innerBundleUserInfos_,
-        JsonType::OBJECT,
-        true,
-        isOldVersion,
-        ArrayType::NOT_ARRAY);
-    if (parseResult == ERR_OK && isOldVersion == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {
-        // To be compatible with the old database,
-        // if the old data does not have bundleUserInfos,
-        // the default user information needs to be constructed.
-        BuildDefaultUserInfo();
+    try {
+        const auto &jsonObjectEnd = jsonObject.end();
+        int32_t parseResult = ERR_OK;
+        GetValueIfFindKey<Constants::AppType>(jsonObject,
+            jsonObjectEnd,
+            APP_TYPE,
+            appType_,
+            JsonType::NUMBER,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<BundleStatus>(jsonObject,
+            jsonObjectEnd,
+            BUNDLE_STATUS,
+            bundleStatus_,
+            JsonType::NUMBER,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+            jsonObjectEnd,
+            ALLOWED_ACLS,
+            allowedAcls_,
+            JsonType::ARRAY,
+            false,
+            parseResult,
+            ArrayType::STRING);
+        GetValueIfFindKey<BundleInfo>(jsonObject,
+            jsonObjectEnd,
+            BASE_BUNDLE_INFO,
+            *baseBundleInfo_,
+            JsonType::OBJECT,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<ApplicationInfo>(jsonObject,
+            jsonObjectEnd,
+            BASE_APPLICATION_INFO,
+            *baseApplicationInfo_,
+            JsonType::OBJECT,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::map<std::string, InnerAbilityInfo>>(jsonObject,
+            jsonObjectEnd,
+            BASE_ABILITY_INFO,
+            baseAbilityInfos_,
+            JsonType::OBJECT,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::map<std::string, InnerModuleInfo>>(jsonObject,
+            jsonObjectEnd,
+            INNER_MODULE_INFO,
+            innerModuleInfos_,
+            JsonType::OBJECT,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::map<std::string, std::vector<InnerModuleInfo>>>(jsonObject,
+            jsonObjectEnd,
+            INNER_SHARED_MODULE_INFO,
+            innerSharedModuleInfos_,
+            JsonType::OBJECT,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
+            jsonObjectEnd,
+            SKILL_INFOS,
+            skillInfos_,
+            JsonType::OBJECT,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<int>(jsonObject,
+            jsonObjectEnd,
+            USER_ID,
+            userId_,
+            JsonType::NUMBER,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            APP_FEATURE,
+            appFeature_,
+            true,
+            parseResult);
+        GetValueIfFindKey<std::map<std::string, std::vector<FormInfo>>>(jsonObject,
+            jsonObjectEnd,
+            MODULE_FORMS,
+            formInfos_,
+            JsonType::OBJECT,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::map<std::string, ShortcutInfo>>(jsonObject,
+            jsonObjectEnd,
+            MODULE_SHORTCUT,
+            shortcutInfos_,
+            JsonType::OBJECT,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::map<std::string, CommonEventInfo>>(jsonObject,
+            jsonObjectEnd,
+            MODULE_COMMON_EVENT,
+            commonEvents_,
+            JsonType::OBJECT,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<InstallMark>(jsonObject,
+            jsonObjectEnd,
+            INSTALL_MARK,
+            mark_,
+            JsonType::OBJECT,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        int32_t isOldVersion = ERR_OK;
+        GetValueIfFindKey<std::map<std::string, InnerBundleUserInfo>>(jsonObject,
+            jsonObjectEnd,
+            INNER_BUNDLE_USER_INFOS,
+            innerBundleUserInfos_,
+            JsonType::OBJECT,
+            true,
+            isOldVersion,
+            ArrayType::NOT_ARRAY);
+        if (parseResult == ERR_OK && isOldVersion == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {
+            // To be compatible with the old database,
+            // if the old data does not have bundleUserInfos,
+            // the default user information needs to be constructed.
+            BuildDefaultUserInfo();
+        }
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            BUNDLE_IS_NEW_VERSION,
+            isNewVersion_,
+            false,
+            parseResult);
+        GetValueIfFindKey<std::map<std::string, InnerExtensionInfo>>(jsonObject,
+            jsonObjectEnd,
+            BUNDLE_BASE_EXTENSION_INFOS,
+            baseExtensionInfos_,
+            JsonType::OBJECT,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
+            jsonObjectEnd,
+            BUNDLE_EXTENSION_SKILL_INFOS,
+            extensionSkillInfos_,
+            JsonType::OBJECT,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::map<std::string, ExtendResourceInfo>>(jsonObject,
+            jsonObjectEnd,
+            BUNDLE_EXTEND_RESOURCES,
+            extendResourceInfos_,
+            JsonType::OBJECT,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            CUR_DYNAMIC_ICON_MODULE,
+            curDynamicIconModule_,
+            false,
+            parseResult);
+        GetValueIfFindKey<BundlePackInfo>(jsonObject,
+            jsonObjectEnd,
+            BUNDLE_PACK_INFO,
+            *bundlePackInfo_,
+            JsonType::OBJECT,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<int>(jsonObject,
+            jsonObjectEnd,
+            APP_INDEX,
+            appIndex_,
+            JsonType::NUMBER,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            BUNDLE_IS_SANDBOX_APP,
+            isSandboxApp_,
+            false,
+            parseResult);
+        GetValueIfFindKey<std::vector<HqfInfo>>(jsonObject,
+            jsonObjectEnd,
+            BUNDLE_HQF_INFOS,
+            hqfInfos_,
+            JsonType::ARRAY,
+            false,
+            parseResult,
+            ArrayType::OBJECT);
+        GetValueIfFindKey<std::vector<OverlayBundleInfo>>(jsonObject,
+            jsonObjectEnd,
+            OVERLAY_BUNDLE_INFO,
+            overlayBundleInfo_,
+            JsonType::ARRAY,
+            false,
+            parseResult,
+            ArrayType::OBJECT);
+        GetValueIfFindKey<int32_t>(jsonObject,
+            jsonObjectEnd,
+            OVERLAY_TYPE,
+            overlayType_,
+            JsonType::NUMBER,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<int32_t>(jsonObject,
+            jsonObjectEnd,
+            APPLY_QUICK_FIX_FREQUENCY,
+            applyQuickFixFrequency_,
+            JsonType::NUMBER,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::unordered_map<std::string, std::vector<DataGroupInfo>>>(jsonObject,
+            jsonObjectEnd,
+            DATA_GROUP_INFOS,
+            dataGroupInfos_,
+            JsonType::OBJECT,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::unordered_map<std::string, PluginBundleInfo>>(jsonObject,
+            jsonObjectEnd,
+            PLUGIN_BUNDLE_INFOS,
+            pluginBundleInfos_,
+            JsonType::OBJECT,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            DEVELOPER_ID,
+            developerId_,
+            false,
+            parseResult);
+        BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            ODID,
+            odid_,
+            false,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            UNINSTALL_STATE,
+            uninstallState_,
+            false,
+            parseResult);
+        if (parseResult != ERR_OK) {
+            APP_LOGE("read InnerBundleInfo from database error code : %{public}d", parseResult);
+        }
+        return parseResult;
+    } catch (const nlohmann::json::exception &e) {
+        APP_LOGE("FromJson err: %{public}s", e.what());
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
     }
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_IS_NEW_VERSION,
-        isNewVersion_,
-        false,
-        parseResult);
-    GetValueIfFindKey<std::map<std::string, InnerExtensionInfo>>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_BASE_EXTENSION_INFOS,
-        baseExtensionInfos_,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_EXTENSION_SKILL_INFOS,
-        extensionSkillInfos_,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, ExtendResourceInfo>>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_EXTEND_RESOURCES,
-        extendResourceInfos_,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        CUR_DYNAMIC_ICON_MODULE,
-        curDynamicIconModule_,
-        false,
-        parseResult);
-    GetValueIfFindKey<BundlePackInfo>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_PACK_INFO,
-        *bundlePackInfo_,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
-        jsonObjectEnd,
-        APP_INDEX,
-        appIndex_,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_IS_SANDBOX_APP,
-        isSandboxApp_,
-        false,
-        parseResult);
-    GetValueIfFindKey<std::vector<HqfInfo>>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_HQF_INFOS,
-        hqfInfos_,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::OBJECT);
-    GetValueIfFindKey<std::vector<OverlayBundleInfo>>(jsonObject,
-        jsonObjectEnd,
-        OVERLAY_BUNDLE_INFO,
-        overlayBundleInfo_,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::OBJECT);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        OVERLAY_TYPE,
-        overlayType_,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        APPLY_QUICK_FIX_FREQUENCY,
-        applyQuickFixFrequency_,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::unordered_map<std::string, std::vector<DataGroupInfo>>>(jsonObject,
-        jsonObjectEnd,
-        DATA_GROUP_INFOS,
-        dataGroupInfos_,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::unordered_map<std::string, PluginBundleInfo>>(jsonObject,
-        jsonObjectEnd,
-        PLUGIN_BUNDLE_INFOS,
-        pluginBundleInfos_,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        DEVELOPER_ID,
-        developerId_,
-        false,
-        parseResult);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        ODID,
-        odid_,
-        false,
-        parseResult);
-    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        UNINSTALL_STATE,
-        uninstallState_,
-        false,
-        parseResult);
-    if (parseResult != ERR_OK) {
-        APP_LOGE("read InnerBundleInfo from database error code : %{public}d", parseResult);
-    }
-    return parseResult;
 }
 
 void InnerBundleInfo::BuildDefaultUserInfo()
@@ -2426,9 +2432,14 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
 
 std::string InnerBundleInfo::ToString() const
 {
-    nlohmann::json j;
-    ToJson(j);
-    return j.dump();
+    try {
+        nlohmann::json j;
+        ToJson(j);
+        return j.dump();
+    } catch (const nlohmann::json::exception &e) {
+        LOG_E(BMS_TAG_DEFAULT, "ToString err: %{public}s", e.what());
+        return Constants::EMPTY_STRING;
+    }
 }
 
 void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, ApplicationInfo &appInfo,
