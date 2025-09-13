@@ -500,6 +500,21 @@ HWTEST_F(BmsAppControlProxyTest, GetDisposedRule_0100, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: GetDisposedRules_0100
+ * @tc.name: test the GetDisposedRules
+ * @tc.desc: 1. system running normally
+ *           2. test GetDisposedRules
+ */
+HWTEST_F(BmsAppControlProxyTest, GetDisposedRules_0100, Function | MediumTest | Level1)
+{
+    AppControlProxy appControlProxy(nullptr);
+    int32_t userId = 100;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto res = appControlProxy.GetDisposedRules(userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
  * @tc.number: GetAbilityRunningControlRule_0100
  * @tc.name: test the GetAbilityRunningControlRule
  * @tc.desc: 1. system running normally
@@ -823,6 +838,78 @@ HWTEST_F(BmsAppControlProxyTest, SetDisposedRules_0400, Function | MediumTest | 
         disposedRuleConfigurations.push_back(disposedRuleConfiguration);
     }
     auto res = appControlProxy.SetDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteDisposedRules_0100
+ * @tc.name: test the DeleteDisposedRules_0100
+ * @tc.desc: test the DeleteDisposedRules_0100
+ */
+HWTEST_F(BmsAppControlProxyTest, DeleteDisposedRules_0100, Function | MediumTest | Level1)
+{
+    AppControlProxy appControlProxy(nullptr);
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    disposedRuleConfiguration.appId = APPID;
+    disposedRuleConfiguration.appIndex = APP_INDEX;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+    auto res = appControlProxy.DeleteDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: DeleteDisposedRules_0200
+ * @tc.name: test the DeleteDisposedRules_0200
+ * @tc.desc: test the DeleteDisposedRules_0200
+ */
+HWTEST_F(BmsAppControlProxyTest, DeleteDisposedRules_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    disposedRuleConfiguration.appId = APPID;
+    disposedRuleConfiguration.appIndex = APP_INDEX;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+    auto res = appControlProxy.DeleteDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteDisposedRules_0300
+ * @tc.name: test the DeleteDisposedRules_0300
+ * @tc.desc: test the DeleteDisposedRules_0300
+ */
+HWTEST_F(BmsAppControlProxyTest, DeleteDisposedRules_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.clear();
+    auto res = appControlProxy.DeleteDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteDisposedRules_0400
+ * @tc.name: test DeleteDisposedRules_0400
+ * @tc.desc: test DeleteDisposedRules_0400
+ */
+HWTEST_F(BmsAppControlProxyTest, DeleteDisposedRules_0400, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    AppControlProxy appControlProxy(mockRemoteObject);
+    DisposedRuleConfiguration disposedRuleConfiguration;
+    disposedRuleConfiguration.appId = APPID;
+    disposedRuleConfiguration.appIndex = APP_INDEX;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.reserve(MAX_VECTOR_NUM);
+
+    for (int i = 0; i < MAX_VECTOR_NUM; ++i) {
+        disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+    }
+    auto res = appControlProxy.DeleteDisposedRules(disposedRuleConfigurations, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 } // AppExecFwk

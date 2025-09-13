@@ -1344,6 +1344,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8900, Functi
 
     res = impl->SetDisposedRules(disposedRuleConfigurations, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    res = impl->DeleteDisposedRules(disposedRuleConfigurations, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
 /**

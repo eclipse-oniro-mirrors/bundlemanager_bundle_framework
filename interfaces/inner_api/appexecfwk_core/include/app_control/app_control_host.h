@@ -58,8 +58,10 @@ private:
     ErrCode HandleSetDisposedStatus(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleDeleteDisposedStatus(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleGetDisposedRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleGetDisposedRules(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleSetDisposedRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleSetDisposedRules(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleDeleteDisposedRules(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleGetAbilityRunningControlRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleGetDisposedRuleForCloneApp(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleSetDisposedRuleForCloneApp(MessageParcel& data, MessageParcel& reply);
@@ -72,6 +74,8 @@ private:
     DISALLOW_COPY_AND_MOVE(AppControlHost);
     template<typename T>
     ErrCode GetVectorParcelInfo(MessageParcel &data, std::vector<T> &parcelInfos);
+    template<typename T>
+    ErrCode WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply);
 };
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -59,6 +59,8 @@ public:
         const std::string &appId, const DisposedRule& rule, int32_t appIndex, int32_t userId) = 0;
     virtual ErrCode GetDisposedRule(const std::string &callingName,
         const std::string &appId, DisposedRule& rule, int32_t appIndex, int32_t userId) = 0;
+    virtual ErrCode GetDisposedRules(const std::string &callingName,
+        int32_t userId, std::vector<DisposedRuleConfiguration>& disposedRuleConfigurations) = 0;
     virtual ErrCode DeleteDisposedRule(const std::string &callingName,
         const std::vector<std::string> &appIdList, int32_t appIndex, int32_t userId) = 0;
     virtual ErrCode GetAbilityRunningControlRule(const std::vector<std::string> &appIdList, int32_t appIndex,

@@ -378,6 +378,17 @@ ErrCode AppControlManager::GetDisposedRule(
     return ERR_OK;
 }
 
+ErrCode AppControlManager::GetDisposedRules(const std::string &callerName,
+    int32_t userId, std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations)
+{
+    auto ret = appControlManagerDb_->GetDisposedRules(callerName, userId, disposedRuleConfigurations);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetDisposedRules to rdb failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlManager::DeleteDisposedRule(
     const std::string &callerName, const std::string &appId, int32_t appIndex, int32_t userId)
 {

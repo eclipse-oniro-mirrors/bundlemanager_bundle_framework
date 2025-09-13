@@ -331,6 +331,21 @@ HWTEST_F(BmsAppControlHostTest, HandleGetDisposedRule_0100, Function | MediumTes
 }
 
 /**
+ * @tc.number: HandleGetDisposedRules_0100
+ * @tc.name: test the HandleGetDisposedRules
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetDisposedRules
+ */
+HWTEST_F(BmsAppControlHostTest, HandleGetDisposedRules_0100, Function | MediumTest | Level1)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = appControlHost.HandleGetDisposedRules(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: HandleSetDisposedRule_0100
  * @tc.name: test the HandleSetDisposedRule
  * @tc.desc: 1. system running normally

@@ -15,6 +15,8 @@
 
 #include "app_control_proxy.h"
 
+#include "securec.h"
+
 #include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
@@ -27,6 +29,28 @@ namespace AppExecFwk {
 namespace {
 const int16_t MAX_VECTOR_NUM = 1000;
 constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
+bool GetData(size_t size, const void *data, void *&buffer)
+{
+    if (data == nullptr) {
+        APP_LOGE("failed due to null data");
+        return false;
+    }
+    if ((size == 0) || size > Constants::MAX_PARCEL_CAPACITY) {
+        APP_LOGE("failed due to wrong size");
+        return false;
+    }
+    buffer = malloc(size);
+    if (buffer == nullptr) {
+        APP_LOGE("failed due to malloc buffer failed");
+        return false;
+    }
+    if (memcpy_s(buffer, size, data, size) != EOK) {
+        free(buffer);
+        APP_LOGE("failed due to memcpy_s failed");
+        return false;
+    }
+    return true;
+}
 }
 AppControlProxy::AppControlProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IAppControlMgr>(object)
 {
@@ -537,6 +561,41 @@ ErrCode AppControlProxy::SetDisposedRules(
     return ERR_OK;
 }
 
+ErrCode AppControlProxy::DeleteDisposedRules(
+    std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId)
+{
+    if (disposedRuleConfigurations.empty() || disposedRuleConfigurations.size() > MAX_VECTOR_NUM) {
+        LOG_E(BMS_TAG_DEFAULT, "params error");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = WriteVectorToParcel(disposedRuleConfigurations, data);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "write DisposedRuleConfiguration failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ret = SendRequest(AppControlManagerInterfaceCode::DELETE_DISPOSED_RULES, data, reply);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlProxy::GetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
 {
     LOG_D(BMS_TAG_DEFAULT, "proxy begin to GetDisposedRule");
@@ -554,6 +613,29 @@ ErrCode AppControlProxy::GetDisposedRule(const std::string &appId, DisposedRule 
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = GetParcelableInfo<DisposedRule>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE, data, rule);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlProxy::GetDisposedRules(
+    int32_t userId, std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations)
+{
+    LOG_D(BMS_TAG_DEFAULT, "proxy begin to GetDisposedRules");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = GetVectorParcelInfo<DisposedRuleConfiguration>(AppControlManagerInterfaceCode::GET_DISPOSED_RULES,
+        data, disposedRuleConfigurations);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
         return ret;
@@ -942,6 +1024,59 @@ ErrCode AppControlProxy::WriteVectorToParcel(std::vector<T> &parcelVector, Messa
         APP_LOGE("write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    return ERR_OK;
+}
+
+template<typename T>
+ErrCode AppControlProxy::GetVectorParcelInfo(AppControlManagerInterfaceCode code,
+    MessageParcel &data, std::vector<T> &parcelInfos)
+{
+    MessageParcel reply;
+    if (SendRequest(code, data, reply) != ERR_OK) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    ErrCode res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("failed err %{public}d", res);
+        return res;
+    }
+
+    size_t dataSize = reply.ReadUint32();
+    if (dataSize == 0) {
+        APP_LOGW("Parcel no data");
+        return ERR_OK;
+    }
+
+    void *buffer = nullptr;
+    if (dataSize > MAX_IPC_ALLOWED_CAPACITY) {
+        APP_LOGE("dataSize is too large");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    } else {
+        if (!GetData(dataSize, reply.ReadRawData(dataSize), buffer)) {
+            APP_LOGE("GetData failed dataSize: %{public}zu", dataSize);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    MessageParcel tempParcel;
+    if (!tempParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        APP_LOGE("Fail to ParseFrom");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    int32_t infoSize = tempParcel.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(tempParcel, infoSize, &parcelInfos);
+    for (int32_t i = 0; i < infoSize; i++) {
+        std::unique_ptr<T> info(tempParcel.ReadParcelable<T>());
+        if (info == nullptr) {
+            APP_LOGE("Read Parcelable infos failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        parcelInfos.emplace_back(*info);
+    }
+
     return ERR_OK;
 }
 } // AppExecFwk
