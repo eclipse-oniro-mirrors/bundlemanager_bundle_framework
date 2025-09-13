@@ -738,6 +738,12 @@ bool BundleResourceManager::AddDynamicIconResource(
     resourceInfo.bundleName_ = bundleName;
     resourceInfo.appIndex_ = appIndex;
     if (userId != Constants::UNSPECIFIED_USERID) {
+        // process icon with badge
+        BundleResourceParser parser;
+        if ((appIndex > 0) && (!parser.ParserCloneResourceInfo(appIndex, resourceInfo))) {
+            APP_LOGE("parse clone resource failed -n %{public}s -u %{public}d -a %{public}d",
+                bundleName.c_str(), userId, appIndex);
+        }
         if (!bundleResourceIconRdb_->AddResourceIconInfo(userId, IconResourceType::DYNAMIC_ICON, resourceInfo)) {
             APP_LOGE("add dynamic icon failed -n %{public}s -u %{public}d -a %{public}d",
                 bundleName.c_str(), userId, appIndex);
@@ -757,9 +763,16 @@ bool BundleResourceManager::AddDynamicIconResource(
         resourceInfo.appIndex_ = 0;
         ret &= bundleResourceIconRdb_->AddResourceIconInfo(user, IconResourceType::DYNAMIC_ICON, resourceInfo);
         auto appIndexes = dataMgr->GetCloneAppIndexes(bundleName, user);
+        // process icon with badge
+        BundleResourceParser parser;
         for (const auto &index : appIndexes) {
-            resourceInfo.appIndex_ = index;
-            ret &= bundleResourceIconRdb_->AddResourceIconInfo(user, IconResourceType::DYNAMIC_ICON, resourceInfo);
+            ResourceInfo newResourceInfo = resourceInfo;
+            newResourceInfo.appIndex_ = index;
+            if (!parser.ParserCloneResourceInfo(appIndex, newResourceInfo)) {
+                APP_LOGE("parse clone resource failed -n %{public}s -u %{public}d -a %{public}d",
+                    bundleName.c_str(), userId, appIndex);
+            }
+            ret &= bundleResourceIconRdb_->AddResourceIconInfo(user, IconResourceType::DYNAMIC_ICON, newResourceInfo);
         }
     }
     if (!ret) {
