@@ -768,9 +768,9 @@ bool BundleResourceManager::AddDynamicIconResource(
         for (const auto &index : appIndexes) {
             ResourceInfo newResourceInfo = resourceInfo;
             newResourceInfo.appIndex_ = index;
-            if (!parser.ParserCloneResourceInfo(appIndex, newResourceInfo)) {
+            if (!parser.ParserCloneResourceInfo(index, newResourceInfo)) {
                 APP_LOGE("parse clone resource failed -n %{public}s -u %{public}d -a %{public}d",
-                    bundleName.c_str(), userId, appIndex);
+                    bundleName.c_str(), user, index);
             }
             ret &= bundleResourceIconRdb_->AddResourceIconInfo(user, IconResourceType::DYNAMIC_ICON, newResourceInfo);
         }
