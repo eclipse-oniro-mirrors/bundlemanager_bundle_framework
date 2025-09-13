@@ -5538,6 +5538,135 @@ HWTEST_F(BmsBundleResourceTest, AddDynamicIconResource_0010, Function | SmallTes
 }
 
 /**
+ * @tc.number: AddDynamicIconResource_0020
+ * Function: AddDynamicIconResource
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddDynamicIconResource
+ */
+HWTEST_F(BmsBundleResourceTest, AddDynamicIconResource_0020, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        ResourceInfo resourceInfo;
+        resourceInfo.icon_ = "111";
+        bool ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 1, resourceInfo);
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 1);
+        EXPECT_TRUE(ret);
+
+        BundleResourceRdb resourceRdb;
+        BundleResourceInfo info;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+        EXPECT_TRUE(ret);
+        resourceInfo.icon_ = info.icon;
+        ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 2, resourceInfo);
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, USERID, 2);
+        EXPECT_TRUE(ret);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: AddDynamicIconResource_0030
+ * Function: AddDynamicIconResource
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddDynamicIconResource
+ */
+HWTEST_F(BmsBundleResourceTest, AddDynamicIconResource_0030, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    innerBundleCloneInfo.appIndex = 1;
+    innerBundleCloneInfo.userId = USERID;
+    innerBundleUserInfo.cloneInfos["1"] = innerBundleCloneInfo;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.innerBundleUserInfos_["_100"] = innerBundleUserInfo;
+    savedDataMgr->bundleInfos_[BUNDLE_NAME_NOT_EXIST] = bundleInfo;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        ResourceInfo resourceInfo;
+        resourceInfo.icon_ = "111";
+        bool ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0,
+            resourceInfo);
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0);
+        EXPECT_TRUE(ret);
+
+        BundleResourceRdb resourceRdb;
+        BundleResourceInfo info;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+        EXPECT_TRUE(ret);
+        resourceInfo.icon_ = info.icon;
+        ret = manager->AddDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0, resourceInfo);
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteDynamicIconResource(BUNDLE_NAME_NOT_EXIST, Constants::UNSPECIFIED_USERID, 0);
+        EXPECT_TRUE(ret);
+    }
+
+    auto iter = savedDataMgr->bundleInfos_.find(BUNDLE_NAME_NOT_EXIST);
+    if (iter != savedDataMgr->bundleInfos_.end()) {
+        savedDataMgr->bundleInfos_.erase(iter);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: ParserCloneResourceInfo_0010
+ * Function: ParserCloneResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ParserCloneResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, ParserCloneResourceInfo_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    ResourceInfo resourceInfo;
+    BundleResourceParser bundleResourceParser;
+    bool ret = bundleResourceParser.ParserCloneResourceInfo(0, resourceInfo);
+    EXPECT_FALSE(ret);
+
+    resourceInfo.icon_ = "111";
+    ret = bundleResourceParser.ParserCloneResourceInfo(1, resourceInfo);
+    EXPECT_FALSE(ret);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        BundleResourceInfo info;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+        EXPECT_TRUE(ret);
+        resourceInfo.icon_ = info.icon;
+    }
+
+    ret = bundleResourceParser.ParserCloneResourceInfo(2, resourceInfo);
+    EXPECT_TRUE(ret);
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
  * @tc.number: AddAllResourceInfo_0010
  * Function: AddAllResourceInfo
  * @tc.name: test
@@ -5729,8 +5858,12 @@ HWTEST_F(BmsBundleResourceTest, AddCloneBundleResourceInfoWhenInstall_0010, Func
         EXPECT_FALSE(ret);
         ret = manager->AddCloneBundleResourceInfoWhenInstall(BUNDLE_NAME, USERID, 1, false);
         EXPECT_TRUE(ret);
+        ret = manager->DeleteCloneBundleResourceInfoWhenUninstall(BUNDLE_NAME, USERID, 1, false);
+        EXPECT_TRUE(ret);
         OHOS::ForceCreateDirectory(THEME_B_ICON_BUNDLE_NAME);
         ret = manager->AddCloneBundleResourceInfoWhenInstall(BUNDLE_NAME, USERID, 2, false);
+        EXPECT_TRUE(ret);
+        ret = manager->DeleteCloneBundleResourceInfoWhenUninstall(BUNDLE_NAME, USERID, 2, false);
         EXPECT_TRUE(ret);
         OHOS::ForceRemoveDirectory(THEME_BUNDLE_NAME_PATH);
     }
