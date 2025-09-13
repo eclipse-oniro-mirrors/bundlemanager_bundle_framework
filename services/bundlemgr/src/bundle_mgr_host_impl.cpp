@@ -636,7 +636,7 @@ bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleNa
     int64_t intervalTime = ONE_DAY;
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        APP_LOGE("non-system app calling system api");
+        APP_LOGE_NOFUNC("non-system permission deny");
         return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
