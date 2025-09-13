@@ -196,10 +196,6 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBu
 
     if (dataMgr->HasUserId(userId)) {
         APP_LOGE("Has create user %{public}d", userId);
-        ErrCode ret = InnerRemoveUser(userId, false); // no need lock
-        if (ret != ERR_OK) {
-            APP_LOGW("remove user %{public}d failed, error %{public}d", userId, ret);
-        }
     }
 
     dataMgr->AddUserId(userId);
