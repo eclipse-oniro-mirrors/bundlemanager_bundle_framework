@@ -65,6 +65,8 @@ public:
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetDisposedRule(const std::string &appId,
         DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode GetDisposedRules(
+        int32_t userId, std::vector<DisposedRuleConfiguration>& disposedRuleConfigurations) override;
     virtual ErrCode SetDisposedRules(std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations,
         int32_t userId) override;
     virtual ErrCode DeleteDisposedRules(
@@ -105,6 +107,9 @@ private:
     static inline BrokerDelegator<AppControlProxy> delegator_;
     template<typename T>
     ErrCode WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply);
+    template<typename T>
+    ErrCode GetVectorParcelInfo(AppControlManagerInterfaceCode code,
+        MessageParcel &data, std::vector<T> &parcelInfos);
 };
 } // namespace AppExecFwk
 } // namespace OHOS
