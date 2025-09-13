@@ -144,8 +144,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
 
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     (void)PublishCommonEvent(installResult.bundleName, want.GetAction(), publishUserId, commonData);
-    (void)ProcessBundleChangedEventForOtherUsers(dataMgr, installResult.bundleName,
-        want.GetAction(), publishUserId, commonData);
+    (void)ProcessBundleChangedEventForOtherUsers(dataMgr, installResult, publishUserId, commonData);
     IPCSkeleton::SetCallingIdentity(identity);
 }
 
@@ -174,23 +173,27 @@ bool BundleCommonEventMgr::PublishCommonEvent(
     }
     return true;
 }
+
 bool BundleCommonEventMgr::ProcessBundleChangedEventForOtherUsers(
     const std::shared_ptr<BundleDataMgr> &dataMgr,
-    const std::string &bundleName,
-    const std::string &action,
+    const NotifyBundleEvents &event,
     const int32_t publishUserId,
     const EventFwk::CommonEventData &commonData)
 {
-    if (action != EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED) {
+    if ((event.type != NotifyType::INSTALL) && (event.type != NotifyType::UPDATE)) {
+        return false;
+    }
+    if ((event.type == NotifyType::INSTALL) &&
+        (event.isInstallByBundleName || event.isRecover || (event.appIndex != 0))) {
         return false;
     }
     if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is nullptr -n %{public}s", bundleName.c_str());
+        APP_LOGE("dataMgr is nullptr -n %{public}s", event.bundleName.c_str());
         return false;
     }
-    auto userIds = dataMgr->GetUserIds(bundleName);
+    auto userIds = dataMgr->GetUserIds(event.bundleName);
     if (userIds.size() <= 1) {
-        APP_LOGD("-n %{public}s only has one user", bundleName.c_str());
+        APP_LOGD("-n %{public}s only has one user", event.bundleName.c_str());
         return false;
     }
     EventFwk::CommonEventPublishInfo publishInfo;
@@ -200,8 +203,24 @@ bool BundleCommonEventMgr::ProcessBundleChangedEventForOtherUsers(
         if (userId == publishUserId) {
             continue;
         }
-        APP_LOGI("-n %{public}s publish change event for -u %{public}d", bundleName.c_str(), userId);
-        if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishInfo, userId)) {
+        OHOS::AAFwk::Want want = commonData.GetWant();
+        if (event.type == NotifyType::INSTALL) {
+            want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+        }
+        ApplicationInfo appInfo;
+        if (dataMgr->GetApplicationInfoV9(event.bundleName,
+            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, appInfo) != ERR_OK) {
+            APP_LOGE("-n %{public}s -u %{public}d get appInfo failed when publish event",
+                event.bundleName.c_str(), userId);
+            continue;
+        }
+        // need modify uid, userId, tokenId
+        want.SetParam(Constants::UID, appInfo.uid);
+        want.SetParam(Constants::USER_ID, userId);
+        want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(appInfo.accessTokenId));
+        APP_LOGI("-n %{public}s publish change event for -u %{public}d", event.bundleName.c_str(), userId);
+        EventFwk::CommonEventData newCommonData { want };
+        if (!EventFwk::CommonEventManager::PublishCommonEventAsUser(newCommonData, publishInfo, userId)) {
             APP_LOGE("PublishCommonEventAsUser failed, userId:%{public}d", userId);
         }
     }
