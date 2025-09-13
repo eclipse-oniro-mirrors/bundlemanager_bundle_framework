@@ -535,11 +535,27 @@ static ani_string GetAbilityLabelNative(ani_env* env,
         return nullptr;
     }
     std::string abilityLabel;
-    ErrCode ret = iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, abilityLabel);
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, abilityLabel));
+    if (ret == ERROR_PARAM_CHECK_ERROR) {
+        if (bundleName.empty()) {
+            APP_LOGW("bundleName is empty");
+            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+            return nullptr;
+        } else if (moduleName.empty()) {
+            APP_LOGW("moduleName is empty");
+            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
+            return nullptr;
+        } else {
+            APP_LOGW("abilityName is empty");
+            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_ABILITYNAME_EMPTY_ERROR);
+            return nullptr;
+        }
+    }
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     if (ret != ERR_OK) {
         APP_LOGE("GetAbilityLabel failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+        BusinessErrorAni::ThrowCommonError(env, ret,
             isSync ? GET_ABILITY_LABEL_SYNC : GET_ABILITY_LABEL, BUNDLE_PERMISSIONS);
         return nullptr;
     }
@@ -638,10 +654,16 @@ static ani_string GetSpecifiedDistributionType(ani_env* env, ani_string aniBundl
         return nullptr;
     }
     std::string specifiedDistributionType;
-    ErrCode ret = iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType);
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType));
+    if (ret == ERROR_PARAM_CHECK_ERROR && bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
+    }
     if (ret != ERR_OK) {
         APP_LOGE("GetSpecifiedDistributionType failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+        BusinessErrorAni::ThrowCommonError(env, ret,
             RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -818,6 +840,10 @@ static void SetApplicationEnabledNative(ani_env* env,
         return;
     }
     ErrCode ret = BundleManagerHelper::InnerSetApplicationEnabled(bundleName, isEnable, aniAppIndex);
+    if (ret == ERROR_PARAM_CHECK_ERROR && bundleName.empty()) {
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return;
+    }
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     if (ret != ERR_OK) {
         APP_LOGE("SetApplicationEnabled failed ret: %{public}d", ret);

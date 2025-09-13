@@ -126,6 +126,11 @@ napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
+    }
     if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], isEnable)) {
         APP_LOGE("parse isEnable failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
@@ -519,12 +524,27 @@ ErrCode ParamsProcessGetAbilityLabelSync(napi_env env, napi_callback_info info,
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
             return ERROR_PARAM_CHECK_ERROR;
         }
+        if (bundleName.empty()) {
+            APP_LOGW("bundleName is empty");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
         if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], moduleName)) {
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
             return ERROR_PARAM_CHECK_ERROR;
         }
+        if (moduleName.empty()) {
+            APP_LOGW("moduleName is empty");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
         if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], abilityName)) {
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+        if (abilityName.empty()) {
+            APP_LOGW("abilityName is empty");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_ABILITYNAME_EMPTY_ERROR);
             return ERROR_PARAM_CHECK_ERROR;
         }
     } else {
