@@ -134,12 +134,22 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    virtual ErrCode GetDisposedRules(
+        int32_t userId, std::vector<DisposedRuleConfiguration>& disposedRuleConfigurations)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     virtual ErrCode SetDisposedRule(
         const std::string &appId, DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     virtual ErrCode SetDisposedRules(std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode DeleteDisposedRules(
+        std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations, int32_t userId)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

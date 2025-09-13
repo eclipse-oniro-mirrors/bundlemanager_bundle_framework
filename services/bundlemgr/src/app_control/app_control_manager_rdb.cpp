@@ -36,6 +36,7 @@ namespace {
     constexpr int8_t CONTROL_MESSAGE_INDEX = 5;
     constexpr int8_t DISPOSED_STATUS_INDEX = 6;
     constexpr int8_t TIME_STAMP_INDEX = 8;
+    constexpr int8_t APP_INDEX_INDEX = 9;
     // app control table key
     constexpr const char* CALLING_NAME = "CALLING_NAME";
     constexpr const char* APP_CONTROL_LIST = "APP_CONTROL_LIST";
@@ -563,6 +564,82 @@ ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
         return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
     }
     DisposedRule::FromString(ruleString, rule);
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::GetDisposedRules(const std::string &callingName,
+    int32_t userId, std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_DEFAULT, "rdb begin to GetDisposedRules");
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(CALLING_NAME, callingName);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "GetDisposedRules failed");
+        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
+    }
+
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetRowCount failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    if (count == 0) {
+        LOG_D(BMS_TAG_DEFAULT, "GetDisposedRule size 0");
+        return ERR_OK;
+    }
+    LOG_D(BMS_TAG_DEFAULT, "GetDisposedRule size:%{public}d", count);
+    ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GoToFirstRow failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    do {
+        DisposedRuleConfiguration disposedRuleConfiguration;
+        if (ConvertToDisposedRuleConfiguration(absSharedResultSet, disposedRuleConfiguration) == ERR_OK) {
+            disposedRuleConfigurations.push_back(disposedRuleConfiguration);
+        }
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::ConvertToDisposedRuleConfiguration(
+    const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
+    DisposedRuleConfiguration &disposedRuleConfiguration
+)
+{
+    if (absSharedResultSet == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "ConvertToDisposedRuleConfiguration failed");
+        return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
+    }
+    std::string appIndex;
+    std::string ruleString;
+    int ret = absSharedResultSet->GetString(APP_ID_INDEX, disposedRuleConfiguration.appId);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "Get appId failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+
+    ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, ruleString);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "Get disposedRule failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    DisposedRule::FromString(ruleString, disposedRuleConfiguration.disposedRule);
+
+    ret = absSharedResultSet->GetString(APP_INDEX_INDEX, appIndex);
+    if (ret != NativeRdb::E_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "Get appIndex failed, ret: %{public}d", ret);
+        return ERR_APPEXECFWK_DB_RESULT_SET_OPT_ERROR;
+    }
+    if (!OHOS::StrToInt(appIndex, disposedRuleConfiguration.appIndex)) {
+        LOG_W(BMS_TAG_DEFAULT, "parse appIndex failed");
+    }
     return ERR_OK;
 }
 

@@ -56,6 +56,8 @@ public:
         const std::string &appId, const DisposedRule& rule, int32_t appIndex, int32_t userId) override;
     virtual ErrCode GetDisposedRule(const std::string &callingName,
         const std::string &appId, DisposedRule& rule, int32_t appIndex, int32_t userId) override;
+    virtual ErrCode GetDisposedRules(const std::string &callingName,
+        int32_t userId, std::vector<DisposedRuleConfiguration> &disposedRuleConfigurations) override;
     virtual ErrCode DeleteDisposedRule(const std::string &callingName,
         const std::vector<std::string> &appIdList, int32_t appIndex, int32_t userId) override;
     virtual ErrCode DeleteAllDisposedRuleByBundle(const std::vector<std::string> &appIdList,
@@ -77,6 +79,9 @@ private:
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
     ErrCode GetDisposedRuleFromResultSet(
         std::shared_ptr<NativeRdb::ResultSet> absSharedResultSet, std::vector<DisposedRule> &disposedRules);
+    ErrCode ConvertToDisposedRuleConfiguration(
+        const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
+        DisposedRuleConfiguration &disposedRuleConfiguration);
     std::shared_ptr<RdbDataManager> rdbDataManager_;
 };
 } // namespace AppExecFwk
