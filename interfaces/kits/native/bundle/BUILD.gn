@@ -60,11 +60,27 @@ ohos_shared_library("bundle_ndk") {
 
   external_deps = [
     "ability_base:want",
+    "ace_engine:ace_ndk",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
+
+  if (bundle_framework_bundle_resource) {
+    defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
+    sources += [
+      "src/bundle_resource_drawable_utils_native.cpp",
+    ]
+    if (bundle_framework_graphics) {
+      defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
+      external_deps += [
+        "ace_engine:drawable_descriptor",
+        "image_framework:image_native",
+        "resource_management:global_resmgr",
+      ]
+    }
+  }
 
   relative_install_dir = "ndk"
   public_external_deps = [ "json:nlohmann_json_static" ]

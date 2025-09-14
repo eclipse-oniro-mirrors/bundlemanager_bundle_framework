@@ -66,5 +66,9 @@
     {
       "first_introduced": "21",
       "name": "OH_NativeBundle_GetSize"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_NativeBundle_GetDrawableDescriptor"
     }
 ]
