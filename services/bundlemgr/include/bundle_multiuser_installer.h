@@ -52,6 +52,7 @@ private:
     int32_t uid_ = 0;
     bool isBundleCrossAppSharedConfig_ = false;
     uint32_t accessTokenId_ = 0;
+    std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
 };
 } // AppExecFwk
 } // OHOS

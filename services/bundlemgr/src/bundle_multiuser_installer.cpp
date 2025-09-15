@@ -68,6 +68,7 @@ ErrCode BundleMultiUserInstaller::InstallExistedApp(const std::string &bundleNam
         .uid = uid_,
         .appIndex = 0,
         .bundleName = bundleName,
+        .appDistributionType = appDistributionType_,
         .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
@@ -129,14 +130,14 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
         return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
     }
 
-    std::string appDistributionType = info.GetAppDistributionType();
-    if (appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE
-        || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL
-        || appDistributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM) {
+    appDistributionType_ = info.GetAppDistributionType();
+    if (appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE
+        || appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL
+        || appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM) {
         APP_LOGE("the origin application is enterprise, not allow to install here");
         return ERR_APPEXECFWK_INSTALL_EXISTED_ENTERPRISE_BUNDLE_NOT_ALLOWED;
     }
-    if (appDistributionType == Constants::APP_DISTRIBUTION_TYPE_INTERNALTESTING) {
+    if (appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_INTERNALTESTING) {
         APP_LOGE("the origin application is inrternaltesting, not allow to install here");
         return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
     }
@@ -299,6 +300,7 @@ void BundleMultiUserInstaller::ResetInstallProperties()
     uid_ = 0;
     accessTokenId_ = 0;
     isBundleCrossAppSharedConfig_ = false;
+    appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
 }
 
 bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, const int32_t userId,
