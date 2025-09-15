@@ -44,23 +44,11 @@ export default namespace bundleResourceManager {
   export native function getAllLauncherAbilityResourceInfoNative(resourceFlags: int): Array<LauncherAbilityResourceInfo>;
   export native function getExtensionAbilityResourceInfoNative(bundleName: string, extensionAbilityType: bundleManager.ExtensionAbilityType, resourceFlags: int, appIndex: int): Array<LauncherAbilityResourceInfo>;
 
-  function getBundleResourceInfo(bundleName: string, resourceFlags?: int): BundleResourceInfo
-  {
-    let resFlag = resourceFlags ?? INVALID_VALUE;
-    return bundleResourceManager.getBundleResourceInfoNative(bundleName, resFlag, INVALID_VALUE);
-  }
-
   function getBundleResourceInfo(bundleName: string, resourceFlags?: int, appIndex?: int): BundleResourceInfo
   {
     let resFlag = resourceFlags ?? INVALID_VALUE;
     let appIdx = appIndex ?? INVALID_VALUE;
     return bundleResourceManager.getBundleResourceInfoNative(bundleName, resFlag, appIdx);
-  }
-
-  function getLauncherAbilityResourceInfo(bundleName: string, resourceFlags?: int): Array<LauncherAbilityResourceInfo>
-  {
-    let resFlag = resourceFlags ?? INVALID_VALUE;
-    return bundleResourceManager.getLauncherAbilityResourceInfoNative(bundleName, resFlag, INVALID_VALUE);
   }
 
   function getLauncherAbilityResourceInfo(bundleName: string, resourceFlags?: int, appIndex?: int): Array<LauncherAbilityResourceInfo>
