@@ -13,11 +13,6 @@
  * limitations under the License.
  */
 
-/**
- * @file
- * @kit AbilityKit
- */
-
 import { AsyncCallback, BusinessError } from '@ohos.base';
 import installer from '@ohos.bundle.installer';
 
@@ -37,11 +32,11 @@ export class ParametersInner implements installer.Parameters {
 }
 
 export class InstallParamInner implements installer.InstallParam {
-  userId?: number;
-  installFlag?: number;
+  userId?: int;
+  installFlag?: int;
   isKeepData?: boolean;
   hashParams?: Array<installer.HashParam>;
-  crowdtestDeadline?: number;
+  crowdtestDeadline?: long;
   sharedBundleDirPaths?: Array<string>;
   specifiedDistributionType?: string;
   additionalInfo?: string;
@@ -51,16 +46,16 @@ export class InstallParamInner implements installer.InstallParam {
 
 export class UninstallParamInner implements installer.UninstallParam {
   bundleName: string = "";
-  versionCode?: number;
+  versionCode?: int;
 }
 
 export class CreateAppCloneParamInner implements installer.CreateAppCloneParam {
-  userId?: number;
-  appIndex?: number;
+  userId?: int;
+  appIndex?: int;
 }
 
 export class DestroyAppCloneParamInner implements installer.DestroyAppCloneParam {
-  userId?: number;
+  userId?: int;
   parameters?: Array<installer.Parameters>;
   constructor() {
     super();
@@ -73,11 +68,58 @@ export class DestroyAppCloneParamInner implements installer.DestroyAppCloneParam
 }
 
 export class PluginParamInner implements installer.PluginParam {
-  userId?: number;
+  userId?: int;
   parameters?: Array<installer.Parameters>;
 }
 
-const UNSPECIFIED_USERID: number = -2;
+const UNSPECIFIED_USERID: int = -2;
+const SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE : number = 128;
+const ADDITIONAL_INFO_MAX_SIZE: number = 3000;
+const ERROR_PARAM_CHECK_ERROR: int = 401;
+const SPECIFIED_DISTRIBUTION_TYPE_ERROR: string = "BusinessError 401: The size of specifiedDistributionType is greater than 128";
+const ADDITIONALINFO_ERROR: string = "BusinessError 401: The size of additionalInfo is greater than 3000";
+const PARAMETERTYPE_ERROR: string = "BusinessError 401: Parameter error. The type of parameters must be corresponding type.";
+
+function createBusinessError(code: int, message: string) {
+  let err = new BusinessError();
+  err.code = code;
+  err.name = 'Error';
+  err.message = message;
+  return err;
+}
+
+function checkInstallParam(params: installer.InstallParam, needExtras: boolean): void {
+  
+  const hashParams = params.hashParams ?? new Array<installer.HashParam>;
+  const moduleNameSet = new Set<string>();
+  for (const hashParam of hashParams) {
+    if (hashParam.moduleName === "" || hashParam.hashValue === "") {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAMETERTYPE_ERROR);
+    }
+    if (moduleNameSet.has(hashParam.moduleName)) {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAMETERTYPE_ERROR);
+    }
+    moduleNameSet.add(hashParam.moduleName);
+  }
+
+  const pgoParams = params.pgoParams ?? new Array<installer.PGOParam>;
+  for (const pgoParam of pgoParams) {
+    if (pgoParam.moduleName === "" || pgoParam.pgoFilePath === "") {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAMETERTYPE_ERROR);
+    }
+  }
+  if (!needExtras) {
+    return;
+  }
+  let specifiedDistributionType: string = params.specifiedDistributionType ?? "";
+  if (specifiedDistributionType.length > SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE) {
+    throw createBusinessError(ERROR_PARAM_CHECK_ERROR, SPECIFIED_DISTRIBUTION_TYPE_ERROR);
+  }
+  let additionalInfo: string = params.additionalInfo ?? "";
+  if (additionalInfo.length > ADDITIONAL_INFO_MAX_SIZE) {
+    throw createBusinessError(ERROR_PARAM_CHECK_ERROR, ADDITIONALINFO_ERROR);
+  }
+}
 
 export class BundleInstallerInner implements installer.BundleInstaller {
   native installNative(hapFilePaths: Array<string>, installParam: installer.InstallParam): void;
@@ -88,13 +130,16 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   native uninstallUpdatesNative(bundleName: string, installParam: installer.InstallParam): void;
   native addExtResourceNative(bundleName: string, filePaths: Array<string>): void;
   native removeExtResourceNative(bundleName: string, moduleNames: Array<string>): void;
-  native createAppCloneNative(bundleName: string, createAppCloneParam: installer.CreateAppCloneParam): number;
-  native destroyAppCloneNative(bundleName: string, appIndex: number, options: installer.DestroyAppCloneParam): void;
-  native installPreexistingAppNative(bundleName: string, userId: number): void;
+  native createAppCloneNative(bundleName: string, createAppCloneParam: installer.CreateAppCloneParam): int;
+  native destroyAppCloneNative(bundleName: string, appIndex: int, options: installer.DestroyAppCloneParam): void;
+  native installPreexistingAppNative(bundleName: string, userId: int): void;
   native installPluginNative(hostBundleName: string, pluginFilePaths: Array<string>, pluginParam: installer.PluginParam): void;
   native uninstallPluginNative(hostBundleName: string, pluginBundleName: string, pluginParam: installer.PluginParam): void;
 
   install(hapFilePaths: Array<string>, installParam?: installer.InstallParam): Promise<void> {
+      if (installParam) {
+        checkInstallParam(installParam, true);
+      }
       let emptyParam = new InstallParamInner();
       let params = installParam ?? emptyParam;
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
@@ -110,6 +155,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   }
 
   install(hapFilePaths: Array<string>, installParam: installer.InstallParam, callback: AsyncCallback<void>): void {
+      checkInstallParam(installParam, true);
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.installNative(hapFilePaths, installParam); }
           let p1 = taskpool.execute(execFun);
@@ -135,6 +181,9 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   }
 
   uninstall(bundleName: string, installParam?: installer.InstallParam): Promise<void> {
+      if (installParam) {
+        checkInstallParam(installParam, false);
+      }
       let emptyParam = new InstallParamInner();
       let params = installParam ?? emptyParam;
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
@@ -150,8 +199,10 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   }
 
   uninstall(bundleName: string, installParam: installer.InstallParam, callback: AsyncCallback<void>): void {
+      checkInstallParam(installParam, false);
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.uninstallNative(bundleName, installParam); }
+
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
               callback(null, undefined);
@@ -175,6 +226,9 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   }
 
   recover(bundleName: string, installParam?: installer.InstallParam): Promise<void> {
+      if (installParam) {
+        checkInstallParam(installParam, false);
+      }
       let emptyParam = new InstallParamInner();
       let params = installParam ?? emptyParam;
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
@@ -190,6 +244,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   }
 
   recover(bundleName: string, installParam: installer.InstallParam, callback: AsyncCallback<void>): void {
+      checkInstallParam(installParam, false);
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.recoverNative(bundleName, installParam); }
           let p1 = taskpool.execute(execFun);
@@ -240,6 +295,9 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   }
 
   updateBundleForSelf(hapFilePaths: Array<string>, installParam?: installer.InstallParam): Promise<void> {
+      if (installParam) {
+        checkInstallParam(installParam, true);
+      }
       let emptyParam = new InstallParamInner();
       let params = installParam ?? emptyParam;
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
@@ -255,6 +313,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   }
 
   updateBundleForSelf(hapFilePaths: Array<string>, installParam: installer.InstallParam, callback: AsyncCallback<void>): void {
+      checkInstallParam(installParam, true);
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
           let execFun = ():NullishType=>{ this.updateBundleForSelfNative(hapFilePaths, installParam); }
           let p1 = taskpool.execute(execFun);
@@ -280,6 +339,9 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   }
 
   uninstallUpdates(bundleName: string, installParam?: installer.InstallParam): Promise<void> {
+      if (installParam) {
+        checkInstallParam(installParam, false);
+      }
       let emptyParam = new InstallParamInner();
       let params = installParam ?? emptyParam;
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
@@ -320,14 +382,14 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       return p;
   }
 
-  createAppClone(bundleName: string, createAppCloneParam?: installer.CreateAppCloneParam): Promise<number> {
+  createAppClone(bundleName: string, createAppCloneParam?: installer.CreateAppCloneParam): Promise<int> {
       let emptyParam = new CreateAppCloneParamInner();
       let params = createAppCloneParam ?? emptyParam;
-      let p = new Promise<number>((resolve: (v:number) => void, reject: (error: BusinessError) => void):void => {
-      let execFun = ():number=>{ return this.createAppCloneNative(bundleName, params); }
+      let p = new Promise<int>((resolve: (v:int) => void, reject: (error: BusinessError) => void):void => {
+      let execFun = ():int=>{ return this.createAppCloneNative(bundleName, params); }
       let p1 = taskpool.execute(execFun);
       p1.then((appIdx: NullishType) => {
-          resolve(appIdx as number);
+          resolve(appIdx as int);
         }, (err: Error): void => {
           reject(err as BusinessError);
         });
@@ -335,7 +397,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       return p;
   }
 
-  destroyAppClone(bundleName: string, appIndex: number, options?: number | installer.DestroyAppCloneParam): Promise<void> {
+  destroyAppClone(bundleName: string, appIndex: int, options?: int | installer.DestroyAppCloneParam): Promise<void> {
       let defaultParam = new DestroyAppCloneParamInner();
       let option = options ?? defaultParam;
       if (option instanceof installer.DestroyAppCloneParam) {
@@ -357,7 +419,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       return p;
   }
 
-  installPreexistingApp(bundleName: string, userId?: number): Promise<void> {
+  installPreexistingApp(bundleName: string, userId?: int): Promise<void> {
       let userIdNum = userId ?? UNSPECIFIED_USERID;
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
       let execFun = ():NullishType=>{ this.installPreexistingAppNative(bundleName, userIdNum); }

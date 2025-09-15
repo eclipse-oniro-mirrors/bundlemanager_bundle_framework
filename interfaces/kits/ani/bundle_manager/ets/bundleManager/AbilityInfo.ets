@@ -23,33 +23,33 @@ export interface AbilityInfo {
   readonly moduleName: string;
   readonly name: string;
   readonly label: string;
-  readonly labelId: number;
+  readonly labelId: long;
   readonly description: string;
-  readonly descriptionId: number;
+  readonly descriptionId: long;
   readonly icon: string;
-  readonly iconId: number;
+  readonly iconId: long;
   readonly process: string;
   readonly exported: boolean;
   readonly orientation: bundleManager.DisplayOrientation;
   readonly launchType: bundleManager.LaunchType;
   readonly permissions: Array<string>;
   readonly deviceTypes: Array<string>;
-  readonly applicationInfo: ApplicationInfo;
+  readonly applicationInfo: ApplicationInfo | null;
   readonly metadata: Array<Metadata>;
   readonly enabled: boolean;
   readonly supportWindowModes: Array<bundleManager.SupportWindowMode>;
   readonly windowSize: WindowSize;
   readonly excludeFromDock: boolean;
   readonly skills: Array<Skill>;
-  readonly appIndex: number;
-  readonly orientationId: number;
+  readonly appIndex: int;
+  readonly orientationId: long;
 }
 
 export interface WindowSize {
-  readonly maxWindowRatio: number;
-  readonly minWindowRatio: number;
-  readonly maxWindowWidth: number;
-  readonly minWindowWidth: number;
-  readonly maxWindowHeight: number;
-  readonly minWindowHeight: number;
+  readonly maxWindowRatio: double;
+  readonly minWindowRatio: double;
+  readonly maxWindowWidth: long;
+  readonly minWindowWidth: long;
+  readonly maxWindowHeight: long;
+  readonly minWindowHeight: long;
 }

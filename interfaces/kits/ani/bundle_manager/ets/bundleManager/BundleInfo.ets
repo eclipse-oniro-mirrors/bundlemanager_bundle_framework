@@ -20,27 +20,27 @@ import bundleManager from '@ohos.bundle.bundleManager';
 export interface BundleInfo {
   readonly name: string;
   readonly vendor: string;
-  readonly versionCode: number;
+  readonly versionCode: long;
   readonly versionName: string;
-  readonly minCompatibleVersionCode: number;
-  readonly targetVersion: number;
-  readonly appInfo: ApplicationInfo;
+  readonly minCompatibleVersionCode: int;
+  readonly targetVersion: int;
+  readonly appInfo: ApplicationInfo | null;
   readonly hapModulesInfo: Array<HapModuleInfo>;
   readonly reqPermissionDetails: Array<ReqPermissionDetail>;
   readonly permissionGrantStates: Array<bundleManager.PermissionGrantState>;
-  readonly signatureInfo: SignatureInfo;
-  readonly installTime: number;
-  readonly updateTime: number;
+  readonly signatureInfo: SignatureInfo | null;
+  readonly installTime: long;
+  readonly updateTime: long;
   readonly routerMap: Array<RouterItem>;
-  readonly appIndex: number;
-  readonly firstInstallTime?: number;
+  readonly appIndex: int;
+  readonly firstInstallTime?: long;
 }
 
 export interface ReqPermissionDetail {
   name: string;
   moduleName: string;
   reason: string;
-  reasonId: number;
+  reasonId: long;
   usedScene: UsedScene;
 }
 
@@ -58,5 +58,17 @@ export interface SignatureInfo {
 
 export interface AppCloneIdentity {
   readonly bundleName: string;
-  readonly appIndex: number;
+  readonly appIndex: int;
+}
+
+export interface DynamicIconInfo {
+  readonly bundleName: string;
+  readonly moduleName: string;
+  readonly userId: int;
+  readonly appIndex: int;
+}
+
+export interface BundleOptions {
+  userId?: int;
+  appIndex?: int;
 }

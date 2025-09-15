@@ -13,11 +13,6 @@
  * limitations under the License.
  */
 
-/**
- * @file
- * @kit AbilityKit
- */
-
 import { LauncherAbilityResourceInfo } from 'bundleManager.LauncherAbilityResourceInfo';
 
 export class LauncherAbilityResourceInfoInner implements LauncherAbilityResourceInfo {
@@ -26,5 +21,20 @@ export class LauncherAbilityResourceInfoInner implements LauncherAbilityResource
     readonly abilityName: string = '';
     readonly icon: string = '';
     readonly label: string = '';
-    readonly appIndex: number;
+    readonly appIndex: int;
+
+    constructor() { }
+    constructor(bundleName: string,
+        moduleName: string,
+        abilityName: string,
+        icon: string,
+        label: string,
+        appIndex: int) {
+            this.bundleName = bundleName;
+            this.moduleName = moduleName;
+            this.abilityName = abilityName;
+            this.icon = icon;
+            this.label = label;
+            this.appIndex = appIndex;
+    }
 }

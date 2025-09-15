@@ -22,6 +22,6 @@ export interface OverlayModuleInfo {
     readonly bundleName: string;
     readonly moduleName: string;
     readonly targetModuleName: string;
-    readonly priority: number;
-    readonly state: number;
+    readonly priority: int;
+    readonly state: int;
 }

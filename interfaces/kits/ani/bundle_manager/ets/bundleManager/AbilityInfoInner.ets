@@ -25,33 +25,118 @@ export class AbilityInfoInner implements AbilityInfo {
   readonly moduleName: string = "";
   readonly name: string = "";
   readonly label: string = "";
-  readonly labelId: number;
+  readonly labelId: long;
   readonly description: string = "";
-  readonly descriptionId: number;
+  readonly descriptionId: long;
   readonly icon: string = "";
-  readonly iconId: number;
+  readonly iconId: long;
   readonly process: string = "";
   readonly exported: boolean;
   readonly orientation: bundleManager.DisplayOrientation = bundleManager.DisplayOrientation.UNSPECIFIED;
   readonly launchType: bundleManager.LaunchType = bundleManager.LaunchType.SINGLETON;
   readonly permissions: Array<string> = new Array<string>;
   readonly deviceTypes: Array<string> = new Array<string>;
-  readonly applicationInfo: ApplicationInfo = new ApplicationInfoInner;
+  readonly applicationInfo: ApplicationInfo | null = null;
   readonly metadata: Array<Metadata> = new Array<Metadata>;
   readonly enabled: boolean;
   readonly supportWindowModes: Array<bundleManager.SupportWindowMode> = new Array<bundleManager.SupportWindowMode>;
   readonly windowSize: WindowSize = new WindowSizeInner;
   readonly excludeFromDock: boolean;
   readonly skills: Array<Skill> = new Array<Skill>;
-  readonly appIndex: number;
-  readonly orientationId: number;
+  readonly appIndex: int;
+  readonly orientationId: long;
+
+  constructor() { }
+  constructor(bundleName: string,
+    moduleName: string,
+    name: string,
+    label: string,
+    labelId: long,
+    description: string,
+    descriptionId: long,
+    icon: string,
+    iconId: long,
+    process: string,
+    exported: boolean,
+    orientation: bundleManager.DisplayOrientation,
+    launchType: bundleManager.LaunchType,
+    permissions: Array<string>,
+    deviceTypes: Array<string>,
+    applicationInfo: ApplicationInfo,
+    metadata: Array<Metadata>,
+    enabled: boolean,
+    supportWindowModes: Array<bundleManager.SupportWindowMode>,
+    windowSize: WindowSize,
+    excludeFromDock: boolean,
+    skills: Array<Skill>,
+    appIndex: int,
+    orientationId: long) {
+      this.bundleName = bundleName;
+      this.moduleName = moduleName;
+      this.name = name;
+      this.label = label;
+      this.labelId = labelId;
+      this.description = description;
+      this.descriptionId = descriptionId;
+      this.icon = icon;
+      this.iconId = iconId;
+      this.process = process;
+      this.exported = exported;
+      this.orientation = orientation;
+      this.launchType = launchType;
+      this.permissions = permissions;
+      this.deviceTypes = deviceTypes;
+      this.applicationInfo = applicationInfo;
+      this.metadata = metadata;
+      this.enabled = enabled;
+      this.supportWindowModes = supportWindowModes;
+      this.windowSize = windowSize;
+      this.excludeFromDock = excludeFromDock;
+      this.skills = skills;
+      this.appIndex = appIndex;
+      this.orientationId = orientationId;
+  }
+  constructor(bundleName: string,
+    moduleName: string,
+    name: string,
+    label: string,
+    labelId: long,
+    description: string,
+    descriptionId: long,
+    icon: string,
+    iconId: long) {
+      this.bundleName = bundleName;
+      this.moduleName = moduleName;
+      this.name = name;
+      this.label = label;
+      this.labelId = labelId;
+      this.description = description;
+      this.descriptionId = descriptionId;
+      this.icon = icon;
+      this.iconId = iconId;
+  }
 }
 
 export class WindowSizeInner implements WindowSize {
-  readonly maxWindowRatio: number;
-  readonly minWindowRatio: number;
-  readonly maxWindowWidth: number;
-  readonly minWindowWidth: number;
-  readonly maxWindowHeight: number;
-  readonly minWindowHeight: number;
+  readonly maxWindowRatio: double;
+  readonly minWindowRatio: double;
+  readonly maxWindowWidth: long;
+  readonly minWindowWidth: long;
+  readonly maxWindowHeight: long;
+  readonly minWindowHeight: long;
+
+  constructor() { }
+  constructor(maxWindowRatio: double,
+    minWindowRatio: double,
+    maxWindowWidth: long,
+    minWindowWidth: long,
+    maxWindowHeight: long,
+    minWindowHeight: long) {
+      this.maxWindowRatio = maxWindowRatio;
+      this.minWindowRatio = minWindowRatio;
+      this.maxWindowWidth = maxWindowWidth;
+      this.minWindowWidth = minWindowWidth;
+      this.maxWindowHeight = maxWindowHeight;
+      this.minWindowHeight = minWindowHeight;
+  }
 }

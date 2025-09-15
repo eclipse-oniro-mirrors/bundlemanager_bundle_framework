@@ -356,7 +356,7 @@ static ani_object CreateChecksumSync(ani_env* env)
     Type checksumType = Builder::BuildClass({ zlibNS.Name(), TYPE_NAME_CHECKSUMINTERNAL });
     ani_class clsChecksum = CommonFunAni::CreateClassByName(env, checksumType.Descriptor());
     RETURN_NULL_IF_NULL(clsChecksum);
-    ani_object objChecksum = CommonFunAni::CreateNewObjectByClass(env, clsChecksum);
+    ani_object objChecksum = CommonFunAni::CreateNewObjectByClass(env, checksumType.Descriptor(), clsChecksum);
     return objChecksum;
 }
 
@@ -365,7 +365,7 @@ static ani_double Adler32(
 {
     int64_t adler = 0;
 
-    if (!CommonFunAni::TryCastDoubleTo(aniAdler, &adler)) {
+    if (!CommonFunAni::TryCastTo(aniAdler, &adler)) {
         APP_LOGE("Cast aniAdler failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER, TYPE_NUMBER);
         return 0;
@@ -400,19 +400,19 @@ static ani_double Adler32Combine(ani_env* env,
     int64_t adler2 = 0;
     int64_t len2 = 0;
 
-    if (!CommonFunAni::TryCastDoubleTo(aniAdler1, &adler1)) {
+    if (!CommonFunAni::TryCastTo(aniAdler1, &adler1)) {
         APP_LOGE("Cast aniAdler1 failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER1, TYPE_NUMBER);
         return 0;
     }
 
-    if (!CommonFunAni::TryCastDoubleTo(aniAdler2, &adler2)) {
+    if (!CommonFunAni::TryCastTo(aniAdler2, &adler2)) {
         APP_LOGE("Cast aniAdler2 failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_ADLER2, TYPE_NUMBER);
         return 0;
     }
 
-    if (!CommonFunAni::TryCastDoubleTo(aniLen2, &len2) || len2 < 0) {
+    if (!CommonFunAni::TryCastTo(aniLen2, &len2) || len2 < 0) {
         APP_LOGE("Cast aniLen2 failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_LEN2, TYPE_NUMBER);
         return 0;
@@ -429,7 +429,7 @@ static ani_double Crc32(ani_env* env, [[maybe_unused]] ani_object checksumObj, a
 {
     int64_t crc = 0;
 
-    if (!CommonFunAni::TryCastDoubleTo(aniCrc, &crc)) {
+    if (!CommonFunAni::TryCastTo(aniCrc, &crc)) {
         APP_LOGE("Cast aniCrc failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC, TYPE_NUMBER);
         return 0;
@@ -464,19 +464,19 @@ static ani_double Crc32Combine(ani_env* env,
     int64_t crc2 = 0;
     int64_t len2 = 0;
 
-    if (!CommonFunAni::TryCastDoubleTo(aniCrc1, &crc1)) {
+    if (!CommonFunAni::TryCastTo(aniCrc1, &crc1)) {
         APP_LOGE("Cast aniCrc1 failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC1, TYPE_NUMBER);
         return 0;
     }
 
-    if (!CommonFunAni::TryCastDoubleTo(aniCrc2, &crc2)) {
+    if (!CommonFunAni::TryCastTo(aniCrc2, &crc2)) {
         APP_LOGE("Cast aniCrc2 failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC2, TYPE_NUMBER);
         return 0;
     }
 
-    if (!CommonFunAni::TryCastDoubleTo(aniLen2, &len2) || len2 < 0) {
+    if (!CommonFunAni::TryCastTo(aniLen2, &len2) || len2 < 0) {
         APP_LOGE("Cast aniLen2 failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_LEN2, TYPE_NUMBER);
         return 0;
@@ -493,7 +493,7 @@ static ani_double Crc64(ani_env* env, [[maybe_unused]] ani_object checksumObj, a
 {
     uint64_t crc = 0;
 
-    if (!CommonFunAni::TryCastDoubleTo(aniCrc, &crc)) {
+    if (!CommonFunAni::TryCastTo(aniCrc, &crc)) {
         APP_LOGE("Cast aniCrc failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PARAM_NAME_CRC, TYPE_NUMBER);
         return 0;

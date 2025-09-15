@@ -22,19 +22,19 @@ import { ResourceInner } from 'global.resourceInner';
 export class ApplicationInfoInner implements ApplicationInfo {
   readonly name: string = "";
   readonly description: string = "";
-  readonly descriptionId: number;
+  readonly descriptionId: long;
   readonly enabled: boolean;
   readonly label: string = "";
-  readonly labelId: number;
+  readonly labelId: long;
   readonly icon: string = "";
-  readonly iconId: number;
+  readonly iconId: long;
   readonly process: string = "";
   readonly permissions: Array<string> = new Array<string>;
   readonly codePath: string = "";
   readonly metadataArray: Array<ModuleMetadata> = new Array<ModuleMetadata>;
   readonly removable: boolean;
-  readonly accessTokenId: number;
-  readonly uid: number;
+  readonly accessTokenId: long;
+  readonly uid: int;
   readonly iconResource: Resource = new ResourceInner;
   readonly labelResource: Resource = new ResourceInner;
   readonly descriptionResource: Resource = new ResourceInner;
@@ -46,27 +46,114 @@ export class ApplicationInfoInner implements ApplicationInfo {
   readonly dataUnclearable: boolean;
   readonly nativeLibraryPath: string = "";
   readonly multiAppMode: MultiAppMode = new MultiAppModeInner;
-  readonly appIndex: number;
+  readonly appIndex: int;
   readonly installSource: string = "";
   readonly releaseType: string = "";
   readonly cloudFileSyncEnabled: boolean;
   readonly cloudStructuredDataSyncEnabled?: boolean|undefined;
-  readonly flags?: number|undefined;
+  readonly flags?: int|undefined;
+
+  constructor() { }
+  constructor(name: string,
+    description: string,
+    descriptionId: long,
+    enabled: boolean,
+    label: string,
+    labelId: long,
+    icon: string,
+    iconId: long,
+    process: string,
+    permissions: Array<string>,
+    codePath: string,
+    metadataArray: Array<ModuleMetadata>,
+    removable: boolean,
+    accessTokenId: long,
+    uid: int,
+    iconResource: Resource,
+    labelResource: Resource,
+    descriptionResource: Resource,
+    appDistributionType: string,
+    appProvisionType: string,
+    systemApp: boolean,
+    bundleType: bundleManager.BundleType,
+    debug: boolean,
+    dataUnclearable: boolean,
+    nativeLibraryPath: string,
+    multiAppMode: MultiAppMode,
+    appIndex: int,
+    installSource: string,
+    releaseType: string,
+    cloudFileSyncEnabled: boolean,
+    cloudStructuredDataSyncEnabled?: boolean,
+    flags?: int) {
+      this.name = name;
+      this.description = description;
+      this.descriptionId = descriptionId;
+      this.enabled = enabled;
+      this.label = label;
+      this.labelId = labelId;
+      this.icon = icon;
+      this.iconId = iconId;
+      this.process = process;
+      this.permissions = permissions;
+      this.codePath = codePath;
+      this.metadataArray = metadataArray;
+      this.removable = removable;
+      this.accessTokenId = accessTokenId;
+      this.uid = uid;
+      this.iconResource = iconResource;
+      this.labelResource = labelResource;
+      this.descriptionResource = descriptionResource;
+      this.appDistributionType = appDistributionType;
+      this.appProvisionType = appProvisionType;
+      this.systemApp = systemApp;
+      this.bundleType = bundleType;
+      this.debug = debug;
+      this.dataUnclearable = dataUnclearable;
+      this.nativeLibraryPath = nativeLibraryPath;
+      this.multiAppMode = multiAppMode;
+      this.appIndex = appIndex;
+      this.installSource = installSource;
+      this.releaseType = releaseType;
+      this.cloudFileSyncEnabled = cloudFileSyncEnabled;
+      this.cloudStructuredDataSyncEnabled = cloudStructuredDataSyncEnabled;
+      this.flags = flags;
+  }
 }
 
 export class ModuleMetadataInner implements ModuleMetadata {
   readonly moduleName: string = "";
   readonly metadata: Array<Metadata> = new Array<Metadata>;
+
+  constructor() { }
+  constructor(moduleName: string, metadata: Array<Metadata>) {
+    this.moduleName = moduleName;
+    this.metadata = metadata;
+  }
 }
 
 export class MultiAppModeInner implements MultiAppMode {
   readonly multiAppModeType: bundleManager.MultiAppModeType = bundleManager.MultiAppModeType.UNSPECIFIED;
-  readonly maxCount: number;
+  readonly maxCount: int;
+
+  constructor() { }
+  constructor(multiAppModeType: bundleManager.MultiAppModeType, maxCount: int) {
+    this.multiAppModeType = multiAppModeType;
+    this.maxCount = maxCount;
+  }
 }
 
 export class PreinstalledApplicationInfoInner implements PreinstalledApplicationInfo {
   readonly bundleName: string = "";
   readonly moduleName: string = "";
-  readonly iconId: number;
-  readonly labelId: number;
+  readonly iconId: long;
+  readonly labelId: long;
+
+  constructor() { }
+  constructor(bundleName: string, moduleName: string, iconId: long, labelId: long) {
+    this.bundleName = bundleName;
+    this.moduleName = moduleName;
+    this.iconId = iconId;
+    this.labelId = labelId;
+  }
 }
