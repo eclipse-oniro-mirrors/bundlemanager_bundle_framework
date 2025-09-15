@@ -32,7 +32,7 @@ BundleMgrClient::BundleMgrClient()
 
 BundleMgrClient::~BundleMgrClient()
 {
-    APP_LOGD("destory BundleMgrClient");
+    APP_LOGD("destroy BundleMgrClient");
 }
 
 ErrCode BundleMgrClient::GetNameForUid(const int uid, std::string &name)
