@@ -7169,8 +7169,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0200, Function | SmallTest | Leve
 /**
  * @tc.number: IsDebuggableApplication_0100
  * @tc.name: test IsDebuggableApplication proxy
- * @tc.desc: 1.system run normally
- *           2.return false
+ * @tc.desc: test is debug application
  */
 HWTEST_F(ActsBmsKitSystemTest, IsDebuggableApplication_0100, Function | SmallTest | Level1)
 {
@@ -7198,8 +7197,7 @@ HWTEST_F(ActsBmsKitSystemTest, IsDebuggableApplication_0100, Function | SmallTes
 /**
  * @tc.number: IsDebuggableApplication_0200
  * @tc.name: test IsDebuggableApplication proxy
- * @tc.desc: 1.system run normally
- *           2.return false
+ * @tc.desc: test is debug application
  */
 HWTEST_F(ActsBmsKitSystemTest, IsDebuggableApplication_0200, Function | SmallTest | Level1)
 {
@@ -7209,6 +7207,21 @@ HWTEST_F(ActsBmsKitSystemTest, IsDebuggableApplication_0200, Function | SmallTes
     bool isDebuggable = false;
     ErrCode ret = bundleMgrProxy->IsDebuggableApplication(bundleName, isDebuggable);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IsDebuggableApplication_0300
+ * @tc.name: test IsDebuggableApplication proxy
+ * @tc.desc: test is debug application
+ */
+HWTEST_F(ActsBmsKitSystemTest, IsDebuggableApplication_0300, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName = "";
+    bool isDebuggable = false;
+    ErrCode ret = bundleMgrProxy->IsDebuggableApplication(bundleName, isDebuggable);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
 /**

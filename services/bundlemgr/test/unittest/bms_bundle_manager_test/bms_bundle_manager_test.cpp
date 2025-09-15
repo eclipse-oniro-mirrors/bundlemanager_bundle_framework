@@ -2976,6 +2976,29 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5300, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_5400
+ * @tc.name: test IsDebuggableApplication
+ * @tc.desc: 1.test IsDebuggableApplication
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_5400, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool isDebuggable = false;
+    ErrCode ret = hostImpl->IsDebuggableApplication("", isDebuggable);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = hostImpl->IsDebuggableApplication("ohos.global.systemres", isDebuggable);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
+    ret = hostImpl->IsDebuggableApplication(BUNDLE_NAME, isDebuggable);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: GetAbilityInfos_0100
  * @tc.name: test GetAbilityInfos
  * @tc.desc: 1.get ability not exist
