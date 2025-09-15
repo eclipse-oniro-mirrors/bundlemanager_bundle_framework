@@ -78,7 +78,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_zip_0100_8file, Function | MediumTest | Leve
     OPTIONS options;
     auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_TRUE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -95,7 +94,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_zip_0200_1file, Function | MediumTest | Leve
     OPTIONS options;
     auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_TRUE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -112,7 +110,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_zip_0100_zip1file, Function | MediumTest | L
     OPTIONS options;
     auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_TRUE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -129,7 +126,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_0100_8file, Function | MediumTest | Le
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -147,7 +143,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_0100_8file_parallel, Function | Medium
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -164,7 +159,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_single_0200_1file, Function | MediumTe
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -182,7 +176,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_single_0200_1file_parallel, Function |
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -199,7 +192,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_0100_zip1file, Function | MediumTest |
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -217,7 +209,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_unzip_0100_zip1file_parallel, Function | Med
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 
@@ -239,7 +230,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0100, Function | MediumTest | Level
     FilePath newDestFile(destFile.CheckDestDirTail());
     std::cout << newDestFile.Value() << std::endl;
     EXPECT_TRUE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -256,7 +246,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0200, Function | MediumTest | Level
     OPTIONS options;
     auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_TRUE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -279,7 +268,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0300, Function | MediumTest | Level
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
     EXPECT_TRUE(ret3);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -299,7 +287,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0400, Function | MediumTest | Level
     EXPECT_TRUE(ret);
     std::cout << "srcFile1  DirName: " << srcFile1.DirName().Value() << std::endl;
     std::cout << "srcFile1  Value:   " << srcFile1.Value() << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -316,7 +303,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0500, Function | MediumTest | Level
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -334,7 +320,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0500_parallel, Function | MediumTes
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 
@@ -353,7 +338,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0600, Function | MediumTest | Level
     auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_FALSE(ret);
     std::cout << dest << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -374,7 +358,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0700, Function | MediumTest | Level
     destFile.CheckDestDirTail();
     FilePath newDestFile(destFile.CheckDestDirTail());
     std::cout << newDestFile.Value() << std::endl;
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -391,7 +374,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0800, Function | MediumTest | Level
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -409,7 +391,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0800_parallel, Function | MediumTes
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -424,7 +405,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0100, Function | MediumTest 
 
     auto ret = GetOriginalSize(src, originalSize);
     EXPECT_EQ(ret, ERR_ZLIB_SRC_FILE_DISABLED);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -439,7 +419,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0200, Function | MediumTest 
 
     auto ret = GetOriginalSize(src, originalSize);
     EXPECT_EQ(ret, ERR_ZLIB_SRC_FILE_DISABLED);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -454,7 +433,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0300, Function | MediumTest 
 
     auto ret = GetOriginalSize(src, originalSize);
     EXPECT_EQ(ret, ERR_ZLIB_SRC_FILE_FORMAT_ERROR);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
@@ -470,7 +448,6 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0400, Function | MediumTest 
     auto ret = GetOriginalSize(src, originalSize);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_GT(originalSize, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 
 /**
