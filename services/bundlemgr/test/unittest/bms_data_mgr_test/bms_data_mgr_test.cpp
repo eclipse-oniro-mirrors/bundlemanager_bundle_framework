@@ -2358,6 +2358,21 @@ HWTEST_F(BmsDataMgrTest, IsDebuggableApplication_0200, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: IsDebuggableApplication_0300
+ * @tc.name: test IsDebuggableApplication
+ * @tc.desc: 1.test is debug application
+ */
+HWTEST_F(BmsDataMgrTest, IsDebuggableApplication_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string bundleName = "ohos.global.systemres";
+    bool isDebuggable = false;
+    auto ret = dataMgr->IsDebuggableApplication(bundleName, isDebuggable);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: IsApplicationEnabled_0100
  * @tc.name: test IsApplicationEnabled
  * @tc.desc: 1.test enable application
