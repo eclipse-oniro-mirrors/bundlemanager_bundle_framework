@@ -72,7 +72,8 @@ const uint32_t BACKGROUND_MODES_MAP_VALUE[] = {
 
 const std::unordered_set<std::string> GRANT_MODE_SET = {
     "system_grant",
-    "user_grant"
+    "user_grant",
+    "manual_settings"
 };
 
 const std::unordered_set<std::string> AVAILABLE_LEVEL_SET = {
