@@ -1259,6 +1259,9 @@ public:
 
     virtual ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName,
         ModuleTestRunner &testRunner) override;
+
+    virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
+        int32_t userId) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

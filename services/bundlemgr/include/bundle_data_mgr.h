@@ -1180,6 +1180,8 @@ public:
     std::set<std::string> GetOtaNewInstallBundleNames();
     void ClearOtaNewInstallBundleNames();
     bool InnerProcessOtaNewInstallBundle(const std::string &bundleName, const int32_t userId) const;
+    ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
+        int32_t userId, bool &stateChange);
 
 private:
     /**

@@ -820,6 +820,22 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0045, TestSize.Leve
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
+/*
+ * @tc.number: BundleMgrHostImpl_0046
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: SwitchUninstallState SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0046, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "com.example.test";
+    bool state = true;
+    auto ret = localBundleMgrHostImpl->SwitchUninstallStateByUserId(bundleName, state, 100);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 /**
  * @tc.number: BundleResourceHostImpl_0001

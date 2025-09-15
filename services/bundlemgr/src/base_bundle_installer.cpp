@@ -1763,7 +1763,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     if (!installParam.GetForceExecuted() &&
-        !oldInfo.GetUninstallState() && installParam.GetKillProcess() && !installParam.GetIsUninstallAndRecover()) {
+        (!oldInfo.GetUninstallState() || !curInnerBundleUserInfo.canUninstall) && installParam.GetKillProcess() &&
+        !installParam.GetIsUninstallAndRecover()) {
         if (!isForcedUninstall) {
             LOG_E(BMS_TAG_INSTALLER, "bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
                 bundleName.c_str(), oldInfo.GetUninstallState());

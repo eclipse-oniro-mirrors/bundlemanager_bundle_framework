@@ -5445,6 +5445,34 @@ ErrCode BundleMgrProxy::SwitchUninstallState(const std::string &bundleName, cons
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::SwitchUninstallStateByUserId(const std::string &bundleName, const bool state, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(state)) {
+        APP_LOGE("write state failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SWITCH_UNINSTALL_STATE_BY_USER_ID, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::QueryAbilityInfoByContinueType(const std::string &bundleName,
     const std::string &continueType,  AbilityInfo &abilityInfo, int32_t userId)
 {
