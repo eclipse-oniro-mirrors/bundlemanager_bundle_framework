@@ -3326,10 +3326,10 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
             info.GetBundleName().c_str(), userId_);
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
-
-    if (!dataMgr_->GenerateUidAndGid(newInnerBundleUserInfo)) {
+    ErrCode ret = dataMgr_->GenerateUidAndGid(newInnerBundleUserInfo);
+    if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to generate uid and gid");
-        return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
+        return ret;
     }
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);
@@ -5683,9 +5683,10 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
             return ERR_APPEXECFWK_USER_NOT_EXIST;
         }
 
-        if (!dataMgr_->GenerateUidAndGid(newInnerBundleUserInfo)) {
-            LOG_E(BMS_TAG_INSTALLER, "fail to gererate uid and gid");
-            return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
+        errCode = dataMgr_->GenerateUidAndGid(newInnerBundleUserInfo);
+        if (errCode != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "fail to generate uid and gid");
+            return errCode;
         }
         BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
             Constants::APP_PROVISION_TYPE_FILE_NAME);
@@ -5990,7 +5991,7 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
             LOG_D(BMS_TAG_INSTALLER, "parsed path: %{public}s", newPath.c_str());
         } else {
             LOG_E(BMS_TAG_INSTALLER, "path invalid: %{public}s", bundlePath.c_str());
-            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+            return ERR_APPEXECFWK_INSTALL_RENAME_INSTALL_FILE_PATH_NOT_START_WITH_APP_INSTALL_SANDBOX;
         }
     }
     if (!parsedPaths.empty()) {

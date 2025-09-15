@@ -68,7 +68,6 @@ ohos_shared_library("bundlemgr_extension") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "relational_store:native_rdb",
-    "ffrt:libffrt",
   ]
 
   subsystem_name = "bundlemanager"

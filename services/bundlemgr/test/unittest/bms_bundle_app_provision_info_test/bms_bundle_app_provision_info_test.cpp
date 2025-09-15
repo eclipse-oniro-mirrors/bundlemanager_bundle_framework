@@ -1022,7 +1022,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0600, Fun
     std::vector<std::string> bundlePaths;
     std::string signatureFilePath;
     auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY);
 
     inBundlePaths.emplace_back(HSP_FILE_PATH1);
     ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
@@ -1045,7 +1045,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0700, Fun
     inBundlePaths.emplace_back(HAP_FILE_PATH1);
     inBundlePaths.emplace_back(HSP_FILE_PATH1);
     ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_NUMBER_EXCEED_MAX_NUMBER_IN_HSP_LIB_PATH);
 }
 
 /**
@@ -1060,12 +1060,12 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0800, Fun
     std::vector<std::string> bundlePaths;
     std::string signatureFilePath;
     auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ONLY_HSP_OR_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR);
 
     inBundlePaths.clear();
     inBundlePaths = {HSP_FILE_PATH1, HSP_FILE_PATH1};
     ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ONLY_ONE_HSP_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR);
 
     inBundlePaths[0] = "test.sig";
     ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);

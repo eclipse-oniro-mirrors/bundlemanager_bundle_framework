@@ -588,14 +588,18 @@ ErrCode InnerSharedBundleInstaller::CopyHspToSecurityDir(std::vector<std::string
 ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std::vector<std::string> &inBundlePaths,
     std::vector<std::string> &bundlePaths, std::string &signatureFilePath)
 {
-    if (inBundlePaths.empty() || inBundlePaths.size() > MAX_FILE_NUMBER) {
-        APP_LOGE("number of files in single shared lib path is illegal");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    if (inBundlePaths.empty()) {
+        APP_LOGE("bundle path is empty");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY;
+    }
+    if (inBundlePaths.size() > MAX_FILE_NUMBER) {
+        APP_LOGE("number of files in single shared lib path exceed max number");
+        return ERR_APPEXECFWK_INSTALL_FILE_NUMBER_EXCEED_MAX_NUMBER_IN_HSP_LIB_PATH;
     }
     if (inBundlePaths.size() == 1) {
         if (!BundleUtil::EndWith(inBundlePaths[0], ServiceConstants::HSP_FILE_SUFFIX)) {
             APP_LOGE("invalid file in shared bundle dir");
-            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+            return ERR_APPEXECFWK_INSTALL_ONLY_HSP_OR_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR;
         }
         bundlePaths.emplace_back(inBundlePaths[0]);
         return ERR_OK;
@@ -606,7 +610,7 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
         if ((path.find(ServiceConstants::HSP_FILE_SUFFIX) == std::string::npos) &&
             (path.find(ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX) == std::string::npos)) {
             APP_LOGE("only hsp or sig file can be contained in shared bundle dir");
-            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+            return ERR_APPEXECFWK_INSTALL_ONLY_HSP_OR_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR;
         }
         if (BundleUtil::EndWith(path, ServiceConstants::HSP_FILE_SUFFIX)) {
             numberOfHsp++;
@@ -616,9 +620,13 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
             numberOfSignatureFile++;
             signatureFilePath = path;
         }
-        if ((numberOfHsp >= MAX_FILE_NUMBER) || (numberOfSignatureFile >= MAX_FILE_NUMBER)) {
-            APP_LOGE("only one hsp and one signature file can be contained in a single shared bundle dir");
-            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        if (numberOfHsp >= MAX_FILE_NUMBER) {
+            APP_LOGE("only one hsp file can be contained in a single shared bundle dir");
+            return ERR_APPEXECFWK_INSTALL_ONLY_ONE_HSP_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR;
+        }
+        if (numberOfSignatureFile >= MAX_FILE_NUMBER) {
+            APP_LOGE("only one signature file can be contained in a single shared bundle dir");
+            return ERR_APPEXECFWK_INSTALL_ONLY_ONE_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR;
         }
     }
     APP_LOGD("signatureFilePath is %{public}s", signatureFilePath.c_str());

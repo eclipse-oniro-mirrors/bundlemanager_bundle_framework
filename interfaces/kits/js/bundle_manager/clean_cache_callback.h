@@ -16,7 +16,6 @@
 #ifndef BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_CLEAN_CACHE_CALLBACK_H
 #define BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_CLEAN_CACHE_CALLBACK_H
 
-#include "ffrt.h"
 #include <future>
 #include <uv.h>
 
@@ -43,7 +42,7 @@ public:
 
 private:
     bool err_ = false;
-    ffrt::mutex mutex_;
+    std::mutex mutex_;
     bool complete_ = false;
     std::promise<void> promise_;
     std::future<void> future_ = promise_.get_future();

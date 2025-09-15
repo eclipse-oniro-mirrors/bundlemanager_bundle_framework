@@ -146,8 +146,9 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     InnerBundleUserInfo newUserInfo;
     newUserInfo.bundleName = bundleName;
     newUserInfo.bundleUserInfo.userId = userId;
-    if (!dataMgr_->GenerateUidAndGid(newUserInfo)) {
-        return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
+    ErrCode ret = dataMgr_->GenerateUidAndGid(newUserInfo);
+    if (ret != ERR_OK) {
+        return ret;
     }
     BundleUtil::MakeFsConfig(info.GetBundleName(), ServiceConstants::HMDFS_CONFIG_PATH, info.GetAppProvisionType(),
         Constants::APP_PROVISION_TYPE_FILE_NAME);

@@ -21,7 +21,6 @@
 #include <string>
 
 #include "bms_ecological_rule_mgr_service_client.h"
-#include "ffrt.h"
 #include "free_install_params.h"
 #include "inner_bundle_info.h"
 #include "install_result.h"
@@ -252,8 +251,8 @@ private:
         const sptr<IRemoteObject> &callBack, InnerBundleInfo &innerBundleInfo);
 
     bool GetAbilityMgrProxy();
-    void WaitFromConnecting(std::unique_lock<ffrt::mutex> &lock);
-    void WaitFromConnected(std::unique_lock<ffrt::mutex> &lock);
+    void WaitFromConnecting(std::unique_lock<std::mutex> &lock);
+    void WaitFromConnected(std::unique_lock<std::mutex> &lock);
     void DisconnectDelay();
 
     void PreloadRequest(int32_t flag, const TargetAbilityInfo &targetAbilityInfo);
@@ -277,9 +276,9 @@ private:
     mutable std::atomic<int> transactId_ = 0;
     sptr<ServiceCenterConnection> serviceCenterConnection_;
     // maintain the order of using locks. mutex_ >> remoteObejctMutex_ >> mapMutex_
-    ffrt::mutex mutex_;
-    ffrt::mutex mapMutex_;
-    ffrt::condition_variable cv_;
+    std::mutex mutex_;
+    std::mutex mapMutex_;
+    std::condition_variable cv_;
     std::shared_ptr<SerialQueue> serialQueue_;
     std::map<std::string, FreeInstallParams> freeInstallParamsMap_;
 };

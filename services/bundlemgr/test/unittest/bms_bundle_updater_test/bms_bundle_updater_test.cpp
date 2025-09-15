@@ -337,7 +337,7 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0300, Function | SmallTest | Level0)
     EXPECT_EQ(installResult, ERR_OK);
 
     ErrCode updateResult = UpdateBundle("");
-    EXPECT_EQ(updateResult, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(updateResult, ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED);
 
     installResult = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(installResult, ERR_OK);
@@ -355,7 +355,7 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0400, Function | SmallTest | Level0)
     EXPECT_EQ(installResult, ERR_OK);
 
     ErrCode updateResult = UpdateBundle(BUNDLE_FILE_DIR + ERROR_BUNDLE_NAME);
-    EXPECT_EQ(updateResult, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(updateResult, ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED);
 
     installResult = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(installResult, ERR_OK);

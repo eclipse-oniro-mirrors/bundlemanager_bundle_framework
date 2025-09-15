@@ -170,7 +170,7 @@ void BundleConnectAbilityMgr::PreloadRequest(int32_t flag, const TargetAbilityIn
         LOG_E(BMS_TAG_DEFAULT, "failed to WriteRemoteObject callbcak");
         return;
     }
-    std::unique_lock<ffrt::mutex> mutexLock(mutex_);
+    std::unique_lock<std::mutex> mutexLock(mutex_);
     sptr<IRemoteObject> serviceCenterRemoteObject = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "failed to get remote object");
@@ -182,7 +182,7 @@ void BundleConnectAbilityMgr::PreloadRequest(int32_t flag, const TargetAbilityIn
         return;
     }
     freeInstallParams->serviceCenterFunction = ServiceCenterFunction::CONNECT_PRELOAD_INSTALL;
-    std::unique_lock<ffrt::mutex> lock(mapMutex_);
+    std::unique_lock<std::mutex> lock(mapMutex_);
     auto emplaceResult = freeInstallParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, *freeInstallParams);
     LOG_I(BMS_TAG_DEFAULT, "emplace map size = %{public}zu, transactId = %{public}s",
         freeInstallParamsMap_.size(), targetAbilityInfo.targetInfo.transactId.c_str());
@@ -444,7 +444,7 @@ void BundleConnectAbilityMgr::LoadService(int32_t saId) const
 
 void BundleConnectAbilityMgr::DisconnectAbility()
 {
-    std::unique_lock<ffrt::mutex> mutexLock(mutex_);
+    std::unique_lock<std::mutex> mutexLock(mutex_);
     if (serviceCenterConnection_ != nullptr) {
         LOG_I(BMS_TAG_DEFAULT, "DisconnectAbility");
         int result = AbilityManagerClient::GetInstance()->DisconnectAbility(serviceCenterConnection_);
@@ -454,7 +454,7 @@ void BundleConnectAbilityMgr::DisconnectAbility()
     }
 }
 
-void BundleConnectAbilityMgr::WaitFromConnecting(std::unique_lock<ffrt::mutex> &lock)
+void BundleConnectAbilityMgr::WaitFromConnecting(std::unique_lock<std::mutex> &lock)
 {
     LOG_I(BMS_TAG_DEFAULT, "ConnectAbility await start CONNECTING");
     while (connectState_ == ServiceCenterConnectState::CONNECTING) {
@@ -463,7 +463,7 @@ void BundleConnectAbilityMgr::WaitFromConnecting(std::unique_lock<ffrt::mutex> &
     LOG_I(BMS_TAG_DEFAULT, "ConnectAbility await end CONNECTING");
 }
 
-void BundleConnectAbilityMgr::WaitFromConnected(std::unique_lock<ffrt::mutex> &lock)
+void BundleConnectAbilityMgr::WaitFromConnected(std::unique_lock<std::mutex> &lock)
 {
     LOG_I(BMS_TAG_DEFAULT, "ConnectAbility await start CONNECTED");
     while (connectState_ != ServiceCenterConnectState::CONNECTED) {
@@ -478,7 +478,7 @@ void BundleConnectAbilityMgr::WaitFromConnected(std::unique_lock<ffrt::mutex> &l
 bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemoteObject> &callerToken)
 {
     LOG_I(BMS_TAG_DEFAULT, "ConnectAbility start target bundle = %{public}s", want.GetBundle().c_str());
-    std::unique_lock<ffrt::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     serialQueue_->CancelDelayTask(DISCONNECT_DELAY_TASK);
     if (connectState_ == ServiceCenterConnectState::CONNECTING) {
         WaitFromConnecting(lock);
@@ -535,7 +535,7 @@ void BundleConnectAbilityMgr::SendCallBack(
         return;
     }
 
-    std::unique_lock<ffrt::mutex> lock(mapMutex_);
+    std::unique_lock<std::mutex> lock(mapMutex_);
     if (freeInstallParamsMap_[transactId].serviceCenterFunction == ServiceCenterFunction::CONNECT_UPGRADE_INSTALL &&
         resultCode != ServiceCenterResultCode::FREE_INSTALL_OK) {
         LOG_E(BMS_TAG_DEFAULT, "SendCallBack, freeinstall upgrade return ok");
@@ -611,9 +611,9 @@ void BundleConnectAbilityMgr::SendCallBack(const std::string &transactId, const 
 void BundleConnectAbilityMgr::DeathRecipientSendCallback()
 {
     LOG_I(BMS_TAG_DEFAULT, "DeathRecipientSendCallback start");
-    std::unique_lock<ffrt::mutex> mutexLock(mutex_);
+    std::unique_lock<std::mutex> mutexLock(mutex_);
     connectState_ = ServiceCenterConnectState::DISCONNECTED;
-    std::unique_lock<ffrt::mutex> lock(mapMutex_);
+    std::unique_lock<std::mutex> lock(mapMutex_);
     LOG_I(BMS_TAG_DEFAULT, "freeInstallParamsMap size = %{public}zu", freeInstallParamsMap_.size());
     for (auto &it : freeInstallParamsMap_) {
         SendCallBack(it.first, it.second);
@@ -635,7 +635,7 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
     }
     LOG_I(BMS_TAG_DEFAULT, "OnServiceCenterCall, retCode = %{public}d", installResult.result.retCode);
     FreeInstallParams freeInstallParams;
-    std::unique_lock<ffrt::mutex> lock(mapMutex_);
+    std::unique_lock<std::mutex> lock(mapMutex_);
     auto node = freeInstallParamsMap_.find(installResult.result.transactId);
     if (node == freeInstallParamsMap_.end()) {
         LOG_E(BMS_TAG_DEFAULT, "Can not find node");
@@ -670,7 +670,7 @@ void BundleConnectAbilityMgr::OnDelayedHeartbeat(std::string installResultStr)
     }
     LOG_I(BMS_TAG_DEFAULT, "OnDelayedHeartbeat, retCode = %{public}d", installResult.result.retCode);
     FreeInstallParams freeInstallParams;
-    std::unique_lock<ffrt::mutex> lock(mapMutex_);
+    std::unique_lock<std::mutex> lock(mapMutex_);
     auto node = freeInstallParamsMap_.find(installResult.result.transactId);
     if (node == freeInstallParamsMap_.end()) {
         LOG_E(BMS_TAG_DEFAULT, "Can not find node");
@@ -691,7 +691,7 @@ void BundleConnectAbilityMgr::OnServiceCenterReceived(std::string installResultS
         return;
     }
     FreeInstallParams freeInstallParams;
-    std::unique_lock<ffrt::mutex> lock(mapMutex_);
+    std::unique_lock<std::mutex> lock(mapMutex_);
     auto node = freeInstallParamsMap_.find(installResult.result.transactId);
     if (node == freeInstallParamsMap_.end()) {
         LOG_E(BMS_TAG_DEFAULT, "Can not find node");
@@ -716,7 +716,7 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
 {
     LOG_I(BMS_TAG_DEFAULT, "BundleConnectAbilityMgr::OutTimeMonitor");
     FreeInstallParams freeInstallParams;
-    std::unique_lock<ffrt::mutex> lock(mapMutex_);
+    std::unique_lock<std::mutex> lock(mapMutex_);
     auto node = freeInstallParamsMap_.find(transactId);
     if (node == freeInstallParamsMap_.end()) {
         LOG_E(BMS_TAG_DEFAULT, "Can not find node");
@@ -765,7 +765,7 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
         SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
         return;
     }
-    std::unique_lock<ffrt::mutex> mutexLock(mutex_);
+    std::unique_lock<std::mutex> mutexLock(mutex_);
     sptr<IRemoteObject> serviceCenterRemoteObject = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "failed to get remote object");
@@ -773,7 +773,7 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
         return;
     }
-    std::unique_lock<ffrt::mutex> lock(mapMutex_);
+    std::unique_lock<std::mutex> lock(mapMutex_);
     auto emplaceResult = freeInstallParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, freeInstallParams);
     LOG_I(BMS_TAG_DEFAULT, "emplace map size = %{public}zu, transactId = %{public}s",
         freeInstallParamsMap_.size(), targetAbilityInfo.targetInfo.transactId.c_str());
@@ -796,7 +796,7 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
 bool BundleConnectAbilityMgr::SendRequest(int32_t code, MessageParcel &data, MessageParcel &reply)
 {
     LOG_I(BMS_TAG_DEFAULT, "BundleConnectAbilityMgr::SendRequest to service center");
-    std::unique_lock<ffrt::mutex> mutexLock(mutex_);
+    std::unique_lock<std::mutex> mutexLock(mutex_);
     sptr<IRemoteObject> serviceCenterRemoteObject = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "failed to get remote object");
@@ -815,7 +815,7 @@ sptr<IRemoteObject> BundleConnectAbilityMgr::GetAbilityManagerServiceCallBack(st
 {
     LOG_I(BMS_TAG_DEFAULT, "GetAbilityManagerServiceCallBack");
     FreeInstallParams freeInstallParams;
-    std::unique_lock<ffrt::mutex> lock(mapMutex_);
+    std::unique_lock<std::mutex> lock(mapMutex_);
     auto node = freeInstallParamsMap_.find(transactId);
     if (node == freeInstallParamsMap_.end()) {
         LOG_E(BMS_TAG_DEFAULT, "Can not find node transactId = %{public}s", transactId.c_str());

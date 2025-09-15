@@ -1044,7 +1044,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0001, Function | Smal
         want.SetElement(name);
         bundleMgr->UpgradeAtomicService(want, USERID);
         int32_t connectState = 0;
-        ffrt::condition_variable cv;
+        std::condition_variable cv;
         const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
         ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
         bool ret = bundleMgr->QueryAbilityInfo(want,
@@ -1077,7 +1077,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0003, Function | Smal
         bundleMgr->UpgradeAtomicService(want, USERID);
         bundleMgr->DisconnectDelay();
         int32_t connectState = 0;
-        ffrt::condition_variable cv;
+        std::condition_variable cv;
         const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
         ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
         bool ret = bundleMgr->ConnectAbility(want, connection.serviceCenterRemoteObject_);
@@ -1107,7 +1107,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0004, Function | Smal
         name.SetBundleName(BUNDLE_NAME);
         want.SetElement(name);
         InnerBundleInfo innerBundleInfo;
-        ffrt::condition_variable cv;
+        std::condition_variable cv;
         int32_t connectState = 0;
         const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
         ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
@@ -1438,7 +1438,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0026, Function | Smal
 HWTEST_F(BmsBundleFreeInstallTest, OnAbilityConnectDone_0001, Function | SmallTest | Level0)
 {
     int32_t connectState = 0;
-    ffrt::condition_variable cv;
+    std::condition_variable cv;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
     ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
     ElementName element;
@@ -1459,7 +1459,7 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityConnectDone_0001, Function | SmallTe
 HWTEST_F(BmsBundleFreeInstallTest, OnAbilityConnectDone_0002, Function | SmallTest | Level0)
 {
     int32_t connectState = 0;
-    ffrt::condition_variable cv;
+    std::condition_variable cv;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
     ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
     ElementName element;
@@ -1480,7 +1480,7 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityConnectDone_0002, Function | SmallTe
 HWTEST_F(BmsBundleFreeInstallTest, OnAbilityConnectDone_0003, Function | SmallTest | Level0)
 {
     int32_t connectState = 0;
-    ffrt::condition_variable cv;
+    std::condition_variable cv;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
     ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
     ElementName element;
@@ -1884,7 +1884,7 @@ HWTEST_F(BmsBundleFreeInstallTest, QueryBundleStatsInfoByInterval_0100, Function
 HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0100, Function | SmallTest | Level0)
 {
     int32_t connectState = 0;
-    ffrt::condition_variable cv;
+    std::condition_variable cv;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
     ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
     ElementName element;
@@ -1911,7 +1911,7 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0100, Function | Smal
 HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0200, Function | SmallTest | Level0)
 {
     int32_t connectState = 0;
-    ffrt::condition_variable cv;
+    std::condition_variable cv;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
     ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
     ElementName element;
@@ -1937,7 +1937,7 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0200, Function | Smal
 HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0300, Function | SmallTest | Level0)
 {
     int32_t connectState = 0;
-    ffrt::condition_variable cv;
+    std::condition_variable cv;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
     ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
     ElementName element;
@@ -1963,7 +1963,7 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0300, Function | Smal
 HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0400, Function | SmallTest | Level0)
 {
     int32_t connectState = 0;
-    ffrt::condition_variable cv;
+    std::condition_variable cv;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
     ServiceCenterConnection connection(connectState, cv, connectAbilityMgr);
     ElementName element;

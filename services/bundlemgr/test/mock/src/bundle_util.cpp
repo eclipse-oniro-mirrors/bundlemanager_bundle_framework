@@ -38,14 +38,14 @@ bool BundleUtil::CheckFileType(const std::string &fileName, const std::string &e
     return true;
 }
 
-bool BundleUtil::CheckFileName(const std::string &fileName)
+ErrCode BundleUtil::CheckFileName(const std::string &fileName)
 {
-    return true;
+    return ERR_OK;
 }
 
-bool BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t fileSize)
+ErrCode BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t fileSize)
 {
-    return true;
+    return ERR_OK;
 }
 
 bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::string &diskPath)
@@ -63,9 +63,10 @@ bool BundleUtil::CheckSystemSizeAndHisysEvent(const std::string &path, const std
     return true;
 }
 
-bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList)
+ErrCode BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
+    std::vector<std::string>& hapFileList)
 {
-    return true;
+    return ERR_OK;
 }
 
 int64_t BundleUtil::GetCurrentTime()
@@ -349,14 +350,14 @@ bool BundleUtil::CheckFileType(const std::string &fileName, const std::string &e
     return false;
 }
 
-bool BundleUtil::CheckFileName(const std::string &fileName)
+ErrCode BundleUtil::CheckFileName(const std::string &fileName)
 {
-    return false;
+    return ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY;
 }
 
-bool BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t fileSize)
+ErrCode BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t fileSize)
 {
-    return false;
+    return ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED;
 }
 
 bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::string &diskPath)
@@ -374,9 +375,10 @@ bool BundleUtil::CheckSystemSizeAndHisysEvent(const std::string &path, const std
     return false;
 }
 
-bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList)
+ErrCode BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
+    std::vector<std::string>& hapFileList)
 {
-    return false;
+    return ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY;
 }
 
 int64_t BundleUtil::GetCurrentTime()

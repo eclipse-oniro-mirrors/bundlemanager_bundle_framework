@@ -38,7 +38,7 @@ uint32_t GetU32Data(const char* ptr)
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     int32_t connectState = 0;
-    ffrt::condition_variable cv;
+    std::condition_variable cv;
     const std::weak_ptr<BundleConnectAbilityMgr> connectAbilityMgr;
     ServiceCenterConnection serviceCenterConnection(connectState, cv, connectAbilityMgr);
     sptr<IRemoteObject> remoteObject = nullptr;

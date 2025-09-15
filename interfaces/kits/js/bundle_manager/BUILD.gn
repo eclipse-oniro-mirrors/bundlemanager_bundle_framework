@@ -62,7 +62,6 @@ ohos_shared_library("bundle_manager_common") {
     "hilog:libhilog",
     "ipc:ipc_single",
     "napi:ace_napi",
-    "ffrt:libffrt",
   ]
 
   subsystem_name = "bundlemanager"
@@ -120,7 +119,6 @@ ohos_shared_library("bundlemanager") {
     "hilog:libhilog",
     "ipc:ipc_single",
     "napi:ace_napi",
-    "ffrt:libffrt",
   ]
 
   if (global_resmgr_enable && bundle_framework_graphics) {

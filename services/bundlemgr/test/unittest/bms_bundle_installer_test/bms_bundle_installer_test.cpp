@@ -1932,11 +1932,11 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0400, Function | SmallTest
 {
     BundleUtil bundleUtil;
     std::string maxFileName = std::string(256, 'a');
-    bool res = bundleUtil.CheckFileName(maxFileName);
-    EXPECT_EQ(res, true);
+    ErrCode res = bundleUtil.CheckFileName(maxFileName);
+    EXPECT_EQ(res, ERR_OK);
     maxFileName.append(".txt");
     res = bundleUtil.CheckFileName(maxFileName);
-    EXPECT_EQ(res, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INVALID_FILE_NAME_SIZE);
 }
 
 /**
@@ -1947,8 +1947,8 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0400, Function | SmallTest
 HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0500, Function | SmallTest | Level0)
 {
     BundleUtil bundleUtil;
-    bool res = bundleUtil.CheckFileSize(BUNDLE_NAME, 0);
-    EXPECT_EQ(res, false);
+    ErrCode res = bundleUtil.CheckFileSize(BUNDLE_NAME, 0);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED);
 }
 
 /**
@@ -1961,11 +1961,11 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0600, Function | SmallTest
     BundleUtil bundleUtil;
     std::string currentPath = "";
     std::vector<std::string> fileList = {"test1.hap"};
-    bool res = bundleUtil.GetHapFilesFromBundlePath(currentPath, fileList);
-    EXPECT_EQ(res, false);
+    ErrCode res = bundleUtil.GetHapFilesFromBundlePath(currentPath, fileList);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY);
     currentPath = "/data/test/test2.hap";
     res = bundleUtil.GetHapFilesFromBundlePath(currentPath, fileList);
-    EXPECT_EQ(res, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_OPENDIR_FAILED);
 }
 
 /**
@@ -2287,7 +2287,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0300, Function | SmallTest 
     int32_t uid = 0;
     ErrCode ret = installer.ProcessBundleInstall(
         inBundlePaths, installParam, appType, uid);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY);
     installer.dataMgr_ = GetBundleDataMgr();
 
     installParam.userId = Constants::INVALID_USERID;
@@ -5674,7 +5674,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0010, Function | SmallTest 
     InnerBundleInfo info;
     installer.InitDataMgr();
     ErrCode res = installer.CreateBundleDataDir(info);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY);
 }
 
 /**
@@ -5704,10 +5704,11 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
     dataMgr->bundleInfos_.clear();
     bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::INSTALL_START);
     bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME_TEST, info);
-    bool ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_TRUE(ret3);
+    EXPECT_EQ(ret3, ERR_OK);
 
     BaseBundleInstaller installer;
     installer.InitDataMgr();
@@ -5715,10 +5716,10 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
     ErrCode res = installer.CreateBundleDataDir(info);
     EXPECT_NE(res, ERR_OK);
 
-    ret3 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::UNINSTALL_START);
-    EXPECT_TRUE(ret3);
-    ret3 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::UNINSTALL_SUCCESS);
-    EXPECT_TRUE(ret3);
+    bool ret4 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::UNINSTALL_START);
+    EXPECT_TRUE(ret4);
+    ret4 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::UNINSTALL_SUCCESS);
+    EXPECT_TRUE(ret4);
 }
 
 /**
@@ -5958,8 +5959,8 @@ HWTEST_F(BmsBundleInstallerTest, GetHapFilesFromBundlePath_0100, Function | Smal
     }
     bundleUtil.MakeFsConfig("testWrong.hap", 1, "/data/testWrong");
     bundleUtil.MakeFsConfig("testWrong.hap", "/data/testWrong", "1", "appid");
-    bool res = bundleUtil.GetHapFilesFromBundlePath(CURRENT_PATH, fileList);
-    EXPECT_EQ(res, false);
+    ErrCode res = bundleUtil.GetHapFilesFromBundlePath(CURRENT_PATH, fileList);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_HAP_NUMBER_EXCEED_MAX_NUMBER);
     bundleUtil.DeleteTempDirs(fileList);
 }
 
@@ -10516,7 +10517,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0004, Function | MediumTest | L
     InstallPluginParam installPluginParam;
     installPluginParam.userId = 100;
     auto ret = installer.InstallPlugin(bundleName, pluginFilePaths, installPluginParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY);
 
     std::string pluginBundleName;
     auto uninstallRet = installer.UninstallPlugin(bundleName, pluginBundleName, installPluginParam);
@@ -10536,7 +10537,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0005, Function | MediumTest | L
     std::vector<std::string> pluginFilePaths;
     InstallPluginParam installPluginParam;
     auto ret = installer.ParseFiles(pluginFilePaths, installPluginParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY);
 }
 
 /**

@@ -1655,7 +1655,8 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
 
 ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signatureFileDir) const
 {
-    if (!BundleUtil::CheckFileName(signatureFileDir)) {
+    ErrCode ret = BundleUtil::CheckFileName(signatureFileDir);
+    if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "code signature file dir is invalid");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }

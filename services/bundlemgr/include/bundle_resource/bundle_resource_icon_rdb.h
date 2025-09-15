@@ -77,7 +77,7 @@ private:
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
 
     std::shared_ptr<RdbDataManager> rdbDataManager_;
-    mutable ffrt::shared_mutex isOnlineThemeMutex_;
+    mutable std::shared_mutex isOnlineThemeMutex_;
     std::unordered_map<int32_t, bool> isOnlineThemeMap_;
 
 #define CHECK_RDB_RESULT_RETURN_IF_FAIL(errcode, errmsg)                           \

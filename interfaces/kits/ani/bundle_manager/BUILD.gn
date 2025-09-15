@@ -72,7 +72,6 @@ ohos_shared_library("ani_bundle_manager") {
     "runtime_core:ani",
     "runtime_core:ani_helpers",
     "samgr:samgr_proxy",
-    "ffrt:libffrt",
   ]
 
   if (global_resmgr_enable) {

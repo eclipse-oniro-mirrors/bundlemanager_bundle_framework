@@ -42,7 +42,6 @@
 #include "default_app_host_impl.h"
 #endif
 #include "extend_resource_manager_host_impl.h"
-#include "ffrt.h"
 #include "hidump_helper.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_host_impl.h"
@@ -197,7 +196,7 @@ private:
     std::shared_ptr<BundleDataMgr> dataMgr_;
     std::shared_ptr<HidumpHelper> hidumpHelper_;
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    mutable ffrt::mutex bundleConnectMutex_;
+    mutable std::mutex bundleConnectMutex_;
     std::shared_ptr<BundleAgingMgr> agingMgr_;
     std::shared_ptr<BundleDistributedManager> bundleDistributedManager_;
     // key is userId
