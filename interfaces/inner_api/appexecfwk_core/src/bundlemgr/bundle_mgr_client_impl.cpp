@@ -536,7 +536,7 @@ ErrCode BundleMgrClientImpl::GetSandboxBundleInfo(
 {
     APP_LOGD("GetSandboxBundleInfo begin");
     if (bundleName.empty() || appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
-        APP_LOGE("UninstallSandboxApp params are invalid");
+        APP_LOGE("GetSandboxBundleInfo params are invalid");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
 
