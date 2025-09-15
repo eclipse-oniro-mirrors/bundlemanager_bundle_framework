@@ -10075,6 +10075,64 @@ HWTEST_F(ActsBmsKitSystemTest, SwitchUninstallState_0002, Function | MediumTest 
 }
 
 /**
+ * @tc.number: SwitchUninstallStateByUserId_0001
+ * @tc.name: test SwitchUninstallStateByUserId interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call SwitchUninstallStateByUserId
+ */
+HWTEST_F(ActsBmsKitSystemTest, SwitchUninstallStateByUserId_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START SwitchUninstallStateByUserId_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    auto queryResult = bundleMgrProxy->SwitchUninstallStateByUserId(appName, false, false, 100);
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_NE(uninstallResult, "Success");
+
+    queryResult = bundleMgrProxy->SwitchUninstallStateByUserId(appName, true, false, 200);
+    EXPECT_NE(queryResult, ERR_OK);
+
+    queryResult = bundleMgrProxy->SwitchUninstallStateByUserId(appName, true, false, 100);
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END SwitchUninstallStateByUserId_0001" << std::endl;
+}
+
+/**
+ * @tc.number: SwitchUninstallStateByUserId_0002
+ * @tc.name: test SwitchUninstallStateByUserId interface
+ * @tc.desc: SwitchUninstallStateByUserId failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, SwitchUninstallStateByUserId_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START SwitchUninstallState_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    auto res = bundleMgrProxy->SwitchUninstallStateByUserId("", false, false, 100);
+    EXPECT_NE(res, ERR_OK);
+    std::cout << "END SwitchUninstallStateByUserId_0002" << std::endl;
+}
+
+/**
  * @tc.number: QueryAbilityInfoByContinueType_0001
  * @tc.name: test query ability information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap

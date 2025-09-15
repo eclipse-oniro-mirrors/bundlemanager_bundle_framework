@@ -28,6 +28,7 @@ constexpr const char* INNER_BUNDLE_USER_INFO_UPDATE_TIME = "updateTime";
 constexpr const char* INNER_BUNDLE_USER_INFO_FIRST_INSTALL_TIME = "firstInstallTime";
 constexpr const char* INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO = "bundleUserInfo";
 constexpr const char* INNER_BUNDLE_USER_INFO_IS_REMOVABLE = "isRemovable";
+constexpr const char* INNER_BUNDLE_USER_INFO_CAN_UNINSTALL = "canUninstall";
 constexpr const char* INNER_BUNDLE_USER_INFO_CLONE_INFOS = "cloneInfos";
 constexpr const char* INNER_BUNDLE_USER_INFO_KEYID = "keyId";
 constexpr const char* INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET = "installedPluginSet";
@@ -47,6 +48,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
         {INNER_BUNDLE_USER_INFO_FIRST_INSTALL_TIME, innerBundleUserInfo.firstInstallTime},
         {INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO, innerBundleUserInfo.bundleUserInfo},
         {INNER_BUNDLE_USER_INFO_IS_REMOVABLE, innerBundleUserInfo.isRemovable},
+        {INNER_BUNDLE_USER_INFO_CAN_UNINSTALL, innerBundleUserInfo.canUninstall},
         {INNER_BUNDLE_USER_INFO_CLONE_INFOS, innerBundleUserInfo.cloneInfos},
         {INNER_BUNDLE_USER_INFO_KEYID, innerBundleUserInfo.keyId},
         {INNER_BUNDLE_USER_INFO_INSTALLED_PLUGIN_SET, innerBundleUserInfo.installedPluginSet},
@@ -78,6 +80,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
         innerBundleUserInfo.bundleUserInfo, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_IS_REMOVABLE,
         innerBundleUserInfo.isRemovable, false, parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_CAN_UNINSTALL,
+        innerBundleUserInfo.canUninstall, false, parseResult);
     GetValueIfFindKey<std::map<std::string, InnerBundleCloneInfo>>(jsonObject, jsonObjectEnd,
         INNER_BUNDLE_USER_INFO_CLONE_INFOS,
         innerBundleUserInfo.cloneInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);

@@ -1102,6 +1102,9 @@ public:
     virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state,
         bool isNeedSendNotify) override;
 
+    virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
+        const bool isNeedSendNotify, int32_t userId) override;
+
     virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 

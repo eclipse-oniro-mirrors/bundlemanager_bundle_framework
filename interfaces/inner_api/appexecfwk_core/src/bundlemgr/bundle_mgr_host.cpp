@@ -561,6 +561,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SWITCH_UNINSTALL_STATE):
             errCode = this->HandleSwitchUninstallState(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SWITCH_UNINSTALL_STATE_BY_USER_ID):
+            errCode = this->HandleSwitchUninstallStateByUserId(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_CONTINUE_TYPE):
             errCode = this->HandleQueryAbilityInfoByContinueType(data, reply);
             break;
@@ -4220,6 +4223,21 @@ ErrCode BundleMgrHost::HandleSwitchUninstallState(MessageParcel &data, MessagePa
     bool state = data.ReadBool();
     bool isNeedSendNotify = data.ReadBool();
     ErrCode ret = SwitchUninstallState(bundleName, state, isNeedSendNotify);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSwitchUninstallStateByUserId(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    bool state = data.ReadBool();
+    bool isNeedSendNotify = data.ReadBool();
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = SwitchUninstallStateByUserId(bundleName, state, isNeedSendNotify, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

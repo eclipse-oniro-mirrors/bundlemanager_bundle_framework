@@ -1158,6 +1158,9 @@ public:
     virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state,
         bool isNeedSendNotify = true) override;
 
+    virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
+        const bool isNeedSendNotify, int32_t userId) override;
+
     /**
      * @brief Query the AbilityInfo by continueType.
      * @param bundleName Indicates the bundle name of the application.

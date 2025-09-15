@@ -1070,6 +1070,8 @@ public:
         std::vector<std::string> &developerIdList, int32_t userId);
     ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state,
         const bool isNeedSendNotify, bool &stateChange);
+    ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
+        const bool isNeedSendNotify, int32_t userId, bool &stateChange);
 
     ErrCode AddCloneBundle(const std::string &bundleName, const InnerBundleCloneInfo &attr);
     ErrCode RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex);

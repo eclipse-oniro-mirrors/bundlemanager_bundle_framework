@@ -26,6 +26,7 @@ namespace AppExecFwk {
 struct InnerBundleUserInfo {
     // app install control
     bool isRemovable = true;
+    bool canUninstall = true;
 
     int32_t uid = Constants::INVALID_UID;
     uint32_t accessTokenId = 0;

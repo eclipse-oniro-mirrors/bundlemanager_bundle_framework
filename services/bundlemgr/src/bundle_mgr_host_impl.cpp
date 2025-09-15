@@ -5115,6 +5115,60 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
     return resCode;
 }
 
+ErrCode BundleMgrHostImpl::SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
+    const bool isNeedSendNotify, int32_t userId)
+{
+    APP_LOGD("start SwitchUninstallStateByUserId %{public}s %{public}d %{public}d %{public}d",
+        bundleName.c_str(), state, isNeedSendNotify, userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+        ServiceConstants::PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    bool stateChange = false;
+    auto resCode = dataMgr->SwitchUninstallStateByUserId(bundleName, state, isNeedSendNotify, userId, stateChange);
+    if (resCode != ERR_OK) {
+        APP_LOGE("set status fail");
+        return resCode;
+    }
+    if (!isNeedSendNotify || !stateChange) {
+        APP_LOGI("no need notify %{public}s %{public}d %{public}d", bundleName.c_str(), isNeedSendNotify, stateChange);
+        return resCode;
+    }
+    InnerBundleInfo innerBundleInfo;
+    bool isSuccess = dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
+    if (!isSuccess) {
+        APP_LOGE("get innerBundleInfo fail");
+        return resCode;
+    }
+    AbilityInfo mainAbilityInfo;
+    innerBundleInfo.GetMainAbilityInfo(mainAbilityInfo);
+    NotifyBundleEvents installRes = {
+        .isModuleUpdate = false,
+        .type = NotifyType::UNINSTALL_STATE,
+        .resultCode = ERR_OK,
+        .accessTokenId = innerBundleInfo.GetAccessTokenId(userId),
+        .uid = innerBundleInfo.GetUid(userId),
+        .bundleType = static_cast<int32_t>(innerBundleInfo.GetApplicationBundleType()),
+        .bundleName = innerBundleInfo.GetBundleName(),
+        .modulePackage = innerBundleInfo.GetModuleNameVec()[0],
+        .abilityName = mainAbilityInfo.name,
+        .appDistributionType = innerBundleInfo.GetAppDistributionType(),
+    };
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
+    return resCode;
+}
+
 void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info)
 {
     Security::Verify::HapVerifyResult hapVerifyResult;
