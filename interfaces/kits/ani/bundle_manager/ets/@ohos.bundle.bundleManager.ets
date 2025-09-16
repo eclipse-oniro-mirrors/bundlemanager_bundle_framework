@@ -358,11 +358,11 @@ namespace bundleManager {
   }
 
   function setAbilityEnabledSync(info: AbilityInfo, isEnabled: boolean): void {
-    return bundleManager.setAbilityEnabledNative(info, isEnabled, 0, true);
+    bundleManager.setAbilityEnabledNative(info, isEnabled, 0, true);
   }
 
   function setApplicationEnabledSync(bundleName: string, isEnabled: boolean): void {
-    return bundleManager.setApplicationEnabledNative(bundleName, isEnabled, 0, true);
+    bundleManager.setApplicationEnabledNative(bundleName, isEnabled, 0, true);
   }
 
   function queryExtensionAbilityInfoSync(want: Want, extensionAbilityType: ExtensionAbilityType,
@@ -1118,23 +1118,6 @@ namespace bundleManager {
     return p;
   }
 
-  function enableDynamicIcon(bundleName: string, moduleName: string): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
-      let bundleOptions = new BundleOptionsInner();
-      let execFun = (): void => {
-        return bundleManager.enableDynamicIconNative(bundleName, moduleName, bundleOptions);
-      };
-      let p1 = taskpool.execute(execFun);
-      p1.then((): void => {
-        resolve(undefined);
-      }, (err: Error): void => {
-        reject(err as BusinessError);
-      });
-    }
-    );
-    return p;
-  }
-
   function enableDynamicIcon(bundleName: string, moduleName: string, option?: BundleOptions): Promise<void> {
     let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
       let bundleOptions = option ?? new BundleOptionsInner();
@@ -1526,23 +1509,6 @@ namespace bundleManager {
       p1.then((e: Any) => {
         let extResource: Array<string> = e as Array<string>;
         resolve(extResource);
-      }, (err: Error): void => {
-        reject(err as BusinessError);
-      });
-    }
-    );
-    return p;
-  }
-
-  function disableDynamicIcon(bundleName: string): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
-      let bundleOptions = new BundleOptionsInner();
-      let execFun = (): void => {
-        return bundleManager.disableDynamicIconNative(bundleName, bundleOptions);
-      };
-      let p1 = taskpool.execute(execFun);
-      p1.then((): void => {
-        resolve(undefined);
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
