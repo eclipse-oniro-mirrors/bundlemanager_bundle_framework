@@ -88,16 +88,21 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
         APP_LOGE("ossyscap no exist ");
         return ErrorCode::DECODE_SYS_CAP_FAILED;
     }
-    std::vector<int> values = jsonObject[CHARACTER_OS_SYSCAP].get<std::vector<int>>();
     std::string pcId;
-    for (int value : values) {
-        pcId = pcId + std::to_string(value) + ",";
-    }
-    std::string capabilities = jsonObject[CHARACTER_PRIVATE_SYSCAP];
-    if (capabilities.empty()) {
-        pcId.resize(pcId.empty() ? pcId.length() : (pcId.length() - 1));
-    } else {
-        pcId = pcId + capabilities;
+    try {
+        std::vector<int> values = jsonObject[CHARACTER_OS_SYSCAP].get<std::vector<int>>();
+        for (int value : values) {
+            pcId = pcId + std::to_string(value) + ",";
+        }
+        std::string capabilities = jsonObject[CHARACTER_PRIVATE_SYSCAP];
+        if (capabilities.empty()) {
+            pcId.resize(pcId.empty() ? pcId.length() : (pcId.length() - 1));
+        } else {
+            pcId = pcId + capabilities;
+        }
+    } catch (const nlohmann::json::exception &e) {
+        APP_LOGE("ossyscap json err: %{public}s", e.what());
+        return ErrorCode::DECODE_SYS_CAP_FAILED;
     }
     APP_LOGD("sysCap pcId:%{public}s", pcId.c_str());
     for (auto &rpcId : rpcIdResult.abilityInfo.rpcId) {
