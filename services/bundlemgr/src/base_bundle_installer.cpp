@@ -388,6 +388,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .bundleName = bundleName,
             .appId = uninstallBundleAppId_,
             .developerId = developerId,
+            .appDistributionType = appDistributionType_,
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_
@@ -594,6 +595,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .modulePackage = modulePackage,
             .appId = uninstallBundleAppId_,
             .developerId = developerId,
+            .appDistributionType = appDistributionType_,
             .assetAccessGroups = assetAccessGroups,
             .keepData = installParam.isKeepData,
             .isBundleExist = isBundleExist_,
@@ -1774,6 +1776,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     appIdentifier_ = oldInfo.GetAppIdentifier();
+    appDistributionType_ = oldInfo.GetAppDistributionType();
     isBundleCrossAppSharedConfig_ = oldInfo.IsBundleCrossAppSharedConfig();
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
@@ -2059,6 +2062,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
+    appDistributionType_ = oldInfo.GetAppDistributionType();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle is shared library");
@@ -5403,6 +5407,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     callerToken_ = 0;
     isBundleExist_ = false;
     isBundleCrossAppSharedConfig_ = false;
+    appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool killProcess)

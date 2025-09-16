@@ -153,7 +153,12 @@ bool BundleCommonEventMgr::PublishCommonEvent(
     const int32_t publishUserId,
     const EventFwk::CommonEventData &commonData)
 {
-    if (eventSet_.find(action) != eventSet_.end()) {
+    std::string appDistributionType = commonData.GetWant().GetStringParam(APP_DISTRIBUTION_TYPE);
+    if (appDistributionType.empty()) {
+        APP_LOGD("appDistributionType is empty");
+    }
+    if (eventSet_.find(action) != eventSet_.end() &&
+        appDistributionType != Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE) {
         EventFwk::CommonEventPublishInfo publishInfo;
         std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
         publishInfo.SetSubscriberPermissions(permissionVec);
