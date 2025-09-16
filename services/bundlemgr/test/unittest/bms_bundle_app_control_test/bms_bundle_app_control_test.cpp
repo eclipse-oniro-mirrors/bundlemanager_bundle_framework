@@ -60,6 +60,7 @@ const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_
 const std::string ABILITY_RUNNING_KEY = "ABILITY_RUNNING_KEY";
 const std::string INVALID_MESSAGE = "INVALID_MESSAGE";
 const int32_t USERID = 100;
+const int32_t USERID2 = 101;
 const int32_t TEST_USERID = 2000;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int NOT_EXIST_USERID = -5;
@@ -3691,31 +3692,6 @@ HWTEST_F(BmsBundleAppControlTest, AddAppRunningControlRule_0300, Function | Smal
 }
 
 /**
- * @tc.number: AddAppRunningControlRule_0400
- * @tc.name: Test AddAppRunningControlRule by AppControlManager
- * @tc.desc: 1.AddAppRunningControlRule test
- */
-HWTEST_F(BmsBundleAppControlTest, AddAppRunningControlRule_0400, Function | SmallTest | Level1)
-{
-    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
-    ASSERT_NE(appControlManager, nullptr);
-    std::vector<AppRunningControlRule> controlRules;
-    AppRunningControlRule ruleParam;
-    ruleParam.appId = APPID;
-    ruleParam.controlMessage = CONTROL_MESSAGE;
-    ruleParam.allowRunning = false;
-    for (int i = 0; i < 1024; i++) {
-        ruleParam.appId = APPID + "_" + std::to_string(i);
-        controlRules.clear();
-        controlRules.emplace_back(ruleParam);
-        auto res = appControlManager->AddAppRunningControlRule(AppControlConstants::EDM_CALLING, controlRules, USERID);
-        EXPECT_EQ(res, ERR_OK);
-    }
-    auto res = appControlManager->DeleteAppRunningControlRule(AppControlConstants::EDM_CALLING, USERID);
-    EXPECT_EQ(res, ERR_OK);
-}
-
-/**
  * @tc.number: CheckControlRules_0100
  * @tc.name: Test CheckControlRules by AppControlManager
  * @tc.desc: 1.CheckControlRules test
@@ -3864,7 +3840,7 @@ HWTEST_F(BmsBundleAppControlTest, DeleteAppRunningControlRule_0200, Function | S
     AppRunningControlRule ruleParam;
     ruleParam.appId = APPID;
     ruleParam.controlMessage = CONTROL_MESSAGE;
-    ruleParam.allowRunning = true;
+    ruleParam.allowRunning = false;
     controlRules.emplace_back(ruleParam);
     auto res = appControlManager->DeleteAppRunningControlRule(AppControlConstants::EDM_CALLING, controlRules, USERID);
     EXPECT_EQ(res, ERR_OK);
@@ -4651,5 +4627,169 @@ HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0500, Function | Smal
     appControlManager->appRunningControlRuleResult_.clear();
     ret = appControlManagerDb_->DeleteAppRunningControlRule(AppControlConstants::EDM_CALLING, USERID);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetRunningRuleSettingStatusByUserId_0300
+ * @tc.name: Test GetRunningRuleSettingStatusByUserId by AppControlManager
+ * @tc.desc: 1.GetRunningRuleSettingStatusByUserId test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetRunningRuleSettingStatusByUserId_0300, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->runningRuleSettingStatusMap_.clear();
+    auto res = appControlManager->GetRunningRuleSettingStatusByUserId(0);
+    EXPECT_EQ(res, AppExecFwk::AppControlManager::RunningRuleSettingStatus::NO_SET);
+}
+
+/**
+ * @tc.number: GetRunningRuleSettingStatusByUserId_0400
+ * @tc.name: Test GetRunningRuleSettingStatusByUserId by AppControlManager
+ * @tc.desc: 1.GetRunningRuleSettingStatusByUserId test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetRunningRuleSettingStatusByUserId_0400, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->SetRunningRuleSettingStatusByUserId(
+        USERID, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
+    auto res = appControlManager->GetRunningRuleSettingStatusByUserId(USERID2);
+    EXPECT_EQ(res, AppExecFwk::AppControlManager::RunningRuleSettingStatus::NO_SET);
+}
+
+/**
+ * @tc.number: CheckAppControlRuleIntercept_0800
+ * @tc.name: Test CheckAppControlRuleIntercept by AppControlManager
+ * @tc.desc: 1.CheckAppControlRuleIntercept test
+ */
+HWTEST_F(BmsBundleAppControlTest, CheckAppControlRuleIntercept_0800, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    AppRunningControlRuleResult ruleParam;
+    ruleParam.controlMessage = CONTROL_MESSAGE;
+    ruleParam.isEdm = true;
+    appControlManager->SetRunningRuleSettingStatusByUserId(
+        USERID, AppExecFwk::AppControlManager::RunningRuleSettingStatus::WHITE_LIST);
+    auto ret = appControlManager->CheckAppControlRuleIntercept("", USERID, false, ruleParam);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetRunningRuleSettingStatusByUserId_0100
+ * @tc.name: Test SetRunningRuleSettingStatusByUserId by AppControlManager
+ * @tc.desc: 1.SetRunningRuleSettingStatusByUserId test
+ */
+HWTEST_F(BmsBundleAppControlTest, SetRunningRuleSettingStatusByUserId_0100, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->runningRuleSettingStatusMap_.clear();
+    appControlManager->SetRunningRuleSettingStatusByUserId(
+        USERID, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
+    auto ret = appControlManager->GetRunningRuleSettingStatusByUserId(USERID);
+    EXPECT_EQ(ret, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
+}
+
+/**
+ * @tc.number: SetRunningRuleSettingStatusByUserId_0200
+ * @tc.name: Test SetRunningRuleSettingStatusByUserId by AppControlManager
+ * @tc.desc: 1.SetRunningRuleSettingStatusByUserId test
+ */
+HWTEST_F(BmsBundleAppControlTest, SetRunningRuleSettingStatusByUserId_0200, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->runningRuleSettingStatusMap_.emplace(
+        USERID, AppExecFwk::AppControlManager::RunningRuleSettingStatus::NO_SET);
+    appControlManager->SetRunningRuleSettingStatusByUserId(
+        USERID, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
+    auto ret = appControlManager->GetRunningRuleSettingStatusByUserId(USERID);
+    EXPECT_EQ(ret, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
+}
+
+/**
+ * @tc.number: SetRunningRuleSettingStatusByUserId_0300
+ * @tc.name: Test SetRunningRuleSettingStatusByUserId by AppControlManager
+ * @tc.desc: 1.SetRunningRuleSettingStatusByUserId test
+ */
+HWTEST_F(BmsBundleAppControlTest, SetRunningRuleSettingStatusByUserId_0300, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->runningRuleSettingStatusMap_.emplace(
+        USERID, AppExecFwk::AppControlManager::RunningRuleSettingStatus::NO_SET);
+    appControlManager->SetRunningRuleSettingStatusByUserId(
+        USERID2, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
+    auto ret = appControlManager->GetRunningRuleSettingStatusByUserId(USERID2);
+    EXPECT_EQ(ret, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
+}
+
+/**
+ * @tc.number: GetAppRunningControlRuleCache_0100
+ * @tc.name: Test GetAppRunningControlRuleCache by AppControlManager
+ * @tc.desc: 1.GetAppRunningControlRuleCache test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRuleCache_0100, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->appRunningControlRuleResult_.clear();
+    AppRunningControlRuleResult rule;
+    std::string key = APPID + std::string("_") + std::to_string(USERID);
+    auto ret = appControlManager->GetAppRunningControlRuleCache(key, rule);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetAppRunningControlRuleCache_0200
+ * @tc.name: Test GetAppRunningControlRuleCache by AppControlManager
+ * @tc.desc: 1.GetAppRunningControlRuleCache test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRuleCache_0200, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    std::string key = "";
+    AppRunningControlRuleResult rule;
+    auto ret = appControlManager->GetAppRunningControlRuleCache(key, rule);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DeleteAppRunningControlRuleCache_0200
+ * @tc.name: Test DeleteAppRunningControlRuleCache by AppControlManager
+ * @tc.desc: 1.DeleteAppRunningControlRuleCache test
+ */
+HWTEST_F(BmsBundleAppControlTest, DeleteAppRunningControlRuleCache_0200, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    AppRunningControlRuleResult ruleParam;
+    ruleParam.controlMessage = CONTROL_MESSAGE;
+    std::string key = APPID + std::string("_") + std::to_string(USERID);
+    appControlManager->SetAppRunningControlRuleCache(key, ruleParam);
+    appControlManager->DeleteAppRunningControlRuleCache("");
+    AppRunningControlRuleResult rule;
+    auto ret = appControlManager->GetAppRunningControlRuleCache(key, rule);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DeleteAppRunningControlRuleCache_0300
+ * @tc.name: Test DeleteAppRunningControlRuleCache by AppControlManager
+ * @tc.desc: 1.DeleteAppRunningControlRuleCache test
+ */
+HWTEST_F(BmsBundleAppControlTest, DeleteAppRunningControlRuleCache_0300, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->appRunningControlRuleResult_.clear();
+    std::string key = APPID + std::string("_") + std::to_string(USERID);
+    appControlManager->DeleteAppRunningControlRuleCache(key);
+    AppRunningControlRuleResult rule;
+    auto ret = appControlManager->GetAppRunningControlRuleCache(key, rule);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

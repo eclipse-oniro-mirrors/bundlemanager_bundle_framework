@@ -20,11 +20,13 @@
 #include "app_control_constants.h"
 #include "app_control_manager_rdb.h"
 #include "app_jump_interceptor_manager_rdb.h"
+#include "app_mgr_interface.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "hitrace_meter.h"
 #include "parameters.h"
+#include "running_process_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -33,6 +35,9 @@ namespace {
     constexpr const char* INVALID_MESSAGE = "INVALID_MESSAGE";
     constexpr const char* ATOMIC_SERVICE = "atomicservice";
     constexpr const char* APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
+    #ifndef BUNDLE_FRAMEWORK_FREE_INSTALL
+    constexpr int APP_MGR_SERVICE_ID = 501;
+    #endif
 }
 
 AppControlManager::AppControlManager()
@@ -142,11 +147,6 @@ ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingNa
     if (status == RunningRuleSettingStatus::NO_SET) {
         DeleteAppRunningControlRuleCacheForUserId(userId);
     }
-    if (controlRules[0].allowRunning == true) {
-        SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::WHITE_LIST);
-    } else {
-        SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::BLACK_LIST);
-    }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
@@ -159,7 +159,13 @@ ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingNa
         std::string transformedKey = transformedAppId + std::string("_") + std::to_string(userId);
         DeleteAppRunningControlRuleCache(transformedKey);
     }
-    KillRunningApp(controlRules, userId);
+    if (controlRules[0].allowRunning == true) {
+        SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::WHITE_LIST);
+        KillRunningAppOutWhiteList(controlRules, userId);
+    } else {
+        SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::BLACK_LIST);
+        KillRunningApp(controlRules, userId);
+    }
     return ERR_OK;
 }
 
@@ -232,13 +238,22 @@ ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callin
         std::string transformedKey = transformedAppId + std::string("_") + std::to_string(userId);
         DeleteAppRunningControlRuleCache(transformedKey);
     }
+    DeleteRunningRuleSettingStatusCache(userId);
+    return ret;
+}
+
+void AppControlManager::DeleteRunningRuleSettingStatusCache(int32_t userId)
+{
     std::vector<std::string> appIds;
-    ret = appControlManagerDb_->GetAppIdsByUserId(userId, appIds);
+    auto ret = appControlManagerDb_->GetAppIdsByUserId(userId, appIds);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetAppIdsByUserId failed");
+        return;
+    }
     if (appIds.empty()) {
         SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::NO_SET);
         DeleteAppRunningControlRuleCacheForUserId(userId);
     }
-    return ret;
 }
 
 ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName, int32_t userId)
@@ -421,13 +436,12 @@ ErrCode AppControlManager::CheckAppControlRuleIntercept(const std::string &bundl
             LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
             return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
-        auto bundleInfos = dataMgr->GetAllInnerBundleInfos();
-        auto iter = bundleInfos.find(bundleName);
-        if (iter == bundleInfos.end()) {
-            APP_LOGW("%{public}s not found", bundleName.c_str());
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        bool isSystemApp = false;
+        auto ret = dataMgr->IsSystemApp(bundleName, isSystemApp);
+        if (ret != ERR_OK) {
+            return ret;
         }
-        if (iter->second.IsSystemApp()) {
+        if (isSystemApp) {
             controlRuleResult.controlMessage = INVALID_MESSAGE;
         } else {
             controlRuleResult.controlMessage = APP_CONTROL_EDM_DEFAULT_MESSAGE;
@@ -477,6 +491,56 @@ void AppControlManager::DeleteAppRunningControlRuleCacheForUserId(int32_t userId
             ++it;
         }
     }
+}
+
+ErrCode AppControlManager::KillRunningAppOutWhiteList(
+    const std::vector<AppRunningControlRule> &rules, int32_t userId) const
+{
+    sptr<IAppMgr> appMgrProxy = iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
+    if (appMgrProxy == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "fail to find the app mgr service to check app is running");
+        return ERR_BUNDLE_MANAGER_GET_SYSTEM_ABILITY_FAILED;
+    }
+    std::vector<RunningProcessInfo> runningList;
+    if (appMgrProxy->GetAllRunningProcesses(runningList) != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetAllRunningProcesses failed");
+        return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
+    }
+    std::unordered_set<std::string> runningBundleNames;
+    for (const auto &info : runningList) {
+        runningBundleNames.insert(info.bundleNames.begin(), info.bundleNames.end());
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::unordered_set<std::string> whiteListBundleNames;
+    for (const auto &rule : rules) {
+        std::string bundleName;
+        auto ret = dataMgr->GetBundleNameByAppId(rule.appId, bundleName);
+        if (ret != ERR_OK) {
+            LOG_W(BMS_TAG_DEFAULT, "GetBundleNameByAppId failed");
+            continue;
+        }
+        whiteListBundleNames.insert(bundleName);
+    }
+    bool isSystemApp = false;
+    for (auto &bundleName : runningBundleNames) {
+        if (whiteListBundleNames.find(bundleName) != whiteListBundleNames.end()) {
+            continue;
+        }
+        if (dataMgr->IsSystemApp(bundleName, isSystemApp) != ERR_OK || isSystemApp) {
+            continue;
+        }
+        int32_t uid = dataMgr->GetUidByBundleName(bundleName, userId, 0);
+        if (uid == Constants::INVALID_UID) {
+            LOG_W(BMS_TAG_DEFAULT, "GetUidByBundleName failed");
+            continue;
+        }
+        AbilityManagerHelper::UninstallApplicationProcesses(bundleName, uid);
+    }
+    return ERR_OK;
 }
 
 void AppControlManager::KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const
@@ -618,6 +682,8 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &
     }
     std::string key = appId + std::string("_") + std::to_string(userId);
     DeleteAppRunningRuleCache(key);
+    DeleteAppRunningControlRuleCache(key);
+    DeleteRunningRuleSettingStatusCache(userId);
     key = key + std::string("_");
     std::string cacheKey = key + std::to_string(appIndex);
     DeleteAbilityRunningRuleCache({ cacheKey });
