@@ -1169,6 +1169,7 @@ void BaseBundleInstaller::RestoreconForArkweb()
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "Failed to restorecon arkweb dir, error code: %{public}d", result);
     }
+    NWeb::AppFwkUpdateClient::GetInstance().NotifyArkWebInstallSuccess();
 }
 #endif
 
