@@ -2487,7 +2487,7 @@ void InstalldOperator::AddDeleteDfx(const std::string &path)
 
 void InstalldOperator::RmvDeleteDfx(const std::string &path)
 {
-    if (path.find(BUNDLE_BASE_CODE_DIR)) {
+    if (path.find(BUNDLE_BASE_CODE_DIR) != std::string::npos) {
         LOG_D(BMS_TAG_INSTALLD, "codeDir:%{public}s not need delete", path.c_str());
         return;
     }
