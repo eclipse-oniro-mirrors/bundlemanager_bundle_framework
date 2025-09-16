@@ -506,6 +506,22 @@ bool BundleResourceParser::ParserCloneResourceInfo(
 #endif
 }
 
+bool BundleResourceParser::ParserCloneResourceInfo(const int32_t appIndex, ResourceInfo &resourceInfo)
+{
+    if (appIndex <= 0) {
+        APP_LOGE("-n %{public}s appIndex %{public}d is invalid", resourceInfo.GetKey().c_str(), appIndex);
+        return false;
+    }
+    std::vector<ResourceInfo> resourceInfos;
+    resourceInfos.emplace_back(resourceInfo);
+    if (ParserCloneResourceInfo(appIndex, resourceInfos) && !resourceInfos.empty()) {
+        resourceInfo.icon_ = resourceInfos[0].icon_;
+        return true;
+    }
+    APP_LOGE("-n %{public}s appIndex %{public}d parse badge failed", resourceInfo.GetKey().c_str(), appIndex);
+    return false;
+}
+
 bool BundleResourceParser::ParseResourceInfosNoTheme(
     const int32_t userId, std::vector<ResourceInfo> &resourceInfos)
 {
