@@ -487,13 +487,14 @@ void AppControlManager::KillRunningApp(const std::vector<AppRunningControlRule> 
         return;
     }
     std::for_each(rules.cbegin(), rules.cend(), [&dataMgr, userId](const auto &rule) {
-        std::string bundleName = dataMgr->GetBundleNameByAppId(rule.appId);
-        if (bundleName.empty()) {
+        std::string bundleName;
+        ErrCode ret = dataMgr->GetBundleNameByAppId(rule.appId, bundleName);
+        if (ret != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "GetBundleNameByAppId failed");
             return;
         }
         BundleInfo bundleInfo;
-        ErrCode ret = dataMgr->GetBundleInfoV9(
+        ret = dataMgr->GetBundleInfoV9(
             bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
         if (ret != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "GetBundleInfoV9 failed");
