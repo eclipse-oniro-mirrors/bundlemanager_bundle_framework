@@ -103,7 +103,8 @@ bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json 
 
 ErrCode BundleParser::Parse(
     const std::string &pathName,
-    InnerBundleInfo &innerBundleInfo) const
+    InnerBundleInfo &innerBundleInfo,
+    bool &isAbcCompressed) const
 {
     APP_LOGD("parse from %{private}s", pathName.c_str());
     BundleExtractor bundleExtractor(pathName);
@@ -111,6 +112,9 @@ ErrCode BundleParser::Parse(
         APP_LOGE("bundle extractor init failed");
         return ERR_APPEXECFWK_PARSE_UNEXPECTED;
     }
+
+    // check abc is compressed or not
+    bundleExtractor.IsHapCompress(isAbcCompressed);
 
     // to extract config.json
     std::ostringstream outStream;

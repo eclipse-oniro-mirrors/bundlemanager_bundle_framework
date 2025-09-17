@@ -36,7 +36,8 @@ public:
     {
         BundleParser bundleParser;
         InnerBundleInfo innerBundleInfo;
-        ErrCode result = bundleParser.Parse(pathStream.str(), innerBundleInfo);
+        bool isAbcCompressed = false;
+        ErrCode result = bundleParser.Parse(pathStream.str(), innerBundleInfo, isAbcCompressed);
         BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
         EXPECT_EQ(result, ERR_OK);
 

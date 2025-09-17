@@ -3753,7 +3753,8 @@ bool BMSEventHandler::ParseHapFiles(
     BundleParser bundleParser;
     for (auto realPath : realPaths) {
         InnerBundleInfo innerBundleInfo;
-        ret = bundleParser.Parse(realPath, innerBundleInfo);
+        bool isAbcCompressed = false;
+        ret = bundleParser.Parse(realPath, innerBundleInfo, isAbcCompressed);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_DEFAULT, "Parse bundle info failed, error: %{public}d", ret);
             continue;
