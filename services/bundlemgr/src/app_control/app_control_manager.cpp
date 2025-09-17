@@ -161,7 +161,7 @@ ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingNa
     }
     if (controlRules[0].allowRunning == true) {
         SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::WHITE_LIST);
-        KillRunningAppOutWhiteList(controlRules, userId);
+        KillRunningAppOutWhiteList(userId);
     } else {
         SetRunningRuleSettingStatusByUserId(userId, RunningRuleSettingStatus::BLACK_LIST);
         KillRunningApp(controlRules, userId);
@@ -493,8 +493,7 @@ void AppControlManager::DeleteAppRunningControlRuleCacheForUserId(int32_t userId
     }
 }
 
-ErrCode AppControlManager::KillRunningAppOutWhiteList(
-    const std::vector<AppRunningControlRule> &rules, int32_t userId) const
+ErrCode AppControlManager::KillRunningAppOutWhiteList(int32_t userId) const
 {
     sptr<IAppMgr> appMgrProxy = iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
     if (appMgrProxy == nullptr) {
@@ -516,9 +515,15 @@ ErrCode AppControlManager::KillRunningAppOutWhiteList(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::unordered_set<std::string> whiteListBundleNames;
-    for (const auto &rule : rules) {
+    std::vector<std::string> appIds;
+    auto ret = appControlManagerDb_->GetAppIdsByUserId(userId, appIds);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "GetAppIdsByUserId failed");
+        return ret;
+    }
+    for (const auto &appId : appIds) {
         std::string bundleName;
-        auto ret = dataMgr->GetBundleNameByAppId(rule.appId, bundleName);
+        auto ret = dataMgr->GetBundleNameByAppId(appId, bundleName);
         if (ret != ERR_OK) {
             LOG_W(BMS_TAG_DEFAULT, "GetBundleNameByAppId failed");
             continue;
