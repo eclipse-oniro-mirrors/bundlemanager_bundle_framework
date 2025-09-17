@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,7 +62,36 @@ void BMSJsonUtil::GetBoolValueIfFindKey(const nlohmann::json &jsonObject,
     }
 }
 
-bool BMSJsonUtil::CheckMapValueType(JsonType valueType, const nlohmann::json &value)
+bool BMSJsonUtil::CheckArrayValueType(const nlohmann::json &value, ArrayType arrayType)
+{
+    if (!value.is_array()) {
+        APP_LOGE("not array");
+        return false;
+    }
+    switch (arrayType) {
+        case ArrayType::NUMBER:
+            for (const auto &item : value) {
+                if (!item.is_number()) {
+                    APP_LOGE("array item not number");
+                    return false;
+                }
+            }
+            return true;
+        case ArrayType::STRING:
+            for (const auto &item : value) {
+                if (!item.is_string()) {
+                    APP_LOGE("array item not string");
+                    return false;
+                }
+            }
+            return true;
+        default:
+            APP_LOGE("not support arrayType: %{public}d", static_cast<int32_t>(arrayType));
+            return false;
+    }
+}
+
+bool BMSJsonUtil::CheckMapValueType(const nlohmann::json &value, JsonType valueType, ArrayType arrayType)
 {
     switch (valueType) {
         case JsonType::BOOLEAN:
@@ -71,7 +100,10 @@ bool BMSJsonUtil::CheckMapValueType(JsonType valueType, const nlohmann::json &va
             return value.is_number();
         case JsonType::STRING:
             return value.is_string();
+        case JsonType::ARRAY:
+            return CheckArrayValueType(value, arrayType);
         default:
+            APP_LOGE("not support valueType: %{public}d", (int)valueType);
             return false;
     }
 }

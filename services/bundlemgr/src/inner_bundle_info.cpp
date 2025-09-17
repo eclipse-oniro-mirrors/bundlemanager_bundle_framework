@@ -720,13 +720,13 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.installationFree,
         false,
         parseResult);
-    GetValueIfFindKey<std::map<std::string, bool>>(jsonObject,
+    GetMapValueIfFindKey<std::map<std::string, bool>>(jsonObject,
         jsonObjectEnd,
         MODULE_IS_REMOVABLE,
         info.isRemovable,
-        JsonType::OBJECT,
         false,
         parseResult,
+        JsonType::BOOLEAN,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -780,14 +780,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
+    GetMapValueIfFindKey<std::map<std::string, std::vector<std::string>>>(jsonObject,
         jsonObjectEnd,
         MODULE_REQUIRED_DEVICE_FEATURES,
         info.requiredDeviceFeatures,
-        JsonType::OBJECT,
         false,
         parseResult,
-        ArrayType::NOT_ARRAY);
+        JsonType::ARRAY,
+        ArrayType::STRING);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
         MODULE_VIRTUAL_MACHINE,
