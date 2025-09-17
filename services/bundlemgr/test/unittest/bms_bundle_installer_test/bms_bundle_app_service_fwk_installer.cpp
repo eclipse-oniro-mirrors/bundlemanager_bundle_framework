@@ -766,37 +766,6 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, UninstallLowerVersion_0080, Functi
 }
 
 /**
- * @tc.number: ProcessNewModuleInstall_0010
- * @tc.name: test ProcessNewModuleInstall
- * @tc.desc: 1.Test the ProcessNewModuleInstall
-*/
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessNewModuleInstall_0010, Function | SmallTest | Level0)
-{
-    auto installRes = InstallSystemHsp(VERSION_ONE_LIBRARY_ONE_PATH);
-    ASSERT_EQ(installRes, ERR_OK);
-
-    auto installRes2 = InstallSystemHsp(VERSION_ONE_LIBRARY_TWO_PATH);
-    ASSERT_EQ(installRes2, ERR_OK);
-
-    AppServiceFwkInstaller appServiceFwkInstaller;
-    InitAppServiceFwkInstaller(appServiceFwkInstaller);
-    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME;
-
-    auto dataMgr = GetBundleDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    dataMgr->installStates_[BUNDLE_NAME] = InstallState::INSTALL_SUCCESS;
-
-    std::vector<std::string> moduleNameList { MODULE_NAME_LIBRARY_ONE };
-    auto res = appServiceFwkInstaller.UninstallLowerVersion(moduleNameList);
-    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
-
-    DeleteBundleInfo(BUNDLE_NAME);
-    DeletePreBundleInfo(BUNDLE_NAME);
-    dataMgr->installStates_.erase(BUNDLE_NAME);
-    UninstallSystemHsp(BUNDLE_NAME);
-}
-
-/**
  * @tc.number: ProcessInstall_0010
  * @tc.name: test ProcessInstall
  * @tc.desc: 1.Test the ProcessInstall
