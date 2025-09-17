@@ -854,10 +854,10 @@ HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0100, Function | SmallTest | Level0)
     EXPECT_NE(dataMgr, nullptr);
     bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
     bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
-    bool ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_TRUE(ret3);
+    EXPECT_EQ(ret3, ERR_OK);
 
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
@@ -888,10 +888,10 @@ HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0200, Function | SmallTest | Level0)
     EXPECT_NE(dataMgr, nullptr);
     bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
     bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
-    bool ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_TRUE(ret3);
+    EXPECT_EQ(ret3, ERR_OK);
 
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
@@ -924,10 +924,10 @@ HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0300, Function | SmallTest | Level0)
 
     bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
     bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
-    bool ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    ErrCode ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
-    EXPECT_TRUE(ret3);
+    EXPECT_EQ(ret3, ERR_OK);
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
 
@@ -946,8 +946,8 @@ HWTEST_F(BmsDataMgrTest, GenerateUidAndGid_0400, Function | SmallTest | Level0)
     EXPECT_NE(dataMgr, nullptr);
     dataMgr->AddUserId(USERID);
 
-    bool ret = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
-    EXPECT_FALSE(ret);
+    ErrCode ret = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY);
 
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
@@ -6089,7 +6089,7 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionBundleNames_0002, Function | MediumTest 
     InnerExtensionInfo innerExtensionInfo;
     innerExtensionInfo.type = ExtensionAbilityType::INPUTMETHOD;
     info.InsertExtensionInfo("test.extension", innerExtensionInfo);
-    std::shared_lock<ffrt::shared_mutex> lock(dataMgr_->bundleInfoMutex_);
+    std::shared_lock<std::shared_mutex> lock(dataMgr_->bundleInfoMutex_);
     dataMgr_->bundleInfos_.emplace("test.bundle", info);
     std::vector<ExtensionAbilityType> types = {
         ExtensionAbilityType::INPUTMETHOD,

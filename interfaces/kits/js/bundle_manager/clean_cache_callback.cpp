@@ -30,7 +30,7 @@ CleanCacheCallback::~CleanCacheCallback() {}
 
 void CleanCacheCallback::OnCleanCacheFinished(bool err)
 {
-    std::lock_guard<ffrt::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!complete_) {
         complete_ = true;
         err_ = err;

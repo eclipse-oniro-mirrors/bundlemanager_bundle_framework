@@ -15,7 +15,6 @@
 
 #include "ability_manager_helper.h"
 #include "bundle_mgr_service.h"
-#include "ffrt.h"
 #include "installd_client.h"
 
 namespace OHOS {
@@ -28,13 +27,13 @@ public:
 
     bool IsRunning()
     {
-        std::lock_guard<ffrt::mutex> lock(stateMutex_);
+        std::lock_guard<std::mutex> lock(stateMutex_);
         return isRunning_;
     }
 
     void MarkRunning()
     {
-        std::lock_guard<ffrt::mutex> lock(stateMutex_);
+        std::lock_guard<std::mutex> lock(stateMutex_);
         isRunning_ = true;
     }
 
@@ -48,7 +47,7 @@ public:
 
     void OnFinished(const int32_t resultCode, const std::string &resultMsg) override
     {
-        std::lock_guard<ffrt::mutex> lock(stateMutex_);
+        std::lock_guard<std::mutex> lock(stateMutex_);
         isRunning_ = false;
         if (agingPromise_) {
             APP_LOGD("Notify task end");
@@ -57,7 +56,7 @@ public:
     }
 
 private:
-    ffrt::mutex stateMutex_;
+    std::mutex stateMutex_;
     bool isRunning_ = false;
     std::shared_ptr<BundlePromise> agingPromise_ = nullptr;
 };

@@ -1837,7 +1837,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckAndParseFiles_0010, Function 
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
 
     auto res = installer.CheckAndParseFiles(hspPaths, installParam, newInfos);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY);
 }
 
 /**

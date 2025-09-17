@@ -406,7 +406,7 @@ void BundleResourceIconRdb::ParseKey(const std::string &key,
 
 bool BundleResourceIconRdb::GetIsOnlineTheme(const int32_t userId)
 {
-    std::shared_lock<ffrt::shared_mutex> lock(isOnlineThemeMutex_);
+    std::shared_lock<std::shared_mutex> lock(isOnlineThemeMutex_);
     auto iter = isOnlineThemeMap_.find(userId);
     if (iter == isOnlineThemeMap_.end()) {
         return false;
@@ -416,7 +416,7 @@ bool BundleResourceIconRdb::GetIsOnlineTheme(const int32_t userId)
 
 void BundleResourceIconRdb::SetIsOnlineTheme(const int32_t userId, bool isOnlineTheme)
 {
-    std::unique_lock<ffrt::shared_mutex> lock(isOnlineThemeMutex_);
+    std::unique_lock<std::shared_mutex> lock(isOnlineThemeMutex_);
     isOnlineThemeMap_[userId] = isOnlineTheme;
 }
 

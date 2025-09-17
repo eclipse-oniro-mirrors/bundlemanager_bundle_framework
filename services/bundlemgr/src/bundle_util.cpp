@@ -74,9 +74,10 @@ std::mutex BundleUtil::g_mutex;
 
 ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &realPath)
 {
-    if (!CheckFileName(bundlePath)) {
+    ErrCode ret = CheckFileName(bundlePath);
+    if (ret != ERR_OK) {
         APP_LOGE("bundle file path invalid");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        return ret;
     }
     if (!CheckFileType(bundlePath, ServiceConstants::INSTALL_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, ServiceConstants::HSP_FILE_SUFFIX) &&
@@ -87,15 +88,16 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
     }
     if (!PathToRealPath(bundlePath, realPath)) {
         APP_LOGE("file is not real path");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_IS_NOT_REAL;
     }
     if (access(realPath.c_str(), F_OK) != 0) {
         APP_LOGE("not access the bundle file path: %{public}s, errno:%{public}d", realPath.c_str(), errno);
-        return ERR_APPEXECFWK_INSTALL_INVALID_BUNDLE_FILE;
+        return ERR_APPEXECFWK_INSTALL_ACCESS_FILE_FAILED;
     }
-    if (!CheckFileSize(realPath, MAX_HAP_SIZE)) {
+    ret = CheckFileSize(realPath, MAX_HAP_SIZE);
+    if (ret != ERR_OK) {
         APP_LOGE("file size larger than max hap size Max size is: %{public}" PRId64, MAX_HAP_SIZE);
-        return ERR_APPEXECFWK_INSTALL_INVALID_HAP_SIZE;
+        return ret;
     }
     return ERR_OK;
 }
@@ -110,7 +112,7 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
     APP_LOGD("check file path");
     if (bundlePaths.empty()) {
         APP_LOGE("bundle file paths invalid");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY;
     }
     ErrCode ret = ERR_OK;
 
@@ -120,9 +122,10 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
         if (stat(bundlePath.c_str(), &s) == 0) {
             std::string realPath = "";
             // it is a direction
-            if ((s.st_mode & S_IFDIR) && !GetHapFilesFromBundlePath(bundlePath, realPaths)) {
+            ret = GetHapFilesFromBundlePath(bundlePath, realPaths);
+            if ((s.st_mode & S_IFDIR) && ret != ERR_OK) {
                 APP_LOGE("GetHapFilesFromBundlePath failed with bundlePath:%{public}s", bundlePaths.front().c_str());
-                return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+                return ret;
             }
             // it is a file
             if ((s.st_mode & S_IFREG) && (ret = CheckFilePath(bundlePaths.front(), realPath)) == ERR_OK) {
@@ -131,7 +134,7 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
             return ret;
         } else {
             APP_LOGE("bundlePath not existed with :%{public}s errno %{public}d", bundlePaths.front().c_str(), errno);
-            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+            return ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED;
         }
     } else {
         for (const std::string& bundlePath : bundlePaths) {
@@ -150,7 +153,7 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
 bool BundleUtil::CheckFileType(const std::string &fileName, const std::string &extensionName)
 {
     APP_LOGD("path is %{public}s, support suffix is %{public}s", fileName.c_str(), extensionName.c_str());
-    if (!CheckFileName(fileName)) {
+    if (CheckFileName(fileName) != ERR_OK) {
         return false;
     }
 
@@ -164,31 +167,31 @@ bool BundleUtil::CheckFileType(const std::string &fileName, const std::string &e
     return LowerStr(suffixStr) == extensionName;
 }
 
-bool BundleUtil::CheckFileName(const std::string &fileName)
+ErrCode BundleUtil::CheckFileName(const std::string &fileName)
 {
     if (fileName.empty()) {
         APP_LOGE("the file name is empty");
-        return false;
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY;
     }
     if (fileName.size() > ServiceConstants::PATH_MAX_SIZE) {
         APP_LOGE("bundle file path length %{public}zu too long", fileName.size());
-        return false;
+        return ERR_APPEXECFWK_INSTALL_INVALID_FILE_NAME_SIZE;
     }
-    return true;
+    return ERR_OK;
 }
 
-bool BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t fileSize)
+ErrCode BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t fileSize)
 {
     APP_LOGD("fileSize is %{public}" PRId64, fileSize);
     struct stat fileInfo = { 0 };
     if (stat(bundlePath.c_str(), &fileInfo) != 0) {
         APP_LOGE("call stat error:%{public}d", errno);
-        return false;
+        return ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED;
     }
     if (fileInfo.st_size > fileSize) {
-        return false;
+        return ERR_APPEXECFWK_INSTALL_INVALID_HAP_SIZE;
     }
-    return true;
+    return ERR_OK;
 }
 
 bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::string &diskPath)
@@ -233,11 +236,12 @@ bool BundleUtil::CheckSystemSizeAndHisysEvent(const std::string &path, const std
     return freeSize < DISK_REMAINING_SIZE_LIMIT;
 }
 
-bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList)
+ErrCode BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
+    std::vector<std::string>& hapFileList)
 {
     APP_LOGD("GetHapFilesFromBundlePath with path is %{public}s", currentBundlePath.c_str());
     if (currentBundlePath.empty()) {
-        return false;
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY;
     }
     DIR* dir = opendir(currentBundlePath.c_str());
     if (dir == nullptr) {
@@ -245,7 +249,7 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
         strerror_r(errno, errMsg, sizeof(errMsg));
         APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s failed due to %{public}s, errno:%{public}d",
             currentBundlePath.c_str(), errMsg, errno);
-        return false;
+        return ERR_APPEXECFWK_INSTALL_OPENDIR_FAILED;
     }
     std::string bundlePath = currentBundlePath;
     if (bundlePath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
@@ -268,12 +272,12 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
         if (!hapFileList.empty() && (hapFileList.size() > ServiceConstants::MAX_HAP_NUMBER)) {
             APP_LOGE("reach the max hap number 128, stop to add more");
             closedir(dir);
-            return false;
+            return ERR_APPEXECFWK_INSTALL_HAP_NUMBER_EXCEED_MAX_NUMBER;
         }
     }
     APP_LOGI_NOFUNC("hap number: %{public}zu", hapFileList.size());
     closedir(dir);
-    return true;
+    return ERR_OK;
 }
 
 int64_t BundleUtil::GetCurrentTime()

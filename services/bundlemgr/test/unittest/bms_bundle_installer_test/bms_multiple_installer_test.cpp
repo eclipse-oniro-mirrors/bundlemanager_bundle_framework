@@ -374,7 +374,7 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0200, Function | SmallTest 
 {
     std::string nonExistFile = RESOURCE_ROOT_PATH + INVALID_BUNDLE;
     ErrCode result = InstallThirdPartyBundle(nonExistFile);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED);
     CheckFileNonExist();
 }
 
@@ -388,7 +388,7 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0200, Function | SmallTest 
 HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0300, Function | SmallTest | Level0)
 {
     ErrCode result = InstallThirdPartyBundle("");
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED);
     CheckFileNonExist();
 }
 
@@ -402,7 +402,7 @@ HWTEST_F(BmsMultipleInstallerTest, ThirdPartyInstall_0500, Function | SmallTest 
 {
     std::string bundleFile = INVALID_PATH + RIGHT_BUNDLE;
     ErrCode result = InstallThirdPartyBundle(bundleFile);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED);
     CheckFileNonExist();
 }
 
@@ -518,7 +518,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0100, Function | SmallTes
 {
     std::vector<std::string> filePaths;
     auto installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID) << "installation is successful";
+    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY) << "installation is successful";
 }
 
 /**
@@ -534,7 +534,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0200, Function | SmallTes
     filePaths.emplace_back(bundleFile);
     filePaths.emplace_back("");
     auto installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID) << "installation is successful";
+    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY) << "installation is successful";
 }
 
 /**
@@ -566,7 +566,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0400, Function | SmallTes
     std::string nonExistFile = RESOURCE_ROOT_PATH + INVALID_BUNDLE;
     filePaths.emplace_back(nonExistFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID) << "installation is successful";
+    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED) << "installation is successful";
     CheckFileNonExist();
 }
 
@@ -582,7 +582,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0600, Function | SmallTes
     std::string bundleFile = INVALID_PATH + RIGHT_BUNDLE_FIRST;
     filePaths.emplace_back(bundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_STAT_FILE_FAILED);
     CheckFileNonExist();
 }
 
@@ -789,7 +789,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1800, Function | SmallTes
     filePaths.emplace_back(firstBundleFile);
     filePaths.emplace_back(secondBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_FILE_PATH_IS_NOT_REAL);
     CheckFileNonExist();
 }
 

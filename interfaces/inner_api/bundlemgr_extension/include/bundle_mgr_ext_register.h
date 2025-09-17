@@ -22,7 +22,6 @@
 #include <unordered_map>
 
 #include "bundle_mgr_ext.h"
-#include "ffrt.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -37,8 +36,8 @@ public:
     void RegisterBundleMgrExt(const std::string& bundleExtName, const CreateFunc& createFunc);
     std::shared_ptr<BundleMgrExt> GetBundleMgrExt(const std::string &bundleExtName);
 private:
-    static ffrt::mutex mutex_;
-    mutable ffrt::mutex BundleMgrExtMutex_;
+    static std::mutex mutex_;
+    mutable std::mutex BundleMgrExtMutex_;
     BundleMgrExtRegister() = default;
     std::unordered_map<std::string, CreateFunc> bundleMgrExts_;
 

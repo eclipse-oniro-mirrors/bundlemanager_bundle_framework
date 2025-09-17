@@ -2820,8 +2820,8 @@ HWTEST_F(BmsBundleDataMgrTest, GenerateUidAndGid_0100, Function | SmallTest | Le
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     GetBundleDataMgr()->bundleIdMap_.emplace(MAX_APP_UID, BUNDLE_TEST1);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
-    bool res = GetBundleDataMgr()->GenerateUidAndGid(innerBundleUserInfo);
-    EXPECT_EQ(res, false);
+    ErrCode res = GetBundleDataMgr()->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLENAME_IS_EMPTY);
 }
 
 /**

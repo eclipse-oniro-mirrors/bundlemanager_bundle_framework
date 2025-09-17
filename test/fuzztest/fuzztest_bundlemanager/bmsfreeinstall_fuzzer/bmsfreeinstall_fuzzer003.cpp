@@ -41,7 +41,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     FuzzedDataProvider fdp(data, size);
     std::shared_ptr<BundleConnectAbilityMgr> bundleConnectAbilityMgrPtr = std::make_shared<BundleConnectAbilityMgr>();
     int32_t connectState = fdp.ConsumeIntegralInRange<int32_t>(0, 2);
-    ffrt::condition_variable cv;
+    std::condition_variable cv;
     OHOS::AppExecFwk::ServiceCenterConnection serviceCenterConnection(connectState, cv, bundleConnectAbilityMgrPtr);
     AppExecFwk::ElementName element;
     int32_t resultCode = fdp.ConsumeIntegralInRange<int32_t>(0, 1);

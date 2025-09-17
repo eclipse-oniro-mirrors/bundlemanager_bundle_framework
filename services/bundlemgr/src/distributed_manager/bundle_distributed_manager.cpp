@@ -150,7 +150,7 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
     queryRpcIdParams->want = want;
     queryRpcIdParams->versionCode = applicationInfo.versionCode;
     {
-        std::unique_lock<ffrt::shared_mutex> lock(mutex_);
+        std::unique_lock<std::shared_mutex> lock(mutex_);
         auto ret = queryAbilityParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, *queryRpcIdParams);
         if (!ret.second) {
             APP_LOGE("BundleDistributedManager::QueryAbilityInfo map emplace error");
@@ -255,7 +255,7 @@ void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcI
     }
     Want want;
     {
-        std::shared_lock<ffrt::shared_mutex> lock(mutex_);
+        std::shared_lock<std::shared_mutex> lock(mutex_);
         auto queryAbilityParams = queryAbilityParamsMap_.find(rpcIdResult.transactId);
         if (queryAbilityParams == queryAbilityParamsMap_.end()) {
             APP_LOGE("no node");
@@ -281,7 +281,7 @@ void BundleDistributedManager::SendCallbackRequest(int32_t resultCode, const std
     APP_LOGI("sendCallbackRequest resultCode:%{public}d, transactId:%{public}s", resultCode, transactId.c_str());
     QueryRpcIdParams queryRpcIdParams;
     {
-        std::shared_lock<ffrt::shared_mutex> lock(mutex_);
+        std::shared_lock<std::shared_mutex> lock(mutex_);
         auto queryAbilityParams = queryAbilityParamsMap_.find(transactId);
         if (queryAbilityParams == queryAbilityParamsMap_.end()) {
             APP_LOGE("Can not find transactId:%{public}s in queryAbilityParamsMap", transactId.c_str());
@@ -293,7 +293,7 @@ void BundleDistributedManager::SendCallbackRequest(int32_t resultCode, const std
 
     uint32_t mapSize;
     {
-        std::unique_lock<ffrt::shared_mutex> lock(mutex_);
+        std::unique_lock<std::shared_mutex> lock(mutex_);
         queryAbilityParamsMap_.erase(transactId);
         mapSize = queryAbilityParamsMap_.size();
     }

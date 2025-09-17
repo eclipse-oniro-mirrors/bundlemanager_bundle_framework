@@ -150,7 +150,7 @@ public:
      * @param innerBundleUserInfo Indicates the InnerBundleUserInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInfo);
+    ErrCode GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInfo);
     /**
      * @brief Recycle uid and gid .
      * @param info Indicates the InnerBundleInfo object.
@@ -539,7 +539,7 @@ public:
      * @param bundleName Indicates the bundle name.
      * @return Returns a reference of mutex that for locing by bundle name.
      */
-    ffrt::mutex &GetBundleMutex(const std::string &bundleName);
+    std::mutex &GetBundleMutex(const std::string &bundleName);
     /**
      * @brief Obtains the provision Id based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
@@ -888,7 +888,7 @@ public:
     ErrCode GetMediaData(const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
         std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId) const;
 
-    ffrt::shared_mutex &GetStatusCallbackMutex();
+    std::shared_mutex &GetStatusCallbackMutex();
 
     std::vector<sptr<IBundleStatusCallback>> GetCallBackList() const;
 
@@ -922,7 +922,7 @@ public:
 
     const std::map<std::string, InnerBundleInfo> GetAllInnerBundleInfos() const
     {
-        std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         return bundleInfos_;
     }
 
@@ -1244,7 +1244,7 @@ private:
         int32_t appIndex = 0) const;
     ErrCode ExplicitQueryAbilityInfoV9(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
         int32_t appIndex = 0) const;
-    bool GenerateBundleId(const std::string &bundleName, int32_t &bundleId);
+    ErrCode GenerateBundleId(const std::string &bundleName, int32_t &bundleId);
     int32_t GetUserIdByUid(int32_t uid) const;
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     ErrCode GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
@@ -1414,16 +1414,16 @@ private:
 private:
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
-    mutable ffrt::mutex stateMutex_;
-    mutable ffrt::mutex multiUserIdSetMutex_;
-    mutable ffrt::mutex hspBundleNameMutex_;
-    mutable ffrt::mutex pluginCallbackMutex_;
-    mutable ffrt::mutex eventCallbackMutex_;
-    mutable ffrt::shared_mutex bundleInfoMutex_;
-    mutable ffrt::shared_mutex bundleIdMapMutex_;
-    mutable ffrt::shared_mutex callbackMutex_;
-    mutable ffrt::shared_mutex bundleMutex_;
-    mutable ffrt::shared_mutex otaNewInstallMutex_;
+    mutable std::mutex stateMutex_;
+    mutable std::mutex multiUserIdSetMutex_;
+    mutable std::mutex hspBundleNameMutex_;
+    mutable std::mutex pluginCallbackMutex_;
+    mutable std::mutex eventCallbackMutex_;
+    mutable std::shared_mutex bundleInfoMutex_;
+    mutable std::shared_mutex bundleIdMapMutex_;
+    mutable std::shared_mutex callbackMutex_;
+    mutable std::shared_mutex bundleMutex_;
+    mutable std::shared_mutex otaNewInstallMutex_;
     std::shared_ptr<IBundleDataStorage> dataStorage_;
     std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;
@@ -1439,7 +1439,7 @@ private:
     // common event callback
     std::vector<sptr<IBundleEventCallback>> eventCallbackList_;
     // using for locking by bundleName
-    std::unordered_map<std::string, ffrt::mutex> bundleMutexMap_;
+    std::unordered_map<std::string, std::mutex> bundleMutexMap_;
     // using for generating bundleId
     // key:bundleId
     // value:bundleName

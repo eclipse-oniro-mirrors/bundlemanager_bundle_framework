@@ -64,15 +64,15 @@ public:
     /**
      * @brief Check whether a file name is valid.
      * @param fileName Indicates the file path.
-     * @return Returns true if the file name checked successfully; returns false otherwise.
+     * @return Returns ERR_OK if the file name checked successfully; returns errcode otherwise.
      */
-    static bool CheckFileName(const std::string &fileName);
+    static ErrCode CheckFileName(const std::string &fileName);
     /**
      * @brief Check whether a Hap size is valid.
      * @param fileName Indicates the file path.
-     * @return Returns true if the file size checked successfully; returns false otherwise.
+     * @return Returns ERR_OK if the file size checked successfully; returns errcode otherwise.
      */
-    static bool CheckFileSize(const std::string &bundlePath, const int64_t fileSize);
+    static ErrCode CheckFileSize(const std::string &bundlePath, const int64_t fileSize);
     /**
      * @brief Check whether the disk path memory is available for installing the hap.
      * @param bundlePath Indicates the file path.
@@ -94,9 +94,10 @@ public:
      * @brief to obtain the hap paths of the input bundle path.
      * @param currentBundlePath Indicates the current bundle path.
      * @param hapFileList Indicates the hap paths.
-     * @return Returns true if the hap path obtained successfully; returns false otherwise.
+     * @return Returns ERR_OK if the hap path obtained successfully; returns errcode otherwise.
      */
-    static bool GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList);
+    static ErrCode GetHapFilesFromBundlePath(const std::string& currentBundlePath,
+        std::vector<std::string>& hapFileList);
     /**
      * @brief to obtain the current time.
      * @return Returns current time.

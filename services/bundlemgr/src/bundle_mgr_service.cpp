@@ -71,7 +71,7 @@ BundleMgrService::~BundleMgrService()
     }
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     {
-        std::lock_guard<ffrt::mutex> connectLock(bundleConnectMutex_);
+        std::lock_guard<std::mutex> connectLock(bundleConnectMutex_);
         if (!connectAbilityMgr_.empty()) {
             connectAbilityMgr_.clear();
         }
@@ -387,7 +387,7 @@ const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrService::GetConnectAbili
     if (currentUserId == Constants::UNSPECIFIED_USERID) {
         currentUserId = AccountHelper::GetUserIdByCallerType();
     }
-    std::lock_guard<ffrt::mutex> connectLock(bundleConnectMutex_);
+    std::lock_guard<std::mutex> connectLock(bundleConnectMutex_);
     if (connectAbilityMgr_.find(userId) == connectAbilityMgr_.end() ||
         connectAbilityMgr_[userId] == nullptr) {
         auto ptr = std::make_shared<BundleConnectAbilityMgr>();
@@ -413,7 +413,7 @@ void BundleMgrService::SelfClean()
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     agingMgr_.reset();
     {
-        std::lock_guard<ffrt::mutex> connectLock(bundleConnectMutex_);
+        std::lock_guard<std::mutex> connectLock(bundleConnectMutex_);
         connectAbilityMgr_.clear();
     }
     bundleDistributedManager_.reset();
@@ -510,7 +510,7 @@ void BundleMgrService::CheckAllUser()
             userMgrHost_->RemoveUser(userId);
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
             {
-                std::lock_guard<ffrt::mutex> connectLock(bundleConnectMutex_);
+                std::lock_guard<std::mutex> connectLock(bundleConnectMutex_);
                 connectAbilityMgr_.erase(userId);
             }
 #endif

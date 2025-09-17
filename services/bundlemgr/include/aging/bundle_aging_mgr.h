@@ -24,7 +24,6 @@
 #include "aging/aging_request.h"
 #include "bundle_active_client.h"
 #include "bundle_data_mgr.h"
-#include "ffrt.h"
 #include "singleton.h"
 
 namespace OHOS {
@@ -62,7 +61,7 @@ private:
     static const uint32_t EVENT_AGING_NOW = 1;
     int64_t agingTimerInterval_ = AgingConstants::DEFAULT_AGING_TIMER_INTERVAL;
     int64_t agingBatteryThresold_ = AgingConstants::DEFAULT_AGING_BATTERY_THRESHOLD;
-    ffrt::mutex mutex_;
+    std::mutex mutex_;
     AgingHandlerChain chain_;
     AgingRequest request_;
 };

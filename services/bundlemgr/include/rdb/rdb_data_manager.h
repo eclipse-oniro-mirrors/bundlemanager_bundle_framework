@@ -16,7 +16,6 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_RDB_DATA_MANAGER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_RDB_DATA_MANAGER_H
 
-#include "ffrt.h"
 #include <mutex>
 #include <unordered_map>
 
@@ -68,11 +67,11 @@ private:
     int32_t InsertWithRetry(std::shared_ptr<NativeRdb::RdbStore> rdbStore, int64_t &rowId,
         const NativeRdb::ValuesBucket &valuesBucket);
     bool IsRetryErrCode(int32_t errCode);
-    ffrt::mutex &GetRdbRestoreMutex(const std::string &dbName);
+    std::mutex &GetRdbRestoreMutex(const std::string &dbName);
     bool isInitial_ = false;
-    ffrt::mutex rdbMutex_;
-    static ffrt::mutex restoreRdbMapMutex_;
-    static std::unordered_map<std::string, ffrt::mutex> restoreRdbMap_;
+    std::mutex rdbMutex_;
+    static std::mutex restoreRdbMapMutex_;
+    static std::unordered_map<std::string, std::mutex> restoreRdbMap_;
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
 
     BmsRdbConfig bmsRdbConfig_;
