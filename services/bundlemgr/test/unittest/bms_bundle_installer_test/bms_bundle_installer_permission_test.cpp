@@ -1219,4 +1219,47 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ProcessArkStartupCache_0010, Function
     ErrCode ret = installer.ProcessArkStartupCache(ceateArk, 1, 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+* @tc.number: ParseSizeFromProvision_0010
+* @tc.name: test arseSizeFromProvision
+* @tc.desc: 1.Test arseSizeFromProvision
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, ParseSizeFromProvision_0010, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    int32_t sizeMb = 200;
+    std::string bundleName = "test";
+    int32_t uid = 20020000;
+    Security::Verify::ProvisionInfo provisionInfo;
+
+    provisionInfo.appServiceCapabilities = "";
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.ParseSizeFromProvision(bundleName, uid, sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.TEST\":{\"storageSize\": 1024}}";
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.ParseSizeFromProvision(bundleName, uid, sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.atomicService.MANAGE_STORAGE\":{\"test\": 1024}}";
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.ParseSizeFromProvision(bundleName, uid, sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.atomicService.MANAGE_STORAGE\":{\"storageSize\": 100}}";
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.ParseSizeFromProvision(bundleName, uid, sizeMb);
+    EXPECT_EQ(sizeMb, 200);
+
+    provisionInfo.appServiceCapabilities =
+        "{\"ohos.permission.atomicService.MANAGE_STORAGE\":{\"storageSize\": 1024}}";
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.ParseSizeFromProvision(bundleName, uid, sizeMb);
+    EXPECT_EQ(sizeMb, 1024);
+}
 } // OHOS

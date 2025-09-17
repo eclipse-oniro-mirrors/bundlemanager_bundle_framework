@@ -1969,11 +1969,11 @@ void BMSEventHandler::PrepareBundleDirQuota(const std::string &bundleName, const
     }
 #endif // QUOTA_PARAM_SET_ENABLE
 #endif // STORAGE_SERVICE_ENABLE
-    ParseSizeFromProvision(bundleName, atomicserviceDatasizeThreshold);
+    ParseSizeFromProvision(bundleName, uid, atomicserviceDatasizeThreshold);
     SendToStorageQuota(bundleName, uid, bundleDataDirPath, atomicserviceDatasizeThreshold);
 }
 
-void BMSEventHandler::ParseSizeFromProvision(const std::string &bundleName, int32_t &sizeMb) const
+void BMSEventHandler::ParseSizeFromProvision(const std::string &bundleName, const int32_t uid, int32_t &sizeMb) const
 {
     AppProvisionInfo provisionInfo;
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName, provisionInfo)) {
@@ -1987,6 +1987,11 @@ void BMSEventHandler::ParseSizeFromProvision(const std::string &bundleName, int3
     for (auto &item : appServiceCapabilityMap) {
         if (item.first != ServiceConstants::PERMISSION_MANAGE_STORAGE) {
             continue;
+        }
+        if (BundlePermissionMgr::VerifyPermission(bundleName, ServiceConstants::PERMISSION_MANAGE_STORAGE,
+            uid / Constants::BASE_USER_RANGE) != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+            APP_LOGW("no manage storage permission for %{public}s", bundleName.c_str());
+            return;
         }
         std::unordered_map<std::string, std::string> storageMap = BundleUtil::ParseMapFromJson(item.second);
         auto it = storageMap.find(KEY_STORAGE_SIZE);
