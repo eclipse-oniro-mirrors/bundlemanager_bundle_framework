@@ -112,6 +112,7 @@ public:
 
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
+    ErrCode KillRunningAppOutWhiteList(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
     void DeleteAppRunningRuleCache(std::string &key);
     bool GetAbilityRunningRuleCache(const std::string &key, std::vector<DisposedRule> &disposedRules);
     void SetAbilityRunningRuleCache(const std::string &key, const std::vector<DisposedRule> &disposedRules);
@@ -129,6 +130,7 @@ private:
     bool GetAppRunningControlRuleCache(const std::string &key, AppRunningControlRuleResult &controlRuleResult);
     void DeleteAppRunningControlRuleCache(const std::string &key);
     void DeleteAppRunningControlRuleCacheForUserId(int32_t userId);
+    void DeleteRunningRuleSettingStatusCache(int32_t userId);
     ErrCode CheckAppControlRuleIntercept(const std::string &bundleName,
         int32_t userId, bool isSuccess, AppRunningControlRuleResult &controlRuleResult);
 

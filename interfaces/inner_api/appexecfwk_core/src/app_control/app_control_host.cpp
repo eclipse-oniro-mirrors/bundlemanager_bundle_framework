@@ -253,7 +253,7 @@ ErrCode AppControlHost::HandleGetAppRunningControlRule(MessageParcel& data, Mess
 {
     int32_t userId = data.ReadInt32();
     std::vector<std::string> appIds;
-    bool allowRunning;
+    bool allowRunning = false;
     int32_t ret = GetAppRunningControlRule(userId, appIds, allowRunning);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "HandleGetAppRunningControlRule failed");
