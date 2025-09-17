@@ -112,7 +112,7 @@ public:
 
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
-    ErrCode KillRunningAppOutWhiteList(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
+    ErrCode KillRunningAppOutWhiteList(int32_t userId) const;
     void DeleteAppRunningRuleCache(std::string &key);
     bool GetAbilityRunningRuleCache(const std::string &key, std::vector<DisposedRule> &disposedRules);
     void SetAbilityRunningRuleCache(const std::string &key, const std::vector<DisposedRule> &disposedRules);
