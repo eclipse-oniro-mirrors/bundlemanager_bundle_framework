@@ -873,6 +873,7 @@ private:
     ErrCode HandleGetDeveloperIds(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleSwitchUninstallState(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleSwitchUninstallStateByUserId(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleQueryAbilityInfoByContinueType(MessageParcel &data, MessageParcel &reply);
 

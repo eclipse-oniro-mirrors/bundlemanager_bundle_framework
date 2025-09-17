@@ -2307,6 +2307,7 @@ public:
     void SetUninstallState(const bool &uninstallState);
     bool IsNeedSendNotify() const;
     void SetNeedSendNotify(const bool needStatus);
+    ErrCode SetCanUninstall(int32_t userId, bool state, bool &stateChange);
     void UpdateMultiAppMode(const InnerBundleInfo &newInfo);
     void UpdateReleaseType(const InnerBundleInfo &newInfo);
     ErrCode AddCloneBundle(const InnerBundleCloneInfo &attr);

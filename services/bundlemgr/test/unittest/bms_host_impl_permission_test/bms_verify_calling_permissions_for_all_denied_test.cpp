@@ -1003,6 +1003,23 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0057, TestS
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
+/**
+ * @tc.number: BundleMgrHostImpl_0058
+ * @tc.name: VerifyCallingPermissionsForAllDeniedTest
+ * @tc.desc: SwitchUninstallStateByUserId VerifyCallingPermissionsForAll denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0058, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "com.example.test"; // Example bundle name
+    bool state = true; // Example state
+    bool isNeedSendNotify = false; // Example notification flag
+    auto ret = localBundleMgrHostImpl->SwitchUninstallStateByUserId(bundleName, state, isNeedSendNotify, 100);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 /**
  * @tc.number: VerifyManagerHostImpl_0001

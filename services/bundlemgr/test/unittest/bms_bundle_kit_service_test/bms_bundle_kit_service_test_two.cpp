@@ -1983,6 +1983,19 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0100, Function | SmallTes
 }
 
 /**
+ * @tc.number: SwitchUninstallStateByUserId_0100
+ * @tc.name: test SwitchUninstallStateByUserId
+ * @tc.desc: 1.Test the SwitchUninstallStateByUserId by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallStateByUserId_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode ret = hostImpl->SwitchUninstallStateByUserId(BUNDLE_NAME_DEMO, true, false, 100);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
  * @tc.number: QueryAbilityInfoByContinueType_0100
  * @tc.name: test QueryAbilityInfoByContinueType
  * @tc.desc: 1.Test the QueryAbilityInfoByContinueType by BundleMgrHostImpl
@@ -5558,6 +5571,21 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0001, Function | SmallTes
     EXPECT_NE(dataMgr, nullptr);
     bool stateChange = false;
     ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, false, false, stateChange);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SwitchUninstallStateByUserId_0001
+ * @tc.name: SwitchUninstallStateByUserId
+ * @tc.desc: 1.system run normally
+ *           2.switch uninstallState return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallStateByUserId_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool stateChange = false;
+    ErrCode res = dataMgr->SwitchUninstallStateByUserId(BUNDLE_NAME_UNINSTALL_STATE, false, false, 100, stateChange);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 

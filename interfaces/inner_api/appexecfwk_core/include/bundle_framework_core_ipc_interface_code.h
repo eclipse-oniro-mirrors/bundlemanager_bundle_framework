@@ -228,6 +228,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     IS_DEBUGGABLE_APPLICATION = 202,
     GET_ALL_BUNDLE_NAMES = 203,
 	GET_ABILITY_RESOURCE_INFO = 204,
+    SWITCH_UNINSTALL_STATE_BY_USER_ID = 205,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
