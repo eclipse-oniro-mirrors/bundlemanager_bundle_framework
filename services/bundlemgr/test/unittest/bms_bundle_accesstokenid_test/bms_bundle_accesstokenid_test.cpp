@@ -1014,7 +1014,9 @@ HWTEST_F(BmsBundleAccessTokenIdTest, GetRouterInfo_0001, Function | SmallTest | 
     ASSERT_NE(dataMgr, nullptr);
     ASSERT_NE(dataMgr->routerStorage_, nullptr);
     std::vector<RouterItem> routerInfos;
-    auto ret = dataMgr->routerStorage_->GetRouterInfo(BUNDLE_NAME, WRONG_BUNDLE_NAME, routerInfos);
+    uint32_t versionCode = 0;
+    auto ret = dataMgr->routerStorage_->GetRouterInfo(BUNDLE_NAME, WRONG_BUNDLE_NAME,
+        versionCode, routerInfos);
     EXPECT_FALSE(ret);
 }
 

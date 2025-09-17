@@ -28,16 +28,19 @@ constexpr uint8_t CODE_MAX = 22;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    uint32_t versionCode = 0;
     std::string bundleName(data, size);
     std::string moduleName(data, size);
     std::map<std::string, std::string> routerInfoMap;
     std::vector<RouterItem> routerInfos;
-    routerDataStorageRdb->UpdateRouterInfo(bundleName, routerInfoMap);
-    routerDataStorageRdb->GetRouterInfo(bundleName, moduleName, routerInfos);
+    routerDataStorageRdb->UpdateRouterInfo(bundleName, routerInfoMap, versionCode);
+    routerDataStorageRdb->GetRouterInfo(bundleName, moduleName, versionCode, routerInfos);
     std::set<std::string> bundleNames;
     routerDataStorageRdb->GetAllBundleNames(bundleNames);
     routerDataStorageRdb->DeleteRouterInfo(bundleName);
     routerDataStorageRdb->DeleteRouterInfo(bundleName, moduleName);
+    routerDataStorageRdb->DeleteRouterInfo(bundleName, moduleName, versionCode);
+    routerDataStorageRdb->InsertRouterInfo(bundleName, routerInfoMap, versionCode);
     return true;
 }
 } // namespace OHOS

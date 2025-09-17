@@ -945,8 +945,11 @@ HWTEST_F(BmsBundleNavigationTest, RouterMapMerge_0001, Function | SmallTest | Le
     hapModuleInfo.routerArray.emplace_back(routerArrayTest_[0]);
     hapModuleInfo.routerArray.emplace_back(routerArrayTest_[9]);
     info.hapModuleInfos.emplace_back(hapModuleInfo);
-    RouterMapHelper::MergeRouter(info);
-    EXPECT_EQ(info.routerArray.size(), 2);
+    std::vector<RouterItem> pluginRouterInfos;
+    pluginRouterInfos.push_back(routerArrayTest_[1]);
+    pluginRouterInfos.push_back(routerArrayTest_[10]);
+    RouterMapHelper::MergeRouter(info, pluginRouterInfos);
+    EXPECT_EQ(info.routerArray.size(), 3);
 }
 
 /**
@@ -1426,7 +1429,8 @@ HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0001, Function | SmallTes
     routerDataStorageRdb->rdbDataManager_ = nullptr;
     std::string bundleName;
     std::map<std::string, std::string> routerInfoMap;
-    auto ret = routerDataStorageRdb->UpdateRouterInfo(bundleName, routerInfoMap);
+    uint32_t versionCode = 0;
+    auto ret = routerDataStorageRdb->UpdateRouterInfo(bundleName, routerInfoMap, versionCode);
     EXPECT_FALSE(ret);
 }
 
@@ -1442,7 +1446,8 @@ HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0002, Function | SmallTes
 
     std::string bundleName = "";
     std::map<std::string, std::string> routerInfoMap;
-    auto ret = routerDataStorageRdb->UpdateRouterInfo(bundleName, routerInfoMap);
+    uint32_t versionCode = 0;
+    auto ret = routerDataStorageRdb->UpdateRouterInfo(bundleName, routerInfoMap, versionCode);
     EXPECT_FALSE(ret);
 }
 
@@ -1459,7 +1464,8 @@ HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0003, Function | SmallTes
     std::string bundleName = "xxxx";
     std::map<std::string, std::string> routerInfoMap;
     routerInfoMap["testKey"] = "testValue";
-    auto ret = routerDataStorageRdb->UpdateRouterInfo(bundleName, routerInfoMap);
+    uint32_t versionCode = 0;
+    auto ret = routerDataStorageRdb->UpdateRouterInfo(bundleName, routerInfoMap, versionCode);
     EXPECT_FALSE(ret);
 }
 
@@ -1476,8 +1482,10 @@ HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0004, Function | SmallTes
     routerDataStorageRdb->rdbDataManager_ = nullptr;
     std::string bundleName;
     std::string moduleName;
+    uint32_t versionCode = 0;
     std::vector<RouterItem> routerInfos;
-    auto ret = routerDataStorageRdb->GetRouterInfo(bundleName, moduleName, routerInfos);
+    auto ret = routerDataStorageRdb->GetRouterInfo(bundleName, moduleName,
+        versionCode, routerInfos);
     EXPECT_FALSE(ret);
 }
 
@@ -1494,7 +1502,9 @@ HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0005, Function | SmallTes
     std::string bundleName;
     std::string moduleName;
     std::vector<RouterItem> routerInfos;
-    auto ret = routerDataStorageRdb->GetRouterInfo(bundleName, moduleName, routerInfos);
+    uint32_t versionCode = 0;
+    auto ret = routerDataStorageRdb->GetRouterInfo(bundleName, moduleName,
+        versionCode, routerInfos);
     EXPECT_FALSE(ret);
 }
 
@@ -1559,6 +1569,65 @@ HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0009, Function | SmallTes
     std::string bundleName;
     std::string moduleName;
     auto ret = routerDataStorageRdb->DeleteRouterInfo(bundleName, moduleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0010
+ * @tc.name: test DeleteRouterInfo
+ * @tc.desc: 1.DeleteRouterInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0010, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    routerDataStorageRdb->rdbDataManager_ = nullptr;
+    std::string bundleName;
+    std::string moduleName;
+    uint32_t versionCode = 0;
+    auto ret = routerDataStorageRdb->DeleteRouterInfo(bundleName, moduleName, versionCode);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0011
+ * @tc.name: test DeleteRouterInfo
+ * @tc.desc: 1.DeleteRouterInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0011, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    std::string bundleName = "bundleName";
+    std::map<std::string, std::string> routerInfoMap;
+    routerInfoMap["moduleName"] = "routerInfo";
+    uint32_t versionCode = 0;
+
+    auto ret = routerDataStorageRdb->InsertRouterInfo(bundleName, routerInfoMap, versionCode);
+    EXPECT_FALSE(ret);
+
+    std::string moduleName = "moduleName";
+    ret = routerDataStorageRdb->DeleteRouterInfo(bundleName, moduleName, versionCode);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0012
+ * @tc.name: test InsertRouterInfo
+ * @tc.desc: 1.InsertRouterInfo
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0012, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    routerDataStorageRdb->rdbDataManager_ = nullptr;
+    std::string bundleName;
+    std::map<std::string, std::string> routerInfoMap;
+    uint32_t versionCode = 0;
+    auto ret = routerDataStorageRdb->InsertRouterInfo(bundleName, routerInfoMap, versionCode);
     EXPECT_FALSE(ret);
 }
 

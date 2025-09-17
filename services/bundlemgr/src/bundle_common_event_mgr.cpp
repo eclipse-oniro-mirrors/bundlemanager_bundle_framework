@@ -444,9 +444,11 @@ void BundleCommonEventMgr::NotifyPluginEvents(const NotifyBundleEvents &event,
     want.SetParam(Constants::UID, event.uid);
     EventFwk::CommonEventData commonData { want };
     if (dataMgr != nullptr) {
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "pluginEventBack begin");
-        dataMgr->NotifyPluginEventCallback(commonData);
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "pluginEventBack end");
+        LOG_I(BMS_TAG_DEFAULT, "pluginEventBack begin");
+        std::string hostBundleName;
+        dataMgr->GetBundleNameForUid(event.uid, hostBundleName);
+        dataMgr->NotifyPluginEventCallback(commonData, hostBundleName);
+        LOG_I(BMS_TAG_DEFAULT, "pluginEventBack end");
     }
 }
 

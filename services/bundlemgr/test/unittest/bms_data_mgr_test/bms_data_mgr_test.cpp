@@ -5239,7 +5239,8 @@ HWTEST_F(BmsDataMgrTest, GetPluginHapModuleInfo_0001, TestSize.Level1)
 HWTEST_F(BmsDataMgrTest, UnregisterPluginEventCallback_0001, TestSize.Level1)
 {
     BundleDataMgr bundleDataMgr;
-    auto ret = bundleDataMgr.UnregisterPluginEventCallback(nullptr);
+    std::string bundleName;
+    auto ret = bundleDataMgr.UnregisterPluginEventCallback(nullptr, bundleName);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 

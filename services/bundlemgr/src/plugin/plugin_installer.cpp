@@ -608,6 +608,7 @@ ErrCode PluginInstaller::ProcessPluginInstall(const InnerBundleInfo &hostBundleI
     result = SavePluginInfoToStorage(pluginInfo, hostBundleInfo);
     CHECK_RESULT(result, "save plugin info to storage failed %{public}d");
 
+    UpdateRouterInfoForPlugin(hostBundleInfo.GetBundleName(), pluginInfo);
     RemoveEmptyDirs(pluginDir);
     RemoveOldInstallDir();
     deleteDirGuard.Dismiss();
@@ -855,6 +856,7 @@ ErrCode PluginInstaller::ProcessPluginUninstall(const InnerBundleInfo &hostBundl
             hostBundleInfo.GetBundleName().c_str(), bundleName_.c_str());
     }
     InstalldClient::GetInstance()->RemoveSignProfile(bundleName_);
+    DeleteRouterInfoForPlugin(hostBundleName);
 
     return ERR_OK;
 }
@@ -917,6 +919,27 @@ void PluginInstaller::NotifyPluginEvents(const NotifyType &type, int32_t uid)
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyPluginEvents(event, dataMgr_);
+}
+
+void PluginInstaller::UpdateRouterInfoForPlugin(const std::string &hostBundleName, const InnerBundleInfo &pluginInfo)
+{
+    if (!InitDataMgr()) {
+        return;
+    }
+    if (!isPluginExist_) {
+        dataMgr_->InsertRouterInfo(pluginInfo);
+        return;
+    }
+    dataMgr_->DeleteRouterInfoForPlugin(hostBundleName, oldPluginInfo_);
+    dataMgr_->InsertRouterInfo(pluginInfo);
+}
+
+void PluginInstaller::DeleteRouterInfoForPlugin(const std::string &hostBundleName)
+{
+    if (!InitDataMgr()) {
+        return;
+    }
+    dataMgr_->DeleteRouterInfoForPlugin(hostBundleName, oldPluginInfo_);
 }
 } // AppExecFwk
 } // OHOS

@@ -1045,11 +1045,18 @@ public:
     void FindRouterHapPath(const InnerBundleInfo &innerBundleInfo,
         std::map<std::string, std::pair<std::string, std::string>> &hapPathMap);
     void UpdateRouterInfo(const std::string &bundleName,
-        std::map<std::string, std::pair<std::string, std::string>> &hapPathMap);
+        std::map<std::string, std::pair<std::string, std::string>> &hapPathMap, const uint32_t versionCode);
+    bool UpdateRouterDB();
+    void InsertRouterInfo(const InnerBundleInfo &innerBundleInfo);
+    bool HasPluginInstalledByOtherBundle(const std::string &hostBundleName,
+        const std::string &pluginBundleName, const uint32_t versionCode);
 
     bool DeleteRouterInfo(const std::string &bundleName);
     bool DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName);
+    void DeleteRouterInfoForPlugin(const std::string &hostBundleName, const PluginBundleInfo &pluginInfo);
     void GetAllBundleNames(std::set<std::string> &bundleNames);
+    void GetRouterInfoForPlugin(const std::string &hostBundleName, int32_t userId,
+        std::vector<RouterItem> &routerInfos) const;
 
     void UpdateIsPreInstallApp(const std::string &bundleName, bool isPreInstallApp);
 
@@ -1171,9 +1178,11 @@ public:
         const int32_t userId, AbilityInfo &abilityInfo);
     ErrCode GetPluginHapModuleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo);
-    ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
-    ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
-    void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData);
+    ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback,
+        const std::string callingBundleName);
+    ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback,
+        const std::string &callingBundleName);
+    void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData, const std::string &bundleName);
     ErrCode GetDynamicIconInfo(const std::string &bundleName, std::vector<DynamicIconInfo> &dynamicIconInfos);
     void ProcessDynamicIconForOta();
     ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos);
@@ -1386,7 +1395,7 @@ private:
     void AddAppHspBundleName(const BundleType type, const std::string &bundleName);
     void ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &innerBundleInfo,
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
-    void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const;
+    void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag, int32_t userId) const;
     void ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void ProcessCertificate(BundleInfo& bundleInfo, const std::string &bundleName, int32_t flags) const;
     void FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
@@ -1465,7 +1474,7 @@ private:
     std::set<int32_t> multiUserIdsSet_;
     std::set<std::string> appServiceHspBundleName_;
     // using for plugin event callback
-    std::vector<sptr<IBundleEventCallback>> pluginCallbackList_;
+    std::map<std::string, std::vector<sptr<IBundleEventCallback>>> pluginCallbackMap_;
     std::set<std::string> otaNewInstallBundleNames_;
 
     static bool HasAppLinkingFlag(uint32_t flags);

@@ -25,7 +25,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class RouterMapHelper {
 public:
-    static void MergeRouter(BundleInfo &info);
+    static void MergeRouter(BundleInfo &info, const std::vector<RouterItem> &pluginRouterInfos = {});
     static void MergeRouter(const std::vector<RouterItem>& routerArrayList,
         std::vector<RouterItem>& routerArray, const std::set<std::string>& moduleNameSet);
     static int32_t Compare(const std::string &version1, const std::string &version2);

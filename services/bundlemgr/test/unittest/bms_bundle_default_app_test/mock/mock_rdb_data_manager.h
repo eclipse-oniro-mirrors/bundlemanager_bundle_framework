@@ -125,6 +125,11 @@ bool RdbDataManager::CreateTable()
     return true;
 }
 
+bool RdbDataManager::ExecuteSql()
+{
+    return true;
+}
+
 std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryByStep(const NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {
     return nullptr;

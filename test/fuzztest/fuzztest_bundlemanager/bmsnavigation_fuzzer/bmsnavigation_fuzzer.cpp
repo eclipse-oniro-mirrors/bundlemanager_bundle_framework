@@ -67,22 +67,25 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
     RouterDataStorageRdb routerDataStorageRdb;
+    uint32_t versionCode = 0;
     std::string bundleName;
     std::string moduleName;
     std::vector<RouterItem> routerInfos;
     std::set<std::string> bundleNames;
     std::map<std::string, std::string> routerInfoMap;
-    routerDataStorageRdb.UpdateRouterInfo(bundleName, routerInfoMap);
+    routerDataStorageRdb.UpdateRouterInfo(bundleName, routerInfoMap, versionCode);
     bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     GenerateMap(fdp, routerInfoMap);
-    routerDataStorageRdb.UpdateRouterInfo(bundleName, routerInfoMap);
+    routerDataStorageRdb.UpdateRouterInfo(bundleName, routerInfoMap, versionCode);
 
     routerDataStorageRdb.rdbDataManager_ = nullptr;
-    routerDataStorageRdb.UpdateRouterInfo(bundleName, routerInfoMap);
-    routerDataStorageRdb.GetRouterInfo(bundleName, moduleName, routerInfos);
+    routerDataStorageRdb.UpdateRouterInfo(bundleName, routerInfoMap, versionCode);
+    routerDataStorageRdb.GetRouterInfo(bundleName, moduleName, versionCode, routerInfos);
     routerDataStorageRdb.GetAllBundleNames(bundleNames);
     routerDataStorageRdb.DeleteRouterInfo(bundleName);
     routerDataStorageRdb.DeleteRouterInfo(bundleName, moduleName);
+    routerDataStorageRdb.DeleteRouterInfo(bundleName, moduleName, versionCode);
+    routerDataStorageRdb.InsertRouterInfo(bundleName, routerInfoMap, versionCode);
 
     BundleInfo bundleInfo;
     GenerateBundleInfo(fdp, bundleInfo);
