@@ -616,7 +616,7 @@ void CleanAllBundleCacheComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
-        APP_LOGE("asyncCallbackInfo is null");
+        APP_LOGE("asyncCallbackInfo errCode: %{public}d", asyncCallbackInfo->err);
         result[0] = BusinessError::CreateCommonError(
             env, asyncCallbackInfo->err, CLEAN_ALL_BUNDLE_CACHE, Constants::PERMISSION_REMOVECACHEFILE);
     }
@@ -1610,7 +1610,7 @@ void GetAbilityLabelComplete(napi_env env, napi_status status, void *data)
             result[0] = BusinessError::CreateError(env, ERROR_PARAM_CHECK_ERROR, PARAM_ABILITYNAME_EMPTY_ERROR);
         }
     } else {
-        APP_LOGE("asyncCallbackInfo is null");
+        APP_LOGE("asyncCallbackInfo errCode: %{public}d", asyncCallbackInfo->err);
         result[0] = BusinessError::CreateCommonError(
             env, asyncCallbackInfo->err, "GetAbilityLabel", Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
