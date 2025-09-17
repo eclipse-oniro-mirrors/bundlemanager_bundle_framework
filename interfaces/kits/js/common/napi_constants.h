@@ -15,6 +15,11 @@
 #ifndef NAPI_CONSTANTS_H
 #define NAPI_CONSTANTS_H
 
+#include <map>
+#include <set>
+
+#include "bundle_constants.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
@@ -172,6 +177,18 @@ constexpr const char* GET_ALL_DYNAMIC_ICON = "GetAllDynamicIconInfo";
 constexpr const char* GET_SANDBOX_DATA_DIR_SYNC = "GetSandboxDataDirSync";
 constexpr const char* GET_ABILITY_INFOS = "GetAbilityInfos";
 constexpr const char* GET_DYNAMIC_ICON_INFO = "GetDynamicIconInfo";
+
+inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1 };
+
+inline std::map<int32_t, std::string> APP_DISTRIBUTION_TYPE_MAP = {
+    { ENUM_ONE, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
+    { ENUM_TWO, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
+    { ENUM_THREE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
+    { ENUM_FOUR, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
+    { ENUM_FIVE, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
+    { ENUM_SIX, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
+    { ENUM_SEVEN, Constants::APP_DISTRIBUTION_TYPE_NONE },
+};
 
 // launcher_bundle_manager
 constexpr const char* GET_SHORTCUT_INFO = "GetShortcutInfo";

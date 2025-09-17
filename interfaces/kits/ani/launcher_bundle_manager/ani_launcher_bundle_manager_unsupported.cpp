@@ -12,8 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "app_log_wrapper.h"
+
 #include <ani_signature_builder.h>
+
+#include "app_log_wrapper.h"
 #include "bundle_errors.h"
 #include "business_error_ani.h"
 #include "common_fun_ani.h"
