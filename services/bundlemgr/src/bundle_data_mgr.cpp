@@ -7958,7 +7958,7 @@ void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t 
     }
 }
 
-bool BundleDataMgr::CreateAppGroupDir(const InnerBundleInfo &info, int32_t userId)
+bool BundleDataMgr::CreateAppGroupDir(const InnerBundleInfo &info, int32_t userId, DataDirEl dirEl)
 {
     auto dataGroupInfoMap = info.GetDataGroupInfos();
     if (dataGroupInfoMap.empty()) {
@@ -7973,7 +7973,7 @@ bool BundleDataMgr::CreateAppGroupDir(const InnerBundleInfo &info, int32_t userI
         }
     }
     bool needCreateEl5Dir = info.NeedCreateEl5Dir();
-    return CreateGroupDirs(dataGroupInfos, userId, needCreateEl5Dir) == ERR_OK;
+    return CreateGroupDirs(dataGroupInfos, userId, needCreateEl5Dir, dirEl) == ERR_OK;
 }
 
 bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t userId)
@@ -7988,7 +7988,7 @@ bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t use
 }
 
 ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId,
-    bool needCreateEl5Dir)
+    bool needCreateEl5Dir, DataDirEl dirEl)
 {
     if (dataGroupInfos.empty()) {
         return ERR_OK;
@@ -8008,7 +8008,7 @@ ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGro
         APP_LOGE("mkdir group dir failed %{public}d", nonEl5Res);
         res = nonEl5Res;
     }
-    if (!needCreateEl5Dir) {
+    if (!needCreateEl5Dir || (dirEl != DataDirEl::EL5 && dirEl != DataDirEl::NONE)) {
         return res;
     }
     auto el5Res = CreateEl5GroupDirs(dataGroupInfos, userId);
@@ -9223,7 +9223,7 @@ ErrCode BundleDataMgr::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl
             createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
             createDirParam.dataDirEl = dirEl;
             createDirParams.emplace_back(createDirParam);
-            CreateAppGroupDir(info, userId);
+            CreateAppGroupDir(info, userId, dirEl);
         }
     }
     ErrCode res = ERR_OK;
