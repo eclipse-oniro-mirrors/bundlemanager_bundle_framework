@@ -1379,7 +1379,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "check dependency failed %{public}d");
     // hapVerifyResults at here will not be empty
     verifyRes_ = hapVerifyResults[0];
-
     result = DeliveryProfileToCodeSign();
     CHECK_RESULT(result, "delivery profile failed %{public}d");
 
