@@ -48,6 +48,7 @@ public:
     static void GetBoolValueIfFindKey(const nlohmann::json &jsonObject,
         const nlohmann::detail::iter_impl<const nlohmann::json> &end,
         const std::string &key, bool &data, bool isNecessary, int32_t &parseResult);
+    static bool CheckMapValueType(JsonType valueType, const nlohmann::json &value);
 };
 
 template<typename T, typename dataType>
@@ -150,7 +151,7 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
         return;
     }
     if (isNecessary) {
-        APP_LOGE("profile prop %{public}s mission", key.c_str());
+        APP_LOGE("profile prop %{public}s missing", key.c_str());
         parseResult = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
     }
 }
@@ -205,7 +206,37 @@ void GetBigStringIfFindKey(const nlohmann::json &jsonObject,
         return;
     }
     if (isNecessary) {
-        APP_LOGE("profile prop %{public}s mission", key.c_str());
+        APP_LOGE("profile prop %{public}s missing", key.c_str());
+        parseResult = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
+    }
+}
+
+template<typename T, typename dataType>
+void GetMapValueIfFindKey(const nlohmann::json &jsonObject,
+    const nlohmann::detail::iter_impl<const nlohmann::json> &end, const std::string &key, dataType &data,
+    bool isNecessary, int32_t &parseResult, JsonType valueType)
+{
+    if (parseResult != ERR_OK) {
+        return;
+    }
+    if (jsonObject.find(key) != end) {
+        if (!jsonObject.at(key).is_object()) {
+            APP_LOGE("type error %{public}s not map object", key.c_str());
+            parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+            return;
+        }
+        for (const auto& [mapKey, mapValue] : jsonObject.at(key).items()) {
+            if (!BMSJsonUtil::CheckMapValueType(valueType, mapValue)) {
+                APP_LOGE("type error key:%{public}s", mapKey.c_str());
+                parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+                return;
+            }
+        }
+        data = jsonObject.at(key).get<T>();
+        return;
+    }
+    if (isNecessary) {
+        APP_LOGE("profile prop %{public}s missing", key.c_str());
         parseResult = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
     }
 }
