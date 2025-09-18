@@ -36,7 +36,7 @@ namespace {
             return false;
         }
         std::vector<ExtendResourceInfo> extendResourceInfos;
-        ret = impl.UpateExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
+        ret = impl.UpdateExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
         return ret;
     }
 }

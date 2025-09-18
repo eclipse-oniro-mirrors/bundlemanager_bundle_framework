@@ -181,11 +181,15 @@ ErrCode ExtendResourceManagerHostImpl::ProcessAddExtResource(
         return ERR_EXT_RESOURCE_MANAGER_PARSE_FILE_FAILED;
     }
 
-    InnerSaveExtendResourceInfo(bundleName, newFilePaths, extendResourceInfos);
+    if (!InnerSaveExtendResourceInfo(bundleName, newFilePaths, extendResourceInfos)) {
+        APP_LOGE("save %{public}s extendResource failed", bundleName.c_str());
+        RollBack(newFilePaths);
+        return ERR_EXT_RESOURCE_MANAGER_PARSE_FILE_FAILED;
+    }
     return ERR_OK;
 }
 
-void ExtendResourceManagerHostImpl::InnerSaveExtendResourceInfo(
+bool ExtendResourceManagerHostImpl::InnerSaveExtendResourceInfo(
     const std::string &bundleName,
     const std::vector<std::string> &filePaths,
     const std::vector<ExtendResourceInfo> &extendResourceInfos)
@@ -203,7 +207,7 @@ void ExtendResourceManagerHostImpl::InnerSaveExtendResourceInfo(
 
         newExtendResourceInfos.emplace_back(extendResourceInfos[i]);
     }
-    UpateExtResourcesDb(bundleName, newExtendResourceInfos);
+    return UpdateExtResourcesDb(bundleName, newExtendResourceInfos);
 }
 
 ErrCode ExtendResourceManagerHostImpl::ParseExtendResourceFile(
@@ -286,7 +290,7 @@ bool ExtendResourceManagerHostImpl::GetInnerBundleInfo(
     return dataMgr->FetchInnerBundleInfo(bundleName, info);
 }
 
-bool ExtendResourceManagerHostImpl::UpateExtResourcesDb(const std::string &bundleName,
+bool ExtendResourceManagerHostImpl::UpdateExtResourcesDb(const std::string &bundleName,
     const std::vector<ExtendResourceInfo> &extendResourceInfos)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -294,7 +298,7 @@ bool ExtendResourceManagerHostImpl::UpateExtResourcesDb(const std::string &bundl
         APP_LOGE("Get dataMgr shared_ptr nullptr");
         return false;
     }
-    return dataMgr->UpateExtResources(bundleName, extendResourceInfos);
+    return dataMgr->UpdateExtResources(bundleName, extendResourceInfos);
 }
 
 bool ExtendResourceManagerHostImpl::RemoveExtResourcesDb(const std::string &bundleName,

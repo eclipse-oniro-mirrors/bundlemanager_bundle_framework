@@ -2678,7 +2678,7 @@ bool BundleDataMgr::GetApplicationInfos(
     return !appInfos.empty();
 }
 
-bool BundleDataMgr::UpateExtResources(const std::string &bundleName,
+bool BundleDataMgr::UpdateExtResources(const std::string &bundleName,
     const std::vector<ExtendResourceInfo> &extendResourceInfos)
 {
     if (bundleName.empty()) {

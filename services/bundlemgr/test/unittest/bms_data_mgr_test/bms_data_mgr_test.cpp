@@ -2249,24 +2249,24 @@ HWTEST_F(BmsDataMgrTest, ModifyApplicationInfoByCloneInfo_0100, Function | Small
 }
 
 /**
- * @tc.number: UpateExtResources_0100
- * @tc.name: test UpateExtResources
+ * @tc.number: UpdateExtResources_0100
+ * @tc.name: test UpdateExtResources
  * @tc.desc: 1.test update external resources
  */
-HWTEST_F(BmsDataMgrTest, UpateExtResources_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsDataMgrTest, UpdateExtResources_0100, Function | SmallTest | Level1)
 {
     auto dataMgr = GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     std::string bundleName = "";
     std::vector<ExtendResourceInfo> extendResourceInfos;
-    bool ret = dataMgr->UpateExtResources(bundleName, extendResourceInfos);
+    bool ret = dataMgr->UpdateExtResources(bundleName, extendResourceInfos);
     EXPECT_EQ(ret, false);
 
     std::map<std::string, InnerBundleInfo> infos;
     InnerBundleInfo innerBundleInfo;
     infos.emplace(BUNDLE_NAME, innerBundleInfo);
     dataMgr->bundleInfos_.swap(infos);
-    ret = dataMgr->UpateExtResources(BUNDLE_NAME, extendResourceInfos);
+    ret = dataMgr->UpdateExtResources(BUNDLE_NAME, extendResourceInfos);
     EXPECT_EQ(ret, true);
 }
 

@@ -788,7 +788,7 @@ public:
     bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos,
         bool &findDefaultApp);
-    bool UpateExtResources(const std::string &bundleName,
+    bool UpdateExtResources(const std::string &bundleName,
         const std::vector<ExtendResourceInfo> &extendResourceInfos);
     bool RemoveExtResources(const std::string &bundleName,
         const std::vector<std::string> &moduleNames);
