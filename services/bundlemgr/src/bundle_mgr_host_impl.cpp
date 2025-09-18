@@ -634,7 +634,7 @@ bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleNa
     int64_t intervalTime = ONE_DAY;
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        APP_LOGE("non-system app calling system api");
+        APP_LOGE_NOFUNC("non-system permission deny");
         return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
@@ -3240,7 +3240,7 @@ bool BundleMgrHostImpl::VerifyCallingPermission(const std::string &permission)
 bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
     ExtensionAbilityInfo &extensionAbilityInfo)
 {
-    LOG_I(BMS_TAG_QUERY, "uri:%{private}s -u %{public}d", uri.c_str(), userId);
+    LOG_D(BMS_TAG_QUERY, "uri:%{private}s -u %{public}d", uri.c_str(), userId);
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
