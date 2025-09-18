@@ -182,8 +182,7 @@
                       "header_base": "//foundation/bundlemanager/bundle_framework/interfaces/kits/cj/src",
                       "header_files": [
                         "bundle_manager_convert.h",
-                        "bundle_manager_utils.h",
-                        "bundle_manager_ffi.h"
+                        "bundle_manager_utils.h"
                       ]
                     },
                     "name": "//foundation/bundlemanager/bundle_framework/interfaces/kits/cj:cj_bundle_manager_ffi"
