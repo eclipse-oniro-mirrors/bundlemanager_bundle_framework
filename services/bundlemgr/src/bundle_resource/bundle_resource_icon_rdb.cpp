@@ -266,7 +266,8 @@ bool BundleResourceIconRdb::GetResourceIconInfos(const std::string &bundleName,
     const IconResourceType type)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    APP_LOGI_NOFUNC("icon rdb get resource icon start -n %{public}s -i %{public}d", bundleName.c_str(), appIndex);
+    APP_LOGI_NOFUNC("icon rdb get resource icon start -n %{public}s -i %{public}d -f %{public}d",
+        bundleName.c_str(), appIndex, resourceFlag);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
