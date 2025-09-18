@@ -89,6 +89,8 @@ constexpr int32_t BUNDLE_DATA_SIZE_INDEX = 1;
 constexpr uint64_t VECTOR_SIZE_MAX = 200;
 constexpr int32_t INSTALLS_UID = 3060;
 constexpr int64_t EMPTY_FILE_SIZE = 4 * 1024;
+constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
+constexpr int64_t TEN_GB = ONE_GB * 10;
 enum class DirType : uint8_t {
     DIR_EL1,
     DIR_EL2,
@@ -1446,6 +1448,9 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
     for (size_t index = 0; index < uids.size(); ++index) {
         const auto &uid = uids[index];
         int64_t bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
+        if (bundleDataSize > TEN_GB) {
+            LOG_W(BMS_TAG_INSTALLD, "large data size %{public}lld uid %{public}d", bundleDataSize, uid);
+        }
         // index 1 : local bundle data size
         totalDataSize += bundleDataSize;
     }
@@ -1454,6 +1459,7 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
     bundleStats.push_back(0);
     bundleStats.push_back(0);
     bundleStats.push_back(0);
+    LOG_I(BMS_TAG_INSTALLD, "installs size %{public}lld data size %{public}lld", totalFileSize, totalDataSize);
     return ERR_OK;
 }
 
