@@ -18,4 +18,10 @@ import { DispatchInfo } from 'bundleManager.DispatchInfo';
 export class DispatchInfoInner implements DispatchInfo {
   public readonly version: string = '';
   public readonly dispatchAPIVersion: string = '';
+
+  constructor() { }
+  constructor(version: string, dispatchAPIVersion: string) {
+      this.version = version;
+      this.dispatchAPIVersion = dispatchAPIVersion;
+  }
 }

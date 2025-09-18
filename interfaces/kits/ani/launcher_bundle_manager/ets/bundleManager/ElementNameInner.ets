@@ -22,4 +22,19 @@ export class ElementNameInner implements ElementName {
   abilityName: string = "";
   uri?: string | undefined;
   shortName?: string | undefined;
+
+  constructor() { }
+  constructor(bundleName: string,
+    abilityName: string,
+    deviceId?: string,
+    moduleName?: string,
+    uri?: string,
+    shortName?: string) {
+      this.deviceId = deviceId;
+      this.bundleName = bundleName;
+      this.moduleName = moduleName;
+      this.abilityName = abilityName;
+      this.uri = uri;
+      this.shortName = shortName;
+  }
 }

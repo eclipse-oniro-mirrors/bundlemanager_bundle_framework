@@ -12,8 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <ani_signature_builder.h>
 
+#include "ani_resource_manager_common.h"
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
 #include "bundle_resource_info.h"
@@ -28,14 +30,14 @@ namespace OHOS {
 namespace AppExecFwk {
 
 namespace {
-constexpr int32_t INVALID_INT = -500;
+constexpr int32_t INVALID_VALUE = -500;
 constexpr int32_t DEFAULT_RES_FLAG = 1;
 constexpr int32_t DEFAULT_IDX = 0;
 constexpr const char* NS_NAME_RESOURCEMANAGER = "@ohos.bundle.bundleResourceManager.bundleResourceManager";
 }
 
 static ani_object AniGetBundleResourceInfo(ani_env* env, ani_string aniBundleName,
-    ani_double aniResFlag, ani_double aniAppIndex)
+    ani_int aniResFlag, ani_int aniAppIndex)
 {
     APP_LOGD("ani GetBundleResourceInfo called");
     std::string bundleName;
@@ -44,29 +46,18 @@ static ani_object AniGetBundleResourceInfo(ani_env* env, ani_string aniBundleNam
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    int32_t resFlag = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniResFlag, &resFlag)) {
-        APP_LOGE("Cast aniResFlag failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
-        return nullptr;
-    }
-    int32_t appIndex = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
-        APP_LOGE("Cast aniAppIndex failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
-        return nullptr;
+
+    if (aniResFlag == INVALID_VALUE) {
+        aniResFlag = DEFAULT_RES_FLAG;
     }
 
-    if (resFlag == INVALID_INT) {
-        resFlag = DEFAULT_RES_FLAG;
-    }
-
-    if (appIndex == INVALID_INT) {
-        appIndex = DEFAULT_IDX;
+    if (aniAppIndex == INVALID_VALUE) {
+        aniAppIndex = DEFAULT_IDX;
     }
 
     BundleResourceInfo bundleResInfo;
-    int32_t ret = ResourceHelper::InnerGetBundleResourceInfo(bundleName, resFlag, appIndex, bundleResInfo);
+    int32_t ret = ResourceHelper::InnerGetBundleResourceInfo(
+        bundleName, static_cast<uint32_t>(aniResFlag), aniAppIndex, bundleResInfo);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleResourceInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(
@@ -74,11 +65,11 @@ static ani_object AniGetBundleResourceInfo(ani_env* env, ani_string aniBundleNam
         return nullptr;
     }
 
-    return CommonFunAni::ConvertBundleResourceInfo(env, bundleResInfo);
+    return AniResourceManagerCommon::ConvertBundleResourceInfo(env, bundleResInfo);
 }
 
 static ani_object AniGetLauncherAbilityResourceInfo(ani_env* env, ani_string aniBundleName,
-    ani_double aniResFlag, ani_double aniAppIndex)
+    ani_int aniResFlag, ani_int aniAppIndex)
 {
     APP_LOGD("ani GetLauncherAbilityResourceInfo called");
     std::string bundleName;
@@ -87,30 +78,18 @@ static ani_object AniGetLauncherAbilityResourceInfo(ani_env* env, ani_string ani
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    int32_t resFlag = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniResFlag, &resFlag)) {
-        APP_LOGE("Cast aniResFlag failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
-        return nullptr;
-    }
-    int32_t appIndex = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIndex)) {
-        APP_LOGE("Cast aniAppIndex failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
-        return nullptr;
+
+    if (aniResFlag == INVALID_VALUE) {
+        aniResFlag = DEFAULT_RES_FLAG;
     }
 
-    if (resFlag == INVALID_INT) {
-        resFlag = DEFAULT_RES_FLAG;
-    }
-
-    if (appIndex == INVALID_INT) {
-        appIndex = DEFAULT_IDX;
+    if (aniAppIndex == INVALID_VALUE) {
+        aniAppIndex = DEFAULT_IDX;
     }
 
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
     int32_t ret = ResourceHelper::InnerGetLauncherAbilityResourceInfo(
-        bundleName, resFlag, appIndex, launcherAbilityResourceInfos);
+        bundleName, static_cast<uint32_t>(aniResFlag), aniAppIndex, launcherAbilityResourceInfos);
     if (ret != ERR_OK) {
         APP_LOGE("GetLauncherAbilityResourceInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, ret,
@@ -119,7 +98,7 @@ static ani_object AniGetLauncherAbilityResourceInfo(ani_env* env, ani_string ani
     }
 
     ani_object launcherAbilityResourceInfosObject = CommonFunAni::ConvertAniArray(
-        env, launcherAbilityResourceInfos, CommonFunAni::ConvertLauncherAbilityResourceInfo);
+        env, launcherAbilityResourceInfos, AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo);
     if (launcherAbilityResourceInfosObject == nullptr) {
         APP_LOGE("nullptr launcherAbilityResourceInfosObject");
     }
@@ -127,18 +106,12 @@ static ani_object AniGetLauncherAbilityResourceInfo(ani_env* env, ani_string ani
     return launcherAbilityResourceInfosObject;
 }
 
-static ani_object AniGetAllBundleResourceInfo(ani_env* env, ani_double aniResFlag)
+static ani_object AniGetAllBundleResourceInfo(ani_env* env, ani_int aniResFlag)
 {
     APP_LOGD("ani GetAllBundleResourceInfo called");
-    int32_t resFlag = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniResFlag, &resFlag)) {
-        APP_LOGE("Cast aniResFlag failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
-        return nullptr;
-    }
 
     std::vector<BundleResourceInfo> bundleResourceInfos;
-    int32_t ret = ResourceHelper::InnerGetAllBundleResourceInfo(resFlag, bundleResourceInfos);
+    int32_t ret = ResourceHelper::InnerGetAllBundleResourceInfo(static_cast<uint32_t>(aniResFlag), bundleResourceInfos);
     if (ret != ERR_OK) {
         APP_LOGE("GetLauncherAbilityResourceInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, ret, GET_ALL_BUNDLE_RESOURCE_INFO, PERMISSION_GET_ALL_BUNDLE_RESOURCES);
@@ -146,7 +119,7 @@ static ani_object AniGetAllBundleResourceInfo(ani_env* env, ani_double aniResFla
     }
 
     ani_object bundleResourceInfosObject = CommonFunAni::ConvertAniArray(
-        env, bundleResourceInfos, CommonFunAni::ConvertBundleResourceInfo);
+        env, bundleResourceInfos, AniResourceManagerCommon::ConvertBundleResourceInfo);
     if (bundleResourceInfosObject == nullptr) {
         APP_LOGE("nullptr bundleResourceInfosObject");
     }
@@ -154,18 +127,13 @@ static ani_object AniGetAllBundleResourceInfo(ani_env* env, ani_double aniResFla
     return bundleResourceInfosObject;
 }
 
-static ani_object AniGetAllLauncherAbilityResourceInfo(ani_env* env, ani_double aniResFlag)
+static ani_object AniGetAllLauncherAbilityResourceInfo(ani_env* env, ani_int aniResFlag)
 {
     APP_LOGD("ani GetAllLauncherAbilityResourceInfo called");
-    int32_t resFlag = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniResFlag, &resFlag)) {
-        APP_LOGE("Cast aniResFlag failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
-        return nullptr;
-    }
 
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    int32_t ret = ResourceHelper::InnerGetAllLauncherAbilityResourceInfo(resFlag, launcherAbilityResourceInfos);
+    int32_t ret = ResourceHelper::InnerGetAllLauncherAbilityResourceInfo(
+        static_cast<uint32_t>(aniResFlag), launcherAbilityResourceInfos);
     if (ret != ERR_OK) {
         APP_LOGE("GetLauncherAbilityResourceInfo failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, ret,
@@ -174,11 +142,57 @@ static ani_object AniGetAllLauncherAbilityResourceInfo(ani_env* env, ani_double 
     }
 
     ani_object launcherAbilityResourceInfosObject = CommonFunAni::ConvertAniArray(
-        env, launcherAbilityResourceInfos, CommonFunAni::ConvertLauncherAbilityResourceInfo);
+        env, launcherAbilityResourceInfos, AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo);
     if (launcherAbilityResourceInfosObject == nullptr) {
         APP_LOGE("nullptr launcherAbilityResourceInfosObject");
     }
 
+    return launcherAbilityResourceInfosObject;
+}
+
+static ani_object GetExtensionAbilityResourceInfoNative(ani_env* env, ani_string aniBundleName,
+    ani_enum_item aniExtensionAbilityType, ani_int aniResourceFlags, ani_int aniAppIndex)
+{
+    APP_LOGD("ani GetExtensionAbilityResourceInfo called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("parse bundleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName empty");
+        BusinessErrorAni::ThrowCommonError(
+            env, ERROR_BUNDLE_NOT_EXIST, GET_EXTENSION_ABILITY_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+        return nullptr;
+    }
+    ExtensionAbilityType extensionAbilityType = ExtensionAbilityType::UNSPECIFIED;
+    if (!EnumUtils::EnumETSToNative(env, aniExtensionAbilityType, extensionAbilityType)) {
+        APP_LOGE("Parse extensionAbilityType failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, EXTENSION_ABILITY_TYPE, TYPE_NUMBER);
+        return nullptr;
+    }
+    if (aniResourceFlags <= 0) {
+        aniResourceFlags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    }
+    if (aniAppIndex == INVALID_VALUE) {
+        aniAppIndex = DEFAULT_IDX;
+    }
+
+    std::vector<LauncherAbilityResourceInfo> extensionAbilityResourceInfos;
+    ErrCode ret = ResourceHelper::InnerGetExtensionAbilityResourceInfo(
+        bundleName, extensionAbilityType, aniResourceFlags, aniAppIndex, extensionAbilityResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("QueryExtensionAbilityInfo failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(
+            env, ret, GET_EXTENSION_ABILITY_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+        return nullptr;
+    }
+    ani_object launcherAbilityResourceInfosObject = CommonFunAni::ConvertAniArray(
+        env, extensionAbilityResourceInfos, AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo);
+    if (launcherAbilityResourceInfosObject == nullptr) {
+        APP_LOGE("nullptr launcherAbilityResourceInfosObject");
+    }
     return launcherAbilityResourceInfosObject;
 }
 
@@ -206,7 +220,9 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getAllBundleResourceInfoNative", nullptr,
             reinterpret_cast<void*>(AniGetAllBundleResourceInfo) },
         ani_native_function { "getAllLauncherAbilityResourceInfoNative", nullptr,
-            reinterpret_cast<void*>(AniGetAllLauncherAbilityResourceInfo) }
+            reinterpret_cast<void*>(AniGetAllLauncherAbilityResourceInfo) },
+        ani_native_function { "getExtensionAbilityResourceInfoNative", nullptr,
+            reinterpret_cast<void*>(GetExtensionAbilityResourceInfoNative) }
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

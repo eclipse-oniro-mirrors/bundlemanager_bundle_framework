@@ -376,7 +376,7 @@ static void AniRemoveExtResource(ani_env* env, [[maybe_unused]] ani_object insta
     }
 }
 
-static ani_double AniCreateAppClone(ani_env* env, [[maybe_unused]] ani_object installerObj,
+static ani_int AniCreateAppClone(ani_env* env, [[maybe_unused]] ani_object installerObj,
     ani_string aniBundleName, ani_object aniCrtAppCloneParam)
 {
     APP_LOGD("ani CreateAppClone called");
@@ -384,7 +384,7 @@ static ani_double AniCreateAppClone(ani_env* env, [[maybe_unused]] ani_object in
     if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
         APP_LOGE("parse bundleName failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
-        return (ani_double)Constants::INITIAL_APP_INDEX;
+        return static_cast<ani_int>(Constants::INITIAL_APP_INDEX);
     }
     int32_t userId;
     int32_t appIdx;
@@ -396,23 +396,17 @@ static ani_double AniCreateAppClone(ani_env* env, [[maybe_unused]] ani_object in
     if (res != SUCCESS) {
         BusinessErrorAni::ThrowCommonError(env, res, CREATE_APP_CLONE, Constants::PERMISSION_INSTALL_CLONE_BUNDLE);
     }
-    return (ani_double)appIdx;
+    return appIdx;
 }
 
 static void AniDestroyAppClone(ani_env* env, [[maybe_unused]] ani_object installerObj,
-    ani_string aniBundleName, ani_double aniAppIndex, ani_object aniDestroyAppCloneParam)
+    ani_string aniBundleName, ani_int aniAppIndex, ani_object aniDestroyAppCloneParam)
 {
     APP_LOGD("ani DestroyAppClone called");
     std::string bundleName;
     if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
         APP_LOGE("parse bundleName failed");
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
-        return;
-    }
-    int32_t appIdx = 0;
-    if (!CommonFunAni::TryCastDoubleTo(aniAppIndex, &appIdx)) {
-        APP_LOGE("Cast appIdx failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
         return;
     }
     DestroyAppCloneParam destroyCloneParam;
@@ -425,7 +419,7 @@ static void AniDestroyAppClone(ani_env* env, [[maybe_unused]] ani_object install
         destroyCloneParam.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     ErrCode result = CommonFunc::ConvertErrCode(InstallerHelper::InnerDestroyAppClone(bundleName,
-        destroyCloneParam.userId, appIdx, destroyCloneParam));
+        destroyCloneParam.userId, aniAppIndex, destroyCloneParam));
     if (result != SUCCESS) {
         BusinessErrorAni::ThrowCommonError(env, result,
             DESTROY_APP_CLONE, Constants::PERMISSION_UNINSTALL_CLONE_BUNDLE);
@@ -433,7 +427,7 @@ static void AniDestroyAppClone(ani_env* env, [[maybe_unused]] ani_object install
 }
 
 static void AniInstallPreexistingApp(ani_env* env, [[maybe_unused]] ani_object installerObj,
-    ani_string aniBundleName, ani_double aniUserId)
+    ani_string aniBundleName, ani_int aniUserId)
 {
     APP_LOGD("ani InstallPreexistingApp called");
     std::string bundleName;
@@ -442,16 +436,10 @@ static void AniInstallPreexistingApp(ani_env* env, [[maybe_unused]] ani_object i
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return;
     }
-    int32_t userId = Constants::UNSPECIFIED_USERID;
-    if (!CommonFunAni::TryCastDoubleTo(aniUserId, &userId)) {
-        APP_LOGE("Cast appIdx failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
-        return;
+    if (aniUserId == Constants::UNSPECIFIED_USERID) {
+        aniUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
-    if (userId == Constants::UNSPECIFIED_USERID) {
-        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    }
-    ErrCode result = CommonFunc::ConvertErrCode(InstallerHelper::InnerInstallPreexistingApp(bundleName, userId));
+    ErrCode result = CommonFunc::ConvertErrCode(InstallerHelper::InnerInstallPreexistingApp(bundleName, aniUserId));
     if (result != SUCCESS) {
         BusinessErrorAni::ThrowCommonError(env, result,
             INSTALL_PREEXISTING_APP, Constants::PERMISSION_INSTALL_BUNDLE);
@@ -547,10 +535,10 @@ static ani_object AniGetBundleInstaller(ani_env* env, ani_boolean aniIsSync)
         return nullptr;
     }
     g_isSystemApp = true;
-    ani_class installerClz = CommonFunAni::CreateClassByName(env,
-        Builder::BuildClass(INNERINSTALLER_CLASSNAME).Descriptor());
+    static const std::string installerClzName = Builder::BuildClass(INNERINSTALLER_CLASSNAME).Descriptor();
+    ani_class installerClz = CommonFunAni::CreateClassByName(env, installerClzName);
     RETURN_NULL_IF_NULL(installerClz);
-    return CommonFunAni::CreateNewObjectByClass(env, installerClz);
+    return CommonFunAni::CreateNewObjectByClass(env, installerClzName, installerClz);
 }
  
 static void GetInstallerMethods(std::array<ani_native_function, INSTALLER_METHOD_COUNTS> &installerMethods)

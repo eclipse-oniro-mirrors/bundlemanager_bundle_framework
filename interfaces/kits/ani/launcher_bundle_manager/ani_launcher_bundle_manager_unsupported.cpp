@@ -12,8 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "app_log_wrapper.h"
+
 #include <ani_signature_builder.h>
+
+#include "app_log_wrapper.h"
 #include "bundle_errors.h"
 #include "business_error_ani.h"
 #include "common_fun_ani.h"
@@ -34,7 +36,7 @@ static void AniStartShortcut(ani_env *env, ani_object aniShortcutInfo, ani_objec
 }
 
 static ani_object AniGetShortcutInfo(ani_env *env,
-    ani_string aniBundleName, ani_double aniUserId, ani_boolean aniIsSync)
+    ani_string aniBundleName, ani_int aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
@@ -44,7 +46,7 @@ static ani_object AniGetShortcutInfo(ani_env *env,
 }
 
 static ani_object AniGetLauncherAbilityInfo(ani_env *env,
-    ani_string aniBundleName, ani_double aniUserId, ani_boolean aniIsSync)
+    ani_string aniBundleName, ani_int aniUserId, ani_boolean aniIsSync)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
@@ -53,11 +55,25 @@ static ani_object AniGetLauncherAbilityInfo(ani_env *env,
     return nullptr;
 }
 
-static ani_object AniGetAllLauncherAbilityInfo(ani_env *env, ani_double aniUserId)
+static ani_object AniGetAllLauncherAbilityInfo(ani_env *env, ani_int aniUserId)
 {
     APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
     BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ALL_LAUNCHER_ABILITY_INFO, "");
     return nullptr;
+}
+
+static ani_object GetShortcutInfoByAppIndex(ani_env* env, ani_string aniBundleName, ani_int aniAppIndex)
+{
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_SHORTCUT_INFO_BY_APPINDEX, "");
+    return nullptr;
+}
+
+static void StartShortcutWithReasonNative(
+    ani_env* env, ani_object aniShortcutInfo, ani_string aniStartReason, ani_object aniStartOptions)
+{
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, START_SHORTCUT_WITH_REASON, "");
 }
 
 extern "C" {
@@ -83,6 +99,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
             reinterpret_cast<void*>(AniGetLauncherAbilityInfo) },
         ani_native_function { "getAllLauncherAbilityInfoNative", nullptr,
             reinterpret_cast<void*>(AniGetAllLauncherAbilityInfo) },
+        ani_native_function { "getShortcutInfoByAppIndex", nullptr,
+            reinterpret_cast<void*>(GetShortcutInfoByAppIndex) },
+        ani_native_function { "startShortcutWithReasonNative", nullptr,
+            reinterpret_cast<void*>(StartShortcutWithReasonNative) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

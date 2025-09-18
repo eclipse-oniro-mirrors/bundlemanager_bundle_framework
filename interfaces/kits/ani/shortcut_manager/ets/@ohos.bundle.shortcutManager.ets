@@ -20,18 +20,36 @@ namespace shortcutManager {
 
   loadLibraryWithPermissionCheck("ani_shortcut_manager.z", "@ohos.bundle.shortcutManager");
 
-  export native function addDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;
-  export native function deleteDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: number): void;
-  export native function getAllDesktopShortcutInfoNative(userId: number): Array<ShortcutInfo>;
+  function createBusinessError(code: int, message: string) {
+    let err = new BusinessError();
+    err.code = code;
+    err.name = 'Error';
+    err.message = message;
+    return err;
+  }
+  
+  const ERROR_SOURCETYPE : int = -1;
+  const MAIN_APP_INDEX: int = 0;
+  const ERROR_PARAM_CHECK_ERROR: int = 401;
+  const INVALID_SHORTCUT_INFO_ERROR: string = "invalid ShortcutInfo: parameter type error, or appIndex is less than 0";
 
-  function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void): void => {
+  export native function addDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: int): void;
+  export native function deleteDesktopShortcutInfoNative(shortcutInfo: ShortcutInfo, userId: int): void;
+  export native function getAllDesktopShortcutInfoNative(userId: int): Array<ShortcutInfo>;
+  export native function setShortcutVisibleForSelfNative(id: string, visible: boolean): void;
+  export native function getAllShortcutInfoForSelfNative(): Array<ShortcutInfo>;
+
+  function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
+    if (shortcutInfo.appIndex < MAIN_APP_INDEX || shortcutInfo.sourceType === ERROR_SOURCETYPE) {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
+    }
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
       let cb = (): NullishType => {
         return shortcutManager.addDesktopShortcutInfoNative(shortcutInfo, userId);
       }
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -39,10 +57,44 @@ namespace shortcutManager {
     return p;
   }
 
-  function deleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: number): Promise<void> {
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void): void => {
+  function deleteDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
+    if (shortcutInfo.appIndex < MAIN_APP_INDEX || shortcutInfo.sourceType === ERROR_SOURCETYPE) {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
+    }
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
       let cb = (): NullishType => {
         return shortcutManager.deleteDesktopShortcutInfoNative(shortcutInfo, userId)
+      }
+      let p1 = taskpool.execute(cb);
+      p1.then((): void => {
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function getAllDesktopShortcutInfo(userId: int): Promise<Array<ShortcutInfo>> {
+    let p = new Promise<Array<ShortcutInfo>>((resolve: (arrShortcutInfo: Array<ShortcutInfo>) => void, reject: (error: BusinessError) => void) => {
+      let cb = (): (Array<ShortcutInfo>) => {
+        return shortcutManager.getAllDesktopShortcutInfoNative(userId);
+      };
+      let p1 = taskpool.execute(cb);
+      p1.then((e: NullishType) => {
+        let result: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
+        resolve(result);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function setShortcutVisibleForSelf(id: string, visible: boolean): Promise<void> {
+    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void): void => {
+      let cb = (): NullishType => {
+        return shortcutManager.setShortcutVisibleForSelfNative(id, visible);
       }
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
@@ -54,10 +106,10 @@ namespace shortcutManager {
     return p;
   }
 
-  function getAllDesktopShortcutInfo(userId: number): Promise<Array<ShortcutInfo>> {
+  function getAllShortcutInfoForSelf(): Promise<Array<ShortcutInfo>> {
     let p = new Promise<Array<ShortcutInfo>>((resolve: (arrShortcutInfo: Array<ShortcutInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<ShortcutInfo>) => {
-        return shortcutManager.getAllDesktopShortcutInfoNative(userId);
+        return shortcutManager.getAllShortcutInfoForSelfNative();
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {

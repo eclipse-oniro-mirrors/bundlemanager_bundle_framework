@@ -24,19 +24,69 @@ export class ExtensionAbilityInfoInner implements ExtensionAbilityInfo {
   readonly bundleName: string = "";
   readonly moduleName: string = "";
   readonly name: string = "";
-  readonly labelId: number;
-  readonly descriptionId: number;
-  readonly iconId: number;
+  readonly labelId: long;
+  readonly descriptionId: long;
+  readonly iconId: long;
   readonly exported: boolean;
   readonly extensionAbilityType: bundleManager.ExtensionAbilityType = bundleManager.ExtensionAbilityType.UNSPECIFIED;
   readonly extensionAbilityTypeName: string = "";
   readonly permissions: Array<string> = new Array<string>;
-  readonly applicationInfo: ApplicationInfo = new ApplicationInfoInner;
+  readonly applicationInfo: ApplicationInfo | null = null;
   readonly metadata: Array<Metadata> = new Array<Metadata>;
   readonly enabled: boolean;
   readonly readPermission: string = "";
   readonly writePermission: string = "";
   readonly skills: Array<Skill> = new Array<Skill>;
-  readonly appIndex: number;
+  readonly appIndex: int;
+
+  constructor() { }
+  constructor(bundleName: string,
+    moduleName: string,
+    name: string,
+    labelId: long,
+    descriptionId: long,
+    iconId: long,
+    exported: boolean,
+    extensionAbilityType: bundleManager.ExtensionAbilityType,
+    extensionAbilityTypeName: string,
+    permissions: Array<string>,
+    applicationInfo: ApplicationInfo,
+    metadata: Array<Metadata>,
+    enabled: boolean,
+    readPermission: string,
+    writePermission: string,
+    skills: Array<Skill>,
+    appIndex: int) {
+      this.bundleName = bundleName;
+      this.moduleName = moduleName;
+      this.name = name;
+      this.labelId = labelId;
+      this.descriptionId = descriptionId;
+      this.iconId = iconId;
+      this.exported = exported;
+      this.extensionAbilityType = extensionAbilityType;
+      this.extensionAbilityTypeName = extensionAbilityTypeName;
+      this.permissions = permissions;
+      this.applicationInfo = applicationInfo;
+      this.metadata = metadata;
+      this.enabled = enabled;
+      this.readPermission = readPermission;
+      this.writePermission = writePermission;
+      this.skills = skills;
+      this.appIndex = appIndex;
+  }
+  constructor(bundleName: string,
+    moduleName: string,
+    name: string,
+    labelId: long,
+    descriptionId: long,
+    iconId: long) {
+      this.bundleName = bundleName;
+      this.moduleName = moduleName;
+      this.name = name;
+      this.labelId = labelId;
+      this.descriptionId = descriptionId;
+      this.iconId = iconId;
+  }
 }
 

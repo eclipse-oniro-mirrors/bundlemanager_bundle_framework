@@ -21,11 +21,11 @@ import bundleManager from '@ohos.bundle.bundleManager';
 export interface HapModuleInfo {
   readonly name: string;
   readonly icon: string;
-  readonly iconId: number;
+  readonly iconId: long;
   readonly label: string;
-  readonly labelId: number;
+  readonly labelId: long;
   readonly description: string;
-  readonly descriptionId: number;
+  readonly descriptionId: long;
   readonly mainElementName: string;
   readonly abilitiesInfo: Array<AbilityInfo>;
   readonly extensionAbilitiesInfo: Array<ExtensionAbilityInfo>;
@@ -45,7 +45,7 @@ export interface HapModuleInfo {
 export interface Dependency {
   readonly moduleName: string;
   readonly bundleName: string;
-  readonly versionCode: number;
+  readonly versionCode: long;
 }
 
 export interface PreloadItem {

@@ -16,6 +16,7 @@ import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
 ohos_shared_library("ani_zlib") {
+  shlib_type = "ani"
   branch_protector_ret = "pac_ret"
 
   sanitize = {
@@ -43,11 +44,11 @@ ohos_shared_library("ani_zlib") {
 
   sources = [
     "${kits_path}/js/zip/src/file_path.cpp",
+    "${kits_path}/js/zip/src/zip.cpp",
     "${kits_path}/js/zip/src/zip_internal.cpp",
     "${kits_path}/js/zip/src/zip_reader.cpp",
     "${kits_path}/js/zip/src/zip_utils.cpp",
     "${kits_path}/js/zip/src/zip_writer.cpp",
-    "${kits_path}/js/zip/src/zip.cpp",
     "ani_zlib.cpp",
   ]
 

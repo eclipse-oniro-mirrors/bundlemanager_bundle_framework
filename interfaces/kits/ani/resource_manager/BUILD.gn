@@ -16,6 +16,7 @@ import("//build/ohos.gni")
 import("//foundation/bundlemanager/bundle_framework/appexecfwk.gni")
 
 ohos_shared_library("ani_bundle_res_manager") {
+  shlib_type = "ani"
   branch_protector_ret = "pac_ret"
 
   sanitize = {
@@ -36,7 +37,10 @@ ohos_shared_library("ani_bundle_res_manager") {
   ]
 
   if (bundle_framework_bundle_resource) {
-    sources = [ "ani_resource_manager.cpp" ]
+    sources = [
+      "ani_resource_manager.cpp",
+      "ani_resource_manager_common.cpp",
+    ]
   } else {
     sources = [ "ani_resource_manager_unsupport.cpp" ]
   }

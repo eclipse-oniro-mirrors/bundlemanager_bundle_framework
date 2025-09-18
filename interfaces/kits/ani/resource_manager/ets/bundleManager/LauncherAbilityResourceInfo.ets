@@ -13,16 +13,11 @@
  * limitations under the License.
  */
 
-/**
- * @file
- * @kit AbilityKit
- */
-
 export interface LauncherAbilityResourceInfo {
   readonly bundleName: string;
   readonly moduleName: string;
   readonly abilityName: string;
   readonly icon: string;
   readonly label: string;
-  readonly appIndex: number;
+  readonly appIndex: int;
 }

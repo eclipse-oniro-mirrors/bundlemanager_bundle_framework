@@ -21,14 +21,23 @@ export default namespace bundleMonitor {
 
   export interface BundleChangedInfo {
     readonly bundleName: string;
-    readonly userId: number;
-    readonly appIndex: number;
+    readonly userId: int;
+    readonly appIndex: int;
   }
   
   export class BundleChangedInfoInner implements BundleChangedInfo {
     readonly bundleName: string;
-    readonly userId: number;
-    readonly appIndex: number;
+    readonly userId: int;
+    readonly appIndex: int;
+
+    constructor() { }
+    constructor(bundleName: string,
+      userId: int,
+      appIndex: int) {
+        this.bundleName = bundleName;
+        this.userId = userId;
+        this.appIndex = appIndex;
+    }
   }
 
   type BundleChangedEvent = 'add' | 'update' | 'remove';
