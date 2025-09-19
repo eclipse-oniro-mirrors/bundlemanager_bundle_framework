@@ -2929,6 +2929,57 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     return ERR_OK;
 }
 
+bool BundleDataMgr::InnerProcessOtaNewInstallBundle(
+    const std::string &bundleName, const int32_t userId) const
+{
+    if (ServiceConstants::OTA_NEW_INSTALL_BUNDLE_NAME_LIST.find(bundleName) ==
+        ServiceConstants::OTA_NEW_INSTALL_BUNDLE_NAME_LIST.end()) {
+        return false;
+    }
+    std::lock_guard otaNewInstallLock(otaNewInstallMutex_);
+    if (otaNewInstallBundleNames_.find(bundleName) == otaNewInstallBundleNames_.end()) {
+        return false;
+    }
+    std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not find when process new install bundle", bundleName.c_str());
+        return false;
+    }
+    APP_LOGI("bundle %{public}s user %{public}d create bundle data dir start", bundleName.c_str(), userId);
+    std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::DATABASE + bundleName;
+    bool isExist = false;
+    (void)InstalldClient::GetInstance()->IsExistDir(baseBundleDataDir, isExist);
+    if (isExist) {
+        APP_LOGI("bundle %{public}s user %{public}d bundle data dir exist", bundleName.c_str(), userId);
+        return true;
+    }
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleName;
+    createDirParam.userId = userId;
+    createDirParam.uid = infoItem->second.GetUid(userId);
+    if (createDirParam.uid == Constants::INVALID_UID) {
+        APP_LOGE("bundle %{public}s user %{public}d not exist", bundleName.c_str(), userId);
+        return false;
+    }
+    createDirParam.gid = infoItem->second.GetGid(userId);
+    createDirParam.apl = infoItem->second.GetAppPrivilegeLevel();
+    createDirParam.isPreInstallApp = infoItem->second.IsPreInstallApp();
+    createDirParam.debug = infoItem->second.GetBaseApplicationInfo().appProvisionType ==
+        Constants::APP_PROVISION_TYPE_DEBUG;
+    createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
+    createDirParam.extensionDirs = infoItem->second.GetAllExtensionDirs();
+    auto ret = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
+    if (ret != ERR_OK) {
+        APP_LOGE("bundle %{public}s user %{public}d create dir failed %{public}d", bundleName.c_str(), userId, ret);
+        return false;
+    }
+    APP_LOGI("bundle %{public}s user %{public}d create bundle data dir end", bundleName.c_str(), userId);
+    return true;
+}
+
+
 void BundleDataMgr::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
     std::vector<BundleInfo> &bundleInfos, int32_t userId) const
 {

@@ -1178,6 +1178,7 @@ public:
     void AddOtaNewInstallBundleName(const std::string &bundleName);
     std::set<std::string> GetOtaNewInstallBundleNames();
     void ClearOtaNewInstallBundleNames();
+    bool InnerProcessOtaNewInstallBundle(const std::string &bundleName, const int32_t userId) const;
 
 private:
     /**

@@ -4703,4 +4703,19 @@ HWTEST_F(BmsBundleDataMgrTest, GetTestRunner_0300, Function | MediumTest | Level
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
+
+/**
+* @tc.number: InnerProcessOtaNewInstallBundle_0010
+* @tc.name: InnerProcessOtaNewInstallBundle_0010
+* @tc.desc: test InnerProcessOtaNewInstallBundle
+*/
+HWTEST_F(BmsBundleDataMgrTest, InnerProcessOtaNewInstallBundle_0010, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        bool ret = dataMgr->InnerProcessOtaNewInstallBundle("", USERID);
+        EXPECT_FALSE(ret);
+    }
+}
 } // OHOS
