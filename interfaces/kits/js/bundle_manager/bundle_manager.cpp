@@ -59,16 +59,6 @@ static std::unordered_map<Query, napi_ref, QueryHash> cache;
 static std::string g_ownBundleName;
 static std::mutex g_ownBundleNameMutex;
 static std::shared_mutex g_cacheMutex;
-static std::set<int32_t> g_supportedProfileList = { 1 };
-static std::map<int32_t, std::string> appDistributionTypeMap = {
-    { ENUM_ONE, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
-    { ENUM_TWO, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
-    { ENUM_THREE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
-    { ENUM_FOUR, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
-    { ENUM_FIVE, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
-    { ENUM_SIX, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
-    { ENUM_SEVEN, Constants::APP_DISTRIBUTION_TYPE_NONE },
-};
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 
@@ -2852,7 +2842,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
     ErrCode result;
     BundleMgrClient client;
     BundleInfo bundleInfo;
-    if (info.type == AbilityProfileType::ABILITY_PROFILE) {
+    if (info.type == Constants::AbilityProfileType::ABILITY_PROFILE) {
         auto getAbilityFlag = baseFlag +
             static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
         result = iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo);
@@ -2873,7 +2863,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
         return ERR_OK;
     }
 
-    if (info.type == AbilityProfileType::EXTENSION_PROFILE) {
+    if (info.type == Constants::AbilityProfileType::EXTENSION_PROFILE) {
         auto getExtensionFlag = baseFlag +
             static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
         result = iBundleMgr->GetBundleInfoForSelf(getExtensionFlag, bundleInfo);
@@ -2932,7 +2922,7 @@ void GetProfileComplete(napi_env env, napi_status status, void *data)
     CommonFunc::NapiReturnDeferred<GetProfileCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
-napi_value GetProfile(napi_env env, napi_callback_info info, const AbilityProfileType &profileType)
+napi_value GetProfile(napi_env env, napi_callback_info info, const Constants::AbilityProfileType &profileType)
 {
     APP_LOGD("napi begin to GetProfile");
     NapiArg args(env, info);
@@ -2993,13 +2983,13 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const AbilityProfil
 napi_value GetProfileByAbility(napi_env env, napi_callback_info info)
 {
     APP_LOGD("napi begin to GetProfileByAbility");
-    return GetProfile(env, info, AbilityProfileType::ABILITY_PROFILE);
+    return GetProfile(env, info, Constants::AbilityProfileType::ABILITY_PROFILE);
 }
 
 napi_value GetProfileByExAbility(napi_env env, napi_callback_info info)
 {
     APP_LOGD("napi begin to GetProfileByExAbility");
-    return GetProfile(env, info, AbilityProfileType::EXTENSION_PROFILE);
+    return GetProfile(env, info, Constants::AbilityProfileType::EXTENSION_PROFILE);
 }
 
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value)
@@ -4679,7 +4669,7 @@ bool ParamsProcessGetJsonProfile(napi_env env, napi_callback_info info,
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PROFILE_TYPE, TYPE_NUMBER);
         return false;
     }
-    if (g_supportedProfileList.find(profileType) == g_supportedProfileList.end()) {
+    if (SUPPORTED_PROFILE_LIST.find(profileType) == SUPPORTED_PROFILE_LIST.end()) {
         APP_LOGE("JS request profile error, type is %{public}d, profile not exist", profileType);
         BusinessError::ThrowParameterTypeError(env, ERROR_PROFILE_NOT_EXIST, PROFILE_TYPE, TYPE_NUMBER);
         return false;
@@ -5082,12 +5072,12 @@ napi_value GetDeveloperIds(napi_env env, napi_callback_info info)
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_DISTRIBUTION_TYPE, TYPE_NUMBER);
             return nullptr;
         }
-        if (appDistributionTypeMap.find(appDistributionTypeEnum) == appDistributionTypeMap.end()) {
+        if (APP_DISTRIBUTION_TYPE_MAP.find(appDistributionTypeEnum) == APP_DISTRIBUTION_TYPE_MAP.end()) {
             APP_LOGE("request error, type %{public}d is invalid", appDistributionTypeEnum);
             BusinessError::ThrowEnumError(env, APP_DISTRIBUTION_TYPE, APP_DISTRIBUTION_TYPE_ENUM);
             return nullptr;
         }
-        distributionType = std::string{ appDistributionTypeMap[appDistributionTypeEnum] };
+        distributionType = std::string{ APP_DISTRIBUTION_TYPE_MAP[appDistributionTypeEnum] };
     }
 
     auto iBundleMgr = CommonFunc::GetBundleMgr();

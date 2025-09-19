@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include <ani_signature_builder.h>
 
 #include "ani_app_control_common.h"

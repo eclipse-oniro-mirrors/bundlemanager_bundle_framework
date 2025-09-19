@@ -187,15 +187,9 @@ struct DynamicIconInfoCallbackInfo : public BaseCallbackInfo {
     std::vector<DynamicIconInfo> dynamicIconInfos;
 };
 
-enum AbilityProfileType : uint32_t {
-    ABILITY_PROFILE = 0,
-    EXTENSION_PROFILE,
-    UNKNOWN_PROFILE
-};
-
 struct GetProfileCallbackInfo : public BaseCallbackInfo {
     explicit GetProfileCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    AbilityProfileType type = AbilityProfileType::UNKNOWN_PROFILE;
+    Constants::AbilityProfileType type = Constants::AbilityProfileType::UNKNOWN_PROFILE;
     std::string moduleName;
     std::string abilityName;
     std::string metadataName;
@@ -358,7 +352,7 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
 napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
-napi_value GetProfile(napi_env env, napi_callback_info info, const AbilityProfileType &profileType);
+napi_value GetProfile(napi_env env, napi_callback_info info, const Constants::AbilityProfileType &profileType);
 napi_value GetProfileByAbility(napi_env env, napi_callback_info info);
 napi_value GetProfileByExAbility(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfo(napi_env env, napi_callback_info info);

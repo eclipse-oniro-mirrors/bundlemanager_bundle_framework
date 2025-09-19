@@ -139,7 +139,7 @@ static ani_object GetAllShortcutInfoForSelfNative(ani_env* env)
     if (iBundleMgr == nullptr) {
         APP_LOGE("Can not get iBundleMgr");
         BusinessErrorAni::ThrowCommonError(
-            env, CommonFunc::ConvertErrCode(ERR_APPEXECFWK_NULL_PTR), GET_ALL_SHORTCUT_INFO_FOR_SELF, "");
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_ALL_SHORTCUT_INFO_FOR_SELF, "");
         return nullptr;
     }
     std::vector<ShortcutInfo> shortcutInfos;
@@ -154,7 +154,6 @@ static ani_object GetAllShortcutInfoForSelfNative(ani_env* env)
     if (shortcutInfosObject == nullptr) {
         APP_LOGE("nullptr shortcutInfosRef");
     }
-
     return shortcutInfosObject;
 }
 
