@@ -4689,6 +4689,248 @@ HWTEST_F(BmsBundleDataMgrTest, GetTestRunner_0200, Function | MediumTest | Level
 }
 
 /**
+ * @tc.number: UninstallBundleInfo_0001
+ * @tc.name: test GetResponseUserId
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, UninstallBundleInfo_0001, Function | SmallTest | Level1)
+{
+    std::vector<int32_t> uids;
+    // test add one uninstallbudnleinfo, but no userInfos
+    std::string bundleName = "com.test.UninstallBundleInfo_0001";
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.bundleType = BundleType::ATOMIC_SERVICE;
+
+    auto userId = uninstallBundleInfo.GetResponseUserId(USERID);
+    EXPECT_EQ(userId, Constants::INVALID_USERID);
+
+    // test add one uninstallbudnleinfo
+    bundleName = "com.test.UninstallBundleInfo_0001_2";
+    UninstallDataUserInfo uninstallDataUserInfo2;
+    UninstallBundleInfo uninstallBundleInfo2;
+    uninstallBundleInfo2.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo2));
+
+    // test ANY_USERID
+    int32_t testUserId = Constants::ANY_USERID;
+    userId = uninstallBundleInfo2.GetResponseUserId(testUserId);
+    EXPECT_EQ(userId, USERID);
+    
+    // query userid is in userinfos
+    testUserId = USERID;
+    userId = uninstallBundleInfo2.GetResponseUserId(testUserId);
+    EXPECT_EQ(userId, USERID);
+
+    // test add one uninstallbudnleinfo, but query userid is not in userinfos and < Constants::START_USERID
+    bundleName = "com.test.UninstallBundleInfo_0001_3";
+    UninstallDataUserInfo uninstallDataUserInfo3;
+    UninstallBundleInfo uninstallBundleInfo3;
+    uninstallBundleInfo3.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo3));
+
+    testUserId = 1;
+    userId = uninstallBundleInfo3.GetResponseUserId(testUserId);
+    EXPECT_EQ(userId, Constants::INVALID_USERID);
+
+    // test add two uninstallbudnleinfo, but query userid is not in userinfos and > Constants::START_USERID
+    bundleName = "com.test.UninstallBundleInfo_0001_4";
+    UninstallDataUserInfo uninstallDataUserInfo4;
+    UninstallDataUserInfo uninstallDataUserInfo5;
+    UninstallBundleInfo uninstallBundleInfo4;
+    uninstallBundleInfo4.userInfos.emplace(std::make_pair(std::to_string(MULTI_USERID), uninstallDataUserInfo4));
+    uninstallBundleInfo4.userInfos.emplace(std::make_pair(std::to_string(USERID - 1), uninstallDataUserInfo5));
+
+    testUserId = MULTI_USERID + 1;
+    userId = uninstallBundleInfo4.GetResponseUserId(testUserId);
+    EXPECT_EQ(userId, USERID - 1);
+}
+
+/**
+ * @tc.number: UninstallBundleInfo_0002
+ * @tc.name: test GetUid
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, UninstallBundleInfo_0002, Function | SmallTest | Level1)
+{
+    std::vector<int32_t> uids;
+    // test add one uninstallbudnleinfo, but no userInfos
+    std::string bundleName = "com.test.UninstallBundleInfo_0002_1";
+    UninstallBundleInfo uninstallBundleInfo;
+
+    auto uid = uninstallBundleInfo.GetUid(USERID);
+    EXPECT_EQ(uid, Constants::INVALID_UID);
+
+    // test add one uninstallbudnleinfo, query userid is in userinfos
+    bundleName = "com.test.UninstallBundleInfo_0002_2";
+    UninstallDataUserInfo uninstallDataUserInfo2;
+    uninstallDataUserInfo2.uid = 20020033;
+    UninstallBundleInfo uninstallBundleInfo2;
+    uninstallBundleInfo2.bundleType = BundleType::ATOMIC_SERVICE;
+    uninstallBundleInfo2.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo2));
+
+    uid = uninstallBundleInfo2.GetUid(USERID);
+    EXPECT_EQ(uid, 20020033);
+}
+
+/**
+ * @tc.number: GetAllUnisntallBundleUids_0001
+ * @tc.name: test GetAllUnisntallBundleUids
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllUnisntallBundleUids_0001, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<int32_t> uids;
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+
+    // add four uninstallbudnleinfo
+    std::string bundleName1 = "com.test.GetAllUnisntallBundleUids_0001_1";
+    UninstallBundleInfo uninstallBundleInfo1;
+    uninstallBundleInfos.emplace(std::make_pair(bundleName1, uninstallBundleInfo1));
+
+    std::string bundleName2 = "com.test.GetAllUnisntallBundleUids_0001_2";
+    UninstallDataUserInfo uninstallDataUserInfo2;
+    UninstallBundleInfo uninstallBundleInfo2;
+    uninstallBundleInfo2.bundleType = BundleType::APP;
+    uninstallBundleInfo2.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo2));
+    uninstallBundleInfos.emplace(std::make_pair(bundleName2, uninstallBundleInfo2));
+
+    // apptype is not ATOMIC_SERVICE and not APP
+    std::string bundleName3 = "com.test.GetAllUnisntallBundleUids_0001_3";
+    UninstallDataUserInfo uninstallDataUserInfo3;
+    UninstallBundleInfo uninstallBundleInfo3;
+    uninstallBundleInfo3.bundleType = BundleType::SHARED;
+    uninstallBundleInfo3.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo3));
+    uninstallBundleInfos.emplace(std::make_pair(bundleName3, uninstallBundleInfo3));
+
+    // test add one uninstallbudnleinfo, and apptype is ATOMIC_SERVICE
+    std::string bundleName4 = "com.test.GetAllUnisntallBundleUids_0001_4";
+    UninstallDataUserInfo uninstallDataUserInfo4;
+    uninstallDataUserInfo4.uid = 20020033;
+    UninstallBundleInfo uninstallBundleInfo4;
+    uninstallBundleInfo4.bundleType = BundleType::ATOMIC_SERVICE;
+    uninstallBundleInfo4.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo4));
+    uninstallBundleInfos.emplace(std::make_pair(bundleName4, uninstallBundleInfo4));
+
+    // test get with invalid userid
+    int32_t userId = -3;
+    bool res = dataMgr->GetAllUnisntallBundleUids(userId, uninstallBundleInfos, uids);
+    EXPECT_TRUE(res);
+    EXPECT_EQ(uids.empty(), true);
+    
+    // test get with valid userid 
+    res = dataMgr->GetAllUnisntallBundleUids(USERID, uninstallBundleInfos, uids);
+    EXPECT_TRUE(res);
+    EXPECT_EQ(uids.empty(), false);
+}
+
+/**
+ * @tc.number: GetBundleStats_0300
+ * @tc.name: test GetBundleStats
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // test bundlename not in bundleinfos_ and not uninstalled withkeepdata before
+    std::vector<int64_t> bundleStats;
+    std::string bundleName = "com.test.GetBundleStats_0300";
+    bool res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats);
+    EXPECT_EQ(res, false);
+
+    // test bundlename not in bundleinfos_ and uninstalled withkeepdata before
+    UninstallDataUserInfo uninstallDataUserInfo;
+    uninstallDataUserInfo.uid = 20020033;
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.bundleType = BundleType::ATOMIC_SERVICE;
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
+    auto ret = dataMgr->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+    res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats, 0);
+    EXPECT_EQ(res, true);
+    res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats, 1);
+    EXPECT_EQ(res, false);
+    dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
+
+    // test mock bundle installed
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    res = dataMgr->GetBundleStats(BUNDLE_NAME_TEST, USERID, bundleStats);
+    EXPECT_EQ(res, true);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: BatchGetBundleStats_1000
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: 1.Test the BatchGetBundleStats by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_1000, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<BundleStorageStats> bundleStats;
+    std::string bundleName = "com.example.BatchGetBundleStats_1000_1";
+    std::string bundleName2 = "com.example.BatchGetBundleStats_1000_2";
+    std::vector<std::string> bundleNames = {bundleName, bundleName2, BUNDLE_NAME_TEST};
+    // test bundlename not in bundleinfos_ and uninstalled withkeepdata before
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    UninstallDataUserInfo uninstallDataUserInfo;
+    uninstallDataUserInfo.uid = 20020033;
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.bundleType = BundleType::ATOMIC_SERVICE;
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
+    auto ret = dataMgr->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+    ErrCode res = dataMgr->BatchGetBundleStats(bundleNames, USERID, bundleStats);
+    EXPECT_EQ(res, ERR_OK);
+    dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
+    dataMgr->multiUserIdsSet_.erase(USERID);
+}
+
+/**
+ * @tc.number: GetPreBundleSize_0010
+ * @tc.name: test GetPreBundleSize
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPreBundleSize_0010, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundleName = "com.test.GetPreBundleSize_0010";
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    std::vector<BundleStorageStats> bundleStats;
+    BundleStorageStats stats;
+    stats.bundleName = bundleName;
+    stats.bundleStats = {0, 0, 0, 0, 0};
+    // index 0 : bundle data size
+    stats.bundleStats[0] = 1;
+    // index 1 : local bundle data size
+    stats.bundleStats[1] = 2;
+    bundleStats.emplace_back(stats);
+
+    dataMgr->GetPreBundleSize(bundleName, bundleStats);
+    auto statsIter = std::find_if(bundleStats.begin(), bundleStats.end(),
+        [&bundleName](const BundleStorageStats &stats) { return stats.bundleName == bundleName; });
+    EXPECT_EQ(statsIter->bundleStats[0], 1);
+    dataMgr->bundleInfos_.erase(bundleName);
+
+    dataMgr->GetPreBundleSize(bundleName, bundleStats);
+    statsIter = std::find_if(bundleStats.begin(), bundleStats.end(),
+        [&bundleName](const BundleStorageStats &stats) { return stats.bundleName == bundleName; });
+    EXPECT_EQ(statsIter->bundleStats[0], 1);
+}
+
+/**
 * @tc.number: GetTestRunner_0300
 * @tc.name: GetTestRunner_0300
 * @tc.desc: test GetTestRunner

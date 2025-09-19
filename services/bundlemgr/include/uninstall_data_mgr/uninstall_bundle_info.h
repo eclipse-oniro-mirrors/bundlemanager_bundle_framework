@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_UNINSTALL_DATA_BUNDLE_INFO_H
 
 #include "application_info.h"
+#include "bundle_constants.h"
 #include "json_util.h"
 
 namespace OHOS {
@@ -33,10 +34,13 @@ struct UninstallBundleInfo {
     std::string appProvisionType;
     BundleType bundleType = BundleType::APP;
     std::vector<std::string> extensionDirs;
+    std::vector<std::string> moduleNames;
     std::map<std::string, UninstallDataUserInfo> userInfos;
 
     std::string ToString() const;
     void Init();
+    int32_t GetResponseUserId(int32_t requestUserId) const;
+    int32_t GetUid(int32_t userId) const;
 };
 
 void from_json(const nlohmann::json& jsonObject, UninstallBundleInfo& uninstallBundleInfo);
