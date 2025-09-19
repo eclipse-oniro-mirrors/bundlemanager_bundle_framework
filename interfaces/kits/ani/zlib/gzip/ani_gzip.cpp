@@ -16,6 +16,7 @@
 #include "ani_gzip.h"
 #include "ani_signature_builder.h"
 #include "ani_zlib_common.h"
+#include <charconv>
 #include "enum_util.h"
 #include "napi_business_error.h"
 #include "napi_constants.h"
@@ -30,6 +31,7 @@ constexpr const char* FIELD_NAME_NATIVE_GZFILE = "nativeGZFile";
 constexpr int INVALID_FD = -1;
 constexpr uint8_t MIN_ASCII = 0;
 constexpr uint8_t MAX_ASCII = 255;
+constexpr int ANI_DOUBLE_BYTE_MAX = 64;
 } // namespace
 using namespace arkts::ani_signature;
 
@@ -156,7 +158,17 @@ static bool TryGetNumberArg(ani_env* env, ani_array args, ani_size index, std::s
     if (status == ANI_OK && isDouble == ANI_TRUE) {
         ani_double numberArg = 0;
         status = env->Object_CallMethodByName_Double(arg, CommonFunAniNS::PROPERTYNAME_UNBOXED, nullptr, &numberArg);
-        output = std::to_string(static_cast<int32_t>(numberArg));
+        if (status != ANI_OK) {
+            APP_LOGE("Object_CallMethodByName_Double failed %{public}d", status);
+            return false;
+        }
+        output.resize(ANI_DOUBLE_BYTE_MAX);
+        auto r = std::to_chars(output.data(), output.data() + output.size(), numberArg, std::chars_format::general, 17);
+        if (r.ec != std::errc()) {
+            APP_LOGE("number to string failed");
+            return false;
+        }
+        output.resize(r.ptr - output.data());
     }
 
     if (status != ANI_OK) {
