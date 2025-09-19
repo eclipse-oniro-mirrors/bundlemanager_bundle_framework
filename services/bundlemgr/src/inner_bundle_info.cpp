@@ -3849,7 +3849,7 @@ bool InnerBundleInfo::SetModuleRemovable(const std::string &moduleName, bool isE
 
 ErrCode InnerBundleInfo::UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex)
 {
-    APP_LOGI("update encrypted key %{public}s %{public}d %{public}d", bundleName.c_str(), isExisted, appIndex);
+    APP_LOGI_NOFUNC("update encrypted key %{public}s %{public}d %{public}d", bundleName.c_str(), isExisted, appIndex);
     if (isExisted) {
         // Set the second bit to 1
         SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_KEY_EXISTED));

@@ -1227,7 +1227,7 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
     bool isSingleton = info.IsSingleton();
     if ((isSingleton && (userId != Constants::DEFAULT_USERID)) ||
         (!isSingleton && (userId == Constants::DEFAULT_USERID))) {
-        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched",
+        LOG_D(BMS_TAG_INSTALLER, "singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched",
             isSingleton, info.GetBundleName().c_str(), userId);
         return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
     }
@@ -1238,7 +1238,7 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
 ErrCode BaseBundleInstaller::CheckU1Enable(const InnerBundleInfo &info,
     const int32_t userId)
 {
-    LOG_I(BMS_TAG_INSTALLER, "start for -n %{public}s -u %{public}d",
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "start for -n %{public}s -u %{public}d",
         info.GetBundleName().c_str(), userId);
     std::string bundleName = info.GetBundleName();
     bool u1Enable = info.IsU1Enable();
@@ -1309,7 +1309,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CheckSysCap(bundlePaths);
     bool isSysCapValid = (result == ERR_OK);
     if (!isSysCapValid) {
-        APP_LOGI("hap syscap check failed %{public}d", result);
+        APP_LOGI_NOFUNC("check syscap failed %{public}d", result);
     }
     UpdateInstallerState(InstallerState::INSTALL_SYSCAP_CHECKED);                  // ---- 10%
 
@@ -4400,7 +4400,7 @@ void BaseBundleInstaller::GetRemoveExtensionDirs(
 void BaseBundleInstaller::RemoveCreatedExtensionDirsForException() const
 {
     if (createExtensionDirs_.empty()) {
-        LOG_I(BMS_TAG_INSTALLER, "no need to remove extension sandbox dir");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "no need to remove extension sandbox dir");
         return;
     }
     if (InstalldClient::GetInstance()->RemoveExtensionDir(userId_, createExtensionDirs_) != ERR_OK) {
@@ -5458,7 +5458,7 @@ void BaseBundleInstaller::OnSingletonChange(bool killProcess)
 void BaseBundleInstaller::RestoreHaps(const std::vector<std::string> &bundlePaths, const InstallParam &installParam)
 {
     if (!installParam.IsRenameInstall() || bundlePaths_.empty() || bundlePaths.empty()) {
-        LOG_I(BMS_TAG_INSTALLER, "No need to restore haps");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "No need to restore haps");
         return;
     }
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +

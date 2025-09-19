@@ -4525,7 +4525,7 @@ bool BMSEventHandler::IsQuickfixPatchApp(const std::string &bundleName, uint32_t
     // 1. check whether a patch has been installed on the app
     InnerPatchInfo innerPatchInfo;
     if (!PatchDataMgr::GetInstance().GetInnerPatchInfo(bundleName, innerPatchInfo)) {
-        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "app is not patch -n %{public}s", bundleName.c_str());
+        LOG_D(BMS_TAG_DEFAULT, "app is not patch -n %{public}s", bundleName.c_str());
         return false;
     }
     // 2. check appType, current only Internal app types can be uninstall
