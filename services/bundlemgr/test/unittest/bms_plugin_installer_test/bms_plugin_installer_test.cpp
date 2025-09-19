@@ -351,7 +351,7 @@ HWTEST_F(BmsPluginInstallerTest, ParseFiles_0002, Function | SmallTest | Level0)
     pluginParam.userId = USER_ID;
     std::vector<std::string> pluginFilePaths;
     ErrCode ret = installer.ParseFiles(pluginFilePaths, pluginParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_EMPTY);
 }
 
 /**
