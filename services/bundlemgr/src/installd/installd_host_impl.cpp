@@ -1485,7 +1485,7 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
     HapContext hapContext;
     int ret = hapContext.HapFileRestorecon(hapFileInfo);
     if (ret != 0) {
-        LOG_E(BMS_TAG_INSTALLD, "HapFileRestorecon path: %{public}s failed, apl: %{public}s, errcode:%{public}d",
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "HapFileRestorecon path: %{public}s failed, apl: %{public}s, errcode:%{public}d",
             dir.c_str(), apl.c_str(), ret);
         return ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED;
     }

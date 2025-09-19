@@ -177,7 +177,7 @@ bool BundleResourceParser::IsNeedToParseResourceInfo(
     }
     if ((newResourceInfo.labelId_ <= 0) && (newResourceInfo.iconId_ <= 0)) {
         // no need to process icon and label
-        APP_LOGW("key:%{public}s label and icon both equal 0", newResourceInfo.GetKey().c_str());
+        APP_LOGD("key:%{public}s label and icon both equal 0", newResourceInfo.GetKey().c_str());
         return false;
     }
     return true;
