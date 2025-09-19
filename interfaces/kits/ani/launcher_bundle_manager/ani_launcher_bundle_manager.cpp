@@ -33,7 +33,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int32_t EMPTY_USER_ID = -500;
 constexpr const char* NS_NAME_LAUNCHERMANAGER = "@ohos.bundle.launcherBundleManager.launcherBundleManager";
 
 const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {

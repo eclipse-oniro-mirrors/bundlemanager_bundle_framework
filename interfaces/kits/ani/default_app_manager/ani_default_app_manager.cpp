@@ -29,7 +29,6 @@ namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 namespace {
 constexpr const char* NS_NAME_DEFAULTAPPMANAGER = "@ohos.bundle.defaultAppManager.defaultAppManager";
-constexpr int32_t EMPTY_USER_ID = -500;
 } // namespace
 
 static bool ParseType(ani_env *env, ani_string aniType, std::string& result)

@@ -52,24 +52,8 @@ static std::shared_mutex g_aniCacheMutex;
 static std::unordered_map<ANIQuery, ani_ref, ANIQueryHash> g_aniCache;
 static std::string g_aniOwnBundleName;
 static std::mutex g_aniOwnBundleNameMutex;
-constexpr int32_t EMPTY_USER_ID = -500;
-static std::set<int32_t> g_supportedProfileList = { 1 };
-static std::map<int32_t, std::string> appDistributionTypeMap = {
-    { ENUM_ONE, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
-    { ENUM_TWO, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
-    { ENUM_THREE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
-    { ENUM_FOUR, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
-    { ENUM_FIVE, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
-    { ENUM_SIX, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
-    { ENUM_SEVEN, Constants::APP_DISTRIBUTION_TYPE_NONE },
-};
 constexpr int32_t EMPTY_VALUE = -500;
 constexpr const char* EMPTY_STRING = "ani empty string";
-enum AbilityProfileType : uint32_t {
-    ABILITY_PROFILE = 0,
-    EXTENSION_PROFILE = 1,
-    UNKNOWN_PROFILE = 2
-};
 } // namespace
 
 static void CheckToCache(
@@ -535,28 +519,27 @@ static ani_string GetAbilityLabelNative(ani_env* env,
         BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return nullptr;
     }
-    std::string abilityLabel;
-    ErrCode ret = CommonFunc::ConvertErrCode(
-        iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, abilityLabel));
-    if (ret == ERROR_PARAM_CHECK_ERROR) {
-        if (bundleName.empty()) {
-            APP_LOGW("bundleName is empty");
-            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
-            return nullptr;
-        } else if (moduleName.empty()) {
-            APP_LOGW("moduleName is empty");
-            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
-            return nullptr;
-        } else {
-            APP_LOGW("abilityName is empty");
-            BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_ABILITYNAME_EMPTY_ERROR);
-            return nullptr;
-        }
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
+        return nullptr;
     }
+    if (moduleName.empty()) {
+        APP_LOGW("moduleName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
+        return nullptr;
+    }
+    if (abilityName.empty()) {
+        APP_LOGW("abilityName is empty");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_ABILITYNAME_EMPTY_ERROR);
+        return nullptr;
+    }
+    std::string abilityLabel;
+    ErrCode ret = iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, abilityLabel);
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     if (ret != ERR_OK) {
         APP_LOGE("GetAbilityLabel failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, ret,
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             isSync ? GET_ABILITY_LABEL_SYNC : GET_ABILITY_LABEL, BUNDLE_PERMISSIONS);
         return nullptr;
     }
@@ -654,17 +637,16 @@ static ani_string GetSpecifiedDistributionType(ani_env* env, ani_string aniBundl
             RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
-    std::string specifiedDistributionType;
-    ErrCode ret = CommonFunc::ConvertErrCode(
-        iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType));
-    if (ret == ERROR_PARAM_CHECK_ERROR && bundleName.empty()) {
+    if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
         return nullptr;
     }
+    std::string specifiedDistributionType;
+    ErrCode ret = iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType);
     if (ret != ERR_OK) {
         APP_LOGE("GetSpecifiedDistributionType failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, ret,
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }
@@ -840,11 +822,12 @@ static void SetApplicationEnabledNative(ani_env* env,
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return;
     }
-    ErrCode ret = BundleManagerHelper::InnerSetApplicationEnabled(bundleName, isEnable, aniAppIndex);
-    if (ret == ERROR_PARAM_CHECK_ERROR && bundleName.empty()) {
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
         BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
         return;
     }
+    ErrCode ret = BundleManagerHelper::InnerSetApplicationEnabled(bundleName, isEnable, aniAppIndex);
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
     if (ret != ERR_OK) {
         APP_LOGE("SetApplicationEnabled failed ret: %{public}d", ret);
@@ -1055,7 +1038,7 @@ static ani_object GetLaunchWant(ani_env* env)
 }
 
 static ErrCode InnerGetProfile(const std::string& moduleName, const std::string& abilityName,
-    const std::string& metadataName, AbilityProfileType profileType, std::vector<std::string>& profileVec)
+    const std::string& metadataName, Constants::AbilityProfileType profileType, std::vector<std::string>& profileVec)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -1078,7 +1061,7 @@ static ErrCode InnerGetProfile(const std::string& moduleName, const std::string&
     ErrCode result;
     BundleMgrClient client;
     BundleInfo bundleInfo;
-    if (profileType == AbilityProfileType::ABILITY_PROFILE) {
+    if (profileType == Constants::AbilityProfileType::ABILITY_PROFILE) {
         auto getAbilityFlag = baseFlag +
             static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
         result = iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo);
@@ -1099,7 +1082,7 @@ static ErrCode InnerGetProfile(const std::string& moduleName, const std::string&
         return ERR_OK;
     }
 
-    if (profileType == AbilityProfileType::EXTENSION_PROFILE) {
+    if (profileType == Constants::AbilityProfileType::EXTENSION_PROFILE) {
         auto getExtensionFlag = baseFlag +
             static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
         result = iBundleMgr->GetBundleInfoForSelf(getExtensionFlag, bundleInfo);
@@ -1156,7 +1139,7 @@ static ani_object GetProfileByAbilityNative(ani_env* env, ani_string aniModuleNa
     if (!CommonFunAni::ParseString(env, aniMetadataName, metadataName)) {
         APP_LOGW("Parse metadataName failed, The default value is undefined");
     }
-    AbilityProfileType profileType = AbilityProfileType::UNKNOWN_PROFILE;
+    Constants::AbilityProfileType profileType = Constants::AbilityProfileType::UNKNOWN_PROFILE;
     if (!EnumUtils::EnumETSToNative(env, aniProfileType, profileType)) {
         APP_LOGE("Parse profileType failed");
         return nullptr;
@@ -1166,7 +1149,7 @@ static ani_object GetProfileByAbilityNative(ani_env* env, ani_string aniModuleNa
     if (ret != ERR_OK) {
         APP_LOGE("InnerGetProfile failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            (isSync ? (profileType == AbilityProfileType::EXTENSION_PROFILE ?
+            (isSync ? (profileType == Constants::AbilityProfileType::EXTENSION_PROFILE ?
             GET_PROFILE_BY_EXTENSION_ABILITY_SYNC : GET_PROFILE_BY_ABILITY_SYNC) : ""), "");
         return nullptr;
     }
@@ -1564,7 +1547,7 @@ static ani_string GetJsonProfileNative(ani_env* env, ani_enum_item aniProfileTyp
         BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PROFILE_TYPE, TYPE_NUMBER);
         return nullptr;
     }
-    if (g_supportedProfileList.find(profileType) == g_supportedProfileList.end()) {
+    if (SUPPORTED_PROFILE_LIST.find(profileType) == SUPPORTED_PROFILE_LIST.end()) {
         APP_LOGE("JS request profile error, type is %{public}d, profile not exist", profileType);
         BusinessErrorAni::ThrowCommonError(env, ERROR_PROFILE_NOT_EXIST, PROFILE_TYPE, TYPE_NUMBER);
         return nullptr;
@@ -1777,12 +1760,12 @@ static ani_object GetDeveloperIdsNative(ani_env* env, ani_int aniAppDistribution
 {
     APP_LOGD("ani GetDeveloperIdsNative called");
     if (aniAppDistributionType != EMPTY_VALUE &&
-        appDistributionTypeMap.find(aniAppDistributionType) == appDistributionTypeMap.end()) {
+        APP_DISTRIBUTION_TYPE_MAP.find(aniAppDistributionType) == APP_DISTRIBUTION_TYPE_MAP.end()) {
             APP_LOGE("request error, type %{public}d is invalid", aniAppDistributionType);
             BusinessErrorAni::ThrowEnumError(env, APP_DISTRIBUTION_TYPE, APP_DISTRIBUTION_TYPE_ENUM);
             return nullptr;
     }
-    std::string distributionType = std::string { appDistributionTypeMap[aniAppDistributionType] };
+    std::string distributionType = std::string { APP_DISTRIBUTION_TYPE_MAP[aniAppDistributionType] };
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("GetBundleMgr failed");
