@@ -36,16 +36,31 @@ ohos_shared_library("ani_bundle_res_manager") {
     "${kits_path}/js/bundle_resource",
   ]
 
+  defines = []
+  external_deps = []
+
   if (bundle_framework_bundle_resource) {
+    defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
+
     sources = [
       "ani_resource_manager.cpp",
       "ani_resource_manager_common.cpp",
+      "ani_resource_manager_drawable_utils.cpp",
     ]
+    if (bundle_framework_graphics) {
+      defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
+
+      external_deps += [
+        "ace_engine:drawable_inner_ani",
+        "image_framework:image_native",
+        "resource_management:global_resmgr",
+      ]
+    }
   } else {
     sources = [ "ani_resource_manager_unsupport.cpp" ]
   }
 
-  defines = [
+  defines += [
     "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
@@ -69,7 +84,7 @@ ohos_shared_library("ani_bundle_res_manager") {
     "-fstack-protector-strong",
   ]
 
-  external_deps = [
+  external_deps += [
     "ability_base:want",
     "c_utils:utils",
     "common_event_service:cesfwk_core",
