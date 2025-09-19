@@ -108,9 +108,10 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
             }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
-            if (scope == nullptr) {
+            napi_status openRet = napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
+            if (openRet != napi_ok || scope == nullptr) {
                 APP_LOGE("scope is null");
+                delete work;
                 return;
             }
             napi_value callback = nullptr;
@@ -174,9 +175,10 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
             }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
-            if (scope == nullptr) {
+            napi_status openRet = napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
+            if (openRet != napi_ok || scope == nullptr) {
                 APP_LOGE("scope is null");
+                delete work;
                 return;
             }
             napi_value callback = nullptr;
@@ -245,9 +247,10 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
             }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
-            if (scope == nullptr) {
+            napi_status openRet = napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
+            if (openRet != napi_ok || scope == nullptr) {
                 APP_LOGE("scope is null");
+                delete work;
                 return;
             }
             napi_value callback = nullptr;
