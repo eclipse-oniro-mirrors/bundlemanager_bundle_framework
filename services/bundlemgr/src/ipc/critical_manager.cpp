@@ -39,6 +39,12 @@ void CriticalManager::SetMemMgrStatus(bool started)
     memMgrStarted_ = started;
 }
 
+bool CriticalManager::IsCritical()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return critical_;
+}
+
 void CriticalManager::BeforeRequest()
 {
     std::lock_guard<std::mutex> lock(mutex_);

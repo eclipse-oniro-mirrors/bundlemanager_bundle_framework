@@ -135,5 +135,12 @@ void InstalldService::OnAddSystemAbility(int32_t systemAbilityId, const std::str
 {
     APP_LOGI("OnAddSystemAbility: %{public}d", systemAbilityId);
 }
+
+int32_t InstalldService::OnIdle(const SystemAbilityOnDemandReason& idleReason)
+{
+    APP_LOGI("OnIdle: %{public}s, %{public}s",
+        idleReason.GetName().c_str(), idleReason.GetValue().c_str());
+    return 0;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -47,6 +47,11 @@ void InstalldHost::SetMemMgrStatus(bool started)
     criticalManager_.SetMemMgrStatus(started);
 }
 
+bool InstalldHost::IsCritical()
+{
+    return criticalManager_.IsCritical();
+}
+
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     BundleMemoryGuard memoryGuard;

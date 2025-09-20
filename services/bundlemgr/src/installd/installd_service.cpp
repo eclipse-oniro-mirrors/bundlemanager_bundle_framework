@@ -43,6 +43,7 @@ constexpr uint8_t INSTALLD_UMASK = 0000;
 constexpr uint8_t SA_SERVICE = 1;
 constexpr uint8_t SA_START = 1;
 constexpr uint8_t SA_DIED = 0;
+constexpr int32_t IDLE_DELAY_TIME = 60 * 1000; // ms
 }
 REGISTER_SYSTEM_ABILITY_BY_ID(InstalldService, INSTALLD_SERVICE_ID, true);
 
@@ -151,6 +152,17 @@ void InstalldService::OnAddSystemAbility(int32_t systemAbilityId, const std::str
             hostImpl_->SetMemMgrStatus(true);
         }
     }
+}
+
+int32_t InstalldService::OnIdle(const SystemAbilityOnDemandReason& idleReason)
+{
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "OnIdle: %{public}s, %{public}s",
+        idleReason.GetName().c_str(), idleReason.GetValue().c_str());
+    if (hostImpl_ != nullptr && hostImpl_->IsCritical()) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "OnIdle: delayed");
+        return IDLE_DELAY_TIME;
+    }
+    return 0;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
