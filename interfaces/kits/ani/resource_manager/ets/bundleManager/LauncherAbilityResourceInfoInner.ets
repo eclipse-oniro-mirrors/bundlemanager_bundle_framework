@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+import { DrawableDescriptor } from '@ohos.arkui.drawableDescriptor';
 import { LauncherAbilityResourceInfo } from 'bundleManager.LauncherAbilityResourceInfo';
 
 export class LauncherAbilityResourceInfoInner implements LauncherAbilityResourceInfo {
@@ -21,6 +22,7 @@ export class LauncherAbilityResourceInfoInner implements LauncherAbilityResource
     readonly abilityName: string = '';
     readonly icon: string = '';
     readonly label: string = '';
+    readonly drawableDescriptor: DrawableDescriptor | null = null;
     readonly appIndex: int;
 
     constructor() { }
@@ -29,12 +31,14 @@ export class LauncherAbilityResourceInfoInner implements LauncherAbilityResource
         abilityName: string,
         icon: string,
         label: string,
+        drawableDescriptor: DrawableDescriptor,
         appIndex: int) {
             this.bundleName = bundleName;
             this.moduleName = moduleName;
             this.abilityName = abilityName;
             this.icon = icon;
             this.label = label;
+            this.drawableDescriptor = drawableDescriptor;
             this.appIndex = appIndex;
     }
 }

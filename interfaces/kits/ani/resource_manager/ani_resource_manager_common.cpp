@@ -16,6 +16,7 @@
 #include <ani_signature_builder.h>
 
 #include "ani_resource_manager_common.h"
+#include "ani_resource_manager_drawable_utils.h"
 #include "common_fun_ani.h"
 
 namespace OHOS {
@@ -26,6 +27,7 @@ constexpr const char* CLASSNAME_BUNDLE_RES_INFO_INNER =
     "bundleManager.BundleResourceInfoInner.BundleResourceInfoInner";
 constexpr const char* CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER =
     "bundleManager.LauncherAbilityResourceInfoInner.LauncherAbilityResourceInfoInner";
+constexpr const char* CLASSNAME_DRAWABLE_DESCRIPTOR = "@ohos.arkui.drawableDescriptor.DrawableDescriptor";
 }
 
 ani_object AniResourceManagerCommon::ConvertBundleResourceInfo(ani_env* env, const BundleResourceInfo& bundleResInfo)
@@ -44,10 +46,25 @@ ani_object AniResourceManagerCommon::ConvertBundleResourceInfo(ani_env* env, con
     ani_string label = nullptr;
     RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, bundleResInfo.label, label));
 
+    // drawableDecriptor: DrawableDescriptor
+    ani_ref drawableDecriptor = nullptr;
+    ani_object drawableDecriptorObj = AniResourceManagerDrawableUtils::ConvertDrawableDescriptor(env,
+        bundleResInfo.foreground, bundleResInfo.background);
+    if (drawableDecriptorObj == nullptr) {
+        ani_status status = env->GetNull(&drawableDecriptor);
+        if (status != ANI_OK) {
+            APP_LOGE("GetNull failed %{public}d", status);
+            return nullptr;
+        }
+    } else {
+        drawableDecriptor = drawableDecriptorObj;
+    }
+
     ani_value args[] = {
         { .r = bundleName },
         { .r = icon },
         { .r = label },
+        { .r = drawableDecriptor },
         { .i = bundleResInfo.appIndex },
     };
     static const std::string ctorSig =
@@ -55,6 +72,7 @@ ani_object AniResourceManagerCommon::ConvertBundleResourceInfo(ani_env* env, con
             .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
             .AddClass(CommonFunAniNS::CLASSNAME_STRING) // icon: string
             .AddClass(CommonFunAniNS::CLASSNAME_STRING) // label: string
+            .AddClass(CLASSNAME_DRAWABLE_DESCRIPTOR)    // drawableDecriptor: DrawableDescriptor
             .AddInt()                                   // appIndex: int
             .BuildSignatureDescriptor();
     return CommonFunAni::CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_RES_INFO_INNER, ctorSig, args);
@@ -85,12 +103,27 @@ ani_object AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo(ani_env*
     ani_string label = nullptr;
     RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, launcherAbilityResourceInfo.label, label));
 
+    // drawableDescriptor: DrawableDescriptor
+    ani_ref drawableDecriptor = nullptr;
+    ani_object drawableDecriptorObj = AniResourceManagerDrawableUtils::ConvertDrawableDescriptor(env,
+        launcherAbilityResourceInfo.foreground, launcherAbilityResourceInfo.background);
+    if (drawableDecriptorObj == nullptr) {
+        ani_status status = env->GetNull(&drawableDecriptor);
+        if (status != ANI_OK) {
+            APP_LOGE("GetNull failed %{public}d", status);
+            return nullptr;
+        }
+    } else {
+        drawableDecriptor = drawableDecriptorObj;
+    }
+
     ani_value args[] = {
         { .r = bundleName },
         { .r = moduleName },
         { .r = abilityName },
         { .r = icon },
         { .r = label },
+        { .r = drawableDecriptor },
         { .i = launcherAbilityResourceInfo.appIndex },
     };
     static const std::string ctorSig =
@@ -100,6 +133,7 @@ ani_object AniResourceManagerCommon::ConvertLauncherAbilityResourceInfo(ani_env*
             .AddClass(CommonFunAniNS::CLASSNAME_STRING) // abilityName: string
             .AddClass(CommonFunAniNS::CLASSNAME_STRING) // icon: string
             .AddClass(CommonFunAniNS::CLASSNAME_STRING) // label: string
+            .AddClass(CLASSNAME_DRAWABLE_DESCRIPTOR)    // drawableDecriptor: DrawableDescriptor
             .AddInt()                                   // appIndex: int
             .BuildSignatureDescriptor();
     return CommonFunAni::CreateNewObjectByClassV2(env, CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER, ctorSig, args);
