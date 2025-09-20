@@ -15,14 +15,24 @@
 
 #include "bundle_stream_installer_host_impl.h"
 
+#include <dirent.h>
+#include "bundle_file_util.h"
 #include "bundle_hitrace_chain.h"
 #include "bundle_mgr_service.h"
+#include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
+#include "contrib/minizip/unzip.h"
 #include "ipc_skeleton.h"
+#include "scope_guard.h"
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
+constexpr const char* PATH_SEPARATOR = "/";
+constexpr const char FILE_SEPARATOR_CHAR = '/';
+constexpr const char PACK_INFO[] = "pack.info";
+constexpr const int32_t ZIP_MAX_PATH = 256;
+constexpr const int32_t ZIP_BUF_SIZE = 8192;
 }
 
 BundleStreamInstallerHostImpl::BundleStreamInstallerHostImpl(uint32_t installerId, int32_t installedUid)
@@ -132,8 +142,9 @@ int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
     }
 
     if (!BundleUtil::CheckFileType(fileName, ServiceConstants::INSTALL_FILE_SUFFIX) &&
-        !BundleUtil::CheckFileType(fileName, ServiceConstants::HSP_FILE_SUFFIX)) {
-        APP_LOGE("file is not hap or hsp");
+        !BundleUtil::CheckFileType(fileName, ServiceConstants::HSP_FILE_SUFFIX) &&
+        !BundleUtil::CheckFileType(fileName, ServiceConstants::APP_FILE_SUFFIX)) {
+        APP_LOGE("file is not hap or hsp or app");
         return Constants::DEFAULT_STREAM_FD;
     }
     // to prevent the hap copied to relevant path
@@ -359,6 +370,242 @@ int32_t BundleStreamInstallerHostImpl::CreateExtProfileFileStream(const std::str
     return fd;
 }
 
+static bool GetAppFilesFromBundlePath(const std::string &currentBundlePath, std::vector<std::string> &appFileList)
+{
+    if (currentBundlePath.empty()) {
+        return false;
+    }
+
+    DIR* dir = opendir(currentBundlePath.c_str());
+    if (dir == nullptr) {
+        char errMsg[256] = {0};
+        strerror_r(errno, errMsg, sizeof(errMsg));
+        APP_LOGE("open %{public}s failure due to %{public}s errno %{public}d",
+            currentBundlePath.c_str(), errMsg, errno);
+        return false;
+    }
+
+    ScopeGuard dirGuard([&dir]() {
+        closedir(dir);
+    });
+
+    std::string bundlePath = currentBundlePath;
+    if (bundlePath.back() != FILE_SEPARATOR_CHAR) {
+        bundlePath.append(PATH_SEPARATOR);
+    }
+
+    bool ret = true;
+    struct dirent *entry = nullptr;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+        const std::string hapFilePath = bundlePath + entry->d_name;
+        if (!BundleFileUtil::CheckFileType(hapFilePath, ServiceConstants::APP_FILE_SUFFIX)) {
+            ret = false;
+            continue;
+        }
+
+        if (std::find(appFileList.begin(), appFileList.end(), hapFilePath) == appFileList.end()) {
+            appFileList.emplace_back(hapFilePath);
+        }
+    }
+    return ret;
+}
+
+static bool ExtractFileFromZip(const unzFile &zipFile, const std::string &outFilePath,
+    const char* filename, std::vector<std::string> &filePaths)
+{
+    std::string fullPath = outFilePath + "/" + std::string(filename);
+    if (strcmp(filename, PACK_INFO) == 0) {
+        return true;
+    }
+    filePaths.emplace_back(fullPath);
+
+    if (unzOpenCurrentFile(zipFile) != UNZ_OK) {
+        APP_LOGE("Failed to open file in zip: %{public}s", filename);
+        return false;
+    }
+
+    ScopeGuard zipGuard([&zipFile]() {
+        unzCloseCurrentFile(zipFile);
+    });
+
+    FILE *outFile = fopen(fullPath.c_str(), "wb");
+    if (!outFile) {
+        APP_LOGE("Failed to create output file: %{public}s", fullPath.c_str());
+        unzCloseCurrentFile(zipFile);
+        return false;
+    }
+
+    ScopeGuard fileGuard([&outFile]() {
+        if (fclose(outFile) != 0) {
+            APP_LOGE("Failed to close file");
+        }
+    });
+
+    std::string buffer;
+    buffer.reserve(ZIP_BUF_SIZE);
+    buffer.resize(ZIP_BUF_SIZE - 1);
+    size_t bytesRead;
+    while ((bytesRead = unzReadCurrentFile(zipFile, &(buffer[0]), ZIP_BUF_SIZE)) > 0) {
+        if (fwrite(&(buffer[0]), 1, bytesRead, outFile) != bytesRead) {
+            APP_LOGE("Failed to write file");
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool DecompressToFile(const std::string &zipFilePath, const std::string &outFilePath,
+    std::vector<std::string> &filePaths)
+{
+    mode_t rootMode = 0777;
+    struct stat st;
+    if (stat(outFilePath.c_str(), &st) != 0) {
+        if (mkdir(outFilePath.c_str(), rootMode) != 0) {
+            APP_LOGE("Failed to create directory: %{public}s", outFilePath.c_str());
+            return false;
+        }
+    }
+
+    unzFile zipFile = unzOpen(zipFilePath.c_str());
+    if (!zipFile) {
+        APP_LOGE("Failed to open zip file: %{public}s", zipFilePath.c_str());
+        return false;
+    }
+
+    ScopeGuard zipGuard([&zipFile]() {
+        unzClose(zipFile);
+    });
+
+    unz_global_info globalInfo = {};
+    if (unzGetGlobalInfo(zipFile, &globalInfo) != UNZ_OK) {
+        APP_LOGE("Failed to get global info from zip file: %{public}s", zipFilePath.c_str());
+        unzClose(zipFile);
+        return false;
+    }
+
+    bool result = true;
+    for (uLong i = 0; i < globalInfo.number_entry; i++) {
+        char filename[ZIP_MAX_PATH] = {};
+        unz_file_info fileInfo = {};
+        if (unzGetCurrentFileInfo(zipFile, &fileInfo, filename, sizeof(filename) - 1, nullptr, 0, nullptr, 0) !=
+            UNZ_OK) {
+            APP_LOGE("Failed to get file info");
+            result = false;
+            break;
+        }
+
+        if (!ExtractFileFromZip(zipFile, outFilePath, filename, filePaths)) {
+            result = false;
+            break;
+        }
+
+        if ((i + 1) < globalInfo.number_entry) {
+            if (unzGoToNextFile(zipFile) != UNZ_OK) {
+                APP_LOGE("Failed to go to next file");
+                result = false;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+static bool GetInnerBundleInfo(const std::string &hapFilePath, std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (hapFilePath.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
+        APP_LOGE("invalid hapFilePath");
+        return false;
+    }
+    std::string realPath;
+    auto ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("getInnerBundleInfo file path %{private}s invalid", hapFilePath.c_str());
+        return false;
+    }
+
+    InnerBundleInfo innerBundleInfo;
+    BundleParser bundleParser;
+    bool isAbcCompressed = false;
+    ret = bundleParser.Parse(realPath, innerBundleInfo, isAbcCompressed);
+    if (ret != ERR_OK) {
+        APP_LOGE("parse bundle info failed, error: %{public}d", ret);
+        return false;
+    }
+    infos.emplace(hapFilePath, innerBundleInfo);
+    return true;
+}
+
+static bool SelectApp(const std::vector<std::string> &filePaths)
+{
+    bool ret = true;
+    for (const auto &path : filePaths) {
+        auto bundleInstallChecker = std::make_unique<BundleInstallChecker>();
+        if (bundleInstallChecker == nullptr) {
+            APP_LOGW("bundleInstallChecker is null");
+            continue;
+        }
+
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        if (!GetInnerBundleInfo(path, infos)
+            || bundleInstallChecker->CheckDeviceType(infos) != OHOS::ERR_OK) {
+            std::error_code ec;
+            if (!std::filesystem::remove(path, ec) || ec) {
+                APP_LOGE("remove file failed.");
+            }
+            continue;
+        }
+        ret = false;
+    }
+    return ret;
+}
+
+bool BundleStreamInstallerHostImpl::InstallApp(const std::vector<std::string> &pathVec)
+{
+    std::vector<std::string> appPaths;
+    for (const auto &path : pathVec) {
+        if ((!GetAppFilesFromBundlePath(path, appPaths) && !appPaths.empty()) || appPaths.size() > 1) {
+            receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_MORE_THAN_ONE_APP, "");
+            return false;
+        }
+    }
+    if (appPaths.empty()) {
+        return true;
+    }
+    if (!installParam_.sharedBundleDirPaths.empty()) {
+        receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_MORE_THAN_ONE_APP, "");
+        return false;
+    }
+
+    auto bundleInstallChecker = std::make_unique<BundleInstallChecker>();
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    if (bundleInstallChecker == nullptr ||
+        bundleInstallChecker->CheckMultipleHapsSignInfo(appPaths, hapVerifyResults) != OHOS::ERR_OK) {
+        receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_VERIFY_APP_SIGNATURE_FAILED, "");
+        return false;
+    }
+
+    std::vector<std::string> filePaths;
+    for (const auto &appPath : appPaths) {
+        if (!DecompressToFile(appPath, pathVec.front(), filePaths)) {
+            receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_DECOMPRESS_APP_FAILED, "");
+            return false;
+        }
+        std::error_code ec;
+        if (!std::filesystem::remove(appPath, ec) || ec) {
+            APP_LOGW("remove file failed.");
+        }
+    }
+
+    if (SelectApp(filePaths)) {
+        receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_NO_SUITABLE_BUNDLES, "");
+        return false;
+    }
+    return true;
+}
+
 bool BundleStreamInstallerHostImpl::Install()
 {
     BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Install", HITRACE_FLAG_INCLUDE_ASYNC);
@@ -380,6 +627,13 @@ bool BundleStreamInstallerHostImpl::Install()
         pathVec.emplace_back(tempDir_);
     }
     installParam_.withCopyHaps = true;
+
+    if (installParam_.isCallByShell) {
+        if (!InstallApp(pathVec)) {
+            APP_LOGE("install app failed");
+            return false;
+        }
+    }
 
     bool res;
     if (installParam_.isSelfUpdate) {

@@ -43,6 +43,7 @@ public:
 
     virtual uint32_t GetInstallerId() const override;
     virtual void SetInstallerId(uint32_t installerId) override;
+    bool InstallApp(const std::vector<std::string> &pathVec);
 
 private:
     bool isInstallSharedBundlesOnly_ = true;

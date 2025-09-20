@@ -61,6 +61,7 @@ constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* UNINSTALL_TMP_PREFIX = "=uninstall_tmp_";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
 constexpr const char* HSP_FILE_SUFFIX = ".hsp";
+constexpr const char* APP_FILE_SUFFIX = ".app";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
