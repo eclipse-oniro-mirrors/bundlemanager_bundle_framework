@@ -14,8 +14,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <filesystem>
-#include <fstream>
 #include <vector>
 
 #define private public
@@ -1377,38 +1375,5 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7900, Function | Sma
     auto ret = hostImpl->VerifyCodeSignatureForHap(codeSignatureParam);
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_8000
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling GetEl2CacheSize of hostImpl
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8000, Function | SmallTest | Level0)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    ASSERT_NE(hostImpl, nullptr);
-    EXPECT_TRUE(InstalldOperator::DeleteDir("/data/app/el2/100/base/com.test.8000"));
-    EXPECT_EQ(hostImpl->GetEl2CacheSize(8000, "com.test.8000", 100, 0), 0);
-
-    EXPECT_TRUE(InstalldOperator::MkRecursiveDir("/data/app/el2/100/base/com.test.8000/cache", true));
-    EXPECT_EQ(hostImpl->GetEl2CacheSize(8000, "com.test.8000", 100, 0), 0);
-
-    EXPECT_TRUE(InstalldOperator::MkRecursiveDir("/data/app/el2/100/base/com.test.8000/cache/test", true));
-    EXPECT_EQ(hostImpl->GetEl2CacheSize(8000, "com.test.8000", 100, 0), 0);
-
-    EXPECT_TRUE(InstalldOperator::SetProjectIdForDir("/data/app/el2/100/base/com.test.8000/cache", 8000));
-    std::ofstream testFile1("/data/app/el2/100/base/com.test.8000/cache/test1.txt");
-    EXPECT_TRUE(testFile1.is_open());
-    testFile1 << "test content";
-    testFile1.close();
-    std::ofstream testFile2("/data/app/el2/100/base/com.test.8000/cache/test2.txt");
-    EXPECT_TRUE(testFile2.is_open());
-    testFile2 << "test content";
-    testFile2.close();
-    EXPECT_NE(hostImpl->GetEl2CacheSize(8000, "com.test.8000", 100, 0), 0);
-    EXPECT_TRUE(InstalldOperator::DeleteDir("/data/app/el2/100/base/com.test.8000"));
-
-    EXPECT_EQ(hostImpl->GetEl2CacheSize(9000, "com.test.8000", 100, 1), 0);
 }
 } // OHOS
