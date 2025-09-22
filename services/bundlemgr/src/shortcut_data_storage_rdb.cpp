@@ -248,6 +248,9 @@ bool ShortcutDataStorageRdb::GetAllTableDataToJson(nlohmann::json &jsonResult)
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        if (ret == NativeRdb::E_ROW_OUT_RANGE) {
+            return true;
+        }
         return false;
     }
     do {

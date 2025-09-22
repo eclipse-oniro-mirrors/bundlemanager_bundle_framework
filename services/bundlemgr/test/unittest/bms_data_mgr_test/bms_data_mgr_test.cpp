@@ -5917,8 +5917,8 @@ HWTEST_F(BmsDataMgrTest, OnExtension_0020, Function | MediumTest | Level1)
     std::shared_ptr<BundleBackupService> bundleBackupService = DelayedSingleton<BundleBackupService>::GetInstance();
     ASSERT_NE(bundleBackupService, nullptr);
     auto ret = bundleBackupService->OnBackup(backupJson);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_GET_DATA_ERROR);
-    EXPECT_EQ(shortcutDataStorageRdb->GetAllTableDataToJson(backupJson), false);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(shortcutDataStorageRdb->GetAllTableDataToJson(backupJson), true);
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
     EXPECT_EQ(shortcutDataStorageRdb->GetAllTableDataToJson(backupJson), false);
 }
