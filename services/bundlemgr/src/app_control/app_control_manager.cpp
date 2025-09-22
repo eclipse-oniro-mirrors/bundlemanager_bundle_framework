@@ -264,6 +264,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    (void)dataMgr->InnerProcessOtaNewInstallBundle(bundleName, userId);
     std::string appId;
     ErrCode ret = dataMgr->GetAppIdByBundleName(bundleName, appId);
     if (ret != ERR_OK) {
