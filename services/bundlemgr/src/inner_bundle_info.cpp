@@ -2784,8 +2784,13 @@ void InnerBundleInfo::GetModuleWithHashValue(
 void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(
     int32_t flags, BundleInfo &bundleInfo, int32_t userId, int32_t appIndex) const
 {
-    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
-        != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
+    bool hasEntryModuleFlag = ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ENTRY_MODULE)) ==
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ENTRY_MODULE));
+    bool hasHapModuleFlag = ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) ==
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE));
+    if (!hasHapModuleFlag && !hasEntryModuleFlag) {
         bundleInfo.hapModuleInfos.clear();
         return;
     }
@@ -2798,6 +2803,9 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(
                 APP_LOGE("not find module %{public}s", info.second.modulePackage.c_str());
             } else {
                 hapModuleInfo.hashValue = it->second.hashValue;
+            }
+            if (!hasHapModuleFlag && hasEntryModuleFlag && hapModuleInfo.moduleType != ModuleType::ENTRY) {
+                continue;
             }
             if (hapModuleInfo.hapPath.empty()) {
                 hapModuleInfo.moduleSourceDir = info.second.modulePath;

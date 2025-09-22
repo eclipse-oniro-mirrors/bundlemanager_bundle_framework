@@ -3228,6 +3228,26 @@ HWTEST_F(BmsBundleManagerTest, GetBundleInfosV9_0001, Function | MediumTest | Le
 }
 
 /**
+ * @tc.number: GetBundleInfoV9_0003
+ * @tc.name: test GetBundleInfoV9 proxy
+ * @tc.desc: 1.query bundle info success
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleInfoV9_0003, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    ErrCode ret1 = hostImpl->GetBundleInfoV9(BUNDLE_BACKUP_NAME,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ENTRY_MODULE), bundleInfo, USERID);
+    EXPECT_EQ(bundleInfo.hapModuleInfos.size(), 1);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[0].moduleType, ModuleType::ENTRY);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
  * @tc.number: ImplicitQueryAbilityInfosWithDefault_0001
  * @tc.name: test ImplicitQueryAbilityInfosWithDefault in HostImpl
  * @tc.desc: 1.system run normally
