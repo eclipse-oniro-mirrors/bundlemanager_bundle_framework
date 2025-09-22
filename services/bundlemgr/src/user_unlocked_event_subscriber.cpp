@@ -250,13 +250,13 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
     }
 
     std::set<std::string> otaNewInstallBundleNames = dataMgr->GetOtaNewInstallBundleNames();
-    dataMgr->ClearOtaNewInstallBundleNames();
     std::stable_partition(bundleInfos.begin(), bundleInfos.end(),
         [&otaNewInstallBundleNames](const BundleInfo &info) {
             return otaNewInstallBundleNames.find(info.name) != otaNewInstallBundleNames.end();
         });
 
     ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::BUNDLE_EL[1]);
+    dataMgr->ClearOtaNewInstallBundleNames();
 #ifdef CHECK_ELDIR_ENABLED
     ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL3);
     ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL4);
