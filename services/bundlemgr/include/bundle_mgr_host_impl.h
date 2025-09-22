@@ -1102,9 +1102,6 @@ public:
     virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state,
         bool isNeedSendNotify) override;
 
-    virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
-        const bool isNeedSendNotify, int32_t userId) override;
-
     virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
@@ -1200,6 +1197,8 @@ public:
         ModuleTestRunner &testRunner) override;
     virtual ErrCode GetAbilityResourceInfo(const std::string &fileType,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos) override;
+    virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
+        int32_t userId) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);

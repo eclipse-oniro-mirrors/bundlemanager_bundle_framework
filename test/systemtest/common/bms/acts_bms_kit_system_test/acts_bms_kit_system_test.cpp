@@ -10108,7 +10108,7 @@ HWTEST_F(ActsBmsKitSystemTest, SwitchUninstallStateByUserId_0001, Function | Med
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
 
-    auto queryResult = bundleMgrProxy->SwitchUninstallStateByUserId(appName, false, false, 100);
+    auto queryResult = bundleMgrProxy->SwitchUninstallStateByUserId(appName, false, 100);
     EXPECT_EQ(queryResult, ERR_OK);
 
     resvec.clear();
@@ -10116,10 +10116,10 @@ HWTEST_F(ActsBmsKitSystemTest, SwitchUninstallStateByUserId_0001, Function | Med
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_NE(uninstallResult, "Success");
 
-    queryResult = bundleMgrProxy->SwitchUninstallStateByUserId(appName, true, false, 200);
+    queryResult = bundleMgrProxy->SwitchUninstallStateByUserId(appName, true, 200);
     EXPECT_NE(queryResult, ERR_OK);
 
-    queryResult = bundleMgrProxy->SwitchUninstallStateByUserId(appName, true, false, 100);
+    queryResult = bundleMgrProxy->SwitchUninstallStateByUserId(appName, true, 100);
     EXPECT_EQ(queryResult, ERR_OK);
 
     resvec.clear();
@@ -10140,7 +10140,7 @@ HWTEST_F(ActsBmsKitSystemTest, SwitchUninstallStateByUserId_0002, Function | Med
     std::cout << "START SwitchUninstallState_0002" << std::endl;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
-    auto res = bundleMgrProxy->SwitchUninstallStateByUserId("", false, false, 100);
+    auto res = bundleMgrProxy->SwitchUninstallStateByUserId("", false, 100);
     EXPECT_NE(res, ERR_OK);
     std::cout << "END SwitchUninstallStateByUserId_0002" << std::endl;
 }

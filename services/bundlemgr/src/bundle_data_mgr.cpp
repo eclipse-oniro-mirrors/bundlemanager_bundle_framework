@@ -9667,7 +9667,7 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
 }
 
 ErrCode BundleDataMgr::SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
-    const bool isNeedSendNotify, int32_t userId, bool &stateChange)
+    int32_t userId, bool &stateChange)
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {

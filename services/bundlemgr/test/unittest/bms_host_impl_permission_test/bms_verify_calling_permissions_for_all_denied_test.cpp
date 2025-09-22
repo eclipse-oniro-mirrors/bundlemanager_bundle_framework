@@ -1015,8 +1015,7 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0058, TestS
 
     std::string bundleName = "com.example.test"; // Example bundle name
     bool state = true; // Example state
-    bool isNeedSendNotify = false; // Example notification flag
-    auto ret = localBundleMgrHostImpl->SwitchUninstallStateByUserId(bundleName, state, isNeedSendNotify, 100);
+    auto ret = localBundleMgrHostImpl->SwitchUninstallStateByUserId(bundleName, state, 100);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
