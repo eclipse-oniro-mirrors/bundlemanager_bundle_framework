@@ -41,6 +41,8 @@ public:
     // parse clone bundle resource info
     bool ParserCloneResourceInfo(const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);
 
+    bool ParserCloneResourceInfo(const int32_t appIndex, ResourceInfo &resourceInfos);
+
     bool ParseResourceInfosNoTheme(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
 
     bool ParseIconResourceInfosWithTheme(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
