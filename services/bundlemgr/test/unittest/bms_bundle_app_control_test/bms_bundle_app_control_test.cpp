@@ -2181,8 +2181,8 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7300, Function | Sma
 
 /**
  * @tc.number: AppControlManagerHostImpl_7400
- * @tc.name: Test DeleteAppRunningRuleCache by AppControlManager
- * @tc.desc: 1.DeleteAppRunningRuleCache test
+ * @tc.name: Test DeleteAppRunningRuleCacheExcludeEdm by AppControlManager
+ * @tc.desc: 1.DeleteAppRunningRuleCacheExcludeEdm test
  */
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7400, Function | SmallTest | Level1)
 {
@@ -2193,7 +2193,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7400, Function | Sma
     std::string key = "key";
     AppRunningControlRuleResult appRunningControlRuleResult;
     appControlManager->appRunningControlRuleResult_.emplace(key, appRunningControlRuleResult);
-    appControlManager->DeleteAppRunningRuleCache(key);
+    appControlManager->DeleteAppRunningRuleCacheExcludeEdm(key);
     EXPECT_EQ(appControlManager->appRunningControlRuleResult_.find(key),
               appControlManager->appRunningControlRuleResult_.end());
 }
@@ -3863,6 +3863,7 @@ HWTEST_F(BmsBundleAppControlTest, SetAppRunningControlRuleCache_0100, Function |
     auto ret = appControlManager->GetAppRunningControlRuleCache(key, rule);
     EXPECT_TRUE(ret);
     EXPECT_EQ(rule.controlMessage, ruleParam.controlMessage);
+    appControlManager->appRunningControlRuleResult_.clear();
 }
 
 /**
@@ -3937,6 +3938,7 @@ HWTEST_F(BmsBundleAppControlTest, CheckAppControlRuleIntercept_0200, Function | 
     auto ret = appControlManager->CheckAppControlRuleIntercept(BUNDLE_NAME, USERID, true, ruleParam);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
     EXPECT_EQ(ruleParam.controlMessage, INVALID_MESSAGE);
+    appControlManager->runningRuleSettingStatusMap_.clear();
 }
 
 /**
@@ -3956,6 +3958,7 @@ HWTEST_F(BmsBundleAppControlTest, CheckAppControlRuleIntercept_0300, Function | 
     auto ret = appControlManager->CheckAppControlRuleIntercept(BUNDLE_NAME, USERID, true, ruleParam);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
     EXPECT_EQ(ruleParam.controlMessage, INVALID_MESSAGE);
+    appControlManager->runningRuleSettingStatusMap_.clear();
 }
 
 /**
@@ -3975,6 +3978,7 @@ HWTEST_F(BmsBundleAppControlTest, CheckAppControlRuleIntercept_0400, Function | 
     auto ret = appControlManager->CheckAppControlRuleIntercept(BUNDLE_NAME, USERID, true, ruleParam);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(ruleParam.controlMessage, CONTROL_MESSAGE);
+    appControlManager->runningRuleSettingStatusMap_.clear();
 }
 
 /**
@@ -3994,6 +3998,7 @@ HWTEST_F(BmsBundleAppControlTest, CheckAppControlRuleIntercept_0500, Function | 
     auto ret = appControlManager->CheckAppControlRuleIntercept(BUNDLE_NAME, USERID, false, ruleParam);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
     EXPECT_EQ(ruleParam.controlMessage, INVALID_MESSAGE);
+    appControlManager->runningRuleSettingStatusMap_.clear();
 }
 
 /**
@@ -4013,6 +4018,7 @@ HWTEST_F(BmsBundleAppControlTest, CheckAppControlRuleIntercept_0600, Function | 
     auto ret = appControlManager->CheckAppControlRuleIntercept(BUNDLE_NAME, USERID, false, ruleParam);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
     EXPECT_EQ(ruleParam.controlMessage, INVALID_MESSAGE);
+    appControlManager->runningRuleSettingStatusMap_.clear();
 }
 
 /**
@@ -4032,6 +4038,7 @@ HWTEST_F(BmsBundleAppControlTest, CheckAppControlRuleIntercept_0700, Function | 
     auto ret = appControlManager->CheckAppControlRuleIntercept(BUNDLE_NAME, USERID, false, ruleParam);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(ruleParam.controlMessage, APP_CONTROL_EDM_DEFAULT_MESSAGE);
+    appControlManager->runningRuleSettingStatusMap_.clear();
 }
 
 /**
@@ -4050,7 +4057,8 @@ HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0100, Function | Smal
     appControlManager->SetAppRunningControlRuleCache(key, ruleParam);
     AppRunningControlRuleResult rule;
     auto ret = appControlManager->GetAppRunningControlRule(BUNDLE_NAME, USERID, rule);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
+    appControlManager->appRunningControlRuleResult_.clear();
 }
 
 /**
@@ -4069,7 +4077,8 @@ HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0200, Function | Smal
     appControlManager->SetAppRunningControlRuleCache(key, ruleParam);
     AppRunningControlRuleResult rule;
     auto ret = appControlManager->GetAppRunningControlRule(BUNDLE_NAME, USERID, rule);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
+    appControlManager->appRunningControlRuleResult_.clear();
 }
 
 /**
@@ -4083,7 +4092,7 @@ HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0300, Function | Smal
     ASSERT_NE(appControlManager, nullptr);
     AppRunningControlRuleResult rule;
     auto ret = appControlManager->GetAppRunningControlRule(BUNDLE_NAME, USERID, rule);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
 }
 
 /**
@@ -4613,7 +4622,7 @@ HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0500, Function | Smal
     auto ret = appControlManagerDb_->AddAppRunningControlRule(AppControlConstants::EDM_CALLING, controlRules, USERID);
     EXPECT_EQ(ret, ERR_OK);
     ret = appControlManager->GetAppRunningControlRule(BUNDLE_NAME, USERID, rule);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
     appControlManager->appRunningControlRuleResult_.clear();
 
     controlRule.appId = APPID;
@@ -4656,6 +4665,7 @@ HWTEST_F(BmsBundleAppControlTest, GetRunningRuleSettingStatusByUserId_0400, Func
         USERID, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
     auto res = appControlManager->GetRunningRuleSettingStatusByUserId(USERID2);
     EXPECT_EQ(res, AppExecFwk::AppControlManager::RunningRuleSettingStatus::NO_SET);
+    appControlManager->runningRuleSettingStatusMap_.clear();
 }
 
 /**
@@ -4690,6 +4700,7 @@ HWTEST_F(BmsBundleAppControlTest, SetRunningRuleSettingStatusByUserId_0100, Func
         USERID, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
     auto ret = appControlManager->GetRunningRuleSettingStatusByUserId(USERID);
     EXPECT_EQ(ret, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
+    appControlManager->runningRuleSettingStatusMap_.clear();
 }
 
 /**
@@ -4707,6 +4718,7 @@ HWTEST_F(BmsBundleAppControlTest, SetRunningRuleSettingStatusByUserId_0200, Func
         USERID, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
     auto ret = appControlManager->GetRunningRuleSettingStatusByUserId(USERID);
     EXPECT_EQ(ret, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
+    appControlManager->runningRuleSettingStatusMap_.clear();
 }
 
 /**
@@ -4724,6 +4736,7 @@ HWTEST_F(BmsBundleAppControlTest, SetRunningRuleSettingStatusByUserId_0300, Func
         USERID2, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
     auto ret = appControlManager->GetRunningRuleSettingStatusByUserId(USERID2);
     EXPECT_EQ(ret, AppExecFwk::AppControlManager::RunningRuleSettingStatus::BLACK_LIST);
+    appControlManager->runningRuleSettingStatusMap_.clear();
 }
 
 /**

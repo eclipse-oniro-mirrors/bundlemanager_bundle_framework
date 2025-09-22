@@ -66,6 +66,8 @@ public:
         int32_t userId, std::vector<DisposedRule>& disposedRules) = 0;
     virtual ErrCode DeleteAllDisposedRuleByBundle(const std::vector<std::string> &appIdList,
         int32_t appIndex, int32_t userId) = 0;
+    virtual ErrCode DeleteDisposedRuleByBundleExcludeEdm(const std::vector<std::string> &appIdList,
+        int32_t appIndex, int32_t userId) = 0;
 
     virtual ErrCode SetUninstallDisposedRule(const std::string &callingName, const std::string &appIdentifier,
         const UninstallDisposedRule &rule, int32_t appIndex, int32_t userId) = 0;

@@ -61,6 +61,8 @@ public:
         const std::vector<std::string> &appIdList, int32_t appIndex, int32_t userId) override;
     virtual ErrCode DeleteAllDisposedRuleByBundle(const std::vector<std::string> &appIdList,
         int32_t appIndex, int32_t userId) override;
+    virtual ErrCode DeleteDisposedRuleByBundleExcludeEdm(const std::vector<std::string> &appIdList,
+        int32_t appIndex, int32_t userId) override;
     virtual ErrCode GetAbilityRunningControlRule(const std::vector<std::string> &appIdList, int32_t appIndex,
         int32_t userId, std::vector<DisposedRule>& disposedRules) override;
     

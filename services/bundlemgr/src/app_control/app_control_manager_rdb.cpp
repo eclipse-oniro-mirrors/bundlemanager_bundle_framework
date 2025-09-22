@@ -644,10 +644,33 @@ ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::vector<st
     int32_t appIndex, int32_t userId)
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
-    std::vector<std::string> controlList = {DISPOSED_RULE, RUNNING_CONTROL, UNINSTALL_DISPOSED_RULE};
+    std::vector<std::string> controlList = {DISPOSED_RULE, UNINSTALL_DISPOSED_RULE};
     absRdbPredicates.In(APP_CONTROL_LIST, controlList);
     absRdbPredicates.In(APP_ID, appIdList);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    // if appIndex is main app also clear all clone app
+    if (appIndex != Constants::MAIN_APP_INDEX) {
+        absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
+    }
+    bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
+    if (!ret) {
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+    auto result = DeleteDisposedRuleByBundleExcludeEdm(appIdList, appIndex, userId);
+    if (result != ERR_OK) {
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::DeleteDisposedRuleByBundleExcludeEdm(const std::vector<std::string> &appIdList,
+    int32_t appIndex, int32_t userId)
+{
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, RUNNING_CONTROL);
+    absRdbPredicates.In(APP_ID, appIdList);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.NotEqualTo(CALLING_NAME, AppControlConstants::EDM_CALLING);
     // if appIndex is main app also clear all clone app
     if (appIndex != Constants::MAIN_APP_INDEX) {
         absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
