@@ -508,6 +508,7 @@ public:
      * @param isEntry Indicates the isEntry.
      */
     void UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo);
+    void UpdatePartialInnerBundleInfo(const InnerBundleInfo &info);
     /**
      * @brief Get application enabled.
      * @param userId Indicates the user ID.

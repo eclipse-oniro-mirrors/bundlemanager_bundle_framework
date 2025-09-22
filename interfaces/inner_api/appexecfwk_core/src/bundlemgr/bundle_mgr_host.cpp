@@ -780,6 +780,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfos(MessageParcel &data, MessagePar
     int userId = data.ReadInt32();
     std::vector<ApplicationInfo> infos;
     bool ret = GetApplicationInfos(flag, userId, infos);
+    size_t vectorSize = infos.size();
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -790,7 +791,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfos(MessageParcel &data, MessagePar
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    APP_LOGI_NOFUNC("GetApplicationInfos bundles:%{public}zu, size:%{public}zu", infos.size(), reply.GetRawDataSize());
+    APP_LOGI_NOFUNC("GetApplicationInfos bundles:%{public}zu, size:%{public}zu", vectorSize, reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -801,6 +802,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlags(MessageParcel &data
     int userId = data.ReadInt32();
     std::vector<ApplicationInfo> infos;
     bool ret = GetApplicationInfos(flags, userId, infos);
+    size_t vectorSize = infos.size();
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -811,7 +813,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlags(MessageParcel &data
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    APP_LOGI_NOFUNC("GetApplicationInfos bundles:%{public}zu, size:%{public}zu", infos.size(), reply.GetRawDataSize());
+    APP_LOGI_NOFUNC("GetApplicationInfos bundles:%{public}zu, size:%{public}zu", vectorSize, reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -822,6 +824,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9(MessageParcel &da
     int32_t userId = data.ReadInt32();
     std::vector<ApplicationInfo> infos;
     auto ret = GetApplicationInfosV9(flags, userId, infos);
+    size_t vectorSize = infos.size();
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -833,7 +836,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9(MessageParcel &da
         }
     }
     APP_LOGI_NOFUNC("GetApplicationInfosV9 bundles:%{public}zu, size:%{public}zu",
-        infos.size(), reply.GetRawDataSize());
+        vectorSize, reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -1023,6 +1026,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfos(MessageParcel &data, MessageParcel &
 
     std::vector<BundleInfo> infos;
     bool ret = GetBundleInfos(flag, infos, userId);
+    size_t vectorSize = infos.size();
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1034,7 +1038,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfos(MessageParcel &data, MessageParcel &
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    APP_LOGI("bundles %{public}zu, size %{public}zu", infos.size(), reply.GetRawDataSize());
+    APP_LOGI("bundles %{public}zu, size %{public}zu", vectorSize, reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -1046,6 +1050,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlags(MessageParcel &data, Mes
 
     std::vector<BundleInfo> infos;
     bool ret = GetBundleInfos(flags, infos, userId);
+    size_t vectorSize = infos.size();
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1057,7 +1062,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlags(MessageParcel &data, Mes
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    APP_LOGI("bundles %{public}zu, size %{public}zu", infos.size(), reply.GetRawDataSize());
+    APP_LOGI("bundles %{public}zu, size %{public}zu", vectorSize, reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -1069,6 +1074,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, M
 
     std::vector<BundleInfo> infos;
     auto ret = GetBundleInfosV9(flags, infos, userId);
+    size_t vectorSize = infos.size();
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1079,7 +1085,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, M
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    APP_LOGI("bundles %{public}zu, size %{public}zu", infos.size(), reply.GetRawDataSize());
+    APP_LOGI("bundles %{public}zu, size %{public}zu", vectorSize, reply.GetRawDataSize());
     return ERR_OK;
 }
 
@@ -3105,6 +3111,8 @@ bool BundleMgrHost::WriteVectorToParcelIntelligent(std::vector<T> &parcelableVec
             return false;
         }
     }
+
+    std::vector<T>().swap(parcelableVector);
 
     size_t dataSize = tempParcel.GetDataSize();
     if (!reply.WriteInt32(static_cast<int32_t>(dataSize))) {

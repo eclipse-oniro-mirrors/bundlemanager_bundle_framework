@@ -201,6 +201,12 @@ public:
     ErrCode CheckU1EnableSameInHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::string &bundleName, bool &u1Enable);
     bool DetermineCloneApp(InnerBundleInfo &innerBundleInfo);
+
+    void ParseAppPrivilegeCapability(const Security::Verify::ProvisionInfo &provisionInfo,
+        AppPrivilegeCapability &appPrivilegeCapability);
+
+    void FetchPrivilegeCapabilityFromPreConfig(const std::string &bundleName,
+        const std::vector<std::string> &appSignatures, AppPrivilegeCapability &appPrivilegeCapability);
 private:
 
     ErrCode ParseBundleInfo(
@@ -226,18 +232,9 @@ private:
     void GetPrivilegeCapability(
         const InstallCheckParam &checkParam, InnerBundleInfo &newInfo);
 
-    void ParseAppPrivilegeCapability(
-        const Security::Verify::ProvisionInfo &provisionInfo,
-        AppPrivilegeCapability &appPrivilegeCapability);
-
     ErrCode CheckMainElement(const InnerBundleInfo &info);
 
     ErrCode CheckBundleName(const std::string &provisionInfoBundleName, const std::string &bundleName);
-
-    void FetchPrivilegeCapabilityFromPreConfig(
-        const std::string &bundleName,
-        const std::vector<std::string> &appSignatures,
-        AppPrivilegeCapability &appPrivilegeCapability);
 
     bool MatchSignature(const std::vector<std::string> &appSignatures, const std::string &signature);
 

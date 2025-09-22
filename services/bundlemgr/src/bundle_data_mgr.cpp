@@ -7416,6 +7416,27 @@ bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo
     return true;
 }
 
+bool BundleDataMgr::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
+{
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
+    std::string bundleName = info.GetBundleName();
+    if (bundleName.empty()) {
+        APP_LOGE("bundle name empty");
+        return false;
+    }
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", bundleName.c_str());
+        return false;
+    }
+    item->second.UpdatePartialInnerBundleInfo(info);
+    if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
+        APP_LOGE("save %{public}s to db failed", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
 bool BundleDataMgr::UpdateEl5KeyId(const CreateDirParam &el5Param, const std::string keyId, bool needSaveStorage)
 {
     if (el5Param.bundleName.empty()) {

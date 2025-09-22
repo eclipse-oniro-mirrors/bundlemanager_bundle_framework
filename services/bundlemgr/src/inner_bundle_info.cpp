@@ -1935,6 +1935,95 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
     }
 }
 
+void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)
+{
+    // update ApplicationInfo
+    if (baseApplicationInfo_ != nullptr && info.baseApplicationInfo_ != nullptr) {
+        baseApplicationInfo_->targetMinorApiVersion = info.baseApplicationInfo_->targetMinorApiVersion;
+        baseApplicationInfo_->targetPatchApiVersion = info.baseApplicationInfo_->targetPatchApiVersion;
+        baseApplicationInfo_->startMode = info.baseApplicationInfo_->startMode;
+        if (info.HasEntry()) {
+            baseApplicationInfo_->assetAccessGroups = info.baseApplicationInfo_->assetAccessGroups;
+            baseApplicationInfo_->appPreloadPhase = info.baseApplicationInfo_->appPreloadPhase;
+        }
+        baseApplicationInfo_->cloudStructuredDataSyncEnabled =
+            info.baseApplicationInfo_->cloudStructuredDataSyncEnabled;
+    }
+    // update BundleInfo
+    if (baseBundleInfo_ != nullptr && info.baseApplicationInfo_ != nullptr) {
+        baseBundleInfo_->targetMinorApiVersion = info.baseApplicationInfo_->targetMinorApiVersion;
+        baseBundleInfo_->targetPatchApiVersion = info.baseApplicationInfo_->targetPatchApiVersion;
+    }
+    // update ModuleInfo
+    for (auto &[moduleName, innerModuleInfo] : innerModuleInfos_) {
+        auto item = info.innerModuleInfos_.find(moduleName);
+        if (item == info.innerModuleInfos_.end()) {
+            APP_LOGW("moduleName:%{public}s not found", moduleName.c_str());
+            continue;
+        }
+        innerModuleInfo.requiredDeviceFeatures = item->second.requiredDeviceFeatures;
+        innerModuleInfo.systemTheme = item->second.systemTheme;
+        innerModuleInfo.crossAppSharedConfig = item->second.crossAppSharedConfig;
+        innerModuleInfo.formExtensionModule = item->second.formExtensionModule;
+        innerModuleInfo.formWidgetModule = item->second.formWidgetModule;
+        innerModuleInfo.moduleArkTSMode = item->second.moduleArkTSMode;
+        innerModuleInfo.arkTSMode = item->second.arkTSMode;
+        innerModuleInfo.resizeable = item->second.resizeable;
+        innerModuleInfo.metadata = item->second.metadata;
+    }
+    for (auto &[moduleName, innerModuleInfoVector] : innerSharedModuleInfos_) {
+        auto item = info.innerModuleInfos_.find(moduleName);
+        if (item == info.innerModuleInfos_.end()) {
+            APP_LOGW("shared moduleName:%{public}s not found", moduleName.c_str());
+            continue;
+        }
+        for (auto &innerModuleInfo : innerModuleInfoVector) {
+            innerModuleInfo.requiredDeviceFeatures = item->second.requiredDeviceFeatures;
+            innerModuleInfo.systemTheme = item->second.systemTheme;
+            innerModuleInfo.crossAppSharedConfig = item->second.crossAppSharedConfig;
+            innerModuleInfo.formExtensionModule = item->second.formExtensionModule;
+            innerModuleInfo.formWidgetModule = item->second.formWidgetModule;
+            innerModuleInfo.moduleArkTSMode = item->second.moduleArkTSMode;
+            innerModuleInfo.arkTSMode = item->second.arkTSMode;
+            innerModuleInfo.resizeable = item->second.resizeable;
+            innerModuleInfo.metadata = item->second.metadata;
+        }
+    }
+    // update AbilityInfo
+    for (auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        auto item = info.baseAbilityInfos_.find(key);
+        if (item == info.baseAbilityInfos_.end() ||
+            innerAbilityInfo.moduleName != item->second.moduleName ||
+            innerAbilityInfo.name != item->second.name) {
+            APP_LOGW("abilityKey:%{public}s not found", key.c_str());
+            continue;
+        }
+        innerAbilityInfo.continueBundleNames = item->second.continueBundleNames;
+        innerAbilityInfo.startWindow = item->second.startWindow;
+        innerAbilityInfo.startWindowId = item->second.startWindowId;
+        innerAbilityInfo.startWindowResource = item->second.startWindowResource;
+        innerAbilityInfo.arkTSMode = item->second.arkTSMode;
+        innerAbilityInfo.metadata = item->second.metadata;
+    }
+    // update ExtensionInfo
+    for (auto &[key, innerExtensionInfo] : baseExtensionInfos_) {
+        auto item = info.baseExtensionInfos_.find(key);
+        if (item == info.baseExtensionInfos_.end() ||
+            innerExtensionInfo.moduleName != item->second.moduleName ||
+            innerExtensionInfo.name != item->second.name) {
+            APP_LOGW("extensionKey:%{public}s not found", key.c_str());
+            continue;
+        }
+        if (innerExtensionInfo.type == ExtensionAbilityType::UNSPECIFIED) {
+            innerExtensionInfo.type = item->second.type;
+        }
+        innerExtensionInfo.appIdentifierAllowList = item->second.appIdentifierAllowList;
+        innerExtensionInfo.isolationProcess = item->second.isolationProcess;
+        innerExtensionInfo.arkTSMode = item->second.arkTSMode;
+        innerExtensionInfo.metadata = item->second.metadata;
+    }
+}
+
 ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled, int32_t appIndex) const
 {
     InnerBundleUserInfo innerBundleUserInfo;
