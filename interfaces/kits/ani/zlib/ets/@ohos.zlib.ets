@@ -71,9 +71,9 @@ export default namespace zlib {
     pathSeparatorStrategy?: PathSeparatorStrategy | undefined;
   }
 
-  export function compressFile(inFile: string, outFile: string, options: Options, callback: AsyncCallback<void>): void {
+  function compressFile(inFile: string, outFile: string, options: Options, callback: AsyncCallback<void>): void {
     let execFun = (): void => {
-      zlib.CompressFile(inFile, outFile, options);
+      CompressFile(inFile, outFile, options);
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
@@ -83,10 +83,10 @@ export default namespace zlib {
     });
   }
 
-  export function compressFile(inFile: string, outFile: string, options: Options): Promise<void> {
+  function compressFile(inFile: string, outFile: string, options: Options): Promise<void> {
     let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
-        zlib.CompressFile(inFile, outFile, options);
+        CompressFile(inFile, outFile, options);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -98,11 +98,11 @@ export default namespace zlib {
     return p;
   }
 
-  export native function CompressFile(inFile: string, outFile: string, options: Options): void;
+  native function CompressFile(inFile: string, outFile: string, options: Options): void;
 
-  export function decompressFile(inFile: string, outFile: string, options: Options, callback: AsyncCallback<void>): void {
+  function decompressFile(inFile: string, outFile: string, options: Options, callback: AsyncCallback<void>): void {
     let execFun = (): void => {
-      zlib.DecompressFile(inFile, outFile, options);
+      DecompressFile(inFile, outFile, options);
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
@@ -112,9 +112,9 @@ export default namespace zlib {
     });
   }
 
-  export function decompressFile(inFile: string, outFile: string, callback: AsyncCallback<void>): void {
+  function decompressFile(inFile: string, outFile: string, callback: AsyncCallback<void>): void {
     let execFun = (): void => {
-      zlib.DecompressFile(inFile, outFile, new OptionsInner());
+      DecompressFile(inFile, outFile, new OptionsInner());
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
@@ -124,11 +124,11 @@ export default namespace zlib {
     });
   }
 
-  export function decompressFile(inFile: string, outFile: string, options?: Options): Promise<void> {
+  function decompressFile(inFile: string, outFile: string, options?: Options): Promise<void> {
     let optionsParam = options ?? new OptionsInner();
     let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
-        zlib.DecompressFile(inFile, outFile, optionsParam);
+        DecompressFile(inFile, outFile, optionsParam);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -140,7 +140,7 @@ export default namespace zlib {
     return p;
   }
 
-  export native function DecompressFile(inFile: string, outFile: string, options?: Options): void;
+  native function DecompressFile(inFile: string, outFile: string, options?: Options): void;
 
   export interface Checksum {
     adler32(adler: number, buf: ArrayBuffer): Promise<number>;
@@ -274,12 +274,12 @@ export default namespace zlib {
     }
   }
 
-  export native function CompressFiles(inFiles: Array<string>, outFile: string, options: Options): void;
+  native function CompressFiles(inFiles: Array<string>, outFile: string, options: Options): void;
 
-  export function compressFiles(inFiles: Array<string>, outFile: string, options: Options): Promise<void> {
+  function compressFiles(inFiles: Array<string>, outFile: string, options: Options): Promise<void> {
     let p: Promise<void> = new Promise<void>((resolve: (v:PromiseLike<void>) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
-        zlib.CompressFiles(inFiles, outFile, options);
+        CompressFiles(inFiles, outFile, options);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -291,12 +291,12 @@ export default namespace zlib {
     return p;
   }
 
-  export native function GetOriginalSize(compressedFile: string): number;
+  native function GetOriginalSize(compressedFile: string): number;
 
-  export function getOriginalSize(compressedFile: string): Promise<number> {
+  function getOriginalSize(compressedFile: string): Promise<number> {
     let p: Promise<number> = new Promise<number>((resolve: (v:number) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): number => {
-        return zlib.GetOriginalSize(compressedFile);
+        return GetOriginalSize(compressedFile);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -309,12 +309,12 @@ export default namespace zlib {
     return p;
   }
 
-  export native function createChecksumSync(): Checksum;
+  native function createChecksumSync(): Checksum;
 
-  export function createChecksum(): Promise<Checksum> {
+  function createChecksum(): Promise<Checksum> {
     let p: Promise<Checksum> = new Promise<Checksum>((resolve: (v:Checksum) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): Checksum => {
-        return zlib.createChecksumSync();
+        return createChecksumSync();
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {

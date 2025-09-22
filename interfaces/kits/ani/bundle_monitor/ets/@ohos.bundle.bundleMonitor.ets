@@ -42,7 +42,7 @@ export default namespace bundleMonitor {
 
   type BundleChangedEvent = 'add' | 'update' | 'remove';
 
-  export native function on(type: BundleChangedEvent, callback: Callback<BundleChangedInfo>): void;
+  native function on(type: BundleChangedEvent, callback: Callback<BundleChangedInfo>): void;
 
-  export native function off(type: BundleChangedEvent, callback?: Callback<BundleChangedInfo>): void;
+  native function off(type: BundleChangedEvent, callback?: Callback<BundleChangedInfo>): void;
 }

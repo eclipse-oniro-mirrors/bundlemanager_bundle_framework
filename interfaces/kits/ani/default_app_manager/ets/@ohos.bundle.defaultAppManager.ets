@@ -40,14 +40,14 @@ export default namespace defaultAppManager {
     EMAIL = 'Email'
   }
 
-  export native function isDefaultApplicationNative(type: string, isSync: boolean): boolean;
-  export native function getDefaultApplicationNative(type: string, userId: int, isSync: boolean): BundleInfo;
-  export native function setDefaultApplicationNative(type: string, elementName: ElementName, userId: int, isSync: boolean): void;
-  export native function resetDefaultApplicationNative(type: string, userId: int, isSync: boolean): void;
+  native function isDefaultApplicationNative(type: string, isSync: boolean): boolean;
+  native function getDefaultApplicationNative(type: string, userId: int, isSync: boolean): BundleInfo;
+  native function setDefaultApplicationNative(type: string, elementName: ElementName, userId: int, isSync: boolean): void;
+  native function resetDefaultApplicationNative(type: string, userId: int, isSync: boolean): void;
 
   function isDefaultApplication(type: string, callback: AsyncCallback<boolean>): void {
     let cb = (): boolean => {
-      return defaultAppManager.isDefaultApplicationNative(type, false);
+      return isDefaultApplicationNative(type, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -62,7 +62,7 @@ export default namespace defaultAppManager {
   function isDefaultApplication(type: string): Promise<boolean> {
     let p = new Promise<boolean>((resolve: (isDefaultApp: boolean) => void, reject: (error: Error) => void) => {
       let cb = (): boolean => {
-        return defaultAppManager.isDefaultApplicationNative(type, false);
+        return isDefaultApplicationNative(type, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
@@ -77,12 +77,12 @@ export default namespace defaultAppManager {
   }
 
   function isDefaultApplicationSync(type: string): boolean {
-    return defaultAppManager.isDefaultApplicationNative(type, true);
+    return isDefaultApplicationNative(type, true);
   }
 
   function getDefaultApplication(type: string, userId: int, callback: AsyncCallback<BundleInfo>): void {
     let cb = (): BundleInfo => {
-      return defaultAppManager.getDefaultApplicationNative(type, userId, false);
+      return getDefaultApplicationNative(type, userId, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -95,7 +95,7 @@ export default namespace defaultAppManager {
 
   function getDefaultApplication(type: string, callback: AsyncCallback<BundleInfo>): void {
     let cb = (): BundleInfo => {
-      return defaultAppManager.getDefaultApplicationNative(type, EMPTY_USER_ID, false);
+      return getDefaultApplicationNative(type, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -110,7 +110,7 @@ export default namespace defaultAppManager {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
     let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Error) => void) => {
       let cb = (): BundleInfo => {
-        return defaultAppManager.getDefaultApplicationNative(type, userIdInfo, false);
+        return getDefaultApplicationNative(type, userIdInfo, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
@@ -125,12 +125,12 @@ export default namespace defaultAppManager {
 
   function getDefaultApplicationSync(type: string, userId?: int): BundleInfo {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
-    return defaultAppManager.getDefaultApplicationNative(type, userIdInfo, true);
+    return getDefaultApplicationNative(type, userIdInfo, true);
   }
 
   function setDefaultApplication(type: string, elementName: ElementName, userId: int, callback: AsyncCallback<void>): void {
     let cb = (): void => {
-      return defaultAppManager.setDefaultApplicationNative(type, elementName, userId, false);
+      return setDefaultApplicationNative(type, elementName, userId, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
@@ -142,7 +142,7 @@ export default namespace defaultAppManager {
 
   function setDefaultApplication(type: string, elementName: ElementName, callback: AsyncCallback<void>): void {
     let cb = (): void => {
-      return defaultAppManager.setDefaultApplicationNative(type, elementName, EMPTY_USER_ID, false);
+      return setDefaultApplicationNative(type, elementName, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
@@ -156,7 +156,7 @@ export default namespace defaultAppManager {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
     let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
       let cb = (): void => {
-        return defaultAppManager.setDefaultApplicationNative(type, elementName, userIdInfo, false);
+        return setDefaultApplicationNative(type, elementName, userIdInfo, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
@@ -171,12 +171,12 @@ export default namespace defaultAppManager {
 
   function setDefaultApplicationSync(type: string, elementName: ElementName, userId?: int): void {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
-    return defaultAppManager.setDefaultApplicationNative(type, elementName, userIdInfo, true);
+    return setDefaultApplicationNative(type, elementName, userIdInfo, true);
   }
 
   function resetDefaultApplication(type: string, userId: int, callback: AsyncCallback<void>): void {
     let cb = (): void => {
-      return defaultAppManager.resetDefaultApplicationNative(type, userId, false);
+      return resetDefaultApplicationNative(type, userId, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
@@ -188,7 +188,7 @@ export default namespace defaultAppManager {
 
   function resetDefaultApplication(type: string, callback: AsyncCallback<void>): void {
     let cb = (): void => {
-      return defaultAppManager.resetDefaultApplicationNative(type, EMPTY_USER_ID, false);
+      return resetDefaultApplicationNative(type, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
@@ -202,7 +202,7 @@ export default namespace defaultAppManager {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
     let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
       let cb = (): void => {
-        return defaultAppManager.resetDefaultApplicationNative(type, userIdInfo, false);
+        return resetDefaultApplicationNative(type, userIdInfo, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
@@ -217,6 +217,6 @@ export default namespace defaultAppManager {
 
   function resetDefaultApplicationSync(type: string, userId?: int): void {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
-    return defaultAppManager.resetDefaultApplicationNative(type, userIdInfo, true);
+    return resetDefaultApplicationNative(type, userIdInfo, true);
   }
 }
