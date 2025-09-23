@@ -1200,6 +1200,7 @@ public:
         ModuleTestRunner &testRunner) override;
     virtual ErrCode GetAbilityResourceInfo(const std::string &fileType,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos) override;
+    virtual ErrCode GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);

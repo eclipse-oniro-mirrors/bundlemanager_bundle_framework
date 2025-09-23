@@ -171,6 +171,7 @@ constexpr const char* GET_ALL_DYNAMIC_ICON = "GetAllDynamicIconInfo";
 constexpr const char* GET_SANDBOX_DATA_DIR_SYNC = "GetSandboxDataDirSync";
 constexpr const char* GET_ABILITY_INFOS = "GetAbilityInfos";
 constexpr const char* GET_DYNAMIC_ICON_INFO = "GetDynamicIconInfo";
+constexpr const char* GET_PLUGIN_BUNDLE_PATH_FOR_SELF = "GetPluginBundlePathForSelf";
 
 // launcher_bundle_manager
 constexpr const char* GET_SHORTCUT_INFO = "GetShortcutInfo";

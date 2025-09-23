@@ -6362,5 +6362,17 @@ ErrCode BundleMgrHostImpl::GetAbilityResourceInfo(const std::string &fileType,
     APP_LOGI("GetAbilityResourceInfo end, size: %{public}zu", launcherAbilityResourceInfos.size());
     return ERR_OK;
 }
+
+ErrCode BundleMgrHostImpl::GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath)
+{
+    // The application itself is the caller, so there is no need for permission control.
+    APP_LOGD("start GetPluginBundlePathForSelf");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetPluginBundlePathForSelf(pluginBundleName, codePath);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

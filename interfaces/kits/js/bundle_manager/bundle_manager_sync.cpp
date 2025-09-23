@@ -16,6 +16,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_manager_helper.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
@@ -1076,6 +1077,35 @@ napi_value GetAppCloneIdentityBySandboxDataDirSync(napi_env env, napi_callback_i
 
     APP_LOGD("call GetAppCloneIdentityBySandboxDataDirSync done");
     return nAppCloneIdentity;
+}
+
+napi_value GetPluginBundlePathForSelfSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetPluginBundlePathForSelfSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string pluginBundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], pluginBundleName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PLUGIN_BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::string codePath;
+    ErrCode ret = BundleManagerHelper::InnerGetPluginBundlePathForSelf(pluginBundleName, codePath);
+    if (ret != NO_ERROR) {
+        APP_LOGE("call GetPluginBundlePathForSelf failed, pluginBundleName is %{public}s", pluginBundleName.c_str());
+        napi_value businessError = BusinessError::CreateCommonError(env, ret, GET_PLUGIN_BUNDLE_PATH_FOR_SELF);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nCodePath = nullptr;
+    napi_create_string_utf8(env, codePath.c_str(), NAPI_AUTO_LENGTH, &nCodePath);
+
+    APP_LOGD("call GetPluginBundlePathForSelfSync done");
+    return nCodePath;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

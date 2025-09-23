@@ -6583,4 +6583,128 @@ HWTEST_F(BmsDataMgrTest, OtaNewInstallBundleName_0001, Function | MediumTest | L
     bundleDataMgr.ClearOtaNewInstallBundleNames();
     EXPECT_EQ(bundleDataMgr.otaNewInstallBundleNames_.size(), 0);
 }
+
+/**
+ * @tc.number: GetPluginBundlePathForSelf_0010
+ * @tc.name: GetPluginBundlePathForSelf
+ * @tc.desc: test BundleDataMgr::GetPluginBundlePathForSelf
+ */
+HWTEST_F(BmsDataMgrTest, GetPluginBundlePathForSelf_0010, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string pluginBundleName = "test2";
+    std::string codePath;
+    auto ret = bundleDataMgr.GetPluginBundlePathForSelf(pluginBundleName, codePath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetPluginBundlePathForSelf_0020
+ * @tc.name: GetPluginBundlePathForSelf
+ * @tc.desc: test BundleDataMgr::GetPluginBundlePathForSelf
+ */
+HWTEST_F(BmsDataMgrTest, GetPluginBundlePathForSelf_0020, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hostBundleName = "test1";
+    std::string pluginBundleName = "test2";
+    std::string codePath = "/data/app/el1/bundle/com.example.test1/public/+plugins/com.example.test2.123456";
+    std::string sandboxPath = "/data/storage/el1/bundle/+plugins/com.example.test2.123456";
+    int32_t userId = 100;
+
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = hostBundleName;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    userInfo.bundleName = hostBundleName;
+    userInfo.uid = 20000001;
+    info.AddInnerBundleUserInfo(userInfo);
+    bundleDataMgr.bundleInfos_.emplace(hostBundleName, info);
+    bundleDataMgr.bundleIdMap_.emplace(1, hostBundleName);
+    bundleDataMgr.AddUserId(userId);
+
+    std::string pluginCodePath;
+    auto ret = bundleDataMgr.GetPluginBundlePathForSelf(pluginBundleName, pluginCodePath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetPluginBundlePathForSelf_0030
+ * @tc.name: GetPluginBundlePathForSelf
+ * @tc.desc: test BundleDataMgr::GetPluginBundlePathForSelf
+ */
+HWTEST_F(BmsDataMgrTest, GetPluginBundlePathForSelf_0030, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hostBundleName = "test1";
+    std::string pluginBundleName = "test2";
+    std::string codePath = "/data/app/el1/bundle/public/com.example.test1/+plugins/com.example.test2.123456";
+    std::string sandboxPath = "/data/storage/el1/bundle/+plugins/com.example.test2.123456";
+    int32_t userId = 100;
+    PluginBundleInfo pluginBundleInfo;
+    pluginBundleInfo.pluginBundleName = pluginBundleName;
+    pluginBundleInfo.codePath = codePath;
+
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = hostBundleName;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    userInfo.uid = 20000001;
+    userInfo.bundleName = hostBundleName;
+    info.AddInnerBundleUserInfo(userInfo);
+    bundleDataMgr.bundleInfos_.emplace(hostBundleName, info);
+    bundleDataMgr.bundleIdMap_.emplace(1, hostBundleName);
+    bundleDataMgr.AddUserId(userId);
+
+    auto ret = bundleDataMgr.AddPluginInfo(hostBundleName, pluginBundleInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::string pluginCodePath;
+    ret = bundleDataMgr.GetPluginBundlePathForSelf(pluginBundleName, pluginCodePath);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(pluginCodePath, sandboxPath);
+}
+
+/**
+ * @tc.number: GetPluginBundlePathForSelf_0040
+ * @tc.name: GetPluginBundlePathForSelf
+ * @tc.desc: test BundleDataMgr::GetPluginBundlePathForSelf
+ */
+HWTEST_F(BmsDataMgrTest, GetPluginBundlePathForSelf_0040, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string hostBundleName = "test1";
+    std::string pluginBundleName = "test2";
+    std::string codePath = "/com.example.test1/public/+plugins/com.example.test2.123456";
+    int32_t userId = 100;
+    PluginBundleInfo pluginBundleInfo;
+    pluginBundleInfo.pluginBundleName = pluginBundleName;
+    pluginBundleInfo.codePath = codePath;
+
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = hostBundleName;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    userInfo.uid = 20000001;
+    userInfo.bundleName = hostBundleName;
+    info.AddInnerBundleUserInfo(userInfo);
+    bundleDataMgr.bundleInfos_.emplace(hostBundleName, info);
+    bundleDataMgr.bundleIdMap_.emplace(1, hostBundleName);
+    bundleDataMgr.AddUserId(userId);
+
+    auto ret = bundleDataMgr.AddPluginInfo(hostBundleName, pluginBundleInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::string pluginCodePath;
+    ret = bundleDataMgr.GetPluginBundlePathForSelf(pluginBundleName, pluginCodePath);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(pluginCodePath, codePath);
+
+    pluginBundleInfo.codePath = "/data/app/el1/bundle/public/";
+    ret = bundleDataMgr.AddPluginInfo(hostBundleName, pluginBundleInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = bundleDataMgr.GetPluginBundlePathForSelf(pluginBundleName, pluginCodePath);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(pluginCodePath, pluginBundleInfo.codePath);
+}
 } // OHOS

@@ -1397,5 +1397,21 @@ HWTEST_F(BmsBundleMgrProxyTest, GetPluginInfo_0001, Function | MediumTest | Leve
     auto ret = bundleMgrProxy.GetPluginInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
     EXPECT_NE(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: GetPluginBundlePathForSelf_0100
+ * @tc.name: test the GetPluginBundlePathForSelf
+ * @tc.desc: 1. system running normally
+ *           2. test GetPluginBundlePathForSelf
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetPluginBundlePathForSelf_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string pluginBundleName = "plugin";
+    std::string codePath;
+    auto res = bundleMgrProxy.GetPluginBundlePathForSelf(pluginBundleName, codePath);
+    EXPECT_NE(ret, ERR_OK);
+}
 }
 }

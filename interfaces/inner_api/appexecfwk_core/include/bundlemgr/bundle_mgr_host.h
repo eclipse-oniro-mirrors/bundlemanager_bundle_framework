@@ -950,6 +950,8 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetPluginBundlePathForSelf(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.
