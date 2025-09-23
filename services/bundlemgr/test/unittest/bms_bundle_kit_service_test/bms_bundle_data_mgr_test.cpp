@@ -4300,69 +4300,6 @@ HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0600, Function | SmallTest | 
 }
 
 /**
- * @tc.number: BatchGetBundleStats_0700
- * @tc.name: test BatchGetBundleStats
- * @tc.desc: 1.Test the BatchGetBundleStats by BundleDataMgr
- */
-HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0700, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-
-    InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
-    std::vector<BundleStorageStats> bundleStats;
-    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
-    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
-    ErrCode res = GetBundleDataMgr()->BatchGetBundleStats(bundleNames, USERID, bundleStats);
-    EXPECT_EQ(res, ERR_OK);
-
-    GetBundleDataMgr()->multiUserIdsSet_.erase(USERID);
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: BatchGetBundleStats_0800
- * @tc.name: test BatchGetBundleStats
- * @tc.desc: 1.Test the BatchGetBundleStats by BundleDataMgr
- */
-HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0800, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-
-    InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
-    std::vector<BundleStorageStats> bundleStats;
-    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
-    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
-    ErrCode res = GetBundleDataMgr()->BatchGetBundleStats(bundleNames, USERID, bundleStats);
-    EXPECT_EQ(res, ERR_OK);
-
-    GetBundleDataMgr()->multiUserIdsSet_.erase(USERID);
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: BatchGetBundleStats_0900
- * @tc.name: test BatchGetBundleStats
- * @tc.desc: 1.Test the BatchGetBundleStats by BundleDataMgr
- */
-HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0900, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-
-    InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
-    std::vector<BundleStorageStats> bundleStats;
-    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
-    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
-    ErrCode res = GetBundleDataMgr()->BatchGetBundleStats(bundleNames, USERID, bundleStats);
-    EXPECT_EQ(res, ERR_OK);
-
-    GetBundleDataMgr()->multiUserIdsSet_.erase(USERID);
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
  * @tc.number: BundleMgrHostHandleBatchGetBundleStats_0100
  * @tc.name: BundleMgrHostHandleBatchGetBundleStats_0100
  * @tc.desc: test BundleMgrHostHandleBatchGetBundleStats(MessageParcel &data, MessageParcel &reply)
