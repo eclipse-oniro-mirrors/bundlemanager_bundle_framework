@@ -23,6 +23,7 @@
 #include "access_token.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "app_provision_info_manager.h"
 #include "bundle_backup_mgr.h"
 #include "bundle_backup_service.h"
 #include "bundle_data_storage_interface.h"
@@ -6364,6 +6365,8 @@ HWTEST_F(BmsDataMgrTest, ProcessCertificate_0002, TestSize.Level1)
 
     BundleInfo bundleInfo;
     int32_t flags = 0;
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->
+        DeleteAppProvisionInfo(BUNDLE_NAME);
     dataMgr->ProcessCertificate(bundleInfo, BUNDLE_NAME, flags);
     EXPECT_TRUE(bundleInfo.signatureInfo.certificate.empty());
 }

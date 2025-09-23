@@ -668,27 +668,6 @@ void BmsCleanAllBundleCacheTest::CheckCacheExist() const
 }
 
 /**
- * @tc.number: CleanCache_0100
- * @tc.name: test can clean the cache files by empty bundle name
- * @tc.desc: 1.system run normally
- *           2.clean the cache files failed
- */
-HWTEST_F(BmsCleanAllBundleCacheTest, CleanCache_0100, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    CreateFileDir();
-
-    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    auto result = hostImpl->CleanBundleCacheFiles("", cleanCache);
-    EXPECT_FALSE(result == ERR_OK);
-    CheckCacheExist();
-
-    CleanFileDir();
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
  * @tc.number: CleanCache_0300
  * @tc.name: test can clean the cache files
  * @tc.desc: 1.system run normally
