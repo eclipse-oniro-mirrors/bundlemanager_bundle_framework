@@ -2396,6 +2396,7 @@ private:
 
     // need to send a notification when uninstallState_ change
     bool isNeedSendNotify_ = false;
+    
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     int32_t appIndex_ = Constants::INITIAL_APP_INDEX;
     // apply quick fix frequency

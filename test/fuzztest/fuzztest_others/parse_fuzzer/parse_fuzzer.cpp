@@ -51,7 +51,8 @@ namespace OHOS {
         pFile = nullptr;
         InnerBundleInfo info;
         BundleParser bundleParser;
-        auto ret = bundleParser.Parse("myHap.hap", info);
+        bool isAbcCompressed = false;
+        auto ret = bundleParser.Parse("myHap.hap", info, isAbcCompressed);
         if (ret != ERR_OK) {
             return false;
         }

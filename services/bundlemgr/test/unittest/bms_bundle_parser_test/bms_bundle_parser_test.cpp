@@ -14,6 +14,7 @@
  */
 
 #define private public
+#define protected public
 
 #include <fstream>
 #include <sstream>
@@ -1972,7 +1973,8 @@ HWTEST_F(BmsBundleParserTest, TestParse_0200, Function | SmallTest | Level0)
     BundleParser bundleParser;
     InnerBundleInfo innerBundleInfo;
     pathStream_ << RESOURCE_ROOT_PATH << UNKOWN_PATH << INSTALL_FILE_SUFFIX;
-    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
+    bool isAbcCompressed = false;
+    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo, isAbcCompressed);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 }
 
@@ -2185,17 +2187,18 @@ HWTEST_F(BmsBundleParserTest, TestParse_1600, Function | SmallTest | Level0)
     BundleParser bundleParser;
     InnerBundleInfo innerBundleInfo;
     pathStream_ << RESOURCE_ROOT_PATH << "demo.error_type";
-    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
+    bool isAbcCompressed = false;
+    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo, isAbcCompressed);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 
     pathStream_.str("");
     pathStream_ << RESOURCE_ROOT_PATH << "demo.";
-    result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
+    result = bundleParser.Parse(pathStream_.str(), innerBundleInfo, isAbcCompressed);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 
     pathStream_.str("");
     pathStream_ << RESOURCE_ROOT_PATH << "bundle_suffix_test.BUNDLE";
-    result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
+    result = bundleParser.Parse(pathStream_.str(), innerBundleInfo, isAbcCompressed);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 }
 
@@ -2215,7 +2218,8 @@ HWTEST_F(BmsBundleParserTest, TestParse_1700, Function | SmallTest | Level1)
         pathStream_ << "test/";
     }
     pathStream_ << NEW_APP << INSTALL_FILE_SUFFIX;
-    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
+    bool isAbcCompressed = false;
+    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo, isAbcCompressed);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED) << pathStream_.str();
 }
 
@@ -2235,7 +2239,8 @@ HWTEST_F(BmsBundleParserTest, TestParse_1800, Function | SmallTest | Level1)
         pathStream_ << "test/";
     }
     pathStream_ << NEW_APP << INSTALL_FILE_SUFFIX;
-    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
+    bool isAbcCompressed = false;
+    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo, isAbcCompressed);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 }
 
@@ -2252,7 +2257,8 @@ HWTEST_F(BmsBundleParserTest, TestParse_1900, Function | SmallTest | Level1)
     pathStream_ << RESOURCE_ROOT_PATH;
     std::string specialChars = "~!@#$%^&*(){}[]:;'?<>,.|`/./+_-";
     pathStream_ << specialChars << "new" << INSTALL_FILE_SUFFIX;
-    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
+    bool isAbcCompressed = false;
+    ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo, isAbcCompressed);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_UNEXPECTED);
 }
 
@@ -4776,4 +4782,35 @@ HWTEST_F(BmsBundleParserTest, ParseArkStartupCacheConfig_0100, Function | Medium
     ret = BundleParser::ParseArkStartupCacheConfig(ServiceConstants::APP_STARTUP_CACHE_CONG, arkStartupCacheList);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: IsHapCompress_0100
+ * @tc.name: parse abc compressed in hap
+ * @tc.desc: 1. test IsHapCompress in bundleExtractor
+ */
+HWTEST_F(BmsBundleParserTest, IsHapCompress_0100, Function | SmallTest | Level1)
+{
+    BundleParser bundleParser;
+    pathStream_ << RESOURCE_ROOT_PATH << UNKOWN_PATH << INSTALL_FILE_SUFFIX;
+    bool result = false;
+
+    BundleExtractor bundleExtractor(pathStream_.str());
+    bundleExtractor.IsHapCompress(result);
+    EXPECT_FALSE(result);
+
+    ZipEntry zipEntry;
+    zipEntry.compressionMethod = 0;
+    bundleExtractor.zipFile_.entriesMap_.emplace(
+        std::string("ets/modules.abc"), zipEntry);
+    bundleExtractor.IsHapCompress(result);
+    EXPECT_FALSE(result);
+
+    BundleExtractor bundleExtractor2(pathStream_.str());
+    zipEntry.compressionMethod = 1;
+    bundleExtractor2.zipFile_.entriesMap_.emplace(
+        std::string("ets/modules.abc"), zipEntry);
+    bundleExtractor2.IsHapCompress(result);
+    EXPECT_TRUE(result);
+}
+
 } // OHOS

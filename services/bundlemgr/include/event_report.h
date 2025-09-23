@@ -142,6 +142,9 @@ struct EventInfo {
 
     bool isPatch = false;
 
+    // abc compressed
+    bool isAbcCompressed = false;
+
     InstallScene preBundleScene = InstallScene::NORMAL;
 
     // only used in user event
@@ -159,6 +162,11 @@ struct EventInfo {
     int32_t actionType = 0;
     uint32_t versionCode = 0;
     uint32_t successCnt = 0;
+
+    // only used in install and update
+    int32_t targetAPIVersion = 0;
+    uint32_t minAPIVersion = 0;
+    int32_t uid = 0;
 
     // only used in fault event
     ErrCode errCode = ERR_OK;
@@ -182,6 +190,9 @@ struct EventInfo {
     std::string compileMode;
     std::string failureReason;
     std::string processName;
+
+    // only used in install and update
+    std::string compileSdkVersion;
 
     //for query of continue type
     std::string continueType;
@@ -268,6 +279,10 @@ struct EventInfo {
         bundleNameList.clear();
         callingAppIdList.clear();
         callingBundleNameList.clear();
+        targetAPIVersion = 0;
+        minAPIVersion = 0;
+        uid = 0;
+        isAbcCompressed = false;
     }
 };
 

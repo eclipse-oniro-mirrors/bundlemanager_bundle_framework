@@ -23,6 +23,8 @@ namespace {
 constexpr const char* BUNDLE_PROFILE_NAME = "config.json";
 constexpr const char* MODULE_PROFILE_NAME = "module.json";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
+constexpr const char* MERGE_ABC_PATH = "ets/modules.abc";
+
 }
 BundleExtractor::BundleExtractor(const std::string &source, bool parallel) : BaseExtractor(source, parallel)
 {
@@ -58,6 +60,18 @@ bool BundleExtractor::ExtractModuleProfile(std::ostream &dest) const
     }
     APP_LOGW("profile is config.json");
     return false;
+}
+
+void BundleExtractor::IsHapCompress(bool &isAbcCompressed) const
+{
+    ZipEntry zipEntry;
+    if (!zipFile_.GetEntry(MERGE_ABC_PATH, zipEntry)) {
+        APP_LOGE("GetEntry failed entryName: %{public}s", MERGE_ABC_PATH);
+        return;
+    }
+    if (zipEntry.compressionMethod != 0) {
+        isAbcCompressed = true;
+    }
 }
 
 BundleParallelExtractor::BundleParallelExtractor(const std::string &source) : BundleExtractor(source, true)

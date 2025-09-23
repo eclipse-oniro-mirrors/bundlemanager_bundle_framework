@@ -42,7 +42,8 @@ public:
      */
     ErrCode Parse(
         const std::string &pathName,
-        InnerBundleInfo &innerBundleInfo) const;
+        InnerBundleInfo &innerBundleInfo,
+        bool &isAbcCompressed) const;
 
     ErrCode ParsePackInfo(const std::string &pathName, BundlePackInfo &bundlePackInfo) const;
     /**
