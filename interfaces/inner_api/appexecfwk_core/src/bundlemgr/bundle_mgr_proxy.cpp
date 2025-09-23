@@ -6615,5 +6615,33 @@ ErrCode BundleMgrProxy::GetTestRunner(
     }
     return ERR_OK;
 }
+
+ErrCode BundleMgrProxy::GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write MessageParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(pluginBundleName)) {
+        APP_LOGE("write pluginBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    ErrCode ret = SendTransactCmdWithLogErrCode(BundleMgrInterfaceCode::GET_PLUGIN_BUNDLE_PATH_FOR_SELF, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to GetPluginBundlePathForSelf from server, %{public}d", ret);
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host return error:%{public}d", ret);
+        return ret;
+    }
+    codePath = reply.ReadString();
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

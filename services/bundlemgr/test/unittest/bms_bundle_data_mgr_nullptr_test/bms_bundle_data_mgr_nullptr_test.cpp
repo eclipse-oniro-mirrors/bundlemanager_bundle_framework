@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2023 Huawei Device Co., Ltd.
+* Copyright (c) 2023-2025 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -1486,5 +1486,20 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, GetRdbRestoreMutex_0010, Function | SmallT
 
     (void)rdbDataManager->GetRdbRestoreMutex(dbName);
     ASSERT_TRUE(rdbDataManager->isInitial_);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0003
+ * @tc.name: BundleMgrHostImpl_0003
+ * @tc.desc: test GetPluginBundlePathForSelf
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleMgrHostImpl_0003, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string pluginBundleName = "plugin";
+    std::string codePath;
+    auto ret = localBundleMgrHostImpl->GetPluginBundlePathForSelf(pluginBundleName, codePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
 } // OHOS

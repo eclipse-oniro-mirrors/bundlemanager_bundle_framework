@@ -183,6 +183,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAppCloneIdentityBySandboxDataDir", GetAppCloneIdentityBySandboxDataDirSync),
         DECLARE_NAPI_FUNCTION("getAbilityInfo", GetAbilityInfos),
         DECLARE_NAPI_FUNCTION("getDynamicIconInfo", GetDynamicIconInfo),
+        DECLARE_NAPI_FUNCTION("getPluginBundlePathForSelf", GetPluginBundlePathForSelfSync),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

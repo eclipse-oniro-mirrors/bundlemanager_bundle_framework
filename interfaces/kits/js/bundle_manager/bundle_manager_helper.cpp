@@ -477,5 +477,20 @@ ErrCode BundleManagerHelper::InnerCleanBundleCacheForSelfCallback(
     }
     return CommonFunc::ConvertErrCode(result);
 }
+
+ErrCode BundleManagerHelper::InnerGetPluginBundlePathForSelf(
+    const std::string &pluginBundleName, std::string &codePath)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode result = iBundleMgr->GetPluginBundlePathForSelf(pluginBundleName, codePath);
+    if (result != ERR_OK) {
+        APP_LOGE("GetPluginBundlePathForSelf ErrCode: %{public}d", result);
+    }
+    return CommonFunc::ConvertErrCode(result);
+}
 } // AppExecFwk
 } // OHOS

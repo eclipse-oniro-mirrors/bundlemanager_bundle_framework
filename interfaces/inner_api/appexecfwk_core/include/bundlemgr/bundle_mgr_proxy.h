@@ -1282,6 +1282,9 @@ public:
 
     virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
         int32_t userId) override;
+    
+    virtual ErrCode GetPluginBundlePathForSelf(
+        const std::string &pluginBundleName, std::string &codePath) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

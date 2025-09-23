@@ -1195,6 +1195,7 @@ public:
     bool InnerProcessOtaNewInstallBundle(const std::string &bundleName, const int32_t userId) const;
     ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
         int32_t userId, bool &stateChange);
+    ErrCode GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath);
 
 private:
     /**
