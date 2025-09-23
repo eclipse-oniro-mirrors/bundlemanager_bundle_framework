@@ -2445,7 +2445,7 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
 
         InnerBundleInfo oldBundleInfo;
         bool hasInstalled = dataMgr->FetchInnerBundleInfo(bundleName, oldBundleInfo);
-        if (!hasInstalled) {
+        if (!hasInstalled && mapIter->second.IsUninstalled()) {
             LOG_W(BMS_TAG_DEFAULT, "app(%{public}s) has been uninstalled and do not OTA install", bundleName.c_str());
             continue;
         }
