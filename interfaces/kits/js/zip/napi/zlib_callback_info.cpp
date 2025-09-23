@@ -78,9 +78,10 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
                 return;
             }
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(asyncCallbackInfo->env, &scope);
-            if (scope == nullptr) {
+            napi_status openRet = napi_open_handle_scope(asyncCallbackInfo->env, &scope);
+            if (openRet != napi_ok || scope == nullptr) {
                 APP_LOGE("scope null");
+                delete work;
                 return;
             }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
