@@ -5500,8 +5500,7 @@ ErrCode BundleMgrProxy::SwitchUninstallState(const std::string &bundleName, cons
     return reply.ReadInt32();
 }
 
-ErrCode BundleMgrProxy::SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
-    const bool isNeedSendNotify, int32_t userId)
+ErrCode BundleMgrProxy::SwitchUninstallStateByUserId(const std::string &bundleName, const bool state, int32_t userId)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
@@ -5515,10 +5514,6 @@ ErrCode BundleMgrProxy::SwitchUninstallStateByUserId(const std::string &bundleNa
     }
     if (!data.WriteBool(state)) {
         APP_LOGE("write state failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteBool(isNeedSendNotify)) {
-        APP_LOGE("write isNeedSendNotify failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {

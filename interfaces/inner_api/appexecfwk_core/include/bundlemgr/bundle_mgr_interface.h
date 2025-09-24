@@ -1683,12 +1683,6 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
-        const bool isNeedSendNotify, int32_t userId)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
     virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
@@ -1893,6 +1887,11 @@ public:
 
     virtual ErrCode GetAbilityResourceInfo(const std::string &fileType,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state, int32_t userId)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

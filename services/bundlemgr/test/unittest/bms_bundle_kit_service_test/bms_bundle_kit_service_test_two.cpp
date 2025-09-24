@@ -1991,7 +1991,7 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallStateByUserId_0100, Function | 
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
-    ErrCode ret = hostImpl->SwitchUninstallStateByUserId(BUNDLE_NAME_DEMO, true, false, 100);
+    ErrCode ret = hostImpl->SwitchUninstallStateByUserId(BUNDLE_NAME_DEMO, true, 100);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -5585,7 +5585,7 @@ HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallStateByUserId_0001, Function | 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     bool stateChange = false;
-    ErrCode res = dataMgr->SwitchUninstallStateByUserId(BUNDLE_NAME_UNINSTALL_STATE, false, false, 100, stateChange);
+    ErrCode res = dataMgr->SwitchUninstallStateByUserId(BUNDLE_NAME_UNINSTALL_STATE, false, 100, stateChange);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 

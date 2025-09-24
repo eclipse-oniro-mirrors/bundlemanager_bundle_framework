@@ -1158,9 +1158,6 @@ public:
     virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state,
         bool isNeedSendNotify = true) override;
 
-    virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
-        const bool isNeedSendNotify, int32_t userId) override;
-
     /**
      * @brief Query the AbilityInfo by continueType.
      * @param bundleName Indicates the bundle name of the application.
@@ -1282,6 +1279,9 @@ public:
 
     virtual ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName,
         ModuleTestRunner &testRunner) override;
+
+    virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
+        int32_t userId) override;
 private:
     /**
      * @brief Send a command message from the proxy object.
