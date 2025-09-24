@@ -92,6 +92,8 @@ const uint64_t BAD_CONTEXT_ID = 0;
 const uint64_t VECTOR_SIZE_MAX = 200;
 const size_t MAX_QUERY_EVENT_REPORT_ONCE = 100;
 const int64_t ONE_DAY =  86400;
+const std::string APP_DATA_PREFIX = "/data/app/el1/bundle/public/";
+const std::string STORAGE_PREFIX = "/data/storage/el1/bundle/";
 const std::unordered_map<std::string, int32_t> QUERY_FUNC_MAP = {
     {"GetNameForUid", 1},
     {"GetBundleNameForUid", 2},
@@ -6395,6 +6397,27 @@ ErrCode BundleMgrHostImpl::GetAbilityResourceInfo(const std::string &fileType,
 
     APP_LOGI("GetAbilityResourceInfo end, size: %{public}zu", launcherAbilityResourceInfos.size());
     return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath)
+{
+    // The application itself is the caller, so there is no need for permission control.
+    APP_LOGD("start GetPluginBundlePathForSelf");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    auto ret = dataMgr->GetPluginBundlePathForSelf(pluginBundleName, codePath);
+    if (ret == ERR_OK) {
+        if (codePath.find(APP_DATA_PREFIX) == 0) {
+            size_t endPos = codePath.find('/', APP_DATA_PREFIX.length());
+            if (endPos != std::string::npos) {
+                codePath = STORAGE_PREFIX + codePath.substr(endPos + 1);
+            }
+        }
+    }
+    return ret;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

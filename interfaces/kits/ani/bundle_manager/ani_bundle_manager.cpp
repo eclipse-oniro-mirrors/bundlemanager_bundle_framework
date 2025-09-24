@@ -2005,6 +2005,30 @@ static void CleanBundleCacheFilesForSelfNative(ani_env* env)
     }
 }
 
+static ani_string GetPluginBundlePathForSelfNative(ani_env* env, ani_string aniPluginBundleName)
+{
+    APP_LOGD("ani GetPluginBundlePathForSelfNative called");
+    std::string pluginBundleName;
+    if (!CommonFunAni::ParseString(env, aniPluginBundleName, pluginBundleName)) {
+        APP_LOGE("pluginBundleName %{public}s invalid", pluginBundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PLUGIN_BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::string codePath;
+    ErrCode ret = BundleManagerHelper::InnerGetPluginBundlePathForSelf(pluginBundleName, codePath);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetPluginBundlePathForSelf failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, GET_PLUGIN_BUNDLE_PATH_FOR_SELF, "");
+        return nullptr;
+    }
+    ani_string aniCodePath = nullptr;
+    if (!CommonFunAni::StringToAniStr(env, codePath, aniCodePath)) {
+        APP_LOGE("StringToAniStr failed");
+        return nullptr;
+    }
+    return aniCodePath;
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -2104,6 +2128,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getAbilityInfoNative", nullptr, reinterpret_cast<void*>(GetAbilityInfoNative) },
         ani_native_function { "cleanBundleCacheFilesForSelfNative", nullptr,
             reinterpret_cast<void*>(CleanBundleCacheFilesForSelfNative) },
+        ani_native_function { "getPluginBundlePathForSelfNative", nullptr,
+            reinterpret_cast<void*>(GetPluginBundlePathForSelfNative) },
     };
 
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());
