@@ -1437,7 +1437,7 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
         const auto &uid = uids[index];
         int64_t bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
         if (bundleDataSize > TEN_GB) {
-            LOG_W(BMS_TAG_INSTALLD, "large data size %{public}lld uid %{public}d", bundleDataSize, uid);
+            LOG_W(BMS_TAG_INSTALLD, "large data size %{public}" PRId64 " uid %{public}d", bundleDataSize, uid);
         }
         // index 1 : local bundle data size
         totalDataSize += bundleDataSize;
@@ -1447,7 +1447,8 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
     bundleStats.push_back(0);
     bundleStats.push_back(0);
     bundleStats.push_back(0);
-    LOG_I(BMS_TAG_INSTALLD, "installs size %{public}lld data size %{public}lld", totalFileSize, totalDataSize);
+    LOG_I(BMS_TAG_INSTALLD, "installs size %{public}" PRId64 " data size %{public}" PRId64 "",
+        totalFileSize, totalDataSize);
     return ERR_OK;
 }
 
