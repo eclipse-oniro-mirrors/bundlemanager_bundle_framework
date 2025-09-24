@@ -58,7 +58,6 @@ constexpr const char* WORD = "WORD";
 constexpr const char* EXCEL = "EXCEL";
 constexpr const char* PPT = "PPT";
 constexpr const char* EMAIL = "EMAIL";
-constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
 constexpr const char* APP_TYPES_KEY[] = {
     IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT
 };
@@ -421,7 +420,7 @@ void DefaultAppMgr::HandleRemoveUser(int32_t userId) const
 
 bool DefaultAppMgr::IsBrowserWant(const Want& want) const
 {
-    bool matchAction = want.GetAction() == ACTION_VIEW_DATA;
+    bool matchAction = want.GetAction() == ServiceConstants::ACTION_VIEW_DATA;
     if (!matchAction) {
         LOG_D(BMS_TAG_DEFAULT, "Action does not match, not browser want");
         return false;
@@ -461,7 +460,7 @@ std::string DefaultAppMgr::GetTypeFromWant(const Want& want) const
     if (IsEmailWant(want)) {
         return EMAIL;
     }
-    if (want.GetAction() != ACTION_VIEW_DATA) {
+    if (want.GetAction() != ServiceConstants::ACTION_VIEW_DATA) {
         return Constants::EMPTY_STRING;
     }
     std::string uri = Skill::GetOptParamUri(want.GetUriString());
@@ -674,7 +673,7 @@ bool DefaultAppMgr::MatchAppType(const std::string& type, const std::vector<Skil
         return false;
     }
     for (const std::string& utdId : APP_TYPES_VALUE[i]) {
-        if (MatchActionAndType(ACTION_VIEW_DATA, utdId, skills)) {
+        if (MatchActionAndType(ServiceConstants::ACTION_VIEW_DATA, utdId, skills)) {
             return true;
         }
     }
@@ -685,12 +684,12 @@ bool DefaultAppMgr::IsBrowserSkillsValid(const std::vector<Skill>& skills) const
 {
     LOG_D(BMS_TAG_DEFAULT, "begin to verify browser skills");
     Want httpWant;
-    httpWant.SetAction(ACTION_VIEW_DATA);
+    httpWant.SetAction(ServiceConstants::ACTION_VIEW_DATA);
     httpWant.AddEntity(ENTITY_BROWSER);
     httpWant.SetUri(HTTP);
 
     Want httpsWant;
-    httpsWant.SetAction(ACTION_VIEW_DATA);
+    httpsWant.SetAction(ServiceConstants::ACTION_VIEW_DATA);
     httpsWant.AddEntity(ENTITY_BROWSER);
     httpsWant.SetUri(HTTPS);
     for (const Skill& skill : skills) {
@@ -723,7 +722,7 @@ bool DefaultAppMgr::IsEmailSkillsValid(const std::vector<Skill>& skills) const
 bool DefaultAppMgr::MatchUtd(const std::string& utd, const std::vector<Skill>& skills) const
 {
     LOG_D(BMS_TAG_DEFAULT, "utd : %{public}s", utd.c_str());
-    if (MatchActionAndType(ACTION_VIEW_DATA, utd, skills)) {
+    if (MatchActionAndType(ServiceConstants::ACTION_VIEW_DATA, utd, skills)) {
         return true;
     }
     LOG_E(BMS_TAG_DEFAULT, "match utd failed");

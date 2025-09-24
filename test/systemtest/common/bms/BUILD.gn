@@ -75,6 +75,7 @@ group("systemtest_bms") {
     "bms_code_signature_test:systemtest",
     "bms_compatible_system_test:systemtest",
     "bms_default_app_host_test:systemtest",
+    "bms_dynamic_skills_system_test:systemtest",
     "bms_install_system_test:systemtest",
     "bms_launcher_service_system_test:systemtest",
     "bms_match_share_test:systemtest",

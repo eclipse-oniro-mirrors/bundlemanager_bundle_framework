@@ -99,6 +99,12 @@ bool ParseBundleOption(napi_env env, napi_value value, BundleOption& option)
     }
     return !option.isDefault;
 }
+
+void ClearCache()
+{
+    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    cache.clear();
+}
 }
 
 void ClearCacheListener::HandleCleanEnv(void *data)
@@ -5746,6 +5752,55 @@ napi_value GetAbilityInfos(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGI_NOFUNC("napi GetAbilityInfos end");
     return promise;
+}
+
+napi_value SetAbilityFileTypesForSelf(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("NAPI SetAbilityFileTypesForSelf begin");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string moduleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], moduleName)) {
+        APP_LOGE("parse moduleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::string abilityName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], abilityName)) {
+        APP_LOGE("parse abilityName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::vector<std::string> fileTypes;
+    if (!CommonFunc::ParseStringArray(env, fileTypes, args[ARGS_POS_TWO])) {
+        APP_LOGE("parse fileTypes failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, FILE_TYPES, TYPE_ARRAY);
+        return nullptr;
+    }
+    auto bundleMgrProxy = CommonFunc::GetBundleMgr();
+    if (bundleMgrProxy == nullptr) {
+        APP_LOGE("bundleMgrProxy null");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    ClearCache();
+    ErrCode proxyRet = bundleMgrProxy->SetAbilityFileTypesForSelf(moduleName, abilityName, fileTypes);
+    APP_LOGI("SetAbilityFileTypesForSelf proxyRet:%{public}d", proxyRet);
+    ErrCode ret = CommonFunc::ConvertErrCode(proxyRet);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetAbilityFileTypesForSelf failed:%{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, SET_ABILITY_FILE_TYPES_FOR_SELF_STRING, Constants::PERMISSION_MANAGE_SELF_SKILLS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRet = nullptr;
+    NAPI_CALL(env, napi_get_undefined(env, &nRet));
+    return nRet;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

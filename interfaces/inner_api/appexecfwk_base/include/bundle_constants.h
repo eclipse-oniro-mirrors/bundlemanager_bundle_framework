@@ -27,6 +27,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace Constants {
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
+constexpr const char* TYPE_WILDCARD = "*/*";
+constexpr const char* GENERAL_OBJECT = "general.object";
 constexpr const char* EMPTY_STRING = "";
 constexpr const char* FILE_UNDERLINE = "_";
 constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
@@ -98,6 +100,7 @@ constexpr const char* PERMISSION_UNINSTALL_PLUGIN = "ohos.permission.UNINSTALL_P
 constexpr const char* PERMISSION_PERFORM_LOCAL_DEBUG = "ohos.permission.PERFORM_LOCAL_DEBUG";
 constexpr const char* PERMISSION_GET_ABILITY_INFO = "ohos.permission.GET_ABILITY_INFO";
 constexpr const char* PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS = "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
+constexpr const char* PERMISSION_MANAGE_SELF_SKILLS = "ohos.permission.MANAGE_SELF_SKILLS";
 
 enum class AppType {
     SYSTEM_APP = 0,

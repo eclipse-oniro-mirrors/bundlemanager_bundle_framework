@@ -218,6 +218,8 @@ public:
     static void MakeFsConfig(const std::string &bundleName, const std::string &configPath,
         const std::string labelValue, const std::string labelPath);
     static void RemoveFsConfig(const std::string &bundleName, const std::string &configPath);
+    static std::string GetAbilityKey(
+        const std::string &bundleName, const std::string &moduleName, const std::string &abilityName);
     static std::string CreateInstallTempDir(uint32_t installerId, const DirType &type);
     static std::string CreateSharedBundleTempDir(uint32_t installerId, uint32_t index);
     static int32_t CreateFileDescriptor(const std::string &bundlePath, long long offset);

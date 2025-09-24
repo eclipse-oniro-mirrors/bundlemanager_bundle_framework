@@ -1560,6 +1560,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     RemoveOldExtensionDirs();
     /* process quick fix when install new moudle */
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
+    UpdateDynamicSkills();
     VerifyDomain();
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, inBundlePaths,
         newInfos.begin()->second.GetVersionCode(), AppPatchType::INTERNAL, installParam.isPatch);
@@ -6689,6 +6690,17 @@ void BaseBundleInstaller::PrepareSkillUri(const std::vector<Skill> &skills,
     }
 }
 #endif
+
+void BaseBundleInstaller::UpdateDynamicSkills()
+{
+    InnerBundleInfo info;
+    if (!GetTempBundleInfo(info)) {
+        LOG_E(BMS_TAG_INSTALLER, "GetTempBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return;
+    }
+    info.UpdateDynamicSkills();
+    (void)tempInfo_.SetTempBundleInfo(info);
+}
 
 void BaseBundleInstaller::VerifyDomain()
 {

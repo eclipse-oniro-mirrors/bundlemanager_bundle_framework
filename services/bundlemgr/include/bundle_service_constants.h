@@ -71,6 +71,7 @@ constexpr const char* BASE = "/base/";
 constexpr const char* CLONE = "clone";
 constexpr const char* PLUS_SIGN = "+";
 constexpr const char* MINUS_SIGN = "-";
+constexpr const char* DOT_SIGN = ".";
 constexpr const char* DATABASE = "/database/";
 constexpr const char* SHAREFILES = "/sharefiles/";
 constexpr const char* LOG = "/log/";
@@ -148,6 +149,9 @@ constexpr const char* PERMISSION_SUPPORT_PLUGIN = "ohos.permission.kernel.SUPPOR
 constexpr const char* PERMISSION_MANAGE_STORAGE = "ohos.permission.atomicService.MANAGE_STORAGE";
 
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
+constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
+constexpr const char* FILE = "file";
+constexpr const char* FILE_OPEN = "FileOpen";
 // max number of haps under one direction
 constexpr uint8_t MAX_HAP_NUMBER = 128;
 constexpr const char* DATA_ABILITY_URI_PREFIX = "dataability://";

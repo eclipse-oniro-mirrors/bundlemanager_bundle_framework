@@ -1294,6 +1294,8 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
     }
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_SKILL) != GET_ABILITY_INFO_WITH_SKILL) {
         info.skills.clear();
+    } else {
+        innerBundleInfo.AppendDynamicSkillsToAbilityIfExist(info);
     }
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) == GET_ABILITY_INFO_WITH_APPLICATION) {
         innerBundleInfo.GetApplicationInfo(
@@ -1362,6 +1364,8 @@ ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityIn
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_SKILL)) !=
         static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_SKILL)) {
         info.skills.clear();
+    } else {
+        innerBundleInfo.AppendDynamicSkillsToAbilityIfExist(info);
     }
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) ==
         static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) {
@@ -1672,7 +1676,7 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
     if (CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_SYSTEMAPP_ONLY) && !info.IsSystemApp()) {
         return;
     }
-    const std::map<std::string, std::vector<Skill>> &skillInfos = info.GetInnerSkillInfos();
+    const std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
         bool isPrivateType = MatchPrivateType(
             want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes, paramMimeTypes);
@@ -1706,6 +1710,8 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
                 }
                 if (!CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_SKILL)) {
                     abilityinfo.skills.clear();
+                } else {
+                    info.AppendDynamicSkillsToAbilityIfExist(abilityinfo);
                 }
                 if (CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_SKILL_URI)) {
                     AddSkillUrisInfo(skillsPair->second, abilityinfo.skillUri, skillIndex, matchUriIndex);
@@ -1778,6 +1784,8 @@ void BundleDataMgr::EmplaceAbilityInfo(const InnerBundleInfo &info, const std::v
         static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_SKILL)) !=
         static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_SKILL)) {
         abilityInfo.skills.clear();
+    } else {
+        info.AppendDynamicSkillsToAbilityIfExist(abilityInfo);
     }
     if ((static_cast<uint32_t>(flags) &
         static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_SKILL_URI)) ==
@@ -1808,7 +1816,7 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags, cons
         LOG_W(BMS_TAG_QUERY, "target not system app");
         return;
     }
-    const std::map<std::string, std::vector<Skill>> &skillInfos = info.GetInnerSkillInfos();
+    const std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
         AbilityInfo abilityinfo = InnerAbilityInfo::ConvertToAbilityInfo(abilityInfoPair.second);
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
@@ -2042,7 +2050,7 @@ void BundleDataMgr::GetMultiLauncherAbilityInfo(const Want& want,
     int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const
 {
     int32_t count = 0;
-    const std::map<std::string, std::vector<Skill>> &skillInfos = info.GetInnerSkillInfos();
+    const std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto& abilityInfoPair : info.GetInnerAbilityInfos()) {
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
         if (skillsPair == skillInfos.end()) {
@@ -5090,6 +5098,27 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t
     } else {
         bundleStateStorage_->SaveBundleStateStorage(
             abilityInfo.bundleName, requestUserId, innerBundleUserInfo.bundleUserInfo);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::SetAbilityFileTypes(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const std::vector<std::string> &fileTypes)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("-n %{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    ErrCode ret = item->second.SetAbilityFileTypes(moduleName, abilityName, fileTypes);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetAbilityFileTypes failed:%{public}d", ret);
+        return ret;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
+        APP_LOGE("SaveStorageBundleInfo failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return ERR_OK;
 }

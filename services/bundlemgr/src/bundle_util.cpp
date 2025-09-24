@@ -400,6 +400,12 @@ void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string
     }
 }
 
+std::string BundleUtil::GetAbilityKey(
+    const std::string &bundleName, const std::string &moduleName, const std::string &abilityName)
+{
+    return bundleName + ServiceConstants::DOT_SIGN + moduleName + ServiceConstants::DOT_SIGN + abilityName;
+}
+
 std::string BundleUtil::CreateTempDir(const std::string &tempDir)
 {
     if (!OHOS::ForceCreateDirectory(tempDir)) {

@@ -1316,10 +1316,12 @@ public:
     /**
      * @brief Obtains all skillInfos.
      */
-    const std::map<std::string, std::vector<Skill>> &GetInnerSkillInfos() const
-    {
-        return skillInfos_;
-    }
+    std::map<std::string, std::vector<Skill>> GetInnerSkillInfos() const;
+    void UpdateDynamicSkills();
+    ErrCode SetAbilityFileTypes(const std::string &moduleName, const std::string &abilityName,
+        const std::vector<std::string> &fileTypes);
+    bool ValidateDynamicSkills(const std::map<std::string, std::vector<Skill>> &dynamicSkills) const;
+    void AppendDynamicSkillsToAbilityIfExist(AbilityInfo &abilityInfo) const;
     /**
      * @brief Fetch all extensionAbilityInfos, can be modify.
      */
@@ -2442,6 +2444,7 @@ private:
 
     std::map<std::string, InnerAbilityInfo> baseAbilityInfos_;
     std::map<std::string, std::vector<Skill>> skillInfos_;
+    std::map<std::string, std::vector<Skill>> dynamicSkills_;
 
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos_;
     std::map<std::string, InnerExtensionInfo> baseExtensionInfos_;

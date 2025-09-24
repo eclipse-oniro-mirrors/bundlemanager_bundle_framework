@@ -1895,6 +1895,11 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    virtual ErrCode SetAbilityFileTypesForSelf(const std::string &moduleName, const std::string &abilityName,
+        const std::vector<std::string> &fileTypes)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

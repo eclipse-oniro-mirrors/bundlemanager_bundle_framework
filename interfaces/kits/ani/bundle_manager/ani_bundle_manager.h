@@ -32,8 +32,6 @@ public:
     virtual ~ANIClearCacheListener() = default;
     void OnReceiveEvent(const OHOS::EventFwk::CommonEventData& data) override;
     static void HandleCleanEnv(void* data);
-
-private:
     static void DoClearCache();
 };
 

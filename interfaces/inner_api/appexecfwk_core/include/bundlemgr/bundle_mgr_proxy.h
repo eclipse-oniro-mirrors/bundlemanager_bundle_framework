@@ -727,6 +727,8 @@ public:
      */
     virtual ErrCode SetCloneAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID)  override;
+    virtual ErrCode SetAbilityFileTypesForSelf(const std::string &moduleName, const std::string &abilityName,
+        const std::vector<std::string> &fileTypes) override;
     /**
      * @brief Obtains the interface used to install and uninstall bundles through the proxy object.
      * @return Returns a pointer to IBundleInstaller class if exist; returns nullptr otherwise.

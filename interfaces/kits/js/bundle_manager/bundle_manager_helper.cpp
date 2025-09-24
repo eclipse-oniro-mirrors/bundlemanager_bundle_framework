@@ -446,6 +446,19 @@ ErrCode BundleManagerHelper::InnerGetAllPluginInfo(
     return CommonFunc::ConvertErrCode(ret);
 }
 
+ErrCode BundleManagerHelper::InnerSetAbilityFileTypesForSelf(
+    const std::string& moduleName, const std::string& abilityName, const std::vector<std::string>& fileTypes)
+{
+    auto bundleMgrProxy = CommonFunc::GetBundleMgr();
+    if (bundleMgrProxy == nullptr) {
+        APP_LOGE("bundleMgrProxy null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode proxyRet = bundleMgrProxy->SetAbilityFileTypesForSelf(moduleName, abilityName, fileTypes);
+    APP_LOGI("SetAbilityFileTypesForSelf proxyRet:%{public}d", proxyRet);
+    return CommonFunc::ConvertErrCode(proxyRet);
+}
+
 ErrCode BundleManagerHelper::InnerGetAbilityInfos(
     const std::string& uri, uint32_t flags, std::vector<AbilityInfo>& abilityInfos)
 {

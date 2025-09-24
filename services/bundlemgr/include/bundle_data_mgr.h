@@ -513,6 +513,8 @@ public:
      */
     ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID);
+    ErrCode SetAbilityFileTypes(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const std::vector<std::string> &fileTypes);
     /**
      * @brief Register the bundle status callback function.
      * @param bundleStatusCallback Indicates the callback object that using for notifing the bundle status.
