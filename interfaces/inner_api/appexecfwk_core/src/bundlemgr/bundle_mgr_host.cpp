@@ -711,6 +711,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_RESOURCE_INFO):
             errCode = HandleGetAbilityResourceInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ABILITY_FILE_TYPES_FOR_SELF):
+            errCode = HandleSetAbilityFileTypesForSelf(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -2229,6 +2232,24 @@ ErrCode BundleMgrHost::HandleSetCloneAbilityEnabled(MessageParcel &data, Message
     int32_t userId = data.ReadInt32();
     ErrCode ret = SetCloneAbilityEnabled(*abilityInfo, appIndex, isEnabled, userId);
     if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetAbilityFileTypesForSelf(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string moduleName = data.ReadString();
+    std::string abilityName = data.ReadString();
+    std::vector<std::string> fileTypes;
+    if (!data.ReadStringVector(&fileTypes)) {
+        APP_LOGE("ReadStringVector failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = SetAbilityFileTypesForSelf(moduleName, abilityName, fileTypes);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

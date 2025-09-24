@@ -804,6 +804,7 @@ private:
     void SetFirstInstallTime(const std::string &bundleName, const int64_t &time, InnerBundleInfo &info);
     bool SaveFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
         bool isPreInstallApp, const InnerBundleUserInfo &innerBundleUserInfo);
+    void UpdateDynamicSkills();
     ErrCode MarkInstallFinish();
     bool IsArkWeb(const std::string &bundleName) const;
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,

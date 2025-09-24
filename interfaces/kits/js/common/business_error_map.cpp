@@ -120,6 +120,9 @@ constexpr const char* ERR_MSG_ERROR_EXT_RESOURCE_GET_ERROR = "Failed to obtain e
 constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_ENABLE_ERROR = "Failed to enable the dynamic icon.";
 constexpr const char* ERR_MSG_ENABLE_DYNAMIC_ICON_DUE_TO_EXISTING_CUSTOM_THEMES =
     "Dynamic icons cannot take effect due to existing custom themes.";
+constexpr const char* ERR_MSG_SET_ABILITY_FILE_TYPES_FOR_SELF =
+    "Invalid fileTypes. Possible causes: 1. The array length exceeds 1024; 2. The array contains an empty item; "
+    "3. An item exceeds 512 characters; 4. The array contains wildcard or general.object.";
 constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_DISABLE_ERROR = "Failed to disable the dynamic icon.";
 constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_GET_ERROR = "Failed to obtain the dynamic icon.";
 constexpr const char* ERROR_MSG_NOT_APP_GALLERY_CALL = "The caller is not AppGallery.";
@@ -253,6 +256,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_ENABLE_DYNAMIC_ICON, ERR_MSG_ERROR_DYNAMIC_ICON_ENABLE_ERROR},
     { ERROR_ENABLE_DYNAMIC_ICON_DUE_TO_EXISTING_CUSTOM_THEMES,
         ERR_MSG_ENABLE_DYNAMIC_ICON_DUE_TO_EXISTING_CUSTOM_THEMES},
+    { ERROR_SET_ABILITY_FILE_TYPES_FOR_SELF, ERR_MSG_SET_ABILITY_FILE_TYPES_FOR_SELF},
     { ERROR_DISABLE_DYNAMIC_ICON, ERR_MSG_ERROR_DYNAMIC_ICON_DISABLE_ERROR},
     { ERROR_GET_DYNAMIC_ICON, ERR_MSG_ERROR_DYNAMIC_ICON_GET_ERROR},
     { ERROR_INSTALL_PERMISSION_CHECK_ERROR, ERROR_MSG_INSTALL_PERMISSION_CHECK_ERROR},

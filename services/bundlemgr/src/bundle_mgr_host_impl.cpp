@@ -37,6 +37,7 @@
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "on_demand_install_data_mgr.h"
+#include "param_validator.h"
 #include "system_ability_helper.h"
 #include "inner_bundle_clone_common.h"
 #ifdef DEVICE_USAGE_STATISTICS_ENABLED
@@ -83,7 +84,6 @@ const std::string AUTH_TITLE = "      ";
 const std::string BUNDLE_NAME = "bundleName";
 const std::string LABEL = "label";
 const std::string NEW_LINE = "\n";
-const std::string ACTION_VIEW_DATA = "ohos.want.action.viewData";
 const std::string RESOURCE_NOT_SUPPORT =
     "warning: dump label failed due to the device not supporting bundle resource!";
 const std::string FILE_URI = "file";
@@ -2833,6 +2833,40 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
     };
     NotifyBundleStatus(installRes);
     return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::SetAbilityFileTypesForSelf(const std::string &moduleName, const std::string &abilityName,
+    const std::vector<std::string> &fileTypes)
+{
+    LOG_I(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf -m:%{public}s, -a:%{public}s",
+        moduleName.c_str(), abilityName.c_str());
+    ErrCode paramRet = ParamValidator::ValidateAbilityFileTypes(moduleName, abilityName, fileTypes);
+    if (paramRet != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "ValidateAbilityFileTypes failed, ret:%{public}d", paramRet);
+        return paramRet;
+    }
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGE_SELF_SKILLS)) {
+        LOG_E(BMS_TAG_QUERY, "permission denied");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string bundleName;
+    ErrCode ret = dataMgr->GetNameForUid(IPCSkeleton::GetCallingUid(), bundleName);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_QUERY, "GetNameForUid failed:%{public}d", ret);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->SetAbilityFileTypes(bundleName, moduleName, abilityName, fileTypes);
 }
 
 sptr<IBundleInstaller> BundleMgrHostImpl::GetBundleInstaller()
@@ -6347,14 +6381,14 @@ ErrCode BundleMgrHostImpl::GetAbilityResourceInfo(const std::string &fileType,
         for (const std::string& normalizedType : normalizedTypeVector) {
             Want want;
             want.SetType(normalizedType);
-            want.SetAction(ACTION_VIEW_DATA);
+            want.SetAction(ServiceConstants::ACTION_VIEW_DATA);
             want.SetUri(FILE_URI);
             (void)ImplicitQueryAbilityInfosWithDefault(want, launcherAbilityResourceInfos);
         }
         RemoveSameAbilityResourceInfo(launcherAbilityResourceInfos);
     } else {
         Want want;
-        want.SetAction(ACTION_VIEW_DATA);
+        want.SetAction(ServiceConstants::ACTION_VIEW_DATA);
         want.SetUri(FILE_URI + Constants::SCHEME_SEPARATOR + fileType);
         (void)ImplicitQueryAbilityInfosWithDefault(want, launcherAbilityResourceInfos);
     }

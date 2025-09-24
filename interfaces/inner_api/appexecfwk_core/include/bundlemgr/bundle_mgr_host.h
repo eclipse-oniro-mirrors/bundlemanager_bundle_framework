@@ -577,6 +577,7 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleSetCloneAbilityEnabled(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleSetAbilityFileTypesForSelf(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetAllFormsInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.

@@ -854,6 +854,37 @@ static void SetApplicationEnabledNative(ani_env* env,
     }
 }
 
+static void SetAbilityFileTypesForSelf(ani_env* env,
+    ani_string aniModuleName, ani_string aniAbilityName, ani_object aniFileTypes)
+{
+    APP_LOGI("ANI SetAbilityFileTypesForSelf begin");
+    std::string moduleName;
+    if (!CommonFunAni::ParseString(env, aniModuleName, moduleName)) {
+        APP_LOGE("parse moduleName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
+        return;
+    }
+    std::string abilityName;
+    if (!CommonFunAni::ParseString(env, aniAbilityName, abilityName)) {
+        APP_LOGE("parse abilityName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
+        return;
+    }
+    std::vector<std::string> fileTypes;
+    if (!CommonFunAni::ParseStrArray(env, aniFileTypes, fileTypes)) {
+        APP_LOGE("parse fileTypes failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, FILE_TYPES, TYPE_ARRAY);
+        return;
+    }
+    ANIClearCacheListener::DoClearCache();
+    ErrCode ret = BundleManagerHelper::InnerSetAbilityFileTypesForSelf(moduleName, abilityName, fileTypes);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetAbilityFileTypesForSelf failed:%{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(
+            env, ret, SET_ABILITY_FILE_TYPES_FOR_SELF_STRING, Constants::PERMISSION_MANAGE_SELF_SKILLS);
+    }
+}
+
 static ani_object QueryExtensionAbilityInfoNative(ani_env* env,
     ani_object aniWant, ani_enum_item aniExtensionAbilityType, ani_string aniExtensionAbilityTypeName,
     ani_int aniExtensionAbilityFlags, ani_int aniUserId,
@@ -2019,6 +2050,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(SetAbilityEnabledNative) },
         ani_native_function { "setApplicationEnabledNative", nullptr,
             reinterpret_cast<void*>(SetApplicationEnabledNative) },
+        ani_native_function { "setAbilityFileTypesForSelf", nullptr,
+            reinterpret_cast<void*>(SetAbilityFileTypesForSelf) },
         ani_native_function { "getDynamicIconNative", nullptr, reinterpret_cast<void*>(GetDynamicIconNative) },
         ani_native_function { "queryAbilityInfoWithWantsNative", nullptr,
             reinterpret_cast<void*>(QueryAbilityInfoWithWantsNative) },

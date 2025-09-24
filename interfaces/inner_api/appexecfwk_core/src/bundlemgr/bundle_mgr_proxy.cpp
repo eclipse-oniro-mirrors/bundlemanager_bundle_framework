@@ -41,6 +41,7 @@
 #include "ffrt.h"
 #include "hitrace_meter.h"
 #include "json_util.h"
+#include "param_validator.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_proxy.h"
 #endif
@@ -2556,6 +2557,43 @@ ErrCode BundleMgrProxy::SetCloneAbilityEnabled(
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::SET_CLONE_ABILITY_ENABLED, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::SetAbilityFileTypesForSelf(const std::string &moduleName, const std::string &abilityName,
+    const std::vector<std::string> &fileTypes)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_NOFUNC_I(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf -m:%{public}s, -a:%{public}s",
+        moduleName.c_str(), abilityName.c_str());
+    ErrCode ret = ParamValidator::ValidateAbilityFileTypes(moduleName, abilityName, fileTypes);
+    if (ret != ERR_OK) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "ValidateAbilityFileTypes failed, ret:%{public}d", ret);
+        return ret;
+    }
+    MessageParcel data;
+    (void)data.SetMaxCapacity(Constants::CAPACITY_SIZE);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write InterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write moduleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(abilityName)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write abilityName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteStringVector(fileTypes)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write fileTypes failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_ABILITY_FILE_TYPES_FOR_SELF, data, reply)) {
+        APP_LOGE("SetAbilityFileTypesForSelf SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return reply.ReadInt32();
 }

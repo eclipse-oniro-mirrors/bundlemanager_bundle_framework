@@ -101,6 +101,7 @@ group("unittest") {
       "unittest/bms_bundle_verifymanager_test:unittest",
       "unittest/bms_cj_test:unittest",
       "unittest/bms_data_mgr_test:unittest",
+      "unittest/bms_dynamic_skills_test:unittest",
       "unittest/bms_event_handler_test:unittest",
       "unittest/bms_extend_resource_manager_test:unittest",
       "unittest/bms_hap_module_info_test:unittest",

@@ -246,6 +246,8 @@ namespace bundleManager {
 
   export native function setApplicationEnabledNative(bundleName: string, isEnabled: boolean, appIndex: int, isSync: boolean): void;
 
+  native function setAbilityFileTypesForSelf(moduleName: string, abilityName: string, fileTypes: Array<string>): void;
+
   export native function getDynamicIconNative(bundleName: string): string;
 
   export native function queryAbilityInfoWithWantsNative(wants: Array<Want>, abilityFlags: int,

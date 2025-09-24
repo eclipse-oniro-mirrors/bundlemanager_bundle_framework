@@ -593,7 +593,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
 
     std::unique_ptr<MultiAppModeData> multiAppModePtr(parcel.ReadParcelable<MultiAppModeData>());
     if (!multiAppModePtr) {
-        APP_LOGE("icon ReadParcelable<MultiAppMode> failed");
+        APP_LOGE("icon ReadParcelable<MultiAppModeData> failed");
         return false;
     }
     multiAppMode = *multiAppModePtr;

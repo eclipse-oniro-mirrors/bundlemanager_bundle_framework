@@ -40,6 +40,12 @@
         src="res" />
     </preparer>
   </target>
+  <target name="BmsDynamicSkillsTest">
+  <preparer>
+      <option name="push" value="test_bundle/defaultAppTest.hap -> /data/test/resource/bms/default_app_bundle/"
+        src="res" />
+    </preparer>
+  </target>
   <target name="BmsAOTHandlerTest">
   <preparer>
       <option name="push" value="test_bundle/bmsThirdBundle1.hap -> /data/test/resource/bms/aot_handler_bundle/"

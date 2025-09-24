@@ -49,11 +49,9 @@ constexpr const char* BUNDLE_MODULE_PROFILE_KEY_PATHREGX = "pathRegx";
 constexpr const char* PARAM_SEPARATOR = "?";
 constexpr const char* PORT_SEPARATOR = ":";
 constexpr const char* PATH_SEPARATOR = "/";
-constexpr const char* TYPE_WILDCARD = "*/*";
 const char WILDCARD = '*';
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const char* LINK_FEATURE = "linkFeature";
-const char* GENERAL_OBJECT = "general.object";
 const uint32_t PROTOCOL_OFFSET = 3;
 }; // namespace
 
@@ -467,7 +465,7 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
 
     // only match */* or general.object
     if (type == TYPE_ONLY_MATCH_WILDCARD) {
-        return skillUriType == TYPE_WILDCARD || skillUriType == GENERAL_OBJECT;
+        return skillUriType == Constants::TYPE_WILDCARD || skillUriType == Constants::GENERAL_OBJECT;
     }
 
     bool containsUtd = false;
@@ -476,7 +474,7 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
         return matchUtdRet;
     }
 
-    if (type == TYPE_WILDCARD || skillUriType == TYPE_WILDCARD) {
+    if (type == Constants::TYPE_WILDCARD || skillUriType == Constants::TYPE_WILDCARD) {
         // param is */* or config is */*
         return true;
     }

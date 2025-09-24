@@ -63,6 +63,8 @@ public:
     static ErrCode InnerGetRecoverableApplicationInfo(std::vector<RecoverableApplicationInfo>& recoverableApplications);
     static ErrCode InnerGetAllPluginInfo(
         std::string& hostBundleName, int32_t userId, std::vector<PluginBundleInfo>& pluginBundleInfos);
+    static ErrCode InnerSetAbilityFileTypesForSelf(
+        const std::string& moduleName, const std::string& abilityName, const std::vector<std::string>& fileTypes);
     static ErrCode InnerGetAbilityInfos(const std::string& uri, uint32_t flags, std::vector<AbilityInfo>& abilityInfos);
     static ErrCode InnerCleanBundleCacheForSelfCallback(const OHOS::sptr<CleanCacheCallback> cleanCacheCallback);
 };

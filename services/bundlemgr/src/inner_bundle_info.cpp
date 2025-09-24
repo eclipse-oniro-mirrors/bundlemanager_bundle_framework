@@ -42,6 +42,7 @@ constexpr const char* BASE_BUNDLE_INFO = "baseBundleInfo";
 constexpr const char* BASE_ABILITY_INFO = "baseAbilityInfos";
 constexpr const char* INNER_MODULE_INFO = "innerModuleInfos";
 constexpr const char* SKILL_INFOS = "skillInfos";
+constexpr const char* DYNAMIC_SKILLS = "dynamicSkills";
 constexpr const char* USER_ID = "userId_";
 constexpr const char* APP_FEATURE = "appFeature";
 constexpr const char* NAME = "name";
@@ -345,6 +346,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->shortcutInfos_ = info.shortcutInfos_;
     this->baseAbilityInfos_ = info.baseAbilityInfos_;
     this->skillInfos_ = info.skillInfos_;
+    this->dynamicSkills_ = info.dynamicSkills_;
     this->innerBundleUserInfos_ = info.innerBundleUserInfos_;
     this->bundlePackInfo_ = std::make_shared<BundlePackInfo>();
     if (info.bundlePackInfo_ != nullptr) {
@@ -529,6 +531,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[INNER_MODULE_INFO] = innerModuleInfos_;
     jsonObject[INNER_SHARED_MODULE_INFO] = innerSharedModuleInfos_;
     jsonObject[SKILL_INFOS] = skillInfos_;
+    jsonObject[DYNAMIC_SKILLS] = dynamicSkills_;
     jsonObject[USER_ID] = userId_;
     jsonObject[APP_FEATURE] = appFeature_;
     jsonObject[MODULE_FORMS] = formInfos_;
@@ -1390,6 +1393,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             true,
             parseResult,
             ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
+            jsonObjectEnd,
+            DYNAMIC_SKILLS,
+            dynamicSkills_,
+            JsonType::OBJECT,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
         GetValueIfFindKey<int>(jsonObject,
             jsonObjectEnd,
             USER_ID,
@@ -1821,6 +1832,125 @@ std::optional<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfo(
     }
 
     return std::nullopt;
+}
+
+std::map<std::string, std::vector<Skill>> InnerBundleInfo::GetInnerSkillInfos() const
+{
+    if (dynamicSkills_.empty()) {
+        return skillInfos_;
+    }
+    std::map<std::string, std::vector<Skill>> mergedSkills = skillInfos_;
+    for (const auto &[key, dynamicVector] : dynamicSkills_) {
+        auto &mergedVector = mergedSkills[key];
+        mergedVector.reserve(mergedVector.size() + dynamicVector.size());
+        mergedVector.insert(mergedVector.end(), dynamicVector.begin(), dynamicVector.end());
+    }
+    return mergedSkills;
+}
+
+void InnerBundleInfo::UpdateDynamicSkills()
+{
+    for (auto item = dynamicSkills_.begin(); item != dynamicSkills_.end();) {
+        if (baseAbilityInfos_.find(item->first) == baseAbilityInfos_.end()) {
+            item = dynamicSkills_.erase(item);
+        } else {
+            ++item;
+        }
+    }
+}
+
+void InnerBundleInfo::AppendDynamicSkillsToAbilityIfExist(AbilityInfo &abilityInfo) const
+{
+    if (dynamicSkills_.empty()) {
+        return;
+    }
+    std::string abilityKey = BundleUtil::GetAbilityKey(
+        abilityInfo.bundleName, abilityInfo.moduleName, abilityInfo.name);
+    auto item = dynamicSkills_.find(abilityKey);
+    if (item != dynamicSkills_.end()) {
+        abilityInfo.skills.reserve(abilityInfo.skills.size() + item->second.size());
+        abilityInfo.skills.insert(abilityInfo.skills.end(), item->second.begin(), item->second.end());
+    }
+}
+
+bool InnerBundleInfo::ValidateDynamicSkills(const std::map<std::string, std::vector<Skill>> &dynamicSkills) const
+{
+    try {
+        // validate to json
+        nlohmann::json jsonObject;
+        jsonObject[DYNAMIC_SKILLS] = dynamicSkills;
+        (void)jsonObject.dump();
+        // validate from json
+        int32_t ret = ERR_OK;
+        std::map<std::string, std::vector<Skill>> tmpDynamicSkills;
+        GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
+            jsonObject.end(),
+            DYNAMIC_SKILLS,
+            tmpDynamicSkills,
+            JsonType::OBJECT,
+            false,
+            ret,
+            ArrayType::NOT_ARRAY);
+        if (ret != ERR_OK) {
+            APP_LOGE("ValidateDynamicSkills error:%{public}d", ret);
+            return false;
+        }
+    } catch (const nlohmann::json::exception& e) {
+        APP_LOGE("ValidateDynamicSkills exception:%{public}s, %{public}d", e.what(), e.id);
+        return false;
+    }
+    return true;
+}
+
+ErrCode InnerBundleInfo::SetAbilityFileTypes(const std::string &moduleName, const std::string &abilityName,
+    const std::vector<std::string> &fileTypes)
+{
+    if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+        APP_LOGE("-m %{public}s not exist", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    std::string abilityKey = BundleUtil::GetAbilityKey(GetBundleName(), moduleName, abilityName);
+    auto item = baseAbilityInfos_.find(abilityKey);
+    if (item == baseAbilityInfos_.end()) {
+        APP_LOGE("-a %{public}s not exist", abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (moduleName != item->second.moduleName || abilityName != item->second.name) {
+        APP_LOGE("-a %{public}s not exist", abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+
+    if (fileTypes.empty()) {
+        APP_LOGI("clean dynamic skills:%{public}s", abilityKey.c_str());
+        auto dynamicItem = dynamicSkills_.find(abilityKey);
+        if (dynamicItem != dynamicSkills_.end()) {
+            dynamicSkills_.erase(dynamicItem);
+        }
+        return ERR_OK;
+    }
+
+    std::vector<Skill> skills;
+    Skill skill;
+    skill.actions = {ServiceConstants::ACTION_VIEW_DATA};
+    skill.uris.reserve(fileTypes.size());
+    for (const std::string &fileType : fileTypes) {
+        SkillUri skillUri;
+        skillUri.scheme = ServiceConstants::FILE;
+        skillUri.type = fileType;
+        skillUri.linkFeature = ServiceConstants::FILE_OPEN;
+        skill.uris.emplace_back(skillUri);
+    }
+    skills.emplace_back(skill);
+
+    std::map<std::string, std::vector<Skill>> tmpDynamicSkills;
+    tmpDynamicSkills[abilityKey] = skills;
+    if (!ValidateDynamicSkills(tmpDynamicSkills)) {
+        APP_LOGE("ValidateDynamicSkills failed");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    APP_LOGI("set dynamic skills:%{public}s", abilityKey.c_str());
+    dynamicSkills_[abilityKey] = skills;
+    return ERR_OK;
 }
 
 bool InnerBundleInfo::AddModuleInfo(const InnerBundleInfo &newInfo)
@@ -2845,6 +2975,8 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL))
             != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL)) {
             abilityInfo.skills.clear();
+        } else {
+            AppendDynamicSkillsToAbilityIfExist(abilityInfo);
         }
 
         hapModuleInfo.abilityInfos.emplace_back(abilityInfo);
@@ -2898,6 +3030,8 @@ void InnerBundleInfo::GetBundleWithAbilities(
             abilityInfo.enabled = isEnabled;
             if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_SKILL) != GET_BUNDLE_WITH_SKILL) {
                 abilityInfo.skills.clear();
+            } else {
+                AppendDynamicSkillsToAbilityIfExist(abilityInfo);
             }
             abilityInfo.appIndex = appIndex;
             bundleInfo.abilityInfos.emplace_back(abilityInfo);
