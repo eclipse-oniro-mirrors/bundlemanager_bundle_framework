@@ -1980,7 +1980,7 @@ static ani_string GetPluginBundlePathForSelfNative(ani_env* env, ani_string aniP
     std::string pluginBundleName;
     if (!CommonFunAni::ParseString(env, aniPluginBundleName, pluginBundleName)) {
         APP_LOGE("pluginBundleName %{public}s invalid", pluginBundleName.c_str());
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, PLUGIN_BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
     std::string codePath;

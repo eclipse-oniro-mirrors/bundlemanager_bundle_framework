@@ -1758,7 +1758,7 @@ namespace bundleManager {
     return p;
   }
 
-  function GetPluginBundlePathForSelf(pluginBundleName: string): string {
+  function getPluginBundlePathForSelf(pluginBundleName: string): string {
     return bundleManager.getPluginBundlePathForSelfNative(pluginBundleName);
   }
 }

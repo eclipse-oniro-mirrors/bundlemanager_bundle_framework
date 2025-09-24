@@ -1410,7 +1410,7 @@ HWTEST_F(BmsBundleMgrProxyTest, GetPluginBundlePathForSelf_0100, Function | Medi
     BundleMgrProxy bundleMgrProxy(impl);
     std::string pluginBundleName = "plugin";
     std::string codePath;
-    auto res = bundleMgrProxy.GetPluginBundlePathForSelf(pluginBundleName, codePath);
+    auto ret = bundleMgrProxy.GetPluginBundlePathForSelf(pluginBundleName, codePath);
     EXPECT_NE(ret, ERR_OK);
 }
 }
