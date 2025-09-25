@@ -60,6 +60,7 @@ enum OTAFlag : uint32_t {
     PROCESS_DYNAMIC_ICON = 0x00020000,
     PROCESS_THEME_AND_DYNAMIC_ICON = 0x00040000,
     CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR = 0x00080000,
+    UPDATE_MODULE_JSON = 0x00100000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -570,7 +571,6 @@ private:
 
     void ProcessCheckAppExtensionAbility();
     void InnerProcessCheckAppExtensionAbility();
-    void UpdateExtensionType();
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
     bool IsSystemFingerprintChanged();
