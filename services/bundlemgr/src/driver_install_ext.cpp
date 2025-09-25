@@ -27,8 +27,8 @@ namespace {
 constexpr const char *REDIRECT_PATH_FUNCTION_NAME = "RedirectDriverInstallExtPath";
 constexpr const char *GET_DRIVER_EXCUTE_FUNCTION_NAME = "GetDriverExecuteExtPaths";
 constexpr const char *LIB64_DRIVER_INSTALL_EXT_SO_PATH = "system/lib64/libdriver_install_ext.z.so";
-constexpr const char *PARAM_EXT_SPACE = "persist.space_mgr_service.enterprise_space_init";
-const std::string EXT_SPACE_ENABLE = "2";
+constexpr const char *PARAM_EXT_SPACE = "persist.space_mgr_service.enterprise_space_enable";
+const std::string EXT_SPACE_ENABLE = "true";
 }  // namespace
 
 DriverInstallExtHandler::DriverInstallExtHandler()
