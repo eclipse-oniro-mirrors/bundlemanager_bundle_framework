@@ -688,9 +688,7 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &
         return ret;
     }
     std::string key = appId + std::string("_") + std::to_string(userId);
-    DeleteAppRunningRuleCache(key);
-    DeleteAppRunningControlRuleCache(key);
-    DeleteRunningRuleSettingStatusCache(userId);
+    DeleteAppRunningRuleCacheExcludeEdm(key);
     key = key + std::string("_");
     std::string cacheKey = key + std::to_string(appIndex);
     DeleteAbilityRunningRuleCache({ cacheKey });
@@ -714,12 +712,14 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &
     return ERR_OK;
 }
 
-void AppControlManager::DeleteAppRunningRuleCache(std::string &key)
+void AppControlManager::DeleteAppRunningRuleCacheExcludeEdm(const std::string &key)
 {
     std::lock_guard<std::mutex> lock(appRunningControlMutex_);
     auto iter = appRunningControlRuleResult_.find(key);
     if (iter != appRunningControlRuleResult_.end()) {
-        appRunningControlRuleResult_.erase(iter);
+        if (!iter->second.isEdm) {
+            appRunningControlRuleResult_.erase(iter);
+        }
     }
 }
 
