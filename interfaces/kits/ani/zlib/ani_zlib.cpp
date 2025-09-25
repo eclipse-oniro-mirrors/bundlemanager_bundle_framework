@@ -167,7 +167,8 @@ static ani_object ConvertCRCTable(ani_env* env, const tableType* table, const si
         APP_LOGE("Class_FindMethod Double ctor failed %{public}d", status);
         return nullptr;
     }
-    std::string setSig = Builder::BuildSignatureDescriptor({ Builder::BuildInt(), Builder::BuildNull() });
+    std::string setSig =
+        Builder::BuildSignatureDescriptor({ Builder::BuildInt(), Builder::BuildClass("std.core.Object") });
 
     for (size_t i = 0; i < tableSize; ++i) {
         ani_object doubleObj = nullptr;
@@ -176,7 +177,8 @@ static ani_object ConvertCRCTable(ani_env* env, const tableType* table, const si
             APP_LOGE("Object_New Double failed %{public}d", status);
             return nullptr;
         }
-        status = env->Object_CallMethodByName_Void(arrayObj, "$_set", setSig.c_str(), i, doubleObj);
+        status =
+            env->Object_CallMethodByName_Void(arrayObj, "$_set", setSig.c_str(), static_cast<ani_int>(i), doubleObj);
         env->Reference_Delete(doubleObj);
         if (status != ANI_OK) {
             APP_LOGE("Object_CallMethodByName_Void failed %{public}d", status);
