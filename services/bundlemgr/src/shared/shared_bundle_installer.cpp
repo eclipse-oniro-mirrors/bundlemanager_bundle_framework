@@ -114,7 +114,7 @@ bool SharedBundleInstaller::CheckDependency(const InnerBundleInfo &innerBundleIn
 ErrCode SharedBundleInstaller::Install(const EventInfo &eventTemplate)
 {
     if (!NeedToInstall()) {
-        APP_LOGI("do not need to install");
+        APP_LOGD("do not need to install");
         return ERR_OK;
     }
 
@@ -195,7 +195,7 @@ void SharedBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
         return;
     }
     if (!dataMgr->GetBundleNameForUid(eventInfo.callingUid, eventInfo.callingBundleName)) {
-        APP_LOGW("CallingUid %{public}d is not hap, no bundleName", eventInfo.callingUid);
+        APP_LOGD("CallingUid %{public}d is not hap, no bundleName", eventInfo.callingUid);
         eventInfo.callingBundleName = Constants::EMPTY_STRING;
         return;
     }

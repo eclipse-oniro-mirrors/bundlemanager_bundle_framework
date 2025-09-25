@@ -38,10 +38,10 @@ SandboxManagerRdb::~SandboxManagerRdb()
 bool SandboxManagerRdb::QueryAllSandboxInnerBundleInfo(
     std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos)
 {
-    APP_LOGI("begin to QueryAllSandboxInnerBundleInfo");
+    APP_LOGI_NOFUNC("begin to QueryAllSandboxInnerBundleInfo");
     bool ret = GetAllDataFromDb(innerBundleInfos);
     if (!ret) {
-        APP_LOGE("GetAllDataFromDb failed");
+        APP_LOGE_NOFUNC("GetAllSandboxDataFromDb failed");
         return false;
     }
     return true;
@@ -49,7 +49,7 @@ bool SandboxManagerRdb::QueryAllSandboxInnerBundleInfo(
 
 bool SandboxManagerRdb::QuerySandboxInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfos)
 {
-    APP_LOGI("begin to QuerySandboxInnerBundleInfo");
+    APP_LOGI_NOFUNC("begin to QuerySandboxInnerBundleInfo");
     bool ret = GetDataFromDb(bundleName, innerBundleInfos);
     if (!ret) {
         APP_LOGE("GetDataFromDb failed");
@@ -61,7 +61,7 @@ bool SandboxManagerRdb::QuerySandboxInnerBundleInfo(const std::string &bundleNam
 bool SandboxManagerRdb::SaveSandboxInnerBundleInfo(const std::string &bundleName,
     const InnerBundleInfo &innerBundleInfos)
 {
-    APP_LOGI("begin to SaveSandboxInnerBundleInfo");
+    APP_LOGI_NOFUNC("begin to SaveSandboxInnerBundleInfo");
     bool ret = SaveDataToDb(bundleName, innerBundleInfos);
     if (!ret) {
         APP_LOGE("SaveDataToDb failed");
@@ -72,7 +72,7 @@ bool SandboxManagerRdb::SaveSandboxInnerBundleInfo(const std::string &bundleName
 
 bool SandboxManagerRdb::DeleteSandboxInnerBundleInfo(const std::string &bundleName)
 {
-    APP_LOGI("begin to DeleteSandboxInnerBundleInfo");
+    APP_LOGI_NOFUNC("begin to DeleteSandboxInnerBundleInfo");
     bool ret = DeleteDataFromDb(bundleName);
     if (!ret) {
         APP_LOGE("DeleteDataFromDb failed");

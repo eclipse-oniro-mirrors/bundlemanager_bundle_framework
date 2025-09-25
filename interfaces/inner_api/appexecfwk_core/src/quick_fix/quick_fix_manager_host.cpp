@@ -30,12 +30,12 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixManagerHost::QuickFixManagerHost()
 {
-    LOG_I(BMS_TAG_DEFAULT, "create QuickFixManagerHost");
+    LOG_D(BMS_TAG_DEFAULT, "create QuickFixManagerHost");
 }
 
 QuickFixManagerHost::~QuickFixManagerHost()
 {
-    LOG_I(BMS_TAG_DEFAULT, "destroy QuickFixManagerHost");
+    LOG_D(BMS_TAG_DEFAULT, "destroy QuickFixManagerHost");
 }
 
 int QuickFixManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,

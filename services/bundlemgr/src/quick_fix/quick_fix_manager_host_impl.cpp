@@ -23,12 +23,12 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixManagerHostImpl::QuickFixManagerHostImpl()
 {
-    LOG_I(BMS_TAG_DEFAULT, "create QuickFixManagerHostImpl");
+    LOG_D(BMS_TAG_DEFAULT, "create QuickFixManagerHostImpl");
 }
 
 QuickFixManagerHostImpl::~QuickFixManagerHostImpl()
 {
-    LOG_I(BMS_TAG_DEFAULT, "destory QuickFixManagerHostImpl");
+    LOG_D(BMS_TAG_DEFAULT, "destory QuickFixManagerHostImpl");
 }
 
 ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,

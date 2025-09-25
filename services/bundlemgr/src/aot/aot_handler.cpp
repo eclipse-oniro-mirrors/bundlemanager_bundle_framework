@@ -389,7 +389,9 @@ void AOTHandler::HandleResetAllAOT() const
     std::for_each(bundleNames.cbegin(), bundleNames.cend(), [dataMgr](const auto &bundleToReset) {
         std::string removeDir = ServiceConstants::ARK_CACHE_PATH + bundleToReset;
         ErrCode ret = InstalldClient::GetInstance()->RemoveDir(removeDir);
-        APP_LOGI("reset all aot removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
+        if (ret != ERR_OK) {
+            APP_LOGW("reset all aot removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
+        }
         dataMgr->ResetAOTFlagsCommand(bundleToReset);
     });
 }

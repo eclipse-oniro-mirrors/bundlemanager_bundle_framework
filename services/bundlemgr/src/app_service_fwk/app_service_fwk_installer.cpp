@@ -73,12 +73,12 @@ void BuildCheckParam(
 AppServiceFwkInstaller::AppServiceFwkInstaller()
     : bundleInstallChecker_(std::make_unique<BundleInstallChecker>())
 {
-    APP_LOGI_NOFUNC("AppServiceFwk installer instance created");
+    APP_LOGD("AppServiceFwk installer instance created");
 }
 
 AppServiceFwkInstaller::~AppServiceFwkInstaller()
 {
-    APP_LOGI_NOFUNC("AppServiceFwk installer instance destroyed");
+    APP_LOGD("AppServiceFwk installer instance destroyed");
 }
 
 ErrCode AppServiceFwkInstaller::Install(
@@ -87,7 +87,8 @@ ErrCode AppServiceFwkInstaller::Install(
     ErrCode result = BeforeInstall(hspPaths, installParam);
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
-    APP_LOGI("%{public}s %{public}s result %{public}d first time", hspPaths[0].c_str(), bundleName_.c_str(), result);
+    APP_LOGI_NOFUNC("install appServiceFwk %{public}s %{public}s result %{public}d first time",
+        hspPaths[0].c_str(), bundleName_.c_str(), result);
     if (result != ERR_OK && installParam.copyHapToInstallPath) {
         PreInstallBundleInfo preInstallBundleInfo;
         if (!dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo) ||
@@ -560,7 +561,7 @@ ErrCode AppServiceFwkInstaller::InnerProcessInstall(
     std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     InstallParam &installParam)
 {
-    APP_LOGI("start -n %{public}s, size: %{public}zu",
+    APP_LOGI_NOFUNC("start install appServiceFwk -n %{public}s, size: %{public}zu",
         bundleName_.c_str(), newInfos.size());
     ErrCode result = ERR_OK;
     for (auto it = newInfos.begin(); it != newInfos.end(); ++it) {

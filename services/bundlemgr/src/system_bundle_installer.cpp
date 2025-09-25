@@ -40,7 +40,7 @@ ErrCode SystemBundleInstaller::InstallSystemBundle(
     MarkPreBundleSyeEventBootTag(true);
     ErrCode result = InstallBundle(filePath, installParam, appType);
     if (result != ERR_OK) {
-        APP_LOGE("install system bundle fail, error: %{public}d", result);
+        APP_LOGE_NOFUNC("install system bundle fail error: %{public}d", result);
         if (result != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
             BmsKeyEventMgr::ProcessMainBundleInstallFailed(filePath, result);
         }
@@ -57,7 +57,7 @@ bool SystemBundleInstaller::InstallSystemSharedBundle(
     std::vector<std::string> bundlePaths{};
     ErrCode result = InstallBundle(bundlePaths, installParam, appType);
     if (result != ERR_OK) {
-        APP_LOGE("install system bundle fail, error: %{public}d", result);
+        APP_LOGE_NOFUNC("install system shared bundle fail error: %{public}d", result);
         return false;
     }
     return true;
@@ -85,7 +85,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundle(
             (errCode != ERR_APPEXECFWK_INSTALL_U1_ENABLE_NOT_SUPPORT_APP_SERVICE_AND_SHARED_BUNDLE) &&
             (errCode != ERR_APPEXECFWK_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS) &&
             (errCode != ERR_APPEXECFWK_INSTALL_U1_ENABLE_NOT_SAME_IN_ALL_BUNDLE_INFOS)) {
-            APP_LOGE("install system bundle fail, error: %{public}d", errCode);
+            APP_LOGE_NOFUNC("OTA install system bundle fail error: %{public}d", errCode);
             result = errCode;
             if (!filePaths.empty()) {
                 BmsKeyEventMgr::ProcessMainBundleInstallFailed(filePaths[0], result);

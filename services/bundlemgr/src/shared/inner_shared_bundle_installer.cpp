@@ -36,12 +36,12 @@ constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 InnerSharedBundleInstaller::InnerSharedBundleInstaller(const std::string &path)
     : sharedBundlePath_(path), bundleInstallChecker_(std::make_unique<BundleInstallChecker>())
 {
-    APP_LOGI("inner shared bundle installer instance is created");
+    APP_LOGD("inner shared bundle installer instance is created");
 }
 
 InnerSharedBundleInstaller::~InnerSharedBundleInstaller()
 {
-    APP_LOGI("inner shared bundle installer instance is destroyed");
+    APP_LOGD("inner shared bundle installer instance is destroyed");
     BundleUtil::DeleteTempDirs(toDeleteTempHspPath_);
 }
 
@@ -70,7 +70,7 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     result = bundleInstallChecker_->CheckSysCap(bundlePaths);
     bool isSysCapValid = (result == ERR_OK);
     if (!isSysCapValid) {
-        APP_LOGI("hap syscap check failed %{public}d", result);
+        APP_LOGD("hap syscap check failed %{public}d", result);
     }
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;

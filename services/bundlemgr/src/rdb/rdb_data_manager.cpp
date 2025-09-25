@@ -111,7 +111,7 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
     rdbStoreConfig.SetHaMode(NativeRdb::HAMode::MAIN_REPLICA);
     // for check db exist or not
     if (access(rdbStoreConfig.GetPath().c_str(), F_OK) != 0) {
-        APP_LOGW("bms db :%{public}s is not exist, need to create. errno:%{public}d",
+        APP_LOGW_NOFUNC("bms db :%{public}s is not exist, need to create. errno:%{public}d",
             rdbStoreConfig.GetPath().c_str(), errno);
     }
     int32_t errCode = NativeRdb::E_OK;
@@ -501,7 +501,7 @@ void RdbDataManager::DelayCloseRdbStore()
 
 bool RdbDataManager::RdbIntegrityCheckNeedRestore()
 {
-    APP_LOGI("integrity check start db %{public}s", bmsRdbConfig_.dbName.c_str());
+    APP_LOGI_NOFUNC("integrity check start db %{public}s", bmsRdbConfig_.dbName.c_str());
     if (rdbStore_ == nullptr) {
         APP_LOGE("RdbStore is null");
         return false;
@@ -514,7 +514,7 @@ bool RdbDataManager::RdbIntegrityCheckNeedRestore()
             APP_LOGW("rdb error need to restore");
             return true;
         }
-        APP_LOGI("integrity check succeed db %{public}s", bmsRdbConfig_.dbName.c_str());
+        APP_LOGI_NOFUNC("integrity check succeed db %{public}s", bmsRdbConfig_.dbName.c_str());
     }
     return false;
 }
