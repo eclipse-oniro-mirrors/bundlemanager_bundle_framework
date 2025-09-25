@@ -115,6 +115,12 @@ enum NoGetBundleStatsFlag : uint32_t {
     GET_BUNDLE_WITHOUT_CACHE_SIZE = 0x00000004,
 };
 
+enum AbilityProfileType : uint32_t {
+    ABILITY_PROFILE = 0,
+    EXTENSION_PROFILE = 1,
+    UNKNOWN_PROFILE = 2
+};
+
 constexpr const char* ACTION_HOME = "action.system.home";
 constexpr const char* WANT_ACTION_HOME = "ohos.want.action.home";
 constexpr const char* ENTITY_HOME = "entity.system.home";
