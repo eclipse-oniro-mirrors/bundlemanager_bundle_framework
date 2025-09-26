@@ -123,7 +123,6 @@ void BundleConnectAbilityMgr::ProcessPreloadRequestToServiceCenter(int32_t flag,
         LOG_E(BMS_TAG_DEFAULT, "Fail to query ServiceCenter ability and bundle name");
         return;
     }
-    InstalldClient::GetInstance()->LoadInstalls();
     auto task = [ owner = weak_from_this() ] {
         auto mgr = owner.lock();
         if (mgr == nullptr) {
@@ -131,6 +130,7 @@ void BundleConnectAbilityMgr::ProcessPreloadRequestToServiceCenter(int32_t flag,
             return;
         }
         mgr->LoadService(DOWNLOAD_SERVICE_SA_ID);
+        InstalldClient::GetInstance()->LoadInstalls();
     };
     std::thread loadServiceThread(task);
     loadServiceThread.detach();
@@ -392,7 +392,6 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
     }
     Want serviceCenterWant;
     serviceCenterWant.SetElementName(bundleName, abilityName);
-    InstalldClient::GetInstance()->LoadInstalls();
     auto task = [ owner = weak_from_this() ] {
         auto mgr = owner.lock();
         if (mgr == nullptr) {
@@ -400,6 +399,7 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
             return;
         }
         mgr->LoadService(DOWNLOAD_SERVICE_SA_ID);
+        InstalldClient::GetInstance()->LoadInstalls();
     };
     std::thread loadServiceThread(task);
     loadServiceThread.detach();
