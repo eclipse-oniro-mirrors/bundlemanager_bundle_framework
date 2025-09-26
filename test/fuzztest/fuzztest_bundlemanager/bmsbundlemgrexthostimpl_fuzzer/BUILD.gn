@@ -22,6 +22,7 @@ module_output_path = fuzz_test_path
 ##############################fuzztest##########################################
 ohos_fuzztest("BMSBundleMgrExtHostImplFuzzTest") {
   module_out_path = module_output_path
+  use_exceptions = true
   fuzz_config_file =
       "../../../fuzztest/fuzztest_bundlemanager/bmsbundlemgrexthostimpl_fuzzer"
 
