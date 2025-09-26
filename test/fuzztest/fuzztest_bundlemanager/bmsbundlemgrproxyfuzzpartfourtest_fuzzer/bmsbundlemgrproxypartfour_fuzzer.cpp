@@ -75,6 +75,7 @@ namespace OHOS {
         bool state = fdp.ConsumeBool();
         bool isNeedSendNotify = fdp.ConsumeBool();
         bundleMgrProxy.SwitchUninstallState(bundleName, state, isNeedSendNotify);
+        bundleMgrProxy.SwitchUninstallStateByUserId(bundleName, state, userId);
 
         std::string continueType = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
         AbilityInfo abilityInfo;
