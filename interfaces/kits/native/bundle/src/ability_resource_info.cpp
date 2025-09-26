@@ -20,6 +20,7 @@
 
 #include "ability_resource_info.h"
 #include "app_log_wrapper.h"
+#include "native/drawable_descriptor.h"
 #include "securec.h"
 
 namespace {
@@ -34,6 +35,7 @@ struct OH_NativeBundle_AbilityResourceInfo {
     char *abilityName;
     char *label;
     char *icon;
+    ArkUI_DrawableDescriptor *drawableIcon;
 };
 
 // Helper function to release char* memory
@@ -118,6 +120,7 @@ void ResetResourceInfo(OH_NativeBundle_AbilityResourceInfo* resourceInfo, size_t
         resourceInfo[i].abilityName = nullptr;
         resourceInfo[i].label = nullptr;
         resourceInfo[i].icon = nullptr;
+        resourceInfo[i].drawableIcon = nullptr;
     }
 }
 
@@ -132,6 +135,10 @@ bool ReleaseResourceInfo(OH_NativeBundle_AbilityResourceInfo* resourceInfo, size
         ReleaseChar(resourceInfo[i].abilityName);
         ReleaseChar(resourceInfo[i].label);
         ReleaseChar(resourceInfo[i].icon);
+        if (resourceInfo[i].drawableIcon != nullptr) {
+            OH_ArkUI_DrawableDescriptor_Dispose(resourceInfo[i].drawableIcon);
+            resourceInfo[i].drawableIcon = nullptr;
+        }
     }
     free(resourceInfo);
     return true;
@@ -211,6 +218,17 @@ BundleManager_ErrorCode OH_NativeBundle_CheckDefaultApp(
 int OH_NativeBundle_GetSize()
 {
     return sizeof(OH_NativeBundle_AbilityResourceInfo);
+}
+
+BundleManager_ErrorCode OH_NativeBundle_GetDrawableDescriptor(
+    OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, ArkUI_DrawableDescriptor** drawableIcon)
+{
+    if (abilityResourceInfo == nullptr || drawableIcon == nullptr) {
+        APP_LOGE("abilityResourceInfo or drawableIcon is nullptr");
+        return BUNDLE_MANAGER_ERROR_CODE_PARAM_INVALID;
+    }
+    *drawableIcon = abilityResourceInfo->drawableIcon;
+    return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
 }
 
 BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_BundleName(
@@ -335,6 +353,17 @@ BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_Icon(
         APP_LOGE("copy icon failed");
         return BUNDLE_MANAGER_ERROR_CODE_PARAM_INVALID;
     }
+    return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
+}
+
+BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_DrawableIcon(
+    OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, ArkUI_DrawableDescriptor* drawableIcon)
+{
+    if (abilityResourceInfo == nullptr || drawableIcon == nullptr) {
+        APP_LOGE("abilityResourceInfo or drawableIcon is nullptr");
+        return BUNDLE_MANAGER_ERROR_CODE_PARAM_INVALID;
+    }
+    abilityResourceInfo->drawableIcon = drawableIcon;
     return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
 }
 

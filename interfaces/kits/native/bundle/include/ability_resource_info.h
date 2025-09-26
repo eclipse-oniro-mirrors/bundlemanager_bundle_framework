@@ -39,7 +39,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "bundle_manager_common.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -51,6 +50,8 @@ extern "C" {
  */
 struct OH_NativeBundle_AbilityResourceInfo;
 typedef struct OH_NativeBundle_AbilityResourceInfo OH_NativeBundle_AbilityResourceInfo;
+
+typedef struct ArkUI_DrawableDescriptor ArkUI_DrawableDescriptor;
 
 /**
 * @brief Get the bundle name of the abilityResourceInfo.
@@ -165,6 +166,9 @@ BundleManager_ErrorCode OH_AbilityResourceInfo_Destroy(
  */
 int OH_NativeBundle_GetSize();
 
+BundleManager_ErrorCode OH_NativeBundle_GetDrawableDescriptor(
+    OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, ArkUI_DrawableDescriptor** drawableIcon);
+
 OH_NativeBundle_AbilityResourceInfo* OH_AbilityResourceInfo_Create(size_t elementSize);
 
 BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_AppIndex(
@@ -187,6 +191,9 @@ BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_Label(
 
 BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_Icon(
     OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, const char* icon);
+
+BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_DrawableIcon(
+    OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, ArkUI_DrawableDescriptor* drawableIcon);
 #ifdef __cplusplus
 } // extern "C"
 #endif
