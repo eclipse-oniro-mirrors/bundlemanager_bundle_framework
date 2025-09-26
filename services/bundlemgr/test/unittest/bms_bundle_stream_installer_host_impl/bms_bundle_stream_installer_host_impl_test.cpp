@@ -531,5 +531,22 @@ HWTEST_F(bundle_stream_installer_host_impl_test, test_Install_0300, Function | S
     bundleStreamInstaller_->isInstallSharedBundlesOnly_ = isInstallSharedBundlesOnlyOld;
     bundleStreamInstaller_->installParam_.isSelfUpdate = isSelfUpdateOld;
 }
+
+/**
+ * @tc.number: test_InstallApp_0100
+ * @tc.name: test InstallApp
+ * @tc.desc: 1. test InstallApp_0100
+ */
+HWTEST_F(bundle_stream_installer_host_impl_test, test_InstallApp_0100, Function | SmallTest | Level0)
+{
+    bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
+    if (bundleStreamInstaller_->receiver_ == nullptr) {
+        bundleStreamInstaller_->receiver_ = sptr<IStatusReceiver>();
+    }
+    std::vector<std::string> pathVec;
+    pathVec.push_back("");
+    bool onlyShared = false;
+    EXPECT_TRUE(bundleStreamInstaller_->InstallApp(pathVec));
+}
 }
 }

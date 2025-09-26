@@ -36,6 +36,7 @@ constexpr const char* CODE_SIGNATURE_SUFFIX = ".sig";
 constexpr const char* PGO_SUFFIX = ".ap";
 constexpr const char* ABC_FILE_SUFFIX = ".abc";
 constexpr const char* JSON_FILE_SUFFIX = ".json";
+constexpr const char* APP_FILE_SUFFIX = ".app";
 constexpr const char* PATH_SEPARATOR = "/";
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
@@ -59,8 +60,9 @@ bool BundleFileUtil::CheckFilePath(const std::string &bundlePath, std::string &r
         !CheckFileType(bundlePath, ABC_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, CODE_SIGNATURE_SUFFIX) &&
         !CheckFileType(bundlePath, PGO_SUFFIX) &&
-        !CheckFileType(bundlePath, JSON_FILE_SUFFIX)) {
-        APP_LOGE("file is not hap, hsp or hqf or sig or ap or json");
+        !CheckFileType(bundlePath, JSON_FILE_SUFFIX) &&
+        !CheckFileType(bundlePath, APP_FILE_SUFFIX)) {
+        APP_LOGE("file is not hap, hsp or hqf or sig or ap or json or app");
         return false;
     }
     if (!PathToRealPath(bundlePath, realPath)) {
