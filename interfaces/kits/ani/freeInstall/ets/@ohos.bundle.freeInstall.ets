@@ -37,14 +37,14 @@ namespace freeInstall {
     GET_MODULE_SUMMARY = 0x00000004
   }
 
-  export native function setHapModuleUpgradeFlagNative(bundleName: string, moduleName: string, upgradeFlag: UpgradeFlag): void;
-  export native function isHapModuleRemovableNative(bundleName: string, moduleName: string): boolean;
-  export native function getBundlePackInfoNative(bundleName: string, bundlePackFlag: BundlePackFlag): BundlePackInfo;
-  export native function getDispatchInfoNative(): DispatchInfo;
+  native function setHapModuleUpgradeFlagNative(bundleName: string, moduleName: string, upgradeFlag: UpgradeFlag): void;
+  native function isHapModuleRemovableNative(bundleName: string, moduleName: string): boolean;
+  native function getBundlePackInfoNative(bundleName: string, bundlePackFlag: BundlePackFlag): BundlePackInfo;
+  native function getDispatchInfoNative(): DispatchInfo;
 
   function setHapModuleUpgradeFlag(bundleName: string, moduleName: string, upgradeFlag: UpgradeFlag, callback: AsyncCallback<void>): void {
     let execFun = (): void => {
-      freeInstall.setHapModuleUpgradeFlagNative(bundleName, moduleName, upgradeFlag);
+      setHapModuleUpgradeFlagNative(bundleName, moduleName, upgradeFlag);
     };
     let p1 = taskpool.execute(execFun);
     p1.then(() => {
@@ -57,7 +57,7 @@ namespace freeInstall {
   function setHapModuleUpgradeFlag(bundleName: string, moduleName: string, upgradeFlag: UpgradeFlag): Promise<void> {
     let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
-        freeInstall.setHapModuleUpgradeFlagNative(bundleName, moduleName, upgradeFlag);
+        setHapModuleUpgradeFlagNative(bundleName, moduleName, upgradeFlag);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
@@ -71,7 +71,7 @@ namespace freeInstall {
 
   function isHapModuleRemovable(bundleName: string, moduleName: string, callback: AsyncCallback<boolean>): void {
     let execFun = (): boolean => {
-      return freeInstall.isHapModuleRemovableNative(bundleName, moduleName);
+      return isHapModuleRemovableNative(bundleName, moduleName);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -85,7 +85,7 @@ namespace freeInstall {
   function isHapModuleRemovable(bundleName: string, moduleName: string): Promise<boolean> {
     let p = new Promise<boolean>((resolve: (result: boolean) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): boolean => {
-        return freeInstall.isHapModuleRemovableNative(bundleName, moduleName);
+        return isHapModuleRemovableNative(bundleName, moduleName);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -100,7 +100,7 @@ namespace freeInstall {
 
   function getBundlePackInfo(bundleName: string, bundlePackFlag: BundlePackFlag, callback: AsyncCallback<BundlePackInfo>): void {
     let execFun = (): BundlePackInfo => {
-      return freeInstall.getBundlePackInfoNative(bundleName, bundlePackFlag);
+      return getBundlePackInfoNative(bundleName, bundlePackFlag);
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -114,7 +114,7 @@ namespace freeInstall {
   function getBundlePackInfo(bundleName: string, bundlePackFlag: BundlePackFlag): Promise<BundlePackInfo> {
     let p = new Promise<BundlePackInfo>((resolve: (result: BundlePackInfo) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): BundlePackInfo => {
-        return freeInstall.getBundlePackInfoNative(bundleName, bundlePackFlag);
+        return getBundlePackInfoNative(bundleName, bundlePackFlag);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {
@@ -129,7 +129,7 @@ namespace freeInstall {
 
   function getDispatchInfo(callback: AsyncCallback<DispatchInfo>): void {
     let execFun = (): DispatchInfo => {
-      return freeInstall.getDispatchInfoNative();
+      return getDispatchInfoNative();
     };
     let p1 = taskpool.execute(execFun);
     p1.then((e: NullishType) => {
@@ -143,7 +143,7 @@ namespace freeInstall {
   function getDispatchInfo(): Promise<DispatchInfo> {
     let p = new Promise<DispatchInfo>((resolve: (result: DispatchInfo) => void, reject: (error: BusinessError) => void) => {
       let execFun = (): DispatchInfo => {
-        return freeInstall.getDispatchInfoNative();
+        return getDispatchInfoNative();
       };
       let p1 = taskpool.execute(execFun);
       p1.then((e: NullishType) => {

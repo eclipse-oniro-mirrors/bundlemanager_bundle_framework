@@ -39,19 +39,19 @@ export default namespace overlay {
     return err;
   }
 
-  export native function setOverlayEnabledNative(moduleName: string, isEnabled: boolean): void;
-  export native function setOverlayEnabledByBundleNameNative(bundleName: string, moduleName: string, isEnabled: boolean): void;
-  export native function getOverlayModuleInfoNative(moduleName: string): OverlayModuleInfo;
-  export native function getTargetOverlayModuleInfosNative(targetModuleName: string): Array<OverlayModuleInfo>;
-  export native function getOverlayModuleInfoByBundleNameNative(bundleName: string, moduleName: string): Array<OverlayModuleInfo>;
-  export native function getTargetOverlayModuleInfosByBundleNameNative(targetBundleName: string, moduleName: string): Array<OverlayModuleInfo>;
+  native function setOverlayEnabledNative(moduleName: string, isEnabled: boolean): void;
+  native function setOverlayEnabledByBundleNameNative(bundleName: string, moduleName: string, isEnabled: boolean): void;
+  native function getOverlayModuleInfoNative(moduleName: string): OverlayModuleInfo;
+  native function getTargetOverlayModuleInfosNative(targetModuleName: string): Array<OverlayModuleInfo>;
+  native function getOverlayModuleInfoByBundleNameNative(bundleName: string, moduleName: string): Array<OverlayModuleInfo>;
+  native function getTargetOverlayModuleInfosByBundleNameNative(targetBundleName: string, moduleName: string): Array<OverlayModuleInfo>;
 
   function setOverlayEnabled(moduleName: string, isEnabled: boolean, callback: AsyncCallback<void>): void {
     if (moduleName === "") {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
     }
     let cb = (): void => {
-      return overlay.setOverlayEnabledNative(moduleName, isEnabled);
+      return setOverlayEnabledNative(moduleName, isEnabled);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
@@ -67,7 +67,7 @@ export default namespace overlay {
     }
     let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
-        return overlay.setOverlayEnabledNative(moduleName, isEnabled);
+        return setOverlayEnabledNative(moduleName, isEnabled);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
@@ -88,7 +88,7 @@ export default namespace overlay {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
     }
     let cb = (): void => {
-      return overlay.setOverlayEnabledByBundleNameNative(bundleName, moduleName, isEnabled);
+      return setOverlayEnabledByBundleNameNative(bundleName, moduleName, isEnabled);
     };
     let p1 = taskpool.execute(cb);
     p1.then(() => {
@@ -107,7 +107,7 @@ export default namespace overlay {
     }
     let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
-        return overlay.setOverlayEnabledByBundleNameNative(bundleName, moduleName, isEnabled);
+        return setOverlayEnabledByBundleNameNative(bundleName, moduleName, isEnabled);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
@@ -125,7 +125,7 @@ export default namespace overlay {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
     }
     let cb = (): OverlayModuleInfo => {
-      return overlay.getOverlayModuleInfoNative(moduleName);
+      return getOverlayModuleInfoNative(moduleName);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -142,7 +142,7 @@ export default namespace overlay {
     }
     let p = new Promise<OverlayModuleInfo>((resolve: (overlayModuleInfo: OverlayModuleInfo) => void, reject: (error: BusinessError) => void) => {
       let cb = (): OverlayModuleInfo => {
-        return overlay.getOverlayModuleInfoNative(moduleName);
+        return getOverlayModuleInfoNative(moduleName);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
@@ -160,7 +160,7 @@ export default namespace overlay {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_TARGET_MODULENAME_EMPTY_ERROR);
     }
     let cb = (): (Array<OverlayModuleInfo>) => {
-      return overlay.getTargetOverlayModuleInfosNative(targetModuleName);
+      return getTargetOverlayModuleInfosNative(targetModuleName);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -177,7 +177,7 @@ export default namespace overlay {
     }
     let p = new Promise<Array<OverlayModuleInfo>>((resolve: (arrOverlayModuleInfo: Array<OverlayModuleInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<OverlayModuleInfo>) => {
-        return overlay.getTargetOverlayModuleInfosNative(targetModuleName);
+        return getTargetOverlayModuleInfosNative(targetModuleName);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
@@ -195,7 +195,7 @@ export default namespace overlay {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
     }
     let cb = (): (Array<OverlayModuleInfo>) => {
-      return overlay.getOverlayModuleInfoByBundleNameNative(bundleName, '');
+      return getOverlayModuleInfoByBundleNameNative(bundleName, '');
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -211,7 +211,7 @@ export default namespace overlay {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);
     }
     let cb = (): (Array<OverlayModuleInfo>) => {
-      return overlay.getOverlayModuleInfoByBundleNameNative(bundleName, moduleName);
+      return getOverlayModuleInfoByBundleNameNative(bundleName, moduleName);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -229,7 +229,7 @@ export default namespace overlay {
     let moduleNameInfo: string = moduleName ?? '';
     let p = new Promise<Array<OverlayModuleInfo>>((resolve: (arrOverlayModuleInfo: Array<OverlayModuleInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<OverlayModuleInfo>) => {
-        return overlay.getOverlayModuleInfoByBundleNameNative(bundleName, moduleNameInfo);
+        return getOverlayModuleInfoByBundleNameNative(bundleName, moduleNameInfo);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
@@ -247,7 +247,7 @@ export default namespace overlay {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_TARGET_BUNDLENAME_EMPTY_ERROR);
     }
     let cb = (): (Array<OverlayModuleInfo>) => {
-      return overlay.getTargetOverlayModuleInfosByBundleNameNative(targetBundleName, '');
+      return getTargetOverlayModuleInfosByBundleNameNative(targetBundleName, '');
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -263,7 +263,7 @@ export default namespace overlay {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_TARGET_BUNDLENAME_EMPTY_ERROR);
     }
     let cb = (): (Array<OverlayModuleInfo>) => {
-      return overlay.getTargetOverlayModuleInfosByBundleNameNative(targetBundleName, moduleName);
+      return getTargetOverlayModuleInfosByBundleNameNative(targetBundleName, moduleName);
     };
     let p1 = taskpool.execute(cb);
     p1.then((e: NullishType) => {
@@ -281,7 +281,7 @@ export default namespace overlay {
     let moduleNameInfo: string = moduleName ?? '';
     let p = new Promise<Array<OverlayModuleInfo>>((resolve: (arrOverlayModuleInfo: Array<OverlayModuleInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<OverlayModuleInfo>) => {
-        return overlay.getTargetOverlayModuleInfosByBundleNameNative(targetBundleName, moduleNameInfo);
+        return getTargetOverlayModuleInfosByBundleNameNative(targetBundleName, moduleNameInfo);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: NullishType) => {
