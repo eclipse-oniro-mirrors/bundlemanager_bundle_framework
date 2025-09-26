@@ -2195,6 +2195,36 @@ HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfo_0004, Function | MediumTe
 }
 
 /**
+ * @tc.number: GetAbilityResourceInfo_0005
+ * @tc.name: test GetAbilityResourceInfo
+ * @tc.desc: 1.test GetAbilityResourceInfo
+             2.text fileType
+ */
+HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfo_0005, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string fileType = "*/*";
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    auto testRet = hostImpl->GetAbilityResourceInfo(fileType, launcherAbilityResourceInfos);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE);
+}
+
+/**
+ * @tc.number: GetAbilityResourceInfo_0006
+ * @tc.name: test GetAbilityResourceInfo
+ * @tc.desc: 1.test GetAbilityResourceInfo
+             2.text fileType
+ */
+HWTEST_F(BmsBundleManagerTest3, GetAbilityResourceInfo_0006, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string fileType = "general.object";
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    auto testRet = hostImpl->GetAbilityResourceInfo(fileType, launcherAbilityResourceInfos);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE);
+}
+
+/**
  * @tc.number: GetSpecificResourceInfo_0001
  * @tc.name: test GetSpecificResourceInfo
  * @tc.desc: 1.test GetSpecificResourceInfo

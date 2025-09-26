@@ -6363,8 +6363,8 @@ ErrCode BundleMgrHostImpl::GetAbilityResourceInfo(const std::string &fileType,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
     APP_LOGD("start GetLauncherAbilityResourceInfo, fileType: %{public}s", fileType.c_str());
-    if (fileType.empty()) {
-        APP_LOGW("fileType is empty");
+    if (fileType.empty() || fileType == Constants::TYPE_WILDCARD || fileType == Constants::GENERAL_OBJECT) {
+        APP_LOGW("fileType is invaild");
         return ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_ABILITY_INFO)) {
