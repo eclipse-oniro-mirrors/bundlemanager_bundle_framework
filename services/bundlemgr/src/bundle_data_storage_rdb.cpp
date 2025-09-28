@@ -26,7 +26,7 @@ constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
 }
 BundleDataStorageRdb::BundleDataStorageRdb()
 {
-    APP_LOGI("BundleDataStorageRdb instance is created");
+    APP_LOGI_NOFUNC("BundleDataStorageRdb instance is created");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = BUNDLE_RDB_TABLE_NAME;
@@ -36,12 +36,12 @@ BundleDataStorageRdb::BundleDataStorageRdb()
 
 BundleDataStorageRdb::~BundleDataStorageRdb()
 {
-    APP_LOGI("BundleDataStorageRdb instance is destroyed");
+    APP_LOGI_NOFUNC("BundleDataStorageRdb instance is destroyed");
 }
 
 bool BundleDataStorageRdb::LoadAllData(std::map<std::string, InnerBundleInfo> &infos)
 {
-    APP_LOGI("Load all installed bundle data to map");
+    APP_LOGI_NOFUNC("Load all installed bundle data to map");
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
         return false;
@@ -61,7 +61,7 @@ void BundleDataStorageRdb::TransformStrToInfo(
     const std::map<std::string, std::string> &datas,
     std::map<std::string, InnerBundleInfo> &infos)
 {
-    APP_LOGI("TransformStrToInfo start");
+    APP_LOGI_NOFUNC("bundle TransformStrToInfo start");
     if (rdbDataManager_ == nullptr || datas.empty()) {
         APP_LOGE("rdbDataManager is null");
         return;

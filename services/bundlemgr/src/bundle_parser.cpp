@@ -314,7 +314,7 @@ std::map<std::string, std::string> BundleParser::ParseAclExtendedMap(const std::
         APP_LOGD("appServiceCapabilities is empty");
         return aclExtendedMap;
     }
-    APP_LOGI("ParseAclExtendedMap from %{private}s", appServiceCapabilities.c_str());
+    APP_LOGD("ParseAclExtendedMap from %{private}s", appServiceCapabilities.c_str());
     nlohmann::json jsonBuf = nlohmann::json::parse(appServiceCapabilities, nullptr, false);
     if (jsonBuf.is_discarded()) {
         APP_LOGE("json file discarded");

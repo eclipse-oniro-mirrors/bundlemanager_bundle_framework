@@ -60,7 +60,7 @@ constexpr const char* IS_RECOVER = "isRecover";
 
 BundleCommonEventMgr::BundleCommonEventMgr()
 {
-    APP_LOGI_NOFUNC("enter BundleCommonEventMgr");
+    APP_LOGD("enter BundleCommonEventMgr");
     Init();
 }
 
@@ -102,9 +102,9 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     // trigger BundleEventCallback first
     if (dataMgr != nullptr && !(want.GetAction() == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED &&
         installResult.resultCode != ERR_OK)) {
-        LOG_I(BMS_TAG_DEFAULT, "eventBack begin");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "eventBack begin");
         dataMgr->NotifyBundleEventCallback(commonData);
-        LOG_I(BMS_TAG_DEFAULT, "eventBack end");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "eventBack end");
     }
 
     uint8_t installType = ((installResult.type == NotifyType::UNINSTALL_BUNDLE) ||
@@ -444,9 +444,9 @@ void BundleCommonEventMgr::NotifyPluginEvents(const NotifyBundleEvents &event,
     want.SetParam(Constants::UID, event.uid);
     EventFwk::CommonEventData commonData { want };
     if (dataMgr != nullptr) {
-        LOG_I(BMS_TAG_DEFAULT, "pluginEventBack begin");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "pluginEventBack begin");
         dataMgr->NotifyPluginEventCallback(commonData);
-        LOG_I(BMS_TAG_DEFAULT, "pluginEventBack end");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "pluginEventBack end");
     }
 }
 

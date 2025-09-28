@@ -280,7 +280,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
             APP_LOGD("update succeed");
             return true;
         }
-        APP_LOGW("update failed: incorrect state, -n: %{public}s", bundleName.c_str());
+        APP_LOGW_NOFUNC("update failed: incorrect state -n: %{public}s", bundleName.c_str());
         return false;
     }
 
@@ -7900,7 +7900,7 @@ void BundleDataMgr::ResetAOTFlags()
 
 void BundleDataMgr::ResetAOTFlagsCommand(const std::string &bundleName)
 {
-    APP_LOGI("ResetAOTFlagsCommand begin");
+    APP_LOGD("ResetAOTFlagsCommand begin");
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
@@ -7915,7 +7915,7 @@ void BundleDataMgr::ResetAOTFlagsCommand(const std::string &bundleName)
         APP_LOGW("SaveStorageBundleInfo failed, bundleName : %{public}s", item->second.GetBundleName().c_str());
         return;
     }
-    APP_LOGI("ResetAOTFlagsCommand end");
+    APP_LOGD("ResetAOTFlagsCommand end");
 }
 
 ErrCode BundleDataMgr::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,

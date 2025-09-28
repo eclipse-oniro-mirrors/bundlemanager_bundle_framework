@@ -1238,7 +1238,7 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
 ErrCode BaseBundleInstaller::CheckU1Enable(const InnerBundleInfo &info,
     const int32_t userId)
 {
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "start for -n %{public}s -u %{public}d",
+    LOG_D(BMS_TAG_INSTALLER, "start for -n %{public}s -u %{public}d",
         info.GetBundleName().c_str(), userId);
     std::string bundleName = info.GetBundleName();
     bool u1Enable = info.IsU1Enable();
@@ -2876,7 +2876,7 @@ ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLib
     auto appQuickFix = oldAppQuickFix;
     AppqfInfo &appQfInfo = appQuickFix.deployedAppqfInfo;
     if (isFeatureNeedUninstall_ || appQfInfo.hqfInfos.empty()) {
-        LOG_I(BMS_TAG_INSTALLER, "No need ProcessDeployedHqfInfo");
+        LOG_D(BMS_TAG_INSTALLER, "No need ProcessDeployedHqfInfo");
         return ERR_OK;
     }
 
@@ -4402,7 +4402,7 @@ void BaseBundleInstaller::GetRemoveExtensionDirs(
 void BaseBundleInstaller::RemoveCreatedExtensionDirsForException() const
 {
     if (createExtensionDirs_.empty()) {
-        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "no need to remove extension sandbox dir");
+        LOG_D(BMS_TAG_INSTALLER, "no need to remove extension sandbox dir");
         return;
     }
     if (InstalldClient::GetInstance()->RemoveExtensionDir(userId_, createExtensionDirs_) != ERR_OK) {
@@ -5460,7 +5460,7 @@ void BaseBundleInstaller::OnSingletonChange(bool killProcess)
 void BaseBundleInstaller::RestoreHaps(const std::vector<std::string> &bundlePaths, const InstallParam &installParam)
 {
     if (!installParam.IsRenameInstall() || bundlePaths_.empty() || bundlePaths.empty()) {
-        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "No need to restore haps");
+        LOG_D(BMS_TAG_INSTALLER, "No need to restore haps");
         return;
     }
     const std::string newPrefix = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
@@ -5510,7 +5510,7 @@ void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
         return;
     }
     if (!dataMgr_->GetBundleNameForUid(eventInfo.callingUid, eventInfo.callingBundleName)) {
-        LOG_W(BMS_TAG_INSTALLER, "CallingUid %{public}d is not hap, no bundleName", eventInfo.callingUid);
+        LOG_D(BMS_TAG_INSTALLER, "CallingUid %{public}d is not hap, no bundleName", eventInfo.callingUid);
         eventInfo.callingBundleName = Constants::EMPTY_STRING;
         return;
     }
