@@ -53,6 +53,7 @@
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "install_exception_mgr.h"
+#include "new_bundle_data_dir_mgr.h"
 #include "on_demand_install_data_mgr.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -1599,6 +1600,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         cacheInfo.GetBaseApplicationInfo().compileSdkVersion);
     SetUid(uid);
     SetIsAbcCompressed();
+    InnerProcessNewBundleDataDir(installParam.isOTA || otaInstall_, oldInfo, cacheInfo);
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     CheckAddResultMsg(cacheInfo, isContainEntry_);
@@ -8094,6 +8096,35 @@ void BaseBundleInstaller::SetAPIAndSdkVersions(int32_t targetAPIVersion,
 void BaseBundleInstaller::SetUid(int32_t uid)
 {
     sysEventInfo_.uid = uid;
+}
+
+void BaseBundleInstaller::InnerProcessNewBundleDataDir(const bool isOta,
+    const InnerBundleInfo &oldBundleInfo, const InnerBundleInfo &newBundleInfo)
+{
+    if (!isOta || !isAppExist_) {
+        return;
+    }
+    uint32_t dirType = static_cast<uint32_t>(CreateBundleDirType::CREATE_NONE_DIR);
+    if (!oldBundleInfo.NeedCreateEl5Dir() && newBundleInfo.NeedCreateEl5Dir()) {
+        dirType |= static_cast<uint32_t>(CreateBundleDirType::CREATE_EL5_DIR);
+    }
+    auto newDataGroup = newBundleInfo.GetDataGroupInfos();
+    if (!newDataGroup.empty()) {
+        auto oldDataGroup = oldBundleInfo.GetDataGroupInfos();
+        for (const auto &item : newDataGroup) {
+            if (oldDataGroup.find(item.first) == oldDataGroup.end()) {
+                dirType |= static_cast<uint32_t>(CreateBundleDirType::CREATE_GROUP_DIR);
+                break;
+            }
+        }
+    }
+    if (dirType == static_cast<uint32_t>(CreateBundleDirType::CREATE_NONE_DIR)) {
+        return;
+    }
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    if (newBundleDirMgr != nullptr) {
+        (void)newBundleDirMgr->AddNewBundleDirInfo(newBundleInfo.GetBundleName(), dirType);
+    }
 }
 
 void BaseBundleInstaller::SetIsAbcCompressed()

@@ -25,6 +25,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "hitrace_meter.h"
+#include "new_bundle_data_dir_mgr.h"
 #include "parameters.h"
 #include "running_process_info.h"
 
@@ -386,7 +387,10 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    (void)dataMgr->InnerProcessOtaNewInstallBundle(bundleName, userId);
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    if (newBundleDirMgr != nullptr) {
+        (void)newBundleDirMgr->ProcessOtaBundleDataDir(bundleName, userId);
+    }
     std::string appId;
     std::string appIdentifier;
     ErrCode ret = dataMgr->GetAppIdAndAppIdentifierByBundleName(bundleName, appId, appIdentifier);

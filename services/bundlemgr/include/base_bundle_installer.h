@@ -828,6 +828,8 @@ private:
     bool AddAppGalleryHapToTempPath(const bool isPreInstallApp,
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
     bool DeleteAppGalleryHapFromTempPath();
+    void InnerProcessNewBundleDataDir(const bool isOta, const InnerBundleInfo &oldBundleInfo,
+        const InnerBundleInfo &newBundleInfo);
     bool GetTempBundleInfo(InnerBundleInfo &info) const;
     bool InitTempBundleFromCache(InnerBundleInfo &info, bool &isAppExist, std::string bundleName = "");
     ErrCode UpdateAppEncryptedStatus(const std::string &bundleName, bool isExisted, int32_t appIndex);
