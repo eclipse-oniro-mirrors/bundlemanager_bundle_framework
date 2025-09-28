@@ -852,6 +852,9 @@ public:
         std::vector<BundleStorageStats> &bundleStats) const;
     void GetBundleModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNameList) const;
     bool GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const;
+    bool GetAllUnisntallBundleUids(const int32_t requestUserId,
+        const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
+        std::vector<int32_t> &uids) const;
     bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames);
@@ -908,9 +911,9 @@ public:
     bool IsSystemHsp(const std::string &bundleName);
 
     bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
-    bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo);
+    bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo) const;
     bool DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
-    bool GetAllUninstallBundleInfo(std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos);
+    bool GetAllUninstallBundleInfo(std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos) const;
 
     bool AddFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
         const FirstInstallBundleInfo &firstInstallBundleInfo);

@@ -3496,6 +3496,7 @@ void BaseBundleInstaller::GetUninstallBundleInfo(bool isKeepData, int32_t userId
     uninstallBundleInfo.appIdentifier = oldInfo.GetAppIdentifier();
     uninstallBundleInfo.appProvisionType = oldInfo.GetAppProvisionType();
     uninstallBundleInfo.bundleType = oldInfo.GetApplicationBundleType();
+    oldInfo.GetModuleNames(uninstallBundleInfo.moduleNames);
 }
 
 void BaseBundleInstaller::SaveUninstallBundleInfo(const std::string bundleName, bool isKeepData,

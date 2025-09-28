@@ -12679,4 +12679,33 @@ HWTEST_F(BmsBundleInstallerTest, AddInnerBundleUserInfo_0100, Function | SmallTe
     dataMgr->RemoveInnerBundleUserInfo(SYSTEMFIEID_NAME, ADD_NEW_USERID);
     UnInstallBundle(SYSTEMFIEID_NAME);
 }
+
+/**
+ * @tc.number: GetUninstallBundleInfo_0010
+ * @tc.name: test GetUninstallBundleInfo
+ * @tc.desc: 1.Test the GetUninstallBundleInfo
+*/
+HWTEST_F(BmsBundleInstallerTest, GetUninstallBundleInfo_0010, Function | SmallTest | Level0)
+{
+    UninstallBundleInfo uninstallBundleInfo;
+    BaseBundleInstaller installer;
+    installer.userId_ = Constants::START_USERID;
+    InnerBundleInfo oldInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = 20022222;
+
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    innerBundleCloneInfo.userId = Constants::START_USERID;
+    innerBundleCloneInfo.appIndex = 1;
+    innerBundleCloneInfo.uid = 20022223;
+
+    innerBundleUserInfo.cloneInfos["1"] = innerBundleCloneInfo;
+    oldInfo.innerBundleUserInfos_["com.example.GetUninstallBundleInfo_0010"] = innerBundleUserInfo;
+
+    installer.GetUninstallBundleInfo(false, Constants::START_USERID, oldInfo, uninstallBundleInfo);
+    EXPECT_TRUE(uninstallBundleInfo.userInfos.empty());
+
+    installer.GetUninstallBundleInfo(true, Constants::START_USERID, oldInfo, uninstallBundleInfo);
+    EXPECT_FALSE(uninstallBundleInfo.userInfos.empty());
+}
 } // OHOS

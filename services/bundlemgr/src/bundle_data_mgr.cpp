@@ -513,7 +513,8 @@ bool BundleDataMgr::UpdateUninstallBundleInfo(const std::string &bundleName,
     return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
 }
 
-bool BundleDataMgr::GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo)
+bool BundleDataMgr::GetUninstallBundleInfo(const std::string &bundleName,
+    UninstallBundleInfo &uninstallBundleInfo) const
 {
     if (uninstallDataMgr_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
@@ -527,7 +528,7 @@ bool BundleDataMgr::GetUninstallBundleInfo(const std::string &bundleName, Uninst
 }
 
 bool BundleDataMgr::GetAllUninstallBundleInfo(
-    std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos)
+    std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos) const
 {
     if (uninstallDataMgr_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
@@ -4100,12 +4101,24 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
-        if (infoItem == bundleInfos_.end()) {
+        UninstallBundleInfo uninstallBundleInfo;
+        if (infoItem == bundleInfos_.end() && !GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+            APP_LOGD("bundle is not existed and not uninstalled with keepdata before");
             return false;
         }
-        responseUserId = infoItem->second.GetResponseUserId(userId);
-        uid = infoItem->second.GetUid(responseUserId, appIndex);
-        infoItem->second.GetModuleNames(moduleNameList);
+        if (infoItem != bundleInfos_.end()) {
+            responseUserId = infoItem->second.GetResponseUserId(userId);
+            uid = infoItem->second.GetUid(responseUserId, appIndex);
+            infoItem->second.GetModuleNames(moduleNameList);
+        } else {
+            if (appIndex != 0) {
+                APP_LOGD("keepdata not support clone yet");
+                return false;
+            }
+            responseUserId = uninstallBundleInfo.GetResponseUserId(userId);
+            uid = uninstallBundleInfo.GetUid(responseUserId);
+            moduleNameList = uninstallBundleInfo.moduleNames;
+        }
     }
     ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
         bundleName, responseUserId, bundleStats, uid, appIndex, statFlag, moduleNameList);
@@ -4116,15 +4129,14 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
-        if (infoItem == bundleInfos_.end()) {
-            return false;
-        }
-        if (appIndex == 0 && infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
-            for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
-                if (innerModuleInfo.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
-                    continue;
+        if (infoItem != bundleInfos_.end()) {
+            if (appIndex == 0 && infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+                for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+                    if (innerModuleInfo.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
+                        continue;
+                    }
+                    bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
                 }
-                bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
             }
         }
     }
@@ -4132,7 +4144,7 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     return true;
 }
 
-ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, int32_t userId,
+ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
     std::vector<BundleStorageStats> &bundleStats) const
 {
     std::unordered_map<std::string, int32_t> uidMap;
@@ -4149,11 +4161,18 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
             InnerBundleUserInfo userInfo;
             if (infoItem == bundleInfos_.end() ||
                 !infoItem->second.GetInnerBundleUserInfo(infoItem->second.GetResponseUserId(userId), userInfo)) {
-                BundleStorageStats stats;
-                stats.bundleName = *bundleName;
-                bundleName = bundleNameList.erase(bundleName);
-                stats.errCode = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-                bundleStatsList.push_back(stats);
+                UninstallBundleInfo uninstallBundleInfo;
+                if (!GetUninstallBundleInfo(*bundleName, uninstallBundleInfo)) {
+                    APP_LOGD("bundle is not existed and not uninstalled with keepdata before");
+                    BundleStorageStats stats;
+                    stats.bundleName = *bundleName;
+                    bundleName = bundleNameList.erase(bundleName);
+                    stats.errCode = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+                    bundleStatsList.push_back(stats);
+                } else {
+                    uidMap.emplace(*bundleName, uninstallBundleInfo.GetUid(userId));
+                    ++bundleName;
+                }
                 continue;
             }
             uidMap.emplace(*bundleName, userInfo.uid);
@@ -4187,13 +4206,15 @@ void BundleDataMgr::GetPreBundleSize(const std::string &name, std::vector<Bundle
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(name);
-        if (infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
-            for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
-                if (innerModuleInfo.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
-                    continue;
+        if (infoItem != bundleInfos_.end()) {
+            if (infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+                for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+                    if (innerModuleInfo.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
+                        continue;
+                    }
+                    hapPath = innerModuleInfo.second.hapPath;
+                    getPreBundleSize = true;
                 }
-                hapPath = innerModuleInfo.second.hapPath;
-                getPreBundleSize = true;
             }
         }
     }
@@ -4212,6 +4233,30 @@ void BundleDataMgr::GetBundleModuleNames(const std::string &bundleName,
         return;
     }
     infoItem->second.GetModuleNames(moduleNameList);
+}
+
+bool BundleDataMgr::GetAllUnisntallBundleUids(const int32_t requestUserId,
+    const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
+    std::vector<int32_t> &uids) const
+{
+    int32_t responseUserId = requestUserId;
+    for (const auto &info : uninstallBundleInfos) {
+        std::string bundleName = info.first;
+        if (info.second.userInfos.empty()) {
+            continue;
+        }
+        responseUserId = info.second.GetResponseUserId(requestUserId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            APP_LOGD("bundle %{public}s before is not installed in user %{public}d or 0", bundleName.c_str(), requestUserId);
+            continue;
+        }
+        if (info.second.bundleType != BundleType::ATOMIC_SERVICE && info.second.bundleType != BundleType::APP) {
+            APP_LOGD("BundleType is invalid: %{public}d, bundname: %{public}s", info.second.bundleType, bundleName.c_str());
+            continue;
+        }
+        uids.push_back(info.second.GetUid(responseUserId));
+    }
+    return true;
 }
 
 bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const
@@ -4249,6 +4294,9 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
             }
         }
     }
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    GetAllUninstallBundleInfo(uninstallBundleInfos);
+    GetAllUnisntallBundleUids(requestUserId, uninstallBundleInfos, uids);
     if (InstalldClient::GetInstance()->GetAllBundleStats(responseUserId, bundleStats, uids) != ERR_OK) {
         APP_LOGW("GetAllBundleStats failed, userId: %{public}d", responseUserId);
         return false;
