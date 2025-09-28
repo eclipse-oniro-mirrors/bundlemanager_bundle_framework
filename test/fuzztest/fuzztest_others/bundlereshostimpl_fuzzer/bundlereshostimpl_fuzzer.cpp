@@ -33,8 +33,10 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     std::string bundleName(data, size);
     BundleResourceInfo info;
     bundleResourceHostImpl->GetBundleResourceInfo(bundleName, 0, info);
+    bundleResourceHostImpl->GetBundleResourceInfo(bundleName, 0, info, -1);
     std::vector<LauncherAbilityResourceInfo> launcherInfos;
     bundleResourceHostImpl->GetLauncherAbilityResourceInfo(bundleName, 0, launcherInfos);
+    bundleResourceHostImpl->GetLauncherAbilityResourceInfo(bundleName, 0, launcherInfos, -1);
     std::vector<BundleResourceInfo> infos;
     bundleResourceHostImpl->GetAllBundleResourceInfo(0, infos);
     bundleResourceHostImpl->GetAllLauncherAbilityResourceInfo(0, launcherInfos);
@@ -44,6 +46,10 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     bundleResourceHostImpl->DeleteResourceInfo(key);
     int32_t appIndex = 1;
     bundleResourceHostImpl->CheckBundleNameValid(bundleName, appIndex);
+
+    uint32_t flags = 0;
+    bundleResourceHostImpl->CheckExtensionAbilityValid(bundleName,ExtensionAbilityType::INPUTMETHOD, flags, 0);
+    bundleResourceHostImpl->CheckExtensionAbilityValid(bundleName,ExtensionAbilityType::INPUTMETHOD, flags, 1);
     return true;
 }
 }

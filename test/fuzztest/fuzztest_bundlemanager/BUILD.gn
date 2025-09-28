@@ -60,6 +60,7 @@ group("bundlemanagerfuzztest") {
     "bmsbundleresource_fuzzer:BMSBundleResourceFuzzTest",
     "bmsbundleresourcedrawable_fuzzer:BMSBundleResourceDrawableFuzzTest",
     "bmsbundleresourcehost_fuzzer:BMSBundleResourceHostFuzzTest",
+    "bmsbundleresourcethemeprocess_fuzzer:BMSBundleResourceThemeProcessFuzzTest",
     "bmsbundleresourcemanager_fuzzer:BMSBundleResourceManagerFuzzTest",
     "bmsbundlestatuscallbackproxy_fuzzer:BMSBundleStatusCallbackProxyFuzzTest",
     "bmsbundlestreaminstallerhost_fuzzer:BMSBundleStreamInstallerHostFuzzTest",
