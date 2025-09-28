@@ -11577,5 +11577,28 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosWithDefault(const Want &want, in
 #endif
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath)
+{
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    InnerBundleInfo innerBundleInfo;
+    if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
+        APP_LOGE("get innerBundleInfo by uid :%{public}d failed", uid);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    int32_t userId = GetUserIdByCallingUid();
+    std::unordered_map<std::string, PluginBundleInfo> pluginBundleInfos;
+    if (!innerBundleInfo.GetPluginBundleInfos(userId, pluginBundleInfos)) {
+        APP_LOGE("pluginBundleName:%{public}s can not find pluginBundleInfo", pluginBundleName.c_str());
+        return ERR_APPEXECFWK_GET_PLUGIN_INFO_ERROR;
+    }
+    auto it = pluginBundleInfos.find(pluginBundleName);
+    if (it == pluginBundleInfos.end()) {
+        APP_LOGE("can not find plugin info for %{public}s in user(%{public}d)", pluginBundleName.c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    codePath = it->second.codePath;
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

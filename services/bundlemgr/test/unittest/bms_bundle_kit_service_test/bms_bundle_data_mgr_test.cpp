@@ -4655,4 +4655,21 @@ HWTEST_F(BmsBundleDataMgrTest, InnerProcessOtaNewInstallBundle_0010, Function | 
         EXPECT_FALSE(ret);
     }
 }
+
+/**
+ * @tc.number: HandleGetPluginBundlePathForSelf_0100
+ * @tc.name: HandleGetPluginBundlePathForSelf_0100
+ * @tc.desc: test BundleMgrHostHandleGetPluginBundlePathForSelf(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, HandleGetPluginBundlePathForSelf_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto ret = localBundleMgrHost->HandleGetPluginBundlePathForSelf(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

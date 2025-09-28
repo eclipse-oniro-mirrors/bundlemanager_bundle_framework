@@ -341,6 +341,8 @@ namespace bundleManager {
   native function getAppCloneIdentityBySandboxDataDir(sandboxDataDir: string): AppCloneIdentity;
 
   native function getAbilityInfoNative(uri: string, abilityFlags: int): Array<AbilityInfo>;
+
+  native function getPluginBundlePathForSelfNative(pluginBundleName: string): string;
   
   function isApplicationEnabledSync(bundleName: string): boolean {
     return isApplicationEnabledNative(bundleName, 0, true);
@@ -1756,6 +1758,10 @@ namespace bundleManager {
     }
     );
     return p;
+  }
+
+  function getPluginBundlePathForSelf(pluginBundleName: string): string {
+    return getPluginBundlePathForSelfNative(pluginBundleName);
   }
 }
 

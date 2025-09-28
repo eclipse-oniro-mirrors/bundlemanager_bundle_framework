@@ -67,6 +67,7 @@ public:
         const std::string& moduleName, const std::string& abilityName, const std::vector<std::string>& fileTypes);
     static ErrCode InnerGetAbilityInfos(const std::string& uri, uint32_t flags, std::vector<AbilityInfo>& abilityInfos);
     static ErrCode InnerCleanBundleCacheForSelfCallback(const OHOS::sptr<CleanCacheCallback> cleanCacheCallback);
+    static ErrCode InnerGetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath);
 };
 } // AppExecFwk
 } // OHOS
