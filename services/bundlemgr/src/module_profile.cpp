@@ -2510,7 +2510,7 @@ void ToExtensionInfo(
     extensionInfo.labelId = extension.labelId;
     extensionInfo.description = extension.description;
     extensionInfo.descriptionId = extension.descriptionId;
-    if (transformParam.isSystemApp) {
+    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
         extensionInfo.readPermission = extension.readPermission;
         extensionInfo.writePermission = extension.writePermission;
     }
