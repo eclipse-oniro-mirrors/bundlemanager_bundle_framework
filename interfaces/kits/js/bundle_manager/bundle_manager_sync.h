@@ -49,6 +49,7 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info);
 napi_value GetSignatureInfoSync(napi_env env, napi_callback_info info);
 napi_value GetSandboxDataDirSync(napi_env env, napi_callback_info info);
 napi_value GetAppCloneIdentityBySandboxDataDirSync(napi_env env, napi_callback_info info);
+napi_value GetPluginBundlePathForSelfSync(napi_env env, napi_callback_info info);
 
 bool ParseWantWithParameter(napi_env env, napi_value args, OHOS::AAFwk::Want &want);
 bool ParseWantListWithParameter(napi_env env, napi_value args, std::vector<OHOS::AAFwk::Want> &wants);

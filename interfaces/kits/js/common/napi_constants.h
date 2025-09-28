@@ -179,6 +179,7 @@ constexpr const char* GET_ALL_DYNAMIC_ICON = "GetAllDynamicIconInfo";
 constexpr const char* GET_SANDBOX_DATA_DIR_SYNC = "GetSandboxDataDirSync";
 constexpr const char* GET_ABILITY_INFOS = "GetAbilityInfos";
 constexpr const char* GET_DYNAMIC_ICON_INFO = "GetDynamicIconInfo";
+constexpr const char* GET_PLUGIN_BUNDLE_PATH_FOR_SELF = "GetPluginBundlePathForSelf";
 
 inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1 };
 

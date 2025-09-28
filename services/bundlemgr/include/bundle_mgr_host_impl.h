@@ -1201,6 +1201,7 @@ public:
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos) override;
     virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
         int32_t userId) override;
+    virtual ErrCode GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);

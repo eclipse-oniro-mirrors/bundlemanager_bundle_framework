@@ -2261,5 +2261,20 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetAbilityResourceInfo_0001, Function | Med
     ErrCode res = bundleMgrHost.HandleGetAbilityResourceInfo(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+ /**
+ * @tc.number: HandleGetPluginBundlePathForSelf_0001
+ * @tc.name: test the GetPluginBundlePathForSelf
+ * @tc.desc: 1. system running normally
+ *           2. test GetPluginBundlePathForSelf
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetPluginBundlePathForSelf_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetPluginBundlePathForSelf(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS
