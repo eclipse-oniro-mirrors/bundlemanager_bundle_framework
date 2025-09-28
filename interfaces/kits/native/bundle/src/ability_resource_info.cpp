@@ -34,7 +34,6 @@ struct OH_NativeBundle_AbilityResourceInfo {
     char *moduleName;
     char *abilityName;
     char *label;
-    char *icon;
     ArkUI_DrawableDescriptor *drawableIcon;
 };
 
@@ -119,7 +118,6 @@ void ResetResourceInfo(OH_NativeBundle_AbilityResourceInfo* resourceInfo, size_t
         resourceInfo[i].moduleName = nullptr;
         resourceInfo[i].abilityName = nullptr;
         resourceInfo[i].label = nullptr;
-        resourceInfo[i].icon = nullptr;
         resourceInfo[i].drawableIcon = nullptr;
     }
 }
@@ -134,7 +132,6 @@ bool ReleaseResourceInfo(OH_NativeBundle_AbilityResourceInfo* resourceInfo, size
         ReleaseChar(resourceInfo[i].moduleName);
         ReleaseChar(resourceInfo[i].abilityName);
         ReleaseChar(resourceInfo[i].label);
-        ReleaseChar(resourceInfo[i].icon);
         if (resourceInfo[i].drawableIcon != nullptr) {
             OH_ArkUI_DrawableDescriptor_Dispose(resourceInfo[i].drawableIcon);
             resourceInfo[i].drawableIcon = nullptr;
@@ -342,20 +339,6 @@ BundleManager_ErrorCode OH_NativeBundle_GetLabel(OH_NativeBundle_AbilityResource
     return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
 }
 
-BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_Icon(
-    OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, const char* icon)
-{
-    if (abilityResourceInfo == nullptr || icon == nullptr) {
-        APP_LOGE("abilityResourceInfo or icon is nullptr");
-        return BUNDLE_MANAGER_ERROR_CODE_PARAM_INVALID;
-    }
-    if (!CopyConstChar(abilityResourceInfo->icon, icon)) {
-        APP_LOGE("copy icon failed");
-        return BUNDLE_MANAGER_ERROR_CODE_PARAM_INVALID;
-    }
-    return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
-}
-
 BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_DrawableIcon(
     OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, ArkUI_DrawableDescriptor* drawableIcon)
 {
@@ -364,18 +347,5 @@ BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_DrawableIcon(
         return BUNDLE_MANAGER_ERROR_CODE_PARAM_INVALID;
     }
     abilityResourceInfo->drawableIcon = drawableIcon;
-    return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
-}
-
-BundleManager_ErrorCode OH_NativeBundle_GetIcon(OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, char** icon)
-{
-    if (abilityResourceInfo == nullptr || icon == nullptr) {
-        APP_LOGE("abilityResourceInfo or icon is nullptr");
-        return BUNDLE_MANAGER_ERROR_CODE_PARAM_INVALID;
-    }
-    if (!CopyChar(*icon, abilityResourceInfo->icon)) {
-        APP_LOGE("copy icon failed");
-        return BUNDLE_MANAGER_ERROR_CODE_PARAM_INVALID;
-    }
     return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
 }

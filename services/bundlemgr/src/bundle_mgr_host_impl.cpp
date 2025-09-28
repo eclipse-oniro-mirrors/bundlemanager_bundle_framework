@@ -6300,7 +6300,7 @@ ErrCode BundleMgrHostImpl::ImplicitQueryAbilityInfosWithDefault(const Want &want
         APP_LOGE("manager is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    uint32_t resourceInfoflags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+    uint32_t resourceInfoflags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL) |
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
     std::vector<LauncherAbilityResourceInfo> tmpResourceInfoVector;
     LauncherAbilityResourceInfo tmpResourceInfo;

@@ -588,22 +588,20 @@ BundleManager_ErrorCode OH_NativeBundle_GetAbilityResourceInfo(
                 BUNDLE_MANAGER_ERROR_CODE_NO_ERROR ||
             OH_NativeBundle_SetAbilityResourceInfo_AbilityName(p, info.abilityName.c_str()) !=
                 BUNDLE_MANAGER_ERROR_CODE_NO_ERROR ||
-            OH_NativeBundle_SetAbilityResourceInfo_Label(p, info.label.c_str()) != BUNDLE_MANAGER_ERROR_CODE_NO_ERROR ||
-            OH_NativeBundle_SetAbilityResourceInfo_Icon(p, info.icon.c_str()) != BUNDLE_MANAGER_ERROR_CODE_NO_ERROR) {
+            OH_NativeBundle_SetAbilityResourceInfo_Label(p, info.label.c_str()) != BUNDLE_MANAGER_ERROR_CODE_NO_ERROR) {
             APP_LOGE("failed to set ability resource info");
             OH_AbilityResourceInfo_Destroy(*abilityResourceInfo, i + 1);
             return BUNDLE_MANAGER_ERROR_CODE_NO_ERROR;
         }
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
-        std::unique_ptr<OHOS::Ace::Napi::DrawableDescriptor> nDrawableDescriptor =
-            OHOS::AppExecFwk::BundleResourceDrawableUtilsNative::ConvertToDrawableDescriptor(
-                info.foreground, info.background);
+        auto nDrawableDescriptor = OHOS::AppExecFwk::BundleResourceDrawableUtilsNative::ConvertToDrawableDescriptor(
+            info.foreground, info.background);
         if (nDrawableDescriptor == nullptr) {
             APP_LOGE("failed to ConvertToDrawableDescriptor");
             continue;
         }
 
-        ArkUI_DrawableDescriptor *descriptor = OH_ArkUI_CreateFromNapiDrawable(nDrawableDescriptor.release());
+        ArkUI_DrawableDescriptor *descriptor = OH_ArkUI_CreateFromNapiDrawable(nDrawableDescriptor.get());
         if (descriptor == nullptr) {
             APP_LOGE("failed to OH_ArkUI_CreateFromNapiDrawable");
             continue;
