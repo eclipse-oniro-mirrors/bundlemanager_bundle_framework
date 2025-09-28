@@ -48,8 +48,8 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     bundleResourceHostImpl->CheckBundleNameValid(bundleName, appIndex);
 
     uint32_t flags = 0;
-    bundleResourceHostImpl->CheckExtensionAbilityValid(bundleName,ExtensionAbilityType::INPUTMETHOD, flags, 0);
-    bundleResourceHostImpl->CheckExtensionAbilityValid(bundleName,ExtensionAbilityType::INPUTMETHOD, flags, 1);
+    bundleResourceHostImpl->CheckExtensionAbilityValid(bundleName, ExtensionAbilityType::INPUTMETHOD, flags, 0);
+    bundleResourceHostImpl->CheckExtensionAbilityValid(bundleName, ExtensionAbilityType::INPUTMETHOD, flags, 1);
     return true;
 }
 }
