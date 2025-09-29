@@ -61,6 +61,7 @@ namespace AniZLibCommon {
 void ThrowZLibNapiError(ani_env* env, int posixError);
 
 bool ParseOptions(ani_env* env, ani_object object, LIBZIP::OPTIONS& options);
+bool CheckZStream(ani_env* env, ani_object object);
 bool ParseZStream(ani_env* env, ani_object object, LIBZIP::HasZStreamMember& hasZStreamMember, z_stream& result);
 bool ParseGzHeader(ani_env* env, ani_object object, gz_header& result);
 

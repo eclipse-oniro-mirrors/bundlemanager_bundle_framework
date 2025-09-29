@@ -57,6 +57,8 @@ constexpr const char* PROPERTYNAME_DONE = "done";
 constexpr const char* PROPERTYNAME_DICTIONARY_LENGTH = "dictionaryLength";
 constexpr const char* PROPERTYNAME_PENDING = "pending";
 constexpr const char* PROPERTYNAME_BITS = "bits";
+
+constexpr int32_t ERROR_CODE = -5;
 } // namespace
 using namespace arkts::ani_signature;
 
@@ -91,6 +93,49 @@ bool ParseOptions(ani_env* env, ani_object object, LIBZIP::OPTIONS& options)
     // parallel?: ParallelStrategy
     if (CommonFunAni::CallGetterOptional(env, object, PROPERTY_NAME_PARALLEL, &enumItem)) {
         RETURN_FALSE_IF_FALSE(EnumUtils::EnumETSToNative(env, enumItem, options.parallel));
+    }
+
+    return true;
+}
+
+bool CheckZStream(ani_env* env, ani_object object)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+
+    ani_arraybuffer arrayBuffer = nullptr;
+    void *nextInBuf = nullptr;
+    uInt nextInLen = 0;
+    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_NEXTIN, &arrayBuffer)) {
+        RETURN_FALSE_IF_FALSE(ParseArrayBuffer(env, arrayBuffer, nextInBuf, nextInLen, EINVAL));
+    }
+    // Skip nullptr here, it will be determined later
+    if (nextInBuf == nullptr) {
+        return true;
+    }
+
+    void *nextOutBuf = nullptr;
+    uInt nextOutLen = 0;
+    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_NEXT_OUT, &arrayBuffer)) {
+        void *buf = nullptr;
+        RETURN_FALSE_IF_FALSE(ParseArrayBuffer(env, arrayBuffer, nextOutBuf, nextOutLen, EINVAL));
+    }
+    // Skip nullptr here, it will be determined later
+    if (nextOutBuf == nullptr) {
+        return true;
+    }
+
+    ani_int intValue = 0;
+    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_AVAILABLE_IN, &intValue) &&
+        static_cast<uInt>(intValue) > nextInLen) {
+        ThrowZLibNapiError(env, ERROR_CODE);
+        return false;
+    }
+
+    if (CommonFunAni::CallGetterOptional(env, object, PROPERTYNAME_AVAILABLE_OUT, &intValue) &&
+        static_cast<uInt>(intValue) > nextOutLen) {
+        ThrowZLibNapiError(env, ERROR_CODE);
+        return false;
     }
 
     return true;
