@@ -4052,12 +4052,12 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
             uid = infoItem->second.GetUid(responseUserId, appIndex);
             infoItem->second.GetModuleNames(moduleNameList);
         } else {
-            if (appIndex != 0) {
-                APP_LOGD("keepdata not support clone yet");
+            responseUserId = uninstallBundleInfo.GetResponseUserId(userId);
+            uid = uninstallBundleInfo.GetUid(responseUserId, appIndex);
+            if (uid == Constants::INVALID_UID) {
+                APP_LOGD("clone app not uninstall with keepdata for index: %{public}d", appIndex);
                 return false;
             }
-            responseUserId = uninstallBundleInfo.GetResponseUserId(userId);
-            uid = uninstallBundleInfo.GetUid(responseUserId);
             moduleNameList = uninstallBundleInfo.moduleNames;
         }
     }
@@ -4195,7 +4195,18 @@ bool BundleDataMgr::GetAllUnisntallBundleUids(const int32_t requestUserId,
             APP_LOGD("BundleType is invalid: %{public}d, bundname: %{public}s", info.second.bundleType, bundleName.c_str());
             continue;
         }
-        uids.push_back(info.second.GetUid(responseUserId));
+        uids.push_back(info.second.GetUid(responseUserId, 0));
+        APP_LOGD("get uid: %{public}d for main app: %{public}s", info.second.GetUid(responseUserId, 0),
+            bundleName.c_str());
+        std::string prefixStr = std::to_string(responseUserId) + "_";
+        for (const auto& pair : info.second.userInfos) {
+            const std::string& key = pair.first;
+            if (key.compare(0, prefixStr.length(), prefixStr) == 0) {
+                uids.push_back(pair.second.uid);
+                APP_LOGD("get uid: %{public}d for clone app: %{public}s", pair.second.uid,
+                    key.c_str());
+            }
+        }
     }
     return true;
 }

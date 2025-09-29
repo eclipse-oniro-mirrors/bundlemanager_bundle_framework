@@ -40,7 +40,7 @@ struct UninstallBundleInfo {
     std::string ToString() const;
     void Init();
     int32_t GetResponseUserId(int32_t requestUserId) const;
-    int32_t GetUid(int32_t userId) const;
+    int32_t GetUid(int32_t userId, int32_t appIndex = 0) const;
 };
 
 void from_json(const nlohmann::json& jsonObject, UninstallBundleInfo& uninstallBundleInfo);

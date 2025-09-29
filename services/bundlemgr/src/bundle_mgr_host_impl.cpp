@@ -1814,7 +1814,8 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
     NotifyBundleStatus(installRes);
 }
 
-bool BundleMgrHostImpl::CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex)
+bool BundleMgrHostImpl::CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex,
+    bool checkKeepData)
 {
     if (appIndex == 0) {
         return true;
@@ -1832,6 +1833,11 @@ bool BundleMgrHostImpl::CheckAppIndex(const std::string &bundleName, int32_t use
     bool isAppIndexValid = std::find(appIndexes.cbegin(), appIndexes.cend(), appIndex) == appIndexes.cend();
     if (isAppIndexValid) {
         APP_LOGE("appIndex is not in the installed appIndexes range");
+        UninstallBundleInfo uninstallBundleInfo;
+        if (checkKeepData && dataMgr->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+            APP_LOGD("bundle was uninstalled with keepdata before");
+            return true;
+        }
         return false;
     }
     return true;
@@ -3630,7 +3636,7 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGE("bundleName empty");
         return false;
     }
-    if (!CheckAppIndex(bundleName, userId, appIndex)) {
+    if (!CheckAppIndex(bundleName, userId, appIndex, true)) {
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
