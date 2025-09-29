@@ -69,12 +69,6 @@ public:
      */
     static bool IsDirEmpty(const std::string &dir);
     /**
-     * @brief Check whether a directory is empty using a faster method.
-     * @param path Indicates the directory path to be checked.
-     * @return Returns true if the directory is empty or open failed; returns false otherwise.
-     */
-    static bool IsDirEmptyFast(const std::string &path);
-    /**
      * @brief Make a new directory including the parent path if not exist.
      * @param path Indicates the directory path to be checked.
      * @param isReadByOthers Indicates the directory whether read by other users.
@@ -228,12 +222,6 @@ public:
     static bool InitialiseQuotaMounts();
 
     static int64_t GetDiskUsageFromQuota(const int32_t uid);
-
-    static bool SetProjectIdForDir(const std::string &path, uint32_t projectId);
-
-    static bool HasProjectIdForDir(const std::string &path);
-
-    static int64_t GetProjectUsage(uint32_t projectId);
 
     static bool ScanDir(
         const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
