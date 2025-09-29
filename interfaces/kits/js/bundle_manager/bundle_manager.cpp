@@ -3827,6 +3827,12 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT), &nGetBundleInfoWithCloudKit));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_CLOUD_KIT",
         nGetBundleInfoWithCloudKit));
+
+    napi_value nGetBundleInfoWithEntryModule;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ENTRY_MODULE), &nGetBundleInfoWithEntryModule));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_ENTRY_MODULE",
+        nGetBundleInfoWithEntryModule));
 }
 
 static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,
