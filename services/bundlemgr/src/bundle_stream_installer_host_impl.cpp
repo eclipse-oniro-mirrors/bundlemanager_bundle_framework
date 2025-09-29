@@ -579,6 +579,14 @@ bool BundleStreamInstallerHostImpl::InstallApp(const std::vector<std::string> &p
         return false;
     }
 
+    auto bundleInstallChecker = std::make_unique<BundleInstallChecker>();
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    if (bundleInstallChecker == nullptr ||
+        bundleInstallChecker->CheckMultipleHapsSignInfo(appPaths, hapVerifyResults) != OHOS::ERR_OK) {
+        receiver_->OnFinished(ERR_APPEXECFWK_INSTALL_VERIFY_APP_SIGNATURE_FAILED, "");
+        return false;
+    }
+
     std::vector<std::string> filePaths;
     for (const auto &appPath : appPaths) {
         if (!DecompressToFile(appPath, pathVec.front(), filePaths)) {

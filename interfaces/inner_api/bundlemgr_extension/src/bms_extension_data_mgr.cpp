@@ -250,6 +250,22 @@ ErrCode BmsExtensionDataMgr::ClearData(const std::string &bundleName, int32_t us
     return bundleMgrExtPtr->ClearData(bundleName, userId);
 }
 
+ErrCode BmsExtensionDataMgr::BackupBundleData(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
+{
+    if ((Init() != ERR_OK) || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    return bundleMgrExtPtr->BackupBundleData(bundleName, userId, appIndex);
+}
+
 ErrCode BmsExtensionDataMgr::ClearCache(const std::string &bundleName, sptr<IRemoteObject> callback, int32_t userId)
 {
     if ((Init() != ERR_OK) || handler_ == nullptr) {
