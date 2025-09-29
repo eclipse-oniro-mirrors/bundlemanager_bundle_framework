@@ -22,10 +22,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* const ROUTER_RDB_TABLE_NAME = "router_map";
+const char* const ROUTER_RDB_TABLE_NAME = "router_map_V2";
+const char* const OLD_ROUTER_RDB_TABLE_NAME = "router_map";
 const char* const BUNDLE_NAME = "BUNDLE_NAME";
 const char* const MODULE_NAME = "MODULE_NAME";
 const char* const ROUTER_MAP_INFO = "ROUTER_MAP_INFO";
+const char* const VERSION_CODE = "VERSION_CODE";
 const int8_t BUNDLE_NAME_INDEX = 0;
 const int8_t ROUTER_INFO_INDEX = 2;
 }
@@ -40,7 +42,8 @@ RouterDataStorageRdb::RouterDataStorageRdb()
         + std::string{ ROUTER_RDB_TABLE_NAME }
         + "(BUNDLE_NAME TEXT NOT NULL, "
         + "MODULE_NAME TEXT NOT NULL, ROUTER_MAP_INFO TEXT NOT NULL, "
-        + "PRIMARY KEY (BUNDLE_NAME, MODULE_NAME));");
+        + "VERSION_CODE INTEGER NOT NULL, "
+        + "PRIMARY KEY (BUNDLE_NAME, MODULE_NAME, VERSION_CODE));");
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }
@@ -50,8 +53,41 @@ RouterDataStorageRdb::~RouterDataStorageRdb()
     APP_LOGI("~");
 }
 
-bool RouterDataStorageRdb::UpdateRouterInfo(
-    const std::string &bundleName, const std::map<std::string, std::string> &routerInfoMap)
+bool RouterDataStorageRdb::UpdateDB()
+{
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + std::string(OLD_ROUTER_RDB_TABLE_NAME) +
+        " ADD VERSION_CODE INTEGER DEFAULT 0;"));
+    auto alterRdbManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    if (!alterRdbManager->ExecuteSql()) {
+        APP_LOGE("alter router_map failed.");
+    }
+    bmsRdbConfig.insertColumnSql.clear();
+    bmsRdbConfig.insertColumnSql.push_back(std::string("INSERT INTO " + std::string(ROUTER_RDB_TABLE_NAME)
+        + " (BUNDLE_NAME, MODULE_NAME, VERSION_CODE, ROUTER_MAP_INFO) "
+        + " SELECT BUNDLE_NAME, MODULE_NAME, VERSION_CODE, ROUTER_MAP_INFO FROM "
+        + std::string(OLD_ROUTER_RDB_TABLE_NAME)));
+    auto insertRdbManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    bool ret = insertRdbManager->ExecuteSql();
+    if (!ret) {
+        APP_LOGE("insert router_map_V2 failed.");
+        BmsRdbConfig oldRouterRdbConfig;
+        oldRouterRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
+        oldRouterRdbConfig.tableName = OLD_ROUTER_RDB_TABLE_NAME;
+        rdbDataManager_ = std::make_shared<RdbDataManager>(oldRouterRdbConfig);
+        return false;
+    }
+    bmsRdbConfig.insertColumnSql.clear();
+    bmsRdbConfig.insertColumnSql.push_back("DROP TABLE " + std::string(OLD_ROUTER_RDB_TABLE_NAME));
+    auto deleteRdbManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    (void)deleteRdbManager->ExecuteSql();
+    APP_LOGI("Update router db success");
+    return true;
+}
+
+bool RouterDataStorageRdb::UpdateRouterInfo(const std::string &bundleName,
+    const std::map<std::string, std::string> &routerInfoMap, const uint32_t versionCode)
 {
     DeleteRouterInfo(bundleName);
     if (rdbDataManager_ == nullptr) {
@@ -68,6 +104,7 @@ bool RouterDataStorageRdb::UpdateRouterInfo(
         valuesBucket.PutString(BUNDLE_NAME, bundleName);
         valuesBucket.PutString(MODULE_NAME, item.first);
         valuesBucket.PutString(ROUTER_MAP_INFO, item.second);
+        valuesBucket.PutInt(VERSION_CODE, static_cast<int32_t>(versionCode));
         if (!rdbDataManager_->InsertData(valuesBucket)) {
             APP_LOGE("insert %{public}s %{public}s failed", bundleName.c_str(), item.first.c_str());
             result = false;
@@ -77,7 +114,7 @@ bool RouterDataStorageRdb::UpdateRouterInfo(
 }
 
 bool RouterDataStorageRdb::GetRouterInfo(const std::string &bundleName, const std::string &moduleName,
-    std::vector<RouterItem> &routerInfos)
+    const uint32_t versionCode, std::vector<RouterItem> &routerInfos)
 {
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("null");
@@ -86,6 +123,7 @@ bool RouterDataStorageRdb::GetRouterInfo(const std::string &bundleName, const st
     NativeRdb::AbsRdbPredicates absRdbPredicates(ROUTER_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
     absRdbPredicates.EqualTo(MODULE_NAME, moduleName);
+    absRdbPredicates.EqualTo(VERSION_CODE, static_cast<int32_t>(versionCode));
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("GetRouterInfo %{public}s %{public}s failed", bundleName.c_str(), moduleName.c_str());
@@ -174,6 +212,43 @@ bool RouterDataStorageRdb::DeleteRouterInfo(const std::string &bundleName, const
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
     absRdbPredicates.EqualTo(MODULE_NAME, moduleName);
     return rdbDataManager_->DeleteData(absRdbPredicates);
+}
+
+bool RouterDataStorageRdb::DeleteRouterInfo(const std::string &bundleName,
+    const std::string &moduleName,
+    const uint32_t versionCode)
+{
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    NativeRdb::AbsRdbPredicates absRdbPredicates(ROUTER_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
+    absRdbPredicates.EqualTo(MODULE_NAME, moduleName);
+    absRdbPredicates.EqualTo(VERSION_CODE, static_cast<int32_t>(versionCode));
+    return rdbDataManager_->DeleteData(absRdbPredicates);
+}
+
+bool RouterDataStorageRdb::InsertRouterInfo(const std::string &bundleName,
+    const std::map<std::string, std::string> &routerInfoMap, const uint32_t versionCode)
+{
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    bool result = true;
+    for (const auto &item : routerInfoMap) {
+        NativeRdb::ValuesBucket valuesBucket;
+        valuesBucket.PutString(BUNDLE_NAME, bundleName);
+        valuesBucket.PutString(MODULE_NAME, item.first);
+        valuesBucket.PutString(ROUTER_MAP_INFO, item.second);
+        valuesBucket.PutInt(VERSION_CODE, static_cast<int32_t>(versionCode));
+        if (!rdbDataManager_->InsertData(valuesBucket)) {
+            APP_LOGE("insert %{public}s %{public}s failed", bundleName.c_str(), item.first.c_str());
+            result = false;
+        }
+    }
+    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

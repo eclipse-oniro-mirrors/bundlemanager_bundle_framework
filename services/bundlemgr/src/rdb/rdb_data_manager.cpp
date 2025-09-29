@@ -482,6 +482,25 @@ bool RdbDataManager::CreateTable()
     return true;
 }
 
+bool RdbDataManager::ExecuteSql()
+{
+    ErrCode ret = ERR_OK;
+    auto rdbStore = GetRdbStore(ret);
+    if (rdbStore == nullptr) {
+        APP_LOGE("RdbStore is null");
+        return false;
+    }
+    bool res = true;
+    for (const auto &sql : bmsRdbConfig_.insertColumnSql) {
+        int32_t insertRet = rdbStore->ExecuteSql(sql);
+        if (insertRet != NativeRdb::E_OK) {
+            res = false;
+            APP_LOGW_NOFUNC("ExecuteSql failed ret: %{public}d", insertRet);
+        }
+    }
+    return res;
+}
+
 void RdbDataManager::DelayCloseRdbStore()
 {
     APP_LOGD("RdbDataManager DelayCloseRdbStore start");

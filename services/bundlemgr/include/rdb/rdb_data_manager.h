@@ -61,6 +61,8 @@ public:
     bool CheckIsSatisfyTime();
 
     void SendDbErrorEvent(const std::string &dbName, int32_t operationType, int32_t errorCode);
+    
+    bool ExecuteSql();
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore(ErrCode &result);
     ErrCode GetRdbStoreFromNative();
