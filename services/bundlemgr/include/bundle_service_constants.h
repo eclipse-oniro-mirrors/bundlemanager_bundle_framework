@@ -205,6 +205,8 @@ constexpr const char* LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 constexpr int32_t CLONE_APP_INDEX_MIN = 1;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 constexpr const char* CLONE_PREFIX = "+clone-";
+constexpr const char* BMS_PARA_CLONE_IS_KEEP_DATA = "ohos.bms.param.clone.isKeepData";
+constexpr const char* BMS_TRUE = "true";
 // shader
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";

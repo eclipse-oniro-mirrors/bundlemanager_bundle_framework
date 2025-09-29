@@ -913,6 +913,7 @@ public:
     bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
     bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo) const;
     bool DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
+    bool DeleteUninstallCloneBundleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
     bool GetAllUninstallBundleInfo(std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos) const;
 
     bool AddFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,

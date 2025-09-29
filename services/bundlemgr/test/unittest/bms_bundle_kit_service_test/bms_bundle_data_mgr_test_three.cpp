@@ -316,6 +316,7 @@ const int ABILITYINFOS_SIZE_1 = 1;
 const int ABILITYINFOS_SIZE_2 = 2;
 const int32_t USERID = 100;
 const int32_t MULTI_USERID = 101;
+const int32_t TEST_USERID = 1001;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
@@ -3634,5 +3635,124 @@ HWTEST_F(BmsBundleDataMgrTest3, GetAllCloneAppIndexesAndUidsByInnerBundleInfo_00
 
     ret = bundleDataMgr->GetAllCloneAppIndexesAndUidsByInnerBundleInfo(userId, cloneInfos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteUninstallCloneBundleInfo_0001
+ * @tc.name: DeleteUninstallCloneBundleInfo
+ * @tc.desc: test DeleteUninstallCloneBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DeleteUninstallCloneBundleInfo_0001, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    
+    auto ret = bundleDataMgr->DeleteUninstallCloneBundleInfo("", TEST_USERID, 1);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DeleteUninstallCloneBundleInfo_0002
+ * @tc.name: DeleteUninstallCloneBundleInfo
+ * @tc.desc: test DeleteUninstallCloneBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DeleteUninstallCloneBundleInfo_0002, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    
+    auto ret = bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, TEST_USERID, 1);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DeleteUninstallCloneBundleInfo_0003
+ * @tc.name: DeleteUninstallCloneBundleInfo
+ * @tc.desc: test DeleteUninstallCloneBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DeleteUninstallCloneBundleInfo_0003, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    std::string key = std::to_string(TEST_USERID) + "_" + std::to_string(2);
+    uninstallBundleInfo.userInfos[key] = uninstallDataUserInfo;
+    EXPECT_TRUE(bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME_TEST, uninstallBundleInfo));
+    
+    auto ret = bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, TEST_USERID, 1);
+    EXPECT_FALSE(ret);
+
+    ret = bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, TEST_USERID, 2);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DeleteUninstallCloneBundleInfo_0004
+ * @tc.name: DeleteUninstallCloneBundleInfo
+ * @tc.desc: test DeleteUninstallCloneBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DeleteUninstallCloneBundleInfo_0004, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    std::string key = std::to_string(TEST_USERID) + "_" + std::to_string(1);
+    uninstallBundleInfo.userInfos[key] = uninstallDataUserInfo;
+    EXPECT_TRUE(bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME_TEST, uninstallBundleInfo));
+    
+    auto ret = bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, TEST_USERID, 1);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DeleteUninstallCloneBundleInfo_0005
+ * @tc.name: DeleteUninstallCloneBundleInfo
+ * @tc.desc: test DeleteUninstallCloneBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DeleteUninstallCloneBundleInfo_0005, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    std::string key = std::to_string(TEST_USERID) + "_" + std::to_string(1);
+    uninstallBundleInfo.userInfos[key] = uninstallDataUserInfo;
+    std::string key1 = std::to_string(TEST_USERID) + "_" + std::to_string(2);
+    uninstallBundleInfo.userInfos[key1] = uninstallDataUserInfo;
+    EXPECT_TRUE(bundleDataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME_TEST, uninstallBundleInfo));
+    
+    auto ret = bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, TEST_USERID, 1);
+    EXPECT_TRUE(ret);
+
+    ret = bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, TEST_USERID, 2);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DeleteUninstallCloneBundleInfo_0006
+ * @tc.name: DeleteUninstallCloneBundleInfo
+ * @tc.desc: test DeleteUninstallCloneBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DeleteUninstallCloneBundleInfo_0006, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+    
+    bundleDataMgr->uninstallDataMgr_ = nullptr;
+    auto ret = bundleDataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME_TEST, TEST_USERID, 1);
+    EXPECT_FALSE(ret);
+    bundleDataMgr->uninstallDataMgr_ = std::make_shared<UninstallDataMgrStorageRdb>();
+    EXPECT_NE(bundleDataMgr->uninstallDataMgr_, nullptr);
 }
 } // OHOS
