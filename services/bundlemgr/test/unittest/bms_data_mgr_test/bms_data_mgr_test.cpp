@@ -6349,6 +6349,8 @@ HWTEST_F(BmsDataMgrTest, ProcessCertificate_0001, TestSize.Level1)
 
     BundleInfo bundleInfo;
     int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO);
+    DelayedSingleton<AppProvisionInfoManager>::GetInstance()->
+        DeleteAppProvisionInfo(BUNDLE_NAME);
     dataMgr->ProcessCertificate(bundleInfo, BUNDLE_NAME, flags);
     EXPECT_TRUE(bundleInfo.signatureInfo.certificate.empty());
 }
