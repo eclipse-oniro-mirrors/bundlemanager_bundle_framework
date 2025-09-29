@@ -157,7 +157,7 @@ static bool TryGetNumberArg(ani_env* env, ani_array args, ani_size index, std::s
     status = env->Object_InstanceOf(arg, cls, &isDouble);
     if (status == ANI_OK && isDouble == ANI_TRUE) {
         ani_double numberArg = 0;
-        status = env->Object_CallMethodByName_Double(arg, CommonFunAniNS::PROPERTYNAME_UNBOXED, nullptr, &numberArg);
+        status = env->Object_CallMethodByName_Double(arg, CommonFunAniNS::PROPERTYNAME_TODOUBLE, nullptr, &numberArg);
         if (status != ANI_OK) {
             APP_LOGE("Object_CallMethodByName_Double failed %{public}d", status);
             return false;

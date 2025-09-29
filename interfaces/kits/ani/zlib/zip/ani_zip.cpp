@@ -214,7 +214,7 @@ static int32_t OutFunc(void* outDesc, unsigned char* buf, unsigned len)
 
     ani_int result = 0;
     status = out->env->Object_CallMethodByName_Int(
-        reinterpret_cast<ani_object>(aniResult), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":i", &result);
+        reinterpret_cast<ani_object>(aniResult), CommonFunAniNS::PROPERTYNAME_TOINT, ":i", &result);
     if (status != ANI_OK) {
         APP_LOGE("Object_CallMethodByName_Int aniResult failed %{public}d", status);
         AniZLibCommon::ThrowZLibNapiError(out->env, EINVAL);
