@@ -257,8 +257,6 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
         APP_LOGE("parse plugin id failed");
         return ERR_APPEXECFWK_PLUGIN_INSTALL_PARSE_PLUGINID_ERROR;
     }
-    isDebug_ = (hapVerifyResults[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
-        true : false;
     return result;
 }
 
@@ -431,7 +429,7 @@ ErrCode PluginInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bu
 ErrCode PluginInstaller::VerifyCodeSignatureForHsp(const std::string &hspPath,
     const std::string &appIdentifier, bool isEnterpriseBundle, bool isCompileSdkOpenHarmony) const
 {
-    APP_LOGI("begin to verify code signature for hsp, isDebug: %{public}d", isDebug_);
+    APP_LOGI("begin to verify code signature for hsp");
     CodeSignatureParam codeSignatureParam;
     codeSignatureParam.modulePath = hspPath;
     codeSignatureParam.cpuAbi = cpuAbi_;
@@ -442,7 +440,7 @@ ErrCode PluginInstaller::VerifyCodeSignatureForHsp(const std::string &hspPath,
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = false;
     codeSignatureParam.isPlugin = true;
-    codeSignatureParam.pluginId = isDebug_ ? JoinPluginId() : Constants::EMPTY_STRING;
+    codeSignatureParam.pluginId = JoinPluginId();
     if (InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam) != ERR_OK) {
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
