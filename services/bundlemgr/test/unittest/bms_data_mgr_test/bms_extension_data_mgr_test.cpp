@@ -1689,26 +1689,12 @@ HWTEST_F(BmsExtensionDataMgrTest, GetBundleNameByUid_001, Function | SmallTest |
     std::string bundleName = "testname";
     int32_t uid = 0;
     ErrCode res = bmsExtensionDataMgrTest.GetBundleNameByUid(uid, bundleName);
-#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
-    EXPECT_THAT(res, testing::AnyOf(
-        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
-#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-#endif
 
     int16_t handleTest = 1;
     bmsExtensionDataMgrTest.handler_ = &handleTest;
     res = bmsExtensionDataMgrTest.GetBundleNameByUid(uid, bundleName);
-#if defined(USE_EXTENSION_DATA) && defined(CONTAIN_BROKER_CLIENT_ENABLED)
-    EXPECT_THAT(res, testing::AnyOf(
-        ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY,
-        BMS_BROKER_ERR_UNINSTALL_FAILED,
-        BMS_BROKER_ERR_INSTALL_FAILED));
-#else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-#endif
 }
 
 /**
