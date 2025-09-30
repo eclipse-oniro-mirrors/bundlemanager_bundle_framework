@@ -93,19 +93,6 @@ BundleManager_ErrorCode OH_NativeBundle_GetAbilityName(
     OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, char** abilityName);
 
 /**
-* @brief Get the icon of the abilityResourceInfo.
- *
- * @param abilityResourceInfo The ability resource info that has been obtained.
- * @param icon The icon obtained from abilityResourceInfo.
- * @return The error code.
- *         {@link BUNDLE_MANAGER_ERROR_CODE_NO_ERROR} if the operation is successful.
- *         {@link BUNDLE_MANAGER_ERROR_CODE_PARAM_INVALID} if the abilityResourceInfo is invalid.
- * @since 21
- */
-BundleManager_ErrorCode OH_NativeBundle_GetIcon(
-    OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, char** icon);
-
-/**
 * @brief Get the label of the abilityResourceInfo.
  *
  * @param abilityResourceInfo The ability resource info that has been obtained.
@@ -188,9 +175,6 @@ BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_AbilityName(
 
 BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_Label(
     OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, const char* label);
-
-BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_Icon(
-    OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, const char* icon);
 
 BundleManager_ErrorCode OH_NativeBundle_SetAbilityResourceInfo_DrawableIcon(
     OH_NativeBundle_AbilityResourceInfo* abilityResourceInfo, ArkUI_DrawableDescriptor* drawableIcon);
