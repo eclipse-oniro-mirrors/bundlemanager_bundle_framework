@@ -40,27 +40,31 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     subscriberPtr->OnReceiveEvent(commonEventData);
 
     OHOS::AAFwk::Want want;
-
+    want.SetAction(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
     want.SetParam("oldId", Constants::DEFAULT_USERID);
     commonEventData.SetWant(want);
     subscriberPtr->OnReceiveEvent(commonEventData);
 
     want.SetParam("oldId", Constants::INVALID_USERID);
+    want.SetAction(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
     commonEventData.SetWant(want);
     subscriberPtr->OnReceiveEvent(commonEventData);
 
     want.SetParam("oldId", Constants::U1);
+    want.SetAction(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
     commonEventData.SetWant(want);
     subscriberPtr->OnReceiveEvent(commonEventData);
 
     int32_t userId = fdp.ConsumeIntegral<int32_t>();
     want.SetParam("oldId", userId);
+    want.SetAction(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
     commonEventData.SetWant(want);
     subscriberPtr->OnReceiveEvent(commonEventData);
 
     int32_t oldUserId = fdp.ConsumeIntegral<int32_t>();
     int32_t newUserId = fdp.ConsumeIntegral<int32_t>();
     subscriberPtr->OnUserIdChanged(oldUserId, newUserId);
+    subscriberPtr->CheckUserSwitchWhenReboot(userId, oldUserId);
 
     return true;
 }

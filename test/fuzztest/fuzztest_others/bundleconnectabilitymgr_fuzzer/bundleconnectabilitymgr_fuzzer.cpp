@@ -44,7 +44,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     sptr<IRemoteObject> callerToken = nullptr;
     bundleConnectAbilityMgr.ConnectAbility(want, callerToken);
     bundleConnectAbilityMgr.ProcessPreload(want);
-    bundleConnectAbilityMgr.DisconnectAbility();
     int32_t code = reinterpret_cast<uintptr_t>(data);
     MessageParcel datas;
     datas.WriteBuffer(data, size);
