@@ -1869,6 +1869,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // delete ark startup cache for bundle
     DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, bundleName, userId_);
 
+    if (installParam.isKeepData) {
+        BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
+    }
     if (isMultiUser) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
         if (oldInfo.IsPreInstallApp() && isForcedUninstall) {
@@ -2163,6 +2166,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "remove nativeBundle failed");
                 return result;
+            }
+            if (installParam.isKeepData) {
+                BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
             }
             result = RemoveBundle(oldInfo, installParam.isKeepData);
             if (result != ERR_OK) {
@@ -3558,6 +3564,7 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
         result = InstalldClient::GetInstance()->RemoveExtensionDir(userId_, uninstallBundleInfo.extensionDirs);
         LOG_I(BMS_TAG_INSTALLER, "remove extension dirs res %{public}d", result);
     }
+    BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId_, 0);
     return dataMgr_->DeleteUninstallBundleInfo(bundleName, userId_);
 }
 

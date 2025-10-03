@@ -620,5 +620,48 @@ bool BundleResourceParser::ParseIconResourceInfosWithTheme(
     APP_LOGD("end");
     return true;
 }
+
+bool BundleResourceParser::ParseUninstallBundleResource(
+    ResourceInfo &resourceInfo, std::map<std::string, std::string> &labelMap)
+{
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    if (resourceManager == nullptr) {
+        APP_LOGE("resourceManager is nullptr");
+        return false;
+    }
+    if (!BundleResourceConfiguration::InitResourceGlobalConfig(resourceInfo.hapPath_, resourceManager)) {
+        APP_LOGE("InitResourceGlobalConfig failed, hapPath:%{private}s", resourceInfo.hapPath_.c_str());
+        return false;
+    }
+    // parse icon
+    if (resourceInfo.iconNeedParse_) {
+        if (!ParseIconResourceByResourceManager(resourceManager, resourceInfo)) {
+            APP_LOGE("key %{public}s parse failed", resourceInfo.GetKey().c_str());
+            return false;
+        }
+        if (resourceInfo.appIndex_ > 0) {
+            (void)ParserCloneResourceInfo(resourceInfo.appIndex_, resourceInfo);
+        }
+        return true;
+    }
+
+    if (!resourceInfo.labelNeedParse_) {
+        return true;
+    }
+    // get language list and parse label
+    auto languages = BundleResourceConfiguration::GetSystemLanguages();
+    for (const auto &language : languages) {
+        APP_LOGI("key %{public}s language %{public}s parse label", resourceInfo.bundleName_.c_str(), language.c_str());
+        BundleResourceConfiguration::UpdateResourceGlobalConfig(language, resourceManager);
+        if (!ParseLabelResourceByResourceManager(resourceManager, resourceInfo.labelId_, resourceInfo.label_)) {
+            APP_LOGE("key %{public}s language %{public}s parse failed", resourceInfo.bundleName_.c_str(),
+                language.c_str());
+            continue;
+        }
+        labelMap[language] = (resourceInfo.appIndex_ > 0) ?
+            (resourceInfo.label_ + std::to_string(resourceInfo.appIndex_)) : resourceInfo.label_;
+    }
+    return true;
+}
 } // AppExecFwk
 } // OHOS

@@ -75,8 +75,14 @@ public:
         
     static bool GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
-    
+
     static void ProcessBundleResourceChange();
+
+    static void AddUninstallBundleResource(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex);
+
+    static void DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId,
+        const int32_t appIndex);
 };
 } // AppExecFwk
 } // OHOS

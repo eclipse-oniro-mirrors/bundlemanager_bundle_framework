@@ -30,7 +30,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int32_t INDEX_NAME = 0;
-constexpr int32_t INDEX_USERID = 1;
 constexpr int32_t INDEX_APPINDEX = 2;
 constexpr int32_t INDEX_LABEL = 3;
 constexpr int32_t INDEX_ICON = 4;
@@ -49,7 +48,7 @@ UninstallBundleResourceRdb::UninstallBundleResourceRdb()
     bmsRdbConfig.createTableSql = std::string(
         "CREATE TABLE IF NOT EXISTS "
         + std::string(BundleResourceConstants::UINSTALL_BUNDLE_RESOURCE_RDB)
-        + "(NAME TEXT NOT NULL, USER_ID INTEGER, APP_INDEX INTEGER, ICON TEXT, "
+        + "(NAME TEXT NOT NULL, USER_ID INTEGER, APP_INDEX INTEGER, LABEL TEXT, ICON TEXT, "
         + "FOREGROUND BLOB, BACKGROUND BLOB, PRIMARY KEY (NAME, USER_ID, APP_INDEX));");
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
@@ -92,7 +91,7 @@ std::string UninstallBundleResourceRdb::ToString(const std::map<std::string, std
 
 bool UninstallBundleResourceRdb::AddUninstallBundleResource(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex,
-    const std::map<std::string, std::string> &labelMap, const ResourceInfo &resourceInfo)
+    const std::map<std::string, std::string> &labelMap, const BundleResourceInfo &bundleResourceInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (bundleName.empty()) {
@@ -105,10 +104,15 @@ bool UninstallBundleResourceRdb::AddUninstallBundleResource(const std::string &b
     valuesBucket.PutInt(BundleResourceConstants::USER_ID, userId);
     valuesBucket.PutInt(BundleResourceConstants::APP_INDEX, appIndex);
     valuesBucket.PutString(BundleResourceConstants::LABEL, ToString(labelMap));
-    valuesBucket.PutString(BundleResourceConstants::ICON, resourceInfo.icon_);
-    valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, resourceInfo.foreground_);
-    valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, resourceInfo.background_);
-    return rdbDataManager_->InsertData(valuesBucket);
+    valuesBucket.PutString(BundleResourceConstants::ICON, bundleResourceInfo.icon);
+    valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, bundleResourceInfo.foreground);
+    valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, bundleResourceInfo.background);
+    if (!rdbDataManager_->InsertData(valuesBucket)) {
+        APP_LOGE("-n %{public}s -u %{public}d -i %{public}d add uninstall resource failed",
+            bundleName.c_str(), userId, appIndex);
+        return false;
+    }
+    return true;
 }
 
 bool UninstallBundleResourceRdb::DeleteUninstallBundleResource(const std::string &bundleName,

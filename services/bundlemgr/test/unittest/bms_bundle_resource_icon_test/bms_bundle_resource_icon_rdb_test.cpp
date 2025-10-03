@@ -45,42 +45,34 @@ const std::string MODULE_NAME = "entry";
 const std::string ABILITY_NAME = "com.example.bmsaccesstoken1.MainAbility";
 const nlohmann::json LABEL_JSON_1 = R"(
 {
-    "LABEL": [
-        {
-            "bundleName":"label"
-        }
-    ]
+    "LABEL": {
+        "bundleName":"label"
+    }
 }
 )"_json;
 
 const nlohmann::json LABEL_JSON_2 = R"(
 {
-    "LABEL_1": [
-        {
-            "bundleName":"label"
-        }
-    ]
+    "LABEL_1": {
+        "bundleName":"label"
+    }
 }
 )"_json;
 
 const nlohmann::json LABEL_JSON_3 = R"(
 {
-    "LABEL": [
-        {
-            "bundleName":1
-        }
-    ]
+    "LABEL": {
+        "bundleName":1
+    }
 }
 )"_json;
 
 const nlohmann::json LABEL_JSON_4 = R"(
 {
-    "LABEL": [
-        {
-            "bundleName":"label",
-            "zh-Hans":"label2"
-        }
-    ]
+    "LABEL": {
+        "bundleName":"label",
+        "zh-Hans":"label2"
+    }
 }
 )"_json;
 }  // namespace
@@ -594,7 +586,7 @@ HWTEST_F(BmsBundleResourceIconRdbTest, ParseKey_0001, Function | SmallTest | Lev
 HWTEST_F(BmsBundleResourceIconRdbTest, AddUninstallBundleResource_0001, Function | SmallTest | Level0)
 {
     UninstallBundleResourceRdb uninstallBundleResourceRdb;
-    ResourceInfo resourceInfo;
+    BundleResourceInfo resourceInfo;
     std::map<std::string, std::string> labelMap;
     bool ret = uninstallBundleResourceRdb.AddUninstallBundleResource("", 0, 0, labelMap, resourceInfo);
     EXPECT_FALSE(ret);
@@ -616,9 +608,9 @@ HWTEST_F(BmsBundleResourceIconRdbTest, AddUninstallBundleResource_0002, Function
 {
     UninstallBundleResourceRdb uninstallBundleResourceRdb;
     std::map<std::string, std::string> labelMap;
-    ResourceInfo resourceInfo;
-    resourceInfo.icon_ = "icon";
-    resourceInfo.foreground_.emplace_back(1);
+    BundleResourceInfo resourceInfo;
+    resourceInfo.icon = "icon";
+    resourceInfo.foreground.emplace_back(1);
     bool ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, labelMap, resourceInfo);
     EXPECT_TRUE(ret);
     BundleResourceInfo bundleResourceInfo;
@@ -646,24 +638,24 @@ HWTEST_F(BmsBundleResourceIconRdbTest, AddUninstallBundleResource_0003, Function
 {
     UninstallBundleResourceRdb uninstallBundleResourceRdb;
     std::map<std::string, std::string> labelMap;
-    ResourceInfo resourceInfo;
+    BundleResourceInfo resourceInfo;
     bool ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, labelMap, resourceInfo);
     EXPECT_TRUE(ret);
     BundleResourceInfo bundleResourceInfo;
     ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, APP_INDEX, bundleResourceInfo);
     EXPECT_FALSE(ret);
     EXPECT_TRUE(bundleResourceInfo.icon.empty());
-    resourceInfo.icon_ = "icon";
+    resourceInfo.icon = "icon";
     ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, labelMap, resourceInfo);
     EXPECT_TRUE(ret);
     ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, APP_INDEX, bundleResourceInfo);
     EXPECT_FALSE(ret);
-    resourceInfo.foreground_.emplace_back(1);
+    resourceInfo.foreground.emplace_back(1);
     ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, labelMap, resourceInfo);
     EXPECT_TRUE(ret);
-    ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, APP_INDEX, bundleResourceInfo);
+    ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, bundleResourceInfo);
     EXPECT_TRUE(ret);
-    EXPECT_EQ(bundleResourceInfo.icon, resourceInfo.icon_);
+    EXPECT_EQ(bundleResourceInfo.icon, resourceInfo.icon);
     ret = uninstallBundleResourceRdb.DeleteUninstallBundleResource(BUNDLE_NAME, USER_ID, 0);
     EXPECT_TRUE(ret);
 }
@@ -684,9 +676,9 @@ HWTEST_F(BmsBundleResourceIconRdbTest, AddUninstallBundleResource_0004, Function
     EXPECT_FALSE(ret);
     EXPECT_TRUE(bundleResourceInfos.empty());
 
-    ResourceInfo resourceInfo;
-    resourceInfo.icon_ = "icon";
-    resourceInfo.foreground_.emplace_back(1);
+    BundleResourceInfo resourceInfo;
+    resourceInfo.icon = "icon";
+    resourceInfo.foreground.emplace_back(1);
     ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, TEST_USER_ID,
         APP_INDEX, labelMap, resourceInfo);
     EXPECT_TRUE(ret);
@@ -696,7 +688,7 @@ HWTEST_F(BmsBundleResourceIconRdbTest, AddUninstallBundleResource_0004, Function
     if (!bundleResourceInfos.empty()) {
         EXPECT_EQ(bundleResourceInfos[0].bundleName, BUNDLE_NAME);
         EXPECT_EQ(bundleResourceInfos[0].label, BUNDLE_NAME);
-        EXPECT_EQ(bundleResourceInfos[0].icon, resourceInfo.icon_);
+        EXPECT_EQ(bundleResourceInfos[0].icon, resourceInfo.icon);
     }
 
     ret = uninstallBundleResourceRdb.DeleteUninstallBundleResource(BUNDLE_NAME, TEST_USER_ID, APP_INDEX);
@@ -714,7 +706,7 @@ HWTEST_F(BmsBundleResourceIconRdbTest, DeleteUninstallBundleResource_0001, Funct
 {
     UninstallBundleResourceRdb uninstallBundleResourceRdb;
     bool ret = uninstallBundleResourceRdb.DeleteUninstallBundleResource("", USER_ID, 0);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 
     ret = uninstallBundleResourceRdb.DeleteUninstallBundleResource(BUNDLE_NAME, USER_ID, 0);
     EXPECT_TRUE(ret);

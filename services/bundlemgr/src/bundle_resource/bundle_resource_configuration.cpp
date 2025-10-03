@@ -106,5 +106,43 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
     APP_LOGD("AddResource end");
     return true;
 }
+
+bool BundleResourceConfiguration::UpdateResourceGlobalConfig(
+    const std::string &language,
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager)
+{
+    if (resourceManager == nullptr) {
+        APP_LOGE("resourceManager is nullptr");
+        return false;
+    }
+    std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+    if (resConfig == nullptr) {
+        APP_LOGE("resConfig is nullptr");
+        return false;
+    }
+
+#ifdef GLOBAL_I18_ENABLE
+    std::map<std::string, std::string> configs;
+    OHOS::Global::I18n::LocaleInfo locale(language, configs);
+    resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
+#endif
+    resConfig->SetScreenDensityDpi(Global::Resource::ScreenDensity::SCREEN_DENSITY_XXXLDPI);
+
+    Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);
+    if (ret != Global::Resource::RState::SUCCESS) {
+        APP_LOGE("UpdateResConfig failed %{public}d", static_cast<int32_t>(ret));
+        return false;
+    }
+    return true;
+}
+
+std::unordered_set<std::string> BundleResourceConfiguration::GetSystemLanguages()
+{
+    std::unordered_set<std::string> languages;
+#ifdef GLOBAL_I18_ENABLE
+    languages = OHOS::Global::I18n::LocaleConfig::GetSystemLanguages();
+#endif
+    return languages;
+}
 } // AppExecFwk
 } // OHOS

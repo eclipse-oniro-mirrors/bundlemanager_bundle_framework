@@ -47,6 +47,8 @@ public:
 
     bool ParseIconResourceInfosWithTheme(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
 
+    bool ParseUninstallBundleResource(ResourceInfo &resourceInfo, std::map<std::string, std::string> &labelMap);
+
 private:
     // for defaultIconPath is empty, icon and label exist in same hap.
     bool ParseResourceInfoWithSameHap(const int32_t userId, ResourceInfo &resourceInfo);

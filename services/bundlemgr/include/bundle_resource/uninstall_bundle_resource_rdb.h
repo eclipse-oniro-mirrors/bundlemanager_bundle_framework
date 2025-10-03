@@ -21,7 +21,6 @@
 
 #include "bundle_resource_info.h"
 #include "rdb_data_manager.h"
-#include "resource_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -30,7 +29,7 @@ public:
     UninstallBundleResourceRdb();
     ~UninstallBundleResourceRdb();
     bool AddUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex,
-        const std::map<std::string, std::string> &labelMap, const ResourceInfo &resourceInfo);
+        const std::map<std::string, std::string> &labelMap, const BundleResourceInfo &resourceInfo);
     bool DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     bool GetUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex,
         BundleResourceInfo &bundleResourceInfo);

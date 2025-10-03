@@ -6111,4 +6111,40 @@ HWTEST_F(BmsBundleResourceTest, IsNeedInterrupted_0010, Function | SmallTest | L
         EXPECT_FALSE(ret);
     }
 }
+
+/**
+ * @tc.number: AddUninstallBundleResource_0010
+ * Function: AddUninstallBundleResource
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddUninstallBundleResource
+ */
+HWTEST_F(BmsBundleResourceTest, AddUninstallBundleResource_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->AddUninstallBundleResource(MODULE_NAME, USERID, 0);
+        EXPECT_FALSE(ret);
+
+        ret = manager->AddUninstallBundleResource(BUNDLE_NAME, USERID, 0);
+        EXPECT_TRUE(ret);
+        BundleResourceInfo bundleResourceInfo;
+        ret = manager->GetUninstallBundleResource(BUNDLE_NAME, USERID, APP_INDEX, bundleResourceInfo);
+        EXPECT_FALSE(ret);
+
+        ret = manager->GetUninstallBundleResource(BUNDLE_NAME, USERID, 0, bundleResourceInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(bundleResourceInfo.bundleName, BUNDLE_NAME);
+
+        ret = manager->DeleteUninstallBundleResource(BUNDLE_NAME, USERID, 0);
+        EXPECT_TRUE(ret);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
 } // OHOS
