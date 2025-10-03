@@ -50,6 +50,7 @@ BundleResourceManager::BundleResourceManager()
 {
     bundleResourceRdb_ = std::make_shared<BundleResourceRdb>();
     bundleResourceIconRdb_ = std::make_shared<BundleResourceIconRdb>();
+    uninstallBundleResourceRdb_ = std::make_shared<UninstallBundleResourceRdb>();
     delayedTaskMgr_ = std::make_shared<SingleDelayedTaskMgr>(TASK_NAME, DELAY_TIME_MILLI_SECONDS);
 }
 
@@ -1304,6 +1305,18 @@ bool BundleResourceManager::ProcessThemeAndDynamicIconWhenOta(
         InnerProcessThemeIconWhenOta(bundleName, userIds, hasBundleUpdated);
     }
     APP_LOGI("ProcessThemeAndDynamicIconWhenOta end");
+    return true;
+}
+
+bool BundleResourceManager::AddUninstallBundleResource(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
+{
+    return true;
+}
+
+bool BundleResourceManager::DeleteUninstallBundleResource(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
+{
     return true;
 }
 } // AppExecFwk

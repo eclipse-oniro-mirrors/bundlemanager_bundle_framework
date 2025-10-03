@@ -33,6 +33,7 @@
 #include "resource_manager.h"
 #include "singleton.h"
 #include "single_delayed_task_mgr.h"
+#include "uninstall_bundle_resource_rdb.h"
 #include "want.h"
 
 namespace OHOS {
@@ -114,6 +115,10 @@ public:
     // for ota, need process all user
     bool ProcessThemeAndDynamicIconWhenOta(const std::set<std::string> &updateBundleNames);
 
+    bool AddUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+
+    bool DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+
 private:
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);
 
@@ -171,6 +176,7 @@ private:
     std::mutex mutex_;
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
     std::shared_ptr<BundleResourceIconRdb> bundleResourceIconRdb_;
+    std::shared_ptr<UninstallBundleResourceRdb> uninstallBundleResourceRdb_;
     std::shared_ptr<SingleDelayedTaskMgr> delayedTaskMgr_ = nullptr;
     static std::mutex g_sysResMutex;
     static std::shared_ptr<Global::Resource::ResourceManager> g_resMgr;

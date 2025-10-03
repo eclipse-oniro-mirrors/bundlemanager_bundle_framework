@@ -24,8 +24,9 @@
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource_icon_rdb.h"
 #include "launcher_ability_resource_info.h"
+#include "uninstall_bundle_resource_rdb.h"
 #endif
-
+#include "nlohmann/json.hpp"
 #include "scope_guard.h"
 
 using namespace testing::ext;
@@ -42,6 +43,46 @@ const int32_t APP_INDEX = 1;
 const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string MODULE_NAME = "entry";
 const std::string ABILITY_NAME = "com.example.bmsaccesstoken1.MainAbility";
+const nlohmann::json LABEL_JSON_1 = R"(
+{
+    "LABEL": [
+        {
+            "bundleName":"label"
+        }
+    ]
+}
+)"_json;
+
+const nlohmann::json LABEL_JSON_2 = R"(
+{
+    "LABEL_1": [
+        {
+            "bundleName":"label"
+        }
+    ]
+}
+)"_json;
+
+const nlohmann::json LABEL_JSON_3 = R"(
+{
+    "LABEL": [
+        {
+            "bundleName":1
+        }
+    ]
+}
+)"_json;
+
+const nlohmann::json LABEL_JSON_4 = R"(
+{
+    "LABEL": [
+        {
+            "bundleName":"label",
+            "zh-Hans":"label2"
+        }
+    ]
+}
+)"_json;
 }  // namespace
 
 class BmsBundleResourceIconRdbTest : public testing::Test {
@@ -544,25 +585,209 @@ HWTEST_F(BmsBundleResourceIconRdbTest, ParseKey_0001, Function | SmallTest | Lev
 }
 
 /**
- * @tc.number: SetAndGetIsOnlineTheme_0001
- * Function: BundleResourceIconRdb
- * @tc.name: test BundleResourceIconRdb
+ * @tc.number: AddUninstallBundleResource_0001
+ * Function: UninstallBundleResourceRdb
+ * @tc.name: test UninstallBundleResourceRdb
  * @tc.desc: 1. system running normally
- *           2. test GetIsOnlineTheme and SetIsOnlineTheme
+ *           2. test AddUninstallBundleResource
  */
-HWTEST_F(BmsBundleResourceIconRdbTest, SetAndGetIsOnlineTheme_0001, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleResourceIconRdbTest, AddUninstallBundleResource_0001, Function | SmallTest | Level0)
 {
-    BundleResourceIconRdb resourceIconRdb;
-    bool ans = resourceIconRdb.GetIsOnlineTheme(TEST_USER_ID_TWO);
-    EXPECT_FALSE(ans);
+    UninstallBundleResourceRdb uninstallBundleResourceRdb;
+    ResourceInfo resourceInfo;
+    std::map<std::string, std::string> labelMap;
+    bool ret = uninstallBundleResourceRdb.AddUninstallBundleResource("", 0, 0, labelMap, resourceInfo);
+    EXPECT_FALSE(ret);
+    ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, labelMap, resourceInfo);
+    EXPECT_TRUE(ret);
+    BundleResourceInfo bundleResourceInfo;
+    ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, bundleResourceInfo);
+    EXPECT_FALSE(ret);
+}
 
-    resourceIconRdb.SetIsOnlineTheme(TEST_USER_ID_TWO, true);
-    ans = resourceIconRdb.GetIsOnlineTheme(TEST_USER_ID_TWO);
-    EXPECT_TRUE(ans);
+/**
+ * @tc.number: AddUninstallBundleResource_0002
+ * Function: UninstallBundleResourceRdb
+ * @tc.name: test UninstallBundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test AddUninstallBundleResource
+ */
+HWTEST_F(BmsBundleResourceIconRdbTest, AddUninstallBundleResource_0002, Function | SmallTest | Level0)
+{
+    UninstallBundleResourceRdb uninstallBundleResourceRdb;
+    std::map<std::string, std::string> labelMap;
+    ResourceInfo resourceInfo;
+    resourceInfo.icon_ = "icon";
+    resourceInfo.foreground_.emplace_back(1);
+    bool ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, labelMap, resourceInfo);
+    EXPECT_TRUE(ret);
+    BundleResourceInfo bundleResourceInfo;
+    ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, APP_INDEX, bundleResourceInfo);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(bundleResourceInfo.icon.empty());
+    ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, bundleResourceInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(bundleResourceInfo.bundleName, BUNDLE_NAME);
+    EXPECT_EQ(bundleResourceInfo.label, BUNDLE_NAME);
+    EXPECT_FALSE(bundleResourceInfo.icon.empty());
+    EXPECT_EQ(bundleResourceInfo.appIndex, 0);
+    ret = uninstallBundleResourceRdb.DeleteUninstallBundleResource(BUNDLE_NAME, USER_ID, 0);
+    EXPECT_TRUE(ret);
+}
 
-    resourceIconRdb.SetIsOnlineTheme(TEST_USER_ID_TWO, false);
-    ans = resourceIconRdb.GetIsOnlineTheme(TEST_USER_ID_TWO);
-    EXPECT_FALSE(ans);
+/**
+ * @tc.number: AddUninstallBundleResource_0003
+ * Function: UninstallBundleResourceRdb
+ * @tc.name: test UninstallBundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test AddUninstallBundleResource
+ */
+HWTEST_F(BmsBundleResourceIconRdbTest, AddUninstallBundleResource_0003, Function | SmallTest | Level0)
+{
+    UninstallBundleResourceRdb uninstallBundleResourceRdb;
+    std::map<std::string, std::string> labelMap;
+    ResourceInfo resourceInfo;
+    bool ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, labelMap, resourceInfo);
+    EXPECT_TRUE(ret);
+    BundleResourceInfo bundleResourceInfo;
+    ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, APP_INDEX, bundleResourceInfo);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(bundleResourceInfo.icon.empty());
+    resourceInfo.icon_ = "icon";
+    ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, labelMap, resourceInfo);
+    EXPECT_TRUE(ret);
+    ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, APP_INDEX, bundleResourceInfo);
+    EXPECT_FALSE(ret);
+    resourceInfo.foreground_.emplace_back(1);
+    ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, labelMap, resourceInfo);
+    EXPECT_TRUE(ret);
+    ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, APP_INDEX, bundleResourceInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(bundleResourceInfo.icon, resourceInfo.icon_);
+    ret = uninstallBundleResourceRdb.DeleteUninstallBundleResource(BUNDLE_NAME, USER_ID, 0);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AddUninstallBundleResource_0004
+ * Function: UninstallBundleResourceRdb
+ * @tc.name: test UninstallBundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test AddUninstallBundleResource
+ */
+HWTEST_F(BmsBundleResourceIconRdbTest, AddUninstallBundleResource_0004, Function | SmallTest | Level0)
+{
+    UninstallBundleResourceRdb uninstallBundleResourceRdb;
+    std::map<std::string, std::string> labelMap;
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    bool ret = uninstallBundleResourceRdb.GetAllUninstallBundleResource(0, bundleResourceInfos);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(bundleResourceInfos.empty());
+
+    ResourceInfo resourceInfo;
+    resourceInfo.icon_ = "icon";
+    resourceInfo.foreground_.emplace_back(1);
+    ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, TEST_USER_ID,
+        APP_INDEX, labelMap, resourceInfo);
+    EXPECT_TRUE(ret);
+    ret = uninstallBundleResourceRdb.GetAllUninstallBundleResource(TEST_USER_ID, bundleResourceInfos);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(bundleResourceInfos.size(), 1);
+    if (!bundleResourceInfos.empty()) {
+        EXPECT_EQ(bundleResourceInfos[0].bundleName, BUNDLE_NAME);
+        EXPECT_EQ(bundleResourceInfos[0].label, BUNDLE_NAME);
+        EXPECT_EQ(bundleResourceInfos[0].icon, resourceInfo.icon_);
+    }
+
+    ret = uninstallBundleResourceRdb.DeleteUninstallBundleResource(BUNDLE_NAME, TEST_USER_ID, APP_INDEX);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DeleteUninstallBundleResource_0001
+ * Function: UninstallBundleResourceRdb
+ * @tc.name: test UninstallBundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteUninstallBundleResource
+ */
+HWTEST_F(BmsBundleResourceIconRdbTest, DeleteUninstallBundleResource_0001, Function | SmallTest | Level0)
+{
+    UninstallBundleResourceRdb uninstallBundleResourceRdb;
+    bool ret = uninstallBundleResourceRdb.DeleteUninstallBundleResource("", USER_ID, 0);
+    EXPECT_TRUE(ret);
+
+    ret = uninstallBundleResourceRdb.DeleteUninstallBundleResource(BUNDLE_NAME, USER_ID, 0);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: ToString_0001
+ * Function: UninstallBundleResourceRdb
+ * @tc.name: test UninstallBundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test ToString
+ */
+HWTEST_F(BmsBundleResourceIconRdbTest, ToString_0001, Function | SmallTest | Level0)
+{
+    std::map<std::string, std::string> labelMap;
+    labelMap[BUNDLE_NAME] = BUNDLE_NAME;
+    UninstallBundleResourceRdb uninstallBundleResourceRdb;
+    std::string labels = uninstallBundleResourceRdb.ToString(labelMap);
+    EXPECT_FALSE(labels.empty());
+
+    std::map<std::string, std::string> newLabelMap = uninstallBundleResourceRdb.FromString(labels);
+    EXPECT_FALSE(newLabelMap.empty());
+
+    auto iter = newLabelMap.find(BUNDLE_NAME);
+    EXPECT_TRUE(iter != newLabelMap.end());
+    if (iter != newLabelMap.end()) {
+        EXPECT_EQ(iter->second, BUNDLE_NAME);
+    }
+}
+
+/**
+ * @tc.number: FromString_0001
+ * Function: UninstallBundleResourceRdb
+ * @tc.name: test UninstallBundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test FromString
+ */
+HWTEST_F(BmsBundleResourceIconRdbTest, FromString_0001, Function | SmallTest | Level0)
+{
+    UninstallBundleResourceRdb uninstallBundleResourceRdb;
+    std::string labels = "";
+    std::map<std::string, std::string> labelMap = uninstallBundleResourceRdb.FromString(labels);
+    EXPECT_TRUE(labelMap.empty());
+
+    labelMap = uninstallBundleResourceRdb.FromString(LABEL_JSON_1.dump());
+    EXPECT_FALSE(labelMap.empty());
+    EXPECT_TRUE(labelMap.find("bundleName") != labelMap.end());
+
+    labelMap = uninstallBundleResourceRdb.FromString(LABEL_JSON_2.dump());
+    EXPECT_TRUE(labelMap.empty());
+
+    labelMap = uninstallBundleResourceRdb.FromString(LABEL_JSON_3.dump());
+    EXPECT_TRUE(labelMap.empty());
+}
+
+/**
+ * @tc.number: GetAvailableLabel_0001
+ * Function: UninstallBundleResourceRdb
+ * @tc.name: test UninstallBundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetAvailableLabel
+ */
+HWTEST_F(BmsBundleResourceIconRdbTest, GetAvailableLabel_0001, Function | SmallTest | Level0)
+{
+    UninstallBundleResourceRdb uninstallBundleResourceRdb;
+    std::string label = uninstallBundleResourceRdb.GetAvailableLabel(BUNDLE_NAME, "", LABEL_JSON_1.dump());
+    EXPECT_EQ(label, BUNDLE_NAME);
+
+    label = uninstallBundleResourceRdb.GetAvailableLabel(BUNDLE_NAME, "bundleName", LABEL_JSON_1.dump());
+    EXPECT_EQ(label, "label");
+
+    label = uninstallBundleResourceRdb.GetAvailableLabel(BUNDLE_NAME, "", LABEL_JSON_4.dump());
+    EXPECT_EQ(label, "label2");
 }
 #endif
 } // OHOS
