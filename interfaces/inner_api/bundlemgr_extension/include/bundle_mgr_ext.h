@@ -76,6 +76,10 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual ErrCode BackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
     virtual ErrCode ClearCache(const std::string &bundleName, sptr<IRemoteObject> callback, int32_t userId)
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
