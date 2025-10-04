@@ -3540,6 +3540,7 @@ void BaseBundleInstaller::DeleteUninstallBundleInfo(const std::string &bundleNam
     if (!dataMgr_->DeleteUninstallBundleInfo(bundleName, userId_)) {
         LOG_E(BMS_TAG_INSTALLER, "delete failed");
     }
+    BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId_, 0);
 }
 
 bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bundleName)
