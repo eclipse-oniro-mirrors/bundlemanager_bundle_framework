@@ -26,18 +26,13 @@ class RouterDataStorageRdb :
 public:
     RouterDataStorageRdb();
     ~RouterDataStorageRdb();
-    bool UpdateRouterInfo(const std::string &bundleName,
-        const std::map<std::string, std::string> &routerInfoMap, const uint32_t versionCode);
+    bool UpdateRouterInfo(
+        const std::string &bundleName, const std::map<std::string, std::string> &routerInfoMap);
     bool GetRouterInfo(const std::string &bundleName, const std::string &moduleName,
-        const uint32_t versionCode, std::vector<RouterItem> &routerInfos);
+        std::vector<RouterItem> &routerInfos);
     void GetAllBundleNames(std::set<std::string> &bundleNames);
     bool DeleteRouterInfo(const std::string &bundleName);
     bool DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName);
-    bool DeleteRouterInfo(const std::string &bundleName,
-        const std::string &moduleName, const uint32_t versionCode);
-    bool UpdateDB();
-    bool InsertRouterInfo(const std::string &bundleName,
-        const std::map<std::string, std::string> &routerInfoMap, const uint32_t versionCode);
 private:
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
 };

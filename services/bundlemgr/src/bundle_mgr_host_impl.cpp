@@ -5990,21 +5990,17 @@ ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCa
         APP_LOGE("pluginEventCallback is null");
         return ERR_APPEXECFWK_NULL_PTR;
     }
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    auto uid = IPCSkeleton::GetCallingUid();
-    std::string callingBundleName;
-    if (uid == Constants::FOUNDATION_UID) {
-        callingBundleName = std::string(Constants::FOUNDATION_PROCESS_NAME);
-    } else if (!dataMgr->GetBundleNameForUid(uid, callingBundleName)) {
-        APP_LOGE("get calling bundle name failed");
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-    
-    return dataMgr->RegisterPluginEventCallback(pluginEventCallback, callingBundleName);
+    return dataMgr->RegisterPluginEventCallback(pluginEventCallback);
 }
 
 ErrCode BundleMgrHostImpl::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
@@ -6014,20 +6010,17 @@ ErrCode BundleMgrHostImpl::UnregisterPluginEventCallback(const sptr<IBundleEvent
         APP_LOGE("pluginEventCallback is null");
         return ERR_APPEXECFWK_NULL_PTR;
     }
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    auto uid = IPCSkeleton::GetCallingUid();
-    std::string callingBundleName;
-    if (uid == Constants::FOUNDATION_UID) {
-        callingBundleName = std::string(Constants::FOUNDATION_PROCESS_NAME);
-    } else if (!dataMgr->GetBundleNameForUid(uid, callingBundleName)) {
-        APP_LOGE("get calling bundle name failed");
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-    return dataMgr->UnregisterPluginEventCallback(pluginEventCallback, callingBundleName);
+    return dataMgr->UnregisterPluginEventCallback(pluginEventCallback);
 }
 
 ErrCode BundleMgrHostImpl::GetSandboxDataDir(

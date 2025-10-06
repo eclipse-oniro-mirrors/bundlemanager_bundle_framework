@@ -27,18 +27,13 @@ class IRouterDataStorage {
 public:
     IRouterDataStorage() = default;
     virtual ~IRouterDataStorage() = default;
-    virtual bool UpdateRouterInfo(const std::string &bundleName,
-        const std::map<std::string, std::string> &routerInfoMap, const uint32_t versionCode) = 0;
+    virtual bool UpdateRouterInfo(
+        const std::string &bundleName, const std::map<std::string, std::string> &routerInfoMap) = 0;
     virtual bool GetRouterInfo(const std::string &bundleName, const std::string &moduleName,
-        const uint32_t versionCode, std::vector<RouterItem> &routerInfos) = 0;
+        std::vector<RouterItem> &routerInfos) = 0;
     virtual void GetAllBundleNames(std::set<std::string> &bundleNames);
     virtual bool DeleteRouterInfo(const std::string &bundleName) = 0;
     virtual bool DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName) = 0;
-    virtual bool DeleteRouterInfo(const std::string &bundleName,
-        const std::string &moduleName, const uint32_t versionCode) = 0;
-    virtual bool UpdateDB() = 0;
-    virtual bool InsertRouterInfo(const std::string &bundleName,
-        const std::map<std::string, std::string> &routerInfoMap, const uint32_t versionCode) = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -615,8 +615,6 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_3300, Function | SmallTest 
     MockGetRdbStore(nullptr);
     rdbDataManager->bmsRdbConfig_.createTableSql = "";
     bool ret = rdbDataManager->CreateTable();
-    rdbDataManager->bmsRdbConfig_.insertColumnSql.push_back("");
-    rdbDataManager->ExecuteSql();
     EXPECT_FALSE(ret);
 }
 
@@ -632,8 +630,6 @@ HWTEST_F(BmsBundleRdbDataManagerTest, RdbDataManager_3400, Function | SmallTest 
     auto store = std::make_shared<MockAppProvisionInfo>();
     MockGetRdbStore(store);
     bool ret = rdbDataManager->CreateTable();
-    rdbDataManager->bmsRdbConfig_.insertColumnSql.push_back("");
-    rdbDataManager->ExecuteSql();
     EXPECT_FALSE(ret);
 }
 

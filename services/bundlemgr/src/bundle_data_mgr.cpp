@@ -2136,7 +2136,7 @@ void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t fla
         if (ret == ERR_OK) {
             ProcessCertificate(cloneBundleInfo, info.GetBundleName(), flags);
             ProcessBundleMenu(cloneBundleInfo, flags, true);
-            ProcessBundleRouterMap(cloneBundleInfo, flags, userId);
+            ProcessBundleRouterMap(cloneBundleInfo, flags);
             bundleInfos.emplace_back(cloneBundleInfo);
         }
     }
@@ -2880,7 +2880,7 @@ bool BundleDataMgr::GetBundleInfo(
     if ((static_cast<uint32_t>(flags) & BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP) ==
         BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP) {
         ProcessBundleRouterMap(bundleInfo, static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
-            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP), userId);
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP));
     }
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
         bundleName.c_str(), userId);
@@ -2931,7 +2931,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
 
     ProcessCertificate(bundleInfo, bundleName, flags);
     ProcessBundleMenu(bundleInfo, flags, true);
-    ProcessBundleRouterMap(bundleInfo, flags, userId);
+    ProcessBundleRouterMap(bundleInfo, flags);
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
         bundleName.c_str(), userId);
     return ERR_OK;
@@ -3020,7 +3020,7 @@ ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInf
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, userId, appIndex);
     ProcessCertificate(bundleInfo, innerBundleInfo.GetBundleName(), flags);
     ProcessBundleMenu(bundleInfo, flags, true);
-    ProcessBundleRouterMap(bundleInfo, flags, userId);
+    ProcessBundleRouterMap(bundleInfo, flags);
     LOG_D(BMS_TAG_QUERY, "get bundleInfoForSelf %{public}s successfully in user %{public}d",
         innerBundleInfo.GetBundleName().c_str(), userId);
     return ERR_OK;
@@ -3060,7 +3060,7 @@ ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, 
     return ERR_OK;
 }
 
-void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag, int32_t userId) const
+void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     if (routerStorage_ == nullptr) {
@@ -3083,91 +3083,13 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag,
             APP_LOGD("invalid router profile");
             continue;
         }
-        if (!routerStorage_->GetRouterInfo(bundleInfo.name, hapModuleInfo.moduleName,
-            bundleInfo.versionCode, hapModuleInfo.routerArray)) {
+        if (!routerStorage_->GetRouterInfo(bundleInfo.name, hapModuleInfo.moduleName, hapModuleInfo.routerArray)) {
             APP_LOGE("get failed for %{public}s", hapModuleInfo.moduleName.c_str());
             continue;
         }
     }
-    // get plugin router info
-    std::vector<RouterItem> pluginRouterInfos;
-    GetRouterInfoForPlugin(bundleInfo.name, userId, pluginRouterInfos);
-    RouterMapHelper::MergeRouter(bundleInfo, pluginRouterInfos);
+    RouterMapHelper::MergeRouter(bundleInfo);
 }
-
-void BundleDataMgr::GetRouterInfoForPlugin(const std::string &hostBundleName,
-    int32_t userId, std::vector<RouterItem> &routerInfos) const
-{
-    if (routerStorage_ == nullptr) {
-        APP_LOGE("routerStorage_ is null");
-        return;
-    }
-    std::vector<PluginBundleInfo> pluginBundleInfos;
-    std::vector<RouterItem> tempInfos;
-    GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
-    for (const auto &pluginInfo : pluginBundleInfos) {
-        for (const auto &module : pluginInfo.pluginModuleInfos) {
-            if (!routerStorage_->GetRouterInfo(pluginInfo.pluginBundleName, module.moduleName,
-                pluginInfo.versionCode, tempInfos) || tempInfos.empty()) {
-                continue;
-            }
-            routerInfos.insert(routerInfos.end(), tempInfos.begin(), tempInfos.end());
-            tempInfos.clear();
-        }
-    }
-}
-
-bool BundleDataMgr::UpdateRouterDB()
-{
-    if (routerStorage_ == nullptr) {
-        APP_LOGE("routerStorage_ is null");
-        return false;
-    }
-    return routerStorage_->UpdateDB();
-}
-
-void BundleDataMgr::InsertRouterInfo(const InnerBundleInfo &innerBundleInfo)
-{
-    std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
-    FindRouterHapPath(innerBundleInfo, hapPathMap);
-    std::map<std::string, std::string> routerInfoMap;
-    for (auto hapIter = hapPathMap.begin(); hapIter != hapPathMap.end(); hapIter++) {
-        std::string routerMapString;
-        if (GetJsonProfileByExtractor(hapIter->second.first, hapIter->second.second, routerMapString) != ERR_OK) {
-            APP_LOGW("get json string from %{public}s failed", hapIter->second.second.c_str());
-            continue;
-        }
-        routerInfoMap[hapIter->first] = routerMapString;
-    }
-    std::string bundleName = innerBundleInfo.GetBundleName();
-    if (!routerStorage_->InsertRouterInfo(bundleName, routerInfoMap, innerBundleInfo.GetVersionCode())) {
-        APP_LOGW("-n %{public}s insert router failed", bundleName.c_str());
-    }
-}
-
-bool BundleDataMgr::HasPluginInstalledByOtherBundle(const std::string &hostBundleName,
-    const std::string &pluginBundleName, const uint32_t versionCode)
-{
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    for (const auto &infoItem : bundleInfos_) {
-        for (auto& innerBundleUserInfoItem : infoItem.second.GetInnerBundleUserInfos()) {
-            if ((infoItem.first != hostBundleName) &&
-                innerBundleUserInfoItem.second.IsPluginInstalled(pluginBundleName)) {
-                auto& bundleUserInfo = innerBundleUserInfoItem.second.bundleUserInfo;
-                PluginBundleInfo pluginInfo;
-                if (!GetPluginBundleInfo(infoItem.first, pluginBundleName, bundleUserInfo.userId, pluginInfo)) {
-                    continue;
-                }
-                if (pluginInfo.versionCode == versionCode) {
-                    // other app has installed the same plugin
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
 
 void BundleDataMgr::ProcessCertificate(BundleInfo& bundleInfo, const std::string &bundleName, int32_t flags) const
 {
@@ -3202,21 +3124,6 @@ bool BundleDataMgr::DeleteRouterInfo(const std::string &bundleName)
     return routerStorage_->DeleteRouterInfo(bundleName);
 }
 
-void BundleDataMgr::DeleteRouterInfoForPlugin(const std::string &hostBundleName,
-    const PluginBundleInfo &pluginInfo)
-{
-    if (HasPluginInstalledByOtherBundle(hostBundleName, pluginInfo.pluginBundleName, pluginInfo.versionCode)) {
-        return;
-    }
-    if (routerStorage_ == nullptr) {
-        APP_LOGE("routerStorage_ is null");
-        return;
-    }
-    for (const auto &module : pluginInfo.pluginModuleInfos) {
-        routerStorage_->DeleteRouterInfo(pluginInfo.pluginBundleName, module.moduleName, pluginInfo.versionCode);
-    }
-}
-
 void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
 {
     if (routerStorage_ == nullptr) {
@@ -3224,7 +3131,6 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
         return;
     }
     std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
-    uint32_t versionCode = 0;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
@@ -3233,9 +3139,8 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName)
             return;
         }
         FindRouterHapPath(infoItem->second, hapPathMap);
-        versionCode = infoItem->second.GetVersionCode();
     }
-    UpdateRouterInfo(bundleName, hapPathMap, versionCode);
+    UpdateRouterInfo(bundleName, hapPathMap);
 }
 
 void BundleDataMgr::FindRouterHapPath(const InnerBundleInfo &innerBundleInfo,
@@ -3258,11 +3163,11 @@ void BundleDataMgr::UpdateRouterInfo(InnerBundleInfo &innerBundleInfo)
 {
     std::map<std::string, std::pair<std::string, std::string>> hapPathMap;
     FindRouterHapPath(innerBundleInfo, hapPathMap);
-    UpdateRouterInfo(innerBundleInfo.GetBundleName(), hapPathMap, innerBundleInfo.GetVersionCode());
+    UpdateRouterInfo(innerBundleInfo.GetBundleName(), hapPathMap);
 }
 
 void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName,
-    std::map<std::string, std::pair<std::string, std::string>> &hapPathMap, const uint32_t versionCode)
+    std::map<std::string, std::pair<std::string, std::string>> &hapPathMap)
 {
     std::map<std::string, std::string> routerInfoMap;
     for (auto hapIter = hapPathMap.begin(); hapIter != hapPathMap.end(); hapIter++) {
@@ -3273,7 +3178,7 @@ void BundleDataMgr::UpdateRouterInfo(const std::string &bundleName,
         }
         routerInfoMap[hapIter->first] = routerMapString;
     }
-    if (!routerStorage_->UpdateRouterInfo(bundleName, routerInfoMap, versionCode)) {
+    if (!routerStorage_->UpdateRouterInfo(bundleName, routerInfoMap)) {
         APP_LOGW("add router for %{public}s failed", bundleName.c_str());
     }
 }
@@ -3859,7 +3764,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         }
         ProcessCertificate(bundleInfo, innerBundleInfo.GetBundleName(), flags);
         ProcessBundleMenu(bundleInfo, flags, true);
-        ProcessBundleRouterMap(bundleInfo, flags, userId);
+        ProcessBundleRouterMap(bundleInfo, flags);
         PostProcessAnyUserFlags(flags, responseUserId, requestUserId, bundleInfo, innerBundleInfo);
         bundleInfos.emplace_back(bundleInfo);
         if (!ofAnyUserFlag && ((static_cast<uint32_t>(flags) &
@@ -10173,7 +10078,7 @@ ErrCode BundleDataMgr::GetCloneBundleInfo(
 
     ProcessCertificate(bundleInfo, bundleName, flags);
     ProcessBundleMenu(bundleInfo, flags, true);
-    ProcessBundleRouterMap(bundleInfo, flags, userId);
+    ProcessBundleRouterMap(bundleInfo, flags);
     LOG_D(BMS_TAG_QUERY, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
         bundleName.c_str(), userId);
     return ERR_OK;
@@ -10991,7 +10896,7 @@ ErrCode BundleDataMgr::GetAllPluginInfo(const std::string &hostBundleName, int32
         APP_LOGE("invalid userid :%{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(hostBundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("hostBundleName: %{public}s does not exist", hostBundleName.c_str());
@@ -11238,14 +11143,17 @@ ErrCode BundleDataMgr::GetPluginHapModuleInfo(const std::string &hostBundleName,
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback,
-    const std::string callingBundleName)
+ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
 {
     if (pluginEventCallback == nullptr) {
         APP_LOGW("pluginEventCallback is null");
         return ERR_APPEXECFWK_NULL_PTR;
     }
     std::lock_guard lock(pluginCallbackMutex_);
+    if (pluginCallbackList_.size() >= MAX_EVENT_CALL_BACK_SIZE) {
+        APP_LOGW("pluginCallbackList_ reach max size %{public}d", MAX_EVENT_CALL_BACK_SIZE);
+        return ERR_APPEXECFWK_PLUGIN_CALLBACK_LIST_FULL;
+    }
     if (pluginEventCallback->AsObject() != nullptr) {
         sptr<BundleEventCallbackDeathRecipient> deathRecipient =
             new (std::nothrow) BundleEventCallbackDeathRecipient();
@@ -11255,50 +11163,32 @@ ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallba
         }
         pluginEventCallback->AsObject()->AddDeathRecipient(deathRecipient);
     }
-    pluginCallbackMap_[callingBundleName].emplace_back(pluginEventCallback);
+    pluginCallbackList_.emplace_back(pluginEventCallback);
     APP_LOGI("success");
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback,
-    const std::string &callingBundleName)
+ErrCode BundleDataMgr::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
 {
     if (pluginEventCallback == nullptr) {
         APP_LOGW("pluginEventCallback is null");
         return ERR_APPEXECFWK_NULL_PTR;
     }
     std::lock_guard lock(pluginCallbackMutex_);
-    auto iter = pluginCallbackMap_.find(callingBundleName);
-    if (iter != pluginCallbackMap_.end()) {
-        auto &callbackList = iter->second;
-        callbackList.erase(std::remove_if(callbackList.begin(), callbackList.end(),
+    pluginCallbackList_.erase(std::remove_if(pluginCallbackList_.begin(), pluginCallbackList_.end(),
         [&pluginEventCallback](const sptr<IBundleEventCallback> &callback) {
             return callback->AsObject() == pluginEventCallback->AsObject();
-        }), callbackList.end());
-        if (callbackList.empty()) {
-            pluginCallbackMap_.erase(callingBundleName);
-        }
-    }
+        }), pluginCallbackList_.end());
     APP_LOGI("success");
     return ERR_OK;
 }
 
-void BundleDataMgr::NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData,
-    const std::string &bundleName)
+void BundleDataMgr::NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData)
 {
     APP_LOGI("begin");
     std::lock_guard lock(pluginCallbackMutex_);
-    auto iter = pluginCallbackMap_.find(std::string(Constants::FOUNDATION_PROCESS_NAME));
-    if (iter != pluginCallbackMap_.end()) {
-        for (const auto &callback : iter->second) {
-            callback->OnReceiveEvent(eventData);
-        }
-    }
-    iter = pluginCallbackMap_.find(bundleName);
-    if (iter != pluginCallbackMap_.end()) {
-        for (const auto &callback : iter->second) {
-            callback->OnReceiveEvent(eventData);
-        }
+    for (const auto &callback : pluginCallbackList_) {
+        callback->OnReceiveEvent(eventData);
     }
     APP_LOGI("end");
 }

@@ -1974,7 +1974,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     DeleteEncryptedStatus(bundleName, uid);
     BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
-    DeleteRouterInfo(oldInfo);
+    DeleteRouterInfo(bundleName);
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
@@ -2018,28 +2018,16 @@ void BaseBundleInstaller::UninstallDebugAppSandbox(const std::string &bundleName
     LOG_D(BMS_TAG_INSTALLER, "call UninstallDebugAppSandbox end");
 }
 
-void BaseBundleInstaller::DeleteRouterInfo(const InnerBundleInfo &info, const std::string &moduleName)
+void BaseBundleInstaller::DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName)
 {
     if (!InitDataMgr()) {
         LOG_E(BMS_TAG_INSTALLER, "init failed");
         return;
     }
     if (moduleName.empty()) {
-        DeleteRouterInfoForPlugin(info);
-        dataMgr_->DeleteRouterInfo(info.GetBundleName());
+        dataMgr_->DeleteRouterInfo(bundleName);
     } else {
-        dataMgr_->DeleteRouterInfo(info.GetBundleName(), moduleName);
-    }
-}
-
-void BaseBundleInstaller::DeleteRouterInfoForPlugin(const InnerBundleInfo &info)
-{
-    if (!InitDataMgr()) {
-        return;
-    }
-    auto pluginBundleInfos = info.GetAllPluginBundleInfo();
-    for (const auto &item : pluginBundleInfos) {
-        dataMgr_->DeleteRouterInfoForPlugin(info.GetBundleName(), item.second);
+        dataMgr_->DeleteRouterInfo(bundleName, moduleName);
     }
 }
 
@@ -2196,7 +2184,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 LOG_I(BMS_TAG_INSTALLER, "%{public}s detected, Marking as uninstalled", bundleName.c_str());
                 MarkPreInstallState(bundleName, true);
             }
-            DeleteRouterInfo(oldInfo);
+            DeleteRouterInfo(bundleName);
             SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
             UninstallDebugAppSandbox(bundleName, uid, oldInfo);
             BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
@@ -2218,7 +2206,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (onlyInstallInUser) {
         LOG_I(BMS_TAG_INSTALLER, "%{public}s is only install at the userId %{public}d", bundleName.c_str(), userId_);
         result = RemoveModuleAndDataDir(oldInfo, modulePackage, userId_, installParam.isKeepData);
-        DeleteRouterInfo(oldInfo, modulePackage);
+        DeleteRouterInfo(bundleName, modulePackage);
     }
 
     if (result != ERR_OK) {
@@ -7118,7 +7106,7 @@ ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed",
             oldInfo.GetBundleName().c_str());
     }
-    DeleteRouterInfo(oldInfo);
+    DeleteRouterInfo(oldInfo.GetBundleName());
     BundleResourceHelper::DeleteBundleResourceInfo(oldInfo.GetBundleName(), userId_, false);
     RemoveProfileFromCodeSign(oldInfo.GetBundleName());
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), oldInfo.GetBundleName());
@@ -7761,15 +7749,14 @@ void BaseBundleInstaller::RemovePluginOnlyInCurrentUser(const InnerBundleInfo &i
             continue;
         }
         LOG_I(BMS_TAG_INSTALLER, "%{public}s remove plugin %{public}s", hostBundleName.c_str(), pluginName.c_str());
-        auto it = pluginBundleInfos.find(pluginName);
-        if (it == pluginBundleInfos.end()) {
-            LOG_E(BMS_TAG_INSTALLER, "can not find plugin %{public}s when uninstall %{public}s",
+        if (dataMgr_->RemovePluginInfo(hostBundleName, pluginName, userId_) != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "remove plugin %{public}s fail when uninstall %{public}s",
                 pluginName.c_str(), hostBundleName.c_str());
             continue;
         }
-        dataMgr_->DeleteRouterInfoForPlugin(hostBundleName, it->second);
-        if (dataMgr_->RemovePluginInfo(hostBundleName, pluginName, userId_) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "remove plugin %{public}s fail when uninstall %{public}s",
+        auto it = pluginBundleInfos.find(pluginName);
+        if (it == pluginBundleInfos.end()) {
+            LOG_E(BMS_TAG_INSTALLER, "can not find plugin %{public}s when uninstall %{public}s",
                 pluginName.c_str(), hostBundleName.c_str());
             continue;
         }

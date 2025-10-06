@@ -376,10 +376,10 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0003, Function | Mediu
 HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0004, Function | MediumTest | Level1)
 {
     BaseBundleInstaller installer;
-    InnerBundleInfo info;
+    std::string bundleName;
     std::string moduleName;
-    installer.DeleteRouterInfo(info, moduleName);
-    EXPECT_TRUE(info.GetBundleName().empty());
+    installer.DeleteRouterInfo(bundleName, moduleName);
+    EXPECT_TRUE(bundleName.empty());
     EXPECT_TRUE(moduleName.empty());
 }
 

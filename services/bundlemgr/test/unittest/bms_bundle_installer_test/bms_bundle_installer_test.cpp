@@ -11576,27 +11576,6 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0067, Function | MediumTest | L
 }
 
 /**
- * @tc.number: PluginInstaller_0068
- * @tc.name: test UpdateRouterInfoForPlugin
- * @tc.desc: 1.Test UpdateRouterInfoForPlugin
- * @tc.desc: 2.Test DeleteRouterInfoForPlugin
-*/
-HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0068, Function | MediumTest | Level1)
-{
-    PluginInstaller installer;
-    installer.isPluginExist_ = false;
-    std::string hostBundleName;
-    InnerBundleInfo info;
-    installer.UpdateRouterInfoForPlugin(hostBundleName, info);
-    EXPECT_EQ(hostBundleName, "");
-
-    installer.isPluginExist_ = true;
-    installer.UpdateRouterInfoForPlugin(hostBundleName, info);
-    installer.DeleteRouterInfoForPlugin(hostBundleName);
-    EXPECT_EQ(hostBundleName, "");
-}
-
-/**
  * @tc.number: CreateBundleDataDirWithVector_0100
  * @tc.name: test CreateBundleDataDir
  * @tc.desc: test CreateBundleDataDir of InstalldHostImpl

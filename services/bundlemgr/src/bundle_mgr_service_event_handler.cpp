@@ -393,7 +393,6 @@ void BMSEventHandler::BundleBootStartEvent()
     (void)SaveBmsSystemTimeForShortcut();
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
     UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON);
-    UpdateOtaFlag(OTAFlag::PROCESS_ROUTER_MAP);
     (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }
@@ -422,7 +421,6 @@ void BMSEventHandler::BundleRebootStartEvent()
         CheckBundleProvisionInfo();
         CheckALLResourceInfo();
         RemoveUninstalledPreloadFile();
-        ProcessRouterMap();
     }
     // need process main bundle status
     BmsKeyEventMgr::ProcessMainBundleStatusFinally();
@@ -1319,7 +1317,6 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckRecoverableApplicationInfo();
     ProcessCheckInstallSource();
     ProcessCheckAppExtensionAbility();
-    ProcessRouterMap();
     // Driver update may cause shader cache invalidity and need to be cleared
     CleanAllBundleShaderCache();
     CleanAllBundleEl1ShaderCacheLocal();
@@ -2674,38 +2671,6 @@ void BMSEventHandler::InnerProcessCheckAppExtensionAbility()
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "-n %{public}s add resource when ota", bundleName.c_str());
         BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId, ADD_RESOURCE_TYPE::UPDATE_BUNDLE);
     }
-}
-
-void BMSEventHandler::ProcessRouterMap()
-{
-    bool checkRouterMap = false;
-    CheckOtaFlag(OTAFlag::PROCESS_ROUTER_MAP, checkRouterMap);
-    if (checkRouterMap) {
-        LOG_I(BMS_TAG_DEFAULT, "Not need to process router map due to has checked");
-        return;
-    }
-    LOG_I(BMS_TAG_DEFAULT, "Need to update router map");
-    InnerProcessRouterMap();
-}
-
-void BMSEventHandler::InnerProcessRouterMap()
-{
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
-        return;
-    }
-    bool ret = dataMgr->UpdateRouterDB();
-    if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "Update router db failed");
-        return;
-    }
-    std::set<std::string> bundleNames;
-    dataMgr->GetAllBundleNames(bundleNames);
-    for (const auto &bundleName : bundleNames) {
-        dataMgr->UpdateRouterInfo(bundleName);
-    }
-    UpdateOtaFlag(OTAFlag::PROCESS_ROUTER_MAP);
 }
 
 ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &filePaths)

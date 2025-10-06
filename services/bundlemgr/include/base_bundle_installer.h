@@ -655,8 +655,7 @@ private:
     void AddAppProvisionInfo(const std::string &bundleName,
         const Security::Verify::ProvisionInfo &provisionInfo, const InstallParam &installParam) const;
     void UpdateRouterInfo();
-    void DeleteRouterInfo(const InnerBundleInfo &info, const std::string &moduleName = "");
-    void DeleteRouterInfoForPlugin(const InnerBundleInfo &info);
+    void DeleteRouterInfo(const std::string &bundleName, const std::string &moduleName = "");
     ErrCode UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName);
     ErrCode UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info);
     ErrCode UninstallHspAndBundle(InnerBundleInfo &info, int32_t &versionCode,

@@ -2903,21 +2903,6 @@ HWTEST_F(BmsEventHandlerTest, ProcessAppTmpPath_0100, Function | SmallTest | Lev
     EXPECT_NO_THROW(handler->ProcessAppTmpPath());
 }
 
-/**
- * @tc.number: InnerProcessRouterMap_0100
- * @tc.name: InnerProcessRouterMap
- * @tc.desc: test InnerProcessRouterMap
- */
-HWTEST_F(BmsEventHandlerTest, InnerProcessRouterMap_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    EXPECT_NE(handler, nullptr);
-    if (handler) {
-        EXPECT_NO_THROW(handler->ProcessRouterMap());
-        EXPECT_NO_THROW(handler->InnerProcessRouterMap());
-    }
-}
-
 #ifdef WEBVIEW_ENABLE
 /**
  * @tc.number: NotifyFWKAfterBmsStart_0100

@@ -118,8 +118,6 @@ private:
     void NotifyPluginEvents(const NotifyType &type, int32_t uid);
     std::string GetModuleNames();
     std::string JoinPluginId() const;
-    void UpdateRouterInfoForPlugin(const std::string &hostBundleName, const InnerBundleInfo &pluginInfo);
-    void DeleteRouterInfoForPlugin(const std::string &hostBundleName);
 
 #define CHECK_RESULT(errcode, errmsg)                                              \
     do {                                                                           \

@@ -24,7 +24,7 @@ const char* ALNUM_PATTERN = "^[a-zA-Z0-9]*$";
 const char* NUM_PATTERN = "^[0-9]+$";
 }
 
-void RouterMapHelper::MergeRouter(BundleInfo &info, const std::vector<RouterItem> &pluginRouterInfos)
+void RouterMapHelper::MergeRouter(BundleInfo &info)
 {
     if (info.hapModuleInfos.empty()) {
         APP_LOGW("hapModuleInfos in bundleInfo is empty");
@@ -32,21 +32,13 @@ void RouterMapHelper::MergeRouter(BundleInfo &info, const std::vector<RouterItem
     }
     std::vector<RouterItem> routerArrayList;
     std::set<std::string> moduleNameSet;
-    std::set<std::string> nameSet;
     for (const auto &hapModuleInfo : info.hapModuleInfos) {
         if (hapModuleInfo.moduleType == ModuleType::ENTRY || hapModuleInfo.moduleType == ModuleType::FEATURE) {
             moduleNameSet.insert(hapModuleInfo.name);
         }
         for (const auto &routerItem : hapModuleInfo.routerArray) {
             routerArrayList.emplace_back(routerItem);
-            nameSet.insert(routerItem.name);
         }
-    }
-    for (const auto &info : pluginRouterInfos) {
-        if (nameSet.find(info.name) != nameSet.end()) {
-            continue;
-        }
-        routerArrayList.emplace_back(info);
     }
     if (routerArrayList.empty()) {
         return;

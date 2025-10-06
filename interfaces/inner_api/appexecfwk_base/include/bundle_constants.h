@@ -203,7 +203,6 @@ constexpr const char* MODULE_ARKTS_MODE = "moduleArkTSMode";
 constexpr const char* ARKTS_MODE_DYNAMIC = "dynamic";
 constexpr const char* ARKTS_MODE_STATIC = "static";
 constexpr const char* ARKTS_MODE_HYBRID = "hybrid";
-constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
 
 inline constexpr const char* NAME = "name";
 inline constexpr const char* SRC_ENTRANCE = "srcEntrance";
