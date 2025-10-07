@@ -1365,11 +1365,31 @@ bool BundleResourceManager::DeleteUninstallBundleResource(const std::string &bun
 }
 
 bool BundleResourceManager::GetUninstallBundleResource(const std::string &bundleName,
-    const int32_t userId, const int32_t appIndex, BundleResourceInfo &bundleResourceInfo)
+    const int32_t userId, const int32_t appIndex, const uint32_t flags, BundleResourceInfo &bundleResourceInfo)
 {
-    if (!uninstallBundleResourceRdb_->GetUninstallBundleResource(bundleName, userId, appIndex, bundleResourceInfo)) {
+    uint32_t resourceFlags = CheckResourceFlags(flags);
+    if (!uninstallBundleResourceRdb_->GetUninstallBundleResource(bundleName, userId, appIndex, resourceFlags,
+        bundleResourceInfo)) {
         APP_LOGE("-n %{public}s -u %{public}d -i %{public}d get uinstall bundle resource failed", bundleName.c_str(),
             userId, appIndex);
+        return false;
+    }
+    return true;
+}
+
+bool BundleResourceManager::GetAllUninstallBundleResourceInfo(const int32_t userId, const uint32_t flags,
+    std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("start, -u:%{public}d", userId);
+    uint32_t resourceFlags = CheckResourceFlags(flags);
+    int32_t newUserId = userId;
+    if (newUserId == Constants::DEFAULT_USERID) {
+        // sa call or U0 app
+        newUserId = AccountHelper::GetCurrentActiveUserId();
+    }
+    if (!uninstallBundleResourceRdb_->GetAllUninstallBundleResource(newUserId, resourceFlags, bundleResourceInfos)) {
+        APP_LOGE("-u %{public}d get all uinstall bundle resource failed", newUserId);
         return false;
     }
     return true;

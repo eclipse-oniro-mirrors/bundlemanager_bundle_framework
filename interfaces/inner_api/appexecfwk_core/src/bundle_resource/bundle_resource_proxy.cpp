@@ -291,6 +291,29 @@ ErrCode BundleResourceProxy::GetExtensionAbilityResourceInfo(const std::string &
         BundleResourceInterfaceCode::GET_EXTENSION_ABILITY_RESOURCE_INFO, data, extensionAbilityResourceInfo);
 }
 
+ErrCode BundleResourceProxy::GetAllUninstallBundleResourceInfo(const int32_t userId, const uint32_t flags,
+    std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("start, flags:%{public}u", flags);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to write userId");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(flags)) {
+        APP_LOGE("fail to write flags");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetVectorParcelInfo<BundleResourceInfo>(
+        BundleResourceInterfaceCode::GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO, data, bundleResourceInfos);
+}
+
 template<typename T>
 ErrCode BundleResourceProxy::GetParcelInfo(BundleResourceInterfaceCode code, MessageParcel &data, T &parcelInfo)
 {

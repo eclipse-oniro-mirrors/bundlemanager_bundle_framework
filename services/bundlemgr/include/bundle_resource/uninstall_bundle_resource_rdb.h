@@ -32,14 +32,15 @@ public:
         const std::map<std::string, std::string> &labelMap, const BundleResourceInfo &resourceInfo);
     bool DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     bool GetUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex,
-        BundleResourceInfo &bundleResourceInfo);
-    bool GetAllUninstallBundleResource(const int32_t userId, std::vector<BundleResourceInfo> &bundleResourceInfos);
+        const uint32_t flags, BundleResourceInfo &bundleResourceInfo);
+    bool GetAllUninstallBundleResource(const int32_t userId, const uint32_t flags,
+        std::vector<BundleResourceInfo> &bundleResourceInfos);
 
 private:
     std::map<std::string, std::string> FromString(const std::string &labels);
     std::string ToString(const std::map<std::string, std::string> &labelMap);
     bool ConvertToBundleResourceInfo(const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
-        const std::string &language, BundleResourceInfo &bundleResourceInfo);
+        const uint32_t flags, const std::string &language, BundleResourceInfo &bundleResourceInfo);
     std::string GetAvailableLabel(const std::string &bundleName, const std::string &language,
         const std::string &labels);
 

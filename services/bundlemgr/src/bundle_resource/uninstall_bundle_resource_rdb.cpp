@@ -137,7 +137,7 @@ bool UninstallBundleResourceRdb::DeleteUninstallBundleResource(const std::string
 }
 
 bool UninstallBundleResourceRdb::GetUninstallBundleResource(const std::string &bundleName,
-    const int32_t userId, const int32_t appIndex,
+    const int32_t userId, const int32_t appIndex, const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -158,12 +158,12 @@ bool UninstallBundleResourceRdb::GetUninstallBundleResource(const std::string &b
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GoToFirstRow failed, ret %{public}d");
-    return ConvertToBundleResourceInfo(absSharedResultSet, BundleResourceParam::GetSystemLanguage(),
+    return ConvertToBundleResourceInfo(absSharedResultSet, flags, BundleResourceParam::GetSystemLanguage(),
         bundleResourceInfo);
 }
 
 bool UninstallBundleResourceRdb::GetAllUninstallBundleResource(
-    const int32_t userId, std::vector<BundleResourceInfo> &bundleResourceInfos)
+    const int32_t userId, const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::UINSTALL_BUNDLE_RESOURCE_RDB);
@@ -179,16 +179,18 @@ bool UninstallBundleResourceRdb::GetAllUninstallBundleResource(
     std::string language = BundleResourceParam::GetSystemLanguage();
     do {
         BundleResourceInfo bundleResourceInfo;
-        if (ConvertToBundleResourceInfo(absSharedResultSet, language, bundleResourceInfo)) {
+        if (ConvertToBundleResourceInfo(absSharedResultSet, flags, language, bundleResourceInfo)) {
             bundleResourceInfos.emplace_back(bundleResourceInfo);
         }
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
-    APP_LOGI_NOFUNC("rdb get all uninstall resource end -u %{public}d", userId);
-    return !bundleResourceInfos.empty();
+    APP_LOGI_NOFUNC("rdb get all uninstall resource end -u %{public}d size%{public}zu",
+        userId, bundleResourceInfos.size());
+    return true;
 }
 
 bool UninstallBundleResourceRdb::ConvertToBundleResourceInfo(
     const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
+    const uint32_t flags,
     const std::string &language,
     BundleResourceInfo &bundleResourceInfo)
 {
@@ -202,25 +204,38 @@ bool UninstallBundleResourceRdb::ConvertToBundleResourceInfo(
     ret = absSharedResultSet->GetInt(INDEX_APPINDEX, bundleResourceInfo.appIndex);
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString name failed, ret: %{public}d");
 
-    std::string label;
-    ret = absSharedResultSet->GetString(INDEX_LABEL, label);
-    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString label failed, ret: %{public}d");
-    bundleResourceInfo.label = GetAvailableLabel(bundleResourceInfo.bundleName, language, label);
-
-    ret = absSharedResultSet->GetString(INDEX_ICON, bundleResourceInfo.icon);
-    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString icon failed, ret: %{public}d");
-    if (bundleResourceInfo.icon.empty()) {
-        APP_LOGW("-n %{public}s icon is empty", bundleResourceInfo.bundleName.c_str());
-        return false;
+    bool getAll = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    bool getLabel = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+    if (getAll || getLabel) {
+        std::string label;
+        ret = absSharedResultSet->GetString(INDEX_LABEL, label);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString label failed, ret: %{public}d");
+        bundleResourceInfo.label = GetAvailableLabel(bundleResourceInfo.bundleName, language, label);
     }
-    ret = absSharedResultSet->GetBlob(INDEX_FOREGROUND, bundleResourceInfo.foreground);
-    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob foreground, ret: %{public}d");
-    if (bundleResourceInfo.foreground.empty()) {
-        APP_LOGW("-n %{public}s foreground is empty", bundleResourceInfo.bundleName.c_str());
-        return false;
+    bool getIcon = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON);
+    if (getAll || getIcon) {
+        ret = absSharedResultSet->GetString(INDEX_ICON, bundleResourceInfo.icon);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString icon failed, ret: %{public}d");
+        if (bundleResourceInfo.icon.empty()) {
+            APP_LOGW("-n %{public}s icon is empty", bundleResourceInfo.bundleName.c_str());
+            return false;
+        }
     }
-    ret = absSharedResultSet->GetBlob(INDEX_BACKGROUND, bundleResourceInfo.background);
-    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob background, ret: %{public}d");
+    bool getDrawable = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    if (getDrawable) {
+        ret = absSharedResultSet->GetBlob(INDEX_FOREGROUND, bundleResourceInfo.foreground);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob foreground, ret: %{public}d");
+        if (bundleResourceInfo.foreground.empty()) {
+            APP_LOGW("-n %{public}s foreground is empty", bundleResourceInfo.bundleName.c_str());
+            return false;
+        }
+        ret = absSharedResultSet->GetBlob(INDEX_BACKGROUND, bundleResourceInfo.background);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob background, ret: %{public}d");
+    }
     return true;
 }
 
