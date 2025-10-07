@@ -50,6 +50,7 @@ BundleResourceManager::BundleResourceManager()
 {
     bundleResourceRdb_ = std::make_shared<BundleResourceRdb>();
     bundleResourceIconRdb_ = std::make_shared<BundleResourceIconRdb>();
+    uninstallBundleResourceRdb_ = std::make_shared<UninstallBundleResourceRdb>();
     delayedTaskMgr_ = std::make_shared<SingleDelayedTaskMgr>(TASK_NAME, DELAY_TIME_MILLI_SECONDS);
 }
 
@@ -1304,6 +1305,73 @@ bool BundleResourceManager::ProcessThemeAndDynamicIconWhenOta(
         InnerProcessThemeIconWhenOta(bundleName, userIds, hasBundleUpdated);
     }
     APP_LOGI("ProcessThemeAndDynamicIconWhenOta end");
+    return true;
+}
+
+bool BundleResourceManager::AddUninstallBundleResource(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
+{
+    APP_LOGI("-n %{public}s -u %{public}d -i %{public}d add uinstall bundle resource start", bundleName.c_str(),
+        userId, appIndex);
+    // 1. get resource info, labelId and iconId
+    std::vector<ResourceInfo> resourceInfos;
+    if (!BundleResourceProcess::GetResourceInfoByBundleName(bundleName, userId, resourceInfos, appIndex, false)) {
+        APP_LOGE("-n %{public}s -u %{public}d -i %{public}d get bundle resourceInfo failed", bundleName.c_str(),
+            userId, appIndex);
+        return false;
+    }
+    ResourceInfo resourceInfo = resourceInfos[0]; // resourceInfos not empty
+    resourceInfo.appIndex_ = appIndex;
+    // 2. get bundle resource Info from bundleResourceRdb
+    uint32_t flag = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    BundleResourceInfo bundleResourceInfo;
+    if (!bundleResourceRdb_->GetBundleResourceInfo(bundleName, flag, bundleResourceInfo, appIndex)) {
+        APP_LOGW("-n %{public}s -i %{public}d resource not exist in db", bundleName.c_str(), appIndex);
+        resourceInfo.iconNeedParse_ = true;
+    } else {
+        resourceInfo.iconNeedParse_ = false;
+    }
+    // 3. parse label and icon from hap
+    std::map<std::string, std::string> labelMap;
+    BundleResourceParser parser;
+    if (!parser.ParseUninstallBundleResource(resourceInfo, labelMap)) {
+        APP_LOGE("-n %{public}s -u %{public}d -i %{public}d parse uinstall bundle resource failed", bundleName.c_str(),
+            userId, appIndex);
+        return false;
+    }
+    if (resourceInfo.iconNeedParse_) {
+        bundleResourceInfo.icon = resourceInfo.icon_;
+        bundleResourceInfo.foreground = resourceInfo.foreground_;
+        bundleResourceInfo.background = resourceInfo.background_;
+    }
+    if (!uninstallBundleResourceRdb_->AddUninstallBundleResource(bundleName, userId, appIndex,
+        labelMap, bundleResourceInfo)) {
+        APP_LOGE("-n %{public}s -u %{public}d -i %{public}d add uinstall bundle resource failed", bundleName.c_str(),
+            userId, appIndex);
+        return false;
+    }
+    APP_LOGI("-n %{public}s -u %{public}d -i %{public}d add uinstall bundle resource succeed", bundleName.c_str(),
+        userId, appIndex);
+    return true;
+}
+
+bool BundleResourceManager::DeleteUninstallBundleResource(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
+{
+    APP_LOGI("-n %{public}s -u %{public}d -i %{public}d delete uinstall bundle resource start", bundleName.c_str(),
+        userId, appIndex);
+    return uninstallBundleResourceRdb_->DeleteUninstallBundleResource(bundleName, userId, appIndex);
+}
+
+bool BundleResourceManager::GetUninstallBundleResource(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex, BundleResourceInfo &bundleResourceInfo)
+{
+    if (!uninstallBundleResourceRdb_->GetUninstallBundleResource(bundleName, userId, appIndex, bundleResourceInfo)) {
+        APP_LOGE("-n %{public}s -u %{public}d -i %{public}d get uinstall bundle resource failed", bundleName.c_str(),
+            userId, appIndex);
+        return false;
+    }
     return true;
 }
 } // AppExecFwk

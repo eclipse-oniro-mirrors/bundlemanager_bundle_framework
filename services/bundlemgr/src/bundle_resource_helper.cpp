@@ -359,5 +359,31 @@ void BundleResourceHelper::SetIsOnlineThemeWhenBoot()
     manager->SetIsOnlineThemeWhenBoot();
 #endif
 }
+
+void BundleResourceHelper::AddUninstallBundleResource(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    (void)manager->AddUninstallBundleResource(bundleName, userId, appIndex);
+#endif
+}
+
+void BundleResourceHelper::DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    (void)manager->DeleteUninstallBundleResource(bundleName, userId, appIndex);
+#endif
+}
 } // AppExecFwk
 } // OHOS

@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_CONFIGURATION_H
 
 #include <string>
+#include <unordered_set>
 
 #include "resource_manager.h"
 
@@ -33,6 +34,12 @@ public:
         const std::vector<std::string> &overlayHaps,
         std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
         bool needParseIcon = true, bool needParseLabel = true);
+
+    static bool UpdateResourceGlobalConfig(
+        const std::string &language,
+        std::shared_ptr<Global::Resource::ResourceManager> resourceManager);
+
+    static std::unordered_set<std::string> GetSystemLanguages();
 };
 } // AppExecFwk
 } // OHOS

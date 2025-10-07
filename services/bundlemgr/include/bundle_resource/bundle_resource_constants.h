@@ -28,6 +28,7 @@ constexpr const char* BUNDLE_RESOURCE_RDB_NAME = "/bundleResource.db";
 // resource table name
 constexpr const char* BUNDLE_RESOURCE_RDB_TABLE_NAME = "bundleResource";
 constexpr const char* BUNDLE_ICON_RESOURCE_RDB_TABLE_NAME = "bundleIconResource";
+constexpr const char* UINSTALL_BUNDLE_RESOURCE_RDB = "uninstallBundleResource";
 constexpr const char* SEPARATOR = "/";
 constexpr const char* UNDER_LINE = "_";
 constexpr const char* EXTENSION_ABILITY_SEPARATOR = "+";
@@ -48,6 +49,7 @@ constexpr const char* LANGUAGE = "language";
 constexpr const char* THEME_ID = "themeId";
 constexpr const char* TYPE = "type";
 constexpr const char* THEME_ICON = "themeIcon";
+constexpr const char* APP_INDEX = "APP_INDEX";
 
 constexpr int32_t INDEX_NAME = 0;
 constexpr int32_t INDEX_UPDATE_TIME = 1;
