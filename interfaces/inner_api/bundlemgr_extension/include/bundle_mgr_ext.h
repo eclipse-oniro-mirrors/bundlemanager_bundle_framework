@@ -191,6 +191,14 @@ public:
     {
         return false;
     }
+    virtual ErrCode RecoverBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode RemoveBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
 };
 
 } // AppExecFwk

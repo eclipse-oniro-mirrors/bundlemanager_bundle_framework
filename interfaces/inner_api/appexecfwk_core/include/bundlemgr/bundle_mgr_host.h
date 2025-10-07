@@ -953,6 +953,8 @@ private:
     ErrCode HandleGetAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetPluginBundlePathForSelf(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleRecoverBackupBundleData(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleRemoveBackupBundleData(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

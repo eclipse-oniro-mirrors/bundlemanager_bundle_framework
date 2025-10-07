@@ -717,6 +717,12 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PLUGIN_BUNDLE_PATH_FOR_SELF):
             errCode = HandleGetPluginBundlePathForSelf(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::RECOVER_BACKUP_BUNDLE_DATA):
+            errCode = HandleRecoverBackupBundleData(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::REMOVE_BACKUP_BUNDLE_DATA):
+            errCode = HandleRemoveBackupBundleData(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -5087,6 +5093,34 @@ ErrCode BundleMgrHost::HandleGetPluginBundlePathForSelf(MessageParcel &data, Mes
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleRecoverBackupBundleData(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    ErrCode ret = RecoverBackupBundleData(bundleName, userId, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleRemoveBackupBundleData(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    ErrCode ret = RemoveBackupBundleData(bundleName, userId, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

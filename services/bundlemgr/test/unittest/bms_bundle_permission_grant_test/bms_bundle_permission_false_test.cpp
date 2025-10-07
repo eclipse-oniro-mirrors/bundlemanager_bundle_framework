@@ -2000,4 +2000,32 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetAbilityResourceInfo_0002, Function | S
     ErrCode res = bundleMgrHostImpl_->HandleGetAbilityResourceInfo(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: RecoverBackupBundleData_0001
+ * @tc.name: test RecoverBackupBundleData
+ * @tc.desc: test RecoverBackupBundleData
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, RecoverBackupBundleData_0001, Function | SmallTest | Level1)
+{
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto testRet = bundleMgrHostImpl_->RecoverBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: RemoveBackupBundleData_0001
+ * @tc.name: test RemoveBackupBundleData
+ * @tc.desc: test RemoveBackupBundleData
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, RemoveBackupBundleData_0001, Function | SmallTest | Level1)
+{
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto testRet = bundleMgrHostImpl_->RemoveBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS

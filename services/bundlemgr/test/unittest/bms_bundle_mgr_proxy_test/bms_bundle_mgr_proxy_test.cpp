@@ -1413,5 +1413,39 @@ HWTEST_F(BmsBundleMgrProxyTest, GetPluginBundlePathForSelf_0100, Function | Medi
     auto ret = bundleMgrProxy.GetPluginBundlePathForSelf(pluginBundleName, codePath);
     EXPECT_NE(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: RecoverBackupBundleData_0001
+ * @tc.name: test the RecoverBackupBundleData
+ * @tc.desc: 1. system running normally
+ *           2. test RecoverBackupBundleData
+ */
+HWTEST_F(BmsBundleMgrProxyTest, RecoverBackupBundleData_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto ret = bundleMgrProxy.RecoverBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: RemoveBackupBundleData_0001
+ * @tc.name: test the RemoveBackupBundleData
+ * @tc.desc: 1. system running normally
+ *           2. test RemoveBackupBundleData
+ */
+HWTEST_F(BmsBundleMgrProxyTest, RemoveBackupBundleData_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto ret = bundleMgrProxy.RemoveBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+}
 }
 }

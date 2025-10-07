@@ -1202,6 +1202,10 @@ public:
     virtual ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
         int32_t userId) override;
     virtual ErrCode GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath) override;
+    virtual ErrCode RecoverBackupBundleData(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex) override;
+    virtual ErrCode RemoveBackupBundleData(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);

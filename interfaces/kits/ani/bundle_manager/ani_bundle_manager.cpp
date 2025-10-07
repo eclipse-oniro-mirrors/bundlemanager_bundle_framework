@@ -2012,6 +2012,56 @@ static ani_string GetPluginBundlePathForSelfNative(ani_env* env, ani_string aniP
     return aniCodePath;
 }
 
+static void RecoverBackupBundleDataNative(ani_env* env,
+    ani_string aniBundleName, ani_int aniUserId, ani_int aniAppIndex)
+{
+    APP_LOGD("ani RecoverBackupBundleData called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return;
+    }
+
+    ErrCode ret = iBundleMgr->RecoverBackupBundleData(bundleName, aniUserId, aniAppIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("RecoverBackupBundleData failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env,
+            CommonFunc::ConvertErrCode(ret), RECOVER_BACKUP_BUNDLE_DATA, Constants::PERMISSION_RECOVER_BUNDLE);
+    }
+}
+
+static void RemoveBackupBundleDataNative(ani_env* env,
+    ani_string aniBundleName, ani_int aniUserId, ani_int aniAppIndex)
+{
+    APP_LOGD("ani RemoveBackupBundleData called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("GetBundleMgr failed");
+        BusinessErrorAni::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return;
+    }
+
+    ErrCode ret = iBundleMgr->RemoveBackupBundleData(bundleName, aniUserId, aniAppIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("RemoveBackupBundleData failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env,
+            CommonFunc::ConvertErrCode(ret), REMOVE_BACKUP_BUNDLE_DATA, Constants::PERMISSION_CLEAN_APPLICATION_DATA);
+    }
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -2113,6 +2163,10 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(CleanBundleCacheFilesForSelfNative) },
         ani_native_function { "getPluginBundlePathForSelfNative", nullptr,
             reinterpret_cast<void*>(GetPluginBundlePathForSelfNative) },
+        ani_native_function { "recoverBackupBundleDataNative", nullptr,
+            reinterpret_cast<void*>(RecoverBackupBundleDataNative) },
+        ani_native_function { "removeBackupBundleDataNative", nullptr,
+            reinterpret_cast<void*>(RemoveBackupBundleDataNative) },
     };
 
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

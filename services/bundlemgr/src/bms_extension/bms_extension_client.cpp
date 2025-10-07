@@ -473,6 +473,26 @@ ErrCode BmsExtensionClient::GetAllLauncherAbilityResourceInfo(const uint32_t fla
     }
     return bmsExtensionImpl_->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
 }
+ErrCode BmsExtensionClient::RecoverBackupBundleData(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->RecoverBackupBundleData(bundleName, userId, appIndex);
+}
+ErrCode BmsExtensionClient::RemoveBackupBundleData(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->RemoveBackupBundleData(bundleName, userId, appIndex);
+}
 
 const std::shared_ptr<BundleDataMgr> BmsExtensionClient::GetDataMgr() const
 {

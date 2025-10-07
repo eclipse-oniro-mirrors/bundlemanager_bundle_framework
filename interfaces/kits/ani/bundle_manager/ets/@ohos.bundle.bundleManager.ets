@@ -345,6 +345,10 @@ namespace bundleManager {
 
   native function getPluginBundlePathForSelfNative(pluginBundleName: string): string;
   
+  native function recoverBackupBundleDataNative(bundleName: string, userId: int , appIndex: int): void;
+
+  native function removeBackupBundleDataNative(bundleName: string, userId: int , appIndex: int): void;
+
   function isApplicationEnabledSync(bundleName: string): boolean {
     return isApplicationEnabledNative(bundleName, 0, true);
   }
@@ -1763,6 +1767,38 @@ namespace bundleManager {
 
   function getPluginBundlePathForSelf(pluginBundleName: string): string {
     return getPluginBundlePathForSelfNative(pluginBundleName);
+  }
+
+  function recoverBackupBundleData(bundleName: string, userId: int , appIndex: int): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return recoverBackupBundleDataNative(bundleName, userId, appIndex);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
+  function removeBackupBundleData(bundleName: string, userId: int , appIndex: int): Promise<void> {
+    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+      let execFun = (): void => {
+        return removeBackupBundleDataNative(bundleName, userId, appIndex);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((): void => {
+        resolve(undefined);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
   }
 }
 

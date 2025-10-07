@@ -101,6 +101,8 @@ constexpr const char* PERMISSION_PERFORM_LOCAL_DEBUG = "ohos.permission.PERFORM_
 constexpr const char* PERMISSION_GET_ABILITY_INFO = "ohos.permission.GET_ABILITY_INFO";
 constexpr const char* PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS = "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
 constexpr const char* PERMISSION_MANAGE_SELF_SKILLS = "ohos.permission.MANAGE_SELF_SKILLS";
+constexpr const char* PERMISSION_RECOVER_BUNDLE = "ohos.permission.RECOVER_BUNDLE";
+constexpr const char* PERMISSION_CLEAN_APPLICATION_DATA = "ohos.permission.CLEAN_APPLICATION_DATA";
 
 enum class AppType {
     SYSTEM_APP = 0,

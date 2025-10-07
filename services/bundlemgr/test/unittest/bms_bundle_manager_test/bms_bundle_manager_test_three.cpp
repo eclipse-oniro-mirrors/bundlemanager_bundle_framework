@@ -2324,4 +2324,124 @@ HWTEST_F(BmsBundleManagerTest3, RemoveSameAbilityResourceInfo_0001, Function | S
     hostImpl->RemoveSameAbilityResourceInfo(launcherAbilityResourceInfos);
     EXPECT_EQ(launcherAbilityResourceInfos.size(), 2);
 }
+
+/**
+ * @tc.number: RecoverBackupBundleData_0001
+ * @tc.name: test RecoverBackupBundleData
+ * @tc.desc: test RecoverBackupBundleData
+ */
+HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto testRet = hostImpl->RecoverBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: RecoverBackupBundleData_0002
+ * @tc.name: test RecoverBackupBundleData
+ * @tc.desc: test RecoverBackupBundleData
+ */
+HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = -1;
+    int32_t appIndex = 0;
+    auto testRet = hostImpl->RecoverBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: RecoverBackupBundleData_0003
+ * @tc.name: test RecoverBackupBundleData
+ * @tc.desc: test RecoverBackupBundleData
+ */
+HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0003, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = 100;
+    int32_t appIndex = -1;
+    auto testRet = hostImpl->RecoverBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: RecoverBackupBundleData_0004
+ * @tc.name: test RecoverBackupBundleData
+ * @tc.desc: test RecoverBackupBundleData
+ */
+HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0004, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto testRet = hostImpl->RecoverBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(testRet, ERR_OK);
+}
+
+/**
+ * @tc.number: RemoveBackupBundleData_0001
+ * @tc.name: test RemoveBackupBundleData
+ * @tc.desc: test RemoveBackupBundleData
+ */
+HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = "";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto testRet = hostImpl->RemoveBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: RemoveBackupBundleData_0002
+ * @tc.name: test RemoveBackupBundleData
+ * @tc.desc: test RemoveBackupBundleData
+ */
+HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = -1;
+    int32_t appIndex = 0;
+    auto testRet = hostImpl->RemoveBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: RemoveBackupBundleData_0003
+ * @tc.name: test RemoveBackupBundleData
+ * @tc.desc: test RemoveBackupBundleData
+ */
+HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0003, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = 100;
+    int32_t appIndex = -1;
+    auto testRet = hostImpl->RemoveBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: RemoveBackupBundleData_0004
+ * @tc.name: test RemoveBackupBundleData
+ * @tc.desc: test RemoveBackupBundleData
+ */
+HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0004, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto testRet = hostImpl->RemoveBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(testRet, ERR_OK);
+}
 } // OHOS

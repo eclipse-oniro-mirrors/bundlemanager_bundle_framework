@@ -5798,5 +5798,194 @@ napi_value SetAbilityFileTypesForSelf(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_undefined(env, &nRet));
     return nRet;
 }
+
+void RecoverBackupBundleDataExec(napi_env env, void *data)
+{
+    RecoverOrRemoveBackupBundleDataCallbackInfo* asyncCallbackInfo =
+        reinterpret_cast<RecoverOrRemoveBackupBundleDataCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("error RecoverOrRemoveBackupBundleDataCallbackInfo is nullptr");
+        return;
+    }
+
+    ErrCode ret = ERR_OK;
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        asyncCallbackInfo->err = CommonFunc::ConvertErrCode(ERROR_BUNDLE_SERVICE_EXCEPTION);
+        return;
+    }
+    ret = iBundleMgr->RecoverBackupBundleData(asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("RecoverBackupBundleData failed");
+    }
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(ret);
+}
+
+void RecoverBackupBundleDataComplete(napi_env env, napi_status status, void *data)
+{
+    RecoverOrRemoveBackupBundleDataCallbackInfo* asyncCallbackInfo =
+        reinterpret_cast<RecoverOrRemoveBackupBundleDataCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<RecoverOrRemoveBackupBundleDataCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[1] = { 0 };
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            RECOVER_BACKUP_BUNDLE_DATA, Constants::PERMISSION_RECOVER_BUNDLE);
+    }
+    CommonFunc::NapiReturnDeferred<RecoverOrRemoveBackupBundleDataCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value RecoverBackupBundleData(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to RecoverBackupBundleData");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    RecoverOrRemoveBackupBundleDataCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) RecoverOrRemoveBackupBundleDataCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<RecoverOrRemoveBackupBundleDataCallbackInfo> callbackPtr {asyncCallbackInfo};
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[0], asyncCallbackInfo->bundleName)) {
+                APP_LOGE("parse bundleName failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGE("Parse userId failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->appIndex)) {
+                APP_LOGE("Parse appIndex failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else {
+            APP_LOGE("param check error");
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
+            return nullptr;
+        }
+    }
+
+    auto promise = CommonFunc::AsyncCallNativeMethod<RecoverOrRemoveBackupBundleDataCallbackInfo>(
+        env, asyncCallbackInfo, RECOVER_BACKUP_BUNDLE_DATA,
+        RecoverBackupBundleDataExec, RecoverBackupBundleDataComplete);
+    callbackPtr.release();
+    APP_LOGD("call RecoverBackupBundleData done");
+    return promise;
+}
+
+void RemoveBackupBundleDataExec(napi_env env, void *data)
+{
+    RecoverOrRemoveBackupBundleDataCallbackInfo* asyncCallbackInfo =
+        reinterpret_cast<RecoverOrRemoveBackupBundleDataCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("error RecoverOrRemoveBackupBundleDataCallbackInfo is nullptr");
+        return;
+    }
+
+    ErrCode ret = ERR_OK;
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        asyncCallbackInfo->err = CommonFunc::ConvertErrCode(ERROR_BUNDLE_SERVICE_EXCEPTION);
+        return;
+    }
+    ret = iBundleMgr->RemoveBackupBundleData(asyncCallbackInfo->bundleName,
+        asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("RemoveBackupBundleData failed");
+    }
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(ret);
+}
+
+void RemoveBackupBundleDataComplete(napi_env env, napi_status status, void *data)
+{
+    RecoverOrRemoveBackupBundleDataCallbackInfo* asyncCallbackInfo =
+        reinterpret_cast<RecoverOrRemoveBackupBundleDataCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<RecoverOrRemoveBackupBundleDataCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[1] = { 0 };
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            REMOVE_BACKUP_BUNDLE_DATA, Constants::PERMISSION_CLEAN_APPLICATION_DATA);
+    }
+    CommonFunc::NapiReturnDeferred<RecoverOrRemoveBackupBundleDataCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value RemoveBackupBundleData(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to RemoveBackupBundleData");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    RecoverOrRemoveBackupBundleDataCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) RecoverOrRemoveBackupBundleDataCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<RecoverOrRemoveBackupBundleDataCallbackInfo> callbackPtr {asyncCallbackInfo};
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[0], asyncCallbackInfo->bundleName)) {
+                APP_LOGE("parse bundleName failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGE("Parse userId failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->appIndex)) {
+                APP_LOGE("Parse appIndex failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else {
+            APP_LOGE("param check error");
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
+            return nullptr;
+        }
+    }
+
+    auto promise = CommonFunc::AsyncCallNativeMethod<RecoverOrRemoveBackupBundleDataCallbackInfo>(
+        env, asyncCallbackInfo, REMOVE_BACKUP_BUNDLE_DATA, RemoveBackupBundleDataExec, RemoveBackupBundleDataComplete);
+    callbackPtr.release();
+    APP_LOGD("call RemoveBackupBundleData done");
+    return promise;
+}
 } // namespace AppExecFwk
 } // namespace OHOS

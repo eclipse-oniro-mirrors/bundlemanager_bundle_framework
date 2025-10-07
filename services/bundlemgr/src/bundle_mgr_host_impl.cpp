@@ -6434,5 +6434,82 @@ ErrCode BundleMgrHostImpl::GetPluginBundlePathForSelf(const std::string &pluginB
     }
     return ret;
 }
+
+ErrCode BundleMgrHostImpl::RecoverBackupBundleData(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
+{
+    APP_LOGI("start RecoverBackupBundleData, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+        bundleName.c_str(), userId, appIndex);
+    if (bundleName.empty()) {
+        APP_LOGE("the bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (userId < 0) {
+        APP_LOGE("userId is invalid");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if (appIndex < 0 || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("invalid appIndex");
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
+        Constants::PERMISSION_RECOVER_BUNDLE, Constants::PERMISSION_CLEAN_APPLICATION_DATA})) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    auto ret = bmsExtensionClient->RecoverBackupBundleData(bundleName, userId, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("RecoverBackupBundleData failed, ret = %{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode BundleMgrHostImpl::RemoveBackupBundleData(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
+{
+    APP_LOGI("start RemoveBackupBundleData, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+        bundleName.c_str(), userId, appIndex);
+    if (bundleName.empty()) {
+        APP_LOGE("the bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (userId < 0) {
+        APP_LOGE("userId is invalid");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if (appIndex < 0 || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("invalid appIndex");
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CLEAN_APPLICATION_DATA)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    auto ret = bmsExtensionClient->RemoveBackupBundleData(bundleName, userId, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGE("RemoveBackupBundleData failed, ret = %{public}d", ret);
+    }
+    return ret;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

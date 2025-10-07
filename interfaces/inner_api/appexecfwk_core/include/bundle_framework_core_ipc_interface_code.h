@@ -231,6 +231,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     SWITCH_UNINSTALL_STATE_BY_USER_ID = 205,
     SET_ABILITY_FILE_TYPES_FOR_SELF = 206,
     GET_PLUGIN_BUNDLE_PATH_FOR_SELF = 207,
+    RECOVER_BACKUP_BUNDLE_DATA = 208,
+    REMOVE_BACKUP_BUNDLE_DATA = 209,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

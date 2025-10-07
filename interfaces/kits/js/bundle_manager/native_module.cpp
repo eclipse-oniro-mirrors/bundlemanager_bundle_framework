@@ -185,6 +185,8 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getDynamicIconInfo", GetDynamicIconInfo),
         DECLARE_NAPI_FUNCTION("setAbilityFileTypesForSelf", SetAbilityFileTypesForSelf),
         DECLARE_NAPI_FUNCTION("getPluginBundlePathForSelf", GetPluginBundlePathForSelfSync),
+        DECLARE_NAPI_FUNCTION("recoverBackupBundleData", RecoverBackupBundleData),
+        DECLARE_NAPI_FUNCTION("removeBackupBundleData", RemoveBackupBundleData),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
