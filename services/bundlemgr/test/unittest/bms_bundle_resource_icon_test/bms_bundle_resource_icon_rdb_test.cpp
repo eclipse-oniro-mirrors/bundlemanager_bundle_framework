@@ -671,6 +671,49 @@ HWTEST_F(BmsBundleResourceIconRdbTest, AddUninstallBundleResource_0004, Function
 {
     UninstallBundleResourceRdb uninstallBundleResourceRdb;
     std::map<std::string, std::string> labelMap;
+    BundleResourceInfo resourceInfo;
+    resourceInfo.icon = "icon";
+    resourceInfo.foreground.emplace_back(1);
+    bool ret = uninstallBundleResourceRdb.AddUninstallBundleResource(BUNDLE_NAME, USER_ID, 0, labelMap, resourceInfo);
+    EXPECT_TRUE(ret);
+    BundleResourceInfo bundleResourceInfo;
+    ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(bundleResourceInfo.icon, resourceInfo.icon);
+    EXPECT_TRUE(bundleResourceInfo.foreground.empty());
+    EXPECT_FALSE(bundleResourceInfo.label.empty());
+
+    BundleResourceInfo bundleResourceInfo2;
+    ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), bundleResourceInfo2);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(bundleResourceInfo2.icon, resourceInfo.icon);
+    EXPECT_TRUE(bundleResourceInfo2.foreground.empty());
+    EXPECT_TRUE(bundleResourceInfo2.label.empty());
+
+    BundleResourceInfo bundleResourceInfo3;
+    ret = uninstallBundleResourceRdb.GetUninstallBundleResource(BUNDLE_NAME, USER_ID, 0,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), bundleResourceInfo3);
+    EXPECT_TRUE(ret);
+    EXPECT_TRUE(bundleResourceInfo3.icon.empty());
+    EXPECT_FALSE(bundleResourceInfo3.foreground.empty());
+    EXPECT_TRUE(bundleResourceInfo3.label.empty());
+    ret = uninstallBundleResourceRdb.DeleteUninstallBundleResource(BUNDLE_NAME, USER_ID, 0);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AddUninstallBundleResource_0005
+ * Function: UninstallBundleResourceRdb
+ * @tc.name: test UninstallBundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test AddUninstallBundleResource
+ */
+HWTEST_F(BmsBundleResourceIconRdbTest, AddUninstallBundleResource_0005, Function | SmallTest | Level0)
+{
+    UninstallBundleResourceRdb uninstallBundleResourceRdb;
+    std::map<std::string, std::string> labelMap;
     std::vector<BundleResourceInfo> bundleResourceInfos;
     bool ret = uninstallBundleResourceRdb.GetAllUninstallBundleResource(0, 0, bundleResourceInfos);
     EXPECT_TRUE(ret);

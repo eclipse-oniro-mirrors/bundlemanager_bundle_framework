@@ -217,7 +217,7 @@ ErrCode BundleResourceHost::HandleGetExtensionAbilityResourceInfo(MessageParcel 
 ErrCode BundleResourceHost::HandleGetAllUninstallBundleResourceInfo(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    uint32_t userId = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
     uint32_t flags = data.ReadUint32();
     std::vector<BundleResourceInfo> bundleResourceInfos;
     ErrCode ret = GetAllUninstallBundleResourceInfo(userId, flags, bundleResourceInfos);

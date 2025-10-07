@@ -293,6 +293,26 @@ HWTEST_F(BundleResourceProxyTest, SendRequest_0100, Function | SmallTest | Level
 }
 
 /**
+ * @tc.number: SendRequest_0200
+ * @tc.name: test the SendRequest
+ * @tc.desc: 1. system running normally
+ *           2. test SendRequest
+ */
+HWTEST_F(BundleResourceProxyTest, SendRequest_0200, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "SendRequest_0200 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+
+    BundleResourceInterfaceCode code = BundleResourceInterfaceCode::GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = proxy->SendRequest(code, data, reply);
+    GTEST_LOG_(INFO) << "SendRequest_0200 end, " << ret;
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: GetExtensionAbilityResourceInfo_0100
  * @tc.name: test the GetExtensionAbilityResourceInfo
  * @tc.desc: 1. system running normally
@@ -312,6 +332,23 @@ HWTEST_F(BundleResourceProxyTest, GetExtensionAbilityResourceInfo_0100, Function
         extensionAbilityResourceInfo, appIndex);
     GTEST_LOG_(INFO) << "GetExtensionAbilityResourceInfo_0100 end, " << ret;
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetAllUninstallBundleResourceInfo_0100
+ * @tc.name: test the GetAllUninstallBundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllUninstallBundleResourceInfo
+ */
+HWTEST_F(BundleResourceProxyTest, GetAllUninstallBundleResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "GetAllUninstallBundleResourceInfo_0100 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    auto ret = proxy->GetAllUninstallBundleResourceInfo(100, 1, bundleResourceInfos);
+    GTEST_LOG_(INFO) << "GetAllUninstallBundleResourceInfo end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
 }
 }
 }

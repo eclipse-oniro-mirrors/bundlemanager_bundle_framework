@@ -175,6 +175,10 @@ bool UninstallBundleResourceRdb::GetAllUninstallBundleResource(
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret == NativeRdb::E_ROW_OUT_RANGE) {
+        APP_LOGI_NOFUNC("no uninstall bundle resource in rdb -u %{public}d", userId);
+        return true;
+    }
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GoToFirstRow failed, ret %{public}d");
     std::string language = BundleResourceParam::GetSystemLanguage();
     do {
