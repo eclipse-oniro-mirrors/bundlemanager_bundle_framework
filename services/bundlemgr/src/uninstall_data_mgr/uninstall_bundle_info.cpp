@@ -137,14 +137,25 @@ int32_t UninstallBundleInfo::GetResponseUserId(int32_t requestUserId) const
     return responseUserId;
 }
 
-int32_t UninstallBundleInfo::GetUid(int32_t userId) const
+int32_t UninstallBundleInfo::GetUid(int32_t userId, int32_t appIndex) const
 {
-    if (userInfos.find(std::to_string(userId)) == userInfos.end()) {
+    if (appIndex == 0) {
+        if (userInfos.find(std::to_string(userId)) != userInfos.end()) {
+            APP_LOGD("get uid: %{public}d for main app", userInfos.at(std::to_string(userId)).uid);
+            return userInfos.at(std::to_string(userId)).uid;
+        }
+        // get uid for main app, but no userinfo matched
+        APP_LOGD("get uid for main app, but no userinfo matched for: %{public}d", userId);
         return Constants::INVALID_UID;
     }
-    
-    UninstallDataUserInfo unisntallDataUserInfo = userInfos.at(std::to_string(userId));
-    return unisntallDataUserInfo.uid;
+
+    std::string cloneInfoKey = std::to_string(userId) + '_' + std::to_string(appIndex);
+    if (userInfos.find(cloneInfoKey) != userInfos.end()) {
+        APP_LOGD("get uid: %{public}d for clone app: %{public}s", userInfos.at(cloneInfoKey).uid, cloneInfoKey.c_str());
+        return userInfos.at(cloneInfoKey).uid;
+    }
+    APP_LOGD("get uid for clone app, but no userinfo matched for: %{public}s", cloneInfoKey.c_str());
+    return Constants::INVALID_UID;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

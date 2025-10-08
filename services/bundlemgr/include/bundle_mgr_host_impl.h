@@ -1247,7 +1247,7 @@ private:
         int32_t userId, int32_t callingUid, const std::string &callingBundleName);
     void FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos);
     void SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info);
-    bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex);
+    bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex, bool checkKeepData = false);
     bool CheckCanSetEnable(const std::string &bundleName);
     bool IsAppLinking(int32_t flags) const;
     std::string GetCallerName();
