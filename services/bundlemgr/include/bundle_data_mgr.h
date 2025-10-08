@@ -1150,6 +1150,8 @@ public:
     ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName);
     ErrCode GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
         std::vector<PluginBundleInfo> &pluginBundleInfos) const;
+    ErrCode InnerGetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
+        std::vector<PluginBundleInfo> &pluginBundleInfos) const;
     ErrCode GetDirForAtomicService(const std::string &bundleName, std::string &dataDir) const;
     ErrCode GetDirForAtomicServiceByUserId(const std::string &bundleName, int32_t userId,
         AccountSA::OhosAccountInfo &accountInfo, std::string &dataDir) const;
@@ -1168,6 +1170,8 @@ public:
     ErrCode RemovePluginInfo(const std::string &bundleName, const std::string &pluginBundleName,
         const int32_t userId);
     bool GetPluginBundleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const int32_t userId, PluginBundleInfo &pluginBundleInfo);
+    bool InnerGetPluginBundleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo);
     bool FetchPluginBundleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         PluginBundleInfo &pluginBundleInfo);
