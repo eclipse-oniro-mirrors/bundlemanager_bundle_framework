@@ -50,6 +50,9 @@ public:
         const ExtensionAbilityType extensionAbilityType, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &extensionAbilityResourceInfo, const int32_t appIndex = 0) override;
 
+    virtual ErrCode GetAllUninstallBundleResourceInfo(const int32_t userId, const uint32_t flags,
+        std::vector<BundleResourceInfo> &BundleResourceInfos) override;
+
 private:
     template<typename T>
     ErrCode GetParcelInfo(BundleResourceInterfaceCode code, MessageParcel &data, T &parcelInfo);

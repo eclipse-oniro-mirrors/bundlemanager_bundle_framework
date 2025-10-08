@@ -75,6 +75,9 @@ int32_t BundleResourceHost::OnRemoteRequest(uint32_t code, MessageParcel &data,
         case static_cast<uint32_t>(BundleResourceInterfaceCode::GET_EXTENSION_ABILITY_RESOURCE_INFO):
             errCode = this->HandleGetExtensionAbilityResourceInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleResourceInterfaceCode::GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO):
+            errCode = this->HandleGetAllUninstallBundleResourceInfo(data, reply);
+            break;
         default:
             APP_LOGW("bundle resource host receives unknown %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -207,6 +210,23 @@ ErrCode BundleResourceHost::HandleGetExtensionAbilityResourceInfo(MessageParcel 
     }
     if (ret == ERR_OK) {
         return WriteVectorToParcel<LauncherAbilityResourceInfo>(extensionAbilityResourceInfos, reply);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleResourceHost::HandleGetAllUninstallBundleResourceInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int32_t userId = data.ReadInt32();
+    uint32_t flags = data.ReadUint32();
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    ErrCode ret = GetAllUninstallBundleResourceInfo(userId, flags, bundleResourceInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        return WriteVectorToParcel<BundleResourceInfo>(bundleResourceInfos, reply);
     }
     return ERR_OK;
 }

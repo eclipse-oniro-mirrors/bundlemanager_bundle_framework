@@ -55,6 +55,8 @@ private:
 
     ErrCode HandleGetExtensionAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAllUninstallBundleResourceInfo(MessageParcel &data, MessageParcel &reply);
+
     template<typename T>
     ErrCode WriteParcelInfo(const T &parcelInfo, MessageParcel &reply);
 

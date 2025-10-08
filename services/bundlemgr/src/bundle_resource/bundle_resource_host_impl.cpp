@@ -375,5 +375,39 @@ ErrCode BundleResourceHostImpl::CheckExtensionAbilityValid(const std::string &bu
         bundleName.c_str(), appIndex, extensionAbilityType);
     return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
 }
+
+ErrCode BundleResourceHostImpl::GetAllUninstallBundleResourceInfo(const int32_t userId, const uint32_t flags,
+    std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGI_NOFUNC("GetAllUninstallBundleResourceInfo -p:%{public}d, -f:%{public}d -u:%{public}d",
+        IPCSkeleton::GetCallingPid(), flags, userId);
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    if (!manager->GetAllUninstallBundleResourceInfo(userId, flags, bundleResourceInfos)) {
+        APP_LOGE("get all uninstall bundle resource failed, flags:%{public}u -u:%{public}d", flags, userId);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
+        APP_LOGD("need sort by label");
+        std::sort(bundleResourceInfos.begin(), bundleResourceInfos.end(),
+            [](const BundleResourceInfo &resourceA, const BundleResourceInfo &resourceB) {
+                return resourceA.label < resourceB.label;
+            });
+    }
+    APP_LOGI_NOFUNC("GetAllUninstallBundleResourceInfo count:%{public}zu", bundleResourceInfos.size());
+    return ERR_OK;
+}
 } // AppExecFwk
 } // OHOS

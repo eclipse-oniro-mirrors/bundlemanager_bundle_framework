@@ -9552,6 +9552,27 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllLauncherAbilityResourceInfo_0001, Function 
 }
 
 /**
+ * @tc.number: GetAllUninstallBundleResourceInfo_0002
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call GetAllBundleResourceInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleResourceInfo_0002, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            std::vector<BundleResourceInfo> info;
+            ErrCode ret = proxy->GetAllUninstallBundleResourceInfo(USERID,
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        }
+    }
+}
+
+/**
  * @tc.number: SendRequest_0001
  * @tc.name: test BundleMgrProxy
  * @tc.desc: 1.call SendRequest

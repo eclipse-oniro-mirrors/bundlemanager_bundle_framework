@@ -74,6 +74,12 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetAllUninstallBundleResourceInfo(const int32_t userId, const uint32_t flags,
+        std::vector<BundleResourceInfo> &bundleResourceInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 } // AppExecFwk
 } // OHOS

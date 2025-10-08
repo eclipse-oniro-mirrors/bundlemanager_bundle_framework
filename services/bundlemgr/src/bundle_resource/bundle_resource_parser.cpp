@@ -636,13 +636,12 @@ bool BundleResourceParser::ParseUninstallBundleResource(
     // parse icon
     if (resourceInfo.iconNeedParse_) {
         if (!ParseIconResourceByResourceManager(resourceManager, resourceInfo)) {
-            APP_LOGE("key %{public}s parse failed", resourceInfo.GetKey().c_str());
+            APP_LOGE("key %{public}s parse icon failed", resourceInfo.GetKey().c_str());
             return false;
         }
         if (resourceInfo.appIndex_ > 0) {
             (void)ParserCloneResourceInfo(resourceInfo.appIndex_, resourceInfo);
         }
-        return true;
     }
 
     if (!resourceInfo.labelNeedParse_) {

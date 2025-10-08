@@ -120,7 +120,10 @@ public:
     bool DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
 
     bool GetUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex,
-        BundleResourceInfo &bundleResourceInfo);
+        const uint32_t flags, BundleResourceInfo &bundleResourceInfo);
+
+    bool GetAllUninstallBundleResourceInfo(const int32_t userId, const uint32_t flags,
+        std::vector<BundleResourceInfo> &bundleResourceInfos);
 
 private:
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);

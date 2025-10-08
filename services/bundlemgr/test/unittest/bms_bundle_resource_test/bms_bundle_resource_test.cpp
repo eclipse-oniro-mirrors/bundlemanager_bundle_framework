@@ -120,7 +120,7 @@ public:
     void TearDown();
     ErrCode InstallBundle(const std::string &bundlePath) const;
     ErrCode UpdateBundle(const std::string &bundlePath) const;
-    ErrCode UnInstallBundle(const std::string &bundleName) const;
+    ErrCode UnInstallBundle(const std::string &bundleName, bool keepData = false) const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     void StartInstalldService() const;
     void StartBundleService();
@@ -209,7 +209,7 @@ ErrCode BmsBundleResourceTest::UpdateBundle(const std::string &bundlePath) const
     return receiver->GetResultCode();
 }
 
-ErrCode BmsBundleResourceTest::UnInstallBundle(const std::string &bundleName) const
+ErrCode BmsBundleResourceTest::UnInstallBundle(const std::string &bundleName, bool keepData) const
 {
     if (!bundleMgrService_) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
@@ -227,6 +227,7 @@ ErrCode BmsBundleResourceTest::UnInstallBundle(const std::string &bundleName) co
     InstallParam installParam;
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
+    installParam.isKeepData = keepData;
     bool result = installer->Uninstall(bundleName, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -6133,10 +6134,10 @@ HWTEST_F(BmsBundleResourceTest, AddUninstallBundleResource_0010, Function | Smal
         ret = manager->AddUninstallBundleResource(BUNDLE_NAME, USERID, 0);
         EXPECT_TRUE(ret);
         BundleResourceInfo bundleResourceInfo;
-        ret = manager->GetUninstallBundleResource(BUNDLE_NAME, USERID, APP_INDEX, bundleResourceInfo);
+        ret = manager->GetUninstallBundleResource(BUNDLE_NAME, USERID, APP_INDEX, 1, bundleResourceInfo);
         EXPECT_FALSE(ret);
 
-        ret = manager->GetUninstallBundleResource(BUNDLE_NAME, USERID, 0, bundleResourceInfo);
+        ret = manager->GetUninstallBundleResource(BUNDLE_NAME, USERID, 0, 1, bundleResourceInfo);
         EXPECT_TRUE(ret);
         EXPECT_EQ(bundleResourceInfo.bundleName, BUNDLE_NAME);
 
@@ -6146,5 +6147,97 @@ HWTEST_F(BmsBundleResourceTest, AddUninstallBundleResource_0010, Function | Smal
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: AddUninstallBundleResource_0020
+ * Function: AddUninstallBundleResource
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddUninstallBundleResource
+ */
+HWTEST_F(BmsBundleResourceTest, AddUninstallBundleResource_0020, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME, true);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        BundleResourceInfo bundleResourceInfo;
+        bool ret = manager->GetUninstallBundleResource(BUNDLE_NAME, USERID, 0, 1, bundleResourceInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(bundleResourceInfo.bundleName, BUNDLE_NAME);
+    }
+
+    unInstallResult = UnInstallBundle(BUNDLE_NAME, false);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+    if (manager != nullptr) {
+        BundleResourceInfo bundleResourceInfo;
+        bool ret = manager->GetUninstallBundleResource(BUNDLE_NAME, USERID, 0, 1, bundleResourceInfo);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: GetAllUninstallBundleResourceInfo_0010
+ * Function: AddUninstallBundleResource
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllUninstallBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallBundleResourceInfo_0010, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME, true);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::vector<BundleResourceInfo> bundleResourceInfos;
+        bool ret = manager->GetAllUninstallBundleResourceInfo(USERID, 1, bundleResourceInfos);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(bundleResourceInfos.empty());
+
+        std::vector<BundleResourceInfo> bundleResourceInfos2;
+        ret = manager->GetAllUninstallBundleResourceInfo(0, 1, bundleResourceInfos2);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(bundleResourceInfos2.empty());
+    }
+
+    unInstallResult = UnInstallBundle(BUNDLE_NAME, false);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+    if (manager != nullptr) {
+        BundleResourceInfo bundleResourceInfo;
+        bool ret = manager->GetUninstallBundleResource(BUNDLE_NAME, USERID, 0, 1, bundleResourceInfo);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: GetAllUninstallBundleResourceInfo_0020
+ * Function: GetAllBundleResourceInfo
+ * @tc.name: test Install
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllUninstallBundleResourceInfo_0020, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto resourceProxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(resourceProxy, nullptr);
+        if (resourceProxy != nullptr) {
+            std::vector<BundleResourceInfo> infos;
+            auto ret = resourceProxy->GetAllUninstallBundleResourceInfo(0, 1, infos);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+            EXPECT_TRUE(infos.empty());
+        }
+    }
 }
 } // OHOS
