@@ -498,5 +498,68 @@ napi_value GetExtensionAbilityResourceInfo(napi_env env, napi_callback_info info
     return nExtensionAbilityResourceInfos;
 }
 
+void GetAllUninstallBundleResourceInfoExec(napi_env env, void *data)
+{
+    AllBundleResourceInfoCallback *asyncCallbackInfo = reinterpret_cast<AllBundleResourceInfoCallback *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = ResourceHelper::InnerGetAllUninstallBundleResourceInfo(asyncCallbackInfo->flags,
+        asyncCallbackInfo->bundleResourceInfos);
+}
+
+void GetAllUninstallBundleResourceInfoComplete(napi_env env, napi_status status, void *data)
+{
+    AllBundleResourceInfoCallback *asyncCallbackInfo = reinterpret_cast<AllBundleResourceInfoCallback *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<AllBundleResourceInfoCallback> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
+        ConvertBundleResourceInfos(env, asyncCallbackInfo->bundleResourceInfos, result[1]);
+    } else {
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+    }
+    CommonFunc::NapiReturnDeferred<AllBundleResourceInfoCallback>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetAllUninstallBundleResourceInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI start");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    AllBundleResourceInfoCallback *asyncCallbackInfo = new (std::nothrow) AllBundleResourceInfoCallback(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<AllBundleResourceInfoCallback> callbackPtr {asyncCallbackInfo};
+    int32_t flags = 0;
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], flags)) {
+        APP_LOGE("Flags %{public}d invalid", flags);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
+        return nullptr;
+    }
+    if (flags <= 0) {
+        flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    }
+    asyncCallbackInfo->flags = static_cast<uint32_t>(flags);
+    auto promise = CommonFunc::AsyncCallNativeMethod<AllBundleResourceInfoCallback>(
+        env, asyncCallbackInfo, GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO, GetAllUninstallBundleResourceInfoExec,
+        GetAllUninstallBundleResourceInfoComplete);
+    callbackPtr.release();
+    APP_LOGD("NAPI end");
+    return promise;
+}
 } // AppExecFwk
 } // OHOS

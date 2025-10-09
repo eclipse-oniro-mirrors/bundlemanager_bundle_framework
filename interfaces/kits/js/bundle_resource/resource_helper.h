@@ -36,6 +36,8 @@ public:
     static ErrCode InnerGetExtensionAbilityResourceInfo(const std::string& bundleName,
         ExtensionAbilityType extensionAbilityType, uint32_t flags, int32_t appIndex,
         std::vector<LauncherAbilityResourceInfo>& extensionAbilityResourceInfos);
+    static ErrCode InnerGetAllUninstallBundleResourceInfo(uint32_t flags,
+        std::vector<BundleResourceInfo> &bundleResourceInfos);
 
 private:
     class BundleResourceMgrDeathRecipient : public IRemoteObject::DeathRecipient {

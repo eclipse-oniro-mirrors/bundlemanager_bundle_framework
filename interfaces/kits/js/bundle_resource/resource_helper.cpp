@@ -20,6 +20,7 @@
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "common_func.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -138,6 +139,22 @@ ErrCode ResourceHelper::InnerGetExtensionAbilityResourceInfo(const std::string& 
         bundleName, extensionAbilityType, flags, extensionAbilityResourceInfos, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+ErrCode ResourceHelper::InnerGetAllUninstallBundleResourceInfo(uint32_t flags,
+    std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    auto bundleResourceProxy = ResourceHelper::GetBundleResourceMgr();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode ret = bundleResourceProxy->GetAllUninstallBundleResourceInfo(userId, flags, bundleResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, errCode: %{public}d", ret);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
