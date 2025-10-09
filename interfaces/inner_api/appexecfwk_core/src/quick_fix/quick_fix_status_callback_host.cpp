@@ -43,7 +43,7 @@ int QuickFixStatusCallbackHost::OnRemoteRequest(
     std::u16string descripter = QuickFixStatusCallbackHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
-        LOG_E(BMS_TAG_DEFAULT, "fail to write reply message in clean cache host due to the reply is nullptr");
+        LOG_E(BMS_TAG_DEFAULT, "descripter is not matched");
         return OBJECT_NULL;
     }
     switch (code) {

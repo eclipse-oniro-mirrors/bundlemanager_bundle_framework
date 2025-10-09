@@ -55,7 +55,7 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
     std::u16string descripter = InstalldHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
-        LOG_E(BMS_TAG_INSTALLD, "installd host fail to write reply message due to the reply is nullptr");
+        LOG_E(BMS_TAG_INSTALLD, "descripter is not matched");
         return OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
     }
     criticalManager_.BeforeRequest();

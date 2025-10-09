@@ -31,7 +31,7 @@ BundleStreamInstallerProxy::BundleStreamInstallerProxy(const sptr<IRemoteObject>
 
 BundleStreamInstallerProxy:: ~BundleStreamInstallerProxy()
 {
-    LOG_D(BMS_TAG_INSTALLER, "destory bundle stream installer proxy instance");
+    LOG_D(BMS_TAG_INSTALLER, "destroy bundle stream installer proxy instance");
 }
 
 int32_t BundleStreamInstallerProxy::CreateStream(const std::string &fileName)
@@ -39,7 +39,7 @@ int32_t BundleStreamInstallerProxy::CreateStream(const std::string &fileName)
     LOG_D(BMS_TAG_INSTALLER, "bundle stream installer proxy create stream begin");
     int32_t fd = Constants::DEFAULT_STREAM_FD;
     if (fileName.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "BundleStreamInstallerProxy create stream faile due to empty fileName");
+        LOG_E(BMS_TAG_INSTALLER, "BundleStreamInstallerProxy create stream fail due to empty fileName");
         return fd;
     }
     MessageParcel data;
@@ -77,7 +77,7 @@ int32_t BundleStreamInstallerProxy::CreateSignatureFileStream(const std::string 
     LOG_D(BMS_TAG_INSTALLER, "bundle stream installer proxy create signature file stream begin");
     int32_t fd = Constants::DEFAULT_STREAM_FD;
     if (moduleName.empty() || fileName.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "BundleStreamInstallerProxy create stream faile due to empty fileName or moduleName");
+        LOG_E(BMS_TAG_INSTALLER, "BundleStreamInstallerProxy create stream fail due to empty fileName or moduleName");
         return fd;
     }
     MessageParcel data;
@@ -117,7 +117,7 @@ int32_t BundleStreamInstallerProxy::CreateSharedBundleStream(const std::string &
     LOG_D(BMS_TAG_INSTALLER, "bundle stream installer proxy create shared bundle stream begin");
     int32_t fd = Constants::DEFAULT_STREAM_FD;
     if (hspName.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "BundleStreamInstallerProxy create shared bundle stream faile due to empty hspName");
+        LOG_E(BMS_TAG_INSTALLER, "BundleStreamInstallerProxy create shared bundle stream fail due to empty hspName");
         return fd;
     }
     MessageParcel data;
@@ -159,7 +159,7 @@ int32_t BundleStreamInstallerProxy::CreatePgoFileStream(const std::string &modul
     LOG_D(BMS_TAG_INSTALLER, "create pgo file stream begin");
     int32_t fd = Constants::DEFAULT_STREAM_FD;
     if (moduleName.empty() || fileName.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "create stream faile due to empty fileName or moduleName");
+        LOG_E(BMS_TAG_INSTALLER, "create stream fail due to empty fileName or moduleName");
         return fd;
     }
     MessageParcel data;

@@ -28,7 +28,7 @@ QuickFixManagerHostImpl::QuickFixManagerHostImpl()
 
 QuickFixManagerHostImpl::~QuickFixManagerHostImpl()
 {
-    LOG_D(BMS_TAG_DEFAULT, "destory QuickFixManagerHostImpl");
+    LOG_D(BMS_TAG_DEFAULT, "destroy QuickFixManagerHostImpl");
 }
 
 ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,

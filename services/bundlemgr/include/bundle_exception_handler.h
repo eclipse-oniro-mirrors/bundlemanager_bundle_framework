@@ -38,7 +38,7 @@ public:
      * @param dataDir Indicates the dir needs to be removed.
      * @return Returns true for remove successfully, returns false otherwise.
      */
-    bool RemoveBundleAndDataDir(const std::string &bundleDir, const std::string &bundleOrMoudleDir,
+    bool RemoveBundleAndDataDir(const std::string &bundleDir, const std::string &bundleOrModuleDir,
         int32_t userId) const;
     /**
      * @brief to obtain the bundle path and data path according to the input base bundle or data path.

@@ -144,7 +144,7 @@ void DeleteDesktopShortcutInfoComplete(napi_env env, napi_status status, void *d
     if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
     } else {
-        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, ADD_DESKTOP_SHORTCUT_INFO,
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, DELETE_DESKTOP_SHORTCUT_INFO,
             Constants::PERMISSION_MANAGER_SHORTCUT);
     }
     CommonFunc::NapiReturnDeferred<DeleteDesktopShortcutInfoCallbackInfo>(
@@ -361,7 +361,7 @@ static ErrCode InnerGetAllShortcutInfoForSelf(std::vector<OHOS::AppExecFwk::Shor
     }
     return iBundleMgr->GetAllShortcutInfoForSelf(shortcutInfos);
 }
- 
+
 void GetAllShortcutInfoForSelfExec(napi_env env, void *data)
 {
     GetAllShortcutInfoForSelfCallbackInfo *asyncCallbackInfo =
@@ -373,7 +373,7 @@ void GetAllShortcutInfoForSelfExec(napi_env env, void *data)
     asyncCallbackInfo->err = CommonFunc::ConvertErrCode(
         InnerGetAllShortcutInfoForSelf(asyncCallbackInfo->shortcutInfos));
 }
- 
+
 void GetAllShortcutInfoForSelfComplete(napi_env env, napi_status status, void *data)
 {
     GetAllShortcutInfoForSelfCallbackInfo *asyncCallbackInfo =
@@ -394,7 +394,7 @@ void GetAllShortcutInfoForSelfComplete(napi_env env, napi_status status, void *d
     CommonFunc::NapiReturnDeferred<GetAllShortcutInfoForSelfCallbackInfo>(
         env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
- 
+
 napi_value GetAllShortcutInfoForSelf(napi_env env, napi_callback_info info)
 {
     APP_LOGD("Napi begin GetAllShortcutInfoForSelf");
@@ -405,7 +405,7 @@ napi_value GetAllShortcutInfoForSelf(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::unique_ptr<GetAllShortcutInfoForSelfCallbackInfo> callbackPtr {asyncCallbackInfo};
- 
+
     auto promise = CommonFunc::AsyncCallNativeMethod<GetAllShortcutInfoForSelfCallbackInfo>(env, asyncCallbackInfo,
         "GetAllShortcutInfoForSelf", GetAllShortcutInfoForSelfExec, GetAllShortcutInfoForSelfComplete);
     callbackPtr.release();

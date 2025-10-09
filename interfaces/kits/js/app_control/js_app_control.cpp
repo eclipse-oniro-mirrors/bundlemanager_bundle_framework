@@ -547,7 +547,7 @@ bool ParseDisposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
     napi_get_named_property(env, nRule, "controlType", &prop);
     int32_t controlType;
     if (!CommonFunc::ParseInt(env, prop, controlType)) {
-        APP_LOGW("disposedType parseInt failed");
+        APP_LOGW("controlType parseInt failed");
         return false;
     }
     if (controlType > static_cast<int32_t>(ControlType::DISALLOWED_LIST) ||
@@ -658,7 +658,7 @@ bool ParseDisposedRuleConfigurationArray(napi_env env, napi_value nDisposedRuleC
         napi_valuetype valueType = napi_undefined;
         NAPI_CALL_BASE(env, napi_typeof(env, value, &valueType), false);
         if (valueType != napi_object) {
-            APP_LOGE("disposedRuleConfiguration bot objext");
+            APP_LOGE("disposedRuleConfiguration bot object");
             disposedRuleConfigurations.clear();
             return false;
         }

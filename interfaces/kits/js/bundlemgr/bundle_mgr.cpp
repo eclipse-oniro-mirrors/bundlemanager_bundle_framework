@@ -1597,8 +1597,8 @@ static bool InnerGetBundleInfos(
 static void ProcessBundleInfos(
     napi_env env, napi_value result, const std::vector<OHOS::AppExecFwk::BundleInfo> &bundleInfos)
 {
-    if (bundleInfos.size() > 0) {
-        APP_LOGI("-----bundleInfos is not null-----");
+    if (!bundleInfos.empty()) {
+        APP_LOGI("-----bundleInfos is not empty-----");
         size_t index = 0;
         for (const auto &item : bundleInfos) {
             APP_LOGD("name is %{public}s and bundleName is %{public}s ",
@@ -1614,7 +1614,7 @@ static void ProcessBundleInfos(
             index++;
         }
     } else {
-        APP_LOGI("-----bundleInfos is null-----");
+        APP_LOGI("-----bundleInfos is empty-----");
     }
 }
 
@@ -2845,7 +2845,7 @@ napi_value CreateAbilityTypeObject(napi_env env)
 
     napi_value value = nullptr;
     NAPI_CALL(env, napi_create_object(env, &value));
-    
+
     napi_value nUnknown = nullptr;
     NAPI_CALL(env, napi_create_int32(env, static_cast<int32_t>(AbilityType::UNKNOWN), &nUnknown));
     NAPI_CALL(env, napi_set_named_property(env, value, "UNKNOWN", nUnknown));
@@ -3155,7 +3155,7 @@ napi_value CreateBundleFlagObject(napi_env env)
         static_cast<int32_t>(AbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA), &nAbilityInfoWithMetaData));
     NAPI_CALL(env, napi_set_named_property(env, value,
         "GET_ABILITY_INFO_WITH_METADATA", nAbilityInfoWithMetaData));
-    
+
     napi_value nBundleWithHashValue = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
         static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_HASH_VALUE), &nBundleWithHashValue));
@@ -3173,7 +3173,7 @@ napi_value CreateBundleFlagObject(napi_env env)
         static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION), &nAppInfoWithPermission));
     NAPI_CALL(env, napi_set_named_property(env, value,
         "GET_APPLICATION_INFO_WITH_PERMISSION", nAppInfoWithPermission));
-    
+
     napi_value nAppInfoWithMetaData = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
         static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA), &nAppInfoWithMetaData));
@@ -3185,14 +3185,14 @@ napi_value CreateBundleFlagObject(napi_env env)
         static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), &nAppInfoWithDisable));
     NAPI_CALL(env, napi_set_named_property(env, value,
         "GET_APPLICATION_INFO_WITH_DISABLE", nAppInfoWithDisable));
-    
+
     napi_value nAppInfoWithCertificate = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
         static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT),
         &nAppInfoWithCertificate));
     NAPI_CALL(env, napi_set_named_property(env, value,
         "GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT", nAppInfoWithCertificate));
-    
+
     return value;
 }
 
@@ -3696,7 +3696,7 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
                 NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
         }
     }
-    
+
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityIconCallbackInfo>(
         env, asyncCallbackInfo, GET_ABILITY_ICON, GetAbilityIconExec, GetAbilityIconComplete);
     callbackPtr.release();
@@ -3919,7 +3919,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
                 NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
         }
     }
-    
+
     auto promise = CommonFunc::AsyncCallNativeMethod<LaunchWantCallbackInfo>(
         env, asyncCallbackInfo, GET_LAUNCH_WANT_FOR_BUNDLE, GetLaunchWantForBundleExec, GetLaunchWantForBundleComplete);
     callbackPtr.release();
@@ -4001,7 +4001,7 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
             NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
         }
     }
-    
+
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityEnableCallbackInfo>(
         env, asyncCallbackInfo, IS_ABILITY_ENABLED, IsAbilityEnabledExec, IsAbilityEnabledComplete);
     callbackPtr.release();
@@ -4083,7 +4083,7 @@ napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
             NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
         }
     }
-    
+
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationEnableCallbackInfo>(env,
         asyncCallbackInfo, IS_SET_APPLICATION_ENABLED, IsApplicationEnabledExec, IsApplicationEnabledComplete);
     callbackPtr.release();
