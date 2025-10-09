@@ -68,7 +68,9 @@ void BundleDataStorageRdb::TransformStrToInfo(
     }
 
     std::map<std::string, InnerBundleInfo> updateInfos;
+    uint64_t totalSize = 0;
     for (const auto &data : datas) {
+        totalSize += static_cast<uint64_t>(data.second.size());
         InnerBundleInfo innerBundleInfo;
         nlohmann::json jsonObject = nlohmann::json::parse(data.second, nullptr, false);
         if (jsonObject.is_discarded()) {
@@ -104,6 +106,7 @@ void BundleDataStorageRdb::TransformStrToInfo(
     if (updateInfos.size() > 0) {
         UpdateDataBase(updateInfos);
     }
+    APP_LOGI_NOFUNC("bundle TransformStrToInfo end totalSize:%{public}" PRIu64, totalSize);
 }
 
 void BundleDataStorageRdb::UpdateDataBase(std::map<std::string, InnerBundleInfo> &infos)

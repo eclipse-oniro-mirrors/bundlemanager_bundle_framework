@@ -128,7 +128,9 @@ bool BundleMgrService::Init()
 
     APP_LOGI_NOFUNC("BundleMgrService Init begin");
     CreateBmsServiceDir();
+    APP_LOGI_NOFUNC("BundleMgrService InitBmsParam");
     InitBmsParam();
+    APP_LOGI_NOFUNC("BundleMgrService InitPreInstallExceptionMgr");
     InitPreInstallExceptionMgr();
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");
     CHECK_INIT_RESULT(InitBundleInstaller(), "Init bundleInstaller fail");
