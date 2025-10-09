@@ -288,10 +288,10 @@ constexpr uint32_t VALUE_PICTURE_IN_PICTURE = 1 << 9;
 // 100 0000 0000 represents screen fetch service
 constexpr uint32_t VALUE_SCREEN_FETCH = 1 << 10;
 
-// 100 0000 0000 represents av playback and record service
+// 1000 0000 0000 represents av playback and record service
 constexpr uint32_t VALUE_AV_PLAYBACK_AND_RECORD = 1 << 11;
 
-// 100 0000 0000 represents special scenario processing service
+// 1 0000 0000 0000 represents special scenario processing service
 constexpr uint32_t VALUE_SPECIAL_SCENARIO_PROCESSING = 1 << 12;
 
 constexpr const char* KEY_DATA_TRANSFER = "dataTransfer";
