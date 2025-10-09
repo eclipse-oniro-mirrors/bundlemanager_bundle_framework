@@ -1905,6 +1905,18 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    
+    virtual ErrCode RecoverBackupBundleData(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode RemoveBackupBundleData(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

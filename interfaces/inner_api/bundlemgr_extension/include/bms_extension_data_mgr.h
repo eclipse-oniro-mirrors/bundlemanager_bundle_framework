@@ -84,6 +84,8 @@ public:
     ErrCode GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames);
     ErrCode BmsExtensionInit();
     bool IsMCFlagSet();
+    ErrCode RecoverBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+    ErrCode RemoveBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
 private:
     bool OpenHandler();
     static void *handler_;

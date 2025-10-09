@@ -1287,6 +1287,12 @@ public:
     
     virtual ErrCode GetPluginBundlePathForSelf(
         const std::string &pluginBundleName, std::string &codePath) override;
+    
+    virtual ErrCode RecoverBackupBundleData(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex) override;
+
+    virtual ErrCode RemoveBackupBundleData(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

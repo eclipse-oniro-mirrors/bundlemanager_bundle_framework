@@ -73,6 +73,8 @@ public:
     ErrCode GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
     ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
+    ErrCode RecoverBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+    ErrCode RemoveBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
 
 private:
     void ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const;

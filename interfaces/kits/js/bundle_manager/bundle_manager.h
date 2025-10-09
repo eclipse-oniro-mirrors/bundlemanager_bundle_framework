@@ -342,6 +342,14 @@ struct CloneAppBundleInfosCallbackInfo : public BaseCallbackInfo {
     std::vector<BundleInfo> bundleInfos;
 };
 
+struct RecoverOrRemoveBackupBundleDataCallbackInfo : public BaseCallbackInfo {
+    explicit RecoverOrRemoveBackupBundleDataCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+
+    int32_t appIndex = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
+};
+
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
@@ -400,6 +408,8 @@ napi_value GetAllDynamicIconInfo(napi_env env, napi_callback_info info);
 napi_value GetDynamicIconInfo(napi_env env, napi_callback_info info);
 napi_value GetAbilityInfos(napi_env env, napi_callback_info info);
 napi_value SetAbilityFileTypesForSelf(napi_env env, napi_callback_info info);
+napi_value RecoverBackupBundleData(napi_env env, napi_callback_info info);
+napi_value RemoveBackupBundleData(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
