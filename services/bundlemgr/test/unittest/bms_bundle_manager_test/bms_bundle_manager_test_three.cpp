@@ -2382,7 +2382,11 @@ HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0004, Function | MediumT
     int32_t userId = 100;
     int32_t appIndex = 0;
     auto testRet = hostImpl->RecoverBackupBundleData(bundleName, userId, appIndex);
+    #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(testRet, ERR_OK);
+    #else
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
 }
 
 /**
@@ -2442,6 +2446,10 @@ HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0004, Function | MediumTe
     int32_t userId = 100;
     int32_t appIndex = 0;
     auto testRet = hostImpl->RemoveBackupBundleData(bundleName, userId, appIndex);
+    #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(testRet, ERR_OK);
+    #else
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
 }
 } // OHOS
