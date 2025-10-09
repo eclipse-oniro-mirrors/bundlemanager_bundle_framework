@@ -315,8 +315,11 @@ ani_object CompressNative(ani_env* env, ani_object instance, ani_arraybuffer ani
         return nullptr;
     }
 
-    CHECK_PARAM_NULL_THROW_RETURN(dest, ERROR_CODE, nullptr);
-    CHECK_PARAM_NULL_THROW_RETURN(source, ERROR_CODE, nullptr);
+    if (dest == nullptr || source == nullptr) {
+        APP_LOGE("dest or source is nullptr");
+        AniZLibCommon::ThrowZLibNapiError(env, ERROR_CODE);
+        return nullptr;
+    }
     int32_t errCode = compress(reinterpret_cast<Bytef *>(dest), &destLen, reinterpret_cast<Bytef *>(source), sourceLen);
     if (errCode < 0) {
         APP_LOGE("compress failed %{public}d", errCode);
@@ -360,12 +363,13 @@ ani_object CompressWithSourceLenNative(ani_env* env, ani_object instance,
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return nullptr;
     }
-    if (sourceLen > static_cast<uLong>(aniSourceLen)) {
-        sourceLen = static_cast<uLong>(aniSourceLen);
-    }
+    sourceLen = static_cast<uLong>(aniSourceLen);
 
-    CHECK_PARAM_NULL_THROW_RETURN(dest, ERROR_CODE, nullptr);
-    CHECK_PARAM_NULL_THROW_RETURN(source, ERROR_CODE, nullptr);
+    if (dest == nullptr || source == nullptr) {
+        APP_LOGE("dest or source is nullptr");
+        AniZLibCommon::ThrowZLibNapiError(env, ERROR_CODE);
+        return nullptr;
+    }
     int32_t errCode = compress(reinterpret_cast<Bytef *>(dest), &destLen, reinterpret_cast<Bytef *>(source), sourceLen);
     if (errCode < 0) {
         APP_LOGE("compress failed %{public}d", errCode);
@@ -412,8 +416,11 @@ ani_object Compress2Native(ani_env* env, ani_object instance,
         return nullptr;
     }
 
-    CHECK_PARAM_NULL_THROW_RETURN(dest, ERROR_CODE, nullptr);
-    CHECK_PARAM_NULL_THROW_RETURN(source, ERROR_CODE, nullptr);
+    if (dest == nullptr || source == nullptr) {
+        APP_LOGE("dest or source is nullptr");
+        AniZLibCommon::ThrowZLibNapiError(env, ERROR_CODE);
+        return nullptr;
+    }
     int32_t errCode = compress2(static_cast<Bytef *>(dest), &destLen, static_cast<Bytef *>(source), sourceLen, level);
     if (errCode < 0) {
         APP_LOGE("compress2 failed %{public}d", errCode);
@@ -464,12 +471,13 @@ ani_object Compress2WithSourceLenNative(ani_env* env, ani_object instance,
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return nullptr;
     }
-    if (sourceLen > static_cast<uLong>(aniSourceLen)) {
-        sourceLen = static_cast<uLong>(aniSourceLen);
-    }
+    sourceLen = static_cast<uLong>(aniSourceLen);
 
-    CHECK_PARAM_NULL_THROW_RETURN(dest, ERROR_CODE, nullptr);
-    CHECK_PARAM_NULL_THROW_RETURN(source, ERROR_CODE, nullptr);
+    if (dest == nullptr || source == nullptr) {
+        APP_LOGE("dest or source is nullptr");
+        AniZLibCommon::ThrowZLibNapiError(env, ERROR_CODE);
+        return nullptr;
+    }
     int32_t errCode = compress2(static_cast<Bytef *>(dest), &destLen, static_cast<Bytef *>(source), sourceLen, level);
     if (errCode < 0) {
         APP_LOGE("compress2 failed %{public}d", errCode);
@@ -524,8 +532,11 @@ ani_object UncompressNative(ani_env* env, ani_object instance, ani_arraybuffer a
         return nullptr;
     }
 
-    CHECK_PARAM_NULL_THROW_RETURN(dest, ERROR_CODE, nullptr);
-    CHECK_PARAM_NULL_THROW_RETURN(source, ERROR_CODE, nullptr);
+    if (dest == nullptr || source == nullptr) {
+        APP_LOGE("dest or source is nullptr");
+        AniZLibCommon::ThrowZLibNapiError(env, ERROR_CODE);
+        return nullptr;
+    }
     int32_t errCode = uncompress(static_cast<Bytef *>(dest), &destLen, static_cast<Bytef *>(source), sourceLen);
     if (errCode < 0) {
         APP_LOGE("uncompress failed %{public}d", errCode);
@@ -569,12 +580,13 @@ ani_object UncompressWithSourceLenNative(ani_env* env, ani_object instance,
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return nullptr;
     }
-    if (sourceLen > static_cast<uLong>(aniSourceLen)) {
-        sourceLen = static_cast<uLong>(aniSourceLen);
-    }
+    sourceLen = static_cast<uLong>(aniSourceLen);
 
-    CHECK_PARAM_NULL_THROW_RETURN(dest, ERROR_CODE, nullptr);
-    CHECK_PARAM_NULL_THROW_RETURN(source, ERROR_CODE, nullptr);
+    if (dest == nullptr || source == nullptr) {
+        APP_LOGE("dest or source is nullptr");
+        AniZLibCommon::ThrowZLibNapiError(env, ERROR_CODE);
+        return nullptr;
+    }
     int32_t errCode = uncompress(static_cast<Bytef *>(dest), &destLen, static_cast<Bytef *>(source), sourceLen);
     if (errCode < 0) {
         APP_LOGE("uncompress failed %{public}d", errCode);
@@ -613,8 +625,11 @@ ani_object Uncompress2Native(ani_env* env, ani_object instance, ani_arraybuffer 
         return nullptr;
     }
 
-    CHECK_PARAM_NULL_THROW_RETURN(dest, ERROR_CODE, nullptr);
-    CHECK_PARAM_NULL_THROW_RETURN(source, ERROR_CODE, nullptr);
+    if (dest == nullptr || source == nullptr) {
+        APP_LOGE("dest or source is nullptr");
+        AniZLibCommon::ThrowZLibNapiError(env, ERROR_CODE);
+        return nullptr;
+    }
     int32_t errCode = uncompress2(static_cast<Bytef *>(dest), &destLen, static_cast<Bytef *>(source), &sourceLen);
     if (errCode < 0) {
         APP_LOGE("uncompress2 failed %{public}d", errCode);
@@ -658,12 +673,13 @@ ani_object Uncompress2WithSourceLenNative(ani_env* env, ani_object instance,
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
         return nullptr;
     }
-    if (sourceLen > static_cast<uLong>(aniSourceLen)) {
-        sourceLen = static_cast<uLong>(aniSourceLen);
-    }
+    sourceLen = static_cast<uLong>(aniSourceLen);
 
-    CHECK_PARAM_NULL_THROW_RETURN(dest, ERROR_CODE, nullptr);
-    CHECK_PARAM_NULL_THROW_RETURN(source, ERROR_CODE, nullptr);
+    if (dest == nullptr || source == nullptr) {
+        APP_LOGE("dest or source is nullptr");
+        AniZLibCommon::ThrowZLibNapiError(env, ERROR_CODE);
+        return nullptr;
+    }
     int32_t errCode = uncompress2(static_cast<Bytef *>(dest), &destLen, static_cast<Bytef *>(source), &sourceLen);
     if (errCode < 0) {
         APP_LOGE("uncompress2 failed %{public}d", errCode);
@@ -1462,10 +1478,6 @@ ani_enum_item DeflateNative(ani_env* env, ani_object instance, ani_object aniStr
         return nullptr;
     }
 
-    if (!AniZLibCommon::CheckZStream(env, aniStrm)) {
-        APP_LOGE("zStream is invalid");
-        return nullptr;
-    }
     if (!SetZStream(env, instance, aniStrm, zStream)) {
         APP_LOGE("set zStream failed");
         return nullptr;
