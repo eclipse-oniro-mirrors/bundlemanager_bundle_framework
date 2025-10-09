@@ -85,7 +85,7 @@ napi_value BundleResourceDrawableUtils::ConvertToDrawableDescriptor(napi_env env
     decoderSize.second = decodeSize;
     std::unique_ptr<Ace::Napi::DrawableDescriptor> drawableDescriptor =
         std::make_unique<Ace::Napi::LayeredDrawableDescriptor>(0, themeMask, 1, foregroundPair, backgroundPair,
-        decoderSize);
+        decoderSize, nullptr, true);
     return Ace::Napi::JsDrawableDescriptor::ToNapi(env, drawableDescriptor.release(),
         Ace::Napi::DrawableDescriptor::DrawableType::LAYERED);
 #else
