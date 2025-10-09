@@ -3638,6 +3638,41 @@ HWTEST_F(BmsBundleDataMgrTest3, GetAllCloneAppIndexesAndUidsByInnerBundleInfo_00
 }
 
 /**
+ * @tc.number: InnerGetAllPluginInfo_0001
+ * @tc.name: InnerGetAllPluginInfo
+ * @tc.desc: test InnerGetAllPluginInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest3, InnerGetAllPluginInfo_0001, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+    bundleDataMgr->AddUserId(100);
+    std::vector<PluginBundleInfo> pluginBundleInfos;
+    auto ret = bundleDataMgr->InnerGetAllPluginInfo("", 100, pluginBundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InnerGetPluginBundleInfo_0001
+ * @tc.name: InnerGetPluginBundleInfo
+ * @tc.desc: test InnerGetPluginBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest3, InnerGetPluginBundleInfo_0001, Function | SmallTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    std::string pluginBundleName = BUNDLE_TEST1;
+    std::string hostBundleName = BUNDLE_TEST2;
+    PluginBundleInfo pluginBundleInfo;
+
+    bool result = bundleDataMgr->InnerGetPluginBundleInfo(hostBundleName, pluginBundleName,
+        USERID, pluginBundleInfo);
+    EXPECT_EQ(result, false);
+}
+
+/**
  * @tc.number: DeleteUninstallCloneBundleInfo_0001
  * @tc.name: DeleteUninstallCloneBundleInfo
  * @tc.desc: test DeleteUninstallCloneBundleInfo

@@ -3132,7 +3132,12 @@ void BundleDataMgr::GetRouterInfoForPlugin(const std::string &hostBundleName,
     }
     std::vector<PluginBundleInfo> pluginBundleInfos;
     std::vector<RouterItem> tempInfos;
-    GetAllPluginInfo(hostBundleName, userId, pluginBundleInfos);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid userid :%{public}d", userId);
+        return;
+    }
+    InnerGetAllPluginInfo(hostBundleName, requestUserId, pluginBundleInfos);
     for (const auto &pluginInfo : pluginBundleInfos) {
         for (const auto &module : pluginInfo.pluginModuleInfos) {
             if (!routerStorage_->GetRouterInfo(pluginInfo.pluginBundleName, module.moduleName,
@@ -3183,7 +3188,7 @@ bool BundleDataMgr::HasPluginInstalledByOtherBundle(const std::string &hostBundl
                 innerBundleUserInfoItem.second.IsPluginInstalled(pluginBundleName)) {
                 auto& bundleUserInfo = innerBundleUserInfoItem.second.bundleUserInfo;
                 PluginBundleInfo pluginInfo;
-                if (!GetPluginBundleInfo(infoItem.first, pluginBundleName, bundleUserInfo.userId, pluginInfo)) {
+                if (!InnerGetPluginBundleInfo(infoItem.first, pluginBundleName, bundleUserInfo.userId, pluginInfo)) {
                     continue;
                 }
                 if (pluginInfo.versionCode == versionCode) {
@@ -11031,13 +11036,19 @@ ErrCode BundleDataMgr::GetAllPluginInfo(const std::string &hostBundleName, int32
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    return InnerGetAllPluginInfo(hostBundleName, requestUserId, pluginBundleInfos);
+}
+
+ErrCode BundleDataMgr::InnerGetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
+    std::vector<PluginBundleInfo> &pluginBundleInfos) const
+{
     auto item = bundleInfos_.find(hostBundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("hostBundleName: %{public}s does not exist", hostBundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
-    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
     if (responseUserId == Constants::INVALID_USERID) {
         APP_LOGE("-n : %{public}s is not installed in user %{public}d or 0", hostBundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -11111,6 +11122,12 @@ bool BundleDataMgr::GetPluginBundleInfo(const std::string &hostBundleName, const
     }
 
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    return InnerGetPluginBundleInfo(hostBundleName, pluginBundleName, userId, pluginBundleInfo);
+}
+
+bool BundleDataMgr::InnerGetPluginBundleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
+    const int32_t userId, PluginBundleInfo &pluginBundleInfo)
+{
     auto infoItem = bundleInfos_.find(hostBundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW_NOFUNC("%{public}s GetPluginBundleInfo not found %{public}s", hostBundleName.c_str(),

@@ -11587,13 +11587,11 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0068, Function | MediumTest | L
     installer.isPluginExist_ = false;
     std::string hostBundleName;
     InnerBundleInfo info;
-    installer.UpdateRouterInfoForPlugin(hostBundleName, info);
-    EXPECT_EQ(hostBundleName, "");
+    EXPECT_NO_THROW(installer.UpdateRouterInfoForPlugin(hostBundleName, info));
 
     installer.isPluginExist_ = true;
-    installer.UpdateRouterInfoForPlugin(hostBundleName, info);
-    installer.DeleteRouterInfoForPlugin(hostBundleName);
-    EXPECT_EQ(hostBundleName, "");
+    EXPECT_NO_THROW(installer.UpdateRouterInfoForPlugin(hostBundleName, info));
+    EXPECT_NO_THROW(installer.DeleteRouterInfoForPlugin(hostBundleName));
 }
 
 /**
