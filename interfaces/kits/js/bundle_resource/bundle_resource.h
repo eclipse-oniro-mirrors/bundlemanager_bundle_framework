@@ -47,6 +47,7 @@ napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
 napi_value GetAllBundleResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetExtensionAbilityResourceInfo(napi_env env, napi_callback_info info);
+napi_value GetAllUninstallBundleResourceInfo(napi_env env, napi_callback_info info);
 void CreateBundleResourceFlagObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
