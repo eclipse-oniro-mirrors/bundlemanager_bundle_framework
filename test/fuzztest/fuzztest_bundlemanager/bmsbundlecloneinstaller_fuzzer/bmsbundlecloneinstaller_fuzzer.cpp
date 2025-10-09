@@ -67,8 +67,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     installer.CreateEl5Dir(info, randomUserId, uid, randomAppIndex);
 
     InnerBundleUserInfo userInfo;
-    installer.RemoveEl5Dir(userInfo, uid, Constants::START_USERID, appIndex);
-    installer.RemoveEl5Dir(userInfo, uid, randomUserId, randomAppIndex);
+    installer.RemoveEl5Dir(userInfo, Constants::START_USERID, appIndex);
+    installer.RemoveEl5Dir(userInfo, randomUserId, randomAppIndex);
 
     installer.GetDataMgr();
 
