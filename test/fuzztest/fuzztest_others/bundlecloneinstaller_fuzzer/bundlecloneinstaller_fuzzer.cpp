@@ -71,9 +71,10 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     std::string bundleName(data, size);
     int32_t userId = static_cast<int32_t>(GetU32Data(data));
     int32_t appIndex = static_cast<int32_t>(GetU32Data(data));
+    DestroyAppCloneParam param;
     bundleCloneInstall->InstallCloneApp(bundleName, userId, appIndex);
-    bundleCloneInstall->UninstallCloneApp(bundleName, userId, appIndex, true);
-    bundleCloneInstall->UninstallAllCloneApps(bundleName, true, userId);
+    bundleCloneInstall->UninstallCloneApp(bundleName, userId, appIndex, true, param);
+    bundleCloneInstall->UninstallAllCloneApps(bundleName, true, false, userId);
     InnerBundleInfo info;
     bundleCloneInstall->CreateCloneDataDir(info, userId, UID, appIndex);
     bundleCloneInstall->RemoveCloneDataDir(bundleName, userId, appIndex, true);

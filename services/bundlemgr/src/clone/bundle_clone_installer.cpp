@@ -82,15 +82,15 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     return result;
 }
 
-ErrCode BundleCloneInstaller::UninstallCloneApp(
-    const std::string &bundleName, const int32_t userId, const int32_t appIndex, bool sync)
+ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, const int32_t userId,
+    const int32_t appIndex, bool sync, const DestroyAppCloneParam &destroyAppCloneParam)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("UninstallCloneApp %{public}s _ %{public}d begin", bundleName.c_str(), appIndex);
 
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
-    ErrCode result = ProcessCloneBundleUninstall(bundleName, userId, appIndex, sync);
+    ErrCode result = ProcessCloneBundleUninstall(bundleName, userId, appIndex, sync, destroyAppCloneParam);
     NotifyBundleEvents installRes = {
         .type = NotifyType::UNINSTALL_BUNDLE,
         .resultCode = result,
@@ -102,7 +102,8 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
         .appIdentifier = appIdentifier_,
         .developerId = GetDeveloperId(bundleName),
         .assetAccessGroups = GetAssetAccessGroups(bundleName),
-        .crossAppSharedConfig = isBundleCrossAppSharedConfig_
+        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
+        .keepData = isKeepData_
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -117,7 +118,8 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
     return result;
 }
 
-ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleName, bool sync, int32_t userId)
+ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleName, bool sync, bool isKeepData,
+    int32_t userId)
 {
     // All clone will be uninstalled when the original application is updated or uninstalled
     APP_LOGI_NOFUNC("UninstallAllCloneApps begin");
@@ -145,8 +147,13 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
         return ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
     }
     ErrCode result = ERR_OK;
+    DestroyAppCloneParam destroyAppCloneParam;
+    if (isKeepData) {
+        destroyAppCloneParam.parameters.emplace(ServiceConstants::BMS_PARA_CLONE_IS_KEEP_DATA,
+            ServiceConstants::BMS_TRUE);
+    }
     for (auto it = userInfo.cloneInfos.begin(); it != userInfo.cloneInfos.end(); it++) {
-        if (UninstallCloneApp(bundleName, userId, atoi(it->first.c_str()), sync) != ERR_OK) {
+        if (UninstallCloneApp(bundleName, userId, atoi(it->first.c_str()), sync, destroyAppCloneParam) != ERR_OK) {
             APP_LOGE("UninstallCloneApp failed, appIndex %{public}s", it->first.c_str());
             result = ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
         }
@@ -221,11 +228,13 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     if (dataMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo) != ERR_OK) {
         APP_LOGE("GetAppProvisionInfo failed bundleName:%{public}s", bundleName.c_str());
     }
-    if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
-        appProvisionInfo.appServiceCapabilities) != ERR_OK) {
-        auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
-        APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
-        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+    if (!RecoverHapToken(userId, appIndex, newTokenIdEx, info, appProvisionInfo.appServiceCapabilities)) {
+        if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx, checkResult,
+            appProvisionInfo.appServiceCapabilities) != ERR_OK) {
+            auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+            APP_LOGE("bundleName:%{public}s InitHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
+            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
     }
     ScopeGuard applyAccessTokenGuard([&] {
         BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
@@ -271,6 +280,8 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
             appIndexes.find(appIndex) != appIndexes.end());
     }
 
+    // del keep data uninstall bundle info
+    (void)DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
     createCloneDataDirGuard.Dismiss();
@@ -281,7 +292,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 }
 
 ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bundleName,
-    int32_t userId, int32_t appIndex, bool sync)
+    int32_t userId, int32_t appIndex, bool sync, const DestroyAppCloneParam &destroyAppCloneParam)
 {
     if (bundleName.empty()) {
         APP_LOGE("UninstallCloneApp failed due to empty bundle name");
@@ -329,15 +340,37 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         APP_LOGE("RemoveCloneBundle failed");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
     }
-    if (RemoveCloneDataDir(bundleName, userId, appIndex, sync) != ERR_OK) {
-        APP_LOGW("RemoveCloneDataDir failed");
-    }
-    RemoveEl5Dir(userInfo, uid_, userId, appIndex);
+    auto iter = destroyAppCloneParam.parameters.find(ServiceConstants::BMS_PARA_CLONE_IS_KEEP_DATA);
+    if (iter == destroyAppCloneParam.parameters.end() || iter->second != ServiceConstants::BMS_TRUE) {
+        if (RemoveCloneDataDir(bundleName, userId, appIndex, sync) != ERR_OK) {
+            APP_LOGW("RemoveCloneDataDir failed");
+        }
+        RemoveEl5Dir(userInfo, uid_, userId, appIndex);
 
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
-        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        APP_LOGE("delete AT failed clone");
+        if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            APP_LOGE("delete AT failed clone");
+        }
+    } else {
+        isKeepData_ = true;
+        UninstallBundleInfo uninstallBundleInfo;
+        if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+            uninstallBundleInfo.appId = appId_;
+            uninstallBundleInfo.appIdentifier = appIdentifier_;
+            uninstallBundleInfo.appProvisionType = info.GetAppProvisionType();
+            uninstallBundleInfo.bundleType = info.GetApplicationBundleType();
+            info.GetModuleNames(uninstallBundleInfo.moduleNames);
+        }
+        std::string key = std::to_string(userId) + "_" + std::to_string(appIndex);
+        uninstallBundleInfo.userInfos[key].uid = uid_;
+        uninstallBundleInfo.userInfos[key].gids = it->second.gids;
+        uninstallBundleInfo.userInfos[key].accessTokenId = accessTokenId_;
+        uninstallBundleInfo.userInfos[key].accessTokenIdEx = it->second.accessTokenIdEx;
+        if (!dataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+            LOG_E(BMS_TAG_INSTALLER, "clone update failed");
+        }
     }
+    
     // process icon and label
     {
         InnerBundleInfo info;
@@ -539,6 +572,8 @@ void BundleCloneInstaller::ResetInstallProperties()
     appId_ = "";
     appIdentifier_ = "";
     isBundleCrossAppSharedConfig_ = false;
+    isKeepData_ = false;
+    existBeforeKeepDataApp_ = false;
 }
 
 std::string BundleCloneInstaller::GetAssetAccessGroups(const std::string &bundleName)
@@ -578,6 +613,59 @@ std::string BundleCloneInstaller::GetDeveloperId(const std::string &bundleName)
         APP_LOGE("GetDeveloperId failed, ret=%{public}d", ret);
     }
     return developerId;
+}
+
+bool BundleCloneInstaller::RecoverHapToken(int32_t userId, int32_t appIndex,
+    Security::AccessToken::AccessTokenIDEx &accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
+    const std::string &appServiceCapabilities)
+{
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("Get dataMgr nullptr");
+        return false;
+    }
+    UninstallBundleInfo uninstallBundleInfo;
+    std::string bundleName = innerBundleInfo.GetBundleName();
+    if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        return false;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "bundleName:%{public}s getUninstallBundleInfo success", bundleName.c_str());
+    if (uninstallBundleInfo.userInfos.empty()) {
+        LOG_W(BMS_TAG_INSTALLER, "bundleName:%{public}s empty userInfos", bundleName.c_str());
+        return false;
+    }
+    std::string key = std::to_string(userId) + "_" + std::to_string(appIndex);
+    if (uninstallBundleInfo.userInfos.find(key) != uninstallBundleInfo.userInfos.end()) {
+        existBeforeKeepDataApp_ = true;
+        accessTokenIdEx.tokenIdExStruct.tokenID =
+            uninstallBundleInfo.userInfos.at(key).accessTokenId;
+        accessTokenIdEx.tokenIDEx = uninstallBundleInfo.userInfos.at(key).accessTokenIdEx;
+        Security::AccessToken::HapInfoCheckResult checkResult;
+        if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, innerBundleInfo, userId,
+            checkResult, appServiceCapabilities) == ERR_OK) {
+            return true;
+        } else {
+            auto result = BundlePermissionMgr::GetCheckResultMsg(checkResult);
+            APP_LOGE("bundleName:%{public}s UpdateHapToken failed, %{public}s", bundleName.c_str(), result.c_str());
+        }
+    }
+    return false;
+}
+
+bool BundleCloneInstaller::DeleteUninstallCloneBundleInfo(const std::string &bundleName, int32_t userId,
+    int32_t appIndex)
+{
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("Get dataMgr nullptr");
+        return false;
+    }
+    if (!existBeforeKeepDataApp_) {
+        return false;
+    }
+    if (!dataMgr_->DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex)) {
+        LOG_E(BMS_TAG_INSTALLER, "delete failed");
+        return false;
+    }
+    return true;
 }
 } // AppExecFwk
 } // OHOS

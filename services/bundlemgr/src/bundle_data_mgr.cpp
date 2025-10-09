@@ -564,6 +564,34 @@ bool BundleDataMgr::DeleteUninstallBundleInfo(const std::string &bundleName, int
     return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
 }
 
+bool BundleDataMgr::DeleteUninstallCloneBundleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    if (uninstallDataMgr_ == nullptr) {
+        APP_LOGE("uninstallDataMgr is null");
+        return false;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE("param error");
+        return false;
+    }
+    UninstallBundleInfo uninstallBundleInfo;
+    if (!uninstallDataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        APP_LOGE("bundle %{public}s is not found", bundleName.c_str());
+        return false;
+    }
+    std::string key = std::to_string(userId) + "_" + std::to_string(appIndex);
+    auto it = uninstallBundleInfo.userInfos.find(key);
+    if (it == uninstallBundleInfo.userInfos.end()) {
+        APP_LOGE("-u %{public}d -i %{public}d is not found", userId, appIndex);
+        return false;
+    }
+    uninstallBundleInfo.userInfos.erase(key);
+    if (uninstallBundleInfo.userInfos.empty()) {
+        return uninstallDataMgr_->DeleteUninstallBundleInfo(bundleName);
+    }
+    return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+}
+
 bool BundleDataMgr::AddFirstInstallBundleInfo(const std::string &bundleName, const int32_t userId,
     const FirstInstallBundleInfo &firstInstallBundleInfo)
 {

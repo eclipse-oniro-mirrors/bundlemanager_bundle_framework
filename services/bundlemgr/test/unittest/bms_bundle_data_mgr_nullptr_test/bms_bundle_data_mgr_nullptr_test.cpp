@@ -1108,7 +1108,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleCloneInstaller_0010, Function | Medi
     std::string bundleName = "test";
     bool sync = false;
     int32_t userId = 100;
-    auto ret = installer.UninstallAllCloneApps(bundleName, sync, userId);
+    auto ret = installer.UninstallAllCloneApps(bundleName, sync, false, userId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR);
 }
 

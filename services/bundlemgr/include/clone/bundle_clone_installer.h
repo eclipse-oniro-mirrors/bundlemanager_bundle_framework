@@ -20,6 +20,7 @@
 
 #include "bundle_app_spawn_client.h"
 #include "bundle_data_mgr.h"
+#include "clone_param.h"
 #include "inner_bundle_info.h"
 #include "event_report.h"
 
@@ -46,13 +47,13 @@ public:
      * @return Returns ERR_OK if the clone app uninstall successfully; returns error code otherwise.
      */
     ErrCode UninstallCloneApp(const std::string &bundleName,
-        const int32_t userId, const int32_t appIndex, bool sync);
+        const int32_t userId, const int32_t appIndex, bool sync, const DestroyAppCloneParam &destroyAppCloneParam);
     /**
      * @brief The main function for clone app uninstalling.
      * @param bundleName Indicates the bundleName of the clone applications to uninstall.
      * @return Returns ERR_OK if the clone apps uninstall successfully; returns error code otherwise.
      */
-    ErrCode UninstallAllCloneApps(const std::string &bundleName, bool sync,
+    ErrCode UninstallAllCloneApps(const std::string &bundleName, bool sync, bool isKeepData,
         int32_t userId = Constants::INVALID_USERID);
 
 private:
@@ -66,7 +67,8 @@ private:
         const InnerBundleInfo& innerBundleInfo);
 
     ErrCode ProcessCloneBundleInstall(const std::string &bundleName, const int32_t userId, int32_t &appIndex);
-    ErrCode ProcessCloneBundleUninstall(const std::string &bundleName, int32_t userId, int32_t appIndex, bool sync);
+    ErrCode ProcessCloneBundleUninstall(const std::string &bundleName, int32_t userId, int32_t appIndex, bool sync,
+        const DestroyAppCloneParam &destroyAppCloneParam);
 
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
         int32_t userId, int32_t appIndex, bool isPreInstallApp, bool isFreeInstallMode,
@@ -77,6 +79,9 @@ private:
 
     std::string GetAssetAccessGroups(const std::string &bundleName);
     std::string GetDeveloperId(const std::string &bundleName);
+    bool RecoverHapToken(int32_t userId, int32_t appIndex, Security::AccessToken::AccessTokenIDEx &accessTokenIdEx,
+        const InnerBundleInfo &innerBundleInfo, const std::string &appServiceCapabilities);
+    bool DeleteUninstallCloneBundleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
     int32_t uid_ = 0;
     uint32_t accessTokenId_ = 0;
@@ -85,6 +90,8 @@ private:
     std::string appId_;
     std::string appIdentifier_;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
+    bool isKeepData_ = false;
+    bool existBeforeKeepDataApp_ = false;
 };
 } // AppExecFwk
 } // OHOS

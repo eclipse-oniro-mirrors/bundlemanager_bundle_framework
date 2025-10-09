@@ -201,16 +201,17 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_001, TestSize.
     EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleInstall(BUNDLE_NAME, installer, appIndex),
         ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 
-    EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleUninstall("", userId_, appIdx_, true),
+    DestroyAppCloneParam param;
+    EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleUninstall("", userId_, appIdx_, true, param),
         ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
 
-    EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, 0, true),
+    EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, 0, true, param),
         ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX);
 
-    EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, 6, true),
+    EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, 6, true, param),
         ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX);
 
-    EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, installer, appIndex, true),
+    EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, installer, appIndex, true, param),
         ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED);
 }
 
@@ -234,11 +235,12 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_003, TestSize.
 {
     std::string bundleName = "bundleName";
     ASSERT_NE(bundleCloneInstall_, nullptr);
-    EXPECT_EQ(bundleCloneInstall_->UninstallCloneApp("", userId_, appIdx_, true),
+    DestroyAppCloneParam param;
+    EXPECT_EQ(bundleCloneInstall_->UninstallCloneApp("", userId_, appIdx_, true, param),
         ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
-    EXPECT_EQ(bundleCloneInstall_->UninstallCloneApp(bundleName, userId_, appIdx_, true),
+    EXPECT_EQ(bundleCloneInstall_->UninstallCloneApp(bundleName, userId_, appIdx_, true, param),
         ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX);
-    EXPECT_EQ(bundleCloneInstall_->UninstallCloneApp(bundleName, userId_, appIdx2_, true),
+    EXPECT_EQ(bundleCloneInstall_->UninstallCloneApp(bundleName, userId_, appIdx2_, true, param),
         ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED);
 }
 
@@ -282,21 +284,21 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_006, TestSize.
 {
     std::string bundleName = "";
     ASSERT_NE(bundleCloneInstall_, nullptr);
-    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, true, userId_),
+    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, true, false, userId_),
         ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
     bundleName = "bundleName006";
     int32_t userId = 101;
-    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, true, userId),
+    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, true, false, userId),
         ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST);
-    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, true, userId_),
+    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, true, false, userId_),
         ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED);
     SetInnerBundleInfo(bundleName);
     ScopeGuard deleteGuard([this, bundleName] { DeleteBundle(bundleName); });
-    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, true, userId_),
+    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, true, false, userId_),
         ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID);
     int32_t appIndex = 0;
     bundleCloneInstall_->InstallCloneApp(bundleName, installer, appIndex);
-    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, true, installer), ERR_OK);
+    EXPECT_EQ(bundleCloneInstall_->UninstallAllCloneApps(bundleName, true, false, installer), ERR_OK);
 }
 
 /**
@@ -334,7 +336,8 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_009, TestSize.
     bundleCloneInstall_->dataMgr_ = nullptr;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    auto res = bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, installer, true);
+    DestroyAppCloneParam param;
+    auto res = bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, installer, true, param);
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = dataMgr;
     bundleCloneInstall_->GetDataMgr();
     EXPECT_EQ(ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR, res);
@@ -350,7 +353,8 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_010, TestSize.
     ASSERT_NE(bundleCloneInstall_, nullptr);
     ASSERT_NE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_->multiUserIdsSet_.clear();
-    auto res = bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, installer, true);
+    DestroyAppCloneParam param;
+    auto res = bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, installer, true, param);
     EXPECT_EQ(ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST, res);
 }
 
@@ -367,7 +371,8 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_011, TestSize.
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->multiUserIdsSet_.insert(userId_);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.clear();
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[BUNDLE_NAME] = info;
-    auto res = bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, installer, true);
+    DestroyAppCloneParam param;
+    auto res = bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, installer, true, param);
     EXPECT_EQ(ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID, res);
 }
 
@@ -385,7 +390,8 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_012, TestSize.
     std::string key = Constants::FILE_UNDERLINE + std::to_string(userId_);
     info.innerBundleUserInfos_.emplace(key, userInfo);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_[BUNDLE_NAME] = info;
-    auto res = bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, installer, true);
+    DestroyAppCloneParam param;
+    auto res = bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, installer, true, param);
     EXPECT_EQ(ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED, res);
 }
 
@@ -409,7 +415,8 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_013, TestSize.
     ptr->rdbDataManager_ = nullptr;
     auto dataStorage = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->dataStorage_;
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->dataStorage_ = ptr;
-    auto res = bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, installer, true);
+    DestroyAppCloneParam param;
+    auto res = bundleCloneInstall_->ProcessCloneBundleUninstall(BUNDLE_NAME, userId_, installer, true, param);
     EXPECT_EQ(ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR, res);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->dataStorage_ = dataStorage;
 }
@@ -525,5 +532,138 @@ HWTEST_F(BmsBundleCloneInstallerTest, UninstallDebugAppSandbox_0100, Function | 
     bundleCloneInstall_->UninstallDebugAppSandbox(bundleName, uid, appIndex, innerBundleInfo);
     EXPECT_EQ(innerBundleInfo.GetBaseApplicationInfo().appProvisionType,
         OHOS::AppExecFwk::Constants::APP_PROVISION_TYPE_DEBUG);
+}
+
+/**
+ * @tc.number: RecoverHapToken_0100
+ * @tc.name: test RecoverHapToken
+ * @tc.desc: test RecoverHapToken of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, RecoverHapToken_0100, Function | SmallTest | Level1)
+{
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo info;
+    bundleCloneInstall_->dataMgr_ = nullptr;
+    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "");
+    EXPECT_FALSE(res);
+    bundleCloneInstall_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    EXPECT_NE(bundleCloneInstall_->dataMgr_, nullptr);
+}
+
+/**
+ * @tc.number: RecoverHapToken_0200
+ * @tc.name: test RecoverHapToken
+ * @tc.desc: test RecoverHapToken of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, RecoverHapToken_0200, Function | SmallTest | Level1)
+{
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo info;
+    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "");
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: RecoverHapToken_0300
+ * @tc.name: test RecoverHapToken
+ * @tc.desc: test RecoverHapToken of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, RecoverHapToken_0300, Function | SmallTest | Level1)
+{
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    std::string key = std::to_string(userId_) + "_" + std::to_string(2);
+    uninstallBundleInfo.userInfos[key] = uninstallDataUserInfo;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstallBundleInfo));
+
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo info;
+    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "");
+    EXPECT_FALSE(res);
+    EXPECT_TRUE(dataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 2));
+}
+
+/**
+ * @tc.number: RecoverHapToken_0400
+ * @tc.name: test RecoverHapToken
+ * @tc.desc: test RecoverHapToken of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, RecoverHapToken_0400, Function | SmallTest | Level1)
+{
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    std::string key = std::to_string(userId_) + "_" + std::to_string(1);
+    uninstallBundleInfo.userInfos[key] = uninstallDataUserInfo;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstallBundleInfo));
+
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
+    InnerBundleInfo info;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(applicationInfo);
+    auto res = bundleCloneInstall_->RecoverHapToken(userId_, 1, accessTokenIdEx, info, "");
+    EXPECT_TRUE(res);
+    EXPECT_TRUE(dataMgr->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 1));
+}
+
+/**
+ * @tc.number: DeleteUninstallCloneBundleInfo_0100
+ * @tc.name: test DeleteUninstallCloneBundleInfo
+ * @tc.desc: test DeleteUninstallCloneBundleInfo of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, DeleteUninstallCloneBundleInfo_0100, Function | SmallTest | Level1)
+{
+    bundleCloneInstall_->dataMgr_ = nullptr;
+    auto res = bundleCloneInstall_->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 1);
+    EXPECT_FALSE(res);
+    bundleCloneInstall_->dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    EXPECT_NE(bundleCloneInstall_->dataMgr_, nullptr);
+}
+
+/**
+ * @tc.number: DeleteUninstallCloneBundleInfo_0200
+ * @tc.name: test DeleteUninstallCloneBundleInfo
+ * @tc.desc: test DeleteUninstallCloneBundleInfo of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, DeleteUninstallCloneBundleInfo_0200, Function | SmallTest | Level1)
+{
+    auto res = bundleCloneInstall_->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 1);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: DeleteUninstallCloneBundleInfo_0300
+ * @tc.name: test DeleteUninstallCloneBundleInfo
+ * @tc.desc: test DeleteUninstallCloneBundleInfo of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, DeleteUninstallCloneBundleInfo_0300, Function | SmallTest | Level1)
+{
+    bundleCloneInstall_->existBeforeKeepDataApp_ = true;
+    auto res = bundleCloneInstall_->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 1);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: DeleteUninstallCloneBundleInfo_0400
+ * @tc.name: test DeleteUninstallCloneBundleInfo
+ * @tc.desc: test DeleteUninstallCloneBundleInfo of BundleCloneInstaller
+*/
+HWTEST_F(BmsBundleCloneInstallerTest, DeleteUninstallCloneBundleInfo_0400, Function | SmallTest | Level1)
+{
+    UninstallBundleInfo uninstallBundleInfo;
+    UninstallDataUserInfo uninstallDataUserInfo;
+    std::string key = std::to_string(userId_) + "_" + std::to_string(1);
+    uninstallBundleInfo.userInfos[key] = uninstallDataUserInfo;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    EXPECT_TRUE(dataMgr->UpdateUninstallBundleInfo(BUNDLE_NAME, uninstallBundleInfo));
+
+    bundleCloneInstall_->existBeforeKeepDataApp_ = true;
+    auto res = bundleCloneInstall_->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 1);
+    EXPECT_TRUE(res);
 }
 }
