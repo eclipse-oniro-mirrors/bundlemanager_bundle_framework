@@ -288,7 +288,7 @@ constexpr uint32_t VALUE_PICTURE_IN_PICTURE = 1 << 9;
 // 100 0000 0000 represents screen fetch service
 constexpr uint32_t VALUE_SCREEN_FETCH = 1 << 10;
 
-// 100 0000 0000 represents av playbak and record service
+// 100 0000 0000 represents av playback and record service
 constexpr uint32_t VALUE_AV_PLAYBACK_AND_RECORD = 1 << 11;
 
 // 100 0000 0000 represents special scenario processing service
