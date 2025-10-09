@@ -5058,6 +5058,32 @@ HWTEST_F(BmsBundleDataMgrTest, CheckAppIndex_1000, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: UninstallBundleInfo_1000
+ * @tc.name: test update and get mdulenames in UninstallBundleInfo
+ * @tc.desc: 1.Test the UpdateUninstallBundleInfo by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, UninstallBundleInfo_1000, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<BundleStorageStats> bundleStats;
+    std::string bundleName = "com.example.UninstallBundleInfo_1000";
+    // test bundlename not in bundleinfos_ and uninstalled withkeepdata before
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    UninstallDataUserInfo uninstallDataUserInfo;
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
+    uninstallBundleInfo.moduleNames.push_back("module1");
+    auto ret = dataMgr->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+    UninstallBundleInfo uninstallBundleInfo2;
+    dataMgr->GetUninstallBundleInfo(bundleName, uninstallBundleInfo2);
+    EXPECT_EQ(uninstallBundleInfo2.moduleNames.empty(), false);
+    dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
+    dataMgr->multiUserIdsSet_.erase(USERID);
+}
+
+/**
 * @tc.number: GetTestRunner_0300
 * @tc.name: GetTestRunner_0300
 * @tc.desc: test GetTestRunner
