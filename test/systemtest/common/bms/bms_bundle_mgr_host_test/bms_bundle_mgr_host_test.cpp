@@ -2276,5 +2276,35 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetPluginBundlePathForSelf_0001, Function |
     ErrCode res = bundleMgrHost.HandleGetPluginBundlePathForSelf(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+* @tc.number: HandleRecoverBackupBundleData_0001
+* @tc.name: test the HandleRecoverBackupBundleData
+* @tc.desc: 1. system running normally
+*           2. test HandleRecoverBackupBundleData
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleRecoverBackupBundleData_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleRecoverBackupBundleData(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+* @tc.number: HandleRemoveBackupBundleData_0001
+* @tc.name: test the HandleRemoveBackupBundleData
+* @tc.desc: 1. system running normally
+*           2. test HandleRemoveBackupBundleData
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleRemoveBackupBundleData_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleRemoveBackupBundleData(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS
