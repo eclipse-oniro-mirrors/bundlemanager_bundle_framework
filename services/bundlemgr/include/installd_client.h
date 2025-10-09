@@ -176,6 +176,8 @@ public:
 
     ErrCode MoveFile(const std::string &oldPath, const std::string &newPath);
 
+    ErrCode RenameFile(const std::string &oldPath, const std::string &newPath);
+
     ErrCode CopyFile(const std::string &oldPath, const std::string &newPath,
         const std::string &signatureFilePath = "");
 

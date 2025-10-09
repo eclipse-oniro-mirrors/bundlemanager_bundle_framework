@@ -109,6 +109,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILE):
             result = this->HandleMoveFile(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::RENAME_FILE):
+            result = this->HandleRenameFile(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE):
             result = this->HandleCopyFile(data, reply);
             break;
@@ -662,6 +665,15 @@ bool InstalldHost::HandleMoveFile(MessageParcel &data, MessageParcel &reply)
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
     ErrCode result = MoveFile(oldPath, newPath);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleRenameFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string oldPath = Str16ToStr8(data.ReadString16());
+    std::string newPath = Str16ToStr8(data.ReadString16());
+    ErrCode result = RenameFile(oldPath, newPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

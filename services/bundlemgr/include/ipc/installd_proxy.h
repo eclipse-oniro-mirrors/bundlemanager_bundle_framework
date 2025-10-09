@@ -190,6 +190,8 @@ public:
 
     virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath) override;
 
+    virtual ErrCode RenameFile(const std::string &oldPath, const std::string &newPath) override;
+
     virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath,
         const std::string &signatureFilePath = "") override;
 

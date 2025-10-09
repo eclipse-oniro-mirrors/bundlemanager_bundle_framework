@@ -296,6 +296,11 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode RenameFile(const std::string &oldPath, const std::string &newPath)
+    {
+        return ERR_OK;
+    }
+
     /**
      * @brief Copy file from oldPath to newPath.
      * @param oldPath Indicates oldPath.
