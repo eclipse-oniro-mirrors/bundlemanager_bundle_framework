@@ -44,6 +44,7 @@
 #include "installd_client.h"
 #include "install_exception_mgr.h"
 #include "module_json_updater.h"
+#include "new_bundle_data_dir_mgr.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "patch_data_mgr.h"
@@ -2134,6 +2135,10 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
     }
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    if (newBundleDirMgr != nullptr) {
+        (void)newBundleDirMgr->AddAllUserId(dataMgr->GetAllUser());
+    }
 
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
     for (auto &scanPathIter : scanPathList) {
@@ -2164,7 +2169,10 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 LOG_E(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) error", bundleName.c_str());
                 SavePreInstallException(scanPathIter);
             } else {
-                dataMgr->AddOtaNewInstallBundleName(bundleName);
+                if (newBundleDirMgr != nullptr) {
+                    (void)newBundleDirMgr->AddNewBundleDirInfo(bundleName,
+                        static_cast<uint32_t>(CreateBundleDirType::CREATE_ALL_DIR));
+                }
             }
             continue;
         }

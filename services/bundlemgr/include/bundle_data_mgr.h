@@ -1208,10 +1208,6 @@ public:
     ErrCode GetTestRunner(const std::string &bundleName, const std::string &moduleName, ModuleTestRunner &testRunner);
     ErrCode ImplicitQueryAbilityInfosWithDefault(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, AbilityInfo &defaultAbilityInfo, bool &findDefaultApp);
-    void AddOtaNewInstallBundleName(const std::string &bundleName);
-    std::set<std::string> GetOtaNewInstallBundleNames();
-    void ClearOtaNewInstallBundleNames();
-    bool InnerProcessOtaNewInstallBundle(const std::string &bundleName, const int32_t userId) const;
     ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
         int32_t userId, bool &stateChange);
     ErrCode GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath);

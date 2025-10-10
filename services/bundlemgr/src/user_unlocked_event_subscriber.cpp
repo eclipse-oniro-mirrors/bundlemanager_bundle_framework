@@ -25,6 +25,7 @@
 #include "dlp_permission_kit.h"
 #endif
 #include "installd_client.h"
+#include "new_bundle_data_dir_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -248,15 +249,15 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
         APP_LOGE("UpdateAppDataDirSelinuxLabel GetAllBundleInfos failed");
         return;
     }
-
-    std::set<std::string> otaNewInstallBundleNames = dataMgr->GetOtaNewInstallBundleNames();
-    std::stable_partition(bundleInfos.begin(), bundleInfos.end(),
-        [&otaNewInstallBundleNames](const BundleInfo &info) {
-            return otaNewInstallBundleNames.find(info.name) != otaNewInstallBundleNames.end();
-        });
-
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    if (newBundleDirMgr != nullptr) {
+        std::set<std::string> otaNewInstallBundleNames = newBundleDirMgr->GetAllNewBundleDataDirBundleName();
+        std::stable_partition(bundleInfos.begin(), bundleInfos.end(),
+            [&otaNewInstallBundleNames](const BundleInfo &info) {
+                return otaNewInstallBundleNames.find(info.name) != otaNewInstallBundleNames.end();
+            });
+    }
     ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::BUNDLE_EL[1]);
-    dataMgr->ClearOtaNewInstallBundleNames();
 #ifdef CHECK_ELDIR_ENABLED
     ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL3);
     ReturnIfNewTask(ProcessUpdateAppDataDir, tempTaskNum, userId, bundleInfos, ServiceConstants::DIR_EL4);
@@ -266,6 +267,9 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
     ReturnIfNewTask(ProcessFileManagerDir, tempTaskNum, bundleInfos, userId);
     ReturnIfNewTask(ProcessNewBackupDir, tempTaskNum, bundleInfos, userId);
     ReturnIfNewTask(CreateSharefilesSubDataDirs, tempTaskNum, bundleInfos, userId);
+    if (newBundleDirMgr != nullptr) {
+        (void)newBundleDirMgr->DeleteUserId(userId);
+    }
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d end", userId);
 }
 

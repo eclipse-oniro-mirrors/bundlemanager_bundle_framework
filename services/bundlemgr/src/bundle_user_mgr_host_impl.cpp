@@ -27,6 +27,7 @@
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
+#include "new_bundle_data_dir_mgr.h"
 #include "parameters.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
@@ -456,6 +457,10 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
 #endif
     EventReport::SendUserSysEvent(UserEventType::REMOVE_END, userId);
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    if (newBundleDirMgr != nullptr) {
+        (void)newBundleDirMgr->DeleteUserId(userId);
+    }
     HandleNotifyBundleEventsAsync();
     APP_LOGI("RemoveUser end userId: (%{public}d)", userId);
     return ERR_OK;
