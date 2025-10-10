@@ -82,6 +82,7 @@ enum class ExtensionAbilityType {
     SELECTION = 31,
     WEB_NATIVE_MESSAGING = 32,
     FAULT_LOG = 33,
+    NOTIFICATION_SUBSCRIBER = 34,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
