@@ -288,6 +288,21 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1300, Function | Sma
 }
 
 /**
+ * @tc.number: InstalldHostImplTest_1350
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling RenameFile of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1350, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->RenameFile(TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: InstalldHostImplTest_1400
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CopyFile of hostImpl

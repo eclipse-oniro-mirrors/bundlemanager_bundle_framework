@@ -165,6 +165,11 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::RenameFile(const std::string &oldPath, const std::string &newPath)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath,
     const std::string &signatureFilePath)
 {

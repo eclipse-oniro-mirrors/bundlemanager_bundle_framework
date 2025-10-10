@@ -1549,6 +1549,20 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::RenameFile(const std::string &oldPath, const std::string &newPath)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!InstalldOperator::RenameFile(oldPath, newPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "rename file %{public}s to %{public}s failed errno:%{public}d",
+            oldPath.c_str(), newPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath,
     const std::string &signatureFilePath)
 {

@@ -181,6 +181,8 @@ private:
 
     bool HandleMoveFile(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleRenameFile(MessageParcel &data, MessageParcel &reply);
+
     bool HandleCopyFile(MessageParcel &data, MessageParcel &reply);
 
     bool HandleMkdir(MessageParcel &data, MessageParcel &reply);

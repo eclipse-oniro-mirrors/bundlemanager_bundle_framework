@@ -365,6 +365,21 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1300, Function | SmallTest |
 }
 
 /**
+ * @tc.number: InstalldProxyTest_1350
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling RenameFile of proxy
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1350, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->RenameFile(TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: InstalldProxyTest_1400
  * @tc.name: test Marshalling function of FileStat
  * @tc.desc: 1. calling CopyFile of proxy
