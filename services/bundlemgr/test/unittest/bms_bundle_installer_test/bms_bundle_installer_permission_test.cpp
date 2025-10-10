@@ -64,7 +64,7 @@ const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/libs/arm";
 }  // namespace
 

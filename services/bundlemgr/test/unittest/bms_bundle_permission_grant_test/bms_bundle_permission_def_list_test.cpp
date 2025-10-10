@@ -40,7 +40,7 @@ namespace OHOS {
 namespace {
 const std::string APPID = "appId";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 const std::string PERMISSION_TEST = "ohos.permission.test";
 const std::string MODULE_ENTRY_NAME = "entry";
 }  // namespace

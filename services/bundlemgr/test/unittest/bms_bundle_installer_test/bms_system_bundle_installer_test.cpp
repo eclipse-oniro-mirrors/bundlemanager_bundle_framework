@@ -32,7 +32,7 @@ namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.test";
 const std::string MODULE_NAME = "entry";
-const int32_t WAIT_TIME = 5;
+const int32_t WAIT_TIME = 1;
 const std::string EMPTY_STRING = "";
 }  // namespace
 

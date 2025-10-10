@@ -42,7 +42,7 @@ using OHOS::AAFwk::Want;
 namespace OHOS {
 namespace {
     const int32_t USERID = 100;
-    const int32_t WAIT_TIME = 5; // init mocked bms
+    const int32_t WAIT_TIME = 1; // init mocked bms
     const std::string MODULE_TEST = "moduleNameTest";
     const std::string MODULE_NOT_EXIST = "notExist";
 }  // namespace

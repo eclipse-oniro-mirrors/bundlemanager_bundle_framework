@@ -50,7 +50,7 @@ const int32_t USERID = 100;
 const size_t ZERO = 0;
 const size_t ONE = 1;
 const size_t THREE = 3;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 }  // namespace
 
 class BmsBundleDependenciesTest : public testing::Test {

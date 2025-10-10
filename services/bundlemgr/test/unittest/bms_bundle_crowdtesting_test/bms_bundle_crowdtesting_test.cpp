@@ -43,7 +43,7 @@ const std::string HAP_NAME_FIRST_RIGHT = "first_right.hap";
 const int32_t USERID = 100;
 const int32_t CROWDTEST_DEADLINE = 100000000;
 const int32_t CROWDTEST_DEADLINE2 = 200000000;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 }  // namespace
 
 class BmsBundleCrowdtestingTest : public testing::Test {

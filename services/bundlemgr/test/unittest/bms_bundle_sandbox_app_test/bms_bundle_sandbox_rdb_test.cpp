@@ -36,7 +36,7 @@ using OHOS::DelayedSingleton;
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 } // namespace
 
 class BmsSandboxRdbTest : public testing::Test {

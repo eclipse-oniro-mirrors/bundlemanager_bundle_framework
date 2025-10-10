@@ -54,7 +54,7 @@ constexpr int32_t TEST_GROUP_INDEX_ONE = 1;
 constexpr int32_t TEST_GROUP_INDEX_TWO = 2;
 constexpr int32_t TEST_GROUP_INDEX_THREE = 3;
 constexpr int32_t TEST_GROUP_INDEX_FORE = 4;
-const int32_t WAIT_TIME = 5;
+const int32_t WAIT_TIME = 1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 }  // namespace
 
