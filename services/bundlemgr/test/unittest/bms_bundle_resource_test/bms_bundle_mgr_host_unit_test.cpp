@@ -3034,5 +3034,41 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1660, Function | SmallTest | 
     ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: OnRemoteRequest_1670
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1670, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::RECOVER_BACKUP_BUNDLE_DATA);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1680
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1680, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::REMOVE_BACKUP_BUNDLE_DATA);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

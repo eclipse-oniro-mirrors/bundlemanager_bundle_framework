@@ -2347,12 +2347,17 @@ HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0001, Function | MediumT
  */
 HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0002, Function | MediumTest | Level1)
 {
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string bundleName = BUNDLE_NAME;
+    std::string bundleName = BUNDLE_BACKUP_NAME;
     int32_t userId = -1;
     int32_t appIndex = 0;
     auto testRet = hostImpl->RecoverBackupBundleData(bundleName, userId, appIndex);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
 /**
@@ -2362,12 +2367,17 @@ HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0002, Function | MediumT
  */
 HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0003, Function | MediumTest | Level1)
 {
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string bundleName = BUNDLE_NAME;
+    std::string bundleName = BUNDLE_BACKUP_NAME;
     int32_t userId = 100;
     int32_t appIndex = -1;
     auto testRet = hostImpl->RecoverBackupBundleData(bundleName, userId, appIndex);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
 /**
@@ -2377,8 +2387,12 @@ HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0003, Function | MediumT
  */
 HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0004, Function | MediumTest | Level1)
 {
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string bundleName = BUNDLE_NAME;
+    std::string bundleName = BUNDLE_BACKUP_NAME;
     int32_t userId = 100;
     int32_t appIndex = 0;
     auto testRet = hostImpl->RecoverBackupBundleData(bundleName, userId, appIndex);
@@ -2387,6 +2401,7 @@ HWTEST_F(BmsBundleManagerTest3, RecoverBackupBundleData_0004, Function | MediumT
     #else
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
 /**
@@ -2411,12 +2426,17 @@ HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0001, Function | MediumTe
  */
 HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0002, Function | MediumTest | Level1)
 {
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string bundleName = BUNDLE_NAME;
+    std::string bundleName = BUNDLE_BACKUP_NAME;
     int32_t userId = -1;
     int32_t appIndex = 0;
     auto testRet = hostImpl->RemoveBackupBundleData(bundleName, userId, appIndex);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
 /**
@@ -2426,12 +2446,17 @@ HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0002, Function | MediumTe
  */
 HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0003, Function | MediumTest | Level1)
 {
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string bundleName = BUNDLE_NAME;
+    std::string bundleName = BUNDLE_BACKUP_NAME;
     int32_t userId = 100;
     int32_t appIndex = -1;
     auto testRet = hostImpl->RemoveBackupBundleData(bundleName, userId, appIndex);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
 /**
@@ -2441,8 +2466,12 @@ HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0003, Function | MediumTe
  */
 HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0004, Function | MediumTest | Level1)
 {
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string bundleName = BUNDLE_NAME;
+    std::string bundleName = BUNDLE_BACKUP_NAME;
     int32_t userId = 100;
     int32_t appIndex = 0;
     auto testRet = hostImpl->RemoveBackupBundleData(bundleName, userId, appIndex);
@@ -2451,5 +2480,6 @@ HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0004, Function | MediumTe
     #else
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 } // OHOS
