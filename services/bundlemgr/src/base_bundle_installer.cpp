@@ -1407,6 +1407,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "verisoncode or bundleName is different in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 35%
 
+    result = CheckSpaceIsolation(installParam, newInfos);
+    CHECK_RESULT(result, "check space isolation failed:%{public}d");
+
     // to send notify of start install application
     SendStartInstallNotify(installParam, newInfos);
 
@@ -1693,6 +1696,27 @@ void BaseBundleInstaller::RollBack(const InnerBundleInfo &info, InnerBundleInfo 
         // remove module info
         RemoveInfo(bundleName_, modulePackage);
     }
+}
+
+ErrCode BaseBundleInstaller::CheckSpaceIsolation(
+    const InstallParam &installParam, const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const
+{
+    if (installParam.isPreInstallApp || installParam.isOTA || otaInstall_ ||
+        installParam.isPatch || installParam.allUser || installParam.IsEnterpriseForAllUser()) {
+        return ERR_OK;
+    }
+
+    if (newInfos.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "newInfos is empty");
+        return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+    }
+    const InnerBundleInfo &newInfo = newInfos.begin()->second;
+
+    if (!BundleInstallChecker::CheckSpaceIsolation(userId_, newInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "check space isolation failed");
+        return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+    }
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::RemoveInfo(const std::string &bundleName, const std::string &packageName)
