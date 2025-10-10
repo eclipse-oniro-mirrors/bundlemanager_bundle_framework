@@ -335,7 +335,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallback_0100, Function | Med
     std::string nullString = EMPTY_STRING;
     auto result = bmcb.OnQueryRpcIdFinished(nullString);
     EXPECT_EQ(result, NO_ERROR);
-    sleep(1);
 }
 
 /**
@@ -351,7 +350,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallback_0200, Function | Med
     std::string installResult = INSTALL_RESULT;
     auto result = bmcb.OnQueryRpcIdFinished(installResult);
     EXPECT_EQ(result, NO_ERROR);
-    sleep(1);
 }
 
 /**
@@ -366,7 +364,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallback_0300, Function | Med
     std::string queryRpcIdResult = QUERY_RPC_ID_RESULT;
     auto result = bmcb.OnQueryRpcIdFinished(queryRpcIdResult);
     EXPECT_EQ(result, ERR_INVALID_VALUE);
-    sleep(1);
 }
 
 /**
@@ -381,7 +378,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallback_0400, Function | Med
     std::string nullString = EMPTY_STRING;
     auto result = bmcb.OnQueryRpcIdFinished(nullString);
     EXPECT_EQ(result, ERR_INVALID_VALUE);
-    sleep(1);
 }
 
 
@@ -396,7 +392,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackProxy_0100, Function 
     std::string installResult = INSTALL_RESULT;
     auto result = proxy.OnQueryRpcIdFinished(installResult);
     EXPECT_EQ(result, 0);
-    sleep(1);
 }
 
 /**
@@ -410,7 +405,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackProxy_0200, Function 
     std::string nullString = EMPTY_STRING;
     auto result = proxy.OnQueryRpcIdFinished(nullString);
     EXPECT_EQ(result, 0);
-    sleep(1);
 }
 
 /**
@@ -427,7 +421,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0100, Function |
     MessageOption option;
     auto result = stub.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, OBJECT_NULL);
-    sleep(1);
 }
 
 /**
@@ -444,7 +437,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0200, Function |
     MessageOption option;
     auto result = stub.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, OBJECT_NULL);
-    sleep(1);
 }
 
 /**
@@ -462,7 +454,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0300, Function |
     MessageOption option;
     auto result = stub.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, 305);
-    sleep(1);
 }
 
 /**
@@ -480,7 +471,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0400, Function |
     MessageOption option;
     auto result = stub.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, 0);
-    sleep(1);
 }
 
 /**
@@ -504,7 +494,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0200, Function | 
     EXPECT_EQ(targetAbilityInfo.targetInfo.moduleName, moduleName);
     EXPECT_EQ(targetAbilityInfo.targetInfo.abilityName, abilityName);
     EXPECT_TRUE(ret);
-    sleep(1);
 }
 
 /**
@@ -524,7 +513,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0300, Function | 
     EXPECT_EQ(targetAbilityInfo.targetInfo.moduleName, nullString);
     EXPECT_EQ(targetAbilityInfo.targetInfo.abilityName, nullString);
     EXPECT_TRUE(ret);
-    sleep(1);
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
@@ -547,7 +535,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0400, Function | 
     rpcIdResult.abilityInfo.rpcId.emplace_back(RPC_ID);
     auto ret = mgr->ComparePcIdString(want, rpcIdResult);
     EXPECT_EQ(ret, DECODE_SYS_CAP_FAILED);
-    sleep(1);
 }
 
 /**
@@ -568,7 +555,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0500, Function | 
     want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     auto ret = mgr->ComparePcIdString(want, rpcIdResult);
     EXPECT_EQ(ret, DECODE_SYS_CAP_FAILED);
-    sleep(1);
 }
 
 /**
@@ -584,7 +570,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0600, Function | 
     rpcIdResult.abilityInfo.rpcId.emplace_back(RPC_ID);
     auto ret = mgr->ComparePcIdString(want, rpcIdResult);
     EXPECT_EQ(ret, GET_DEVICE_PROFILE_FAILED);
-    sleep(1);
 }
 #endif
 
@@ -601,7 +586,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0700, Function | 
     int32_t userId = 0;
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
-    sleep(1);
 }
 
 /**
@@ -623,7 +607,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0800, Function | 
     int32_t userId = 0;
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
-    sleep(1);
 }
 
 /**
@@ -647,7 +630,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0900, Function | 
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_TRUE(ret);
     MockUninstallBundle(bundleName);
-    sleep(1);
 }
 
 /**
@@ -669,7 +651,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1000, Function | 
     int32_t userId = 0;
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
-    sleep(1);
 }
 
 /**
@@ -691,7 +672,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1100, Function | 
     int32_t userId = 200;
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
-    sleep(1);
 }
 
 /**
@@ -715,7 +695,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1200, Function | 
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_TRUE(ret);
     MockUninstallBundle(bundleName);
-    sleep(1);
 }
 
 /**
@@ -737,7 +716,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1300, Function | 
     int32_t userId = 200;
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
-    sleep(1);
 }
 
 /**
@@ -759,7 +737,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1400, Function | 
     int32_t userId = 0;
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
-    sleep(1);
 }
 
 /**
@@ -781,7 +758,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1500, Function | 
     int32_t userId = 0;
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
-    sleep(1);
 }
 
 /**
@@ -805,7 +781,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1600, Function | 
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     EXPECT_FALSE(ret);
-    sleep(1);
 }
 
 /**
@@ -827,7 +802,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1700, Function | 
     int32_t userId = 0;
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
-    sleep(1);
 }
 
 /**
@@ -851,7 +825,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1800, Function | 
     auto ret = mgr->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
     EXPECT_FALSE(ret);
     MockUninstallBundle(BUNDLE_NAME_TEST);
-    sleep(1);
 }
 /**
  * @tc.number: BundleDistributedManager_1900
@@ -876,7 +849,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1900, Function | 
 #else
     EXPECT_TRUE(ret);
 #endif
-    sleep(1);
 }
 
 /**
@@ -902,7 +874,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2000, Function | 
 #else
     EXPECT_TRUE(ret);
 #endif
-    sleep(1);
 }
 
 /**
@@ -922,7 +893,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2100, Function | 
 #else
     EXPECT_TRUE(ret);
 #endif
-    sleep(1);
 }
 
 /**
@@ -939,7 +909,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2600, Function | 
     std::string queryRpcIdResult = queryRetPerfix + queryRet + queryRetSuffix;
     mgr->OnQueryRpcIdFinished(queryRpcIdResult);
     EXPECT_TRUE(mgr->queryAbilityParamsMap_.size() == 0);
-    sleep(1);
 }
 
 /**
@@ -953,7 +922,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2700, Function | 
     std::string queryRpcIdResult = EMPTY_STRING;
     mgr->OnQueryRpcIdFinished(queryRpcIdResult);
     EXPECT_TRUE(mgr->queryAbilityParamsMap_.size() == 0);
-    sleep(1);
 }
 
 /**
@@ -972,7 +940,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2800, Function | 
     mgr->SendCallbackRequest(resultCode, transactId);
     EXPECT_FALSE(mgr->queryAbilityParamsMap_.size() == 0);
     mgr->queryAbilityParamsMap_.erase(TRANSACT_ID);
-    sleep(1);
 }
 
 /**
@@ -990,7 +957,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2900, Function | 
     int32_t resultCode = 0;
     mgr->SendCallbackRequest(resultCode, transactId);
     EXPECT_TRUE(mgr->queryAbilityParamsMap_.size() == 0);
-    sleep(1);
 }
 
 /**
@@ -1005,7 +971,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_3000, Function | 
     int32_t resultCode = 0;
     mgr->SendCallback(resultCode, param);
     EXPECT_TRUE(param.callback == nullptr);
-    sleep(1);
 }
 
 /**
@@ -1021,7 +986,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_3100, Function | 
     int32_t resultCode = 0;
     mgr->SendCallback(resultCode, param);
     EXPECT_TRUE(param.callback != nullptr);
-    sleep(1);
 }
 
 /**
