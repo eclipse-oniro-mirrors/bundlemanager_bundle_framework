@@ -129,6 +129,7 @@ namespace bundleManager {
     LIVE_FORM = 30,
     WEB_NATIVE_MESSAGING = 32,
     NOTIFICATION_SUBSCRIBER = 34,
+    CRYPTO = 35,
     UNSPECIFIED = 255
   }
 
