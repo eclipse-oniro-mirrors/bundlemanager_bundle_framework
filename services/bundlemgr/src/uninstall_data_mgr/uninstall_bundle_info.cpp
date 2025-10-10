@@ -27,6 +27,7 @@ const char* const KEY_BUNDLE_TYPE = "bundleType";
 const char* const KEY_APP_IDENTIFIER = "appIdentifier";
 const char* const KEY_APP_PROVISION_TYPE = "appProvisionType";
 const char* const KEY_EXTENSION_DIRS = "extensionDirs";
+const char* const KEY_MODULE_NAMES = "moduleNames";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const UninstallDataUserInfo& uninstallDataUserInfo)
@@ -47,7 +48,8 @@ void to_json(nlohmann::json& jsonObject, const UninstallBundleInfo& uninstallBun
         {KEY_APP_IDENTIFIER, uninstallBundleInfo.appIdentifier},
         {KEY_APP_PROVISION_TYPE, uninstallBundleInfo.appProvisionType},
         {KEY_BUNDLE_TYPE, uninstallBundleInfo.bundleType},
-        {KEY_EXTENSION_DIRS, uninstallBundleInfo.extensionDirs}
+        {KEY_EXTENSION_DIRS, uninstallBundleInfo.extensionDirs},
+        {KEY_MODULE_NAMES, uninstallBundleInfo.moduleNames}
     };
 }
 
@@ -84,6 +86,8 @@ void from_json(const nlohmann::json& jsonObject, UninstallBundleInfo& uninstallB
         uninstallBundleInfo.bundleType, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, KEY_EXTENSION_DIRS,
         uninstallBundleInfo.extensionDirs, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, KEY_MODULE_NAMES,
+        uninstallBundleInfo.moduleNames, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read uninstallBundleInfo from jsonObject error, error code : %{public}d", parseResult);
     }
@@ -104,6 +108,7 @@ void UninstallBundleInfo::Init()
     appProvisionType.clear();
     bundleType = BundleType::APP;
     extensionDirs.clear();
+    moduleNames.clear();
 }
 
 int32_t UninstallBundleInfo::GetResponseUserId(int32_t requestUserId) const
