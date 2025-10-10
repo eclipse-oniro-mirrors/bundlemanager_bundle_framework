@@ -286,12 +286,15 @@ constexpr const char* PLUGIN_BUNDLE_NAME = "pluginBundleName";
 // app_control
 constexpr const char* TYPE_WANT = "want";
 constexpr const char* PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
+constexpr const char* PERMISSION_DISPOSED_APP_STATUS =
+    "ohos.permission.MANAGE_DISPOSED_APP_STATUS or ohos.permission.GET_DISPOSED_APP_STATUS";
 constexpr const char* SET_DISPOSED_STATUS = "SetDisposedStatus";
 constexpr const char* GET_DISPOSED_STATUS = "GetDisposedStatus";
 constexpr const char* DELETE_DISPOSED_STATUS = "DeleteDisposedStatus";
 constexpr const char* SET_DISPOSED_STATUS_SYNC = "SetDisposedStatusSync";
 constexpr const char* DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
 constexpr const char* GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
+constexpr const char* GET_DISPOSED_RULE = "GetDisposedRule";
 constexpr const char* APP_ID = "appId";
 constexpr const char* APP_IDENTIFIER = "appIdentifier";
 constexpr const char* DISPOSED_WANT = "disposedWant";

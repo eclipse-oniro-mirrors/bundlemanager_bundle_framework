@@ -374,7 +374,7 @@ void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
     } else {
         APP_LOGE("GetDisposedStatus err = %{public}d", asyncCallbackInfo->err);
         result[0] = BusinessError::CreateCommonError(
-            env, asyncCallbackInfo->err, GET_DISPOSED_STATUS, PERMISSION_DISPOSED_STATUS);
+            env, asyncCallbackInfo->err, GET_DISPOSED_STATUS, PERMISSION_DISPOSED_APP_STATUS);
     }
     CommonFunc::NapiReturnDeferred<DisposedStatus>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
@@ -460,7 +460,7 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedStatusSync failed");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+            env, ret, GET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_APP_STATUS);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -676,7 +676,7 @@ static napi_value InnerGetDisposedRule(napi_env env, std::string &appId, int32_t
 {
     if (appId.empty()) {
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_INVALID_APPID, GET_DISPOSED_STATUS_SYNC);
+            env, ERROR_INVALID_APPID, GET_DISPOSED_RULE);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -684,7 +684,7 @@ static napi_value InnerGetDisposedRule(napi_env env, std::string &appId, int32_t
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-            GET_DISPOSED_STATUS_SYNC);
+            GET_DISPOSED_RULE);
         napi_throw(env, error);
         return nullptr;
     }
@@ -699,7 +699,7 @@ static napi_value InnerGetDisposedRule(napi_env env, std::string &appId, int32_t
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedStatusSync failed");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+            env, ret, GET_DISPOSED_RULE, PERMISSION_DISPOSED_APP_STATUS);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -926,7 +926,7 @@ static napi_value InnerGetUninstallDisposedRule(napi_env env, std::string &appId
     if (ret != ERR_OK) {
         APP_LOGE("GetUninstallDisposedRule failed");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_UNINSTALL_DISPOSED_RULE, PERMISSION_DISPOSED_STATUS);
+            env, ret, GET_UNINSTALL_DISPOSED_RULE, PERMISSION_DISPOSED_APP_STATUS);
         napi_throw(env, businessError);
         return nullptr;
     }

@@ -93,7 +93,7 @@ static ani_object AniGetDisposedStatus(ani_env* env, ani_string aniAppId, ani_bo
         APP_LOGE("appId is empty");
         BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPID,
             isSync ? GET_DISPOSED_STATUS_SYNC : GET_DISPOSED_STATUS,
-            isSync ? "" : PERMISSION_DISPOSED_STATUS);
+            isSync ? "" : PERMISSION_DISPOSED_APP_STATUS);
         return nullptr;
     }
 
@@ -102,7 +102,7 @@ static ani_object AniGetDisposedStatus(ani_env* env, ani_string aniAppId, ani_bo
         APP_LOGE("appControlProxy is null");
         BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
             isSync ? GET_DISPOSED_STATUS_SYNC : GET_DISPOSED_STATUS,
-            isSync ? "" : PERMISSION_DISPOSED_STATUS);
+            isSync ? "" : PERMISSION_DISPOSED_APP_STATUS);
         return nullptr;
     }
 
@@ -111,7 +111,7 @@ static ani_object AniGetDisposedStatus(ani_env* env, ani_string aniAppId, ani_bo
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedStatusSync failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            isSync ? GET_DISPOSED_STATUS_SYNC : GET_DISPOSED_STATUS, PERMISSION_DISPOSED_STATUS);
+            isSync ? GET_DISPOSED_STATUS_SYNC : GET_DISPOSED_STATUS, PERMISSION_DISPOSED_APP_STATUS);
         return nullptr;
     }
 
@@ -169,14 +169,14 @@ static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int 
     }
     if (appId.empty()) {
         APP_LOGE("appId is empty");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPID, GET_DISPOSED_STATUS_SYNC, "");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_INVALID_APPID, GET_DISPOSED_RULE, "");
         return nullptr;
     }
 
     auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("appControlProxy is null");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_DISPOSED_STATUS_SYNC, "");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_DISPOSED_RULE, "");
         return nullptr;
     }
 
@@ -190,7 +190,7 @@ static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int 
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedRule failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            GET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+            GET_DISPOSED_RULE, PERMISSION_DISPOSED_APP_STATUS);
         return nullptr;
     }
 
@@ -305,7 +305,7 @@ static ani_object AniGetUninstallDisposedRule(ani_env* env, ani_string aniAppIde
     if (ret != ERR_OK) {
         APP_LOGE("GetUninstallDisposedRule failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            GET_UNINSTALL_DISPOSED_RULE, PERMISSION_DISPOSED_STATUS);
+            GET_UNINSTALL_DISPOSED_RULE, PERMISSION_DISPOSED_APP_STATUS);
         return nullptr;
     }
 
