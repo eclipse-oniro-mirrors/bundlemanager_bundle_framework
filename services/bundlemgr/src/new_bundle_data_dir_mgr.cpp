@@ -182,8 +182,8 @@ bool NewBundleDataDirMgr::ProcessOtaBundleDataDir(
     auto &mutex = GetBundleMutex(bundleName);
     std::lock_guard<std::mutex> lock {mutex};
     bool ret = true;
-    if ((dirType & static_cast<uint32_t>(CreateBundleDirType::CREATE_NONE_DIR)) ==
-        static_cast<uint32_t>(CreateBundleDirType::CREATE_NONE_DIR)) {
+    if ((dirType & static_cast<uint32_t>(CreateBundleDirType::CREATE_ALL_DIR)) ==
+        static_cast<uint32_t>(CreateBundleDirType::CREATE_ALL_DIR)) {
         // new install bundle, create all path: el2-el5 base\database\group
         if (!InnerProcessOtaNewInstallBundleDir(bundleName, userId)) {
             ret = false;
