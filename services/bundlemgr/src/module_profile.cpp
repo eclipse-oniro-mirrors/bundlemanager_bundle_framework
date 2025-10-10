@@ -54,7 +54,9 @@ constexpr const char* BACKGROUND_MODES_MAP_KEY[] = {
     ProfileReader::KEY_VOIP,
     ProfileReader::KEY_TASK_KEEPING,
     ProfileReader::KEY_PICTURE_IN_PICTURE,
-    ProfileReader::KEY_SCREEN_FETCH
+    ProfileReader::KEY_SCREEN_FETCH,
+    ProfileReader::KEY_AV_PLAYBACK_AND_RECORD,
+    ProfileReader::KEY_SPECIAL_SCENARIO_PROCESSING
 };
 const uint32_t BACKGROUND_MODES_MAP_VALUE[] = {
     ProfileReader::VALUE_DATA_TRANSFER,
@@ -67,7 +69,9 @@ const uint32_t BACKGROUND_MODES_MAP_VALUE[] = {
     ProfileReader::VALUE_VOIP,
     ProfileReader::VALUE_TASK_KEEPING,
     ProfileReader::VALUE_PICTURE_IN_PICTURE,
-    ProfileReader::VALUE_SCREEN_FETCH
+    ProfileReader::VALUE_SCREEN_FETCH,
+    ProfileReader::VALUE_AV_PLAYBACK_AND_RECORD,
+    ProfileReader::VALUE_SPECIAL_SCENARIO_PROCESSING
 };
 
 const std::unordered_set<std::string> GRANT_MODE_SET = {
