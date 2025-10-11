@@ -91,6 +91,15 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
     ErrCode result = ProcessCloneBundleUninstall(bundleName, userId, appIndex, sync, destroyAppCloneParam);
+    auto iter = destroyAppCloneParam.parameters.find(ServiceConstants::BMS_PARA_CLONE_IS_KEEP_DATA);
+    bool isKeepData_ = (iter != destroyAppCloneParam.parameters.end() &&
+        iter->second == ServiceConstants::BMS_TRUE);
+    if (!isKeepData_ && (result == ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED ||
+        result == ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID ||
+        result == ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED) &&
+        DeleteUninstalledCloneData(bundleName, userId, appIndex)) {
+        return ERR_OK;
+    }
     NotifyBundleEvents installRes = {
         .type = NotifyType::UNINSTALL_BUNDLE,
         .resultCode = result,
@@ -269,7 +278,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         return addRes;
     }
 
-    ScopeGuard createEl5DirGuard([&] { RemoveEl5Dir(userInfo, uid, userId, appIndex); });
+    ScopeGuard createEl5DirGuard([&] { RemoveEl5Dir(userInfo, userId, appIndex); });
     CreateEl5Dir(info, userId, uid, appIndex);
 
     // process icon and label
@@ -345,7 +354,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         if (RemoveCloneDataDir(bundleName, userId, appIndex, sync) != ERR_OK) {
             APP_LOGW("RemoveCloneDataDir failed");
         }
-        RemoveEl5Dir(userInfo, uid_, userId, appIndex);
+        RemoveEl5Dir(userInfo, userId, appIndex);
 
         if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -369,6 +378,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         if (!dataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
             LOG_E(BMS_TAG_INSTALLER, "clone update failed");
         }
+        BundleResourceHelper::AddUninstallBundleResource(bundleName, userId, appIndex);
     }
     
     // process icon and label
@@ -390,6 +400,39 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     UninstallDebugAppSandbox(bundleName, uid_, appIndex, info);
     APP_LOGI("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
+}
+
+bool BundleCloneInstaller::DeleteUninstalledCloneData(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+    UninstallBundleInfo uninstallBundleInfo;
+    if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        APP_LOGE("the bundle is not uninstalled");
+        return false;
+    }
+    std::string key = std::to_string(userId) + "_" + std::to_string(appIndex);
+    auto it = uninstallBundleInfo.userInfos.find(key);
+    if (it == uninstallBundleInfo.userInfos.end()) {
+        APP_LOGE("the cloneInfo is not found");
+        return false;
+    }
+    if (RemoveCloneDataDir(bundleName, userId, appIndex, false) != ERR_OK) {
+        APP_LOGW("RemoveCloneDataDir failed");
+    }
+    InnerBundleUserInfo userInfo;
+    InnerBundleCloneInfo cloneInfo;
+    userInfo.bundleName = bundleName;
+    userInfo.cloneInfos.emplace(std::to_string(appIndex), cloneInfo);
+    RemoveEl5Dir(userInfo, userId, appIndex);
+    uid_ = it->second.uid;
+    accessTokenId_ = it->second.accessTokenId;
+    appId_ = uninstallBundleInfo.appId;
+    appIdentifier_ = uninstallBundleInfo.appIdentifier;
+    BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
+    return dataMgr_->DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
 }
 
 void BundleCloneInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
@@ -479,7 +522,7 @@ void BundleCloneInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t use
     dataMgr_->CreateEl5Dir(std::vector<CreateDirParam> {el5Param}, true);
 }
 
-void BundleCloneInstaller::RemoveEl5Dir(InnerBundleUserInfo &userInfo, const int32_t uid,
+void BundleCloneInstaller::RemoveEl5Dir(InnerBundleUserInfo &userInfo,
     int32_t userId, const int32_t appIndex)
 {
     APP_LOGI("el5 -n %{public}s -i %{public}d", userInfo.bundleName.c_str(), appIndex);
@@ -497,9 +540,6 @@ void BundleCloneInstaller::RemoveEl5Dir(InnerBundleUserInfo &userInfo, const int
     auto it = userInfo.cloneInfos.find(std::to_string(appIndex));
     if (it == userInfo.cloneInfos.end()) {
         APP_LOGE("find cloneInfo failed");
-        return;
-    }
-    if (it->second.keyId.empty()) {
         return;
     }
     EncryptionParam encryptionParam(key, "", 0, userId, EncryptionDirType::APP);
@@ -665,6 +705,7 @@ bool BundleCloneInstaller::DeleteUninstallCloneBundleInfo(const std::string &bun
         LOG_E(BMS_TAG_INSTALLER, "delete failed");
         return false;
     }
+    BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
     return true;
 }
 } // AppExecFwk
