@@ -225,6 +225,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     RESET_ALL_AOT = 199,
     GET_TEST_RUNNER = 200,
     SWITCH_UNINSTALL_STATE_BY_USER_ID = 205,
+    CREATE_NEW_BUNDLE_EL5_DIR = 210,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

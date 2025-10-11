@@ -1233,6 +1233,8 @@ public:
 
     virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
 
+    virtual ErrCode CreateNewBundleEl5Dir(int32_t userId) override;
+
     virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir) override;
 

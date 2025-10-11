@@ -917,6 +917,7 @@ private:
     ErrCode HandleGetAllBundleDirs(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleRegisterPluginEventCallback(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleUnregisterPluginEventCallback(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleCreateNewBundleEl5Dir(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetAppDistributionTypes(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginAbilityInfo(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginHapModuleInfo(MessageParcel &data, MessageParcel &reply);

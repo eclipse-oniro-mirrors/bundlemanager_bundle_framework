@@ -1560,6 +1560,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         cacheInfo.GetBaseApplicationInfo().compileSdkVersion);
     SetUid(uid);
     SetIsAbcCompressed();
+    CheckNewEl5Bundle(installParam.isOTA || otaInstall_, oldInfo, cacheInfo);
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
     return result;
@@ -7974,6 +7975,17 @@ void BaseBundleInstaller::SetHybridSpawn()
     if (arkTSMode == Constants::ARKTS_MODE_STATIC || arkTSMode == Constants::ARKTS_MODE_HYBRID) {
         LOG_I(BMS_TAG_INSTALLER, "set persist.appspawn.hybridspawn.enable true");
         OHOS::system::SetParameter(ServiceConstants::HYBRID_SPAWN_ENABLE, BMS_TRUE);
+    }
+}
+
+void BaseBundleInstaller::CheckNewEl5Bundle(const bool isOta,
+    const InnerBundleInfo &oldBundleInfo, const InnerBundleInfo &newBundleInfo)
+{
+    if (!isOta || !isAppExist_ || !InitDataMgr()) {
+        return;
+    }
+    if (!oldBundleInfo.NeedCreateEl5Dir() && newBundleInfo.NeedCreateEl5Dir()) {
+        dataMgr_->AddNewEl5BundleName(newBundleInfo.GetBundleName());
     }
 }
 

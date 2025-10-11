@@ -842,6 +842,8 @@ private:
     ErrCode CheckPreAppAllowHdcInstall(const InstallParam &installParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     void CheckPreBundleRecoverResult(ErrCode &result);
+    void CheckNewEl5Bundle(const bool isOta, const InnerBundleInfo &oldBundleInfo,
+        const InnerBundleInfo &newBundleInfo);
 
     bool IsAllowEnterPrise();
     void MarkIsForceUninstall(const std::string &bundleName, bool isForceUninstalled);
