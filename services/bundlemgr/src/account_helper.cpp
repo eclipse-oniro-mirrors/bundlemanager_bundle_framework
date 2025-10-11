@@ -21,6 +21,7 @@
 #include "bundle_constants.h"
 #include "bundle_service_constants.h"
 #include "parameters.h"
+#include "string_ex.h"
 
 #ifdef ACCOUNT_ENABLE
 #include "os_account_manager.h"
