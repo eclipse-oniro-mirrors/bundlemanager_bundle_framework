@@ -8247,6 +8247,23 @@ ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGro
     return res;
 }
 
+bool BundleDataMgr::CreateEl5Group(const InnerBundleInfo &info, int32_t userId)
+{
+    auto dataGroupInfoMap = info.GetDataGroupInfos();
+    if (dataGroupInfoMap.empty()) {
+        return true;
+    }
+    std::vector<DataGroupInfo> dataGroupInfos;
+    for (const auto &groupItem : dataGroupInfoMap) {
+        for (const DataGroupInfo &dataGroupInfo : groupItem.second) {
+            if (dataGroupInfo.userId == userId) {
+                dataGroupInfos.emplace_back(dataGroupInfo);
+            }
+        }
+    }
+    return CreateEl5GroupDirs(dataGroupInfos, userId) == ERR_OK;
+}
+
 ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId)
 {
     if (dataGroupInfos.empty()) {
@@ -8262,6 +8279,12 @@ ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &data
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
         // create el5 group dirs
         std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        bool isExist = false;
+        (void)InstalldClient::GetInstance()->IsExistDir(dir, isExist);
+        if (isExist) {
+            APP_LOGI("group dir(%{public}s) exist", dir.c_str());
+            continue;
+        }
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
             ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
@@ -9461,11 +9484,76 @@ ErrCode BundleDataMgr::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl
     return res;
 }
 
+void BundleDataMgr::AddNewEl5BundleName(const std::string &bundleName)
+{
+    std::lock_guard lock(newEl5Mutex_);
+    newEl5BundleNames_.insert(bundleName);
+}
+
+ErrCode BundleDataMgr::CreateNewBundleEl5Dir(int32_t userId)
+{
+    APP_LOGI("begin");
+    std::vector<CreateDirParam> createDirParams;
+    {
+        std::lock_guard el5Lock(newEl5Mutex_);
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (const auto &bundleName : newEl5BundleNames_) {
+            auto infoItem = bundleInfos_.find(bundleName);
+            if (infoItem == bundleInfos_.end()) {
+                APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+                continue;
+            }
+            const InnerBundleInfo &info = infoItem->second;
+            if (!info.HasInnerBundleUserInfo(userId)) {
+                APP_LOGW("bundle %{public}s is not installed in user %{public}d or 0",
+                    info.GetBundleName().c_str(), userId);
+                continue;
+            }
+            if (!info.NeedCreateEl5Dir()) {
+                continue;
+            }
+            CreateDirParam createDirParam;
+            createDirParam.bundleName = info.GetBundleName();
+            createDirParam.userId = userId;
+            createDirParam.uid = info.GetUid(userId);
+            createDirParam.gid = info.GetGid(userId);
+            createDirParam.apl = info.GetAppPrivilegeLevel();
+            createDirParam.isPreInstallApp = info.IsPreInstallApp();
+            createDirParam.debug =
+                info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+            createDirParam.extensionDirs = info.GetAllExtensionDirs();
+            createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
+            createDirParam.dataDirEl = DataDirEl::EL5;
+            createDirParams.emplace_back(createDirParam);
+            CreateEl5Group(info, userId);
+        }
+    }
+    CreateEl5Dir(createDirParams, true);
+    APP_LOGI("end");
+    return ERR_OK;
+}
+
 void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage)
 {
     for (const auto &el5Param : el5Params) {
         APP_LOGI("-n %{public}s -u %{public}d -i %{public}d",
             el5Param.bundleName.c_str(), el5Param.userId, el5Param.appIndex);
+        std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(el5Param.userId);
+        std::string bundleNameDir = el5Param.bundleName;
+        if (el5Param.appIndex > 0) {
+            bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(el5Param.bundleName, el5Param.appIndex);
+        }
+        std::string baseDir = parentDir + ServiceConstants::BASE + bundleNameDir;
+        std::string databaseDir = parentDir + ServiceConstants::DATABASE + bundleNameDir;
+        bool isBaseExist = false;
+        bool isDatabaseExist = false;
+        (void)InstalldClient::GetInstance()->IsExistDir(baseDir, isBaseExist);
+        (void)InstalldClient::GetInstance()->IsExistDir(databaseDir, isDatabaseExist);
+        if (isBaseExist && isDatabaseExist) {
+            APP_LOGI("targetDir(%{public}s) exist", baseDir.c_str());
+            continue;
+        }
         InnerCreateEl5Dir(el5Param);
         SetEl5DirPolicy(el5Param, needSaveStorage);
     }
