@@ -294,12 +294,12 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
 
 FormInfo *FormInfo::Unmarshalling(Parcel &parcel)
 {
-    std::unique_ptr<FormInfo> info = std::make_unique<FormInfo>();
-    if (!info->ReadFromParcel(parcel)) {
+    FormInfo *info = new (std::nothrow) FormInfo();
+    if (info && !info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         info = nullptr;
     }
-    return info.release();
+    return info;
 }
 
 bool FormInfo::Marshalling(Parcel &parcel) const
@@ -421,15 +421,15 @@ void to_json(nlohmann::json &jsonObject, const FormWindow &formWindow)
 
 void to_json(nlohmann::json &jsonObject, const FormFunInteractionParams &funInteractionParams)
 {
-    jsonObject[JSON_KEY_ABILITY_NAME] = funInteractionParams.abilityName,
-    jsonObject[JSON_KEY_TARGET_BUNDLE_NAME] = funInteractionParams.targetBundleName,
-    jsonObject[JSON_KEY_SUB_BUNDLE_NAME] = funInteractionParams.subBundleName,
+    jsonObject[JSON_KEY_ABILITY_NAME] = funInteractionParams.abilityName;
+    jsonObject[JSON_KEY_TARGET_BUNDLE_NAME] = funInteractionParams.targetBundleName;
+    jsonObject[JSON_KEY_SUB_BUNDLE_NAME] = funInteractionParams.subBundleName;
     jsonObject[JSON_KEY_KEEP_STATE_DURATION] = funInteractionParams.keepStateDuration;
 }
 
 void to_json(nlohmann::json &jsonObject, const FormSceneAnimationParams &sceneAnimationParams)
 {
-    jsonObject[JSON_KEY_ABILITY_NAME] = sceneAnimationParams.abilityName,
+    jsonObject[JSON_KEY_ABILITY_NAME] = sceneAnimationParams.abilityName;
     jsonObject[JSON_KEY_DISABLED_DESKTOP_BEHAVIORS] = sceneAnimationParams.disabledDesktopBehaviors;
 }
 
