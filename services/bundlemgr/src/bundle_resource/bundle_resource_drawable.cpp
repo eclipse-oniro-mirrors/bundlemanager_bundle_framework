@@ -50,7 +50,7 @@ bool BundleResourceDrawable::GetIconResourceByTheme(
             return ProcessForegroundIcon(foregroundInfo, resourceInfo);
         }
         auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(foregroundInfo, backgroundInfo,
-            themeMask, drawableType, resourceManager);
+            themeMask, drawableType, resourceManager, true);
         if ((drawableDescriptor != nullptr) && (drawableDescriptor->GetPixelMap() != nullptr)) {
             // init foreground
             resourceInfo.foreground_.resize(foregroundInfo.second);
@@ -88,7 +88,7 @@ bool BundleResourceDrawable::GetIconResourceByHap(
     OHOS::Ace::Napi::DrawableDescriptor::DrawableType drawableType;
     Global::Resource::RState state = Global::Resource::SUCCESS;
     auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(
-        iconId, resourceManager, state, drawableType, density);
+        iconId, resourceManager, state, drawableType, density, true);
     if ((drawableDescriptor == nullptr) || (state != Global::Resource::SUCCESS)) {
         LOG_E(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor is nullptr, errCode:%{public}d",
             resourceInfo.bundleName_.c_str(), static_cast<int32_t>(state));
