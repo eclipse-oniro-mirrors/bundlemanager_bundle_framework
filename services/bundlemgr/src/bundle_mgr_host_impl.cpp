@@ -6444,21 +6444,6 @@ ErrCode BundleMgrHostImpl::RecoverBackupBundleData(const std::string &bundleName
 {
     APP_LOGI("start RecoverBackupBundleData, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
         bundleName.c_str(), userId, appIndex);
-    if (bundleName.empty()) {
-        APP_LOGE("the bundleName empty");
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-
-    if (userId < 0) {
-        APP_LOGE("userId is invalid");
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
-
-    if (appIndex < 0 || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
-        APP_LOGE("invalid appIndex");
-        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
-    }
-
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -6468,6 +6453,26 @@ ErrCode BundleMgrHostImpl::RecoverBackupBundleData(const std::string &bundleName
         Constants::PERMISSION_RECOVER_BUNDLE, Constants::PERMISSION_CLEAN_APPLICATION_DATA})) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    if (bundleName.empty() || !IsBundleExist(bundleName)) {
+        APP_LOGE("the bundleName empty or bundle not exist");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (userId < 0 || !dataMgr->HasUserId(userId)) {
+        APP_LOGE("userId is invalid or not exist");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX || !CheckAppIndex(bundleName, userId, appIndex)) {
+        APP_LOGE("invalid appIndex or appIndex not exist");
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
 
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
@@ -6483,21 +6488,6 @@ ErrCode BundleMgrHostImpl::RemoveBackupBundleData(const std::string &bundleName,
 {
     APP_LOGI("start RemoveBackupBundleData, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
         bundleName.c_str(), userId, appIndex);
-    if (bundleName.empty()) {
-        APP_LOGE("the bundleName empty");
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-
-    if (userId < 0) {
-        APP_LOGE("userId is invalid");
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
-
-    if (appIndex < 0 || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
-        APP_LOGE("invalid appIndex");
-        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
-    }
-
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -6506,6 +6496,26 @@ ErrCode BundleMgrHostImpl::RemoveBackupBundleData(const std::string &bundleName,
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CLEAN_APPLICATION_DATA)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    if (bundleName.empty() || !IsBundleExist(bundleName)) {
+        APP_LOGE("the bundleName empty or bundle not exist");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (userId < 0 || !dataMgr->HasUserId(userId)) {
+        APP_LOGE("userId is invalid or not exist");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX || !CheckAppIndex(bundleName, userId, appIndex)) {
+        APP_LOGE("invalid appIndex or appIndex not exist");
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
 
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();

@@ -253,7 +253,7 @@ ErrCode BmsExtensionDataMgr::ClearData(const std::string &bundleName, int32_t us
 ErrCode BmsExtensionDataMgr::BackupBundleData(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex)
 {
-    if ((Init() != ERR_OK) || handler_ == nullptr) {
+    if (Init() != ERR_OK) {
         APP_LOGW("link failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
