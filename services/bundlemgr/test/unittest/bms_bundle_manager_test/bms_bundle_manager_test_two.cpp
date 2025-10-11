@@ -2577,7 +2577,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleStats_0100, Function | SmallTest | Leve
     EXPECT_EQ(result, true);
 
     result = dataMgr->GetBundleStats(BUNDLE_PREVIEW_NAME, Constants::INVALID_USERID, bundleStats);
-    EXPECT_EQ(result, true);
+    EXPECT_EQ(result, false);
 
     UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }

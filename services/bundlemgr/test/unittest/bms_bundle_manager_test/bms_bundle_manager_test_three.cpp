@@ -1972,7 +1972,7 @@ HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_4400, Function | MediumTest | 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
     auto result = hostImpl->GetAllBundleStats(USERID, bundleStats);
-    EXPECT_FALSE(result);
+    EXPECT_FALSE(bundleStats.empty());
 }
 
 /**

@@ -4037,28 +4037,30 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag) const
 {
     int32_t responseUserId = -1;
-    int32_t uid = -1;
+    int32_t uid = Constants::INVALID_UID;
     std::vector<std::string> moduleNameList;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
-        UninstallBundleInfo uninstallBundleInfo;
-        if (infoItem == bundleInfos_.end() && !GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
-            APP_LOGD("bundle is not existed and not uninstalled with keepdata before");
-            return false;
-        }
         if (infoItem != bundleInfos_.end()) {
             responseUserId = infoItem->second.GetResponseUserId(userId);
             uid = infoItem->second.GetUid(responseUserId, appIndex);
             infoItem->second.GetModuleNames(moduleNameList);
-        } else {
-            responseUserId = uninstallBundleInfo.GetResponseUserId(userId);
-            uid = uninstallBundleInfo.GetUid(responseUserId, appIndex);
-            if (uid == Constants::INVALID_UID) {
-                APP_LOGD("clone app not uninstall with keepdata for index: %{public}d", appIndex);
-                return false;
-            }
-            moduleNameList = uninstallBundleInfo.moduleNames;
+        }
+    }
+    if (uid == Constants::INVALID_UID) {
+        UninstallBundleInfo uninstallBundleInfo;
+        if (!GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+            APP_LOGD("bundle:%{public}s [%{public}d] is not existed and not uninstalled with keepdata",
+                bundleName.c_str(), appIndex);
+            return false;
+        }
+        responseUserId = userId;
+        uid = uninstallBundleInfo.GetUid(responseUserId, appIndex);
+        moduleNameList = uninstallBundleInfo.moduleNames;
+        if (uid == Constants::INVALID_UID) {
+            APP_LOGD("can not found bundle: %{public}s in uninstallBundleInfo for index: %{public}d",
+            bundleName.c_str(), appIndex);
         }
     }
     ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
@@ -4081,7 +4083,6 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
             }
         }
     }
-
     return true;
 }
 
@@ -4180,30 +4181,24 @@ bool BundleDataMgr::GetAllUnisntallBundleUids(const int32_t requestUserId,
     const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
     std::vector<int32_t> &uids) const
 {
-    int32_t responseUserId = requestUserId;
     for (const auto &info : uninstallBundleInfos) {
         std::string bundleName = info.first;
         if (info.second.userInfos.empty()) {
             continue;
         }
-        responseUserId = info.second.GetResponseUserId(requestUserId);
-        if (responseUserId == Constants::INVALID_USERID) {
-            APP_LOGD("bundle %{public}s before is not installed in user %{public}d or 0", bundleName.c_str(), requestUserId);
-            continue;
-        }
+        
         if (info.second.bundleType != BundleType::ATOMIC_SERVICE && info.second.bundleType != BundleType::APP) {
             APP_LOGD("BundleType is invalid: %{public}d, bundname: %{public}s", info.second.bundleType, bundleName.c_str());
             continue;
         }
-        uids.push_back(info.second.GetUid(responseUserId, 0));
-        APP_LOGD("get uid: %{public}d for main app: %{public}s", info.second.GetUid(responseUserId, 0),
-            bundleName.c_str());
-        std::string prefixStr = std::to_string(responseUserId) + "_";
+        
+        std::string mainBundle = std::to_string(requestUserId);
+        std::string cloneBundle = mainBundle + "_";
         for (const auto& pair : info.second.userInfos) {
             const std::string& key = pair.first;
-            if (key.compare(0, prefixStr.length(), prefixStr) == 0) {
+            if (key == mainBundle || key.find(cloneBundle) == 0) {
                 uids.push_back(pair.second.uid);
-                APP_LOGD("get uid: %{public}d for clone app: %{public}s", pair.second.uid,
+                APP_LOGD("get uid: %{public}d for app: %{public}s", pair.second.uid,
                     key.c_str());
             }
         }
