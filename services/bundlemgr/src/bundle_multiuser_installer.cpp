@@ -19,6 +19,7 @@
 #include "account_helper.h"
 #include "bms_extension_data_mgr.h"
 #include "bundle_constants.h"
+#include "bundle_install_checker.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
@@ -140,6 +141,11 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     }
     if (appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_INTERNALTESTING) {
         APP_LOGE("the origin application is inrternaltesting, not allow to install here");
+        return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+    }
+
+    if (!BundleInstallChecker::CheckSpaceIsolation(userId, info)) {
+        APP_LOGE("check space isolation failed");
         return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
     }
 

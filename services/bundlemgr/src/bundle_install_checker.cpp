@@ -161,6 +161,57 @@ bool IsSystemExtensionAbilityType(ExtensionAbilityType type)
 }
 }
 
+bool BundleInstallChecker::CheckSpaceIsolation(const int32_t userId, const InnerBundleInfo &info)
+{
+    bool isSpaceIsolation = OHOS::system::GetBoolParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, false);
+    if (!isSpaceIsolation) {
+        return true;
+    }
+
+    if (userId < Constants::START_USERID) {
+        return true;
+    }
+
+    if (info.IsSystemApp()) {
+        return true;
+    }
+
+    BundleType bundleType = info.GetApplicationBundleType();
+    if (bundleType != BundleType::APP && bundleType != BundleType::ATOMIC_SERVICE) {
+        return true;
+    }
+
+    bool isDebugApp = info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG ||
+        info.GetBaseApplicationInfo().debug;
+    std::string distributionType = info.GetAppDistributionType();
+    bool isEnterpriseApp = distributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE ||
+        distributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL ||
+        distributionType == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM;
+    if (!isDebugApp && !isEnterpriseApp) {
+        return true;
+    }
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return false;
+    }
+
+    std::string bundleName = info.GetBundleName();
+    InnerBundleInfo installedInfo;
+    bool isAppExist = dataMgr->FetchInnerBundleInfo(bundleName, installedInfo);
+    if (!isAppExist) {
+        return true;
+    }
+
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        return true;
+    }
+
+    return AccountHelper::CheckUserIsolation(userId, installedInfo.GetUsers());
+}
+
 ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundlePaths)
 {
     LOG_D(BMS_TAG_INSTALLER, "check hap syscaps start");

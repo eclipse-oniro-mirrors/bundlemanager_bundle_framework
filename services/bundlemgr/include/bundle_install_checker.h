@@ -56,6 +56,7 @@ struct InstallCheckParam {
 
 class BundleInstallChecker {
 public:
+    static bool CheckSpaceIsolation(const int32_t userId, const InnerBundleInfo &info);
     /**
      * @brief Check syscap.
      * @param bundlePaths Indicates the file paths of all HAP packages.

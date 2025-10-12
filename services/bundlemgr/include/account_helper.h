@@ -18,6 +18,7 @@
 
 #include <set>
 #include <string>
+#include <unordered_set>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -38,6 +39,10 @@ public:
     static void QueryAllCreatedOsAccounts(std::set<int32_t> &userIds);
 
     static bool CheckOsAccountConstraintEnabled(const int32_t userId, const std::string &constraint);
+
+    static bool CheckUserIsolation(const int32_t targetUserId, const std::unordered_set<int32_t> &installedUserIds);
+private:
+    static std::set<int32_t> GetEnterpriseUserIds();
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

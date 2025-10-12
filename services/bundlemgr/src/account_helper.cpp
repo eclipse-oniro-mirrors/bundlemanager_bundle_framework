@@ -19,6 +19,9 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
+#include "parameters.h"
+#include "string_ex.h"
 
 #ifdef ACCOUNT_ENABLE
 #include "os_account_manager.h"
@@ -163,6 +166,67 @@ bool AccountHelper::CheckOsAccountConstraintEnabled(const int32_t userId, const 
     APP_LOGI("ACCOUNT_ENABLE is false");
     return false;
 #endif
+}
+
+bool AccountHelper::CheckUserIsolation(
+    const int32_t targetUserId, const std::unordered_set<int32_t> &installedUserIds)
+{
+    std::set<int32_t> enterpriseUserIds = GetEnterpriseUserIds();
+    if (enterpriseUserIds.empty()) {
+        return true;
+    }
+
+    bool inEnterpriseSpace = false;
+    bool inPrivacySpace = false;
+    for (int32_t installedUserId : installedUserIds) {
+        if (installedUserId < Constants::START_USERID) {
+            continue;
+        }
+        if (enterpriseUserIds.find(installedUserId) != enterpriseUserIds.end()) {
+            inEnterpriseSpace = true;
+        } else {
+            inPrivacySpace = true;
+        }
+    }
+
+    if (!inEnterpriseSpace && !inPrivacySpace) {
+        return true;
+    }
+    if (inEnterpriseSpace && inPrivacySpace) {
+        APP_LOGE("bundle is in both enterprise and privacy space");
+        return false;
+    }
+
+    bool targetEnterprise = enterpriseUserIds.find(targetUserId) != enterpriseUserIds.end();
+    if (inEnterpriseSpace && targetEnterprise) {
+        return true;
+    }
+    if (inPrivacySpace && !targetEnterprise) {
+        return true;
+    }
+    APP_LOGE("target user %{public}d is not in the same space", targetUserId);
+    return false;
+}
+
+std::set<int32_t> AccountHelper::GetEnterpriseUserIds()
+{
+    std::string userIdListStr = OHOS::system::GetParameter(ServiceConstants::ENTERPRISE_SPACE_USER_ID_LIST, "");
+    if (userIdListStr.empty()) {
+        return {};
+    }
+    std::vector<std::string> strVector;
+    OHOS::SplitStr(userIdListStr, ServiceConstants::COMMA, strVector);
+    if (strVector.empty()) {
+        return {};
+    }
+    std::set<int32_t> enterpriseUserIds;
+    for (const std::string &userIdStr : strVector) {
+        int32_t userId = -1;
+        if (OHOS::StrToInt(userIdStr, userId)) {
+            enterpriseUserIds.insert(userId);
+        }
+    }
+    return enterpriseUserIds;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

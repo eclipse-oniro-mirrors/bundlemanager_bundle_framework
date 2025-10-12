@@ -811,6 +811,8 @@ private:
     void UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,
         const InnerBundleInfo& innerBundleInfo);
     ErrCode CheckAppDistributionType();
+    ErrCode CheckSpaceIsolation(
+        const InstallParam &installParam, const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
 #ifdef WEBVIEW_ENABLE
     ErrCode VerifyArkWebInstall();
     void RestoreconForArkweb();
