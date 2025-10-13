@@ -893,6 +893,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2100, Function | 
 #else
     EXPECT_TRUE(ret);
 #endif
+    sleep(1);
 }
 
 /**
