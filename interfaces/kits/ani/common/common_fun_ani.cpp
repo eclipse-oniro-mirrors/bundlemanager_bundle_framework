@@ -1534,8 +1534,8 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
     if (!skillUri.port.empty()) {
         auto [ptr, ec] = std::from_chars(skillUri.port.data(), skillUri.port.data() + skillUri.port.size(), port);
         if (ec != std::errc() || ptr != skillUri.port.data() + skillUri.port.size()) {
-            APP_LOGE("skillUri port convert failed");
-            return nullptr;
+            APP_LOGW("skillUri port convert failed");
+            port = 0;
         }
     }
 
