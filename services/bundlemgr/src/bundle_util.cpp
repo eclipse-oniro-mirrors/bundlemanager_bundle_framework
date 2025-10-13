@@ -922,7 +922,7 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
             return "";
         }
     } else {
-        if (!CopyFileFast(filePath, destination)) {
+        if (!CopyFileFast(filePath, destination, true)) {
             APP_LOGE("copy file from %{private}s to %{private}s failed", filePath.c_str(), destination.c_str());
             return "";
         }
