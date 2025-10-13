@@ -233,6 +233,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_PLUGIN_BUNDLE_PATH_FOR_SELF = 207,
     RECOVER_BACKUP_BUNDLE_DATA = 208,
     REMOVE_BACKUP_BUNDLE_DATA = 209,
+    BATCH_GET_COMPATIBLED_DEVICE_TYPE = 210,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
