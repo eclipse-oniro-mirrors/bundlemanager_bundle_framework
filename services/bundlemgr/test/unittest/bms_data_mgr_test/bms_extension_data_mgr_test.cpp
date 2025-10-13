@@ -2251,6 +2251,25 @@ HWTEST_F(BmsExtensionDataMgrTest, BackupBundleData_001, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: BackupBundleData_002
+ * @tc.name: BackupBundleData
+ * @tc.desc: BackupBundleData
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BackupBundleData_002, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName = "testname";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto res = bundleMgrExtTest.BackupBundleData(bundleName, userId, appIndex);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+    #endif
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_001
  * @tc.name: RecoverBackupBundleData
  * @tc.desc: RecoverBackupBundleData
@@ -2270,6 +2289,25 @@ HWTEST_F(BmsExtensionDataMgrTest, RecoverBackupBundleData_001, Function | SmallT
 }
 
 /**
+ * @tc.number: RecoverBackupBundleData_002
+ * @tc.name: RecoverBackupBundleData
+ * @tc.desc: RecoverBackupBundleData
+ */
+HWTEST_F(BmsExtensionDataMgrTest, RecoverBackupBundleData_002, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName = "testname";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto res = bundleMgrExtTest.RecoverBackupBundleData(bundleName, userId, appIndex);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+    #endif
+}
+
+/**
  * @tc.number: RemoveBackupBundleData_001
  * @tc.name: RemoveBackupBundleData
  * @tc.desc: RemoveBackupBundleData
@@ -2285,6 +2323,25 @@ HWTEST_F(BmsExtensionDataMgrTest, RemoveBackupBundleData_001, Function | SmallTe
     EXPECT_EQ(res, ERR_OK);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
+}
+
+/**
+ * @tc.number: RemoveBackupBundleData_002
+ * @tc.name: RemoveBackupBundleData
+ * @tc.desc: RemoveBackupBundleData
+ */
+HWTEST_F(BmsExtensionDataMgrTest, RemoveBackupBundleData_002, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName = "testname";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto res = bundleMgrExtTest.RemoveBackupBundleData(bundleName, userId, appIndex);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
     #endif
 }
 } // OHOS
