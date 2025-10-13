@@ -10869,6 +10869,57 @@ HWTEST_F(ActsBmsKitSystemTest, GetCompatibleDeviceType_0002, Function | MediumTe
 }
 
 /**
+ * @tc.number: BatchGetCompatibleDeviceType_0001
+ * @tc.name: test BatchGetCompatibleDeviceType interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call BatchGetCompatibleDeviceType
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START BatchGetCompatibleDeviceType_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string deviceType;
+    auto queryResult = bundleMgrProxy->BatchGetCompatibleDeviceType(appName, deviceType);
+
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END BatchGetCompatibleDeviceType_0001" << std::endl;
+}
+
+/**
+ * @tc.number: BatchGetCompatibleDeviceType_0002
+ * @tc.name: test BatchGetCompatibleDeviceType interface
+ * @tc.desc: BatchGetCompatibleDeviceType failed for calling bundle name is invalid
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START BatchGetCompatibleDeviceType_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string deviceType;
+    auto queryResult = bundleMgrProxy->BatchGetCompatibleDeviceType("", deviceType);
+
+    EXPECT_EQ(queryResult, ERR_OK);
+    std::cout << "END BatchGetCompatibleDeviceType_0002" << std::endl;
+}
+
+/**
  * @tc.number: GetBundleNameByAppId_0001
  * @tc.name: test GetBundleNameByAppId interface
  * @tc.desc: GetBundleNameByAppId failed for calling bundle name is invalid

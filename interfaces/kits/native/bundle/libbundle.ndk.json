@@ -70,5 +70,9 @@
     {
       "first_introduced": "21",
       "name": "OH_NativeBundle_GetDrawableDescriptor"
+    },
+    {
+      "first_introduced": "21",
+      "name": "OH_NativeBundle_BatchGetCompatibleDeviceType"
     }
 ]
