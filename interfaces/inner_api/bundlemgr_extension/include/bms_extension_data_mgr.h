@@ -51,6 +51,7 @@ public:
     ErrCode Uninstall(const std::string &bundleName);
     ErrCode GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats);
     ErrCode ClearData(const std::string &bundleName, int32_t userId);
+    ErrCode BackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode ClearCache(const std::string &bundleName, sptr<IRemoteObject> callback, int32_t userId);
     ErrCode GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t &uid);
     ErrCode GetBundleNameByUid(int32_t uid, std::string &bundleName);

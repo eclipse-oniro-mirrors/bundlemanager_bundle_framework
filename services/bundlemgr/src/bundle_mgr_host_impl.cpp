@@ -2061,6 +2061,11 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
             callingUid, callingBundleName);
         return false;
     }
+
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    auto ret = bmsExtensionClient->BackupBundleData(bundleName, userId, appIndex);
+    APP_LOGI("BackupBundleData ret : %{public}d", ret);
+
     if (InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userId, appIndex) != ERR_OK) {
         APP_LOGE("%{public}s, CleanBundleDataDirByName failed", bundleName.c_str());
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
