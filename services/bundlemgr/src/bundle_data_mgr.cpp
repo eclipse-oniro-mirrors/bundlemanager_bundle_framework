@@ -2010,7 +2010,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         BmsExtensionDataMgr bmsExtensionDataMgr;
         if (mainAbilityInfo.applicationInfo.removable &&
             !bmsExtensionDataMgr.IsTargetApp(info.GetBundleName(), info.GetAppIdentifier())) {
-            mainAbilityInfo.applicationInfo.removable = info.GetUninstallState();
+            mainAbilityInfo.applicationInfo.removable = info.GetUninstallState() && bundleUserInfo.canUninstall;
         }
         mainAbilityInfo.installTime = installTime;
         // fix labelId or iconId is equal 0
@@ -9671,6 +9671,42 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     stateChange = true;
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
+    int32_t userId, bool &stateChange)
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("name %{public}s invalid userid :%{public}d", bundleName.c_str(), userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo &innerBundleInfo = item->second;
+    if (!innerBundleInfo.IsRemovable() && state) {
+        APP_LOGW("the bundle : %{public}s is not removable", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED;
+    }
+
+    auto ret = innerBundleInfo.SetCanUninstall(requestUserId, state, stateChange);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (!stateChange) {
+        APP_LOGD("CanUninstall is not changed -n %{public}s -u %{public}d", bundleName.c_str(), userId);
+        return ERR_OK;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        innerBundleInfo.SetCanUninstall(requestUserId, !state, stateChange);
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     return ERR_OK;
 }
 

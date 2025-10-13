@@ -2686,7 +2686,12 @@ void InnerBundleInfo::ProcessBundleFlags(
         BmsExtensionDataMgr bmsExtensionDataMgr;
         if (bundleInfo.applicationInfo.removable &&
             !bmsExtensionDataMgr.IsTargetApp(GetBundleName(), GetAppIdentifier())) {
-            bundleInfo.applicationInfo.removable = GetUninstallState();
+            InnerBundleUserInfo innerBundleUserInfo;
+            if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+                APP_LOGE("not find userId %{public}d when get applicationInfo", userId);
+                return;
+            }
+            bundleInfo.applicationInfo.removable = GetUninstallState() && innerBundleUserInfo.canUninstall;
         }
     }
     bundleInfo.applicationInfo.appIndex = appIndex;
@@ -4821,6 +4826,24 @@ bool InnerBundleInfo::IsNeedSendNotify() const
 void InnerBundleInfo::SetNeedSendNotify(const bool needStatus)
 {
     isNeedSendNotify_ = needStatus;
+}
+
+ErrCode InnerBundleInfo::SetCanUninstall(int32_t userId, bool state, bool &stateChange)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("SetCanUninstall not find :%{public}s in userId: %{public}d", GetBundleName().c_str(), userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (infoItem->second.canUninstall == state) {
+        stateChange = false;
+        return ERR_OK;
+    }
+    
+    infoItem->second.canUninstall = state;
+    stateChange = true;
+    return ERR_OK;
 }
 
 std::vector<std::string> InnerBundleInfo::GetAllExtensionDirsInSpecifiedModule(const std::string &moduleName) const
