@@ -752,7 +752,16 @@ ErrCode BundleMgrHostImpl::GetNameAndIndexForUid(const int uid, std::string &bun
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
+    auto ret = dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
+    if (ret != ERR_OK && isBrokerServiceExisted_) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        ret = bmsExtensionClient->GetBundleNameByUid(uid, bundleName);
+        if (ret != ERR_OK) {
+            APP_LOGD("GetBundleNameByUidExt failed, uid : %{public}d", uid);
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
+    }
+    return ret;
 }
 
 ErrCode BundleMgrHostImpl::GetAppIdentifierAndAppIndex(const uint32_t accessTokenId,

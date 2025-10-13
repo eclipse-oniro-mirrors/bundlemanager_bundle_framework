@@ -10261,6 +10261,24 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameAndIndexForUid_0100, Function | MediumTest
 }
 
 /**
+ * @tc.number: GetNameAndIndexForUid_0200
+ * @tc.name: test get name and appIndex by uid
+ * @tc.desc: 1.get bundleName and appIndex by uid
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetNameAndIndexForUid_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START GetNameAndIndexForUid_0200" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string name;
+    int32_t testAppIndex = 0;
+    ErrCode ret = bundleMgrProxy->GetNameAndIndexForUid(10000, name, testAppIndex);
+    EXPECT_TRUE(ret == ERR_OK || ret == ERR_BUNDLE_MANAGER_INVALID_UID);
+    EXPECT_EQ(testAppIndex, 0);
+    std::cout << "END GetNameAndIndexForUid_0200" << std::endl;
+}
+
+/**
  * @tc.number: AddResourceInfoByBundleName_0001
  * @tc.name: test BundleResourceProxy
  * @tc.desc: 1.call AddResourceInfoByBundleName
