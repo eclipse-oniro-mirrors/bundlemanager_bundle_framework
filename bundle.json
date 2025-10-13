@@ -68,6 +68,7 @@
                 "memmgr",
                 "kv_store",
                 "libpng",
+                "libuv",
                 "napi",
                 "os_account",
                 "power_manager",
@@ -94,7 +95,6 @@
                 "user_auth_framework"
             ],
             "third_party": [
-                "libuv",
                 "jsoncpp"
             ]
         },
