@@ -608,12 +608,12 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             std::string logParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::LOG;
             std::string logDir = logParentDir + createDirParam.bundleName;
             if (!InstalldOperator::MkOwnerDir(
-                logDir, S_IRWXU | S_IRWXG, createDirParam.uid, ServiceConstants::LOG_DIR_GID)) {
+                logDir, S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, ServiceConstants::LOG_DIR_GID)) {
                 LOG_E(BMS_TAG_INSTALLD, "create log dir failed errno:%{public}d", errno);
                 return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
             }
             // create log extension dir
-            if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG,
+            if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG | S_ISGID,
                 ServiceConstants::LOG_DIR_GID, true) != ERR_OK) {
                 LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
             }
@@ -828,13 +828,13 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
     std::string logParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::LOG;
     std::string logDir = logParentDir + createDirParam.bundleName;
     if (!InstalldOperator::MkOwnerDir(
-        logDir, S_IRWXU | S_IRWXG, createDirParam.uid, ServiceConstants::LOG_DIR_GID)) {
+        logDir, S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, ServiceConstants::LOG_DIR_GID)) {
         LOG_E(BMS_TAG_INSTALLD, "create log dir failed errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
 
     // create log extension dir: /data/app/el2/${userId}/log/${extensionDir}
-    if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG,
+    if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG | S_ISGID,
         ServiceConstants::LOG_DIR_GID, true) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
     }
@@ -2207,7 +2207,7 @@ ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDir
         AclSetExtensionDirs(createDirParam.debug, bundleDataDir, createDirParam.extensionDirs, true, true);
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             std::string logParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::LOG;
-            if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG,
+            if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG | S_ISGID,
                 ServiceConstants::LOG_DIR_GID, true) != ERR_OK) {
                 LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
             }
