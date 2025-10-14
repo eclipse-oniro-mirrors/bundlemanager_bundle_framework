@@ -2066,7 +2066,7 @@ HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_0001, Function
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 }
 
 /**
