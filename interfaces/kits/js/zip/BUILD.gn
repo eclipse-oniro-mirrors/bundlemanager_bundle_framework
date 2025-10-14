@@ -100,10 +100,10 @@ ohos_shared_library("zlib") {
     "ffrt:libffrt",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "libuv:uv",
     "napi:ace_napi",
     "zlib:shared_libz",
   ]
-  public_external_deps = [ "libuv:uv" ]
   install_enable = true
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
