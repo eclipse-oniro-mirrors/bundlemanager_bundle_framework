@@ -10869,54 +10869,93 @@ HWTEST_F(ActsBmsKitSystemTest, GetCompatibleDeviceType_0002, Function | MediumTe
 }
 
 /**
- * @tc.number: BatchGetCompatibleDeviceType_0001
- * @tc.name: test BatchGetCompatibleDeviceType interface
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
- *           2.install the app
- *           3.call BatchGetCompatibleDeviceType
+ * @tc.number: BBatchGetCompatibleDeviceType_0001
+ * @tc.name: test BatchGetCompatibleDeviceType proxy
+ * @tc.desc: 1.system run normally
  */
-HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0001, Function | MediumTest | Level1)
+HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0001, Function | SmallTest | Level1)
 {
-    std::cout << "START BatchGetCompatibleDeviceType_0001" << std::endl;
-    std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
-    std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back(BASE_BUNDLE_NAME);
     ASSERT_NE(bundleMgrProxy, nullptr);
-
-    std::string deviceType;
-    auto queryResult = bundleMgrProxy->BatchGetCompatibleDeviceType(appName, deviceType);
-
-    EXPECT_EQ(queryResult, ERR_OK);
-
-    resvec.clear();
-    Uninstall(appName, resvec);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::cout << "END BatchGetCompatibleDeviceType_0001" << std::endl;
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+        if (compatibleDeviceTypes.empty()) {
+            EXPECT_FALSE(true);
+        } else {
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(compatibleDeviceTypes[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        }
+    }
 }
 
 /**
  * @tc.number: BatchGetCompatibleDeviceType_0002
- * @tc.name: test BatchGetCompatibleDeviceType interface
- * @tc.desc: BatchGetCompatibleDeviceType failed for calling bundle name is invalid
+ * @tc.name: test BatchGetCompatibleDeviceType proxy
+ * @tc.desc: 1.system run normally
  */
-HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0002, Function | MediumTest | Level1)
+HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0002, Function | SmallTest | Level1)
 {
-    std::cout << "START BatchGetCompatibleDeviceType_0002" << std::endl;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
     ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    }
+}
 
-    std::string deviceType;
-    auto queryResult = bundleMgrProxy->BatchGetCompatibleDeviceType("", deviceType);
+/**
+ * @tc.number: BatchGetCompatibleDeviceType_0003
+ * @tc.name: test BatchGetCompatibleDeviceType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0003, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames(1001, "BASE_BUNDLE_NAME");
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+    }
+}
 
-    EXPECT_EQ(queryResult, ERR_OK);
-    std::cout << "END BatchGetCompatibleDeviceType_0002" << std::endl;
+/**
+ * @tc.number: BatchGetCompatibleDeviceType_0004
+ * @tc.name: test BatchGetCompatibleDeviceType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0004, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back("");
+    bundleNames.push_back("BASE_BUNDLE_NAME");
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+        if (compatibleDeviceTypes.empty()) {
+            EXPECT_FALSE(true);
+        } else {
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(compatibleDeviceTypes[0].bundleName, "");
+            EXPECT_EQ(compatibleDeviceTypes[1].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        }
+    }
 }
 
 /**

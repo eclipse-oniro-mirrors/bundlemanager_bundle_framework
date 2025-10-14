@@ -2055,10 +2055,10 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetCompatibleDeviceTypeNative_0001, Functio
 }
 
 /**
- * @tc.number: HandleGetCompatibleDeviceType_0001
- * @tc.name: test the HandleGetCompatibleDeviceType
+ * @tc.number: HandleBatchGetCompatibleDeviceType_0001
+ * @tc.name: test the HandleBatchGetCompatibleDeviceType
  * @tc.desc: 1. system running normally
- *           2. test HandleGetCompatibleDeviceType
+ *           2. test HandleBatchGetCompatibleDeviceType
  */
 HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_0001, Function | MediumTest | Level1)
 {
