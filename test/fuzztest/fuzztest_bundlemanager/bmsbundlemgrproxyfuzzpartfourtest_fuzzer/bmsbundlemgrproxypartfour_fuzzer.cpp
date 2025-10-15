@@ -96,7 +96,7 @@ namespace OHOS {
         bundleMgrProxy.GetBundleInfosForContinuation(flags, bundleInfos, userId);
         std::string deviceType;
         bundleMgrProxy.GetCompatibleDeviceType(bundleName, deviceType);
-        bundleNames.clear();
+        std::vector<std::string> bundleNames;
         std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
         bundleMgrProxy.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
         std::string queryBundleName;
