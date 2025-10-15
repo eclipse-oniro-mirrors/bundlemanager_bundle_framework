@@ -2698,22 +2698,26 @@ void BMSEventHandler::ProcessRouterMap()
 
 void BMSEventHandler::InnerProcessRouterMap()
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
-        return;
-    }
-    bool ret = dataMgr->UpdateRouterDB();
-    if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "Update router db failed");
-        return;
-    }
-    std::set<std::string> bundleNames;
-    dataMgr->GetAllBundleNames(bundleNames);
-    for (const auto &bundleName : bundleNames) {
-        dataMgr->UpdateRouterInfo(bundleName);
-    }
-    UpdateOtaFlag(OTAFlag::PROCESS_ROUTER_MAP);
+    auto task = []() {
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
+            return;
+        }
+        LOG_I(BMS_TAG_DEFAULT, "addRouterMap start");
+        auto bundleNames = dataMgr->GetAllBundleName();
+        for (auto &bundleName : bundleNames) {
+            dataMgr->UpdateRouterInfo(bundleName);
+        }
+        bool ret = dataMgr->UpdateRouterDB();
+        if (!ret) {
+            LOG_E(BMS_TAG_DEFAULT, "UpdateRouterDB failed");
+        }
+        LOG_I(BMS_TAG_DEFAULT, "addRouterMap end");
+        UpdateOtaFlag(OTAFlag::PROCESS_ROUTER_MAP);
+    };
+    std::thread routerThread(task);
+    routerThread.detach();
 }
 
 ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &filePaths)

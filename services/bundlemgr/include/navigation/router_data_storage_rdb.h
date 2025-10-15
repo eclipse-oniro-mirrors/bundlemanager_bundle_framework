@@ -38,6 +38,8 @@ public:
     bool UpdateDB();
     bool InsertRouterInfo(const std::string &bundleName,
         const std::map<std::string, std::string> &routerInfoMap, const uint32_t versionCode);
+    bool GetRouterInfoFromOldDB(const std::string &bundleName,
+        const std::string &moduleName, std::vector<RouterItem> &routerInfos);
 private:
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
 };
