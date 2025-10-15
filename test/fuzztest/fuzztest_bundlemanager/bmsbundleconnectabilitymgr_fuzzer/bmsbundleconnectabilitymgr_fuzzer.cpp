@@ -55,7 +55,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleConnectAbilityMgr.WaitFromConnected(lock);
     sptr<IRemoteObject> callerToken = nullptr;
     bundleConnectAbilityMgr.ConnectAbility(want, callerToken);
-    bundleConnectAbilityMgr.DisconnectDelay();
     int32_t resultCode = fdp.ConsumeIntegral<int32_t>();
     std::string transactId = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     bundleConnectAbilityMgr.SendCallBack(resultCode, want, userId, transactId);
