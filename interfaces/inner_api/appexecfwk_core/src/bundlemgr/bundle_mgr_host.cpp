@@ -891,15 +891,11 @@ ErrCode BundleMgrHost::HandleGetBundleInfoForSelf(MessageParcel &data, MessagePa
     APP_LOGD("GetBundleInfoForSelf, flags %{public}d", flags);
     BundleInfo info;
     auto ret = GetBundleInfoForSelf(flags, info);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (ret == ERR_OK) {
+        WRITE_PARCEL(reply.WriteInt32(ERR_OK));
+        return WriteParcelInfoIntelligent(info, reply);
     }
-    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
-    if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
+    WRITE_PARCEL(reply.WriteInt32(ret));
     return ERR_OK;
 }
 

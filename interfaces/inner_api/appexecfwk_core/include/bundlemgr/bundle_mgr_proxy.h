@@ -1364,6 +1364,10 @@ private:
     template<typename T>
     ErrCode GetParcelInfoIntelligent(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo);
 
+    template<typename T>
+    ErrCode GetParcelInfoIntelligentWithReply(BundleMgrInterfaceCode code, MessageParcel &data,
+        MessageParcel &reply, T &parcelInfo);
+
     ErrCode GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result);
 
     ErrCode InnerGetBigString(MessageParcel &reply, std::string &result);
