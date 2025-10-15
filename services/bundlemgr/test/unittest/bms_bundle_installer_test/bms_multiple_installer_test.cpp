@@ -90,7 +90,7 @@ const std::string PACKAGE_NAME_FIRST = "entry";
 const std::string PACKAGE_NAME_SECOND = "l2jsdemo";
 const std::string PACKAGE_NAME_THIRD = "com.example.l1jsdemo";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 5; // init mocked bms
 const std::vector<std::string> BUNDLE_DATA_DIR_PAGENAME = {
     "cache",
     "files",
