@@ -98,6 +98,8 @@ private:
 
     static bool GetExternalOverlayHapState(const std::string &bundleName,
         const std::string &moduleName, const int32_t userId, int32_t &state);
+
+    static bool IsOtherIconsMaskExist(const std::string &themePath);
 };
 } // AppExecFwk
 } // OHOS
