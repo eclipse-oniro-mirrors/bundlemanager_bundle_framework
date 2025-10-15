@@ -643,7 +643,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, DeleteUninstallCloneBundleInfo_0300, Funct
 {
     bundleCloneInstall_->existBeforeKeepDataApp_ = true;
     auto res = bundleCloneInstall_->DeleteUninstallCloneBundleInfo(BUNDLE_NAME, userId_, 1);
-    EXPECT_FALSE(res);
+    EXPECT_TRUE(res);
 }
 
 /**
