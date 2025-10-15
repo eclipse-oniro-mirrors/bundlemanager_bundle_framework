@@ -77,7 +77,7 @@ bool BundleMgrProxyNative::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write flag fail");
         return false;
     }
-    if (!GetParcelableInfo<BundleInfo>(GET_BUNDLE_INFO_FOR_SELF_NATIVE, data, bundleInfo)) {
+    if (!GetParcelInfoIntelligent<BundleInfo>(GET_BUNDLE_INFO_FOR_SELF_NATIVE, data, bundleInfo)) {
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf from server");
         return false;
     }
@@ -261,6 +261,41 @@ ErrCode BundleMgrProxyNative::GetParcelInfoFromAshMem(MessageParcel &reply, void
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
+}
+
+template<typename T>
+bool BundleMgrProxyNative::GetParcelInfoIntelligent(uint32_t code, MessageParcel &data, T &parcelInfo)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return false;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGD("reply ErrCode: %{public}d", ret);
+        return false;
+    }
+    size_t dataSize = reply.ReadUint32();
+    void *buffer = nullptr;
+    if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+        APP_LOGE("GetData failed dataSize : %{public}zu", dataSize);
+        return false;
+    }
+
+    MessageParcel tmpParcel;
+    if (!tmpParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        APP_LOGE("ParseFrom failed");
+        return false;
+    }
+
+    std::unique_ptr<T> info(tmpParcel.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("ReadParcelable failed");
+        return false;
+    }
+    parcelInfo = *info;
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
