@@ -35,7 +35,7 @@ namespace {
 const std::string BUNDLE_NAME = "com.example.quickfix_query_test";
 const std::string BUNDLE_NAME_DEMO = "com.example.demo.quickfix_query_test";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string QUICK_FIX_ABI = "arms";
 const std::string QUICK_FIX_SO_PATH = "libs/arms";
 const uint32_t QUICK_FIX_VERSION_CODE = 1;
