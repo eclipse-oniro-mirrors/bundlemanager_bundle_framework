@@ -701,7 +701,6 @@ bool BundleCloneInstaller::DeleteUninstallCloneBundleInfo(const std::string &bun
     }
     if (!dataMgr_->DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex)) {
         LOG_E(BMS_TAG_INSTALLER, "delete failed");
-        return false;
     }
     BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
     return true;

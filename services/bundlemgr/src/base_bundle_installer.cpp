@@ -931,6 +931,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
                 APP_LOGE("user %{public}d is not allowed to install app", userId_);
                 return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
             }
+            if (!CheckInstallOnKeepData(bundleName_, installParam.isOTA, newInfos)) {
+                LOG_E(BMS_TAG_INSTALLER, "check failed");
+                return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
+            }
             LOG_D(BMS_TAG_INSTALLER, "new userInfo with bundleName %{public}s and userId %{public}d",
                 bundleName_.c_str(), userId_);
             InnerBundleUserInfo newInnerBundleUserInfo;
