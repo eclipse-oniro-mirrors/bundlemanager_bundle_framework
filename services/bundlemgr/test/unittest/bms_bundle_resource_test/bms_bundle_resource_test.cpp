@@ -1287,6 +1287,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0060, Function | SmallTest
     std::string param = BundleResourceParam::GetSystemParam("aaa_not_exist");
     EXPECT_TRUE(param.empty());
 
+    language = BundleResourceParam::GetSystemLocale();
+    EXPECT_FALSE(language.empty());
+
     param = BundleResourceParam::GetSystemParam("const.global.language");
     EXPECT_FALSE(param.empty());
 }

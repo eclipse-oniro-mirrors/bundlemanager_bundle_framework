@@ -49,5 +49,11 @@ std::string BundleResourceParam::GetSystemParam(const std::string &key)
     }
     return std::string(value);
 }
+
+std::string BundleResourceParam::GetSystemLocale()
+{
+    std::string language = Global::I18n::LocaleConfig::GetSystemLanguage();
+    return language.empty() ? DEFAULT_LANGUAGE : language;
+}
 } // AppExecFwk
 } // OHOS
