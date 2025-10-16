@@ -1689,7 +1689,10 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
 
     std::unordered_set<std::string> runningSet;
     for (const auto &info : runningList) {
-        runningSet.insert(info.bundleNames.begin(), info.bundleNames.end());
+        int32_t userIdForRunning = BundleUtil::GetUserIdByUid(info.uid_);
+        if (currentUserId == userIdForRunning) {
+            runningSet.insert(info.bundleNames.begin(), info.bundleNames.end());
+        }
     }
 
     uint64_t cleanCacheSum = 0; // The total amount of application cache currently cleaned
