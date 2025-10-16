@@ -53,7 +53,7 @@ ani_object AniAppControlCommon::ConvertDisposedRule(ani_env* env, const Disposed
     // want: Want
     ani_object want = nullptr;
     if (disposedRule.want != nullptr) {
-        want = WrapWant(env, *disposedRule.want);
+        want = CreateAniWant(env, *disposedRule.want);
         RETURN_NULL_IF_NULL(want);
     }
 
@@ -101,7 +101,7 @@ ani_object AniAppControlCommon::ConvertUninstallDisposedRule(ani_env* env,
     // want: Want
     ani_object want = nullptr;
     if (uninstallDisposedRule.want != nullptr) {
-        want = WrapWant(env, *uninstallDisposedRule.want);
+        want = CreateAniWant(env, *uninstallDisposedRule.want);
         RETURN_NULL_IF_NULL(want);
     }
 
