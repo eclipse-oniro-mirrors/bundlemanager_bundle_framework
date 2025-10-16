@@ -31,6 +31,7 @@ bool BundleCompatibleDeviceType::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, errCode);
     return true;
 }
+
 bool BundleCompatibleDeviceType::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
