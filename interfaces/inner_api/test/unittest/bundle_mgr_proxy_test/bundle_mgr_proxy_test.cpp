@@ -598,7 +598,7 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_2901, Function | SmallTest | 
     std::vector<std::string> bundleNames;
     std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
     auto ret = bundleMgrProxy.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
 /**
