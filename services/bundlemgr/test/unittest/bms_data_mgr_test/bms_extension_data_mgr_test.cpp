@@ -2121,11 +2121,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BatchGetCompatibleDeviceType_001, Function | S
     std::vector<std::string> bundleNames = {"bundleNameTest"};
     std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
     ErrCode res = bmsExtensionDataMgrTest.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-    // #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(res, ERR_OK);
-    // #else
-    // EXPECT_EQ(res, "default");
-    // #endif
 }
 
 /**
