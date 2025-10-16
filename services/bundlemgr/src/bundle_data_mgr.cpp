@@ -10538,6 +10538,8 @@ ErrCode BundleDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, 
         }
         return ERR_SHORTCUT_MANAGER_INTERNAL_ERROR;
     }
+    APP_LOGI_NOFUNC("AddDesktopShortcutInfo -n %{public}s -i %{public}d, -u %{public}d",
+        shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
     return ERR_OK;
 }
 
@@ -10551,6 +10553,8 @@ ErrCode BundleDataMgr::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInf
     if (!shortcutStorage_->DeleteDesktopShortcutInfo(shortcutInfo, userId)) {
         return ERR_SHORTCUT_MANAGER_INTERNAL_ERROR;
     }
+    APP_LOGI_NOFUNC("DeleteDesktopShortcutInfo -n %{public}s -i %{public}d, -u %{public}d",
+        shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
     return ERR_OK;
 }
 
@@ -10579,6 +10583,7 @@ ErrCode BundleDataMgr::GetAllDesktopShortcutInfo(int32_t userId, std::vector<Sho
         }
         shortcutInfos.emplace_back(data);
     }
+    APP_LOGI_NOFUNC("GetAllDesktopShortcutInfo size:%{public}zu -u %{public}d", shortcutInfos.size(), userId);
     return ERR_OK;
 }
 
