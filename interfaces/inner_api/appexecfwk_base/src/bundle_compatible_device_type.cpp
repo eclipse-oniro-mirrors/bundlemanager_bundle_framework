@@ -15,10 +15,11 @@
 
 #include "bundle_compatible_device_type.h"
 
+#include <cstdint>
+
 #include "json_util.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
-#include <cstdint>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -49,4 +50,4 @@ BundleCompatibleDeviceType *BundleCompatibleDeviceType::Unmarshalling(Parcel &pa
     return info;
 }
 }
-}
+}
