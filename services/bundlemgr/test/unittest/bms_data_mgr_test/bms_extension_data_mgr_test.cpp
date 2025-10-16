@@ -2244,4 +2244,38 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_IsTargetAppTest_0050, Function | 
     bool res = bmsExtensionDataMgrTest.BmsIsTargetAppTest(bundleName, appIdentifier);
     EXPECT_FALSE(res);
 }
+
+/**
+ * @tc.number: BackupBundleData_001
+ * @tc.name: BackupBundleData
+ * @tc.desc: BackupBundleData
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BackupBundleData_001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgrTest;
+    std::string bundleName = "testname";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto res = bmsExtensionDataMgrTest.BackupBundleData(bundleName, userId, appIndex);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
+}
+
+/**
+ * @tc.number: BackupBundleData_002
+ * @tc.name: BackupBundleData
+ * @tc.desc: BackupBundleData
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BackupBundleData_002, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName = "testname";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto res = bundleMgrExtTest.BackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
 } // OHOS

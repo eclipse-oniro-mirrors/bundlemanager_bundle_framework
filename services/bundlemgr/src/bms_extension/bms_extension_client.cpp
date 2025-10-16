@@ -335,6 +335,16 @@ ErrCode BmsExtensionClient::ClearData(const std::string &bundleName, int32_t use
     }
     return bmsExtensionImpl_->ClearData(bundleName, userId);
 }
+ErrCode BmsExtensionClient::BackupBundleData(const std::string &bundleName,
+    const int32_t userId, const int32_t appIndex)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->BackupBundleData(bundleName, userId, appIndex);
+}
 ErrCode BmsExtensionClient::ClearCache(const std::string &bundleName, sptr<IRemoteObject> callback, int32_t userId)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

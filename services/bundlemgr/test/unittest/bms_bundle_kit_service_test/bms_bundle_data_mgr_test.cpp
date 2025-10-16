@@ -4718,4 +4718,26 @@ HWTEST_F(BmsBundleDataMgrTest, InnerProcessOtaNewInstallBundle_0010, Function | 
         EXPECT_FALSE(ret);
     }
 }
+
+/**
+ * @tc.number: BackupBundleData_0100
+ * @tc.name: BackupBundleData
+ * @tc.desc: test BackupBundleData of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BackupBundleData_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+
+    bmsExtensionClient->bmsExtensionImpl_ = nullptr;
+    std::string bundleName = BUNDLE_NAME_TEST;
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto ret = bmsExtensionClient->BackupBundleData(bundleName, userId, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+
+    bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>();
+    ret = bmsExtensionClient->BackupBundleData(bundleName, userId, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+}
 } // OHOS
