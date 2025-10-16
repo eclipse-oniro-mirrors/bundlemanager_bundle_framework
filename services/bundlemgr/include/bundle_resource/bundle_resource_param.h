@@ -26,6 +26,7 @@ public:
 
     static std::string GetSystemColorMode();
 
+    static std::string GetSystemLocale();
 private:
     static std::string GetSystemParam(const std::string &key);
 };
