@@ -54,6 +54,7 @@ namespace {
 constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 constexpr int64_t GET_BUNDLE_FOR_SELF_CACHE_TIME = 800; // 800ms
+constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 static std::atomic<bool> g_cacheAble = true;
 static std::once_flag g_cacheStopFlag;
 
