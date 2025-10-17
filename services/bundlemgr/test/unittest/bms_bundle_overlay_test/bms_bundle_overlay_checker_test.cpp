@@ -57,7 +57,7 @@ const int32_t FILE_UNDERLINE_NUM = 2;
 const int32_t NOT_EXIST_USERID = -5;
 const int32_t FOUR = 4;
 const int32_t DEFAULT_OVERLAY_BUNDLE_INFO = 0;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
 } // namespace
 

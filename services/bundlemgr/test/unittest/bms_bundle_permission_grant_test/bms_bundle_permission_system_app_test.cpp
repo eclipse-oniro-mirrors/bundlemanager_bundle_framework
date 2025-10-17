@@ -52,7 +52,7 @@ const int32_t USERID = 100;
 const int32_t FLAGS = 0;
 const int32_t UID = 0;
 const int32_t APP_INDEX = 0;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 }  // namespace
 
 class BmsBundlePermissionSyetemAppFalseTest : public testing::Test {

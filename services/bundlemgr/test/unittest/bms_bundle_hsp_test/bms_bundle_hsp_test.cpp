@@ -50,7 +50,7 @@ const std::string MODULE_NAME_A = "hsp_A";
 const std::string MODULE_NAME_B = "hsp_B";
 const std::string MODULE_NAME_C = "hsp_C";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 }  // namespace
 
 class BmsBundleHspTest : public testing::Test {

@@ -59,7 +59,7 @@ const std::string NOT_EXIST_PATH = "notExist";
 const std::string EXIST_PATH = "/data/test/resource/bms/quickfix";
 const std::string EXIST_PATH2 = "/data/test/resource/bms/accesstoken_bundle";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 }  // namespace
 
 class BmsBundleAppProvisionInfoTest : public testing::Test {
