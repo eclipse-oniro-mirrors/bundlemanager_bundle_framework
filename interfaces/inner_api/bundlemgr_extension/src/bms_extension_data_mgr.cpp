@@ -618,7 +618,7 @@ bool BmsExtensionDataMgr::DetermineCloneNum(
 
 std::string BmsExtensionDataMgr::GetCompatibleDeviceType(const std::string &bundleName)
 {
-    if ((Init() == ERR_OK) && handler_) {
+    if (Init() == ERR_OK) {
         auto bundleMgrExtPtr =
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr) {
@@ -741,7 +741,7 @@ ErrCode BmsExtensionDataMgr::RemoveBackupBundleData(const std::string &bundleNam
 ErrCode BmsExtensionDataMgr::BatchGetCompatibleDeviceType(
     const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
 {
-    if ((Init() != ERR_OK) || handler_ == nullptr) {
+    if (Init() != ERR_OK) {
         APP_LOGW("link failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
