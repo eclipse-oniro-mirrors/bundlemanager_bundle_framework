@@ -4990,7 +4990,11 @@ HWTEST_F(BmsBundleDataMgrTest, BackupBundleData_0100, Function | MediumTest | Le
 
     bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>();
     ret = bmsExtensionClient->BackupBundleData(bundleName, userId, appIndex);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, ERR_OK);
+    #else
     EXPECT_NE(ret, ERR_OK);
+    #endif
 }
 
 /**
@@ -5012,7 +5016,11 @@ HWTEST_F(BmsBundleDataMgrTest, RecoverBackupBundleData_0100, Function | MediumTe
 
     bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>();
     ret = bmsExtensionClient->RecoverBackupBundleData(bundleName, userId, appIndex);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, ERR_OK);
+    #else
     EXPECT_NE(ret, ERR_OK);
+    #endif
 }
 
 /**
@@ -5034,6 +5042,10 @@ HWTEST_F(BmsBundleDataMgrTest, RemoveBackupBundleData_0100, Function | MediumTes
 
     bmsExtensionClient->bmsExtensionImpl_ = std::make_shared<BmsExtensionDataMgr>();
     ret = bmsExtensionClient->RemoveBackupBundleData(bundleName, userId, appIndex);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(ret, ERR_OK);
+    #else
     EXPECT_NE(ret, ERR_OK);
+    #endif
 }
 } // OHOS
