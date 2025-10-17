@@ -91,7 +91,7 @@ ErrCode QuickFixDeployer::DeployQuickFix()
         } else {
             oldPath += ServiceConstants::PATCH_PATH + std::to_string(appQuick.deployingAppqfInfo.versionCode);
         }
-        if (InstalldClient::GetInstance()->RemoveDir(oldPath)) {
+        if (InstalldClient::GetInstance()->RemoveDir(oldPath) != ERR_OK) {
             LOG_E(BMS_TAG_DEFAULT, "delete %{private}s failed", oldPath.c_str());
         }
     }
@@ -530,7 +530,7 @@ ErrCode QuickFixDeployer::GetBundleInfo(const std::string &bundleName, BundleInf
     return ERR_OK;
 }
 
-ErrCode QuickFixDeployer::ToInnerAppQuickFix(const std::unordered_map<std::string, AppQuickFix> infos,
+ErrCode QuickFixDeployer::ToInnerAppQuickFix(const std::unordered_map<std::string, AppQuickFix> &infos,
     const InnerAppQuickFix &oldInnerAppQuickFix, InnerAppQuickFix &newInnerAppQuickFix)
 {
     LOG_D(BMS_TAG_DEFAULT, "ToInnerAppQuickFix start");

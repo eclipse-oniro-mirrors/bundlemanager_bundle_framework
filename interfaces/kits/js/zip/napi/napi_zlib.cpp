@@ -925,7 +925,7 @@ void DecompressExcute(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo)
 
 napi_value DecompressFile(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("napi begin CompressFile");
+    APP_LOGD("napi begin DecompressFile");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, WRONG_PARAM);

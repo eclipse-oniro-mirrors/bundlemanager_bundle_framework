@@ -1027,7 +1027,7 @@ void BMSEventHandler::ProcessScanDir(const std::string &dir, std::list<std::stri
 {
     BundleScanner scanner;
     std::list<std::string> bundleList = scanner.Scan(dir);
-    for (auto item : bundleList) {
+    for (const auto &item : bundleList) {
         auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), item);
         if (iter == bundleDirs.end()) {
             bundleDirs.push_back(item);

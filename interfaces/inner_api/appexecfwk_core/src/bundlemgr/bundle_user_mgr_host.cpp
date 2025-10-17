@@ -41,7 +41,7 @@ int BundleUserMgrHost::OnRemoteRequest(
     std::u16string descripter = BundleUserMgrHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
-        APP_LOGE("fail to write reply message in bundle user mgr host due to the reply is nullptr");
+        APP_LOGE("descripter is not matched");
         return OBJECT_NULL;
     }
 

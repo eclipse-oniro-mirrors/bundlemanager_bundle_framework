@@ -223,7 +223,7 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
         .callback_ = removeCallback_,
     };
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGW("BundleStatusCallback OnBundleUpdated asyncCallbackInfo is nullptr bundleName : %{public}s",
+        APP_LOGW("BundleStatusCallback OnBundleRemoved asyncCallbackInfo is nullptr bundleName : %{public}s",
             bundleName.c_str());
         delete work;
         return;

@@ -345,8 +345,8 @@ void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string
     APP_LOGD("RestoreSandboxUidAndGid begin");
     std::unique_lock<std::shared_mutex> lock(sandboxAppMutex_);
     for (const auto &info : sandboxAppInfos_) {
-        for (auto infoItem : info.second.GetInnerBundleUserInfos()) {
-            auto innerBundleUserInfo = infoItem.second;
+        for (const auto &infoItem : info.second.GetInnerBundleUserInfos()) {
+            auto &innerBundleUserInfo = infoItem.second;
             int32_t bundleId = innerBundleUserInfo.uid -
                 innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
             auto item = bundleIdMap.find(bundleId);

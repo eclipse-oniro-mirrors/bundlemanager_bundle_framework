@@ -101,7 +101,7 @@ ErrCode BundleOverlayInstallChecker::CheckInternalBundle(
     // 4. check TargetModule with moduleName
     std::string targetModuleName = innerModuleInfos.at(moduleName).targetModuleName;
     if (targetModuleName == moduleName) {
-        APP_LOGE("target moduleName cannot be same with moudleName");
+        APP_LOGE("target moduleName cannot be same with moduleName");
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_MODULE_NAME;
     }
     // 5. check target module is non-overlay hap
@@ -252,7 +252,7 @@ ErrCode BundleOverlayInstallChecker::CheckTargetBundle(const std::string &target
     }
     // 1. check target bundle is not external overlay bundle
     if (oldInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
-        APP_LOGE("target bundle is cannot be external overlay bundle");
+        APP_LOGE("target bundle cannot be external overlay bundle");
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_IS_OVERLAY_BUNDLE;
     }
     // 2. check target bundle is system application

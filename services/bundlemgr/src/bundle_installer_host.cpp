@@ -72,7 +72,7 @@ int BundleInstallerHost::OnRemoteRequest(
     std::u16string descripter = GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to write reply message in bundle mgr host due to the reply is nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "descripter is not matched");
         return OBJECT_NULL;
     }
     switch (code) {
@@ -146,6 +146,10 @@ void BundleInstallerHost::HandleInstallMessage(MessageParcel &data)
         return;
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    if (statusReceiver == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver is nullptr");
+        return;
+    }
     installParam->withCopyHaps = true;
     Install(bundlePath, *installParam, statusReceiver);
     LOG_D(BMS_TAG_INSTALLER, "handle install message finished");
@@ -167,6 +171,10 @@ void BundleInstallerHost::HandleRecoverMessage(MessageParcel &data)
         return;
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    if (statusReceiver == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver is nullptr");
+        return;
+    }
 
     installParam->preinstallSourceFlag = ApplicationInfoFlag::FLAG_RECOVER_INSTALLED;
     Recover(bundleName, *installParam, statusReceiver);
@@ -201,6 +209,10 @@ void BundleInstallerHost::HandleInstallMultipleHapsMessage(MessageParcel &data)
         return;
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    if (statusReceiver == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver is nullptr");
+        return;
+    }
     installParam->withCopyHaps = true;
     Install(pathVec, *installParam, statusReceiver);
     LOG_D(BMS_TAG_INSTALLER, "handle install multiple haps finished");
@@ -222,7 +234,10 @@ void BundleInstallerHost::HandleUninstallMessage(MessageParcel &data)
         return;
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
-
+    if (statusReceiver == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver is nullptr");
+        return;
+    }
     Uninstall(bundleName, *installParam, statusReceiver);
     LOG_D(BMS_TAG_INSTALLER, "handle uninstall message finished");
 }
@@ -244,6 +259,10 @@ void BundleInstallerHost::HandleUninstallModuleMessage(MessageParcel &data)
         return;
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    if (statusReceiver == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver is nullptr");
+        return;
+    }
     Uninstall(bundleName, modulePackage, *installParam, statusReceiver);
     LOG_D(BMS_TAG_INSTALLER, "handle uninstall message finished");
 }
@@ -262,6 +281,10 @@ void BundleInstallerHost::HandleUninstallByUninstallParam(MessageParcel &data)
         return;
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    if (statusReceiver == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver is nullptr");
+        return;
+    }
     Uninstall(*uninstallParam, statusReceiver);
 }
 
@@ -414,6 +437,10 @@ void BundleInstallerHost::HandleUninstallAndRecoverMessage(MessageParcel &data)
         return;
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    if (statusReceiver == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver is nullptr");
+        return;
+    }
     installParam->preinstallSourceFlag = ApplicationInfoFlag::FLAG_RECOVER_INSTALLED;
     UninstallAndRecover(bundleName, *installParam, statusReceiver);
     LOG_D(BMS_TAG_INSTALLER, "handle UninstallAndRecover message finished");

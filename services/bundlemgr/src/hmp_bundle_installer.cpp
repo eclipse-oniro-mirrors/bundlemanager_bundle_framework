@@ -352,32 +352,28 @@ void HmpBundleInstaller::CheckUninstallSystemHsp(const std::string &bundleName)
         APP_LOGD("bundleName %{public}s is not a system hsp", bundleName.c_str());
         return;
     }
-    bool isExistHsp = false;
     for (const auto &item : info.GetInnerModuleInfos()) {
         if (item.second.distro.moduleType == "shared") {
-            isExistHsp = true;
             return;
         }
     }
     APP_LOGI("appService %{public}s does not have any hsp, so it need to be uninstalled.", bundleName.c_str());
-    if (!isExistHsp) {
-        InstallParam installParam;
-        installParam.userId = Constants::DEFAULT_USERID;
-        installParam.needSavePreInstallInfo = true;
-        installParam.isPreInstallApp = true;
-        installParam.SetKillProcess(false);
-        installParam.needSendEvent = false;
-        installParam.isKeepData = true;
-        MarkPreBundleSyeEventBootTag(false);
-        ErrCode result = UninstallBundle(bundleName, installParam);
-        if (result != ERR_OK) {
-            APP_LOGW("uninstall system bundle fail, error: %{public}d", result);
-            return;
-        }
-        PreInstallBundleInfo preInstallBundleInfo;
-        if ((dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo))) {
-            dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
-        }
+    InstallParam installParam;
+    installParam.userId = Constants::DEFAULT_USERID;
+    installParam.needSavePreInstallInfo = true;
+    installParam.isPreInstallApp = true;
+    installParam.SetKillProcess(false);
+    installParam.needSendEvent = false;
+    installParam.isKeepData = true;
+    MarkPreBundleSyeEventBootTag(false);
+    ErrCode result = UninstallBundle(bundleName, installParam);
+    if (result != ERR_OK) {
+        APP_LOGW("uninstall system bundle fail, error: %{public}d", result);
+        return;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if ((dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo))) {
+        dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
     }
 }
 

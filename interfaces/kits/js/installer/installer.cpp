@@ -204,7 +204,6 @@ napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &nBundleInstaller));
     APP_LOGD("call GetBundleInstallerSync done");
     return nBundleInstaller;
-    APP_LOGI("call GetBundleInstallerSync done");
 }
 
 static bool ParseHashParam(napi_env env, napi_value args, std::string &key, std::string &value)
@@ -713,7 +712,7 @@ static bool ParseUninstallParam(napi_env env, napi_value args, UninstallParam &u
         !ParseModuleName(env, args, uninstallParam.moduleName) ||
         !ParseVersionCode(env, args, uninstallParam.versionCode) ||
         !ParseUserId(env, args, uninstallParam.userId)) {
-            APP_LOGE("Parse UninstallParam faied");
+            APP_LOGE("Parse UninstallParam failed");
             return false;
     }
     return true;

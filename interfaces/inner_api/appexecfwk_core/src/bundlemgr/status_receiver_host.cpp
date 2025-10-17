@@ -40,7 +40,7 @@ int StatusReceiverHost::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
     std::u16string descripter = StatusReceiverHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
-        APP_LOGE("fail to write reply message in status receiver host due to the reply is nullptr");
+        APP_LOGE("descripter is not matched");
         return OBJECT_NULL;
     }
 

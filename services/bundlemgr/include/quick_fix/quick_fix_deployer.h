@@ -53,7 +53,7 @@ private:
         const std::vector<std::string> &bundleFilePaths,
         std::unordered_map<std::string, AppQuickFix> &infos);
 
-    ErrCode ToInnerAppQuickFix(const std::unordered_map<std::string, AppQuickFix> infos,
+    ErrCode ToInnerAppQuickFix(const std::unordered_map<std::string, AppQuickFix> &infos,
         const InnerAppQuickFix &oldInnerAppQuickFix, InnerAppQuickFix &newInnerAppQuickFix);
 
     ErrCode GetBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);

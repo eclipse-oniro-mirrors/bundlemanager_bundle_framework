@@ -40,7 +40,7 @@ int CleanCacheCallbackHost::OnRemoteRequest(
     std::u16string descripter = CleanCacheCallbackHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
-        APP_LOGE("fail to write reply message in clean cache host due to the reply is nullptr");
+        APP_LOGE("descripter is not matched");
         return OBJECT_NULL;
     }
 

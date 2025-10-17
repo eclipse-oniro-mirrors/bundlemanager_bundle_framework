@@ -22,12 +22,12 @@ namespace AppExecFwk {
 BundleExceptionHandler::BundleExceptionHandler(const std::shared_ptr<IBundleDataStorage> &dataStorage)
     : dataStorage_(dataStorage)
 {
-    APP_LOGD("create bundle excepetion handler instance");
+    APP_LOGD("create bundle exception handler instance");
 }
 
 BundleExceptionHandler::~BundleExceptionHandler()
 {
-    APP_LOGD("destroy bundle excepetion handler instance");
+    APP_LOGD("destroy bundle exception handler instance");
 }
 
 
@@ -51,7 +51,7 @@ void BundleExceptionHandler::InnerCheckSystemHspPath(const InnerBundleInfo &info
 }
 
 bool BundleExceptionHandler::RemoveBundleAndDataDir(const std::string &bundleDir,
-    const std::string &bundleOrMoudleDir, int32_t userId) const
+    const std::string &bundleOrModuleDir, int32_t userId) const
 {
     ErrCode result = InstalldClient::GetInstance()->RemoveDir(bundleDir);
     if (result != ERR_OK) {
@@ -59,17 +59,17 @@ bool BundleExceptionHandler::RemoveBundleAndDataDir(const std::string &bundleDir
         return false;
     }
 
-    if (bundleOrMoudleDir.find(ServiceConstants::HAPS) != std::string::npos) {
-        result = InstalldClient::GetInstance()->RemoveModuleDataDir(bundleOrMoudleDir, userId);
+    if (bundleOrModuleDir.find(ServiceConstants::HAPS) != std::string::npos) {
+        result = InstalldClient::GetInstance()->RemoveModuleDataDir(bundleOrModuleDir, userId);
         if (result != ERR_OK) {
-            APP_LOGE("fail to remove module data dir %{public}s, error is %{public}d", bundleOrMoudleDir.c_str(),
+            APP_LOGE("fail to remove module data dir %{public}s, error is %{public}d", bundleOrModuleDir.c_str(),
                 result);
             return false;
         }
     } else {
-        result = InstalldClient::GetInstance()->RemoveBundleDataDir(bundleOrMoudleDir, userId);
+        result = InstalldClient::GetInstance()->RemoveBundleDataDir(bundleOrModuleDir, userId);
         if (result != ERR_OK) {
-            APP_LOGE("fail to remove bundle data dir %{public}s, error is %{public}d", bundleOrMoudleDir.c_str(),
+            APP_LOGE("fail to remove bundle data dir %{public}s, error is %{public}d", bundleOrModuleDir.c_str(),
                 result);
             return false;
         }

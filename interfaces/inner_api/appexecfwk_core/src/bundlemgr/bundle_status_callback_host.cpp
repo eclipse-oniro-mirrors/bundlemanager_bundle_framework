@@ -41,7 +41,7 @@ int BundleStatusCallbackHost::OnRemoteRequest(
     std::u16string descripter = BundleStatusCallbackHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
-        APP_LOGE("fail to write reply message in status callback host due to the reply is nullptr");
+        APP_LOGE("descripter is not matched");
         return OBJECT_NULL;
     }
 
