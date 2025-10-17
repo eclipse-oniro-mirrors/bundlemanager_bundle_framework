@@ -4786,7 +4786,9 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     if (appServiceHspBundleName_.find(bundleName) != appServiceHspBundleName_.end()) {
         appServiceHspBundleName_.erase(bundleName);
     }
-    DeleteDesktopShortcutInfo(bundleName);
+    if (!isKeepData) {
+        DeleteDesktopShortcutInfo(bundleName);
+    }
 }
 
 bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,

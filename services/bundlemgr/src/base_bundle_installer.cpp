@@ -5324,7 +5324,7 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
         return result;
     }
 
-    if (dataMgr_->DeleteDesktopShortcutInfo(bundleName, userId_, 0) != ERR_OK) {
+    if (!isKeepData && dataMgr_->DeleteDesktopShortcutInfo(bundleName, userId_, 0) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "fail to delete shortcut info");
     }
 
