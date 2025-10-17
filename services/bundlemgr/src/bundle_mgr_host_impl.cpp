@@ -1816,8 +1816,7 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
     NotifyBundleStatus(installRes);
 }
 
-bool BundleMgrHostImpl::CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex,
-    bool checkKeepData)
+bool BundleMgrHostImpl::CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex)
 {
     if (appIndex == 0) {
         return true;
@@ -1835,11 +1834,6 @@ bool BundleMgrHostImpl::CheckAppIndex(const std::string &bundleName, int32_t use
     bool isAppIndexValid = std::find(appIndexes.cbegin(), appIndexes.cend(), appIndex) == appIndexes.cend();
     if (isAppIndexValid) {
         APP_LOGE("appIndex is not in the installed appIndexes range");
-        UninstallBundleInfo uninstallBundleInfo;
-        if (checkKeepData && dataMgr->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
-            APP_LOGD("bundle was uninstalled with keepdata before");
-            return true;
-        }
         return false;
     }
     return true;
@@ -3677,15 +3671,21 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGE("bundleName empty");
         return false;
     }
-    if (!CheckAppIndex(bundleName, userId, appIndex, true)) {
-        return false;
-    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
+    bool isKeepDataUninstalled = false;
+    if (!CheckAppIndex(bundleName, userId, appIndex)) {
+        UninstallBundleInfo uninstallBundleInfo;
+        isKeepDataUninstalled = dataMgr->GetUninstallBundleInfo(bundleName, uninstallBundleInfo);
+        if (!isKeepDataUninstalled) {
+            APP_LOGD("bundle was uninstalled with keepdata before");
+            return false;
+        }
+    }
+    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName) && !isKeepDataUninstalled) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         ErrCode ret = bmsExtensionClient->GetBundleStats(bundleName, userId, bundleStats);
         APP_LOGI("ret : %{public}d", ret);
