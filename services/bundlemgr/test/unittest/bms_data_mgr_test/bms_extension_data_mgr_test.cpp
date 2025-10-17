@@ -114,6 +114,8 @@ public:
     bool CheckBundleNameAndStratAbilityTest(const std::string& bundleName, const std::string& appIdentifier);
     bool BmsCheckBundleNameAndStratAbilityTest(const std::string& bundleName, const std::string& appIdentifier);
     std::string GetCompatibleDeviceType(const std::string& bundleName) override;
+    ErrCode BatchGetCompatibleDeviceType(
+        const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes);
     bool IsTargetApp(const std::string &bundleName, const std::string &appIdentifier) override;
     bool IsTargetAppTest(const std::string &bundleName, const std::string &appIdentifier);
     bool BmsIsTargetAppTest(const std::string& bundleName, const std::string& appIdentifier);
@@ -218,6 +220,12 @@ std::string BundleMgrExtTest::GetCompatibleDeviceType(const std::string& bundleN
         typeName = "GetCompatibleDeviceTypetest";
     }
     return typeName;
+}
+
+ErrCode BundleMgrExtTest::BatchGetCompatibleDeviceType(
+    const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
+{
+    return ERR_OK;
 }
 
 bool BmsExtensionDataMgrTest::CheckBmsExtensionProfile()
@@ -1234,6 +1242,21 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0031, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: BundleMgrExt_0031
+ * @tc.name: BatchGetCompatibleDeviceType
+ * @tc.desc: BatchGetCompatibleDeviceType
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_BatchGetCompatibleDeviceType_0001, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::vector<std::string> bundleNames = {"bundleNameTest"};
+    std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+    ErrCode res = bundleMgrExtTest.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(compatibleDeviceTypes.size(), 0);
+}
+
+/**
  * @tc.number: BmsExtensionDataMgrTest_0032
  * @tc.name: IsRdDevice
  * @tc.desc: IsRdDevice
@@ -1278,6 +1301,21 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_0034, Function | Small
 #else
     EXPECT_EQ(res, "default");
 #endif
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgrTest_BatchGetCompatibleDeviceType_0001
+ * @tc.name: BatchGetCompatibleDeviceType
+ * @tc.desc: BatchGetCompatibleDeviceType
+ */
+HWTEST_F(
+    BmsExtensionDataMgrTest, BmsExtensionDataMgrTest_BatchGetCompatibleDeviceType_0001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgrTest;
+    std::vector<std::string> bundleNames = {"bundleNameTest"};
+    std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+    ErrCode res = bmsExtensionDataMgrTest.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -2069,6 +2107,21 @@ HWTEST_F(BmsExtensionDataMgrTest, GetCompatibleDeviceType_001, Function | SmallT
     #else
     EXPECT_EQ(res, "default");
     #endif
+}
+
+/**
+ * @tc.number: BatchGetCompatibleDeviceType_001
+ * @tc.name: BatchGetCompatibleDeviceType
+ * @tc.desc: BatchGetCompatibleDeviceType
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BatchGetCompatibleDeviceType_001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgrTest;
+    bmsExtensionDataMgrTest.handler_ = nullptr;
+    std::vector<std::string> bundleNames = {"bundleNameTest"};
+    std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+    ErrCode res = bmsExtensionDataMgrTest.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**

@@ -2055,6 +2055,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetCompatibleDeviceTypeNative_0001, Functio
 }
 
 /**
+ * @tc.number: HandleBatchGetCompatibleDeviceType_0001
+ * @tc.name: test the HandleBatchGetCompatibleDeviceType
+ * @tc.desc: 1. system running normally
+ *           2. test HandleBatchGetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
  * @tc.number: HandleGetCompatibleDeviceType_0001
  * @tc.name: test the HandleGetCompatibleDeviceType
  * @tc.desc: 1. system running normally
