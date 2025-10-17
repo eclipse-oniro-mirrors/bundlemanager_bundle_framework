@@ -27,7 +27,7 @@ export default namespace bundleResourceManager {
 
   loadLibrary("ani_bundle_res_manager.z");
 
-  const INVALID_VALUE: int = -500;
+  const INVALID_VALUE: int = 0;
 
   enum ResourceFlag {
     GET_RESOURCE_INFO_ALL = 0x00000001,
