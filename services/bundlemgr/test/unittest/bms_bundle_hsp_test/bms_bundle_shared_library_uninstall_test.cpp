@@ -44,7 +44,7 @@ const std::string LIBA_V10002 = "libA_v10002.hsp";
 const std::string BUNDLE_NAME = "com.example.host";
 const std::string SHARED_BUNDLE_NAME = "com.example.liba";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 
 class BmsBundleSharedLibraryUninstallTest : public testing::Test {
 public:

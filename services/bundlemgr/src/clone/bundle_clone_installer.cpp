@@ -363,13 +363,11 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     } else {
         isKeepData_ = true;
         UninstallBundleInfo uninstallBundleInfo;
-        if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
-            uninstallBundleInfo.appId = appId_;
-            uninstallBundleInfo.appIdentifier = appIdentifier_;
-            uninstallBundleInfo.appProvisionType = info.GetAppProvisionType();
-            uninstallBundleInfo.bundleType = info.GetApplicationBundleType();
-            info.GetModuleNames(uninstallBundleInfo.moduleNames);
-        }
+        uninstallBundleInfo.appId = appId_;
+        uninstallBundleInfo.appIdentifier = appIdentifier_;
+        uninstallBundleInfo.appProvisionType = info.GetAppProvisionType();
+        uninstallBundleInfo.bundleType = info.GetApplicationBundleType();
+        info.GetModuleNames(uninstallBundleInfo.moduleNames);
         std::string key = std::to_string(userId) + "_" + std::to_string(appIndex);
         uninstallBundleInfo.userInfos[key].uid = uid_;
         uninstallBundleInfo.userInfos[key].gids = it->second.gids;
@@ -703,7 +701,6 @@ bool BundleCloneInstaller::DeleteUninstallCloneBundleInfo(const std::string &bun
     }
     if (!dataMgr_->DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex)) {
         LOG_E(BMS_TAG_INSTALLER, "delete failed");
-        return false;
     }
     BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
     return true;

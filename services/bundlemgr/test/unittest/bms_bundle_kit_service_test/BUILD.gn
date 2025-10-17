@@ -1400,6 +1400,7 @@ ohos_unittest("BmsCleanAllBundleCacheTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "jsoncpp:jsoncpp",
+    "libuv:uv",
     "napi:ace_napi",
     "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
@@ -1407,7 +1408,6 @@ ohos_unittest("BmsCleanAllBundleCacheTest") {
     "selinux_adapter:librestorecon",
   ]
   external_deps += bundle_install_external_deps
-  public_external_deps = [ "libuv:uv" ]
   defines = []
   if (current_cpu == "arm64") {
     defines += [ "USE_ARM64" ]

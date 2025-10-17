@@ -65,7 +65,7 @@ const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3j
 const int32_t USERID = 100;
 const int32_t FLAG = 0;
 const int32_t WRONG_UID = -1;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
 const std::string BUNDLE_PREVIEW_TEST = "preview.hap";
 const std::string BUNDLE_THUMBNAIL_TEST = "thumbnail.hap";
@@ -2577,7 +2577,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleStats_0100, Function | SmallTest | Leve
     EXPECT_EQ(result, true);
 
     result = dataMgr->GetBundleStats(BUNDLE_PREVIEW_NAME, Constants::INVALID_USERID, bundleStats);
-    EXPECT_EQ(result, true);
+    EXPECT_EQ(result, false);
 
     UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }

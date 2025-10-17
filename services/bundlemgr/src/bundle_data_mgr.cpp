@@ -4173,28 +4173,30 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag) const
 {
     int32_t responseUserId = -1;
-    int32_t uid = -1;
+    int32_t uid = Constants::INVALID_UID;
     std::vector<std::string> moduleNameList;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(bundleName);
-        UninstallBundleInfo uninstallBundleInfo;
-        if (infoItem == bundleInfos_.end() && !GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
-            APP_LOGD("bundle is not existed and not uninstalled with keepdata before");
-            return false;
-        }
         if (infoItem != bundleInfos_.end()) {
             responseUserId = infoItem->second.GetResponseUserId(userId);
             uid = infoItem->second.GetUid(responseUserId, appIndex);
             infoItem->second.GetModuleNames(moduleNameList);
-        } else {
-            responseUserId = uninstallBundleInfo.GetResponseUserId(userId);
-            uid = uninstallBundleInfo.GetUid(responseUserId, appIndex);
-            if (uid == Constants::INVALID_UID) {
-                APP_LOGD("clone app not uninstall with keepdata for index: %{public}d", appIndex);
-                return false;
-            }
-            moduleNameList = uninstallBundleInfo.moduleNames;
+        }
+    }
+    if (uid == Constants::INVALID_UID) {
+        UninstallBundleInfo uninstallBundleInfo;
+        if (!GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+            APP_LOGD("bundle:%{public}s [%{public}d] is not existed and not uninstalled with keepdata",
+                bundleName.c_str(), appIndex);
+            return false;
+        }
+        responseUserId = userId;
+        uid = uninstallBundleInfo.GetUid(responseUserId, appIndex);
+        moduleNameList = uninstallBundleInfo.moduleNames;
+        if (uid == Constants::INVALID_UID) {
+            APP_LOGD("can not found bundle: %{public}s in uninstallBundleInfo for index: %{public}d",
+            bundleName.c_str(), appIndex);
         }
     }
     ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
@@ -4217,7 +4219,6 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
             }
         }
     }
-
     return true;
 }
 
@@ -4316,30 +4317,24 @@ bool BundleDataMgr::GetAllUnisntallBundleUids(const int32_t requestUserId,
     const std::map<std::string, UninstallBundleInfo> &uninstallBundleInfos,
     std::vector<int32_t> &uids) const
 {
-    int32_t responseUserId = requestUserId;
     for (const auto &info : uninstallBundleInfos) {
         std::string bundleName = info.first;
         if (info.second.userInfos.empty()) {
             continue;
         }
-        responseUserId = info.second.GetResponseUserId(requestUserId);
-        if (responseUserId == Constants::INVALID_USERID) {
-            APP_LOGD("bundle %{public}s before is not installed in user %{public}d or 0", bundleName.c_str(), requestUserId);
-            continue;
-        }
+        
         if (info.second.bundleType != BundleType::ATOMIC_SERVICE && info.second.bundleType != BundleType::APP) {
             APP_LOGD("BundleType is invalid: %{public}d, bundname: %{public}s", info.second.bundleType, bundleName.c_str());
             continue;
         }
-        uids.push_back(info.second.GetUid(responseUserId, 0));
-        APP_LOGD("get uid: %{public}d for main app: %{public}s", info.second.GetUid(responseUserId, 0),
-            bundleName.c_str());
-        std::string prefixStr = std::to_string(responseUserId) + "_";
+        
+        std::string mainBundle = std::to_string(requestUserId);
+        std::string cloneBundle = mainBundle + "_";
         for (const auto& pair : info.second.userInfos) {
             const std::string& key = pair.first;
-            if (key.compare(0, prefixStr.length(), prefixStr) == 0) {
+            if (key == mainBundle || key.find(cloneBundle) == 0) {
                 uids.push_back(pair.second.uid);
-                APP_LOGD("get uid: %{public}d for clone app: %{public}s", pair.second.uid,
+                APP_LOGD("get uid: %{public}d for app: %{public}s", pair.second.uid,
                     key.c_str());
             }
         }
@@ -8247,6 +8242,23 @@ ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGro
     return res;
 }
 
+bool BundleDataMgr::CreateEl5Group(const InnerBundleInfo &info, int32_t userId)
+{
+    auto dataGroupInfoMap = info.GetDataGroupInfos();
+    if (dataGroupInfoMap.empty()) {
+        return true;
+    }
+    std::vector<DataGroupInfo> dataGroupInfos;
+    for (const auto &groupItem : dataGroupInfoMap) {
+        for (const DataGroupInfo &dataGroupInfo : groupItem.second) {
+            if (dataGroupInfo.userId == userId) {
+                dataGroupInfos.emplace_back(dataGroupInfo);
+            }
+        }
+    }
+    return CreateEl5GroupDirs(dataGroupInfos, userId) == ERR_OK;
+}
+
 ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId)
 {
     if (dataGroupInfos.empty()) {
@@ -8262,6 +8274,12 @@ ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &data
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
         // create el5 group dirs
         std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        bool isExist = false;
+        (void)InstalldClient::GetInstance()->IsExistDir(dir, isExist);
+        if (isExist) {
+            APP_LOGI("group dir(%{public}s) exist", dir.c_str());
+            continue;
+        }
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
             ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
@@ -9461,11 +9479,76 @@ ErrCode BundleDataMgr::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl
     return res;
 }
 
+void BundleDataMgr::AddNewEl5BundleName(const std::string &bundleName)
+{
+    std::lock_guard lock(newEl5Mutex_);
+    newEl5BundleNames_.insert(bundleName);
+}
+
+ErrCode BundleDataMgr::CreateNewBundleEl5Dir(int32_t userId)
+{
+    APP_LOGI("begin");
+    std::vector<CreateDirParam> createDirParams;
+    {
+        std::lock_guard el5Lock(newEl5Mutex_);
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        for (const auto &bundleName : newEl5BundleNames_) {
+            auto infoItem = bundleInfos_.find(bundleName);
+            if (infoItem == bundleInfos_.end()) {
+                APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+                continue;
+            }
+            const InnerBundleInfo &info = infoItem->second;
+            if (!info.HasInnerBundleUserInfo(userId)) {
+                APP_LOGW("bundle %{public}s is not installed in user %{public}d or 0",
+                    info.GetBundleName().c_str(), userId);
+                continue;
+            }
+            if (!info.NeedCreateEl5Dir()) {
+                continue;
+            }
+            CreateDirParam createDirParam;
+            createDirParam.bundleName = info.GetBundleName();
+            createDirParam.userId = userId;
+            createDirParam.uid = info.GetUid(userId);
+            createDirParam.gid = info.GetGid(userId);
+            createDirParam.apl = info.GetAppPrivilegeLevel();
+            createDirParam.isPreInstallApp = info.IsPreInstallApp();
+            createDirParam.debug =
+                info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+            createDirParam.extensionDirs = info.GetAllExtensionDirs();
+            createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
+            createDirParam.dataDirEl = DataDirEl::EL5;
+            createDirParams.emplace_back(createDirParam);
+            CreateEl5Group(info, userId);
+        }
+    }
+    CreateEl5Dir(createDirParams, true);
+    APP_LOGI("end");
+    return ERR_OK;
+}
+
 void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage)
 {
     for (const auto &el5Param : el5Params) {
         APP_LOGI("-n %{public}s -u %{public}d -i %{public}d",
             el5Param.bundleName.c_str(), el5Param.userId, el5Param.appIndex);
+        std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(el5Param.userId);
+        std::string bundleNameDir = el5Param.bundleName;
+        if (el5Param.appIndex > 0) {
+            bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(el5Param.bundleName, el5Param.appIndex);
+        }
+        std::string baseDir = parentDir + ServiceConstants::BASE + bundleNameDir;
+        std::string databaseDir = parentDir + ServiceConstants::DATABASE + bundleNameDir;
+        bool isBaseExist = false;
+        bool isDatabaseExist = false;
+        (void)InstalldClient::GetInstance()->IsExistDir(baseDir, isBaseExist);
+        (void)InstalldClient::GetInstance()->IsExistDir(databaseDir, isDatabaseExist);
+        if (isBaseExist && isDatabaseExist) {
+            APP_LOGI("targetDir(%{public}s) exist", baseDir.c_str());
+            continue;
+        }
         InnerCreateEl5Dir(el5Param);
         SetEl5DirPolicy(el5Param, needSaveStorage);
     }
@@ -10543,6 +10626,8 @@ ErrCode BundleDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, 
         }
         return ERR_SHORTCUT_MANAGER_INTERNAL_ERROR;
     }
+    APP_LOGI_NOFUNC("AddDesktopShortcutInfo -n %{public}s -i %{public}d, -u %{public}d",
+        shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
     return ERR_OK;
 }
 
@@ -10556,6 +10641,8 @@ ErrCode BundleDataMgr::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInf
     if (!shortcutStorage_->DeleteDesktopShortcutInfo(shortcutInfo, userId)) {
         return ERR_SHORTCUT_MANAGER_INTERNAL_ERROR;
     }
+    APP_LOGI_NOFUNC("DeleteDesktopShortcutInfo -n %{public}s -i %{public}d, -u %{public}d",
+        shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
     return ERR_OK;
 }
 
@@ -10584,6 +10671,7 @@ ErrCode BundleDataMgr::GetAllDesktopShortcutInfo(int32_t userId, std::vector<Sho
         }
         shortcutInfos.emplace_back(data);
     }
+    APP_LOGI_NOFUNC("GetAllDesktopShortcutInfo size:%{public}zu -u %{public}d", shortcutInfos.size(), userId);
     return ERR_OK;
 }
 

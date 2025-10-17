@@ -60,6 +60,7 @@ ohos_unittest("BmsBundleInstallerTest") {
   }
   deps = [
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_A:hsp_A",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_B:hsp_B",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/backupTest:backupTest",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/fifth_right:fifth_right",
@@ -1529,7 +1530,7 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_app_service/app_service_version1_library2:appService_v1_library2",
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_app_service/app_service_version2_library1:appService_v2_library1",
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_app_service/app_service_version2_library2:appService_v2_library2",
-    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/rightTest:rightTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/install_daemon/right:right",
     "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps

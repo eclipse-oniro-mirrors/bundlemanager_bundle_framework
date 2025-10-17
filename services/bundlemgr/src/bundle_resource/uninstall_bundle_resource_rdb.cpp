@@ -158,7 +158,7 @@ bool UninstallBundleResourceRdb::GetUninstallBundleResource(const std::string &b
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GoToFirstRow failed, ret %{public}d");
-    return ConvertToBundleResourceInfo(absSharedResultSet, flags, BundleResourceParam::GetSystemLanguage(),
+    return ConvertToBundleResourceInfo(absSharedResultSet, flags, BundleResourceParam::GetSystemLocale(),
         bundleResourceInfo);
 }
 
@@ -180,7 +180,7 @@ bool UninstallBundleResourceRdb::GetAllUninstallBundleResource(
         return true;
     }
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GoToFirstRow failed, ret %{public}d");
-    std::string language = BundleResourceParam::GetSystemLanguage();
+    std::string language = BundleResourceParam::GetSystemLocale();
     do {
         BundleResourceInfo bundleResourceInfo;
         if (ConvertToBundleResourceInfo(absSharedResultSet, flags, language, bundleResourceInfo)) {

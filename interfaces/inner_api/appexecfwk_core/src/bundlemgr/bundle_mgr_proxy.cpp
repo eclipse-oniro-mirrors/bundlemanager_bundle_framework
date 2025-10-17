@@ -460,17 +460,17 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelfWithOutCache due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelfWithOutCache due to write flag fail");
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
+    auto res = GetParcelInfoIntelligent<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
     if (res != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY, "GetBundleInfoForSelfWithOutCache failed err:%{public}d", res);
+        LOG_D(BMS_TAG_QUERY, "GetBundleInfoForSelf failed err:%{public}d", res);
         return res;
     }
     return ERR_OK;
@@ -483,11 +483,11 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelfWithCache(int32_t flags, BundleInfo 
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelfWithCache due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write flag fail");
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelfWithCache due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
@@ -507,7 +507,7 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelfWithCache(int32_t flags, BundleInfo 
     }
     LOG_D(BMS_TAG_QUERY, "not hitCache, flag %{public}d", flags);
     MessageParcel replyForReal;
-    auto res = GetParcelableInfoWithErrCodeReply<BundleInfo>(
+    auto res = GetParcelInfoIntelligentWithReply<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, replyForReal, bundleInfo);
     if (res != ERR_OK) {
         LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoForSelf failed err:%{public}d", res);
@@ -545,7 +545,7 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelfWithOutCache(int32_t flags, BundleIn
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelfWithOutCache due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
+    auto res = GetParcelInfoIntelligent<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
     if (res != ERR_OK) {
         LOG_D(BMS_TAG_QUERY, "GetBundleInfoForSelfWithOutCache failed err:%{public}d", res);
@@ -5031,6 +5031,13 @@ ErrCode BundleMgrProxy::GetParcelInfoIntelligent(
     BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo)
 {
     MessageParcel reply;
+    return GetParcelInfoIntelligentWithReply(code, data, reply, parcelInfo);
+}
+
+template<typename T>
+ErrCode BundleMgrProxy::GetParcelInfoIntelligentWithReply(
+    BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply, T &parcelInfo)
+{
     ErrCode ret = SendTransactCmdWithErrCode(code, data, reply);
     if (ret != ERR_OK) {
         APP_LOGE("SendTransactCmd failed");
@@ -6775,6 +6782,27 @@ ErrCode BundleMgrProxy::BatchGetCompatibleDeviceType(
  
     return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE,
         data, compatibleDeviceTypes);
+}
+
+ErrCode BundleMgrProxy::CreateNewBundleEl5Dir(int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to CreateNewBundleEl5Dir due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_EL5_DIR, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

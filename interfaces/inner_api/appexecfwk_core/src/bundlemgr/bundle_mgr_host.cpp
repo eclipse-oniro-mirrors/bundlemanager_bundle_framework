@@ -726,6 +726,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE):
             errCode = HandleBatchGetCompatibleDeviceType(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_EL5_DIR):
+            errCode = HandleCreateNewBundleEl5Dir(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -894,15 +897,11 @@ ErrCode BundleMgrHost::HandleGetBundleInfoForSelf(MessageParcel &data, MessagePa
     APP_LOGD("GetBundleInfoForSelf, flags %{public}d", flags);
     BundleInfo info;
     auto ret = GetBundleInfoForSelf(flags, info);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (ret == ERR_OK) {
+        WRITE_PARCEL(reply.WriteInt32(ERR_OK));
+        return WriteParcelInfoIntelligent(info, reply);
     }
-    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
-    if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
+    WRITE_PARCEL(reply.WriteInt32(ret));
     return ERR_OK;
 }
 
@@ -5149,6 +5148,18 @@ ErrCode BundleMgrHost::HandleBatchGetCompatibleDeviceType(MessageParcel &data, M
     }
     if (ret == ERR_OK && !WriteParcelableVector(compatibleDeviceType, reply)) {
         APP_LOGE("write dataGroupInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCreateNewBundleEl5Dir(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = CreateNewBundleEl5Dir(userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

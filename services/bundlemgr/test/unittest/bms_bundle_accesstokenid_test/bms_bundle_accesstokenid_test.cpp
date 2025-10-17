@@ -58,7 +58,7 @@ const std::string BUNDLE_NAME_ICON_STAGE = "com.example.thumbnailtest";
 const int32_t USERID = 100;
 const uint32_t ZERO = 0;
 const uint32_t INVALID_ACCESSTOKENID = 0;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 const int32_t BUNDLE_RDB_VERSION = 1;
 // test hap with so
 const std::string BUNDLE_NAME_WITH_LIBS = "com.example.nativelibs";

@@ -51,7 +51,7 @@ const std::string PLUGIN_ID2 = "22222222";
 const std::string TEST_MODULE_NAME = "testModuleName";
 const int32_t USER_ID = 100;
 const int32_t NEW_USER_ID = 200;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 const std::string APP_SERVICES_CAPABILITIES1 = R"(
     {
         "ohos.permission.kernel.SUPPORT_PLUGIN":{

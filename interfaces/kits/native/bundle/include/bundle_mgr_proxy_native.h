@@ -62,6 +62,8 @@ private:
     template<typename T>
     ErrCode InnerGetVectorFromParcelIntelligent(MessageParcel &reply, std::vector<T> &parcelableInfos);
     ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
+    template<typename T>
+    bool GetParcelInfoIntelligent(uint32_t code, MessageParcel &data, T &parcelInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

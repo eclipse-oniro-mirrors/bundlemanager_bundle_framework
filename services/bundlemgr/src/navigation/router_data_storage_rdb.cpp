@@ -72,10 +72,6 @@ bool RouterDataStorageRdb::UpdateDB()
     bool ret = insertRdbManager->ExecuteSql();
     if (!ret) {
         APP_LOGE("insert router_map_V2 failed.");
-        BmsRdbConfig oldRouterRdbConfig;
-        oldRouterRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
-        oldRouterRdbConfig.tableName = OLD_ROUTER_RDB_TABLE_NAME;
-        rdbDataManager_ = std::make_shared<RdbDataManager>(oldRouterRdbConfig);
         return false;
     }
     bmsRdbConfig.insertColumnSql.clear();

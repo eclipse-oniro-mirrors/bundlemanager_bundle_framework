@@ -72,7 +72,7 @@ std::unique_ptr<Ace::Napi::DrawableDescriptor> BundleResourceDrawableUtilsNative
     backgroundPair.second = lenBackground;
     std::unique_ptr<Ace::Napi::DrawableDescriptor> drawableDescriptor =
         std::make_unique<Ace::Napi::LayeredDrawableDescriptor>(
-            std::move(jsonBuf), 0, resourceManager_, themeMask, 1, foregroundPair, backgroundPair);
+            std::move(jsonBuf), 0, resourceManager_, themeMask, 1, foregroundPair, backgroundPair, true);
 
     return drawableDescriptor;
 #else

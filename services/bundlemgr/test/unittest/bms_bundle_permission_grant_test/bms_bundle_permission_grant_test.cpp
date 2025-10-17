@@ -40,7 +40,7 @@ namespace {
 const std::string BUNDLE_NAME = "com.example.bmsgrantpermission";
 const std::string HAP_FILE_PATH = "/data/test/resource/bms/permission_bundle/";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 }  // namespace
 
 class BmsBundlePermissionGrantTest : public testing::Test {

@@ -52,7 +52,7 @@ const std::string BUNDLE_NAME2 = "com.ohos.mms";
 const std::string TEST_BUNDLE = "com.test.ext.resource";
 const std::string TEST_MODULE = "testModule";
 const std::string EMPTY_STRING = "";
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 const int32_t USER_ID = 100;
 const int32_t INVALID_ID = -1;
 const std::string THEME_BUNDLE_NAME = "com.example.testTheme";
@@ -64,6 +64,7 @@ const std::string THEME_BUNDLE_NAME_PATH =
     "/data/service/el1/public/themes/20000";
 const std::string THEME_A_ICON_JSON_BUNDLE_NAME =
     "/data/service/el1/public/themes/20000/a/app/icons/description.json";
+const std::string THEME_A_OTHER_ICONS = "/data/service/el1/public/themes/20000/a/app/icons/other_icons";
 const int32_t THEME_TEST_USERID = 20000;
 }  // namespace
 
@@ -1734,7 +1735,8 @@ HWTEST_F(BmsExtendResourceManagerTest, EnableDynamicIcon_0020, Function | SmallT
     file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
     file2 << "{\"origin\":\"online\"}" << endl;
     file2.close();
-
+    ret = OHOS::ForceCreateDirectory(THEME_A_OTHER_ICONS);
+    EXPECT_TRUE(ret);
     ExtendResourceManagerHostImpl impl;
     auto errCode = impl.EnableDynamicIcon(THEME_BUNDLE_NAME, THEME_BUNDLE_NAME, THEME_TEST_USERID, 0);
     EXPECT_EQ(errCode, ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED_DUE_TO_EXISTING_CUSTOM_THEMES);
@@ -1840,6 +1842,8 @@ HWTEST_F(BmsExtendResourceManagerTest, CheckWhetherDynamicIconNeedProcess_0003, 
     file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
     file2 << "{\"origin\":\"online\"}" << endl;
     file2.close();
+    ret = OHOS::ForceCreateDirectory(THEME_A_OTHER_ICONS);
+    EXPECT_TRUE(ret);
     ExtendResourceManagerHostImpl impl;
     ret = impl.CheckWhetherDynamicIconNeedProcess(THEME_BUNDLE_NAME, THEME_TEST_USERID);
     EXPECT_FALSE(ret);

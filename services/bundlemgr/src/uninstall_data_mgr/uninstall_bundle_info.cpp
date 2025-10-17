@@ -111,37 +111,6 @@ void UninstallBundleInfo::Init()
     moduleNames.clear();
 }
 
-int32_t UninstallBundleInfo::GetResponseUserId(int32_t requestUserId) const
-{
-    if (userInfos.empty()) {
-        APP_LOGD("user map is empty");
-        return Constants::INVALID_USERID;
-    }
-
-    if (requestUserId == Constants::ANY_USERID) {
-        return std::stoi(userInfos.begin()->first);
-    }
-
-    if (userInfos.find(std::to_string(requestUserId)) != userInfos.end()) {
-        return requestUserId;
-    }
-
-    if (requestUserId < Constants::START_USERID) {
-        APP_LOGD("requestUserId(%{public}d) less than start userId", requestUserId);
-        return Constants::INVALID_USERID;
-    }
-    
-    int32_t responseUserId = Constants::INVALID_USERID;
-    for (const auto &info : userInfos) {
-        if (std::stoi(info.first) < Constants::START_USERID) {
-            responseUserId = std::stoi(info.first);
-            break;
-        }
-    }
-    APP_LOGD("requestUserId(%{public}d) and responseUserId(%{public}d)", requestUserId, responseUserId);
-    return responseUserId;
-}
-
 int32_t UninstallBundleInfo::GetUid(int32_t userId, int32_t appIndex) const
 {
     if (appIndex == 0) {

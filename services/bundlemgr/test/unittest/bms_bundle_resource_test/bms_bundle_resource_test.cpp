@@ -75,7 +75,7 @@ using namespace OHOS::Security;
 namespace OHOS {
 namespace {
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 const int32_t APP_INDEX = 1;
 const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string BUNDLE_NAME_NOT_EXIST = "com.example.not_exist";
@@ -103,6 +103,8 @@ const std::string THEME_A_ICON_JSON_BUNDLE_NAME =
 const std::string THEME_B_ICON_JSON_BUNDLE_NAME =
     "/data/service/el1/public/themes/20000/b/app/icons/description.json";
 const int32_t THEME_TEST_USERID = 20000;
+const std::string THEME_A_OTHER_ICONS = "/data/service/el1/public/themes/20000/a/app/icons/other_icons";
+const std::string THEME_B_OTHER_ICONS = "/data/service/el1/public/themes/20000/b/app/icons/other_icons";
 // test layered image
 const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
 const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
@@ -1284,6 +1286,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0060, Function | SmallTest
 
     std::string param = BundleResourceParam::GetSystemParam("aaa_not_exist");
     EXPECT_TRUE(param.empty());
+
+    language = BundleResourceParam::GetSystemLocale();
+    EXPECT_FALSE(language.empty());
 
     param = BundleResourceParam::GetSystemParam("const.global.language");
     EXPECT_FALSE(param.empty());
@@ -4634,6 +4639,7 @@ HWTEST_F(BmsBundleResourceTest, CheckThemeType_0060, Function | SmallTest | Leve
     file2.open(THEME_A_ICON_JSON_BUNDLE_NAME, ios::out);
     file2 << "{\"origin\":\"online\"}" << endl;
     file2.close();
+    OHOS::ForceCreateDirectory(THEME_A_OTHER_ICONS);
 
     ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME, THEME_TEST_USERID, isOnlineTheme);
     EXPECT_TRUE(ret);
@@ -4668,6 +4674,7 @@ HWTEST_F(BmsBundleResourceTest, CheckThemeType_0070, Function | SmallTest | Leve
     file2 << "{\"origin\":\"online\"}" << endl;
     file2.close();
     isOnlineTheme = false;
+    OHOS::ForceCreateDirectory(THEME_B_OTHER_ICONS);
     ret = BundleResourceProcess::CheckThemeType(BUNDLE_NAME, THEME_TEST_USERID, isOnlineTheme);
     EXPECT_TRUE(ret);
     EXPECT_TRUE(isOnlineTheme);

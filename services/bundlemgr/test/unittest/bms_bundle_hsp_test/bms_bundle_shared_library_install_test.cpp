@@ -54,7 +54,7 @@ const std::string SHARED_BUNDLE_NAME_A = "com.example.liba";
 const std::string SHARED_BUNDLE_NAME_B = "com.example.libb";
 const std::string MOUDLE_PACK_AGE = "modulePackage";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t WAIT_TIME = 1; // init mocked bms
 
 class BmsBundleSharedLibraryInstallTest : public testing::Test {
 public:

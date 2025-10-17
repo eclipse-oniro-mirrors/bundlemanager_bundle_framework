@@ -931,6 +931,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
                 APP_LOGE("user %{public}d is not allowed to install app", userId_);
                 return ERR_APPEXECFWK_INSTALL_FAILED_ACCOUNT_CONSTRAINT;
             }
+            if (!CheckInstallOnKeepData(bundleName_, installParam.isOTA, newInfos)) {
+                LOG_E(BMS_TAG_INSTALLER, "check failed");
+                return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
+            }
             LOG_D(BMS_TAG_INSTALLER, "new userInfo with bundleName %{public}s and userId %{public}d",
                 bundleName_.c_str(), userId_);
             InnerBundleUserInfo newInnerBundleUserInfo;
@@ -1603,6 +1607,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         cacheInfo.GetBaseApplicationInfo().compileSdkVersion);
     SetUid(uid);
     SetIsAbcCompressed();
+    CheckNewEl5Bundle(installParam.isOTA || otaInstall_, oldInfo, cacheInfo);
     InnerProcessNewBundleDataDir(installParam.isOTA || otaInstall_, oldInfo, cacheInfo);
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
@@ -8120,6 +8125,17 @@ void BaseBundleInstaller::SetAPIAndSdkVersions(int32_t targetAPIVersion,
 void BaseBundleInstaller::SetUid(int32_t uid)
 {
     sysEventInfo_.uid = uid;
+}
+
+void BaseBundleInstaller::CheckNewEl5Bundle(const bool isOta,
+    const InnerBundleInfo &oldBundleInfo, const InnerBundleInfo &newBundleInfo)
+{
+    if (!isOta || !isAppExist_ || !InitDataMgr()) {
+        return;
+    }
+    if (!oldBundleInfo.NeedCreateEl5Dir() && newBundleInfo.NeedCreateEl5Dir()) {
+        dataMgr_->AddNewEl5BundleName(newBundleInfo.GetBundleName());
+    }
 }
 
 void BaseBundleInstaller::InnerProcessNewBundleDataDir(const bool isOta,

@@ -1296,6 +1296,8 @@ public:
 
     virtual ErrCode RemoveBackupBundleData(const std::string &bundleName,
         const int32_t userId, const int32_t appIndex) override;
+
+    virtual ErrCode CreateNewBundleEl5Dir(int32_t userId) override;
 private:
     /**
      * @brief Send a command message from the proxy object.
@@ -1366,6 +1368,10 @@ private:
 
     template<typename T>
     ErrCode GetParcelInfoIntelligent(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo);
+
+    template<typename T>
+    ErrCode GetParcelInfoIntelligentWithReply(BundleMgrInterfaceCode code, MessageParcel &data,
+        MessageParcel &reply, T &parcelInfo);
 
     ErrCode GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result);
 

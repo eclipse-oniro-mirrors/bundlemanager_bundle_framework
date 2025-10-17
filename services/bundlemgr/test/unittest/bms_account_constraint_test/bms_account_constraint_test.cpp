@@ -42,7 +42,7 @@ using OHOS::Parcel;
 
 namespace OHOS {
 namespace {
-const int32_t WAIT_TIME = 5;
+const int32_t WAIT_TIME = 1;
 constexpr int32_t USER_ID = 100;
 }  // namespace
 

@@ -58,10 +58,10 @@ ohos_shared_library("package") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "libuv:uv",
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
-  public_external_deps = [ "libuv:uv" ]
   relative_install_dir = "module"
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

@@ -4628,61 +4628,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetTestRunner_0200, Function | MediumTest | Level
 }
 
 /**
- * @tc.number: UninstallBundleInfo_0001
- * @tc.name: test GetResponseUserId
- * @tc.desc: 1.system run normally
- */
-HWTEST_F(BmsBundleDataMgrTest, UninstallBundleInfo_0001, Function | SmallTest | Level1)
-{
-    std::vector<int32_t> uids;
-    // test add one uninstallbudnleinfo, but no userInfos
-    std::string bundleName = "com.test.UninstallBundleInfo_0001";
-    UninstallBundleInfo uninstallBundleInfo;
-    uninstallBundleInfo.bundleType = BundleType::ATOMIC_SERVICE;
-
-    auto userId = uninstallBundleInfo.GetResponseUserId(USERID);
-    EXPECT_EQ(userId, Constants::INVALID_USERID);
-
-    // test add one uninstallbudnleinfo
-    bundleName = "com.test.UninstallBundleInfo_0001_2";
-    UninstallDataUserInfo uninstallDataUserInfo2;
-    UninstallBundleInfo uninstallBundleInfo2;
-    uninstallBundleInfo2.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo2));
-
-    // test ANY_USERID
-    int32_t testUserId = Constants::ANY_USERID;
-    userId = uninstallBundleInfo2.GetResponseUserId(testUserId);
-    EXPECT_EQ(userId, USERID);
-    
-    // query userid is in userinfos
-    testUserId = USERID;
-    userId = uninstallBundleInfo2.GetResponseUserId(testUserId);
-    EXPECT_EQ(userId, USERID);
-
-    // test add one uninstallbudnleinfo, but query userid is not in userinfos and < Constants::START_USERID
-    bundleName = "com.test.UninstallBundleInfo_0001_3";
-    UninstallDataUserInfo uninstallDataUserInfo3;
-    UninstallBundleInfo uninstallBundleInfo3;
-    uninstallBundleInfo3.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo3));
-
-    testUserId = 1;
-    userId = uninstallBundleInfo3.GetResponseUserId(testUserId);
-    EXPECT_EQ(userId, Constants::INVALID_USERID);
-
-    // test add two uninstallbudnleinfo, but query userid is not in userinfos and > Constants::START_USERID
-    bundleName = "com.test.UninstallBundleInfo_0001_4";
-    UninstallDataUserInfo uninstallDataUserInfo4;
-    UninstallDataUserInfo uninstallDataUserInfo5;
-    UninstallBundleInfo uninstallBundleInfo4;
-    uninstallBundleInfo4.userInfos.emplace(std::make_pair(std::to_string(MULTI_USERID), uninstallDataUserInfo4));
-    uninstallBundleInfo4.userInfos.emplace(std::make_pair(std::to_string(USERID - 1), uninstallDataUserInfo5));
-
-    testUserId = MULTI_USERID + 1;
-    userId = uninstallBundleInfo4.GetResponseUserId(testUserId);
-    EXPECT_EQ(userId, USERID - 1);
-}
-
-/**
  * @tc.number: UninstallBundleInfo_0002
  * @tc.name: test GetUid
  * @tc.desc: 1.system run normally
@@ -4705,7 +4650,6 @@ HWTEST_F(BmsBundleDataMgrTest, UninstallBundleInfo_0002, Function | SmallTest | 
     UninstallDataUserInfo uninstallDataUserInfo2;
     uninstallDataUserInfo2.uid = 20020033;
     uninstallBundleInfo2.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo2));
-
 
     UninstallDataUserInfo uninstallDataUserInfo2_1;
     uninstallDataUserInfo2_1.uid = 20020034;
@@ -4835,7 +4779,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
     uninstallBundleInfo.userInfos.emplace(std::make_pair(cloneInfoKey, uninstallDataUserInfo1));
 
     UninstallDataUserInfo uninstallDataUserInfo2;
-    uninstallDataUserInfo2.uid = 20020035;
+    uninstallDataUserInfo2.uid = -1;
     cloneInfoKey = std::to_string(USERID) + '_' + std::to_string(2);
     uninstallBundleInfo.userInfos.emplace(std::make_pair(cloneInfoKey, uninstallDataUserInfo2));
 
@@ -4851,18 +4795,56 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
     EXPECT_EQ(res, true);
     // test getbundlestat for main app, which has no userinfo in UninstallBundleInfo
     res = dataMgr->GetBundleStats(bundleName, Constants::INVALID_USERID, bundleStats, 0);
-    EXPECT_EQ(res, false);
-    dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
+    EXPECT_EQ(res, true);
+    // test getbundlestat for clone app, which has userinfo in UninstallBundleInfo
+    res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats, 1);
+    EXPECT_EQ(res, true);
+    res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats, 2);
+    EXPECT_EQ(res, true);
 
-    // test mock bundle installed
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    // test add bundleinfo
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetIsPreInstallApp(true);
-    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
-    res = dataMgr->GetBundleStats(BUNDLE_NAME_TEST, USERID, bundleStats);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = TEST_QUERY_EVENT_UID2;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    innerBundleCloneInfo.userId = USERID;
+    innerBundleCloneInfo.appIndex = 1;
+    innerBundleCloneInfo.uid = TEST_UID;
+    innerBundleCloneInfo.gids = {0};
+    innerBundleCloneInfo.accessTokenId = TEST_ACCESS_TOKENID;
+    innerBundleCloneInfo.accessTokenIdEx = TEST_ACCESS_TOKENID_EX;
+
+    InnerBundleCloneInfo innerBundleCloneInfo2;
+    innerBundleCloneInfo2.userId = USERID;
+    innerBundleCloneInfo2.appIndex = 2;
+    innerBundleCloneInfo2.uid = -1;
+    innerBundleCloneInfo2.gids = {1};
+    innerBundleCloneInfo2.accessTokenId = TEST_ACCESS_TOKENID;
+    innerBundleCloneInfo2.accessTokenIdEx = TEST_ACCESS_TOKENID_EX;
+
+    std::string appIndexKey = std::to_string(innerBundleCloneInfo.appIndex);
+    innerBundleUserInfo.cloneInfos.insert(make_pair(appIndexKey, innerBundleCloneInfo));
+    appIndexKey = std::to_string(innerBundleCloneInfo2.appIndex);
+    innerBundleUserInfo.cloneInfos.insert(make_pair(appIndexKey, innerBundleCloneInfo2));
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats);
     EXPECT_EQ(res, true);
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+
+    res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats, 1);
+    EXPECT_EQ(res, true);
+
+    res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats, 2);
+    EXPECT_EQ(res, true);
+    
+    dataMgr->bundleInfos_.erase(bundleName);
+    dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
+    dataMgr->DeleteUninstallBundleInfo(bundleName, MULTI_USERID);
 }
 
 /**
@@ -4960,12 +4942,17 @@ HWTEST_F(BmsBundleDataMgrTest, CheckAppIndex_1000, Function | SmallTest | Level1
     info.SetBaseApplicationInfo(applicationInfo);
 
     InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = TEST_QUERY_EVENT_UID2;
     innerBundleUserInfo.bundleName = bundleName;
     innerBundleUserInfo.bundleUserInfo.userId = USERID;
     
     InnerBundleCloneInfo innerBundleCloneInfo;
     innerBundleCloneInfo.userId = USERID;
     innerBundleCloneInfo.appIndex = appIndex1;
+    innerBundleCloneInfo.uid = TEST_UID;
+    innerBundleCloneInfo.gids = {0};
+    innerBundleCloneInfo.accessTokenId = TEST_ACCESS_TOKENID;
+    innerBundleCloneInfo.accessTokenIdEx = TEST_ACCESS_TOKENID_EX;
 
     std::string appIndexKey = std::to_string(innerBundleCloneInfo.appIndex);
     innerBundleUserInfo.cloneInfos.insert(make_pair(appIndexKey, innerBundleCloneInfo));
@@ -4986,6 +4973,7 @@ HWTEST_F(BmsBundleDataMgrTest, CheckAppIndex_1000, Function | SmallTest | Level1
     uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
     ret = dataMgr->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
     ASSERT_TRUE(ret);
+
     ret = bundleMgrHostImpl_->CheckAppIndex(bundleName, USERID, 2, true);
     EXPECT_EQ(ret, true);
     

@@ -1208,6 +1208,7 @@ public:
         const int32_t userId, const int32_t appIndex) override;
     virtual ErrCode RemoveBackupBundleData(const std::string &bundleName,
         const int32_t userId, const int32_t appIndex) override;
+    virtual ErrCode CreateNewBundleEl5Dir(int32_t userId) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);
