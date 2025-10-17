@@ -6525,5 +6525,20 @@ ErrCode BundleMgrHostImpl::RemoveBackupBundleData(const std::string &bundleName,
     }
     return ret;
 }
+
+ErrCode BundleMgrHostImpl::CreateNewBundleEl5Dir(int32_t userId)
+{
+    if (!BundlePermissionMgr::IsCallingUidValid(ServiceConstants::ACCOUNT_UID)) {
+        APP_LOGE("IsCallingUidValid failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->CreateNewBundleEl5Dir(userId);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
