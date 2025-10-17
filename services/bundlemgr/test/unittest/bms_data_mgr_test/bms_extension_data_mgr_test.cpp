@@ -2262,11 +2262,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BackupBundleData_002, Function | SmallTest | L
     int32_t userId = 100;
     int32_t appIndex = 0;
     auto res = bundleMgrExtTest.BackupBundleData(bundleName, userId, appIndex);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
-    #endif
 }
 
 /**
@@ -2300,11 +2296,7 @@ HWTEST_F(BmsExtensionDataMgrTest, RecoverBackupBundleData_002, Function | SmallT
     int32_t userId = 100;
     int32_t appIndex = 0;
     auto res = bundleMgrExtTest.RecoverBackupBundleData(bundleName, userId, appIndex);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
-    #endif
 }
 
 /**
@@ -2338,10 +2330,6 @@ HWTEST_F(BmsExtensionDataMgrTest, RemoveBackupBundleData_002, Function | SmallTe
     int32_t userId = 100;
     int32_t appIndex = 0;
     auto res = bundleMgrExtTest.RemoveBackupBundleData(bundleName, userId, appIndex);
-    #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, ERR_OK);
-    #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
-    #endif
 }
 } // OHOS
