@@ -977,7 +977,7 @@ ErrCode BundleMgrHost::HandleBatchGetBundleInfo(MessageParcel &data, MessageParc
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::vector<std::string> bundleNames;
-    for (int i = 0; i < bundleNameCount; i++) {
+    for (int32_t i = 0; i < bundleNameCount; i++) {
         std::string bundleName = data.ReadString();
         if (bundleName.empty()) {
             APP_LOGE("bundleName %{public}d is empty", i);
@@ -3622,7 +3622,7 @@ ErrCode BundleMgrHost::HandleBatchGetSpecifiedDistributionType(MessageParcel &da
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     std::vector<std::string> bundleNames;
-    for (int i = 0; i < bundleNameCount; i++) {
+    for (int32_t i = 0; i < bundleNameCount; i++) {
         std::string bundleName = data.ReadString();
         bundleNames.push_back(bundleName);
     }
@@ -5137,7 +5137,7 @@ ErrCode BundleMgrHost::HandleBatchGetCompatibleDeviceType(MessageParcel &data, M
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     std::vector<std::string> bundleNames;
-    for (int i = 0; i < bundleNameCount; i++) {
+    for (int32_t i = 0; i < bundleNameCount; i++) {
         std::string bundleName = data.ReadString();
         bundleNames.push_back(bundleName);
     }

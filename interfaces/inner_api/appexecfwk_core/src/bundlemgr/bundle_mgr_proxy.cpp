@@ -6749,16 +6749,20 @@ ErrCode BundleMgrProxy::BatchGetCompatibleDeviceType(
     APP_LOGD("begin to batch get specified distributionType, bundle name count=%{public}u",
         static_cast<unsigned int>(bundleNames.size()));
     if (bundleNames.empty()) {
-        APP_LOGE("fail to batchGetSpecifiedDistributionType due to params empty");
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to bundleName count is error");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to BatchGetBundleInfo due to write InterfaceToken fail");
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(static_cast<int32_t>(bundleNames.size()))) {
-        APP_LOGE("fail to BatchGetBundleInfo due to write bundle name count fail");
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to write bundle name count fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     for (size_t i = 0; i < bundleNames.size(); i++) {
