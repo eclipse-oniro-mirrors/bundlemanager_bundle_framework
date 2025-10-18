@@ -26,7 +26,7 @@
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size) 
+bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     FuzzedDataProvider fdp(data, size);
     sptr<IRemoteObject> object;
