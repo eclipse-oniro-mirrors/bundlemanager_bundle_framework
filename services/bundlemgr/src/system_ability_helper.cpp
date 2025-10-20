@@ -109,7 +109,7 @@ bool SystemAbilityHelper::UnloadSystemAbility(const int32_t systemAbilityId)
 
 #ifdef ABILITY_RUNTIME_ENABLE
 bool SystemAbilityHelper::IsAppRunning(const sptr<IAppMgr> appMgrProxy,
-    const std::string &bundleName, int32_t appCloneIndex)
+    const std::string &bundleName, int32_t appCloneIndex, int32_t userId)
 {
     bool running = false;
     if (appMgrProxy == nullptr) {
@@ -117,7 +117,7 @@ bool SystemAbilityHelper::IsAppRunning(const sptr<IAppMgr> appMgrProxy,
         return running;
     }
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    int32_t result = appMgrProxy->IsAppRunning(bundleName, appCloneIndex, running);
+    int32_t result = appMgrProxy->IsAppRunning(bundleName, appCloneIndex, userId, running);
     IPCSkeleton::SetCallingIdentity(identity);
     if (result != 0) {
         APP_LOGW("IsAppRunning failed");

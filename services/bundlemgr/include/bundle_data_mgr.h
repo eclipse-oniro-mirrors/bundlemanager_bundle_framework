@@ -835,7 +835,7 @@ public:
 
 #ifdef ABILITY_RUNTIME_ENABLE
     std::vector<int32_t> GetNoRunningBundleCloneIndexes(const sptr<IAppMgr> appMgrProxy, const std::string &bundleName,
-        const std::vector<int32_t> &cloneAppIndexes) const;
+        int32_t userId, const std::vector<int32_t> &cloneAppIndexes) const;
 #endif
     void GetBundleCacheInfos(
         const int32_t userId, std::vector<std::tuple<std::string, std::vector<std::string>,

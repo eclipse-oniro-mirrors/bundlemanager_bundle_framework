@@ -4093,7 +4093,7 @@ bool BundleDataMgr::HasUserInstallInBundle(
 
 #ifdef ABILITY_RUNTIME_ENABLE
 std::vector<int32_t> BundleDataMgr::GetNoRunningBundleCloneIndexes(const sptr<IAppMgr> appMgrProxy,
-    const std::string &bundleName, const std::vector<int32_t> &cloneAppIndexes) const
+    const std::string &bundleName, int32_t userId, const std::vector<int32_t> &cloneAppIndexes) const
 {
     std::vector<int32_t> noRunningCloneAppIndexes;
     if (appMgrProxy == nullptr) {
@@ -4102,9 +4102,10 @@ std::vector<int32_t> BundleDataMgr::GetNoRunningBundleCloneIndexes(const sptr<IA
     }
 
     for (const auto &appIndex : cloneAppIndexes) {
-        bool running = SystemAbilityHelper::IsAppRunning(appMgrProxy, bundleName, appIndex);
+        bool running = SystemAbilityHelper::IsAppRunning(appMgrProxy, bundleName, appIndex, userId);
         if (running) {
-            APP_LOGW("No del cache for %{public}s[%{public}d]: is running", bundleName.c_str(), appIndex);
+            APP_LOGW("No del cache for %{public}s[%{public}d] in user[%{public}d]: is running",
+                bundleName.c_str(), appIndex, userId);
             continue;
         }
         noRunningCloneAppIndexes.emplace_back(appIndex);
@@ -4154,8 +4155,8 @@ void BundleDataMgr::GetBundleCacheInfos(const int32_t userId, std::vector<std::t
         APP_LOGE("CleanBundleCache fail to find the app mgr service to check app is running");
         return;
     }
-    auto idxFiltor = [&appMgrProxy, this](std::string &bundleName, std::vector<int32_t> &allidx) {
-        return this->GetNoRunningBundleCloneIndexes(appMgrProxy, bundleName, allidx);
+    auto idxFiltor = [&appMgrProxy, userId, this](std::string &bundleName, std::vector<int32_t> &allidx) {
+        return this->GetNoRunningBundleCloneIndexes(appMgrProxy, bundleName, userId, allidx);
     };
 #else
     auto idxFiltor = [](std::string &bundleName, std::vector<int32_t> &allidx) {

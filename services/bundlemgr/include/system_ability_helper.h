@@ -62,7 +62,7 @@ public:
     static bool UnloadSystemAbility(const int32_t systemAbilityId);
 #ifdef ABILITY_RUNTIME_ENABLE
     static bool IsAppRunning(const sptr<IAppMgr> appMgrProxy,
-        const std::string &bundleName, int32_t appCloneIndex);
+        const std::string &bundleName, int32_t appCloneIndex, int32_t userId);
 #endif
 };
 }  // namespace AppExecFwk

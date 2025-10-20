@@ -79,7 +79,7 @@ bool SystemAbilityHelper::UnloadSystemAbility(const int32_t systemAbilityId)
 
 #ifdef ABILITY_RUNTIME_ENABLE
 bool SystemAbilityHelper::IsAppRunning(const sptr<IAppMgr> appMgrProxy,
-    const std::string &bundleName, int32_t appCloneIndex)
+    const std::string &bundleName, int32_t appCloneIndex, int32_t userId)
 {
     return false;
 }
