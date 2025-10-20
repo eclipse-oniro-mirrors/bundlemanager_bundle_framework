@@ -9495,6 +9495,7 @@ ErrCode BundleDataMgr::CreateNewBundleEl5Dir(int32_t userId)
 {
     APP_LOGI("begin");
     std::vector<CreateDirParam> createDirParams;
+    std::vector<DataGroupInfo> groupInfos;
     {
         std::lock_guard el5Lock(newEl5Mutex_);
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -9526,9 +9527,20 @@ ErrCode BundleDataMgr::CreateNewBundleEl5Dir(int32_t userId)
             createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
             createDirParam.dataDirEl = DataDirEl::EL5;
             createDirParams.emplace_back(createDirParam);
-            CreateEl5Group(info, userId);
+            auto dataGroupInfoMap = info.GetDataGroupInfos();
+            if (dataGroupInfoMap.empty()) {
+                continue;
+            }
+            for (const auto &groupItem : dataGroupInfoMap) {
+                for (const DataGroupInfo &dataGroupInfo : groupItem.second) {
+                    if (dataGroupInfo.userId == userId) {
+                        groupInfos.emplace_back(dataGroupInfo);
+                    }
+                }
+            }
         }
     }
+    CreateEl5GroupDirs(groupInfos, userId);
     CreateEl5Dir(createDirParams, true);
     APP_LOGI("end");
     return ERR_OK;
