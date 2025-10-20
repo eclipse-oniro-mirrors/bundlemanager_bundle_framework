@@ -2434,6 +2434,11 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 preInstallBundleInfo.DeleteForceUnisntalledUser(userId_);
                 dataMgr_->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
             }
+            UninstallBundleInfo uninstallBundleInfo;
+            if (dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+                existBeforeKeepDataApp_ = true;
+                DeleteUninstallBundleInfo(bundleName);
+            }
             // process resource
             BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId_, ADD_RESOURCE_TYPE::CREATE_USER);
             return ERR_OK;
