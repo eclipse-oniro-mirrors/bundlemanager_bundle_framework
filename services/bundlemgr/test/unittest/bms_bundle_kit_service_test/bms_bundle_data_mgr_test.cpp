@@ -4759,10 +4759,12 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
 {
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-
-    // test bundlename not in bundleinfos_ and not uninstalled withkeepdata before
     std::vector<int64_t> bundleStats;
     std::string bundleName = "com.test.GetBundleStats_0300";
+    dataMgr->bundleInfos_.erase(bundleName);
+    dataMgr->RemoveUninstalledBundleinfos(USERID);
+
+    // test bundlename not in bundleinfos_ and not uninstalled withkeepdata before
     bool res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats);
     EXPECT_EQ(res, false);
 
@@ -4772,7 +4774,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
     UninstallDataUserInfo uninstallDataUserInfo;
     uninstallDataUserInfo.uid = 20020033;
     uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
-
+ 
     UninstallDataUserInfo uninstallDataUserInfo1;
     uninstallDataUserInfo1.uid = 20020034;
     std::string cloneInfoKey = std::to_string(USERID) + '_' + std::to_string(1);
@@ -4782,11 +4784,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
     uninstallDataUserInfo2.uid = -1;
     cloneInfoKey = std::to_string(USERID) + '_' + std::to_string(2);
     uninstallBundleInfo.userInfos.emplace(std::make_pair(cloneInfoKey, uninstallDataUserInfo2));
-
-    UninstallDataUserInfo uninstallDataUserInfo3;
-    uninstallDataUserInfo3.uid = 20020036;
-    cloneInfoKey = std::to_string(MULTI_USERID) + '_' + std::to_string(1);
-    uninstallBundleInfo.userInfos.emplace(std::make_pair(cloneInfoKey, uninstallDataUserInfo3));
 
     auto ret = dataMgr->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
     ASSERT_TRUE(ret);
@@ -4841,10 +4838,9 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
 
     res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats, 2);
     EXPECT_EQ(res, true);
-    
+
     dataMgr->bundleInfos_.erase(bundleName);
-    dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
-    dataMgr->DeleteUninstallBundleInfo(bundleName, MULTI_USERID);
+    dataMgr->RemoveUninstalledBundleinfos(USERID);
 }
 
 /**
@@ -4935,6 +4931,146 @@ HWTEST_F(BmsBundleDataMgrTest, UninstallBundleInfo_1000, Function | SmallTest | 
     dataMgr->GetUninstallBundleInfo(bundleName, uninstallBundleInfo2);
     EXPECT_EQ(uninstallBundleInfo2.moduleNames.empty(), false);
     dataMgr->DeleteUninstallBundleInfo(bundleName, USERID);
+    dataMgr->multiUserIdsSet_.erase(USERID);
+}
+
+/**
+ * @tc.number: UninstallBundleInfo_2000
+ * @tc.name: test GetUninstallBundleInfoWithUserAndAppIndex
+ * @tc.desc: 1.Test the GetUninstallBundleInfoWithUserAndAppIndex by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, UninstallBundleInfo_2000, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+
+    std::string bundleName = "com.example.UninstallBundleInfo_2000";
+    bundleDataMgr->uninstallDataMgr_ = nullptr;
+    auto ret = bundleDataMgr->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, USERID, 1);
+    EXPECT_FALSE(ret);
+
+    bundleDataMgr->uninstallDataMgr_ = std::make_shared<UninstallDataMgrStorageRdb>();
+    EXPECT_NE(bundleDataMgr->uninstallDataMgr_, nullptr);
+}
+ 
+/**
+ * @tc.number: UninstallBundleInfo_3000
+ * @tc.name: test GetUninstallBundleInfoWithUserAndAppIndex
+ * @tc.desc: 1.Test the GetUninstallBundleInfoWithUserAndAppIndex by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, UninstallBundleInfo_3000, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<BundleStorageStats> bundleStats;
+    std::string bundleName = "com.example.UninstallBundleInfo_3000";
+    dataMgr->RemoveUninstalledBundleinfos(USERID);
+
+    // test bundleName is empty
+    auto ret = dataMgr->GetUninstallBundleInfoWithUserAndAppIndex("", USERID, 1);
+    EXPECT_FALSE(ret);
+
+    // test bundleName not unisntalled with keepdata
+    ret = dataMgr->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, USERID, 1);
+    EXPECT_FALSE(ret);
+
+    // test bundlename uninstalled withkeepdata before
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    UninstallDataUserInfo uninstallDataUserInfo;
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
+    uninstallBundleInfo.moduleNames.push_back("module1");
+
+    UninstallDataUserInfo uninstallDataUserInfo1;
+    uninstallDataUserInfo1.uid = 20020034;
+    std::string cloneInfoKey = std::to_string(USERID) + '_' + std::to_string(1);
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(cloneInfoKey, uninstallDataUserInfo1));
+
+    UninstallDataUserInfo uninstallDataUserInfo2;
+    uninstallDataUserInfo2.uid = -1;
+    cloneInfoKey = std::to_string(USERID) + '_' + std::to_string(2);
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(cloneInfoKey, uninstallDataUserInfo2));
+
+    ret = dataMgr->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+
+    // test uid is invlaid
+    ret = dataMgr->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, USERID, 2);
+    EXPECT_FALSE(ret);
+
+    ret = dataMgr->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, USERID, 1);
+    EXPECT_TRUE(ret);
+
+    dataMgr->RemoveUninstalledBundleinfos(USERID);
+    dataMgr->multiUserIdsSet_.erase(USERID);
+}
+ 
+/**
+ * @tc.number: IsBundleExistedOrUninstalledWithKeepData_0100
+ * @tc.name: test IsBundleExistedOrUninstalledWithKeepData
+ * @tc.desc: 1.judge bundle exist in oh
+ */
+HWTEST_F(BmsBundleDataMgrTest, IsBundleExistedOrUninstalledWithKeepData_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.test.IsBundleExistedOrUninstalledWithKeepData_0100";
+
+    // test bundle not in bundleinfos and not unisntalled with keepdata before
+    bool ret = bundleMgrHostImpl_->IsBundleExistedOrUninstalledWithKeepData(bundleName, USERID, 1);
+    EXPECT_EQ(ret, false);
+
+    // test bundlename uninstalled with keepdata before
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    UninstallDataUserInfo uninstallDataUserInfo;
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
+    uninstallBundleInfo.moduleNames.push_back("module1");
+
+    UninstallDataUserInfo uninstallDataUserInfo1;
+    uninstallDataUserInfo1.uid = 20020034;
+    std::string cloneInfoKey = std::to_string(USERID) + '_' + std::to_string(1);
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(cloneInfoKey, uninstallDataUserInfo1));
+    ret = dataMgr->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+
+    ret = bundleMgrHostImpl_->IsBundleExistedOrUninstalledWithKeepData(bundleName, USERID, 3);
+    EXPECT_EQ(ret, false);
+
+    ret = bundleMgrHostImpl_->IsBundleExistedOrUninstalledWithKeepData(bundleName, USERID, 1);
+    EXPECT_EQ(ret, true);
+
+    // test bundle in bundleinfos
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    innerBundleCloneInfo.userId = USERID;
+    innerBundleCloneInfo.appIndex = 1;
+    innerBundleCloneInfo.uid = TEST_UID;
+
+    InnerBundleCloneInfo innerBundleCloneInfo2;
+    innerBundleCloneInfo2.userId = USERID;
+    innerBundleCloneInfo2.appIndex = 2;
+    innerBundleCloneInfo2.uid = -1;
+
+    std::string appIndexKey = std::to_string(innerBundleCloneInfo.appIndex);
+    innerBundleUserInfo.cloneInfos.insert(make_pair(appIndexKey, innerBundleCloneInfo));
+    appIndexKey = std::to_string(innerBundleCloneInfo2.appIndex);
+    innerBundleUserInfo.cloneInfos.insert(make_pair(appIndexKey, innerBundleCloneInfo2));
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    ret = bundleMgrHostImpl_->IsBundleExistedOrUninstalledWithKeepData(bundleName, USERID, 1);
+    EXPECT_EQ(ret, true);
+
+    dataMgr->RemoveUninstalledBundleinfos(USERID);
+    dataMgr->RemoveUninstalledBundleinfos(MULTI_USERID);
     dataMgr->multiUserIdsSet_.erase(USERID);
 }
 

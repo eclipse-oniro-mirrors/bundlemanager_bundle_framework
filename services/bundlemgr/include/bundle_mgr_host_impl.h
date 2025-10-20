@@ -1250,6 +1250,7 @@ private:
     bool GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
         BundleInfo &bundleInfo);
     bool IsBundleExist(const std::string &bundleName);
+    bool IsBundleExistedOrUninstalledWithKeepData(const std::string &bundleName, int32_t userId, int32_t appIndex);
     ErrCode ClearCache(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         int32_t userId, int32_t callingUid, const std::string &callingBundleName);
     void FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos);
