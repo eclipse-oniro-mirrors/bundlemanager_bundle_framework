@@ -197,7 +197,7 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
     result = bundleInstallChecker_->CheckSysCap(bundlePaths);
     bool isSysCapValid = (result == ERR_OK);
     if (!isSysCapValid) {
-        APP_LOGI("hap syscap check failed %{public}d", result);
+        APP_LOGD("hap syscap check failed %{public}d", result);
     }
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;

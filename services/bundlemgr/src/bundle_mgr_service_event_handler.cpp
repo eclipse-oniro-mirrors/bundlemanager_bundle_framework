@@ -435,12 +435,12 @@ void BMSEventHandler::BundleRebootStartEvent()
 
 ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
 {
-    LOG_I(BMS_TAG_DEFAULT, "GuardAgainstInstallInfosLossedStrategy start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "GuardAgainstInstallInfosLossedStrategy start");
     // Check user path, and parse userData to InnerBundleUserInfo
     std::map<std::string, std::vector<InnerBundleUserInfo>> innerBundleUserInfoMaps;
     ScanResultCode scanResultCode = ScanAndAnalyzeUserDatas(innerBundleUserInfoMaps);
     if (scanResultCode == ScanResultCode::SCAN_NO_DATA) {
-        LOG_E(BMS_TAG_DEFAULT, "Scan the user data directory failed");
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "Scan the user data directory failed");
         return ResultCode::NO_INSTALLED_DATA;
     }
 
@@ -490,7 +490,7 @@ ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
     for (const auto &userId : userIds) {
         int32_t userIdInt = Constants::INVALID_USERID;
         if (!StrToInt(userId, userIdInt)) {
-            LOG_E(BMS_TAG_DEFAULT, "UserId(%{public}s) strToInt failed", userId.c_str());
+            LOG_NOFUNC_E(BMS_TAG_DEFAULT, "UserId(%{public}s) strToInt failed", userId.c_str());
             continue;
         }
 
@@ -1032,6 +1032,7 @@ void BMSEventHandler::ProcessScanDir(const std::string &dir, std::list<std::stri
 
 void BMSEventHandler::InnerProcessBootSystemHspInstall()
 {
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "boot install appServiceFwk size:%{public}zu", systemHspList_.size());
     for (const auto &systemHspPath : systemHspList_) {
         ProcessSystemHspInstall(systemHspPath);
     }
@@ -1048,7 +1049,7 @@ void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
     AppServiceFwkInstaller installer;
     SavePreInstallExceptionAppService(preScanInfo.bundleDir);
     ErrCode ret = installer.Install({preScanInfo.bundleDir}, installParam);
-    LOG_I(BMS_TAG_DEFAULT, "Install systemHsp %{public}s result %{public}d", preScanInfo.bundleDir.c_str(), ret);
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Install systemHsp %{public}s result %{public}d", preScanInfo.bundleDir.c_str(), ret);
     if (ret == ERR_OK) {
         DeletePreInstallExceptionAppService(preScanInfo.bundleDir);
     }
@@ -1090,7 +1091,7 @@ void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
             taskMap[installInfo.priority].emplace_back(installInfo);
         }
     }
-
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "boot install shared hsp size:%{public}zu", hspDirs.size());
     for (const auto &hspDir : hspDirs) {
         ProcessSystemSharedBundleInstall(hspDir, Constants::AppType::SYSTEM_APP);
     }
@@ -1208,7 +1209,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
 
 void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath, Constants::AppType appType)
 {
-    LOG_I(BMS_TAG_DEFAULT, "Process system shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Process shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.SetKillProcess(false);
@@ -1546,10 +1547,10 @@ void BMSEventHandler::ProcessCheckSystemOptimizeShaderCacheDir()
     bool checkShaderCache = false;
     CheckOtaFlag(OTAFlag::CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR, checkShaderCache);
     if (checkShaderCache) {
-        LOG_I(BMS_TAG_DEFAULT, "Not need to check system optimize shader cache dir due to has checked");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Not need to check system optimize shader cache dir due to has checked");
         return;
     }
-    LOG_I(BMS_TAG_DEFAULT, "Need to check system optimize shader cache dir");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Need to check system optimize shader cache dir");
     CheckSystemOptimizeShaderCache();
     UpdateOtaFlag(OTAFlag::CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR);
 }
@@ -2679,7 +2680,7 @@ void BMSEventHandler::SaveSystemFingerprint()
     }
 
     std::string curSystemFingerprint = GetCurSystemFingerprint();
-    LOG_I(BMS_TAG_DEFAULT, "curSystemFingerprint(%{public}s)", curSystemFingerprint.c_str());
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "curSystemFingerprint(%{public}s)", curSystemFingerprint.c_str());
     if (curSystemFingerprint.empty()) {
         return;
     }
@@ -3668,7 +3669,7 @@ bool BMSEventHandler::CheckAndParseHapFiles(
 
     auto ret = bundleInstallChecker->CheckSysCap(realPaths);
     if (ret != ERR_OK) {
-        LOG_I(BMS_TAG_DEFAULT, "hap syscap check failed");
+        LOG_D(BMS_TAG_DEFAULT, "hap syscap check failed");
     }
     bool isSysCapValid = (ret == ERR_OK);
 
@@ -4537,7 +4538,7 @@ bool BMSEventHandler::GetValueFromJson(nlohmann::json &jsonObject)
 
 void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string &path)
 {
-    LOG_I(BMS_TAG_DEFAULT, "ProcessRebootQuickFixUnInstallAndRecover start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "ProcessRebootQuickFixUnInstallAndRecover start");
     if (!BundleUtil::IsExistFile(QUICK_FIX_APP_RECOVER_FILE)) {
         LOG_E(BMS_TAG_DEFAULT, "end, reinstall json file is empty");
         return;
@@ -4578,7 +4579,7 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
             installer->UninstallAndRecover(bundleName, installParam);
         }
     }
-    LOG_I(BMS_TAG_DEFAULT, "ProcessRebootQuickFixUnInstallAndRecover end");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "ProcessRebootQuickFixUnInstallAndRecover end");
 }
 
 void BMSEventHandler::InnerProcessRebootUninstallWrongBundle()
@@ -4847,7 +4848,7 @@ bool BMSEventHandler::SaveBmsSystemTimeForShortcut()
         LOG_E(BMS_TAG_DEFAULT, "save BMS_SYSTEM_TIME_FOR_SHORTCUT failed");
         return false;
     }
-    LOG_I(BMS_TAG_DEFAULT, "save BMS_SYSTEM_TIME_FOR_SHORTCUT succeed");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "save BMS_SYSTEM_TIME_FOR_SHORTCUT succeed");
     return true;
 }
 
@@ -5117,7 +5118,7 @@ bool BMSEventHandler::SaveUpdatePermissionsFlag()
 
 bool BMSEventHandler::ProcessCheckSystemOptimizeDir()
 {
-    LOG_I(BMS_TAG_DEFAULT, "Need to check system optimize dir");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Need to check system optimize dir");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");

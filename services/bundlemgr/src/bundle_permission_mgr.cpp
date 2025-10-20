@@ -155,7 +155,7 @@ AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const Inn
     hapPolicy.permList = permDef;
     hapPolicy.permStateList = GetPermissionStateFullList(innerBundleInfo);
     hapPolicy.aclRequestedList = innerBundleInfo.GetAllowedAcls();
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "-n %{public}s apl:%{public}s req permission size:%{public}zu, acls size:%{public}zu",
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "-n %{public}s apl:%{public}s req permission:%{public}zu acls:%{public}zu",
         innerBundleInfo.GetBundleName().c_str(), apl.c_str(), hapPolicy.permStateList.size(),
         hapPolicy.aclRequestedList.size());
     BundleParser bundleParser;
@@ -185,7 +185,7 @@ AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const Inn
         preAuthorizationInfo.userCancelable = userCancellable;
         hapPolicy.preAuthorizationInfo.emplace_back(preAuthorizationInfo);
     }
-    LOG_I(BMS_TAG_DEFAULT, "end, preAuthorizationInfo size :%{public}zu", hapPolicy.preAuthorizationInfo.size());
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "preAuthInfo size:%{public}zu", hapPolicy.preAuthorizationInfo.size());
     return hapPolicy;
 }
 
@@ -722,7 +722,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
     Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities)
 {
-    LOG_I(BMS_TAG_DEFAULT, "start, init hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InitHapToken -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, dlpType);
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo, appServiceCapabilities);
 #ifdef X86_EMULATOR_MODE
@@ -744,7 +744,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
             innerBundleInfo.GetBundleName().c_str(), ret);
         return ret;
     }
-    LOG_I(BMS_TAG_DEFAULT, "bundleName: %{public}s tokenId:%{public}u", innerBundleInfo.GetBundleName().c_str(),
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InitHapToken -n %{public}s -t %{public}u", innerBundleInfo.GetBundleName().c_str(),
         tokenIdeEx.tokenIdExStruct.tokenID);
     return ERR_OK;
 }

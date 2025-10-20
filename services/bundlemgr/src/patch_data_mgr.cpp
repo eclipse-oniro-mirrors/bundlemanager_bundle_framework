@@ -55,7 +55,7 @@ bool PatchDataMgr::AddInnerPatchInfo(const std::string &bundleName, const InnerP
 bool PatchDataMgr::GetInnerPatchInfo(const std::string &bundleName, InnerPatchInfo &info) const
 {
     if (bundleName.empty()) {
-        APP_LOGE("GetInnerPatchInfo failed, invalid param");
+        APP_LOGD("GetInnerPatchInfo failed bundleName empty");
         return false;
     }
     if (!patchDataStorage_->GetStoragePatchInfo(bundleName, info)) {

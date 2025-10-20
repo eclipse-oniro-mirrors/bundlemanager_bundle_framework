@@ -36,7 +36,7 @@ const int32_t APP_INDEX_INDEX = 4;
 }
 ShortcutDataStorageRdb::ShortcutDataStorageRdb()
 {
-    APP_LOGI("ShortcutDataStorageRdb instance is created");
+    APP_LOGI_NOFUNC("ShortcutDataStorageRdb instance is created");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = SHORTCUT_RDB_TABLE_NAME;
@@ -52,7 +52,7 @@ ShortcutDataStorageRdb::ShortcutDataStorageRdb()
 
 ShortcutDataStorageRdb::~ShortcutDataStorageRdb()
 {
-    APP_LOGI("ShortcutDataStorageRdb instance is destroyed");
+    APP_LOGI_NOFUNC("ShortcutDataStorageRdb instance is destroyed");
 }
 
 bool ShortcutDataStorageRdb::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId, bool &isIdIllegal)

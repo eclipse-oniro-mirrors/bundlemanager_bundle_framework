@@ -91,7 +91,7 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
         return false;
     }
     // adapt overlay
-    APP_LOGI_NOFUNC("AddResource start");
+    APP_LOGD("AddResource start");
     if (overlayHaps.empty()) {
         uint32_t selectType = needParseIcon ? Global::Resource::SELECT_MEDIA : 0;
         selectType = needParseLabel ? (selectType | Global::Resource::SELECT_STRING) : selectType;
@@ -103,7 +103,7 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
             APP_LOGW("AddResource overlay failed, hapPath: %{public}s", hapPath.c_str());
         }
     }
-    APP_LOGI_NOFUNC("AddResource end");
+    APP_LOGD("AddResource end");
     return true;
 }
 } // AppExecFwk

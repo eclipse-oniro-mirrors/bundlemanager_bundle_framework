@@ -281,7 +281,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName,
             APP_LOGD("update succeed");
             return true;
         }
-        APP_LOGW("update failed: incorrect state, -n: %{public}s", bundleName.c_str());
+        APP_LOGW_NOFUNC("update failed: incorrect state -n: %{public}s", bundleName.c_str());
         return false;
     }
 
@@ -7832,7 +7832,7 @@ void BundleDataMgr::ResetAOTFlags()
 
 void BundleDataMgr::ResetAOTFlagsCommand(const std::string &bundleName)
 {
-    APP_LOGI("ResetAOTFlagsCommand begin");
+    APP_LOGD("ResetAOTFlagsCommand begin");
     std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
@@ -7847,7 +7847,7 @@ void BundleDataMgr::ResetAOTFlagsCommand(const std::string &bundleName)
         APP_LOGW("SaveStorageBundleInfo failed, bundleName : %{public}s", item->second.GetBundleName().c_str());
         return;
     }
-    APP_LOGI("ResetAOTFlagsCommand end");
+    APP_LOGD("ResetAOTFlagsCommand end");
 }
 
 ErrCode BundleDataMgr::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
@@ -10344,6 +10344,8 @@ ErrCode BundleDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, 
         }
         return ERR_SHORTCUT_MANAGER_INTERNAL_ERROR;
     }
+    APP_LOGI_NOFUNC("AddDesktopShortcutInfo -n %{public}s -i %{public}d, -u %{public}d",
+        shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
     return ERR_OK;
 }
 
@@ -10357,6 +10359,8 @@ ErrCode BundleDataMgr::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInf
     if (!shortcutStorage_->DeleteDesktopShortcutInfo(shortcutInfo, userId)) {
         return ERR_SHORTCUT_MANAGER_INTERNAL_ERROR;
     }
+    APP_LOGI_NOFUNC("DeleteDesktopShortcutInfo -n %{public}s -i %{public}d, -u %{public}d",
+        shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
     return ERR_OK;
 }
 
@@ -10385,6 +10389,7 @@ ErrCode BundleDataMgr::GetAllDesktopShortcutInfo(int32_t userId, std::vector<Sho
         }
         shortcutInfos.emplace_back(data);
     }
+    APP_LOGI_NOFUNC("GetAllDesktopShortcutInfo size:%{public}zu -u %{public}d", shortcutInfos.size(), userId);
     return ERR_OK;
 }
 

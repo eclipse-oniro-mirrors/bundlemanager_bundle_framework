@@ -228,10 +228,6 @@ void AOTExecutor::MapHapArgs(const AOTArgs &aotArgs, std::unordered_map<std::str
     argsMap.emplace("appIdentifier", aotArgs.appIdentifier);
     argsMap.emplace(Constants::MODULE_ARKTS_MODE, aotArgs.moduleArkTSMode);
     argsMap.emplace(IS_SYS_COMP, IS_SYS_COMP_FALSE);
-
-    for (const auto &arg : argsMap) {
-        LOG_NOFUNC_I(BMS_TAG_AOT, "%{public}s: %{public}s", arg.first.c_str(), arg.second.c_str());
-    }
 }
 
 ErrCode AOTExecutor::PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData) const

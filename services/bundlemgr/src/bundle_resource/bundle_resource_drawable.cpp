@@ -45,7 +45,7 @@ bool BundleResourceDrawable::GetIconResourceByTheme(
     Global::Resource::RState state = resourceManager->GetThemeIcons(iconId, foregroundInfo, backgroundInfo, density,
         resourceInfo.abilityName_);
     if (state == Global::Resource::SUCCESS) {
-        LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s find theme resource", resourceInfo.bundleName_.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "-n %{public}s find theme resource", resourceInfo.bundleName_.c_str());
         if (backgroundInfo.second == 0) {
             return ProcessForegroundIcon(foregroundInfo, resourceInfo);
         }

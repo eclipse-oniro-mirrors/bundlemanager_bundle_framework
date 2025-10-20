@@ -97,7 +97,7 @@ public:
     virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) override
     {
         g_installedHapNum++;
-        APP_LOGI("OnFinished, resultCode : %{public}d, resultMsg : %{public}s, count : %{public}u",
+        APP_LOGI_NOFUNC("OnFinished result:%{public}d msg:%{public}s count:%{public}u",
             resultCode, resultMsg.c_str(), g_installedHapNum.load());
         if (static_cast<int32_t>(g_installedHapNum) >= totalHapNum_ && bundlePromise_ != nullptr) {
             bundlePromise_->NotifyAllTasksExecuteFinished();
@@ -213,6 +213,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBu
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     bool needReinstall = userId == Constants::START_USERID;
     // Read apps installed by other users that are visible to all users
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "create user:%{public}d bundle size:%{public}d", userId, totalHapNum);
     for (const auto &info : preInstallBundleInfos) {
         InstallParam installParam;
         installParam.userId = userId;

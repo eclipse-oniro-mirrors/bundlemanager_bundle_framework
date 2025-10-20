@@ -363,7 +363,7 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
-        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoV9 fail bundleName empty");
+        LOG_D(BMS_TAG_QUERY, "GetBundleInfoV9 fail bundleName empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
@@ -468,7 +468,7 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
     if (res != ERR_OK) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForSelfWithOutCache failed err:%{public}d", res);
+        LOG_D(BMS_TAG_QUERY, "GetBundleInfoForSelfWithOutCache failed err:%{public}d", res);
         return res;
     }
     return ERR_OK;
