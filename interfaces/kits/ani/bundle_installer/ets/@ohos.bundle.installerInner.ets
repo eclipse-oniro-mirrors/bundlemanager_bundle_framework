@@ -157,7 +157,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   install(hapFilePaths: Array<string>, installParam: installer.InstallParam, callback: AsyncCallback<void>): void {
       checkInstallParam(installParam, true);
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
-          let execFun = ():NullishType=>{ this.installNative(hapFilePaths, installParam); }
+          let execFun = ():Any=>{ this.installNative(hapFilePaths, installParam); }
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
               callback(null, undefined);
@@ -170,7 +170,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
   install(hapFilePaths: Array<string>, callback: AsyncCallback<void>): void {
       let emptyParam = new InstallParamInner();
       let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void):void => {
-          let execFun = ():NullishType=>{ this.installNative(hapFilePaths, emptyParam); }
+          let execFun = ():Any=>{ this.installNative(hapFilePaths, emptyParam); }
           let p1 = taskpool.execute(execFun);
           p1.then(() => {
               callback(null, undefined);
