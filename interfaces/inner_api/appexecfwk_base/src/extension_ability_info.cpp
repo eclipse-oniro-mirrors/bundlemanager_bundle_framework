@@ -244,7 +244,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, validDataGroupIdsSize);
     CONTAINER_SECURITY_VERIFY(parcel, validDataGroupIdsSize, &validDataGroupIds);
     for (auto i = 0; i < validDataGroupIdsSize; i++) {
-        dataGroupIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
+        validDataGroupIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     customProcess = Str16ToStr8(parcel.ReadString16());
     arkTSMode = parcel.ReadString();
