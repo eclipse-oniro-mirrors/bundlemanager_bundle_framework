@@ -21,6 +21,7 @@
 
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
+#include "bundle_common_event_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
@@ -113,6 +114,8 @@ ErrCode PluginInstaller::InstallPlugin(const std::string &hostBundleName,
 
     int32_t uid = hostBundleInfo.GetUid(userId_);
     NotifyPluginEvents(isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL, uid);
+    SendPluginCommonEvent(hostBundleName, bundleName_,
+        isPluginExist_ ? NotifyType::UPDATE : NotifyType::INSTALL);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "install plugin finished");
     return ERR_OK;
 }
@@ -165,6 +168,7 @@ ErrCode PluginInstaller::UninstallPlugin(const std::string &hostBundleName, cons
 
     int32_t uid = hostBundleInfo.GetUid(userId_);
     NotifyPluginEvents(NotifyType::UNINSTALL_BUNDLE, uid);
+    SendPluginCommonEvent(hostBundleName, bundleName_, NotifyType::UNINSTALL_BUNDLE);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "uninstall plugin finish");
     return ERR_OK;
 }
@@ -940,6 +944,15 @@ void PluginInstaller::DeleteRouterInfoForPlugin(const std::string &hostBundleNam
         return;
     }
     dataMgr_->DeleteRouterInfoForPlugin(hostBundleName, oldPluginInfo_);
+}
+
+void PluginInstaller::SendPluginCommonEvent(
+    const std::string &hostBundleName,
+    const std::string &pluginBundleName,
+    const NotifyType &notifyType)
+{
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyPluginCommonEvents(hostBundleName, pluginBundleName, notifyType);
 }
 } // AppExecFwk
 } // OHOS

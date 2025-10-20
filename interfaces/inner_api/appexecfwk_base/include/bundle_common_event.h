@@ -28,6 +28,9 @@ constexpr const char* DISPOSED_RULE_ADDED = "usual.event.DISPOSED_RULE_ADDED";
 constexpr const char* DISPOSED_RULE_DELETED = "usual.event.DISPOSED_RULE_DELETED";
 constexpr const char* DYNAMIC_ICON_CHANGED = "usual.event.DYNAMIC_ICON_CHANGED";
 constexpr const char* DEFAULT_APPLICATION_CHANGED = "usual.event.DEFAULT_APPLICATION_CHANGED";
+constexpr const char* PLUGIN_PACKAGE_CHANGED = "usual.event.PLUGIN_PACKAGE_CHANGED";
+constexpr const char* PLUGIN_PACKAGE_ADDED = "usual.event.PLUGIN_PACKAGE_ADDED";
+constexpr const char* PLUGIN_PACKAGE_REMOVED = "usual.event.PLUGIN_PACKAGE_REMOVED";
 } // AppExecFwk
 } // OHOS
 #endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_COMMON_EVENT_H
