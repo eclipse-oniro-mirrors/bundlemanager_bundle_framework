@@ -1089,12 +1089,8 @@ static void CleanBundleDataSubDirs(const std::string &bundleDataDir)
     }
 }
 
-static void CleanBundleDataForEl2(const std::string &bundleName, const int userid, const int appIndex)
+static void CleanBundleDataForEl2(const std::string &suffixName, const int userid)
 {
-    std::string suffixName = bundleName;
-    if (appIndex > 0) {
-        suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
-    }
     std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userid);
     std::string databaseDir = dataDir + ServiceConstants::DATABASE + suffixName;
@@ -1215,11 +1211,12 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex)
+ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex,
+    const bool isAtomicService)
 {
     LOG_D(BMS_TAG_INSTALLD,
-        "InstalldHostImpl::CleanBundleDataDirByName bundleName:%{public}s,userid:%{public}d,appIndex:%{public}d",
-        bundleName.c_str(), userid, appIndex);
+        "CleanBundleDataDirByName -n:%{public}s,-u:%{public}d,appIndex:%{public}d,isAtomicService:%{public}d",
+        bundleName.c_str(), userid, appIndex, isAtomicService);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
@@ -1228,15 +1225,30 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
         LOG_E(BMS_TAG_INSTALLD, "Calling the function CleanBundleDataDirByName with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    std::string suffixName = bundleName;
+    std::vector<std::string> pathNames;
+    if (isAtomicService) {
+        if (!InstalldOperator::GetAtomicServiceBundleDataDir(bundleName, userid, pathNames)) {
+            LOG_W(BMS_TAG_INSTALLD, "atomic bundle %{public}s no other path", bundleName.c_str());
+        }
+    }
+    pathNames.emplace_back(bundleName);
+    for (auto &name : pathNames) {
+        InnerCleanBundleDataDirByName(name, userid, appIndex);
+    }
+    return ERR_OK;
+}
+
+void InstalldHostImpl::InnerCleanBundleDataDirByName(std::string &suffixName, const int userid,
+    const int appIndex)
+{
     if (appIndex > 0) {
-        suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+        suffixName = BundleCloneCommonHelper::GetCloneDataDir(suffixName, appIndex);
     }
     std::vector<std::string> elPath(ServiceConstants::BUNDLE_EL);
     elPath.push_back(ServiceConstants::DIR_EL5);
     for (const auto &el : elPath) {
         if (el == ServiceConstants::BUNDLE_EL[1]) {
-            CleanBundleDataForEl2(bundleName, userid, appIndex);
+            CleanBundleDataForEl2(suffixName, userid);
             continue;
         }
         std::string bundleDataDir = GetBundleDataDir(el, userid) + ServiceConstants::BASE + suffixName;
@@ -1255,7 +1267,6 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
     CleanNewBackupExtHomeDir(suffixName, userid, DirType::DIR_EL2);
     CleanNewBackupExtHomeDir(suffixName, userid, DirType::DIR_EL1);
     CleanDistributedDir(suffixName, userid);
-    return ERR_OK;
 }
 
 std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int userid) const

@@ -136,7 +136,7 @@ public:
      * @return Returns ERR_OK if the bundle data directory cleaned successfully; returns error code otherwise.
      */
     virtual ErrCode CleanBundleDataDirByName(const std::string &bundleName, const int userid,
-        const int appIndex = 0) override;
+        const int appIndex = 0, const bool isAtomicService = false) override;
     /**
      * @brief Get bundle Stats.
      * @param bundleName Indicates the bundle name.
@@ -307,6 +307,7 @@ private:
     ErrCode CreateBundleDataDirWithEl(const CreateDirParam &createDirParam);
     ErrCode CreateCommonDataDir(const CreateDirParam &createDirParam, const std::string &el);
     ErrCode CreateEl2DataDir(const CreateDirParam &createDirParam);
+    void InnerCleanBundleDataDirByName(std::string &suffixName, const int userid, const int appIndex = 0);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

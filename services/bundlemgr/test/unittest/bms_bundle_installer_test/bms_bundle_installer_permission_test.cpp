@@ -673,7 +673,7 @@ HWTEST_F(BmsBundleInstallerPermissionTest, CleanBundleDataDirByName_0100, Functi
     InstalldHostImpl installdHostImpl;
     int userId = 100;
     int appIndex = 1;
-    ErrCode result = installdHostImpl.CleanBundleDataDirByName(BUNDLE_NAME, userId, appIndex);
+    ErrCode result = installdHostImpl.CleanBundleDataDirByName(BUNDLE_NAME, userId, appIndex, false);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

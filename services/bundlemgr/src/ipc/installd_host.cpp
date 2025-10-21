@@ -518,7 +518,8 @@ bool InstalldHost::HandleCleanBundleDataDirByName(MessageParcel &data, MessagePa
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int userid = data.ReadInt32();
     int appIndex = data.ReadInt32();
-    ErrCode result = CleanBundleDataDirByName(bundleName, userid, appIndex);
+    bool isAtomicService = data.ReadBool();
+    ErrCode result = CleanBundleDataDirByName(bundleName, userid, appIndex, isAtomicService);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
