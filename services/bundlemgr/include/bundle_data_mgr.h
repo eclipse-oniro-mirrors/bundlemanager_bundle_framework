@@ -1157,6 +1157,8 @@ public:
         const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo);
     ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
     ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback);
+    void AddNewEl5BundleName(const std::string &bundleName);
+    ErrCode CreateNewBundleEl5Dir(int32_t userId);
     void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData);
     ErrCode GetDynamicIconInfo(const std::string &bundleName, std::vector<DynamicIconInfo> &dynamicIconInfos);
     void ProcessDynamicIconForOta();
@@ -1400,6 +1402,7 @@ private:
     void GetPreBundleSize(const std::string &name, std::vector<BundleStorageStats> &bundleStats) const;
     bool GetAdaptBaseShareBundleInfo(const InnerBundleInfo &innerBundleInfo, const Dependency &dependency,
         BaseSharedBundleInfo &baseSharedBundleInfo) const;
+    bool CreateEl5Group(const InnerBundleInfo &info, int32_t userId);
 
 private:
     bool initialUserFlag_ = false;
@@ -1414,6 +1417,7 @@ private:
     mutable ffrt::shared_mutex callbackMutex_;
     mutable ffrt::shared_mutex bundleMutex_;
     mutable ffrt::shared_mutex otaNewInstallMutex_;
+    mutable ffrt::shared_mutex newEl5Mutex_;
     std::shared_ptr<IBundleDataStorage> dataStorage_;
     std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;
@@ -1448,6 +1452,7 @@ private:
     // using for plugin event callback
     std::vector<sptr<IBundleEventCallback>> pluginCallbackList_;
     std::set<std::string> otaNewInstallBundleNames_;
+    std::set<std::string> newEl5BundleNames_;
 
     static bool HasAppLinkingFlag(uint32_t flags);
 };

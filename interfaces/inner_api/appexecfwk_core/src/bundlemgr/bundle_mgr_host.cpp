@@ -672,6 +672,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::UNREGISTER_PLUGIN_EVENT_CALLBACK):
             errCode = HandleUnregisterPluginEventCallback(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_EL5_DIR):
+            errCode = HandleCreateNewBundleEl5Dir(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_SPECIFIED_DISTRIBUTED_TYPE):
             errCode = HandleBatchGetSpecifiedDistributionType(data, reply);
             break;
@@ -4740,6 +4743,18 @@ ErrCode BundleMgrHost::HandleUnregisterPluginEventCallback(MessageParcel &data, 
     ErrCode ret = UnregisterPluginEventCallback(pluginEventCallback);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCreateNewBundleEl5Dir(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = CreateNewBundleEl5Dir(userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

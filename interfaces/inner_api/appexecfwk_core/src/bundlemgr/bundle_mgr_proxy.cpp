@@ -6247,6 +6247,27 @@ ErrCode BundleMgrProxy::UnregisterPluginEventCallback(const sptr<IBundleEventCal
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::CreateNewBundleEl5Dir(int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to CreateNewBundleEl5Dir due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_EL5_DIR, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&data)
 {
     sptr<Ashmem> ashMem = reply.ReadAshmem();
