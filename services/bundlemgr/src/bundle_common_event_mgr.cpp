@@ -452,6 +452,34 @@ void BundleCommonEventMgr::NotifyPluginEvents(const NotifyBundleEvents &event,
     }
 }
 
+void BundleCommonEventMgr::NotifyPluginCommonEvents(const std::string &hostBundleName,
+    const std::string &pluginBundleName, const NotifyType &type)
+{
+    APP_LOGI("NotifyPluginCommonEvents -n %{public}s -p %{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str());
+    OHOS::AAFwk::Want want;
+    if (type == NotifyType::INSTALL) {
+        want.SetAction(PLUGIN_PACKAGE_ADDED);
+    } else if (type == NotifyType::UNINSTALL_BUNDLE) {
+        want.SetAction(PLUGIN_PACKAGE_REMOVED);
+    } else if (type == NotifyType::UPDATE) {
+        want.SetAction(PLUGIN_PACKAGE_CHANGED);
+    } else {
+        APP_LOGE("NotifyPluginCommonEvents type error");
+        return;
+    }
+    ElementName element;
+    element.SetBundleName(hostBundleName);
+    want.SetElement(element);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    publishInfo.SetBundleName(hostBundleName);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+}
 
 void BundleCommonEventMgr::NotifyShortcutVisibleChanged(
     const std::string &bundlename, const std::string &id, int32_t userId, int32_t appIndex, bool visible)

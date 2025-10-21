@@ -11595,6 +11595,20 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0068, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: PluginInstaller_0069
+ * @tc.name: test SendPluginCommonEvent
+ * @tc.desc: 1.Test SendPluginCommonEvent
+ * @tc.desc: 2.Test SendPluginCommonEvent
+*/
+HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0069, Function | MediumTest | Level1)
+{
+    PluginInstaller installer;
+    std::string hostBundleName;
+    std::string pluginBundleName;
+    EXPECT_NO_THROW(installer.SendPluginCommonEvent(hostBundleName, pluginBundleName, NotifyType::INSTALL));
+}
+
+/**
  * @tc.number: CreateBundleDataDirWithVector_0100
  * @tc.name: test CreateBundleDataDir
  * @tc.desc: test CreateBundleDataDir of InstalldHostImpl

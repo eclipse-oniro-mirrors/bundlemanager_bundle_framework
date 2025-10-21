@@ -120,6 +120,8 @@ private:
     std::string JoinPluginId() const;
     void UpdateRouterInfoForPlugin(const std::string &hostBundleName, const InnerBundleInfo &pluginInfo);
     void DeleteRouterInfoForPlugin(const std::string &hostBundleName);
+    void SendPluginCommonEvent(const std::string &hostBundleName, const std::string &pluginBundleName,
+        const NotifyType &notifyType);
 
 #define CHECK_RESULT(errcode, errmsg)                                              \
     do {                                                                           \

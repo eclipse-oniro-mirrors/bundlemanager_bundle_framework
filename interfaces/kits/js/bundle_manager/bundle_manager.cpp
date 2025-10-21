@@ -20,6 +20,7 @@
 #include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_common_event.h"
 #include "bundle_manager_helper.h"
 #include "bundle_manager_sync.h"
 #include "bundle_mgr_client.h"
@@ -124,6 +125,9 @@ void RegisterClearCacheListener()
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+    matchingSkills.AddEvent(std::string(PLUGIN_PACKAGE_CHANGED));
+    matchingSkills.AddEvent(std::string(PLUGIN_PACKAGE_ADDED));
+    matchingSkills.AddEvent(std::string(PLUGIN_PACKAGE_REMOVED));
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     g_clearCacheListener = std::make_shared<ClearCacheListener>(subscribeInfo);
     (void)EventFwk::CommonEventManager::SubscribeCommonEvent(g_clearCacheListener);
