@@ -8824,7 +8824,7 @@ HWTEST_F(BmsBundleInstallerTest, DeleteAppGalleryHapFromTempPath_0010, Function 
 
     installer.needDeleteAppTempPath_ = true;
     ret = installer.DeleteAppGalleryHapFromTempPath();
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 }
 
 /**

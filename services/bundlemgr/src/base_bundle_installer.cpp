@@ -7369,8 +7369,9 @@ bool BaseBundleInstaller::DeleteAppGalleryHapFromTempPath()
     if (!needDeleteAppTempPath_) {
         return true;
     }
-    if (!BundleUtil::DeleteDir(ServiceConstants::BMS_APP_TEMP_PATH)) {
-        LOG_E(BMS_TAG_INSTALLER, "delete app_temp failed %{public}d", errno);
+    // rename app_temp to app_copy_temp
+    if (!BundleUtil::RenameFile(ServiceConstants::BMS_APP_TEMP_PATH, ServiceConstants::BMS_APP_COPY_TEMP_PATH)) {
+        LOG_E(BMS_TAG_INSTALLER, "rename app_temp to app_copy_temp failed %{public}d", errno);
         return false;
     }
     if (!BundleUtil::DeleteDir(ServiceConstants::BMS_APP_COPY_TEMP_PATH)) {
