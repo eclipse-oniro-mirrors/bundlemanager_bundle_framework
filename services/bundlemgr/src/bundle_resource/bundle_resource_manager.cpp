@@ -151,7 +151,7 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
                 return true;
             }
             auto iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
-                [bundleName, appIndex](const auto resourceIconInfo) {
+                [bundleName, appIndex](const auto &resourceIconInfo) {
                     return ((resourceIconInfo.bundleName == bundleName) &&
                         (resourceIconInfo.appIndex == appIndex));
                 });
@@ -189,7 +189,7 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
             }
             for (auto &resource : launcherAbilityResourceInfo) {
                 auto iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
-                    [resource](const auto resourceIconInfo) {
+                    [&resource](const auto &resourceIconInfo) {
                         return ((resource.bundleName == resourceIconInfo.bundleName) &&
                             (resource.moduleName == resourceIconInfo.moduleName) &&
                             (resource.abilityName == resourceIconInfo.abilityName) &&
@@ -197,7 +197,7 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
                     });
                 if (iter == resourceIconInfos.end()) {
                     iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
-                        [resource](const auto resourceIconInfo) {
+                        [&resource](const auto &resourceIconInfo) {
                             return ((resource.bundleName == resourceIconInfo.bundleName) &&
                                 (resource.appIndex == resourceIconInfo.appIndex));
                         });
@@ -241,7 +241,7 @@ bool BundleResourceManager::GetAllBundleResourceInfo(const uint32_t flags,
                     continue;
                 }
                 auto iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
-                    [resource](const auto resourceIconInfo) {
+                    [&resource](const auto &resourceIconInfo) {
                         return ((resource.bundleName == resourceIconInfo.bundleName) &&
                             (resource.appIndex == resourceIconInfo.appIndex));
                     });
@@ -272,7 +272,7 @@ bool BundleResourceManager::GetAllLauncherAbilityResourceInfo(const uint32_t fla
             }
             for (auto &resource : launcherAbilityResourceInfos) {
                 auto iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
-                    [resource](const auto resourceIconInfo) {
+                    [&resource](const auto &resourceIconInfo) {
                         return ((resource.bundleName == resourceIconInfo.bundleName) &&
                             (resource.moduleName == resourceIconInfo.moduleName) &&
                             (resource.abilityName == resourceIconInfo.abilityName) &&
@@ -280,7 +280,7 @@ bool BundleResourceManager::GetAllLauncherAbilityResourceInfo(const uint32_t fla
                     });
                 if (iter == resourceIconInfos.end()) {
                     iter = std::find_if(resourceIconInfos.begin(), resourceIconInfos.end(),
-                        [resource](const auto resourceIconInfo) {
+                        [&resource](const auto &resourceIconInfo) {
                             return ((resource.bundleName == resourceIconInfo.bundleName) &&
                                 (resource.appIndex == resourceIconInfo.appIndex));
                         });
