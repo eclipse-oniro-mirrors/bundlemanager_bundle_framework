@@ -20,11 +20,8 @@
 #include "js_drawable_descriptor.h"
 #include "resource_manager.h"
 #endif
-#include "parameters.h"
 namespace OHOS {
 namespace AppExecFwk {
-constexpr const char* DRAWABLE_ICON_SIZE = "const.bms.drawableIconSize";
-constexpr int32_t DECODE_SIZE = 0;
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 std::shared_ptr<Global::Resource::ResourceManager> BundleResourceDrawableUtils::resourceManager_ = nullptr;
 std::mutex BundleResourceDrawableUtils::resMutex_;
@@ -57,12 +54,10 @@ napi_value BundleResourceDrawableUtils::ConvertToDrawableDescriptor(napi_env env
     for (size_t index = 0; index < lenForeground; ++index) {
         foregroundPtr[index] = foreground[index];
     }
-    int32_t decodeSize = OHOS::system::GetIntParameter(DRAWABLE_ICON_SIZE, DECODE_SIZE);
     if (background.empty()) {
         // base-icon
         std::unique_ptr<Ace::Napi::DrawableDescriptor> drawableDescriptor =
             std::make_unique<Ace::Napi::DrawableDescriptor>(std::move(foregroundPtr), lenForeground);
-        drawableDescriptor->SetDecodeSize(decodeSize, decodeSize);
         return Ace::Napi::JsDrawableDescriptor::ToNapi(env, drawableDescriptor.release(),
             Ace::Napi::DrawableDescriptor::DrawableType::BASE);
     }
@@ -72,6 +67,7 @@ napi_value BundleResourceDrawableUtils::ConvertToDrawableDescriptor(napi_env env
     for (size_t index = 0; index < lenBackground; ++index) {
         backgroundPtr[index] = background[index];
     }
+    std::unique_ptr<uint8_t[]> jsonBuf;
     std::string themeMask = (resourceManager_ == nullptr) ? "" : resourceManager_->GetThemeMask();
 
     std::pair<std::unique_ptr<uint8_t[]>, size_t> foregroundPair;
@@ -80,12 +76,9 @@ napi_value BundleResourceDrawableUtils::ConvertToDrawableDescriptor(napi_env env
     std::pair<std::unique_ptr<uint8_t[]>, size_t> backgroundPair;
     backgroundPair.first = std::move(backgroundPtr);
     backgroundPair.second = lenBackground;
-    std::pair<int32_t, int32_t> decoderSize;
-    decoderSize.first = decodeSize;
-    decoderSize.second = decodeSize;
     std::unique_ptr<Ace::Napi::DrawableDescriptor> drawableDescriptor =
-        std::make_unique<Ace::Napi::LayeredDrawableDescriptor>(0, themeMask, 1, foregroundPair, backgroundPair,
-        decoderSize, nullptr, true);
+        std::make_unique<Ace::Napi::LayeredDrawableDescriptor>(std::move(jsonBuf), 0, resourceManager_, themeMask, 1,
+        foregroundPair, backgroundPair, true);
     return Ace::Napi::JsDrawableDescriptor::ToNapi(env, drawableDescriptor.release(),
         Ace::Napi::DrawableDescriptor::DrawableType::LAYERED);
 #else

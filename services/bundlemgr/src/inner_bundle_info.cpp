@@ -1686,6 +1686,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         }
         if ((ability.first.find(key) != std::string::npos) && (ability.second.moduleName == hapInfo.moduleName)) {
             AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(ability.second);
+            AppendDynamicSkillsToAbilityIfExist(abilityInfo);
             auto &abilityInfoRef = hapInfo.abilityInfos.emplace_back(abilityInfo);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,

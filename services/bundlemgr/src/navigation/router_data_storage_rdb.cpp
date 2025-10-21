@@ -55,31 +55,12 @@ RouterDataStorageRdb::~RouterDataStorageRdb()
 
 bool RouterDataStorageRdb::UpdateDB()
 {
+    APP_LOGI("delete router_map");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + std::string(OLD_ROUTER_RDB_TABLE_NAME) +
-        " ADD VERSION_CODE INTEGER DEFAULT 0;"));
-    auto alterRdbManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
-    if (!alterRdbManager->ExecuteSql()) {
-        APP_LOGE("alter router_map failed.");
-    }
-    bmsRdbConfig.insertColumnSql.clear();
-    bmsRdbConfig.insertColumnSql.push_back(std::string("INSERT INTO " + std::string(ROUTER_RDB_TABLE_NAME)
-        + " (BUNDLE_NAME, MODULE_NAME, VERSION_CODE, ROUTER_MAP_INFO) "
-        + " SELECT BUNDLE_NAME, MODULE_NAME, VERSION_CODE, ROUTER_MAP_INFO FROM "
-        + std::string(OLD_ROUTER_RDB_TABLE_NAME)));
-    auto insertRdbManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
-    bool ret = insertRdbManager->ExecuteSql();
-    if (!ret) {
-        APP_LOGE("insert router_map_V2 failed.");
-        return false;
-    }
-    bmsRdbConfig.insertColumnSql.clear();
     bmsRdbConfig.insertColumnSql.push_back("DROP TABLE " + std::string(OLD_ROUTER_RDB_TABLE_NAME));
     auto deleteRdbManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
-    (void)deleteRdbManager->ExecuteSql();
-    APP_LOGI("Update router db success");
-    return true;
+    return deleteRdbManager->ExecuteSql();
 }
 
 bool RouterDataStorageRdb::UpdateRouterInfo(const std::string &bundleName,
@@ -133,7 +114,62 @@ bool RouterDataStorageRdb::GetRouterInfo(const std::string &bundleName, const st
         return false;
     }
     if (count == 0) {
+        if (GetRouterInfoFromOldDB(bundleName, moduleName, routerInfos)) {
+            APP_LOGI("GetRouterInfoFromOldDB success");
+            return true;
+        }
         APP_LOGI("GetRouterInfo size 0");
+        return false;
+    }
+    ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGW("GoToFirstRow failed, ret: %{public}d", ret);
+        return false;
+    }
+    do {
+        std::string value;
+        auto ret = absSharedResultSet->GetString(ROUTER_INFO_INDEX, value);
+        if (ret != NativeRdb::E_OK) {
+            APP_LOGE("GetString failed, ret: %{public}d", ret);
+            return false;
+        }
+        BundleParser bundleParser;
+        if (bundleParser.ParseRouterArray(value, routerInfos) != ERR_OK) {
+            APP_LOGE("parse router %{public}s %{public}s failed", bundleName.c_str(), moduleName.c_str());
+            return false;
+        }
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    return true;
+}
+
+bool RouterDataStorageRdb::GetRouterInfoFromOldDB(const std::string &bundleName,
+    const std::string &moduleName, std::vector<RouterItem> &routerInfos)
+{
+    BmsRdbConfig bmsRdbConfig;
+    bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.tableName = OLD_ROUTER_RDB_TABLE_NAME;
+    auto oldRdbDataManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    if (oldRdbDataManager == nullptr) {
+        APP_LOGE("null");
+        return false;
+    }
+    NativeRdb::AbsRdbPredicates absRdbPredicates(OLD_ROUTER_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
+    absRdbPredicates.EqualTo(MODULE_NAME, moduleName);
+    auto absSharedResultSet = oldRdbDataManager->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("GetRouterInfoFromOldDB %{public}s %{public}s failed", bundleName.c_str(), moduleName.c_str());
+        return false;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGW("GetRowCount failed, ret: %{public}d", ret);
+        return false;
+    }
+    if (count == 0) {
+        APP_LOGI("GetRouterInfoFromOldDB size 0");
         return false;
     }
     ret = absSharedResultSet->GoToFirstRow();
