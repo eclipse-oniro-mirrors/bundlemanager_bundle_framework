@@ -90,6 +90,7 @@ group("bundlemanagerfuzztest") {
     "bmsdeletefirstinstallbundleinfo_fuzzer:BMSDeleteFirstInstallBundleInfoFuzzTest",
     "bmsdriverinstaller_fuzzer:BMSDriverInstallerFuzzTest",
     "bmsextendresourcemanager_fuzzer:BMSExtendResourceManagerFuzzTest",
+    "bmsextendresourcemanagerhost_fuzzer:BMSExtendResourceManagerHostFuzzTest",
     "bmsextensionabilityinfo_fuzzer:BMSExtensionAbilityInfoFuzzTest",
     "bmsfirstinstallbundleinfo_fuzzer:BMSFirstInstallBundleInfoFuzzTest",
     "bmsforminfo_fuzzer:BMSFormInfoFuzzTest",
@@ -140,6 +141,7 @@ group("bundlemanagerfuzztest") {
     "bmsquickfixchecker_fuzzer:BMSQuickFixCheckerFuzzTest",
     "bmsquickfixdatamgr_fuzzer:BMSQuickFixDataMgrFuzzTest",
     "bmsquickfixdeployer_fuzzer:BMSQuickFixDeployerFuzzTest",
+    "bmsquickfixstatuscallbackhost_fuzzer:BMSQuickFixStatusCallbackHostFuzzTest",
     "bmsbundleresourcehelpersecond_fuzzer:BmsBundleResourceHelperSecondFuzzTest",
     "bmsremoteabilityinfo_fuzzer:BMSRemoteAbilityInfoFuzzTest",
     "bmsshortcutvisibledatastoragerdb_fuzzer:BMSShortcutVisibleDataStorageRdbFuzzTest",
@@ -147,6 +149,7 @@ group("bundlemanagerfuzztest") {
     "bmsshortcutdatastoragerdb_fuzzer:BMSShortCutDataStorageRdbFuzzTest",
     "bmsuninstalldatamgr_fuzzer:BMSUninstallDataMgrFuzzTest",
     "bmsstatusreceiverhost_fuzzer:BMSStatusReceiverHostFuzzTest",
+    "bmsverifymanagerclient_fuzzer:BMSVerifyManagerClientFuzzTest",
     "bmsverifymanagerhost_fuzzer:BMSVerifyManagerHostFuzzTest",
     "bmssystemabilityhelper_fuzzer:BMSSystemAbilityHelperFuzzTest",
   ]
