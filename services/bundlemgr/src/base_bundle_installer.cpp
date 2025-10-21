@@ -3590,7 +3590,8 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
     if (!dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
         return false;
     }
-    if (uninstallBundleInfo.userInfos.find(std::to_string(userId_)) == uninstallBundleInfo.userInfos.end()) {
+    auto it = uninstallBundleInfo.userInfos.find(std::to_string(userId_));
+    if (it == uninstallBundleInfo.userInfos.end()) {
         LOG_I(BMS_TAG_INSTALLER, "%{public}s has been uninstalled on user %{public}d without keepData",
             bundleName.c_str(), userId_);
         return false;
@@ -3603,7 +3604,25 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
         LOG_I(BMS_TAG_INSTALLER, "remove extension dirs res %{public}d", result);
     }
     BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId_, 0);
-    return dataMgr_->DeleteUninstallBundleInfo(bundleName, userId_);
+    bool ret = dataMgr_->DeleteUninstallBundleInfo(bundleName, userId_);
+    if (!ret) {
+        LOG_E(BMS_TAG_INSTALLER, "failed %{public}s %{public}d", bundleName.c_str(), userId_);
+        return false;
+    }
+    NotifyBundleEvents installRes = {
+        .resultCode = ERR_OK,
+        .accessTokenId = it->second.accessTokenId,
+        .uid = it->second.uid,
+        .bundleType = static_cast<int32_t>(uninstallBundleInfo.bundleType),
+        .appIndex = 0,
+        .bundleName = bundleName,
+        .appId = uninstallBundleInfo.appId,
+        .appIdentifier = uninstallBundleInfo.appIdentifier,
+        .keepData = false,
+    };
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyUninstalledBundleCleared(installRes);
+    return true;
 }
 
 void BaseBundleInstaller::SetFirstInstallTime(const std::string &bundleName, const int64_t &time,
