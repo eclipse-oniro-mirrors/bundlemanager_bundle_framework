@@ -2349,7 +2349,7 @@ bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName, uint3
         LOG_I(BMS_TAG_DEFAULT, "hasInstallVersionCode: %{public}u, hapVersionCode: %{public}u",
             hasInstallVersionCode, hapVersionCode);
         // installed patch application version greater than or equal to OTA Preconfigured APP Version
-        if (hasInstallVersionCode >= hapVersionCode) {
+        if (hasInstallVersionCode > hapVersionCode) {
             BundleInfo bundleInfo;
             bundleInfo.name = bundleName;
             bundleInfo.versionCode = hapVersionCode;
