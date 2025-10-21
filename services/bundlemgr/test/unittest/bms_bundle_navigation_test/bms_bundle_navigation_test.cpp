@@ -33,6 +33,7 @@ using OHOS::Parcel;
 namespace OHOS {
 namespace {
     const size_t ROUTER_ITEM_TEST_SIZE = 12;
+    const char* const OLD_ROUTER_RDB_TABLE_NAME = "router_map";
 }  // namespace
 
 class BmsBundleNavigationTest : public testing::Test {
@@ -1628,6 +1629,35 @@ HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0012, Function | SmallTes
     std::map<std::string, std::string> routerInfoMap;
     uint32_t versionCode = 0;
     auto ret = routerDataStorageRdb->InsertRouterInfo(bundleName, routerInfoMap, versionCode);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0013
+ * @tc.name: test UpdateDB
+ * @tc.desc: 1.UpdateDB
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0013, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+
+    auto ret = routerDataStorageRdb->UpdateDB();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RouterDataStorageRdb_0014
+ * @tc.name: test GetRouterInfoFromOldDB
+ * @tc.desc: 1.GetRouterInfoFromOldDB
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterDataStorageRdb_0014, Function | SmallTest | Level0)
+{
+    auto routerDataStorageRdb = std::make_shared<RouterDataStorageRdb>();
+    ASSERT_NE(routerDataStorageRdb, nullptr);
+    
+    std::vector<RouterItem> routerInfos;
+    auto ret = routerDataStorageRdb->GetRouterInfoFromOldDB("bundleTest", "moduleTest", routerInfos);
     EXPECT_FALSE(ret);
 }
 
