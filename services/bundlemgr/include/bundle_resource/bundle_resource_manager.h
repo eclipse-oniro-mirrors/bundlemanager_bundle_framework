@@ -119,6 +119,8 @@ public:
 
     bool DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
 
+    bool DeleteUninstallBundleResourceForUser(const int32_t userId);
+
     bool GetUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex,
         const uint32_t flags, BundleResourceInfo &bundleResourceInfo);
 

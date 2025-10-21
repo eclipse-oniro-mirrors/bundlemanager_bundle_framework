@@ -385,5 +385,17 @@ void BundleResourceHelper::DeleteUninstallBundleResource(const std::string &bund
     (void)manager->DeleteUninstallBundleResource(bundleName, userId, appIndex);
 #endif
 }
+
+void BundleResourceHelper::DeleteUninstallBundleResourceForUser(const int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    (void)manager->DeleteUninstallBundleResourceForUser(userId);
+#endif
+}
 } // AppExecFwk
 } // OHOS
