@@ -1529,15 +1529,9 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
     ani_string host = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, skillUri.host, host));
 
-    // port: int
-    int32_t port = 0;
-    if (!skillUri.port.empty()) {
-        auto [ptr, ec] = std::from_chars(skillUri.port.data(), skillUri.port.data() + skillUri.port.size(), port);
-        if (ec != std::errc() || ptr != skillUri.port.data() + skillUri.port.size()) {
-            APP_LOGW("skillUri port convert failed");
-            port = 0;
-        }
-    }
+    // port: string
+    ani_string port = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, skillUri.port, port));
 
     // path: string
     ani_string path = nullptr;
@@ -1566,7 +1560,7 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
     ani_value args[] = {
         { .r = scheme },
         { .r = host },
-        { .i = port },
+        { .r = port },
         { .r = path },
         { .r = pathStartWith },
         { .r = pathRegex },
@@ -1578,7 +1572,7 @@ ani_object CommonFunAni::ConvertAbilitySkillUriInner(ani_env* env, const SkillUr
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // scheme: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // host: string
-        .AddInt()                                   // port: int
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // port: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // path: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // pathStartWith: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // pathRegex: string
