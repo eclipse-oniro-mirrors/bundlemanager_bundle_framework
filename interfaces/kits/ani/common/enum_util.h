@@ -182,9 +182,10 @@ private:
         LIVE_FORM = 30,
         WEB_NATIVE_MESSAGING = 32,
         NOTIFICATION_SUBSCRIBER = 34,
+        CRYPTO = 35,
         UNSPECIFIED = 255
     } */
-    static constexpr std::array<int, 32> Array_BundleManager_ExtensionAbilityType = {
+    static constexpr std::array<int, 33> Array_BundleManager_ExtensionAbilityType = {
         0,
         1,
         2,
@@ -216,6 +217,7 @@ private:
         30,
         32,
         34,
+        35,
         255,
     };
     /* bundleManager.ApplicationFlag
