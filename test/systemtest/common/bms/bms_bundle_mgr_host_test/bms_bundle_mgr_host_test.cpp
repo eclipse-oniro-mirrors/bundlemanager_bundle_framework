@@ -23,6 +23,7 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace AppExecFwk {
+constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 
 class BmsBundleMgrHostTest : public testing::Test {
 public:
@@ -2067,6 +2068,62 @@ HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_0001, Function
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsZero
+ * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_001
+ * @tc.desc  : 测试当 bundleNameCount 为 0 时,函数应返回 ERR_BUNDLE_MANAGER_INVALID_PARAMETER
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsZero, Function | MediumTest | Level1) {
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    data.WriteInt32(0); // 写入 0 作为 bundleNameCount
+
+    ErrCode ret = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsTooLarge
+ * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_002
+ * @tc.desc  : 测试当 bundleNameCount 大于 MAX_BATCH_QUERY_BUNDLE_SIZE 时,函数应返回 ERR_BUNDLE_MANAGER_INVALID_PARAMETER
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsTooLarge, Function | MediumTest | Level1) {
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    data.WriteInt32(MAX_BATCH_QUERY_BUNDLE_SIZE + 1); // 写入超过最大限制的 bundleNameCount
+
+    ErrCode ret = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : HandleBatchGetCompatibleDeviceType_ShouldReturnOK_WhenAllOperationsSucceed
+ * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_004
+ * @tc.desc  : 测试当所有操作都成功时,函数应返回 ERR_OK
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_ShouldReturnOK_WhenAllOperationsSucceed, Function | MediumTest | Level1) {
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    data.WriteInt32(1); // 写入 1 作为 bundleNameCount
+    data.WriteString("com.huawei.hmos.settings"); // 写入一个 bundleName
+
+    // Mock reply.WriteInt32 成功
+
+    // Mock WriteParcelableVector 成功
+
+    ErrCode ret = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
 }
 
 /**

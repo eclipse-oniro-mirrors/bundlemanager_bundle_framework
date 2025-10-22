@@ -1837,7 +1837,11 @@ HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_3401, Function | MediumTest | 
     std::vector<std::string> bundleNames = {BUNDLE_NAME};
     std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
     ErrCode retCode = hostImpl->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+    #ifdef USE_EXTENSION_DATA
     EXPECT_EQ(retCode, ERR_OK);
+    #else
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
 }
 
 /**
