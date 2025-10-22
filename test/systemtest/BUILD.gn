@@ -18,6 +18,7 @@ config("system_test_config") {
 }
 
 group("systemtest") {
+1 
   testonly = true
 
   deps = [ "common/ems:systemtest_ems" ]
