@@ -59,6 +59,7 @@ public:
 protected:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 
+    int32_t OnIdle(const SystemAbilityOnDemandReason& idleReason) override;
 private:
     /**
      * @brief Initialize the installd service context.

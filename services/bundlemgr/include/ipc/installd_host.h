@@ -36,6 +36,7 @@ public:
         uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
     void SetMemMgrStatus(bool started);
+    bool IsCritical();
 private:
     /**
      * @brief Handles the CreateBundleDir function called from a IInstalld proxy object.

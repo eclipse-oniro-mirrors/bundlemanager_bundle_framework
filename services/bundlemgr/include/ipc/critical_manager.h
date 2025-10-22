@@ -28,6 +28,7 @@ public:
     ~CriticalManager() = default;
 
     void SetMemMgrStatus(bool started);
+    bool IsCritical();
     void BeforeRequest();
     void AfterRequest();
 private:
