@@ -849,6 +849,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1900, Function | 
 #else
     EXPECT_TRUE(ret);
 #endif
+    sleep(1);
 }
 
 /**
@@ -874,6 +875,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2000, Function | 
 #else
     EXPECT_TRUE(ret);
 #endif
+    sleep(1);
 }
 
 /**
@@ -893,6 +895,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2100, Function | 
 #else
     EXPECT_TRUE(ret);
 #endif
+    sleep(1);
 }
 
 /**
