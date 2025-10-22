@@ -58,7 +58,8 @@ bool NapiClass::SaveClass(napi_env env, const std::string &className, napi_value
     napi_ref constructor;
     napi_status res = napi_create_reference(env, exClass, 1, &constructor);
     if (res == napi_ok) {
-        nClass.exClassMap.insert({className, constructor});
+        nClass.exClassMap.insert({className,
+            std::shared_ptr<NativeReference>(reinterpret_cast<NativeReference *>(constructor))});
     } else {
         APP_LOGE("INNER BUG. Cannot ref class constructor %{public}s because of %{public}d", className.c_str(), res);
     }
@@ -76,15 +77,14 @@ napi_value NapiClass::InstantiateClass(napi_env env, const std::string &classNam
         return nullptr;
     }
 
-    napi_value cons = nullptr;
-    napi_status status = napi_get_reference_value(env, it->second, &cons);
-    if (status != napi_ok) {
-        APP_LOGE("INNER BUG. Cannot deref class %{public}s because of %{public}d", className.c_str(), status);
+    napi_value cons = it->second->GetNapiValue();
+    if (cons == nullptr) {
+        APP_LOGE("INNER BUG. Cannot deref class %{public}s", className.c_str());
         return nullptr;
     }
 
     napi_value instance = nullptr;
-    status = napi_new_instance(env, cons, args.size(), args.data(), &instance);
+    napi_status status = napi_new_instance(env, cons, args.size(), args.data(), &instance);
     if (status != napi_ok) {
         APP_LOGE("INNER BUG. Cannot instantiate the class %{public}s because of %{public}d", className.c_str(), status);
         return nullptr;
