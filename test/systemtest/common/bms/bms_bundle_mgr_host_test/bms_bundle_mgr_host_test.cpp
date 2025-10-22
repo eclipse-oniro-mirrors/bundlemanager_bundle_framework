@@ -2075,7 +2075,10 @@ HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_0001, Function
  * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_001
  * @tc.desc  : 测试当 bundleNameCount 为 0 时,函数应返回 ERR_BUNDLE_MANAGER_INVALID_PARAMETER
  */
-HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsZero, Function | MediumTest | Level1) {
+HWTEST_F(BmsBundleMgrHostTest,
+         HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsZero,
+         Function | MediumTest | Level1)
+{
     BundleMgrHost bundleMgrHost;
     MessageParcel data;
     MessageParcel reply;
@@ -2092,7 +2095,10 @@ HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_ShouldReturnIn
  * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_002
  * @tc.desc  : 测试当 bundleNameCount 大于 MAX_BATCH_QUERY_BUNDLE_SIZE 时,函数应返回 ERR_BUNDLE_MANAGER_INVALID_PARAMETER
  */
-HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsTooLarge, Function | MediumTest | Level1) {
+HWTEST_F(BmsBundleMgrHostTest,
+         HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsTooLarge,
+         Function | MediumTest | Level1)
+{
     BundleMgrHost bundleMgrHost;
     MessageParcel data;
     MessageParcel reply;
@@ -2109,13 +2115,16 @@ HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_ShouldReturnIn
  * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_004
  * @tc.desc  : 测试当所有操作都成功时,函数应返回 ERR_OK
  */
-HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_ShouldReturnOK_WhenAllOperationsSucceed, Function | MediumTest | Level1) {
+HWTEST_F(BmsBundleMgrHostTest,
+         HandleBatchGetCompatibleDeviceType_ShouldReturnOK_WhenAllOperationsSucceed,
+         Function | MediumTest | Level1)
+{
     BundleMgrHost bundleMgrHost;
     MessageParcel data;
     MessageParcel reply;
 
     data.WriteInt32(1); // 写入 1 作为 bundleNameCount
-    data.WriteString("com.huawei.hmos.settings"); // 写入一个 bundleName
+    data.WriteString("testBundleName"); // 写入一个 bundleName
 
     // Mock reply.WriteInt32 成功
 
