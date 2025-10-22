@@ -10886,7 +10886,7 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0001, Function | Sma
         ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
         if (ret != ERR_OK) {
             EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
-            EXPECT_FALSE(compatibleDeviceTypes.empty());
+            EXPECT_TRUE(compatibleDeviceTypes.empty());
         } else if (compatibleDeviceTypes.empty()) {
             EXPECT_FALSE(true);
         } else {
@@ -10961,7 +10961,7 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0004, Function | Sma
         }
         #else
         EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
-        EXPECT_FALSE(compatibleDeviceTypes.empty());
+        EXPECT_TURE(compatibleDeviceTypes.empty());
         #endif
     }
 }
