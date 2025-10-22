@@ -10961,7 +10961,7 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0004, Function | Sma
         }
         #else
         EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
-        EXPECT_TURE(compatibleDeviceTypes.empty());
+        EXPECT_TRUE(compatibleDeviceTypes.empty());
         #endif
     }
 }
