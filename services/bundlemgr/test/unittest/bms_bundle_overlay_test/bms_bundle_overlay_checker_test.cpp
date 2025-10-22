@@ -3203,7 +3203,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0300, Function | Small
     installer->dataMgr_ = nullptr;
     installer->MarkPreInstallState(bundleName, isUninstalled);
 
-    installer->DeleteEncryptionKeyId(userInfo, isKeepData);
+    installer->DeleteEncryptionKeyId(oldInfo, isKeepData);
 
     installer->UpdateExtensionSandboxInfo(newInfos, hapVerifyRes);
 
