@@ -425,12 +425,26 @@ bool BundleCloneInstaller::DeleteUninstalledCloneData(const std::string &bundleN
     userInfo.bundleName = bundleName;
     userInfo.cloneInfos.emplace(std::to_string(appIndex), cloneInfo);
     RemoveEl5Dir(userInfo, userId, appIndex);
-    uid_ = it->second.uid;
-    accessTokenId_ = it->second.accessTokenId;
-    appId_ = uninstallBundleInfo.appId;
-    appIdentifier_ = uninstallBundleInfo.appIdentifier;
     BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
-    return dataMgr_->DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
+    bool ret = dataMgr_->DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
+    if (!ret) {
+        APP_LOGE("failed %{public}s %{public}d %{public}d", bundleName.c_str(), userId, appIndex);
+        return false;
+    }
+    NotifyBundleEvents installRes = {
+        .resultCode = ERR_OK,
+        .accessTokenId = it->second.accessTokenId,
+        .uid = it->second.uid,
+        .bundleType = static_cast<int32_t>(uninstallBundleInfo.bundleType),
+        .appIndex = appIndex,
+        .bundleName = bundleName,
+        .appId = uninstallBundleInfo.appId,
+        .appIdentifier = uninstallBundleInfo.appIdentifier,
+        .keepData = false,
+    };
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyUninstalledBundleCleared(installRes);
+    return true;
 }
 
 void BundleCloneInstaller::UninstallDebugAppSandbox(const std::string &bundleName, const int32_t uid,

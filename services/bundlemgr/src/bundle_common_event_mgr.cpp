@@ -56,6 +56,7 @@ constexpr const char* MANAGE_SHORTCUTS = "ohos.permission.MANAGE_SHORTCUTS";
 constexpr const char* IS_BUNDLE_EXIST = "isBundleExist";
 constexpr const char* CROSS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* IS_RECOVER = "isRecover";
+constexpr const char* PACKAGE_UNINSTALLED_DATA_CLEARED = "usual.event.PACKAGE_UNINSTALLED_DATA_CLEARED";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -497,6 +498,33 @@ void BundleCommonEventMgr::NotifyShortcutVisibleChanged(
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { MANAGE_SHORTCUTS };
     publishInfo.SetSubscriberPermissions(permissionVec);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+}
+
+void BundleCommonEventMgr::NotifyUninstalledBundleCleared(const NotifyBundleEvents &installResult)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(PACKAGE_UNINSTALLED_DATA_CLEARED);
+    ElementName element;
+    element.SetBundleName(installResult.bundleName);
+    want.SetElement(element);
+    want.SetParam(RESULT_CODE, installResult.resultCode);
+    want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
+    want.SetParam(Constants::UID, installResult.uid);
+    want.SetParam(BUNDLE_TYPE, installResult.bundleType);
+    want.SetParam(APP_ID, installResult.appId);
+    want.SetParam(APP_IDENTIFIER, installResult.appIdentifier);
+    want.SetParam(KEEP_DATA, installResult.keepData);
+    want.SetParam(APP_INDEX, installResult.appIndex);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    publishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
         APP_LOGE("PublishCommonEvent failed");

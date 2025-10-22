@@ -97,6 +97,7 @@ public:
         const std::string &bundlename, const std::string &id, int32_t userId, int32_t appIndex, bool visible);
     void NotifyPluginCommonEvents(const std::string &hostBundleName, const std::string &pluginBundleName,
         const NotifyType &type);
+    void NotifyUninstalledBundleCleared(const NotifyBundleEvents &installResult);
 private:
     std::string GetCommonEventData(const NotifyType &type);
     void SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBundleEvents &installResult);
