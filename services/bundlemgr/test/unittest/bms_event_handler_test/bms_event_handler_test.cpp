@@ -1704,7 +1704,7 @@ HWTEST_F(BmsEventHandlerTest, HandlePreInstallAppServicePathsException_0100, Fun
     std::set<std::string> exceptionAppServicePaths;
     exceptionAppServicePaths.emplace(MODULE_UPDATE_PATH);
     handler->HandlePreInstallAppServicePathsException(preInstallExceptionMgr, exceptionAppServicePaths);
-    EXPECT_TRUE(preInstallExceptionMgr->exceptionPaths_.find(MODULE_UPDATE_PATH) ==
+    EXPECT_TRUE(preInstallExceptionMgr->exceptionPaths_.find(MODULE_UPDATE_PATH) !=
                 preInstallExceptionMgr->exceptionPaths_.end());
 }
 
