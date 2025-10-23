@@ -626,7 +626,7 @@ bool InstalldOperator::ProcessBundleInstallNative(const std::string &userId, con
         return false;
     }
     int ret = NativeInstallHnp(userId.c_str(), hnpRootPath.c_str(), &hapInfo, 1);
-    LOG_D(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);
+    LOG_I(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "Native package installation failed with error code: %{public}d", ret);
         return false;
@@ -637,7 +637,7 @@ bool InstalldOperator::ProcessBundleInstallNative(const std::string &userId, con
 bool InstalldOperator::ProcessBundleUnInstallNative(const std::string &userId, const std::string &packageName)
 {
     int ret = NativeUnInstallHnp(userId.c_str(), packageName.c_str());
-    LOG_D(BMS_TAG_INSTALLD, "NativeUnInstallHnp ret: %{public}d", ret);
+    LOG_I(BMS_TAG_INSTALLD, "NativeUnInstallHnp ret: %{public}d", ret);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "Native package uninstallation failed with error code: %{public}d", ret);
         return false;
