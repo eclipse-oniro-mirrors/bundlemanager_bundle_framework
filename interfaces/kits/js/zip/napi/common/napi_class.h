@@ -21,7 +21,6 @@
 #include <map>
 
 #include "app_log_wrapper.h"
-#include "native_engine/native_reference.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -90,7 +89,7 @@ private:
     NapiClass() = default;
     ~NapiClass() = default;
     std::mutex exClassMapLock;
-    std::map<std::string, std::shared_ptr<NativeReference>> exClassMap;
+    std::map<std::string, napi_ref> exClassMap;
 };
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
