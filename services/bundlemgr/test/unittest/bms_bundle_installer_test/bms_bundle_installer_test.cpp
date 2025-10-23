@@ -12741,4 +12741,20 @@ HWTEST_F(BmsBundleInstallerTest, GetUninstallBundleInfo_0010, Function | SmallTe
     installer.GetUninstallBundleInfo(true, Constants::START_USERID, oldInfo, uninstallBundleInfo);
     EXPECT_FALSE(uninstallBundleInfo.userInfos.empty());
 }
+
+/**
+ * @tc.number: GetHapFlags_0100
+ * @tc.name: test GetHapFlags
+ * @tc.desc: 1.Test the GetHapFlags
+*/
+HWTEST_F(BmsBundleInstallerTest, GetHapFlags_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    unsigned int ret = impl.GetHapFlags(true, true, true, 1);
+    EXPECT_EQ(ret, 131);
+    ret = impl.GetHapFlags(false, false, false, 2);
+    EXPECT_EQ(ret, 1);
+    ret = impl.GetHapFlags(false, false, true, 2);
+    EXPECT_EQ(ret, 256);
+}
 } // OHOS

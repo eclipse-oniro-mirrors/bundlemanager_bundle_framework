@@ -94,6 +94,7 @@ enum class DirType : uint8_t {
     DIR_EL1,
     DIR_EL2,
 };
+constexpr int32_t CONTENT_EDIT = 2;
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -435,7 +436,7 @@ ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &creat
         }
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
-        createDirParam.isDlpSandbox);
+        createDirParam.isDlpSandbox, createDirParam.dlpType);
     res = SetDirApl(bundleShareFilesDataDir, bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (res != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLD, "SetDirApl failed: %{public}s, errno: %{public}d",
@@ -549,7 +550,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
-        createDirParam.isDlpSandbox);
+        createDirParam.isDlpSandbox, createDirParam.dlpType);
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         if ((createDirParam.createDirFlag == CreateDirFlag::CREATE_DIR_UNLOCKED) &&
             (el == ServiceConstants::BUNDLE_EL[0])) {
@@ -764,7 +765,7 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
         return ERR_OK;
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
-        createDirParam.isDlpSandbox);
+        createDirParam.isDlpSandbox, createDirParam.dlpType);
     std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::BASE;
     int mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IRWXO) : S_IRWXU;
 
@@ -875,7 +876,7 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
         DirType::DIR_EL2);
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
-        createDirParam.isDlpSandbox);
+        createDirParam.isDlpSandbox, createDirParam.dlpType);
     ErrCode ret = SetDirApl(
         bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (ret != ERR_OK) {
@@ -907,7 +908,7 @@ ErrCode InstalldHostImpl::CreateExtensionDir(const CreateDirParam &createDirPara
         return ERR_OK;
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
-        createDirParam.isDlpSandbox);
+        createDirParam.isDlpSandbox, createDirParam.dlpType);
     LOG_I(BMS_TAG_INSTALLD, "CreateExtensionDir parent dir %{public}s for bundle %{public}s",
         parentDir.c_str(), createDirParam.bundleName.c_str());
     for (const auto &item : createDirParam.extensionDirs) {
@@ -1430,13 +1431,20 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
     return ERR_OK;
 }
 
-unsigned int InstalldHostImpl::GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox)
+unsigned int InstalldHostImpl::GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox,
+    const int32_t dlpType)
 {
     unsigned int hapFlags = 0;
 #ifdef WITH_SELINUX
     hapFlags = isPreInstallApp ? SELINUX_HAP_RESTORECON_PREINSTALLED_APP : 0;
     hapFlags |= debug ? SELINUX_HAP_DEBUGGABLE : 0;
-    hapFlags |= isDlpSandbox ? SELINUX_HAP_DLP : 0;
+    if (isDlpSandbox) {
+        if (dlpType == CONTENT_EDIT) {
+            hapFlags |= SELINUX_HAP_DLP_FULL_CONTROL;
+        } else {
+            hapFlags |= SELINUX_HAP_DLP_READ_ONLY;
+        }
+    }
 #endif
     return hapFlags;
 }
@@ -1444,7 +1452,7 @@ unsigned int InstalldHostImpl::GetHapFlags(const bool isPreInstallApp, const boo
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
     bool isPreInstallApp, bool debug, int32_t uid)
 {
-    unsigned int hapFlags = GetHapFlags(isPreInstallApp, debug, false);
+    unsigned int hapFlags = GetHapFlags(isPreInstallApp, debug, false, 0);
     return SetDirApl(dir, bundleName, apl, hapFlags, uid);
 }
 

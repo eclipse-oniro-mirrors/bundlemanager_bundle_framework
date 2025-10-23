@@ -293,7 +293,8 @@ private:
     bool CheckPathValid(const std::string &path, const std::string &prefix);
     ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         unsigned int hapFlags, int32_t uid);
-    unsigned int GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox);
+    unsigned int GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox,
+        const int32_t dlpType);
     ErrCode InnerRemoveAtomicServiceBundleDataDir(
         const std::string &bundleName, const int32_t userId, const bool async);
     ErrCode InnerRemoveBundleDataDir(const std::string &bundleName, const int32_t userId, const bool async);
