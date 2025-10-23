@@ -889,7 +889,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4300, Function | SmallTest |
     std::string bundleName = TEST_STRING;
     int userId = 100;
     int appIndex = 1;
-    auto ret = proxy->CleanBundleDataDirByName(TEST_STRING, userId, appIndex);
+    auto ret = proxy->CleanBundleDataDirByName(TEST_STRING, userId, appIndex, false);
     EXPECT_EQ(ret, ERR_OK);
 }
 

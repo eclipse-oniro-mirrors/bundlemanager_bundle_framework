@@ -115,7 +115,8 @@ public:
      * @param appIndex Indicates app index to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory cleaned successfully; returns error code otherwise.
      */
-    ErrCode CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex = 0);
+    ErrCode CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex = 0,
+        const bool isAtomicService = false);
     /**
      * @brief Get bundle Stats.
      * @param bundleName Indicates the bundle name.

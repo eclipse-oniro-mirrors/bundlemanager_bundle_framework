@@ -2096,8 +2096,9 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     auto ret = bmsExtensionClient->BackupBundleData(bundleName, userId, appIndex);
     APP_LOGI("BackupBundleData ret : %{public}d", ret);
-
-    if (InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userId, appIndex) != ERR_OK) {
+    bool isAtomicService = applicationInfo.bundleType == BundleType::ATOMIC_SERVICE;
+    if (InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userId, appIndex,
+        isAtomicService) != ERR_OK) {
         APP_LOGE("%{public}s, CleanBundleDataDirByName failed", bundleName.c_str());
         EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true,
             callingUid, callingBundleName);

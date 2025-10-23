@@ -108,7 +108,7 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 }
 
 ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid,
-    const int appIndex)
+    const int appIndex, const bool isAtomicService)
 {
     return ERR_OK;
 }

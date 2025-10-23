@@ -201,7 +201,8 @@ public:
      * @param appIndex Indicates userid to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory cleaned successfully; returns error code otherwise.
      */
-    virtual ErrCode CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex = 0)
+    virtual ErrCode CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex = 0,
+        const bool isAtomicService = false)
     {
         return ERR_OK;
     }

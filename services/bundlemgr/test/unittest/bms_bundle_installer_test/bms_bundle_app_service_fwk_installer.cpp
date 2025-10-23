@@ -2032,24 +2032,24 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CleanBundleDataDirByName_0001, Fun
     std::string bundleName;
     int userid = Constants::INVALID_USERID;
     int appIndex = 0;
-    auto ret1 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex);
+    auto ret1 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex, false);
     EXPECT_NE(ret1, ERR_OK);
 
     bundleName = "testBundle";
-    auto ret2 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex);
+    auto ret2 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex, false);
     EXPECT_NE(ret2, ERR_OK);
 
     userid = 100;
     appIndex = -1;
-    auto ret3 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex);
+    auto ret3 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex, false);
     EXPECT_NE(ret3, ERR_OK);
 
     appIndex = 99999;
-    auto ret4 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex);
+    auto ret4 = InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex, false);
     EXPECT_NE(ret4, ERR_OK);
 
     appIndex = 1;
-    EXPECT_NO_THROW(InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex));
+    EXPECT_NO_THROW(InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userid, appIndex, false));
 }
 
 /**

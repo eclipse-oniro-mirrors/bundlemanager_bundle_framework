@@ -1730,7 +1730,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldDeathRecipientTest_CleanBundleDataDir
 {
     ASSERT_NE(installClient_, nullptr);
     std::string bundleName;
-    auto result = installClient_->CleanBundleDataDirByName(bundleName, USERID, GID);
+    auto result = installClient_->CleanBundleDataDirByName(bundleName, USERID, GID, false);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
