@@ -2115,7 +2115,7 @@ HWTEST_F(BmsBundleMgrHostTest,
 /**
  * @tc.name  : HandleBatchGetCompatibleDeviceType_ShouldReturnOK_WhenAllOperationsSucceed
  * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_0004
- * @tc.desc  : 1. bundleNameCount is two
+ * @tc.desc  : 1. bundleNameCount is one
  *             2. test HandleBatchGetCompatibleDeviceType
  */
 HWTEST_F(BmsBundleMgrHostTest,
