@@ -6468,8 +6468,7 @@ ErrCode BundleMgrHostImpl::RecoverBackupBundleData(const std::string &bundleName
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
-        Constants::PERMISSION_RECOVER_BUNDLE, Constants::PERMISSION_CLEAN_APPLICATION_DATA})) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RECOVER_BUNDLE)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
