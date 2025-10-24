@@ -2931,9 +2931,12 @@ HWTEST_F(BmsEventHandlerTest, InstallSystemBundleNeedCheckUserForPatch_0100, Fun
         std::vector<std::string> filePaths;
         bool ret = handler->InstallSystemBundleNeedCheckUserForPatch(filePaths, "", false);
         EXPECT_FALSE(ret);
-        filePaths.push_back(OLD_BUNDLE_DIR_NAME);
-        ret = handler->InstallSystemBundleNeedCheckUserForPatch(filePaths, "", false);
-        EXPECT_FALSE(ret);
+        filePaths.push_back("");
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        ASSERT_NE(dataMgr, nullptr);
+        ret = handler->InstallSystemBundleNeedCheckUserForPatch(filePaths, "", false); // no user
+        EXPECT_TRUE(ret);
     }
 }
 
