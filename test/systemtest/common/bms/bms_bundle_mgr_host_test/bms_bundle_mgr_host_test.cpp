@@ -2084,7 +2084,7 @@ HWTEST_F(BmsBundleMgrHostTest,
     MessageParcel data;
     MessageParcel reply;
 
-    data.WriteInt32(0); // 写入 0 作为 bundleNameCount
+    data.WriteInt32(0);
 
     ErrCode ret = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
 
