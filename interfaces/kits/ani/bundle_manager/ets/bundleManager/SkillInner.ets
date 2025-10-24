@@ -33,7 +33,7 @@ export class SkillInner implements Skill {
 export class SkillUriInner implements SkillUri {
     readonly scheme: string = "";
     readonly host: string = "";
-    readonly port: int;
+    readonly port: string = "";
     readonly path: string = "";
     readonly pathStartWith: string = "";
     readonly pathRegex: string = "";
@@ -45,7 +45,7 @@ export class SkillUriInner implements SkillUri {
     constructor() { }
     constructor(scheme: string,
         host: string,
-        port: int,
+        port: string,
         path: string,
         pathStartWith: string,
         pathRegex: string,
