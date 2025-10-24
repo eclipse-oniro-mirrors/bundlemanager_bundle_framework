@@ -2516,6 +2516,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
 ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, int32_t &userId)
 {
     if (info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
+        LOG_I(BMS_TAG_INSTALLER, "hnp install: %{public}s", info.GetCurModuleName().c_str());
         std::string moduleHnpsPath = info.GetInnerModuleInfoHnpPath(info.GetCurModuleName());
         ErrCode ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(std::to_string(userId), moduleHnpsPath,
             modulePath_, info.GetCpuAbi(), info.GetBundleName());
@@ -2533,7 +2534,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, i
 ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
     int32_t &userId, std::string bundleName)
 {
-    if (info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
+    if (info.GetInnerModuleInfoHnpInfo(info.GetEntryModuleName())) {
+        LOG_I(BMS_TAG_INSTALLER, "hnp uninstall: %{public}s", info.GetEntryModuleName().c_str());
         ErrCode ret = InstalldClient::GetInstance()->ProcessBundleUnInstallNative(
             std::to_string(userId).c_str(), bundleName.c_str());
         if (ret != ERR_OK) {

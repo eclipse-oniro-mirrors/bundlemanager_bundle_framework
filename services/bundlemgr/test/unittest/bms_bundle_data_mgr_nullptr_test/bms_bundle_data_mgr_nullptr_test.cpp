@@ -1025,6 +1025,8 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0044, Function | Small
 
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.moduleName = "entry";
+    innerModuleInfo.modulePackage = "entry";
+    innerModuleInfo.isEntry = true;
     HnpPackage hnpPackage;
     innerModuleInfo.hnpPackages.emplace_back(hnpPackage);
 
