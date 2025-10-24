@@ -209,6 +209,10 @@ ErrCode BundleMultiUserInstaller::ProcessBundleInstall(const std::string &bundle
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId, ADD_RESOURCE_TYPE::CREATE_USER);
     CreateEl5Dir(info, userId, uid);
     CreateDataGroupDir(bundleName, userId);
+    UninstallBundleInfo uninstallBundleInfo;
+    if (dataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        DeleteUninstallBundleInfo(bundleName, userId);
+    }
 
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
@@ -341,6 +345,18 @@ bool BundleMultiUserInstaller::RecoverHapToken(const std::string &bundleName, co
         }
     }
     return false;
+}
+
+void BundleMultiUserInstaller::DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId)
+{
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("get dataMgr failed");
+        return;
+    }
+    if (!dataMgr_->DeleteUninstallBundleInfo(bundleName, userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "delete failed");
+    }
+    BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, 0);
 }
 } // AppExecFwk
 } // OHOS

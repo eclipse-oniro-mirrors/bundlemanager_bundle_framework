@@ -47,6 +47,7 @@ private:
     ErrCode GetDataMgr();
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
         Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
+    void DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
 
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     int32_t uid_ = 0;

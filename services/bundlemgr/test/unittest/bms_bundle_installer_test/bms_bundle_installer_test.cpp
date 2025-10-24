@@ -9778,6 +9778,20 @@ HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0013, Function | Small
 }
 
 /**
+ * @tc.number: BundleMultiUserInstaller_0014
+ * @tc.name: test DeleteUninstallBundleInfo
+ * @tc.desc: 1.test DeleteUninstallBundleInfo
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0014, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller installer;
+    installer.dataMgr_ = GetBundleDataMgr();
+    std::string bundleName;
+    installer.DeleteUninstallBundleInfo(bundleName, USERID);
+    EXPECT_EQ(bundleName.empty(), true);
+}
+
+/**
  * @tc.number: BaseBundleInstaller_7300
  * @tc.name: test CheckShellInstall
  * @tc.desc: 1.test CheckShellInstall
