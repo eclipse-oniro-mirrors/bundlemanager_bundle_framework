@@ -89,7 +89,7 @@ constexpr const char* CLASSNAME_INT = "std.core.Int";
 constexpr const char* CLASSNAME_LONG = "std.core.Long";
 constexpr const char* CLASSNAME_DOUBLE = "std.core.Double";
 constexpr const char* CLASSNAME_OBJECT = "std.core.Object";
-constexpr const char* CLASSNAME_ARRAY = "escompat.Array";
+constexpr const char* CLASSNAME_ARRAY = "std.core.Array";
 constexpr const char* CLASSNAME_STRING = "std.core.String";
 } // namespace CommonFunAniNS
 class CommonFunAni {
