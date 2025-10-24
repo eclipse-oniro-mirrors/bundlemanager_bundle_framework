@@ -2132,7 +2132,7 @@ HWTEST_F(BmsBundleMgrHostTest,
 
     ErrCode ret = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
 
-    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

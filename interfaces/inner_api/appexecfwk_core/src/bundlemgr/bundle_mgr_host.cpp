@@ -5150,7 +5150,7 @@ ErrCode BundleMgrHost::HandleBatchGetCompatibleDeviceType(MessageParcel &data, M
         APP_LOGE("write dataGroupInfo failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return ret;
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHost::HandleCreateNewBundleEl5Dir(MessageParcel &data, MessageParcel &reply)
