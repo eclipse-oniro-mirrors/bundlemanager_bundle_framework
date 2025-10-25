@@ -10884,10 +10884,12 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0001, Function | Sma
     } else {
         std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
         ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-        if (compatibleDeviceTypes.empty()) {
-            EXPECT_FALSE(true);
+        if (ret != ERR_OK) {
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+            EXPECT_TRUE(compatibleDeviceTypes.empty());
         } else {
             EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(compatibleDeviceTypes.size(), 1);
             EXPECT_EQ(compatibleDeviceTypes[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
         }
     }
@@ -10948,10 +10950,12 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0004, Function | Sma
     } else {
         std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
         ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-        if (compatibleDeviceTypes.empty()) {
-            EXPECT_FALSE(true);
+        if (ret != ERR_OK) {
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+            EXPECT_TRUE(compatibleDeviceTypes.empty());
         } else {
             EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(compatibleDeviceTypes.size(), 2);
             EXPECT_EQ(compatibleDeviceTypes[0].bundleName, "");
             EXPECT_EQ(compatibleDeviceTypes[1].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
         }
