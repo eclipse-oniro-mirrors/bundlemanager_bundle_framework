@@ -518,7 +518,7 @@ void BundleCloneInstaller::GetCallingEventInfo(EventInfo &eventInfo)
         return;
     }
     if (!dataMgr_->GetBundleNameForUid(eventInfo.callingUid, eventInfo.callingBundleName)) {
-        APP_LOGE("CallingUid %{public}d is not hap, no bundleName", eventInfo.callingUid);
+        APP_LOGD("CallingUid %{public}d is not hap, no bundleName", eventInfo.callingUid);
         eventInfo.callingBundleName = Constants::EMPTY_STRING;
         return;
     }

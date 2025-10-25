@@ -21,25 +21,25 @@ namespace OHOS {
 namespace AppExecFwk {
 BundleSandboxDataMgr::BundleSandboxDataMgr()
 {
-    APP_LOGI("BundleSandboxDataMgr instance is created");
+    APP_LOGI_NOFUNC("BundleSandboxDataMgr instance is created");
     sandboxManagerDb_ = std::make_shared<SandboxManagerRdb>();
     if (sandboxManagerDb_ == nullptr) {
         APP_LOGE("create sandboxManagerDb_ failed");
         return;
     }
     if (!RestoreSandboxPersistentInnerBundleInfo()) {
-        APP_LOGW("RestoreSandboxPersistentInnerBundleInfo failed");
+        APP_LOGW_NOFUNC("RestoreSandboxPersistentInnerBundleInfo failed");
     }
 }
 
 BundleSandboxDataMgr::~BundleSandboxDataMgr()
 {
-    APP_LOGI("BundleSandboxDataMgr instance is destroyed");
+    APP_LOGI_NOFUNC("BundleSandboxDataMgr instance is destroyed");
 }
 
 void BundleSandboxDataMgr::SaveSandboxAppInfo(const InnerBundleInfo &info, const int32_t &appIndex)
 {
-    APP_LOGI("SaveSandboxAppInfo begin");
+    APP_LOGI_NOFUNC("SaveSandboxAppInfo begin");
     std::string bundleName = info.GetBundleName();
     if (bundleName.empty()) {
         APP_LOGE("SaveSandboxAppInfo bundleName is empty");
@@ -53,7 +53,7 @@ void BundleSandboxDataMgr::SaveSandboxAppInfo(const InnerBundleInfo &info, const
 
 void BundleSandboxDataMgr::DeleteSandboxAppInfo(const std::string &bundleName, const int32_t &appIndex)
 {
-    APP_LOGI("DeleteSandboxAppInfo begin");
+    APP_LOGI_NOFUNC("DeleteSandboxAppInfo begin");
     if (bundleName.empty()) {
         APP_LOGE("DeleteSandboxAppInfo bundleName is empty");
         return;
@@ -71,7 +71,7 @@ void BundleSandboxDataMgr::DeleteSandboxAppInfo(const std::string &bundleName, c
 ErrCode BundleSandboxDataMgr::GetSandboxAppInfo(
     const std::string &bundleName, const int32_t &appIndex, int32_t &userId, InnerBundleInfo &info) const
 {
-    APP_LOGI("GetSandboxAppInfo begin");
+    APP_LOGI_NOFUNC("GetSandboxAppInfo begin");
     if (bundleName.empty()) {
         APP_LOGE("GetSandboxAppInfo bundleName is empty");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
@@ -103,14 +103,14 @@ ErrCode BundleSandboxDataMgr::GetSandboxAppInfo(
         info = it->second;
     }
 
-    APP_LOGI("GetSandboxAppInfo successfully");
+    APP_LOGI_NOFUNC("GetSandboxAppInfo successfully");
     return ERR_OK;
 }
 
 ErrCode BundleSandboxDataMgr::GetSandboxAppBundleInfo(
     const std::string &bundleName, const int32_t &appIndex, const int32_t &userId, BundleInfo &info) const
 {
-    APP_LOGI("GetSandboxAppBundleInfo begin");
+    APP_LOGI_NOFUNC("GetSandboxAppBundleInfo begin");
     InnerBundleInfo innerBundleInfo;
     int32_t requestUserId = userId;
     ErrCode result = ERR_OK;
@@ -130,13 +130,13 @@ ErrCode BundleSandboxDataMgr::GetSandboxAppBundleInfo(
         BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION |
         BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
         BundleFlag::GET_BUNDLE_WITH_HASH_VALUE, info, requestUserId);
-    APP_LOGI("GetSandboxAppBundleInfo successfully");
+    APP_LOGI_NOFUNC("GetSandboxAppBundleInfo successfully");
     return ERR_OK;
 }
 
 int32_t BundleSandboxDataMgr::GenerateSandboxAppIndex(const std::string &bundleName)
 {
-    APP_LOGI("GenerateSandboxAppIndex begin");
+    APP_LOGI_NOFUNC("GenerateSandboxAppIndex begin");
     if (bundleName.empty()) {
         APP_LOGE("GenerateSandboxAppIndex bundleName is empty");
         return Constants::INITIAL_SANDBOX_APP_INDEX;
@@ -177,7 +177,7 @@ int32_t BundleSandboxDataMgr::GenerateSandboxAppIndex(const std::string &bundleN
 
 bool BundleSandboxDataMgr::DeleteSandboxAppIndex(const std::string &bundleName, int32_t appIndex)
 {
-    APP_LOGI("DeleteSandboxAppIndex begin");
+    APP_LOGI_NOFUNC("DeleteSandboxAppIndex begin");
     if (bundleName.empty()) {
         APP_LOGE("DeleteSandboxAppIndex bundleName is empty");
         return false;
@@ -198,7 +198,7 @@ bool BundleSandboxDataMgr::DeleteSandboxAppIndex(const std::string &bundleName, 
     if (it->second.empty()) {
         sandboxAppIndexMap_.erase(bundleName);
     }
-    APP_LOGI("DeleteSandboxAppIndex successfully");
+    APP_LOGI_NOFUNC("DeleteSandboxAppIndex successfully");
     return true;
 }
 
@@ -296,7 +296,7 @@ bool BundleSandboxDataMgr::RestoreSandboxPersistentInnerBundleInfo()
     }
     std::unique_lock<std::shared_mutex> lockAppMutex(sandboxAppMutex_);
     if (!sandboxManagerDb_->QueryAllSandboxInnerBundleInfo(sandboxAppInfos_)) {
-        APP_LOGE("QueryAllSandboxInnerBundleInfo failed");
+        APP_LOGE_NOFUNC("QueryAllSandboxInnerBundleInfo failed");
         return false;
     }
     for (const auto &sandboxInfo : sandboxAppInfos_) {

@@ -444,7 +444,7 @@ public:
     {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            APP_LOGE("can not find userId %{public}d when GetBundleUpdateTime", userId);
+            APP_LOGD("can not find userId %{public}d when GetBundleUpdateTime", userId);
             return -1;
         }
         return innerBundleUserInfo.updateTime;

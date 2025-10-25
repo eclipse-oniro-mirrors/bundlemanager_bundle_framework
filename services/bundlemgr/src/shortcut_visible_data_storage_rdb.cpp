@@ -32,7 +32,7 @@ const int32_t VISIBLE_INDEX = 4;
 }
 ShortcutVisibleDataStorageRdb::ShortcutVisibleDataStorageRdb()
 {
-    APP_LOGI("ShortcutVisibleDataStorageRdb instance is created");
+    APP_LOGI_NOFUNC("ShortcutVisibleDataStorageRdb instance is created");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = SHORTCUT_VISIBLE_RDB_TABLE_NAME;
@@ -51,7 +51,7 @@ ShortcutVisibleDataStorageRdb::ShortcutVisibleDataStorageRdb()
 
 ShortcutVisibleDataStorageRdb::~ShortcutVisibleDataStorageRdb()
 {
-    APP_LOGI("ShortcutVisibleDataStorageRdb instance is destroyed");
+    APP_LOGI_NOFUNC("ShortcutVisibleDataStorageRdb instance is destroyed");
 }
 
 bool ShortcutVisibleDataStorageRdb::IsShortcutVisibleInfoExist(
