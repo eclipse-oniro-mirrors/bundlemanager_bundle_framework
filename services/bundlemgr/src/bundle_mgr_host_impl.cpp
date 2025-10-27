@@ -36,6 +36,7 @@
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#include "new_bundle_data_dir_mgr.h"
 #include "on_demand_install_data_mgr.h"
 #include "param_validator.h"
 #include "system_ability_helper.h"
@@ -6550,13 +6551,13 @@ ErrCode BundleMgrHostImpl::CreateNewBundleEl5Dir(int32_t userId)
         APP_LOGE("IsCallingUidValid failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
+    auto newBundleDirMgr = DelayedSingleton<NewBundleDataDirMgr>::GetInstance();
+    if (newBundleDirMgr != nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->CreateNewBundleEl5Dir(userId);
+    (void)newBundleDirMgr->ProcessOtaBundleDataDirEl5(userId);
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

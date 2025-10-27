@@ -9486,67 +9486,6 @@ ErrCode BundleDataMgr::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl
     return res;
 }
 
-void BundleDataMgr::AddNewEl5BundleName(const std::string &bundleName)
-{
-    std::lock_guard lock(newEl5Mutex_);
-    newEl5BundleNames_.insert(bundleName);
-}
-
-ErrCode BundleDataMgr::CreateNewBundleEl5Dir(int32_t userId)
-{
-    APP_LOGI("begin");
-    std::vector<CreateDirParam> createDirParams;
-    std::vector<DataGroupInfo> groupInfos;
-    {
-        std::lock_guard el5Lock(newEl5Mutex_);
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        for (const auto &bundleName : newEl5BundleNames_) {
-            auto infoItem = bundleInfos_.find(bundleName);
-            if (infoItem == bundleInfos_.end()) {
-                APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
-                continue;
-            }
-            const InnerBundleInfo &info = infoItem->second;
-            if (!info.HasInnerBundleUserInfo(userId)) {
-                APP_LOGW("bundle %{public}s is not installed in user %{public}d or 0",
-                    info.GetBundleName().c_str(), userId);
-                continue;
-            }
-            if (!info.NeedCreateEl5Dir()) {
-                continue;
-            }
-            CreateDirParam createDirParam;
-            createDirParam.bundleName = info.GetBundleName();
-            createDirParam.userId = userId;
-            createDirParam.uid = info.GetUid(userId);
-            createDirParam.gid = info.GetGid(userId);
-            createDirParam.apl = info.GetAppPrivilegeLevel();
-            createDirParam.isPreInstallApp = info.IsPreInstallApp();
-            createDirParam.debug =
-                info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-            createDirParam.extensionDirs = info.GetAllExtensionDirs();
-            createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
-            createDirParam.dataDirEl = DataDirEl::EL5;
-            createDirParams.emplace_back(createDirParam);
-            auto dataGroupInfoMap = info.GetDataGroupInfos();
-            if (dataGroupInfoMap.empty()) {
-                continue;
-            }
-            for (const auto &groupItem : dataGroupInfoMap) {
-                for (const DataGroupInfo &dataGroupInfo : groupItem.second) {
-                    if (dataGroupInfo.userId == userId) {
-                        groupInfos.emplace_back(dataGroupInfo);
-                    }
-                }
-            }
-        }
-    }
-    CreateEl5GroupDirs(groupInfos, userId);
-    CreateEl5Dir(createDirParams, true);
-    APP_LOGI("end");
-    return ERR_OK;
-}
-
 void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, bool needSaveStorage)
 {
     for (const auto &el5Param : el5Params) {

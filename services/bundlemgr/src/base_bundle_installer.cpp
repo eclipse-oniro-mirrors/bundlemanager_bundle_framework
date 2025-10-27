@@ -1607,7 +1607,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         cacheInfo.GetBaseApplicationInfo().compileSdkVersion);
     SetUid(uid);
     SetIsAbcCompressed();
-    CheckNewEl5Bundle(installParam.isOTA || otaInstall_, oldInfo, cacheInfo);
     InnerProcessNewBundleDataDir(installParam.isOTA || otaInstall_, oldInfo, cacheInfo);
     LOG_I(BMS_TAG_INSTALLER, "finish install %{public}s", bundleName_.c_str());
     UtdHandler::InstallUtdAsync(bundleName_, userId_);
@@ -8152,17 +8151,6 @@ void BaseBundleInstaller::SetAPIAndSdkVersions(int32_t targetAPIVersion,
 void BaseBundleInstaller::SetUid(int32_t uid)
 {
     sysEventInfo_.uid = uid;
-}
-
-void BaseBundleInstaller::CheckNewEl5Bundle(const bool isOta,
-    const InnerBundleInfo &oldBundleInfo, const InnerBundleInfo &newBundleInfo)
-{
-    if (!isOta || !isAppExist_ || !InitDataMgr()) {
-        return;
-    }
-    if (!oldBundleInfo.NeedCreateEl5Dir() && newBundleInfo.NeedCreateEl5Dir()) {
-        dataMgr_->AddNewEl5BundleName(newBundleInfo.GetBundleName());
-    }
 }
 
 void BaseBundleInstaller::InnerProcessNewBundleDataDir(const bool isOta,
