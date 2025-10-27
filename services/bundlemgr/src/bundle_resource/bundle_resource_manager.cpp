@@ -1364,6 +1364,12 @@ bool BundleResourceManager::DeleteUninstallBundleResource(const std::string &bun
     return uninstallBundleResourceRdb_->DeleteUninstallBundleResource(bundleName, userId, appIndex);
 }
 
+bool BundleResourceManager::DeleteUninstallBundleResourceForUser(const int32_t userId)
+{
+    APP_LOGI("-u %{public}d delete uinstall bundle resource start", userId);
+    return uninstallBundleResourceRdb_->DeleteUninstallBundleResourceForUser(userId);
+}
+
 bool BundleResourceManager::GetUninstallBundleResource(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex, const uint32_t flags, BundleResourceInfo &bundleResourceInfo)
 {

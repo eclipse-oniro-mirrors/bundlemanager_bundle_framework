@@ -564,6 +564,48 @@ bool BundleDataMgr::DeleteUninstallBundleInfo(const std::string &bundleName, int
     return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
 }
 
+bool BundleDataMgr::RemoveUninstalledBundleinfos(int32_t userId)
+{
+    if (uninstallDataMgr_ == nullptr) {
+        APP_LOGE("uninstallDataMgr is null");
+        return false;
+    }
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    if (!uninstallDataMgr_->GetAllUninstallBundleInfo(uninstallBundleInfos)) {
+        APP_LOGE("get all uninstall bundle info failed");
+        return false;
+    }
+    std::string userKey = std::to_string(userId);
+    std::string prefix = userKey + "_";
+    for (auto &item : uninstallBundleInfos) {
+        bool modified = false;
+        for (auto it = item.second.userInfos.begin(); it != item.second.userInfos.end();) {
+            const std::string &key = it->first;
+            if (key == userKey || key.rfind(prefix, 0) == 0) {
+                it = item.second.userInfos.erase(it);
+                modified = true;
+            } else {
+                ++it;
+            }
+        }
+        if (!modified) {
+            continue;
+        }
+        if (item.second.userInfos.empty()) {
+            if (!uninstallDataMgr_->DeleteUninstallBundleInfo(item.first)) {
+                APP_LOGE("delete uninstall bundle %{public}s failed", item.first.c_str());
+                return false;
+            }
+        } else {
+            if (!uninstallDataMgr_->UpdateUninstallBundleInfo(item.first, item.second)) {
+                APP_LOGE("update uninstall bundle %{public}s failed", item.first.c_str());
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 bool BundleDataMgr::DeleteUninstallCloneBundleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex)
 {
     if (uninstallDataMgr_ == nullptr) {

@@ -136,6 +136,19 @@ bool UninstallBundleResourceRdb::DeleteUninstallBundleResource(const std::string
     return true;
 }
 
+bool UninstallBundleResourceRdb::DeleteUninstallBundleResourceForUser(const int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("need delete resource info -u %{public}d", userId);
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::UINSTALL_BUNDLE_RESOURCE_RDB);
+    absRdbPredicates.EqualTo(BundleResourceConstants::USER_ID, userId);
+    if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
+        APP_LOGW("delete -u %{public}d failed", userId);
+        return false;
+    }
+    return true;
+}
+
 bool UninstallBundleResourceRdb::GetUninstallBundleResource(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex, const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo)

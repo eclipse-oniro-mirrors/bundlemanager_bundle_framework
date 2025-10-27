@@ -31,6 +31,7 @@ public:
     bool AddUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex,
         const std::map<std::string, std::string> &labelMap, const BundleResourceInfo &resourceInfo);
     bool DeleteUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+    bool DeleteUninstallBundleResourceForUser(const int32_t userId);
     bool GetUninstallBundleResource(const std::string &bundleName, const int32_t userId, const int32_t appIndex,
         const uint32_t flags, BundleResourceInfo &bundleResourceInfo);
     bool GetAllUninstallBundleResource(const int32_t userId, const uint32_t flags,

@@ -24,6 +24,7 @@
 #include "bms_key_event_mgr.h"
 #include "bundle_hitrace_chain.h"
 #include "bundle_mgr_service.h"
+#include "bundle_resource_helper.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -453,6 +454,8 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
     dataMgr->RemoveUserId(userId);
     dataMgr->RemoveAppInstallDir(userId);
     dataMgr->DeleteFirstInstallBundleInfo(userId);
+    dataMgr->RemoveUninstalledBundleinfos(userId);
+    BundleResourceHelper::DeleteUninstallBundleResourceForUser(userId);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
 #endif
