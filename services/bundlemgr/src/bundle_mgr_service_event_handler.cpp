@@ -2194,18 +2194,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 bundleName.c_str());
             continue;
         }
-        std::vector<int32_t> currentBundleUserIds;
-        if (HotPatchAppProcessing(bundleName, hasInstalledInfo.versionCode, hapVersionCode, currentBundleUserIds)) {
-            LOG_I(BMS_TAG_DEFAULT, "OTA Install prefab bundle(%{public}s) by path(%{public}s) for hotPatch upgrade",
-                bundleName.c_str(), scanPathIter.c_str());
-            // After the patch app is uninstalled, install the preconfigured app of the ota version.
-            std::vector<std::string> filePaths{scanPathIter};
-            if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, currentBundleUserIds)) {
-                LOG_E(BMS_TAG_DEFAULT, "OTA install prefab bundle(%{public}s) error", bundleName.c_str());
-                SavePreInstallException(scanPathIter);
-            }
-            continue;
-        }
         std::vector<std::string> filePaths;
         bool updateSelinuxLabel = false;
         bool updateBundle = false;
@@ -2285,6 +2273,20 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 SendBundleUpdateFailedEvent(hasInstalledInfo);
                 break;
             }
+        }
+        // process patch bundle
+        std::vector<int32_t> currentBundleUserIds;
+        if (!updateBundle && HotPatchAppProcessing(bundleName, hasInstalledInfo.versionCode,
+            hapVersionCode, currentBundleUserIds)) {
+            LOG_I(BMS_TAG_DEFAULT, "OTA Install prefab bundle(%{public}s) by path(%{public}s) for hotPatch upgrade",
+                bundleName.c_str(), scanPathIter.c_str());
+            // After the patch app is uninstalled, install the preconfigured app of the ota version.
+            std::vector<std::string> filePaths{scanPathIter};
+            if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, currentBundleUserIds)) {
+                LOG_E(BMS_TAG_DEFAULT, "OTA install prefab bundle(%{public}s) error", bundleName.c_str());
+                SavePreInstallException(scanPathIter);
+            }
+            continue;
         }
         if (!updateBundle) {
 #ifdef USE_PRE_BUNDLE_PROFILE
