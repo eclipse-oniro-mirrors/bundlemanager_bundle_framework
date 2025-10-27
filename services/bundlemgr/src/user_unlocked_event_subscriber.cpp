@@ -266,7 +266,7 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
     ReturnIfNewTask(ProcessUpdateAppLogDir, tempTaskNum, bundleInfos, userId);
     ReturnIfNewTask(ProcessFileManagerDir, tempTaskNum, bundleInfos, userId);
     ReturnIfNewTask(ProcessNewBackupDir, tempTaskNum, bundleInfos, userId);
-    ReturnIfNewTask(CreateSharefilesSubDataDirs, tempTaskNum, bundleInfos, userId);
+    ReturnIfNewTask(CreateShareFilesSubDataDirs, tempTaskNum, bundleInfos, userId);
     if (newBundleDirMgr != nullptr) {
         (void)newBundleDirMgr->DeleteUserId(userId);
     }
@@ -468,13 +468,20 @@ bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_
     return true;
 }
 
-void UpdateAppDataMgr::CreateSharefilesSubDataDirs(const std::vector<BundleInfo> &bundleInfos, int32_t userId)
+void UpdateAppDataMgr::CreateShareFilesSubDataDirs(const std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
     APP_LOGD("begin for userid: [%{public}d]", userId);
     std::string parentDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::SHAREFILES;
     for (const auto &bundleInfo : bundleInfos) {
         std::string sharefilesDataDir = parentDir + bundleInfo.name;
+        if (userId != Constants::DEFAULT_USERID && bundleInfo.singleton) {
+            APP_LOGD("Bundle: %{public}s in DEFAULT_USERID, do not create sharefiles for other user",
+                bundleInfo.name.c_str());
+            InstalldClient::GetInstance()->RemoveDir(sharefilesDataDir);
+            continue;
+        }
+        
         bool isExist = false;
         if (InstalldClient::GetInstance()->IsExistDir(sharefilesDataDir, isExist) != ERR_OK) {
             APP_LOGW("path: %{public}s IsExistDir failed",
