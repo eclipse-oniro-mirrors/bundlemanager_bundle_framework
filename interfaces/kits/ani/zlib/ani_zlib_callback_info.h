@@ -26,6 +26,7 @@ public:
     virtual ~ANIZlibCallbackInfo() = default;
     virtual void OnZipUnZipFinish(ErrCode result)
     {
+        std::lock_guard<std::mutex> lock(mutex_);
         result_ = result;
     }
     virtual void DoTask(const OHOS::AppExecFwk::InnerEvent::Callback& task)
@@ -36,11 +37,13 @@ public:
 public:
     inline ErrCode GetResult()
     {
+        std::lock_guard<std::mutex> lock(mutex_);
         return result_;
     }
 
 private:
     ErrCode result_ = SUCCESS;
+    std::mutex mutex_;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

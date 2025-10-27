@@ -50,7 +50,7 @@ export default namespace defaultAppManager {
       return isDefaultApplicationNative(type, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: boolean = e as boolean;
       callback(null, result);
     }, (err: Error): void => {
@@ -60,12 +60,12 @@ export default namespace defaultAppManager {
   }
 
   function isDefaultApplication(type: string): Promise<boolean> {
-    let p = new Promise<boolean>((resolve: (isDefaultApp: boolean) => void, reject: (error: Error) => void) => {
+    let p = new Promise<boolean>((resolve: (isDefaultApp: boolean) => void, reject: (error: BusinessError) => void) => {
       let cb = (): boolean => {
         return isDefaultApplicationNative(type, false);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: boolean = e as boolean;
         resolve(result);
       }, (err: Error): void => {
@@ -85,7 +85,7 @@ export default namespace defaultAppManager {
       return getDefaultApplicationNative(type, userId, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: BundleInfo = e as BundleInfo;
       callback(null, result);
     }, (err: Error): void => {
@@ -98,7 +98,7 @@ export default namespace defaultAppManager {
       return getDefaultApplicationNative(type, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: BundleInfo = e as BundleInfo;
       callback(null, result);
     }, (err: Error): void => {
@@ -108,12 +108,12 @@ export default namespace defaultAppManager {
 
   function getDefaultApplication(type: string, userId?: int): Promise<BundleInfo> {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
-    let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: Error) => void) => {
+    let p = new Promise<BundleInfo>((resolve: (bundleInfo: BundleInfo) => void, reject: (error: BusinessError) => void) => {
       let cb = (): BundleInfo => {
         return getDefaultApplicationNative(type, userIdInfo, false);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: BundleInfo = e as BundleInfo;
         resolve(result);
       }, (err: Error): void => {
@@ -154,13 +154,13 @@ export default namespace defaultAppManager {
 
   function setDefaultApplication(type: string, elementName: ElementName, userId?: int): Promise<void> {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
         return setDefaultApplicationNative(type, elementName, userIdInfo, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -200,13 +200,13 @@ export default namespace defaultAppManager {
 
   function resetDefaultApplication(type: string, userId?: int): Promise<void> {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: Error) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
         return resetDefaultApplicationNative(type, userIdInfo, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

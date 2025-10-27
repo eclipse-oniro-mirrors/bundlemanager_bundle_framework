@@ -44,7 +44,7 @@ public:
     void SetValid(bool valid);
 
 private:
-    int32_t ExcuteWork(uv_loop_s* loop, uv_work_t* work);
+    int32_t ExecuteWork(uv_loop_s* loop, uv_work_t* work);
 private:
     napi_env env_ = nullptr;
     napi_ref callback_ = nullptr;

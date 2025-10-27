@@ -26,10 +26,16 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* NS_NAME_BUNDLE_MONITOR = "@ohos.bundle.bundleMonitor.bundleMonitor";
-constexpr const char* INTERFACE_NAME_ON = "on";
-constexpr const char* INTERFACE_NAME_OFF = "off";
+constexpr const char* INTERFACE_NAME_ON_ADD = "onAdd";
+constexpr const char* INTERFACE_NAME_ON_UPDATE = "onUpdate";
+constexpr const char* INTERFACE_NAME_ON_REMOVE = "onRemove";
+constexpr const char* INTERFACE_NAME_OFF_ADD = "offAdd";
+constexpr const char* INTERFACE_NAME_OFF_UPDATE = "offUpdate";
+constexpr const char* INTERFACE_NAME_OFF_REMOVE = "offRemove";
+constexpr const char* EVENT_TYPE_ADD = "add";
+constexpr const char* EVENT_TYPE_UPDATE = "update";
+constexpr const char* EVENT_TYPE_REMOVE = "remove";
 constexpr const char* PERMISSION_LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHANGE";
-constexpr const char* TYPE = "type";
 constexpr const char* CALLBACK = "callback";
 static std::mutex g_aniBundleMonitorMutex;
 static std::shared_ptr<ANIBundleMonitorEventHandler> g_aniBundleMonitor;
@@ -55,16 +61,10 @@ static ani_status IsNullOrUndefined(ani_env* env, ani_ref ref, bool& result)
     return ANI_OK;
 }
 
-static void RegisterBundleChangedEvent(ani_env* env, ani_string aniEventType, ani_object aniCallback)
+static void RegisterBundleChangedEvent(ani_env* env,
+    const std::string& eventType, ani_object aniCallback, const std::string& interfaceName)
 {
-    APP_LOGD("RegisterBundleChangedEvent entry");
-
-    std::string eventType;
-    if (!CommonFunAni::ParseString(env, aniEventType, eventType)) {
-        APP_LOGE("parse eventType failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TYPE, TYPE_STRING);
-        return;
-    }
+    APP_LOGD("Register %{public}s event entry", eventType.c_str());
 
     bool isCallbackEmpty = false;
     ani_status status = IsNullOrUndefined(env, aniCallback, isCallbackEmpty);
@@ -94,7 +94,7 @@ static void RegisterBundleChangedEvent(ani_env* env, ani_string aniEventType, an
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
         APP_LOGE("register bundle status callback failed due to lack of permission");
         auto error = BusinessErrorAni::CreateCommonError(
-            env, ERROR_PERMISSION_DENIED_ERROR, INTERFACE_NAME_ON, PERMISSION_LISTEN_BUNDLE_CHANGE);
+            env, ERROR_PERMISSION_DENIED_ERROR, interfaceName, PERMISSION_LISTEN_BUNDLE_CHANGE);
         env->ThrowError(static_cast<ani_error>(error));
         return;
     }
@@ -108,19 +108,13 @@ static void RegisterBundleChangedEvent(ani_env* env, ani_string aniEventType, an
         g_aniBundleMonitor->RegisterBundleChangedEvent(env, eventType, aniCallback);
     }
 
-    APP_LOGD("RegisterBundleChangedEvent exit");
+    APP_LOGD("Register %{public}s event exit", eventType.c_str());
 }
 
-static void UnregisterBundleChangedEvent(ani_env* env, ani_string aniEventType, ani_object aniCallback)
+static void UnregisterBundleChangedEvent(ani_env* env,
+    const std::string& eventType, ani_object aniCallback, const std::string& interfaceName)
 {
-    APP_LOGD("UnregisterBundleChangedEvent entry");
-
-    std::string eventType;
-    if (!CommonFunAni::ParseString(env, aniEventType, eventType)) {
-        APP_LOGE("parse eventType failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TYPE, TYPE_STRING);
-        return;
-    }
+    APP_LOGD("Unregister %{public}s event entry", eventType.c_str());
 
     bool isCallbackEmpty = false;
     ani_status status = IsNullOrUndefined(env, aniCallback, isCallbackEmpty);
@@ -145,7 +139,7 @@ static void UnregisterBundleChangedEvent(ani_env* env, ani_string aniEventType, 
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
         APP_LOGE("unregister bundle status callback failed due to lack of permission");
         auto error = BusinessErrorAni::CreateCommonError(
-            env, ERROR_PERMISSION_DENIED_ERROR, INTERFACE_NAME_OFF, PERMISSION_LISTEN_BUNDLE_CHANGE);
+            env, ERROR_PERMISSION_DENIED_ERROR, interfaceName, PERMISSION_LISTEN_BUNDLE_CHANGE);
         env->ThrowError(static_cast<ani_error>(error));
         return;
     }
@@ -163,7 +157,37 @@ static void UnregisterBundleChangedEvent(ani_env* env, ani_string aniEventType, 
         }
     }
 
-    APP_LOGD("UnregisterBundleChangedEvent exit");
+    APP_LOGD("Unregister %{public}s event exit", eventType.c_str());
+}
+
+static void RegisterAddEvent(ani_env* env, ani_object aniCallback)
+{
+    RegisterBundleChangedEvent(env, EVENT_TYPE_ADD, aniCallback, INTERFACE_NAME_ON_ADD);
+}
+
+static void RegisterUpdateEvent(ani_env* env, ani_object aniCallback)
+{
+    RegisterBundleChangedEvent(env, EVENT_TYPE_UPDATE, aniCallback, INTERFACE_NAME_ON_UPDATE);
+}
+
+static void RegisterRemoveEvent(ani_env* env, ani_object aniCallback)
+{
+    RegisterBundleChangedEvent(env, EVENT_TYPE_REMOVE, aniCallback, INTERFACE_NAME_ON_REMOVE);
+}
+
+static void UnregisterAddEvent(ani_env* env, ani_object aniCallback)
+{
+    UnregisterBundleChangedEvent(env, EVENT_TYPE_ADD, aniCallback, INTERFACE_NAME_OFF_ADD);
+}
+
+static void UnRegisterUpdateEvent(ani_env* env, ani_object aniCallback)
+{
+    UnregisterBundleChangedEvent(env, EVENT_TYPE_UPDATE, aniCallback, INTERFACE_NAME_OFF_UPDATE);
+}
+
+static void UnregisterRemoveEvent(ani_env* env, ani_object aniCallback)
+{
+    UnregisterBundleChangedEvent(env, EVENT_TYPE_REMOVE, aniCallback, INTERFACE_NAME_OFF_REMOVE);
 }
 
 static void InitializeBundleMonitor(ani_vm* vm)
@@ -198,8 +222,12 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         return status;
     }
     std::array methods = {
-        ani_native_function { INTERFACE_NAME_ON, nullptr, reinterpret_cast<void*>(RegisterBundleChangedEvent) },
-        ani_native_function { INTERFACE_NAME_OFF, nullptr, reinterpret_cast<void*>(UnregisterBundleChangedEvent) },
+        ani_native_function { INTERFACE_NAME_ON_ADD, nullptr, reinterpret_cast<void*>(RegisterAddEvent) },
+        ani_native_function { INTERFACE_NAME_ON_UPDATE, nullptr, reinterpret_cast<void*>(RegisterUpdateEvent) },
+        ani_native_function { INTERFACE_NAME_ON_REMOVE, nullptr, reinterpret_cast<void*>(RegisterRemoveEvent) },
+        ani_native_function { INTERFACE_NAME_OFF_ADD, nullptr, reinterpret_cast<void*>(UnregisterAddEvent) },
+        ani_native_function { INTERFACE_NAME_OFF_UPDATE, nullptr, reinterpret_cast<void*>(UnRegisterUpdateEvent) },
+        ani_native_function { INTERFACE_NAME_OFF_REMOVE, nullptr, reinterpret_cast<void*>(UnregisterRemoveEvent) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

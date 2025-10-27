@@ -44,23 +44,11 @@ export default namespace bundleResourceManager {
   native function getAllLauncherAbilityResourceInfoNative(resourceFlags: int): Array<LauncherAbilityResourceInfo>;
   native function getExtensionAbilityResourceInfoNative(bundleName: string, extensionAbilityType: bundleManager.ExtensionAbilityType, resourceFlags: int, appIndex: int): Array<LauncherAbilityResourceInfo>;
 
-  function getBundleResourceInfo(bundleName: string, resourceFlags?: int): BundleResourceInfo
-  {
-    let resFlag = resourceFlags ?? INVALID_VALUE;
-    return getBundleResourceInfoNative(bundleName, resFlag, INVALID_VALUE);
-  }
-
   function getBundleResourceInfo(bundleName: string, resourceFlags?: int, appIndex?: int): BundleResourceInfo
   {
     let resFlag = resourceFlags ?? INVALID_VALUE;
     let appIdx = appIndex ?? INVALID_VALUE;
     return getBundleResourceInfoNative(bundleName, resFlag, appIdx);
-  }
-
-  function getLauncherAbilityResourceInfo(bundleName: string, resourceFlags?: int): Array<LauncherAbilityResourceInfo>
-  {
-    let resFlag = resourceFlags ?? INVALID_VALUE;
-    return getLauncherAbilityResourceInfoNative(bundleName, resFlag, INVALID_VALUE);
   }
 
   function getLauncherAbilityResourceInfo(bundleName: string, resourceFlags?: int, appIndex?: int): Array<LauncherAbilityResourceInfo>
@@ -80,7 +68,7 @@ export default namespace bundleResourceManager {
       return getAllBundleResourceInfoNative(resourceFlags);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultArray: Array<BundleResourceInfo> = e as Array<BundleResourceInfo>;
       callback(null, resultArray);
     }, (err: Error): void => {
@@ -94,7 +82,7 @@ export default namespace bundleResourceManager {
         return getAllBundleResourceInfoNative(resourceFlags);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultArray: Array<BundleResourceInfo> = e as Array<BundleResourceInfo>;
         resolve(resultArray);
       }, (err: Error): void => {
@@ -109,7 +97,7 @@ export default namespace bundleResourceManager {
       return getAllLauncherAbilityResourceInfoNative(resourceFlags);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultArray: Array<LauncherAbilityResourceInfo> = e as Array<LauncherAbilityResourceInfo>;
       callback(null, resultArray);
     }, (err: Error): void => {
@@ -123,7 +111,7 @@ export default namespace bundleResourceManager {
         return getAllLauncherAbilityResourceInfoNative(resourceFlags);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultArray: Array<LauncherAbilityResourceInfo> = e as Array<LauncherAbilityResourceInfo>;
         resolve(resultArray);
       }, (err: Error): void => {

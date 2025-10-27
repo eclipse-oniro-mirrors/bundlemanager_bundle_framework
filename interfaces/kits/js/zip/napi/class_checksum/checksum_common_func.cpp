@@ -4,7 +4,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,23 +12,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef OHOS_APPEXECFWK_LIBZIP_ZLIB_CALLBACK_BASE_H
-#define OHOS_APPEXECFWK_LIBZIP_ZLIB_CALLBACK_BASE_H
 
-#include "bundle_errors.h"
-#include "event_handler.h"
+#include "checksum_common_func.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-class ZlibCallbackInfoBase {
-public:
-    ZlibCallbackInfoBase() = default;
-    virtual ~ZlibCallbackInfoBase() = default;
-    virtual void OnZipUnZipFinish(ErrCode result) = 0;
-    virtual void DoTask(const OHOS::AppExecFwk::InnerEvent::Callback& task) = 0;
-};
+
+uint64_t ComputeCrc64(uint64_t initCrc, const char *data, size_t length)
+{
+    uint64_t crc = initCrc;
+
+    /* computation of the CRC */
+    for (size_t i = 0; i < length; ++i) {
+        crc = CRC64_TABLE[(crc ^ data[i]) & 0xFF] ^ (crc >> SHIFT_AMOUNT);
+    }
+
+    return crc;
+}
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif  // OHOS_APPEXECFWK_LIBZIP_ZLIB_CALLBACK_BASE_H

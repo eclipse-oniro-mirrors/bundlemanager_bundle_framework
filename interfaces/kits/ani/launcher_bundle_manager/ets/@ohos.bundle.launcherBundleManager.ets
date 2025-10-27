@@ -31,17 +31,17 @@ export default namespace launcherBundleManager {
   native function startShortcutWithReasonNative(shortcutInfo: ShortcutInfo, startReason: string, options: StartOptions): void;
 
   function startShortcut(shortcutInfo: ShortcutInfo, options?: StartOptions): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void): void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
       let startOptions : StartOptions = {};
       if (options != undefined) {
         startOptions = options;
       }
-      let cb = (): NullishType => {
+      let cb = (): Any => {
         startShortcutNative(shortcutInfo, startOptions);
       }
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -62,7 +62,7 @@ export default namespace launcherBundleManager {
       return getShortcutInfoNative(bundleName, EMPTY_USER_ID, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultShortcutInfo: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
       callback(null, resultShortcutInfo);
     }, (err: Error): void => {
@@ -76,7 +76,7 @@ export default namespace launcherBundleManager {
         return getShortcutInfoNative(bundleName, EMPTY_USER_ID, false);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultShortcutInfo: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
         resolve(resultShortcutInfo);
       }, (err: Error): void => {
@@ -91,7 +91,7 @@ export default namespace launcherBundleManager {
       return getLauncherAbilityInfoNative(bundleName, userId, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
       callback(null, resultArray);
     }, (err: Error): void => {
@@ -105,7 +105,7 @@ export default namespace launcherBundleManager {
         return getLauncherAbilityInfoNative(bundleName, userId, false);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
         resolve(resultArray);
       }, (err: Error): void => {
@@ -124,7 +124,7 @@ export default namespace launcherBundleManager {
       return getAllLauncherAbilityInfoNative(userId);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
       callback(null, resultArray);
     }, (err: Error): void => {
@@ -138,7 +138,7 @@ export default namespace launcherBundleManager {
         return getAllLauncherAbilityInfoNative(userId);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultArray: Array<LauncherAbilityInfo> = e as Array<LauncherAbilityInfo>;
         resolve(resultArray);
       }, (err: Error): void => {
@@ -149,17 +149,17 @@ export default namespace launcherBundleManager {
   }
 
   function startShortcutWithReason(shortcutInfo: ShortcutInfo, startReason: string, options?: StartOptions): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void): void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
       let startOptions : StartOptions = {};
       if (options != undefined) {
         startOptions = options;
       }
-      let cb = (): NullishType => {
+      let cb = (): Any => {
         startShortcutWithReasonNative(shortcutInfo, startReason, startOptions);
       }
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

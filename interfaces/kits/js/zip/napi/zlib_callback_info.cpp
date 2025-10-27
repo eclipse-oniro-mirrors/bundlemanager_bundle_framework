@@ -61,11 +61,11 @@ ZlibCallbackInfo::~ZlibCallbackInfo()
     callbackInfos.erase(this);
 }
 
-int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
+int32_t ZlibCallbackInfo::ExecuteWork(uv_loop_s* loop, uv_work_t* work)
 {
     int32_t ret = uv_queue_work(
         loop, work, [](uv_work_t* work) {
-            APP_LOGD("ExcuteWork asyn work done");
+            APP_LOGD("ExecuteWork asyn work done");
         },
         [](uv_work_t* work, int status) {
             if (work == nullptr) {
@@ -169,7 +169,7 @@ void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
         return;
     }
     work->data = reinterpret_cast<void*>(asyncCallbackInfo);
-    int32_t ret = ExcuteWork(loop, work);
+    int32_t ret = ExecuteWork(loop, work);
     if (ret != 0) {
         if (asyncCallbackInfo != nullptr) {
             delete asyncCallbackInfo;
