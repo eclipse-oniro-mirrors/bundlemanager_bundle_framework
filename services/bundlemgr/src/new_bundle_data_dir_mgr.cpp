@@ -189,14 +189,6 @@ bool NewBundleDataDirMgr::ProcessOtaBundleDataDir(
             ret = false;
         }
     }
-    if ((dirType & static_cast<uint32_t>(CreateBundleDirType::CREATE_EL5_DIR)) ==
-        static_cast<uint32_t>(CreateBundleDirType::CREATE_EL5_DIR)) {
-        // create el5
-        if (!InnerProcessOtaBundleDataDirEl5(bundleName, userId)) {
-            APP_LOGE("-n %{public}s -u %{public}d create dir el5 failed", bundleName.c_str(), userId);
-            ret = false;
-        }
-    }
 
     if ((dirType & static_cast<uint32_t>(CreateBundleDirType::CREATE_GROUP_DIR)) ==
         static_cast<uint32_t>(CreateBundleDirType::CREATE_GROUP_DIR)) {
@@ -376,6 +368,43 @@ bool NewBundleDataDirMgr::DeleteUserId(const int32_t userId)
         return DeleteNewBundleDataDirInfosFromDb();
     }
     return AddNewBundleDataDirInfosToDb();
+}
+
+std::set<std::string> NewBundleDataDirMgr::GetAllBundleDataDirEl5BundleName(const int32_t userId)
+{
+    std::lock_guard<std::mutex> lock(newBundleDataDirMutex_);
+    if (!hasInit_) {
+        APP_LOGI("load new data dir map start");
+        if (!LoadNewBundleDataDirInfosFromDb()) {
+            APP_LOGE("load new data dir map failed");
+        }
+    }
+    std::set<std::string> allBundleNames;
+    if (userIds_.find(userId) == userIds_.end()) {
+        return allBundleNames;
+    }
+    for (const auto &item : newBundleDataDirMap_) {
+        if ((item.second & static_cast<uint32_t>(CreateBundleDirType::CREATE_EL5_DIR)) ==
+            static_cast<uint32_t>(CreateBundleDirType::CREATE_EL5_DIR)) {
+            allBundleNames.insert(item.first);
+        }
+    }
+    return allBundleNames;
+}
+
+bool NewBundleDataDirMgr::ProcessOtaBundleDataDirEl5(const int32_t userId)
+{
+    APP_LOGI("process ota bundle data dir el5 -u %{public}d start", userId);
+    bool ret = true;
+    std::set<std::string> allBundleNames = GetAllBundleDataDirEl5BundleName(userId);
+    for (const auto &bundleName : allBundleNames) {
+        if (!InnerProcessOtaBundleDataDirEl5(bundleName, userId)) {
+            APP_LOGE("-n %{public}s -u %{public}d create el5 failed", bundleName.c_str(), userId);
+            ret = false;
+        }
+    }
+    APP_LOGI("process ota bundle data dir el5 -u %{public}d end", userId);
+    return ret;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

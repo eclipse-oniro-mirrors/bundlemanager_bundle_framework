@@ -1211,8 +1211,6 @@ public:
     ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
         int32_t userId, bool &stateChange);
     ErrCode GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath);
-    void AddNewEl5BundleName(const std::string &bundleName);
-    ErrCode CreateNewBundleEl5Dir(int32_t userId);
 
 private:
     /**
@@ -1445,8 +1443,6 @@ private:
     mutable std::shared_mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
     mutable std::shared_mutex bundleMutex_;
-    mutable std::shared_mutex otaNewInstallMutex_;
-    mutable std::shared_mutex newEl5Mutex_;
     std::shared_ptr<IBundleDataStorage> dataStorage_;
     std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;
@@ -1480,8 +1476,6 @@ private:
     std::set<std::string> appServiceHspBundleName_;
     // using for plugin event callback
     std::map<std::string, std::vector<sptr<IBundleEventCallback>>> pluginCallbackMap_;
-    std::set<std::string> otaNewInstallBundleNames_;
-    std::set<std::string> newEl5BundleNames_;
 
     static bool HasAppLinkingFlag(uint32_t flags);
 };
