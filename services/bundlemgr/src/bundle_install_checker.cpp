@@ -1389,14 +1389,13 @@ bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapV
         }
 
         if (isDebugProvisionType && isSaneConfigOrSaneBackend && isDriverExtensionAbilityType) {
-            LOG_E(BMS_TAG_INSTALLER, "Metadata name %{public}s is not allowed", meta.name.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "Bundle %{public}s is not allowed", bundleInfo.GetBundleName.c_str());
             return false;
         }
     }
 
     return true;
 }
-
 
 bool BundleInstallChecker::MatchOldSignatures(const std::string &bundleName,
     const std::vector<std::string> &appSignatures)
