@@ -2209,6 +2209,11 @@ bool InnerBundleInfo::IsHideDesktopIcon() const
     return baseApplicationInfo_->hideDesktopIcon ? true : !IsExistLauncherAbility();
 }
 
+bool InnerBundleInfo::IsHideDesktopIconForEvent() const
+{
+    return baseApplicationInfo_->hideDesktopIcon;
+}
+
 bool InnerBundleInfo::IsExistLauncherAbility() const
 {
     bool isExistLauncherAbility = false;

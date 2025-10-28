@@ -4089,6 +4089,19 @@ HWTEST_F(BmsBundleKitServiceTest, IsHideDesktopIcon_0002, Function | SmallTest |
 }
 
 /**
+ * @tc.number: IsHideDesktopIconForEvent_0001
+ * @tc.name: test can IsHideDesktopIcon
+ * @tc.desc: 1.system run normally
+ *           2.IsHideDesktopIcon
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsHideDesktopIconForEvent_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    bool ret = innerBundleInfo.IsHideDesktopIconForEvent();
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: AppProvisionInfo_0001
  * @tc.name: test AppProvisionInfo Marshalling
  * @tc.desc: 1.system run normally

@@ -2239,6 +2239,7 @@ public:
     int64_t GetLastInstallationTime() const;
     void UpdateAppDetailAbilityAttrs();
     bool IsHideDesktopIcon() const;
+    bool IsHideDesktopIconForEvent() const;
     void AddApplyQuickFixFrequency();
     int32_t GetApplyQuickFixFrequency() const;
     void ResetApplyQuickFixFrequency();

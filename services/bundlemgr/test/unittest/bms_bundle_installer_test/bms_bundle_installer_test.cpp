@@ -7749,7 +7749,7 @@ HWTEST_F(BmsBundleInstallerTest, GetInstallEventInfo_0100, Function | SmallTest 
     InnerBundleInfo bundleInfo;
     EventInfo eventInfo;
     installer.GetInstallEventInfo(bundleInfo, eventInfo);
-    EXPECT_EQ(eventInfo.hideDesktopIcon, bundleInfo.IsHideDesktopIcon());
+    EXPECT_EQ(eventInfo.hideDesktopIcon, bundleInfo.IsHideDesktopIconForEvent());
 
     std::string appDistributionType = "hos_normal_type";
     bundleInfo.SetAppDistributionType(appDistributionType);
