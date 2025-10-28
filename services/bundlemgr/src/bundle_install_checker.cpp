@@ -1375,14 +1375,13 @@ bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapV
     }
  
     bool isDebugProvisionType = (hapVerifyResult.GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG);
-    for (const auto &extensionInfo : newInfo.GetInnerExtensionInfos()) {
+    for (const auto &newInfo : newInfos) {
         const innerBundleInfo &bundleInfo = newInfo.second;
         for (const auto &extensionInfo: bundleInfo.GetInnerExtensionInfos()) {
             bool isSaneConfigOrSaneBackend = false;
             bool isDriverExtensionAbilityType = (extensionInfo.second.type == ExtensionAbilityType::DRIVER);
             for (const auto &meta : extensionInfo.second.metadata) {
                 if (meta.name == "saneConfig" || meta.name == "saneBackend") {
-                    LOG_E(BMS_TAG_INSTALLER, "Metadata name %{public}s is not allowed", meta.name.c_str());
                     isSaneConfigOrSaneBackend = true;
                     break;
                 }
@@ -1390,6 +1389,7 @@ bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapV
         }
 
         if (isDebugProvisionType && isSaneConfigOrSaneBackend && isDriverExtensionAbilityType) {
+            LOG_E(BMS_TAG_INSTALLER, "Metadata name %{public}s is not allowed", meta.name.c_str());
             return false;
         }
     }
