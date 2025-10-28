@@ -101,7 +101,7 @@ void PatchDataMgr::ProcessPatchInfo(const std::string &bundleName, const std::ve
     if (!GetInnerPatchInfo(bundleName, innerPatchInfo)) {
         return;
     }
-    if (innerPatchInfo.GetVersionCode() >= versionCode) {
+    if (innerPatchInfo.GetVersionCode() > versionCode) {
         APP_LOGW("patchVersion: %{public}u, newVersion: %{public}u", innerPatchInfo.GetVersionCode(), versionCode);
         return;
     }
