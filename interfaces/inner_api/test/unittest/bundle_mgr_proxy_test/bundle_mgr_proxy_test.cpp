@@ -587,21 +587,6 @@ HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_2900, Function | SmallTest | 
 }
 
 /**
- * @tc.number: Bundle_Mgr_Proxy_Test_2901
- * @tc.name: test the GetCompatibleDeviceType
- * @tc.desc: 1. GetCompatibleDeviceType
- */
-HWTEST_F(BundleMgrProxyTest, Bundle_Mgr_Proxy_Test_2901, Function | SmallTest | Level0)
-{
-    sptr<IRemoteObject> impl = nullptr;
-    BundleMgrProxy bundleMgrProxy(impl);
-    std::vector<std::string> bundleNames;
-    std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
-    auto ret = bundleMgrProxy.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
-}
-
-/**
  * @tc.number: Bundle_Mgr_Proxy_Test_3000
  * @tc.name: test the GetBundleNameByAppId
  * @tc.desc: 1. appId is empty

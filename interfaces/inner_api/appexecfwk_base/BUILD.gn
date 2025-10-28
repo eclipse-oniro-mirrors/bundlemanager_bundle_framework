@@ -49,7 +49,6 @@ ohos_shared_library("appexecfwk_base") {
     "src/application_info.cpp",
     "src/bms_json_util.cpp",
     "src/bundle_additional_info.cpp",
-    "src/bundle_compatible_device_type.cpp",
     "src/bundle_dir.cpp",
     "src/bundle_distribution_type.cpp",
     "src/bundle_info.cpp",
