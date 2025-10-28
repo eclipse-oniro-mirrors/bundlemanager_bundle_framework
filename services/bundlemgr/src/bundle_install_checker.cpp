@@ -1389,7 +1389,7 @@ bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapV
         }
 
         if (isDebugProvisionType && isSaneConfigOrSaneBackend && isDriverExtensionAbilityType) {
-            LOG_E(BMS_TAG_INSTALLER, "Bundle %{public}s is not allowed", bundleInfo.GetBundleName.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "Bundle %{public}s is not allowed", bundleInfo.GetBundleName().c_str());
             return false;
         }
     }
