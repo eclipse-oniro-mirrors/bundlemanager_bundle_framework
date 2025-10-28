@@ -298,7 +298,7 @@ public:
                     APP_LOGE("convert failed");
                     return nullptr;
                 }
-                status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, item);
+                status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iY:", i, item);
                 env->Reference_Delete(item);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_CallMethodByName_Void failed %{public}d", status);
@@ -327,7 +327,7 @@ public:
         for (const auto& iter : nativeArray) {
             ani_object item = converter(env, iter, std::forward<Args>(args)...);
             RETURN_NULL_IF_NULL(item);
-            status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iC{std.core.Object}:", i, item);
+            status = env->Object_CallMethodByName_Void(arrayObj, "$_set", "iY:", i, item);
             env->Reference_Delete(item);
             if (status != ANI_OK) {
                 APP_LOGE("Object_CallMethodByName_Void failed %{public}d", status);
@@ -353,7 +353,7 @@ public:
         }
         for (ani_int i = 0; i < static_cast<ani_int>(length); ++i) {
             ani_ref ref;
-            status = env->Object_CallMethodByName_Ref(aniArray, "$_get", "i:C{std.core.Object}", &ref, i);
+            status = env->Object_CallMethodByName_Ref(aniArray, "$_get", "i:Y", &ref, i);
             if (status != ANI_OK) {
                 APP_LOGE("Object_CallMethodByName_Ref failed %{public}d", status);
                 return false;
