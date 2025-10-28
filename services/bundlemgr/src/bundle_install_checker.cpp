@@ -1375,11 +1375,17 @@ bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapV
     }
 
     bool isDebugProvisionType = (hapVerifyResult.GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG);
+    if (!isDebugProvisionType) {
+        return true;
+    }
     for (const auto &newInfo : newInfos) {
         const innerBundleInfo &bundleInfo = newInfo.second;
         for (const auto &extensionInfo: bundleInfo.GetInnerExtensionInfos()) {
             bool isSaneConfigOrSaneBackend = false;
             bool isDriverExtensionAbilityType = (extensionInfo.second.type == ExtensionAbilityType::DRIVER);
+            if (!isDriverExtensionAbilityType) {
+                continue;
+            }
             for (const auto &meta : extensionInfo.second.metadata) {
                 if (meta.name == "saneConfig" || meta.name == "saneBackend") {
                     isSaneConfigOrSaneBackend = true;
