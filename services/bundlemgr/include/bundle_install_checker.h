@@ -211,6 +211,10 @@ public:
 
     void FetchPrivilegeCapabilityFromPreConfig(const std::string &bundleName,
         const std::vector<std::string> &appSignatures, AppPrivilegeCapability &appPrivilegeCapability);
+
+    static bool CheckSaneDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult, const int32_t userId,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+
 private:
 
     ErrCode ParseBundleInfo(

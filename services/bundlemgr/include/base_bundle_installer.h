@@ -813,6 +813,8 @@ private:
     ErrCode CheckAppDistributionType();
     ErrCode CheckSpaceIsolation(
         const InstallParam &installParam, const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
+    ErrCode CheckDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult, const int32_t userId,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
 #ifdef WEBVIEW_ENABLE
     ErrCode VerifyArkWebInstall();
     void RestoreconForArkweb();
