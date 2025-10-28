@@ -1373,7 +1373,7 @@ bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapV
     if (!isSpaceIsolation) {
         return true;
     }
- 
+
     bool isDebugProvisionType = (hapVerifyResult.GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG);
     for (const auto &newInfo : newInfos) {
         const innerBundleInfo &bundleInfo = newInfo.second;
