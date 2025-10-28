@@ -322,7 +322,7 @@ bool BundleResourceManager::FilterLauncherAbilityResourceInfoWithFlag(const uint
 bool BundleResourceManager::GetLauncherAbilityInfos(const std::string &bundleName,
     std::vector<AbilityInfo> &abilityInfos)
 {
-    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t userId = GetUserId();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is nullptr");

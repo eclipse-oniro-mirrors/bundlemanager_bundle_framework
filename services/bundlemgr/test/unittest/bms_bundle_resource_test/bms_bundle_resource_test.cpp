@@ -4260,6 +4260,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0222, Function | SmallTest
     EXPECT_NE(manager, nullptr);
     bool ret = manager->GetLauncherAbilityInfos(bundleName, abilityInfos);
     EXPECT_TRUE(ret);
+    EXPECT_TRUE(abilityInfos.size() > 0);
 }
 
 /**
