@@ -1361,6 +1361,26 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
 #endif
 }
 
+bool CheckDriverNameAndType(const innerBundleInfo &bundleInfo)
+{
+    for (const auto &extensionInfo: bundleInfo.GetInnerExtensionInfos()) {
+        bool isSaneConfigOrSaneBackend = false;
+        bool isDriverExtensionAbilityType = (extensionInfo.second.type == ExtensionAbilityType::DRIVER);
+        if (!isDriverExtensionAbilityType) {
+            continue;
+        }
+
+        for (const auto &meta : extensionInfo.second.metadata) {
+            if (meta.name == "saneConfig" || meta.name == "saneBackend") {
+                LOG_E(BMS_TAG_INSTALLER, "Bundle %{public}s is not allowed", bundleInfo.GetBundleName().c_str());
+                return false;
+            }
+        }
+    }
+
+    return false;
+}
+
 bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult,
     const int32_t userId, const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
@@ -1380,22 +1400,7 @@ bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapV
     }
     for (const auto &newInfo : newInfos) {
         const innerBundleInfo &bundleInfo = newInfo.second;
-        for (const auto &extensionInfo: bundleInfo.GetInnerExtensionInfos()) {
-            bool isSaneConfigOrSaneBackend = false;
-            bool isDriverExtensionAbilityType = (extensionInfo.second.type == ExtensionAbilityType::DRIVER);
-            if (!isDriverExtensionAbilityType) {
-                continue;
-            }
-            for (const auto &meta : extensionInfo.second.metadata) {
-                if (meta.name == "saneConfig" || meta.name == "saneBackend") {
-                    isSaneConfigOrSaneBackend = true;
-                    break;
-                }
-            }
-        }
-
-        if (isDebugProvisionType && isSaneConfigOrSaneBackend && isDriverExtensionAbilityType) {
-            LOG_E(BMS_TAG_INSTALLER, "Bundle %{public}s is not allowed", bundleInfo.GetBundleName().c_str());
+        if (!CheckDriverNameAndType(bundleInfo)) {
             return false;
         }
     }
