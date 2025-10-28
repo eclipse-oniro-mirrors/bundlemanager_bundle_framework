@@ -131,21 +131,6 @@ HWTEST_F(BundleMgrExtTest, GetCompatibleDeviceType_0100, Function | SmallTest | 
 }
 
 /**
- * @tc.number: BatchGetCompatibleDeviceType_0100
- * @tc.name: test the BatchGetCompatibleDeviceType
- * @tc.desc: 1. system running normally
- *           2. test BatchGetCompatibleDeviceType
- */
-HWTEST_F(BundleMgrExtTest, BatchGetCompatibleDeviceType_0100, Function | SmallTest | Level0)
-{
-    BundleMgrExtToTest bundleMgrExtToTest;
-    std::vector<std::string> bundleNames = {"com.ohos.systemui"};
-    std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
-    auto ret = bundleMgrExtToTest.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-    EXPECT_NE(ret, ERR_OK);
-}
-
-/**
  * @tc.number: OnGetAllBundleCacheFinished_0100
  * @tc.name: test the OnGetAllBundleCacheFinished
  * @tc.desc: 1. system running normally

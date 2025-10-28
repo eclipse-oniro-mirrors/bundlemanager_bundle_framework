@@ -926,8 +926,6 @@ private:
 
     ErrCode HandleGetCompatibleDeviceType(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleBatchGetCompatibleDeviceType(MessageParcel &data, MessageParcel &reply);
-
     ErrCode HandleGetBundleNameByAppId(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllPluginInfo(MessageParcel &data, MessageParcel &reply);

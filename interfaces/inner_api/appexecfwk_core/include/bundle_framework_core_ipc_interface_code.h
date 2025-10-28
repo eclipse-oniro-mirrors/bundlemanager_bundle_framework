@@ -234,7 +234,6 @@ enum class BundleMgrInterfaceCode : uint32_t {
     RECOVER_BACKUP_BUNDLE_DATA = 208,
     REMOVE_BACKUP_BUNDLE_DATA = 209,
     CREATE_NEW_BUNDLE_EL5_DIR = 210,
-    BATCH_GET_COMPATIBLED_DEVICE_TYPE = 211,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
