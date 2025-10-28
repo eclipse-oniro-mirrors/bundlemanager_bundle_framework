@@ -1361,10 +1361,9 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
 #endif
 }
 
-bool CheckDriverNameAndType(const innerBundleInfo &bundleInfo)
+bool CheckDriverNameAndType(const InnerBundleInfo &bundleInfo)
 {
     for (const auto &extensionInfo: bundleInfo.GetInnerExtensionInfos()) {
-        bool isSaneConfigOrSaneBackend = false;
         bool isDriverExtensionAbilityType = (extensionInfo.second.type == ExtensionAbilityType::DRIVER);
         if (!isDriverExtensionAbilityType) {
             continue;
@@ -1378,7 +1377,7 @@ bool CheckDriverNameAndType(const innerBundleInfo &bundleInfo)
         }
     }
 
-    return false;
+    return true;
 }
 
 bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult,
@@ -1399,7 +1398,7 @@ bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapV
         return true;
     }
     for (const auto &newInfo : newInfos) {
-        const innerBundleInfo &bundleInfo = newInfo.second;
+        const InnerBundleInfo &bundleInfo = newInfo.second;
         if (!CheckDriverNameAndType(bundleInfo)) {
             return false;
         }
