@@ -1361,6 +1361,52 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
 #endif
 }
 
+bool CheckDriverNameAndType(const InnerBundleInfo &bundleInfo)
+{
+    for (const auto &extensionInfo: bundleInfo.GetInnerExtensionInfos()) {
+        bool isDriverExtensionAbilityType = (extensionInfo.second.type == ExtensionAbilityType::DRIVER);
+        if (!isDriverExtensionAbilityType) {
+            continue;
+        }
+
+        for (const auto &meta : extensionInfo.second.metadata) {
+            if (meta.name == "saneConfig" || meta.name == "saneBackend") {
+                LOG_E(BMS_TAG_INSTALLER, "Bundle %{public}s is not allowed", bundleInfo.GetBundleName().c_str());
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool BundleInstallChecker::CheckSaneDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult,
+    const int32_t userId, const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    if (newInfos.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "newInfos is empty");
+        return false;
+    }
+
+    bool isSpaceIsolation = OHOS::system::GetBoolParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, false);
+    if (!isSpaceIsolation) {
+        return true;
+    }
+
+    bool isDebugProvisionType = (hapVerifyResult.GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG);
+    if (!isDebugProvisionType) {
+        return true;
+    }
+    for (const auto &newInfo : newInfos) {
+        const InnerBundleInfo &bundleInfo = newInfo.second;
+        if (!CheckDriverNameAndType(bundleInfo)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool BundleInstallChecker::MatchOldSignatures(const std::string &bundleName,
     const std::vector<std::string> &appSignatures)
 {

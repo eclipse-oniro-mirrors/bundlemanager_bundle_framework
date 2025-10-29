@@ -1384,6 +1384,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "check dependency failed %{public}d");
     // hapVerifyResults at here will not be empty
     verifyRes_ = hapVerifyResults[0];
+
+    result = CheckDriverIsolation(verifyRes_, userId_, newInfos);
+    CHECK_RESULT(result, "check debug scaner driver failed %{public}d");
+
     result = DeliveryProfileToCodeSign();
     CHECK_RESULT(result, "delivery profile failed %{public}d");
 
@@ -1720,6 +1724,15 @@ ErrCode BaseBundleInstaller::CheckSpaceIsolation(
 
     if (!BundleInstallChecker::CheckSpaceIsolation(userId_, newInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "check space isolation failed");
+        return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckDriverIsolation(const Security::Verify::HapVerifyResult &hapVerifyResult,
+    const int32_t userId, const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const
+{
+    if (!BundleInstallChecker::CheckSaneDriverIsolation(hapVerifyResult, userId, newInfos)) {
         return ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
     }
     return ERR_OK;
