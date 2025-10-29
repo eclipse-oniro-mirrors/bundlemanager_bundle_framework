@@ -54,7 +54,8 @@ public:
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
 
 private:
-    ErrCode CreateSandboxDataDir(InnerBundleInfo &info, const int32_t &uid, const int32_t &appIndex) const;
+    ErrCode CreateSandboxDataDir(InnerBundleInfo &info, const int32_t &uid, const int32_t &appIndex,
+        const int32_t &dlpType) const;
     void SandboxAppRollBack(InnerBundleInfo &info, const int32_t &userId);
     bool FetchInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
 

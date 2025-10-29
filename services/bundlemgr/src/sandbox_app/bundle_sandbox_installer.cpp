@@ -136,7 +136,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     info.SetBundleUpdateTime(0, userId_);
     info.SetAccessTokenIdEx(newTokenIdEx, userId_);
     APP_LOGD("InstallSandboxApp generate uid of sandbox is %{public}d", userInfo.uid);
-    ErrCode result = CreateSandboxDataDir(info, userInfo.uid, newAppIndex);
+    ErrCode result = CreateSandboxDataDir(info, userInfo.uid, newAppIndex, dlpType);
     if (result != ERR_OK) {
         APP_LOGE("InstallSandboxApp create sandbox dir failed");
         return result;
@@ -263,7 +263,7 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
 }
 
 ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
-    InnerBundleInfo &info, const int32_t &uid, const int32_t &appIndex) const
+    InnerBundleInfo &info, const int32_t &uid, const int32_t &appIndex, const int32_t &dlpType) const
 {
     APP_LOGD("CreateSandboxDataDir %{public}s _ %{public}d begin", info.GetBundleName().c_str(), appIndex);
     std::string innerDataDir = std::to_string(appIndex) + Constants::FILE_UNDERLINE + info.GetBundleName();
@@ -276,6 +276,7 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     createDirParam.isDlpSandbox = (appIndex > DLP_SANDBOX_APP_INDEX);
+    createDirParam.dlpType = dlpType;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         // if user is not activated, access el2-el4 may return ok but dir cannot be created
