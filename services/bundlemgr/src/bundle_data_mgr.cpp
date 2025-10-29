@@ -9533,22 +9533,6 @@ void BundleDataMgr::CreateEl5Dir(const std::vector<CreateDirParam> &el5Params, b
     for (const auto &el5Param : el5Params) {
         APP_LOGI("-n %{public}s -u %{public}d -i %{public}d",
             el5Param.bundleName.c_str(), el5Param.userId, el5Param.appIndex);
-        std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(el5Param.userId);
-        std::string bundleNameDir = el5Param.bundleName;
-        if (el5Param.appIndex > 0) {
-            bundleNameDir = BundleCloneCommonHelper::GetCloneDataDir(el5Param.bundleName, el5Param.appIndex);
-        }
-        std::string baseDir = parentDir + ServiceConstants::BASE + bundleNameDir;
-        std::string databaseDir = parentDir + ServiceConstants::DATABASE + bundleNameDir;
-        bool isBaseExist = false;
-        bool isDatabaseExist = false;
-        (void)InstalldClient::GetInstance()->IsExistDir(baseDir, isBaseExist);
-        (void)InstalldClient::GetInstance()->IsExistDir(databaseDir, isDatabaseExist);
-        if (isBaseExist && isDatabaseExist) {
-            APP_LOGI("targetDir(%{public}s) exist", baseDir.c_str());
-            continue;
-        }
         InnerCreateEl5Dir(el5Param);
         SetEl5DirPolicy(el5Param, needSaveStorage);
     }
