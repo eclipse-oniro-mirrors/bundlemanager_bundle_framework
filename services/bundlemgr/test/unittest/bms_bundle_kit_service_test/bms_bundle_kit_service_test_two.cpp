@@ -228,7 +228,7 @@ const std::string URI_PATH_REGEX_001 = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 
     PORT_SEPARATOR + PORT_001 + PATH_SEPARATOR + PATH_REGEX_001;
 const int32_t DEFAULT_USERID = 100;
 const int32_t ALL_USERID = -3;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
 const int32_t TEST_APP_INDEX1 = 1;

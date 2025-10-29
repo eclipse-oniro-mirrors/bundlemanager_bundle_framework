@@ -79,7 +79,7 @@ const int32_t MIN_WINDOW_WIDTH_VALUE = 1400;
 const int32_t MAX_WINDOW_HEIGHT_VALUE = 300;
 const int32_t MIN_WINDOW_HEIGHT_VALUE = 200;
 const int32_t DEFAULT_USERID = 100;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 } // namespace
 
 class BmsBundleGetWindowPropertiesTest : public testing::Test {

@@ -54,7 +54,7 @@ const std::string RESOURCE_TEST_PATH = "/data/test/resource/bms/install_bundle/t
 const std::string DB_FILE_PATH = "/data/bundlemgr";
 const int32_t INVALID_USERID = 0;
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 }  // namespace
 
 class BmsBundleUninstallerTest : public testing::Test {
