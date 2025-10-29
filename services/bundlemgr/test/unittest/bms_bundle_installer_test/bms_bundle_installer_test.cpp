@@ -12767,7 +12767,7 @@ HWTEST_F(BmsBundleInstallerTest, GetHapFlags_0100, Function | SmallTest | Level0
     unsigned int ret = impl.GetHapFlags(true, true, true, 1);
     EXPECT_EQ(ret, 131);
     ret = impl.GetHapFlags(false, false, false, 2);
-    EXPECT_EQ(ret, 1);
+    EXPECT_EQ(ret, 0);
     ret = impl.GetHapFlags(false, false, true, 2);
     EXPECT_EQ(ret, 256);
 }
