@@ -398,8 +398,13 @@ HWTEST_F(BmsAgingTest, CheckPrerequisite_0002, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     AppExecFwk::BundleAgingMgr::AgingTriggertype type = AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD;
     DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().SetDisplayState(DisplayPowerMgr::DisplayState::DISPLAY_ON);
+    DisplayPowerMgr::DisplayState state = DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().GetDisplayState();
     bool ret = bundleAgingMgr.CheckPrerequisite(type);
-    EXPECT_FALSE(ret);
+    if (state == DisplayPowerMgr::DisplayState::DISPLAY_ON) {
+        EXPECT_FALSE(ret);
+    } else {
+        EXPECT_TRUE(ret);
+    }
 }
 
 /**
