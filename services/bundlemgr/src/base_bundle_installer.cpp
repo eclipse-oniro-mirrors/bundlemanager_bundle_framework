@@ -1957,7 +1957,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
 
-    ErrCode ret = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
+    ErrCode ret = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName, oldInfo.GetEntryModuleName());
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove nativeBundle failed");
         return ret;
@@ -2206,9 +2206,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return ERR_APPEXECFWK_SAVE_FIRST_INSTALL_BUNDLE_ERROR;
         }
         if (onlyInstallInUser) {
-            result = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
+            result = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName, modulePackage);
             if (result != ERR_OK) {
-                LOG_E(BMS_TAG_INSTALLER, "remove nativeBundle failed");
+                LOG_E(BMS_TAG_INSTALLER, "rm hnp failed");
                 return result;
             }
             if (installParam.isKeepData) {
@@ -2266,6 +2266,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     if (onlyInstallInUser) {
+        result = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName, modulePackage);
+        if (result != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "rm hnp failed");
+            return result;
+        }
         LOG_I(BMS_TAG_INSTALLER, "%{public}s is only install at the userId %{public}d", bundleName.c_str(), userId_);
         result = RemoveModuleAndDataDir(oldInfo, modulePackage, userId_, installParam.isKeepData);
         DeleteRouterInfo(oldInfo, modulePackage);
@@ -2544,10 +2549,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, i
 }
 
 ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
-    int32_t &userId, std::string bundleName)
+    int32_t &userId, std::string bundleName, std::string moduleName)
 {
-    if (info.GetInnerModuleInfoHnpInfo(info.GetEntryModuleName())) {
-        LOG_I(BMS_TAG_INSTALLER, "hnp uninstall: %{public}s", info.GetEntryModuleName().c_str());
+    if (info.GetInnerModuleInfoHnpInfo(moduleName)) {
+        LOG_I(BMS_TAG_INSTALLER, "hnp uninstall: %{public}s", moduleName.c_str());
         ErrCode ret = InstalldClient::GetInstance()->ProcessBundleUnInstallNative(
             std::to_string(userId).c_str(), bundleName.c_str());
         if (ret != ERR_OK) {
@@ -2832,19 +2837,12 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_EXISTED_START);
     result = CheckArkProfileDir(newInfo, oldInfo);
     CHECK_RESULT(result, "CheckArkProfileDir failed %{public}d");
-    auto hnpPackageOldInfos = oldInfo.GetInnerModuleInfoHnpInfo(oldInfo.GetCurModuleName());
-    auto hnpPackageNewInfos = newInfo.GetInnerModuleInfoHnpInfo(newInfo.GetCurModuleName());
+    auto hnpPackageOldInfos = oldInfo.GetInnerModuleInfoHnpInfo(newInfo.GetCurModuleName());
     if (hnpPackageOldInfos) {
-        for (const auto &item : *hnpPackageOldInfos) {
-            auto it = std::find_if(hnpPackageNewInfos->begin(), hnpPackageNewInfos->end(),
-            [&](const HnpPackage &hnpPackage) {return hnpPackage.package == item.package;});
-            if (it == hnpPackageNewInfos->end()) {
-                ErrCode ret = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName_);
-                if (ret != ERR_OK) {
-                    LOG_E(BMS_TAG_INSTALLER, "remove nativeBundle failed");
-                    return ret;
-                }
-            }
+        ErrCode ret = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName_, newInfo.GetCurModuleName());
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "remove nativeBundle failed");
+            return ret;
         }
     }
     result = ProcessAsanDirectory(newInfo);

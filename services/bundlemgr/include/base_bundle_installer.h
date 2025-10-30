@@ -262,7 +262,8 @@ private:
      * @param bundleName Indicates the bundleName of the application.
      * @return Returns ERR_OK if the native bundle uninstall successfully; returns error code otherwise.
      */
-    ErrCode ProcessBundleUnInstallNative(InnerBundleInfo &info, int32_t &userId, std::string bundleName);
+    ErrCode ProcessBundleUnInstallNative(InnerBundleInfo &info, int32_t &userId, std::string bundleName,
+        std::string moduleName);
     /**
      * @brief The process of updating an exist bundle.
      * @param oldInfo Indicates the exist InnerBundleInfo object get from the database.

@@ -340,7 +340,7 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, BaseBundleInstaller_0011, Func
 
     int32_t userId;
     std::string bundleName;
-    ErrCode ret = installer.ProcessBundleUnInstallNative(info, userId, bundleName);
+    ErrCode ret = installer.ProcessBundleUnInstallNative(info, userId, bundleName, "entry");
     EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS
