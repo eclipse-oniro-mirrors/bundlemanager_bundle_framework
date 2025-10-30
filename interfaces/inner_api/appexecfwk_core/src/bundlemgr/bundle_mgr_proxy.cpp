@@ -296,7 +296,7 @@ bool BundleMgrProxy::GetBundleInfo(
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfo due to params empty");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfo -n empty");
         return false;
     }
 
@@ -328,7 +328,7 @@ bool BundleMgrProxy::GetBundleInfo(
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfo due to params empty");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfo -n empty");
         return false;
     }
 
@@ -797,7 +797,7 @@ int BundleMgrProxy::GetUidByDebugBundleName(const std::string &bundleName, const
 std::string BundleMgrProxy::GetAppIdByBundleName(const std::string &bundleName, const int userId)
 {
     if (bundleName.empty()) {
-        APP_LOGE("failed to GetAppIdByBundleName due to bundleName empty");
+        APP_LOGE_NOFUNC("GetAppIdByBundleName -n empty");
         return Constants::EMPTY_STRING;
     }
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

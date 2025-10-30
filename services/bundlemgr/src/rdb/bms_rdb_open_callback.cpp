@@ -46,7 +46,7 @@ int32_t BmsRdbOpenCallback::OnDowngrade(
 
 int32_t BmsRdbOpenCallback::OnOpen(NativeRdb::RdbStore &rdbStore)
 {
-    APP_LOGI("Open");
+    APP_LOGI_NOFUNC("rdb open");
     return NativeRdb::E_OK;
 }
 

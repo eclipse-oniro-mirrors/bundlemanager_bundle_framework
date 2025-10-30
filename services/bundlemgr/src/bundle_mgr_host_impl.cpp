@@ -5333,6 +5333,11 @@ ErrCode BundleMgrHostImpl::QueryCloneAbilityInfo(const ElementName &element,
         LOG_E(BMS_TAG_QUERY, "QueryCloneAbilityInfo fail, err: %{public}d", res);
         return res;
     }
+    if (appIndex > 0) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "QueryCloneAbilityInfo -i %{public}d -m %{public}d",
+            abilityInfo.applicationInfo.appIndex,
+            static_cast<int32_t>(abilityInfo.applicationInfo.multiAppMode.multiAppModeType));
+    }
     return ERR_OK;
 }
 
