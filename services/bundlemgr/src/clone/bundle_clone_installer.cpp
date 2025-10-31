@@ -111,8 +111,8 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
         .appIdentifier = appIdentifier_,
         .developerId = GetDeveloperId(bundleName),
         .assetAccessGroups = GetAssetAccessGroups(bundleName),
-        .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
-        .keepData = isKeepData_
+        .keepData = isKeepData_,
+        .crossAppSharedConfig = isBundleCrossAppSharedConfig_
     };
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
