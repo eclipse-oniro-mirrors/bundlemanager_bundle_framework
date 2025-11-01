@@ -49,8 +49,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::set<std::string> oldExceptionBundleNames;
     std::set<std::string> exceptionAppServicePaths;
     std::set<std::string> exceptionAppServiceBundleNames;
+    std::set<std::string> exceptionSharedPaths;
     preInstallExceptionMgr->GetAllPreInstallExceptionInfo(oldExceptionPaths, oldExceptionBundleNames,
-        exceptionAppServicePaths, exceptionAppServiceBundleNames);
+        exceptionAppServicePaths, exceptionAppServiceBundleNames, exceptionSharedPaths);
     preInstallExceptionMgr->LoadPreInstallExceptionInfosFromDb();
     preInstallExceptionMgr->SavePreInstallExceptionInfosToDb();
     preInstallExceptionMgr->DeletePreInstallExceptionInfosFromDb();
@@ -58,7 +59,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::set<std::string> exceptionPaths;
     std::set<std::string> exceptionBundleNames;
     preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames,
-        exceptionAppServicePaths, exceptionAppServiceBundleNames);
+        exceptionAppServicePaths, exceptionAppServiceBundleNames, exceptionSharedPaths);
     std::string bundleDir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::string dir = "";
     std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
@@ -68,7 +69,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     preInstallExceptionMgr->SavePreInstallExceptionPath(BUNDLE_PATH);
     preInstallExceptionMgr->SavePreInstallExceptionPath(bundle);
     preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames,
-        exceptionAppServicePaths, exceptionAppServiceBundleNames);
+        exceptionAppServicePaths, exceptionAppServiceBundleNames, exceptionSharedPaths);
     preInstallExceptionMgr->DeletePreInstallExceptionBundleName(BUNDLE_TEMP_NAME);
     preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleName);
     preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundle);
@@ -86,7 +87,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     preInstallExceptionMgr->DeletePreInstallExceptionAppServicePath(bundleDir);
     preInstallExceptionMgr->DeletePreInstallExceptionAppServicePath(dir);
     preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames,
-        exceptionAppServicePaths, exceptionAppServiceBundleNames);
+        exceptionAppServicePaths, exceptionAppServiceBundleNames, exceptionSharedPaths);
     return true;
 }
 }
