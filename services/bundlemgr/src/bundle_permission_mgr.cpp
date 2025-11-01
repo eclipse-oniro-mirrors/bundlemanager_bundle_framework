@@ -529,7 +529,7 @@ bool BundlePermissionMgr::IsShellTokenType()
         LOG_D(BMS_TAG_DEFAULT, "caller is shell, success");
         return true;
     }
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "caller not shell");
+    LOG_D(BMS_TAG_DEFAULT, "caller not shell");
     return false;
 }
 
