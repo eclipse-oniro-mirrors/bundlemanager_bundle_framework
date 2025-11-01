@@ -887,4 +887,19 @@ HWTEST_F(BmsInstalldHostTest, SetMemMgrStatus_0100, Function | SmallTest | Level
     criticalManager.SetMemMgrStatus(false);
     EXPECT_FALSE(criticalManager.memMgrStarted_);
 }
+
+/**
+ * @tc.number: HandleResetBmsDBSecurity_0100
+ * @tc.name: test HandleResetBmsDBSecurity_0100
+ * @tc.desc: 1.HandleResetBmsDBSecurity_0100 test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleResetBmsDBSecurity_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleResetBmsDBSecurity(data, reply);
+    EXPECT_TRUE(res);
+}
+
 } // OHOS

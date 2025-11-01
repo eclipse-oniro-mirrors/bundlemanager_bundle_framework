@@ -255,6 +255,8 @@ private:
     CriticalManager criticalManager_;
 
     bool HandleRestoreconPath(MessageParcel &data, MessageParcel &reply);
+    
+    bool HandleResetBmsDBSecurity(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

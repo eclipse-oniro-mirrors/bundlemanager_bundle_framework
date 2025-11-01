@@ -378,5 +378,10 @@ ErrCode InstalldHostImpl::RestoreconPath(const std::string &path)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::ResetBmsDBSecurity()
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

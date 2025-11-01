@@ -376,6 +376,7 @@ void BMSEventHandler::BundleBootStartEvent()
 {
     EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
     OnBundleBootStart(Constants::DEFAULT_USERID);
+    InstalldClient::GetInstance()->ResetBmsDBSecurity();
 #ifdef CHECK_ELDIR_ENABLED
     UpdateOtaFlag(OTAFlag::CHECK_ELDIR);
 #endif
@@ -406,7 +407,6 @@ void BMSEventHandler::BundleRebootStartEvent()
         UpdateAllPrivilegeCapability();
     }
 #endif
-
     if (IsSystemUpgrade()) {
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
         OnBundleRebootStart();
@@ -1286,6 +1286,7 @@ void BMSEventHandler::FilterVersionSpecialCustomApps(std::set<PreScanInfo> &inst
 
 void BMSEventHandler::OnBundleRebootStart()
 {
+    InstalldClient::GetInstance()->ResetBmsDBSecurity();
     ProcessRebootBundle();
 }
 
