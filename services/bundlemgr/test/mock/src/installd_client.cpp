@@ -60,11 +60,9 @@ ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string>
     return CallService(&IInstalld::ExtractHnpFiles, hnpPackageMap, extractParam);
 }
 
-ErrCode InstalldClient::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+ErrCode InstalldClient::ProcessBundleInstallNative(const InstallHnpParam &installHnpParam)
 {
-    return CallService(&IInstalld::ProcessBundleInstallNative, userId, hnpRootPath,
-        hapPath, cpuAbi, packageName);
+    return CallService(&IInstalld::ProcessBundleInstallNative, installHnpParam);
 }
 
 ErrCode InstalldClient::ProcessBundleUnInstallNative(const std::string &userId, const std::string &packageName)

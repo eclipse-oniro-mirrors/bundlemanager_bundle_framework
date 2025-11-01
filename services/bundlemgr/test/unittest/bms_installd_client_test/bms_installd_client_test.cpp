@@ -281,15 +281,15 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0300, Test
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ProcessBundleInstallNative_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ProcessBundleInstallNative_0100 start";
-    std::string userId = std::to_string(USERID);
-    std::string hnpRootPath = SRC_PATH;
-    std::string hapPath = SRC_PATH;
-    std::string cpuAbi = CPU_ABI;
-    std::string packageName = "com.example.test";
+    InstallHnpParam param;
+    param.userId = std::to_string(USERID);
+    param.hnpRootPath = SRC_PATH;
+    param.hapPath = SRC_PATH;
+    param.cpuAbi = CPU_ABI;
+    param.packageName = "com.example.test";
 
-    ErrCode result = installClient_->ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ProcessBundleInstallNative,
-        userId, hnpRootPath, hapPath, cpuAbi, packageName));
+    ErrCode result = installClient_->ProcessBundleInstallNative(param);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ProcessBundleInstallNative, param));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ProcessBundleInstallNative_0100 end";
 }
 

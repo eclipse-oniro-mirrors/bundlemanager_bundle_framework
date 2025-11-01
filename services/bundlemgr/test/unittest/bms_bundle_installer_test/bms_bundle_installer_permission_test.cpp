@@ -427,12 +427,14 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ExtractHnpFiles_0100, Function | Smal
 HWTEST_F(BmsBundleInstallerPermissionTest, ProcessBundleInstallNative_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl installdHostImpl;
-    std::string userId = std::to_string(USERID);
-    std::string cpuAbi = "arm64";
-    std::string packageName = "com.example.test";
-    std::string hnpRootPath = "/data/app/el1/bundle/public/com.example.test/entry_tmp/hnp_tmp_extract_dir/";
-    std::string hapPath = "/system/app/module01/module01.hap";
-    auto ret = installdHostImpl.ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    
+    InstallHnpParam param;
+    param.userId = std::to_string(USERID);
+    param.cpuAbi = "arm64";
+    param.packageName = "com.example.test";
+    param.hnpRootPath = "/data/app/el1/bundle/public/com.example.test/entry_tmp/hnp_tmp_extract_dir/";
+    param.hapPath = "/system/app/module01/module01.hap";
+    auto ret = installdHostImpl.ProcessBundleInstallNative(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

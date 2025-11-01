@@ -3377,12 +3377,13 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1800, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1900, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    std::string userId = std::to_string(USERID);
-    std::string hnpRootPath = "/data/app/el1/bundle/public/com.example.test/entry_tmp/hnp_tmp_extract_dir/";
-    std::string hapPath = "/system/app/module01/module01.hap";
-    std::string cpuAbi = "arm64";
-    std::string packageName = "com.example.test";
-    auto ret = impl.ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    InstallHnpParam param;
+    param.userId = std::to_string(USERID);
+    param.hnpRootPath = "/data/app/el1/bundle/public/com.example.test/entry_tmp/hnp_tmp_extract_dir/";
+    param.hapPath = "/system/app/module01/module01.hap";
+    param.cpuAbi = "arm64";
+    param.packageName = "com.example.test";
+    auto ret = impl.ProcessBundleInstallNative(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_INSTALL_FAILED);
 }
 

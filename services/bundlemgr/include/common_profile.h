@@ -435,6 +435,7 @@ constexpr const char* META_DATA_RESOURCE = "resource";
 // hnppackge
 constexpr const char* HNP_PACKAGE = "package";
 constexpr const char* HNP_TYPE = "type";
+constexpr const char* HNP_INDEPENDENT_SIGN = "independentSign";
 // metadata reserved
 constexpr const char* META_DATA_FORM = "ohos.extension.form";
 constexpr const char* META_DATA_SHORTCUTS = "ohos.ability.shortcuts";

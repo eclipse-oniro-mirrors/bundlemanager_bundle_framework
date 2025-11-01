@@ -131,6 +131,7 @@ struct Metadata : public Parcelable {
 struct HnpPackage : public Parcelable {
     std::string package;
     std::string type;
+    bool independentSign = false;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
