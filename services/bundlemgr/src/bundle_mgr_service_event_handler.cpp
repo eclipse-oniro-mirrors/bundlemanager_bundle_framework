@@ -2167,18 +2167,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 bundleName.c_str());
             continue;
         }
-        std::vector<int32_t> currentBundleUserIds;
-        if (HotPatchAppProcessing(bundleName, hasInstalledInfo.versionCode, hapVersionCode, currentBundleUserIds)) {
-            LOG_I(BMS_TAG_DEFAULT, "OTA Install prefab bundle(%{public}s) by path(%{public}s) for hotPatch upgrade",
-                bundleName.c_str(), scanPathIter.c_str());
-            // After the patch app is uninstalled, install the preconfigured app of the ota version.
-            std::vector<std::string> filePaths{scanPathIter};
-            if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, currentBundleUserIds)) {
-                LOG_E(BMS_TAG_DEFAULT, "OTA install prefab bundle(%{public}s) error", bundleName.c_str());
-                SavePreInstallException(scanPathIter);
-            }
-            continue;
-        }
         std::vector<std::string> filePaths;
         bool updateSelinuxLabel = false;
         bool updateBundle = false;
@@ -2258,6 +2246,20 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 SendBundleUpdateFailedEvent(hasInstalledInfo);
                 break;
             }
+        }
+        // process patch bundle
+        std::vector<int32_t> currentBundleUserIds;
+        if (!updateBundle && HotPatchAppProcessing(bundleName, hasInstalledInfo.versionCode,
+            hapVersionCode, currentBundleUserIds)) {
+            LOG_I(BMS_TAG_DEFAULT, "OTA Install prefab bundle(%{public}s) by path(%{public}s) for hotPatch upgrade",
+                bundleName.c_str(), scanPathIter.c_str());
+            // After the patch app is uninstalled, install the preconfigured app of the ota version.
+            std::vector<std::string> filePaths{scanPathIter};
+            if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, currentBundleUserIds)) {
+                LOG_E(BMS_TAG_DEFAULT, "OTA install prefab bundle(%{public}s) error", bundleName.c_str());
+                SavePreInstallException(scanPathIter);
+            }
+            continue;
         }
         if (!updateBundle) {
 #ifdef USE_PRE_BUNDLE_PROFILE
@@ -4275,6 +4277,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
     }
+    std::unordered_map<std::string, std::vector<std::string>> needInstallMap;
     for (auto &scanPathIter : bundleDirs) {
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
@@ -4296,22 +4299,96 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
                 bundleName.c_str());
             continue;
         }
-        InstallParam installParam;
-        installParam.SetKillProcess(false);
-        installParam.needSendEvent = false;
-        installParam.installFlag = InstallFlag::REPLACE_EXISTING;
-        installParam.copyHapToInstallPath = true;
-        installParam.isOTA = isOta;
-        installParam.withCopyHaps = true;
-        installParam.isPatch = true;
-        SystemBundleInstaller installer;
-        std::vector<std::string> filePaths { scanPathIter };
-        if (installer.OTAInstallSystemBundleNeedCheckUser(
-            filePaths, installParam, bundleName, Constants::AppType::SYSTEM_APP) != ERR_OK) {
-            LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: install failed", bundleName.c_str());
-        }
+        needInstallMap[bundleName].emplace_back(scanPathIter);
+    }
+    if (!InnerMultiProcessBundleInstallForPatch(needInstallMap, isOta)) {
+        LOG_E(BMS_TAG_DEFAULT, "multi patch bundle install failed");
     }
     LOG_I(BMS_TAG_DEFAULT, "end");
+}
+
+bool BMSEventHandler::InstallSystemBundleNeedCheckUserForPatch(const std::vector<std::string> &filePaths,
+    const std::string &bundleName, bool isOta)
+{
+    if (filePaths.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "File path is empty");
+        return false;
+    }
+    InstallParam installParam;
+    installParam.SetKillProcess(false);
+    installParam.needSendEvent = false;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.copyHapToInstallPath = true;
+    installParam.isOTA = isOta;
+    installParam.withCopyHaps = true;
+    installParam.isPatch = true;
+    SystemBundleInstaller installer;
+    if (installer.OTAInstallSystemBundleNeedCheckUser(
+        filePaths, installParam, bundleName, Constants::AppType::SYSTEM_APP) != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "-n %{public}s patch bundle install failed", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool BMSEventHandler::InnerMultiProcessBundleInstallForPatch(
+    const std::unordered_map<std::string, std::vector<std::string>> &needInstallMap, bool isOta)
+{
+    if (needInstallMap.empty()) {
+        LOG_I(BMS_TAG_DEFAULT, "no patch bundle need to update");
+        return true;
+    }
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (bundleMgrService == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "bundleMgrService is nullptr");
+        return false;
+    }
+
+    sptr<BundleInstallerHost> installerHost = bundleMgrService->GetBundleInstaller();
+    if (installerHost == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "installerHost is nullptr");
+        return false;
+    }
+
+    size_t taskTotalNum = needInstallMap.size();
+    size_t threadsNum = static_cast<size_t>(installerHost->GetThreadsNum());
+    LOG_I(BMS_TAG_DEFAULT, "multi patch bundle install start, totalNum: %{public}zu, num: %{public}zu",
+        taskTotalNum, threadsNum);
+    std::atomic_uint taskEndNum = 0;
+    std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
+    for (auto iter = needInstallMap.begin(); iter != needInstallMap.end(); ++iter) {
+        std::string bundleName = iter->first;
+        std::vector<std::string> filePaths = iter->second;
+        auto task = [bundleName, filePaths, taskTotalNum, &taskEndNum, &bundlePromise, isOta]() {
+            std::vector<std::string> realHapPaths = filePaths;
+            if (realHapPaths.size() > 1) {
+                // If the bundle exists in different directories, the real hap file path needs to be obtained
+                std::vector<std::string> hapPaths;
+                for (const auto &path : realHapPaths) {
+                    std::vector<std::string> hapFilePathVec = {path};
+                    (void)BundleUtil::CheckFilePath(hapFilePathVec, hapPaths);
+                }
+                if (!hapPaths.empty()) {
+                    realHapPaths = hapPaths;
+                }
+            }
+            (void)BMSEventHandler::InstallSystemBundleNeedCheckUserForPatch(realHapPaths, bundleName, isOta);
+            taskEndNum++;
+            if (bundlePromise && taskEndNum >= taskTotalNum) {
+                bundlePromise->NotifyAllTasksExecuteFinished();
+                LOG_I(BMS_TAG_DEFAULT, "All tasks has executed and notify promise when patch install");
+            }
+        };
+
+        installerHost->AddTask(task, "RebootStartPatchBundleInstall : " + bundleName);
+    }
+
+    if (taskEndNum < taskTotalNum) {
+        bundlePromise->WaitForAllTasksExecute();
+        LOG_I(BMS_TAG_DEFAULT, "Wait for all tasks execute when patch install");
+    }
+    LOG_I(BMS_TAG_DEFAULT, "multi patch bundle install end");
+    return true;
 }
 
 bool BMSEventHandler::IsHapPathExist(const BundleInfo &bundleInfo)

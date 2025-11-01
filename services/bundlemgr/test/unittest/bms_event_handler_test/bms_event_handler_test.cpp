@@ -2902,4 +2902,58 @@ HWTEST_F(BmsEventHandlerTest, ProcessAppTmpPath_0100, Function | SmallTest | Lev
     BundleUtil::CreateDir(ServiceConstants::BMS_APP_COPY_TEMP_PATH);
     EXPECT_NO_THROW(handler->ProcessAppTmpPath());
 }
+
+/**
+ * @tc.number: InstallSystemBundleNeedCheckUserForPatch_0100
+ * @tc.name: InstallSystemBundleNeedCheckUserForPatch
+ * @tc.desc: test InstallSystemBundleNeedCheckUserForPatch
+ */
+HWTEST_F(BmsEventHandlerTest, InstallSystemBundleNeedCheckUserForPatch_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::vector<std::string> filePaths;
+        bool ret = handler->InstallSystemBundleNeedCheckUserForPatch(filePaths, "", false);
+        EXPECT_FALSE(ret);
+        filePaths.push_back("");
+        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+        auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        ASSERT_NE(dataMgr, nullptr);
+        ret = handler->InstallSystemBundleNeedCheckUserForPatch(filePaths, "", false); // no user
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: InnerMultiProcessBundleInstallForPatch_0100
+ * @tc.name: InnerMultiProcessBundleInstallForPatch
+ * @tc.desc: test InnerMultiProcessBundleInstallForPatch
+ */
+HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstallForPatch_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::unordered_map<std::string, std::vector<std::string>> needInstallMap;
+        bool ret = handler->InnerMultiProcessBundleInstallForPatch(needInstallMap, false);
+        EXPECT_TRUE(ret);
+        auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+        auto savedHost = bundleMgrService->GetBundleInstaller();
+        bundleMgrService->installer_ = nullptr;
+
+        needInstallMap[BUNDLE_TEST_NAME].emplace_back(OLD_BUNDLE_DIR_NAME);
+        ret = handler->InnerMultiProcessBundleInstallForPatch(needInstallMap, false);
+        EXPECT_FALSE(ret);
+
+        bundleMgrService->installer_ = savedHost;
+        needInstallMap[BUNDLE_TEST_NAME].emplace_back(OLD_BUNDLE_DIR_NAME);
+        ret = handler->InnerMultiProcessBundleInstallForPatch(needInstallMap, false);
+        EXPECT_TRUE(ret);
+
+        needInstallMap[BUNDLE_TEST_NAME].emplace_back(REAL_BUNDLE_DIR_NAME);
+        ret = handler->InnerMultiProcessBundleInstallForPatch(needInstallMap, false);
+        EXPECT_TRUE(ret);
+    }
+}
 } // OHOS
