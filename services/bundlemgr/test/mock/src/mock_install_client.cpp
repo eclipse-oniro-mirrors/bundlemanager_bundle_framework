@@ -409,5 +409,10 @@ ErrCode InstalldClient::RestoreconPath(const std::string &path)
     return ERR_OK;
 }
 
+ErrCode InstalldClient::ResetBmsDBSecurity()
+{
+    return ERR_OK;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

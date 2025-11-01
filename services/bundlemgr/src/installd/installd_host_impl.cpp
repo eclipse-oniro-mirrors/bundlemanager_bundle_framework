@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -2688,6 +2689,48 @@ ErrCode InstalldHostImpl::RestoreconPath(const std::string &path)
     if (!InstalldOperator::RestoreconPath(path)) {
         LOG_E(BMS_TAG_INSTALLD, "RestoreconPath failed");
         return ERR_APPEXECFWK_RESTORECON_PATH_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ResetBmsDBSecurity()
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    FileStat fileStat;
+    fileStat.mode = (S_IRUSR | S_IWUSR) | (S_IRGRP | S_IWGRP);
+    fileStat.uid = Constants::FOUNDATION_UID;
+    fileStat.gid = Constants::FOUNDATION_UID;
+    const char *context = "u:object_r:bms_db_file:s0";
+    for (const auto& entry: std::filesystem::directory_iterator(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH)) {
+        const auto& fileName = entry.path().filename().string();
+        const auto& targetPath = entry.path().string();
+        if (entry.is_regular_file() && fileName.find("bmsdb") == 0) {
+            struct stat s;
+            if (stat(targetPath.c_str(), &s) != 0) {
+                LOG_E(BMS_TAG_INSTALLD, "Stat file(%{public}s) failed errno %{public}d", targetPath.c_str(), errno);
+                return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+            }
+            if (fileStat.mode != static_cast<int32_t>(s.st_mode)) {
+                if (chmod(targetPath.c_str(), fileStat.mode) != 0) {
+                    LOG_E(BMS_TAG_INSTALLD, "ChangeFileStat chmod failed errno %{public}d", errno);
+                    return ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED;
+                }
+            }
+            if (fileStat.uid != static_cast<int32_t>(s.st_uid) || fileStat.gid != static_cast<int32_t>(s.st_gid)) {
+                if (chown(targetPath.c_str(), fileStat.uid, fileStat.gid) != 0) {
+                    LOG_E(BMS_TAG_INSTALLD, "ChangeFileStat chown failed errno %{public}d", errno);
+                    return ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED;
+                }
+#ifdef WITH_SELINUX
+                if (lsetfilecon(targetPath.c_str(), context) < 0) {
+                    LOG_E(BMS_TAG_INSTALLD, "setcon %{public}s failed errno:%{public}d", fileName.c_str(), errno);
+                }
+#endif
+            }
+        }
     }
     return ERR_OK;
 }

@@ -90,6 +90,7 @@ enum class InstalldInterfaceCode : uint32_t {
     RESTORE_CON_LIBS = 62,
     CHANGE_FILE_STAT = 63,
     RENAME_FILE = 64,
+    RESTORE_CON_BMSDB = 65,
 };
 
 } // namespace AppExecFwk

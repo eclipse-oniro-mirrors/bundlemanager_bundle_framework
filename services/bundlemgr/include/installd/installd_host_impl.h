@@ -274,6 +274,8 @@ public:
 
     virtual ErrCode RestoreconPath(const std::string &path) override;
 
+    virtual ErrCode ResetBmsDBSecurity() override;
+
 private:
     static std::string GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid);
     std::string GetExtensionConfigPath() const;

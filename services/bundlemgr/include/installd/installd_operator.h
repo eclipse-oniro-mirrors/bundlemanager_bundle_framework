@@ -321,6 +321,8 @@ public:
 
     static bool RestoreconPath(const std::string &path);
 
+    static bool ResetBmsDBSecurity();
+
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);

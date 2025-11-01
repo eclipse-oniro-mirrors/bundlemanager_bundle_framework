@@ -1167,5 +1167,14 @@ ErrCode InstalldProxy::RestoreconPath(const std::string &path)
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::RESTORE_CON_LIBS, data, reply, option);
 }
+
+ErrCode InstalldProxy::ResetBmsDBSecurity()
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::RESTORE_CON_BMSDB, data, reply, option);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

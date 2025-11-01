@@ -1932,5 +1932,16 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RestoreconPath_0100, TestS
     ErrCode result = installClient_->RestoreconPath(arkWebLibPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_ResetBmsDBSecurity_0100
+ * @tc.name: ResetBmsDBSecurity
+ * @tc.desc: Test whether ResetBmsDBSecurity is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ResetBmsDBSecurity_0100, TestSize.Level1)
+{
+    ErrCode result = installClient_->ResetBmsDBSecurity();
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
 } // namespace AppExecFwk
 } // namespace OHOS
