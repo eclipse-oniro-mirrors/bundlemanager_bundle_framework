@@ -62,10 +62,6 @@ constexpr int32_t STORAGE_MANAGER_UID = 1090;
 constexpr int32_t EDC_UID = 7200;
 constexpr int32_t CODE_SIGN_UID = 3074;
 
-// for render process
-constexpr int32_t START_UID_FOR_RENDER_PROCESS = 1000000;
-constexpr int32_t END_UID_FOR_RENDER_PROCESS = 1099999;
-
 /*
 all of cache path for bundle:
 modulename max is 128
