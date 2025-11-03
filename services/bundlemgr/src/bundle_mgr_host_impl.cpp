@@ -1121,7 +1121,8 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     }
     auto res = dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (!IsAppLinking(flags) && isBrokerServiceExisted_ &&
+    if (!IsAppLinking(flags) && !HasGetAbilityInfoExcludeExtFlag(static_cast<uint32_t>(flags)) &&
+        isBrokerServiceExisted_ &&
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos, true) == ERR_OK) {
         LOG_D(BMS_TAG_QUERY, "query ability infos from bms extension successfully");
         return ERR_OK;
@@ -6548,6 +6549,17 @@ ErrCode BundleMgrHostImpl::CreateNewBundleEl5Dir(int32_t userId)
     }
     (void)newBundleDirMgr->ProcessOtaBundleDataDirEl5(userId);
     return ERR_OK;
+}
+
+bool BundleMgrHostImpl::HasGetAbilityInfoExcludeExtFlag(uint32_t flags) const
+{
+    if ((flags &
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXTENSION)) ==
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXTENSION)) {
+        APP_LOGI("contains exclude ext flag, no need to query from bms extension");
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

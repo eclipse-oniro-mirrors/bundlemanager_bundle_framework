@@ -3287,4 +3287,32 @@ HWTEST_F(BmsBundleManagerTest, ImplicitQueryAbilityInfosWithDefault_0002, Functi
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
     EXPECT_EQ(launcherAbilityResourceInfos.size(), 0);
 }
+
+/**
+ * @tc.number: QueryAbilityInfosV9_3000
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.explicit query ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_3000, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "MainAbility", "");
+    want.SetElement(elementName);
+
+    std::vector<AbilityInfo> abilityInfos;
+
+    int32_t flags =
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION) |
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXTENSION);
+    ErrCode ret = localBundleMgrHostImpl->QueryAbilityInfosV9(want, flags, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
 } // OHOS
