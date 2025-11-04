@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef TEST_FUZZTEST_BMS_APPSERVICEFWKINSTALLERBEFOREINSTALL_FUZZER_H
-#define TEST_FUZZTEST_BMS_APPSERVICEFWKINSTALLERBEFOREINSTALL_FUZZER_H
+#ifndef TEST_FUZZTEST_BMS_BEFORE_ADD_EXT_RESOURCE_FUZZER_H
+#define TEST_FUZZTEST_BMS_BEFORE_ADD_EXT_RESOURCE_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "bmsappservicefwkinstallerbeforeinstall_fuzzer"
+#define FUZZ_PROJECT_NAME "bmsbeforeaddextresource_fuzzer"
 
-#endif
+#endif

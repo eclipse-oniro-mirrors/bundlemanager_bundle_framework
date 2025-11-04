@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef TEST_FUZZTEST_QUERYABILITYINFO_FUZZER_H
-#define TEST_FUZZTEST_QUERYABILITYINFO_FUZZER_H
+#ifndef TEST_FUZZTEST_BMS_QUERY_ABILITY_INFO_FUZZER_H
+#define TEST_FUZZTEST_BMS_QUERY_ABILITY_INFO_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "queryabilityinfo_fuzzer"
+#define FUZZ_PROJECT_NAME "bmsqueryabilityinfo_fuzzer"
 
 #endif

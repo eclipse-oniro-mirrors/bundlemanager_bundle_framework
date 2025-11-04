@@ -30,6 +30,7 @@ ohos_fuzztest("BMSGetUidByBundleNameFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
+  include_dirs = [ "${test_path}/fuzztest" ]
   sources = [ "bmsgetuidbybundlename_fuzzer.cpp" ]
 
   deps = [

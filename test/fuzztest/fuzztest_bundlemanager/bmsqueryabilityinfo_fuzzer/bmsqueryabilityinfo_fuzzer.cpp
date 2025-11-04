@@ -18,7 +18,7 @@
 
 #include "bundle_mgr_proxy.h"
 
-#include "queryabilityinfo_fuzzer.h"
+#include "bmsqueryabilityinfo_fuzzer.h"
 
 using Want = OHOS::AAFwk::Want;
 
