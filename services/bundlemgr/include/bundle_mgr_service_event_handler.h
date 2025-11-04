@@ -621,8 +621,12 @@ private:
 #endif
     void DeletePreInstallExceptionAppService(const std::string &bundleDir);
     void SavePreInstallExceptionAppService(const std::string &bundleDir);
+    void DeletePreInstallExceptionShared(const std::string &bundleDir);
+    void HandlePreInstallSharedBundlePathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+        const std::set<std::string> &exceptionSharedPaths);
+    void SavePreInstallExceptionShared(const std::string &bundleDir);
     void HandlePreInstallAppServicePathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
-        const std::set<std::string> &exceptionAppServicePaths, bool needDeleteRecord = true);
+        const std::set<std::string> &exceptionAppServicePaths);
     void HandlePreInstallAppPathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
         const std::set<std::string> &exceptionPaths, bool needDeleteRecord = true);
     void HandlePreInstallAppServiceBundleNamesException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,

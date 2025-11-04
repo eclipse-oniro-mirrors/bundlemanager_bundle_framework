@@ -29,7 +29,8 @@ public:
 
     bool GetAllPreInstallExceptionInfo(
         std::set<std::string> &exceptionPaths, std::set<std::string> &exceptionBundleNames,
-        std::set<std::string> &exceptionAppServicePaths, std::set<std::string> &exceptionAppServiceBundleNames);
+        std::set<std::string> &exceptionAppServicePaths, std::set<std::string> &exceptionAppServiceBundleNames,
+        std::set<std::string> &exceptionSharedBundlePaths);
     void SavePreInstallExceptionPath(const std::string &path);
     void DeletePreInstallExceptionPath(const std::string &path);
     void SavePreInstallExceptionBundleName(const std::string &bundleName);
@@ -38,6 +39,8 @@ public:
     void DeletePreInstallExceptionAppServiceBundleName(const std::string &bundleName);
     void SavePreInstallExceptionAppServicePath(const std::string &bundleDir);
     void DeletePreInstallExceptionAppServicePath(const std::string &bundleDir);
+    void SavePreInstallExceptionSharedBundlePath(const std::string &bundleDir);
+    void DeletePreInstallExceptionSharedBundlePath(const std::string &bundleDir);
     void ClearAll();
 
 private:
@@ -51,6 +54,7 @@ private:
     std::set<std::string> exceptionBundleNames_;
     std::set<std::string> exceptionAppServicePaths_;
     std::set<std::string> exceptionAppServiceBundleNames_;
+    std::set<std::string> exceptionSharedBundlePaths_;
 };
 } // namespace AppExecFwk
 } // namespace OHOS
