@@ -5633,7 +5633,7 @@ void BaseBundleInstaller::GetInstallEventInfo(const InnerBundleInfo &bundleInfo,
     LOG_D(BMS_TAG_INSTALLER, "GetInstallEventInfo start, bundleName:%{public}s", bundleInfo.GetBundleName().c_str());
     eventInfo.fingerprint = bundleInfo.GetCertificateFingerprint();
     eventInfo.appDistributionType = bundleInfo.GetAppDistributionType();
-    eventInfo.hideDesktopIcon = bundleInfo.IsHideDesktopIcon();
+    eventInfo.hideDesktopIcon = bundleInfo.IsHideDesktopIconForEvent();
     eventInfo.timeStamp = bundleInfo.GetBundleUpdateTime(userId_);
     // report hapPath and hashValue
     for (const auto &innerModuleInfo : bundleInfo.GetInnerModuleInfos()) {
