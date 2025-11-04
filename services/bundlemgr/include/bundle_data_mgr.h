@@ -911,6 +911,8 @@ public:
     bool IsSystemHsp(const std::string &bundleName);
 
     bool UpdateUninstallBundleInfo(const std::string &bundleName, const UninstallBundleInfo &uninstallBundleInfo);
+    bool GetUninstallBundleInfoWithUserAndAppIndex(const std::string &bundleName,
+        int32_t userId, int32_t appIndex) const;
     bool GetUninstallBundleInfo(const std::string &bundleName, UninstallBundleInfo &uninstallBundleInfo) const;
     bool DeleteUninstallBundleInfo(const std::string &bundleName, int32_t userId);
     bool RemoveUninstalledBundleinfos(int32_t userId);

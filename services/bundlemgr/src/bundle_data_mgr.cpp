@@ -513,6 +513,33 @@ bool BundleDataMgr::UpdateUninstallBundleInfo(const std::string &bundleName,
     return uninstallDataMgr_->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
 }
 
+bool BundleDataMgr::GetUninstallBundleInfoWithUserAndAppIndex(const std::string &bundleName,
+    int32_t userId, int32_t appIndex) const
+{
+    UninstallBundleInfo uninstallBundleInfo;
+    if (uninstallDataMgr_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE("param error");
+        return false;
+    }
+    
+    if (!uninstallDataMgr_->GetUninstallBundleInfo(bundleName, uninstallBundleInfo)) {
+        APP_LOGD("bundle is not uninstalled with keepdata before");
+        return false;
+    }
+ 
+    int32_t uid = uninstallBundleInfo.GetUid(userId, appIndex);
+    if (uid == Constants::INVALID_UID) {
+        APP_LOGD("can not found bundle: %{public}s in uninstallBundleInfo for index: %{public}d in user: %{public}d",
+            bundleName.c_str(), appIndex, userId);
+        return false;
+    }
+    return true;
+}
+
 bool BundleDataMgr::GetUninstallBundleInfo(const std::string &bundleName,
     UninstallBundleInfo &uninstallBundleInfo) const
 {

@@ -3681,16 +3681,17 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    bool isKeepDataUninstalled = false;
+ 
+    bool isKeepData = false;
     if (!CheckAppIndex(bundleName, userId, appIndex)) {
-        UninstallBundleInfo uninstallBundleInfo;
-        isKeepDataUninstalled = dataMgr->GetUninstallBundleInfo(bundleName, uninstallBundleInfo);
-        if (!isKeepDataUninstalled) {
-            APP_LOGD("bundle was uninstalled with keepdata before");
+        isKeepData = dataMgr->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId, appIndex);
+        if (!isKeepData) {
+            APP_LOGD("bundle is not existed and not uninstalled with keepdata before");
             return false;
         }
     }
-    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName) && !isKeepDataUninstalled) {
+    if (isBrokerServiceExisted_ && !isKeepData &&
+        !IsBundleExistedOrUninstalledWithKeepData(bundleName, userId, appIndex)) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         ErrCode ret = bmsExtensionClient->GetBundleStats(bundleName, userId, bundleStats);
         APP_LOGI("ret : %{public}d", ret);
@@ -5003,6 +5004,21 @@ ErrCode BundleMgrHostImpl::GetUninstalledBundleInfo(const std::string bundleName
         return ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO;
     }
     return ERR_OK;
+}
+
+bool BundleMgrHostImpl::IsBundleExistedOrUninstalledWithKeepData(const std::string &bundleName,
+    int32_t userId, int32_t appIndex)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Mgr is nullptr");
+        return false;
+    }
+    if (!dataMgr->HasUserInstallInBundle(bundleName, userId)) {
+        APP_LOGD("bundle is not existed in bundleinfos");
+        return dataMgr->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId, appIndex);
+    }
+    return true;
 }
 
 bool BundleMgrHostImpl::IsBundleExist(const std::string &bundleName)
