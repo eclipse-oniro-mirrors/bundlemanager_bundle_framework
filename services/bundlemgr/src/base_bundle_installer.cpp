@@ -119,6 +119,9 @@ const char* INSTALL_SOURCE_UNKNOWN = "unknown";
 const char* ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
 const char* OLD_ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
 const char* NEW_ARK_WEB_BUNDLE_NAME = "com.ohos.arkwebcore";
+// module.json: hnpPackages type only allows [public, private]
+constexpr const char* TYPE_PUBLIC = "public";
+constexpr const char* TYPE_PRIVATE = "private";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -3851,6 +3854,10 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         std::map<std::string, std::string> hnpPackageInfoMap;
         std::stringstream hnpPackageInfoString;
         for (const auto &hnp_packageInfo : *hnpPackageInfos) {
+            if (hnp_packageInfo.type != TYPE_PUBLIC && hnp_packageInfo.type != TYPE_PRIVATE) {
+                LOG_E(BMS_TAG_INSTALLER, "hnp type err: %{public}s", hnp_packageInfo.type.c_str());
+                return ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED;
+            }
             hnpPackageInfoMap[hnp_packageInfo.package] = hnp_packageInfo.type;
         }
         for (const auto &hnpPackageKV : hnpPackageInfoMap) {
