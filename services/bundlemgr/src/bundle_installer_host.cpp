@@ -41,7 +41,6 @@ constexpr const char* BMS_PARA_BUNDLE_NAME = "ohos.bms.param.bundleName";
 constexpr const char* BMS_PARA_IS_KEEP_DATA = "ohos.bms.param.isKeepData";
 constexpr const char* BMS_PARA_USER_ID = "ohos.bms.param.userId";
 constexpr const char* BMS_PARA_APP_INDEX = "ohos.bms.param.appIndex";
-constexpr bool IS_KEEP_DATA = false;
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;
 int32_t UPPER_DLP_TYPE_BOUND = 3;
@@ -1046,7 +1045,7 @@ ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, in
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX;
     }
     if (destroyAppCloneParam.IsVerifyUninstallRule() &&
-        CheckUninstallDisposedRule(bundleName, userId, appIndex, IS_KEEP_DATA)) {
+        CheckUninstallDisposedRule(bundleName, userId, appIndex, destroyAppCloneParam.IsKeepData())) {
         LOG_W(BMS_TAG_INSTALLER, "CheckUninstallDisposedRule failed");
         return ERR_APPEXECFWK_UNINSTALL_DISPOSED_RULE_FAILED;
     }
