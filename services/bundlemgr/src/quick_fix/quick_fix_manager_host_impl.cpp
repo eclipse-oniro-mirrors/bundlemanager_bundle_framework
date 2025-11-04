@@ -23,6 +23,7 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixManagerHostImpl::QuickFixManagerHostImpl()
 {
+    quickFixMgr_ = std::make_shared<QuickFixMgr>();
     LOG_D(BMS_TAG_DEFAULT, "create QuickFixManagerHostImpl");
 }
 
@@ -49,10 +50,7 @@ ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &
         LOG_E(BMS_TAG_DEFAULT, "verify install permission failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
-    if (!GetQuickFixMgr()) {
-        LOG_E(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::DeployQuickFix quickFixerMgr is nullptr");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
-    }
+
     std::vector<std::string> securityFilePaths;
     ErrCode result = CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
     if (result != ERR_OK) {
@@ -79,10 +77,6 @@ ErrCode QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName, b
         LOG_E(BMS_TAG_DEFAULT, "verify install permission failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
-    if (!GetQuickFixMgr()) {
-        LOG_E(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::SwitchQuickFix quickFixerMgr is nullptr");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
-    }
 
     return quickFixMgr_->SwitchQuickFix(bundleName, enable, statusCallback);
 }
@@ -103,10 +97,6 @@ ErrCode QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE)) {
         LOG_E(BMS_TAG_DEFAULT, "verify install permission failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
-    }
-    if (!GetQuickFixMgr()) {
-        LOG_E(BMS_TAG_DEFAULT, "QuickFixManagerHostImpl::DeleteQuickFix quickFixerMgr is nullptr");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
     return quickFixMgr_->DeleteQuickFix(bundleName, statusCallback);
@@ -144,14 +134,6 @@ ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_FD_FAILED;
     }
     return ERR_OK;
-}
-
-bool QuickFixManagerHostImpl::GetQuickFixMgr()
-{
-    if (quickFixMgr_ == nullptr) {
-        quickFixMgr_ = std::make_shared<QuickFixMgr>();
-    }
-    return true;
 }
 
 bool QuickFixManagerHostImpl::IsFileNameValid(const std::string &fileName) const

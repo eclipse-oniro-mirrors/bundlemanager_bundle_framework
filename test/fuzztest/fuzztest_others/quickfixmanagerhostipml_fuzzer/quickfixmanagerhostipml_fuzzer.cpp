@@ -49,7 +49,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     int32_t fd = static_cast<int32_t>(GetU32Data(data));
     std::string path(data, size);
     quickFixManagerHostImpl->CreateFd(fileName, fd, path);
-    quickFixManagerHostImpl->GetQuickFixMgr();
     quickFixManagerHostImpl->IsFileNameValid(fileName);
     std::vector<std::string> securityFilePaths;
     quickFixManagerHostImpl->CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
