@@ -4853,7 +4853,7 @@ void BMSEventHandler::CheckAndCreateShareFilesSubDataDirs()
                 shareFilesDir.c_str());
             continue;
         }
-        UpdateAppDataMgr::CreateSharefilesSubDataDirs(bundleInfos, userId);
+        UpdateAppDataMgr::CreateShareFilesSubDataDirs(bundleInfos, userId);
     }
     LOG_D(BMS_TAG_DEFAULT, "end");
 }

@@ -1765,7 +1765,9 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesGetCleanSize(const std::string &
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
     if (ret != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
+        if (ret != ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {
+            EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
+        }
         return ret;
     }
 
@@ -1896,8 +1898,10 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
     if (ret != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
-        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
-            callingUid, callingBundleName);
+        if (ret != ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {
+            EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true,
+                callingUid, callingBundleName);
+        }
         return ret;
     }
 

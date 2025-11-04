@@ -309,6 +309,30 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0800, Function
 }
 
 /**
+ * @tc.number: UserUnlockedEventSubscriber_0900
+ * @tc.name: UserUnlockedEventSubscriber
+ * @tc.desc: test CreateShareFilesSubDataDirs
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0900, Function | SmallTest | Level0)
+{
+    UpdateAppDataMgr updateAppDataMgr;
+    std::vector<BundleInfo> bundleInfos;
+    // test userId != Constants::DEFAULT_USERID && bundleInfo.singleton
+    std::string parentDir100 = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(100) + ServiceConstants::SHAREFILES;
+    std::string bundleName1 = "com.test.UserUnlockedEventSubscriber_0900";
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = bundleName1;
+    bundleInfo1.singleton = true;
+    bundleInfos.emplace_back(bundleInfo1);
+
+    updateAppDataMgr.CreateShareFilesSubDataDirs(bundleInfos, 100);
+    std::string sharefilesDataDir = parentDir100 + bundleName1;
+    int bundleSharefilesExist = access(sharefilesDataDir.c_str(), F_OK);
+    EXPECT_NE(bundleSharefilesExist, 0) << "the bundle sharefiles existed: " << sharefilesDataDir;
+}
+
+/**
  * @tc.number: CheckEl5Dir_0001
  * @tc.name: test CheckEl5Dir
  * @tc.desc: test CheckEl5Dir
