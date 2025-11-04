@@ -407,6 +407,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     if (IsSystemUpgrade()) {
         EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_OTA_INSTALL);
         OnBundleRebootStart();
+        HandlePreInstallException(false);
         HandleOTACodeEncryption();
         SaveSystemFingerprint();
         (void)SaveBmsSystemTimeForShortcut();
@@ -1218,9 +1219,12 @@ void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &shared
     installParam.needSavePreInstallInfo = true;
     installParam.sharedBundleDirPaths = {sharedBundlePath};
     installParam.preinstallSourceFlag = ApplicationInfoFlag::FLAG_BOOT_INSTALLED;
+    SavePreInstallExceptionShared(sharedBundlePath);
     SystemBundleInstaller installer;
     if (!installer.InstallSystemSharedBundle(installParam, false, appType)) {
         LOG_W(BMS_TAG_DEFAULT, "install system shared bundle: %{public}s error", sharedBundlePath.c_str());
+    } else {
+        DeletePreInstallExceptionShared(sharedBundlePath);
     }
 }
 
@@ -2437,6 +2441,7 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPath, infos) || infos.empty()) {
             LOG_E(BMS_TAG_DEFAULT, "obtain bundleinfo failed : %{public}s ", scanPath.c_str());
+            SavePreInstallExceptionShared(scanPath);
             continue;
         }
 
@@ -2447,8 +2452,11 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
         if (mapIter == loadExistData_.end()) {
             LOG_I(BMS_TAG_DEFAULT, "OTA Install new shared bundle(%{public}s) by path(%{public}s)",
                 bundleName.c_str(), scanPath.c_str());
+            SavePreInstallExceptionShared(scanPath);
             if (!OTAInstallSystemSharedBundle({scanPath}, appType, removable)) {
                 LOG_E(BMS_TAG_DEFAULT, "OTA Install new shared bundle(%{public}s) error", bundleName.c_str());
+            } else {
+                DeletePreInstallExceptionShared(scanPath);
             }
             continue;
         }
@@ -2465,8 +2473,11 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
             continue;
         }
 
+        SavePreInstallExceptionShared(scanPath);
         if (!OTAInstallSystemSharedBundle({scanPath}, appType, removable)) {
             LOG_E(BMS_TAG_DEFAULT, "OTA update shared bundle(%{public}s) error", bundleName.c_str());
+        } else {
+            DeletePreInstallExceptionShared(scanPath);
         }
     }
 }
@@ -3400,7 +3411,31 @@ void BMSEventHandler::DeletePreInstallExceptionAppService(const std::string &bun
     preInstallExceptionMgr->DeletePreInstallExceptionAppServicePath(bundleDir);
 }
 
-void BMSEventHandler::HandlePreInstallException()
+void BMSEventHandler::SavePreInstallExceptionShared(const std::string &bundleDir)
+{
+    auto preInstallExceptionMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
+        return;
+    }
+
+    preInstallExceptionMgr->SavePreInstallExceptionSharedBundlePath(bundleDir);
+}
+
+void BMSEventHandler::DeletePreInstallExceptionShared(const std::string &bundleDir)
+{
+    auto preInstallExceptionMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
+        return;
+    }
+
+    preInstallExceptionMgr->DeletePreInstallExceptionSharedBundlePath(bundleDir);
+}
+
+void BMSEventHandler::HandlePreInstallException(bool needDeleteRecord)
 {
     auto preInstallExceptionMgr =
         DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
@@ -3413,25 +3448,27 @@ void BMSEventHandler::HandlePreInstallException()
     std::set<std::string> exceptionBundleNames;
     std::set<std::string> exceptionAppServicePaths;
     std::set<std::string> exceptionAppServiceBundleNames;
-    if (!preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
-        exceptionPaths, exceptionBundleNames, exceptionAppServicePaths, exceptionAppServiceBundleNames)) {
+    std::set<std::string> exceptionSharedPaths;
+    if (!preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames,
+        exceptionAppServicePaths, exceptionAppServiceBundleNames, exceptionSharedPaths)) {
         LOG_I(BMS_TAG_DEFAULT, "No pre-install exception information found");
         return;
     }
 
-    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "handle exception %{public}zu %{public}zu %{public}zu %{public}zu",
-        exceptionPaths.size(), exceptionBundleNames.size(),
-        exceptionAppServicePaths.size(), exceptionAppServiceBundleNames.size());
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "handle exception %{public}zu %{public}zu %{public}zu %{public}zu %{public}zu",
+        exceptionPaths.size(), exceptionBundleNames.size(), exceptionAppServicePaths.size(),
+        exceptionAppServiceBundleNames.size(), exceptionSharedPaths.size());
     HandlePreInstallAppServicePathsException(preInstallExceptionMgr, exceptionAppServicePaths);
-    HandlePreInstallAppPathsException(preInstallExceptionMgr, exceptionPaths);
+    HandlePreInstallSharedBundlePathsException(preInstallExceptionMgr, exceptionSharedPaths);
+    HandlePreInstallAppPathsException(preInstallExceptionMgr, exceptionPaths, needDeleteRecord);
     if (!exceptionBundleNames.empty() || !exceptionAppServiceBundleNames.empty()) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Loading all pre-install bundle infos");
         LoadAllPreInstallBundleInfos();
     }
-    HandlePreInstallAppServiceBundleNamesException(preInstallExceptionMgr, exceptionAppServiceBundleNames);
-    HandlePreInstallBundleNamesException(preInstallExceptionMgr, exceptionBundleNames);
+    HandlePreInstallAppServiceBundleNamesException(
+        preInstallExceptionMgr, exceptionAppServiceBundleNames, needDeleteRecord);
+    HandlePreInstallBundleNamesException(preInstallExceptionMgr, exceptionBundleNames, needDeleteRecord);
 
-    preInstallExceptionMgr->ClearAll();
     LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Pre-install exception information cleared successfully");
 }
 
@@ -3448,14 +3485,14 @@ void BMSEventHandler::HandlePreInstallAppServicePathsException(
         std::vector<std::string> filePaths { pathIter };
         if (OTAInstallSystemHsp(filePaths) != ERR_OK) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "ota install fwk path(%{public}s) error", pathIter.c_str());
+        } else {
+            preInstallExceptionMgr->DeletePreInstallExceptionAppServicePath(pathIter);
         }
-
-        preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
     }
 }
 
-void BMSEventHandler::HandlePreInstallAppPathsException(
-    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr, const std::set<std::string> &exceptionPaths)
+void BMSEventHandler::HandlePreInstallAppPathsException(std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+    const std::set<std::string> &exceptionPaths, bool needDeleteRecord)
 {
     if (preInstallExceptionMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
@@ -3469,13 +3506,34 @@ void BMSEventHandler::HandlePreInstallAppPathsException(
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException path(%{public}s) error", pathIter.c_str());
         }
 
-        preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
+        if (needDeleteRecord) {
+            preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
+        }
+    }
+}
+
+void BMSEventHandler::HandlePreInstallSharedBundlePathsException(
+    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+    const std::set<std::string> &exceptionSharedPaths)
+{
+    if (preInstallExceptionMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
+        return;
+    }
+    for (const auto &pathIter : exceptionSharedPaths) {
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "shared path:%{public}s", pathIter.c_str());
+        if (!OTAInstallSystemSharedBundle(
+            { pathIter }, Constants::AppType::SYSTEM_APP, IsPreInstallRemovable(pathIter))) {
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "ota install shared path(%{public}s) error", pathIter.c_str());
+        } else {
+            preInstallExceptionMgr->DeletePreInstallExceptionSharedBundlePath(pathIter);
+        }
     }
 }
 
 void BMSEventHandler::HandlePreInstallAppServiceBundleNamesException(
     std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
-    const std::set<std::string> &exceptionAppServiceBundleNames)
+    const std::set<std::string> &exceptionAppServiceBundleNames, bool needDeleteRecord)
 {
     if (preInstallExceptionMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
@@ -3494,12 +3552,15 @@ void BMSEventHandler::HandlePreInstallAppServiceBundleNamesException(
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "ota install fwk(%{public}s) error", bundleNameIter.c_str());
         }
 
-        preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+        if (needDeleteRecord) {
+            preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+        }
     }
 }
 
 void BMSEventHandler::HandlePreInstallBundleNamesException(
-    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr, const std::set<std::string> &exceptionBundleNames)
+    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr,
+    const std::set<std::string> &exceptionBundleNames, bool needDeleteRecord)
 {
     if (preInstallExceptionMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
@@ -3521,7 +3582,9 @@ void BMSEventHandler::HandlePreInstallBundleNamesException(
                 bundleNameIter.c_str());
         }
 
-        preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+        if (needDeleteRecord) {
+            preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+        }
     }
 }
 

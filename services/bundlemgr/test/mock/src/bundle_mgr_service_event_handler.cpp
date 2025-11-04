@@ -536,7 +536,7 @@ bool BMSEventHandler::HasModuleSavedInPreInstalledDb(const std::string& bundleNa
 
 void BMSEventHandler::SavePreInstallException(const std::string& bundleDir) {}
 
-void BMSEventHandler::HandlePreInstallException() {}
+void BMSEventHandler::HandlePreInstallException(bool needDeleteRecord) {}
 
 bool BMSEventHandler::OTAInstallSystemBundle(
     const std::vector<std::string>& filePaths, Constants::AppType appType, bool removable)

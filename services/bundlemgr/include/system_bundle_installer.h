@@ -107,6 +107,7 @@ public:
     void CheckUninstallSystemHsp(const std::string &bundleName);
 
 private:
+    void ProcessSingletonChange(const std::string &bundleName, std::set<int32_t> &userIdSet);
 
     DISALLOW_COPY_AND_MOVE(SystemBundleInstaller);
 };
