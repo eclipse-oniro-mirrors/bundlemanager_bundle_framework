@@ -3354,6 +3354,7 @@ bool BundleDataMgr::DeleteSharedBundleInfo(const std::string &bundleName)
             APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
         }
         bundleInfos_.erase(bundleName);
+        installStates_.erase(bundleName);
         return ret;
     }
     return false;
