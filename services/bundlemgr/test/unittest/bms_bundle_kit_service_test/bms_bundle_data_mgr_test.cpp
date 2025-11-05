@@ -1563,6 +1563,18 @@ HWTEST_F(BmsBundleDataMgrTest, DeleteSharedBundleInfo_0200, Function | SmallTest
 }
 
 /**
+ * @tc.number: DeleteSharedBundleInfo_0300
+ * @tc.name: test DeleteSharedBundleInfo
+ * @tc.desc: 1.system run normally
+ *           2.check DeleteSharedBundleInfo failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, DeleteSharedBundleInfo_0300, Function | SmallTest | Level1)
+{
+    bool res = GetBundleDataMgr()->DeleteSharedBundleInfo("");
+    EXPECT_EQ(res, false);
+}
+
+/**
  * @tc.number: GetBundleInfosByMetaData_0100
  * @tc.name: test GetBundleInfosByMetaData
  * @tc.desc: 1.system run normally

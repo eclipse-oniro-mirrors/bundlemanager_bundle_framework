@@ -3499,19 +3499,20 @@ bool BundleDataMgr::GetAdaptBaseShareBundleInfo(
 bool BundleDataMgr::DeleteSharedBundleInfo(const std::string &bundleName)
 {
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    bool ret = false;
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem != bundleInfos_.end()) {
         APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
         const InnerBundleInfo &innerBundleInfo = infoItem->second;
-        bool ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
+        ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
         if (!ret) {
             APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
         }
         bundleInfos_.erase(bundleName);
-        installStates_.erase(bundleName);
-        return ret;
     }
-    return false;
+    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    installStates_.erase(bundleName);
+    return ret;
 }
 
 ErrCode BundleDataMgr::GetBundlePackInfo(
