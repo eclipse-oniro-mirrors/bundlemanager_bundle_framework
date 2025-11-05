@@ -28,6 +28,11 @@
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
+const int32_t VERSION_LOW = 0;
+const std::string MODULE_NAME_TEST = "moduleName";
+const std::string TEST_CREATE_FILE_PATH = "/data/test/resource/bms/app_service_test/test_create_dir/test.hap";
+const std::string VERSION_ONE_LIBRARY_ONE_PATH =
+  "/data/test/resource/bms/app_service_test/test_create_dir/test.hap";
 namespace AppExecFwk {
     std::string ObtainTempSoPath(const std::string &moduleName, const std::string &nativeLibPath);
 }
@@ -45,6 +50,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     appServiceFwkInstaller.Install(hspPaths, installParam);
 
     std::string moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    appServiceFwkInstaller.MoveSoToRealPath(moduleName, "", "");
     std::string nativeLibPath;
     ObtainTempSoPath(moduleName, nativeLibPath);
 
@@ -122,6 +128,35 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     appServiceFwkInstaller.UnInstall(bundleName, moduleName);
 
     appServiceFwkInstaller.ResetProperties();
+    appServiceFwkInstaller.appIdentifier_ = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    appServiceFwkInstaller.RemoveInfo("");
+    appServiceFwkInstaller.SaveBundleInfoToStorage();
+    InstallParam installParam1;
+    installParam1.additionalInfo = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    installParam1.needSavePreInstallInfo = true;
+    appServiceFwkInstaller.SavePreInstallBundleInfo(ERR_APPEXECFWK_INSTALL_PARAM_ERROR, infos, installParam1);
+    InstallParam installParam2;
+    installParam2.isPreInstallApp = true;
+    installParam2.removable = false;
+    ErrCode result = 0;
+    appServiceFwkInstaller.SendBundleSystemEvent(hspPaths,
+        BundleEventType::INSTALL, installParam2, InstallScene::BOOT, result);
+    std::vector<std::string> moduleNameList = GenerateStringArray(fdp);
+    appServiceFwkInstaller.UninstallLowerVersion(moduleNameList);
+    InstallParam installParam3;
+    installParam3.copyHapToInstallPath = false;
+    appServiceFwkInstaller.UpdateAppService(innerBundleInfo, infos, installParam3);
+    std::string hspPath = ", path: ";
+    InnerBundleInfo oldInfo;
+    appServiceFwkInstaller.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH, installParam3);
+    appServiceFwkInstaller.ProcessModuleUpdate(innerBundleInfo, oldInfo, hspPath, installParam3);
+    appServiceFwkInstaller.RemoveLowerVersionSoDir(VERSION_LOW);
+    std::string cpuAbi = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::string targetSoPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    appServiceFwkInstaller.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath);
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    appServiceFwkInstaller.DeliveryProfileToCodeSign(hapVerifyResults);
+    appServiceFwkInstaller.GenerateOdid(infos, hapVerifyResults);
     return true;
 }
 }

@@ -27,6 +27,8 @@
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
+const std::string VERSION_ONE_LIBRARY_ONE_PATH = "/data/test/resource/bms/app_service_test/appService_v1_library1.hsp";
+const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     AppServiceFwkInstaller appServicefwk;
@@ -44,6 +46,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bool copyHapToInstallPath = fdp.ConsumeBool();
 
     appServicefwk.ProcessNativeLibrary(bundlePath, moduleDir, moduleName, versionDir, newInfo, copyHapToInstallPath);
+    appServicefwk.ProcessNativeLibrary(
+        VERSION_ONE_LIBRARY_ONE_PATH, BUNDLE_DATA_DIR, moduleName, BUNDLE_DATA_DIR, newInfo);
     return true;
 }
 } // namespace OHOS
@@ -54,4 +58,4 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     /* Run your code on data */
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
-}
+}

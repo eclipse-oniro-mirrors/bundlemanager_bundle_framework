@@ -17,8 +17,8 @@ import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = fuzz_test_path
 
-ohos_fuzztest("AppServiceFwkInstallerExtractModuleFuzzTest") {
-  fuzz_config_file = "../../../fuzztest/fuzztest_others/appservicefwkinstallerextractmodule_fuzzer"
+ohos_fuzztest("BMSAppServiceFwkInstallerExtractModuleFuzzTest") {
+  fuzz_config_file = "../../../fuzztest/fuzztest_bundlemanager/bmsappservicefwkinstallerextractmodule_fuzzer"
 
   use_exceptions = true
   module_out_path = module_output_path
@@ -36,7 +36,7 @@ ohos_fuzztest("AppServiceFwkInstallerExtractModuleFuzzTest") {
 
   sources += bundle_install_sources
 
-  sources += [ "appservicefwkinstallerextractmodule_fuzzer.cpp" ]
+  sources += [ "bmsappservicefwkinstallerextractmodule_fuzzer.cpp" ]
 
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = [

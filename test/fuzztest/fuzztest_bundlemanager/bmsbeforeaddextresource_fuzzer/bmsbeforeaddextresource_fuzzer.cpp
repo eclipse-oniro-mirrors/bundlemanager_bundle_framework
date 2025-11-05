@@ -12,29 +12,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #define private public
 #include <cstddef>
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
-
-#include "app_service_fwk/app_service_fwk_installer.h"
-
-#include "bmsappservicefwkinstallerbeforeinstall_fuzzer.h"
 #include "bms_fuzztest_util.h"
+#include "extend_resource_manager_host_impl.h"
+#include "bmsbeforeaddextresource_fuzzer.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
+const std::string FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/a.hsp";
+const std::string BUNDLE_NAME = "com.ohos.resourcedemo";
+const std::string INVALID_PATH = "/data/service/el1/public/bms/bundle_manager_service/../../a.hsp";
+const std::string EMPTY_STRING = "";
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
-    InstallParam installParam;
+    ExtendResourceManagerHostImpl impl;
     FuzzedDataProvider fdp(data, size);
-    GenerateInstallParam(fdp, installParam);
-    AppServiceFwkInstaller appServicefwk;
-    std::vector<std::string> hspPaths = GenerateStringArray(fdp);
-    appServicefwk.BeforeInstall(hspPaths, installParam);
+    std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::vector<std::string> filePaths = GenerateStringArray(fdp);
+    impl.BeforeAddExtResource(bundleName, filePaths);
+    impl.BeforeAddExtResource(EMPTY_STRING, filePaths);
+    impl.BeforeAddExtResource(BUNDLE_NAME, filePaths);
+    filePaths.emplace_back(FILE_PATH);
+    filePaths.emplace_back(INVALID_PATH);
+    auto ret = impl.BeforeAddExtResource(BUNDLE_NAME, filePaths);
     return true;
 }
 }
@@ -42,7 +47,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 // Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    /* Run your code on data */
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
-}
+}

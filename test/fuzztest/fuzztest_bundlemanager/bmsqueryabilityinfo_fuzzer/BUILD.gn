@@ -31,7 +31,7 @@ ohos_fuzztest("BMSQueryAbilityInfoFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   include_dirs = [ "${test_path}/fuzztest" ]
-  sources = [ "queryabilityinfo_fuzzer.cpp" ]
+  sources = [ "bmsqueryabilityinfo_fuzzer.cpp" ]
 
   deps = [
     "${base_path}:appexecfwk_base",

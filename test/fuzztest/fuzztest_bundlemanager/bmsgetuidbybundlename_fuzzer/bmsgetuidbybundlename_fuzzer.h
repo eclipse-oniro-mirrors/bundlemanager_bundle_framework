@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#ifndef TEST_FUZZTEST_GETUIDBYBUNDLENAME_FUZZER_H
-#define TEST_FUZZTEST_GETUIDBYBUNDLENAME_FUZZER_H
+#ifndef TEST_FUZZTEST_BMS_GET_UID_BY_BUNDLENAME_FUZZER_H
+#define TEST_FUZZTEST_BMS_GET_UID_BY_BUNDLENAME_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "getuidbybundlename_fuzzer"
+#define FUZZ_PROJECT_NAME "bmsgetuidbybundlename_fuzzer"
 
 #endif
