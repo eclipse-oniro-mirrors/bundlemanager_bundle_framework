@@ -41,7 +41,6 @@ public:
     virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
 
 private:
-    bool GetQuickFixMgr();
     bool IsFileNameValid(const std::string &fileName) const;
     ErrCode CopyHqfToSecurityDir(const std::vector<std::string> &bundleFilePaths,
         std::vector<std::string> &securityFilePaths) const;
