@@ -2988,7 +2988,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_6200, Function | SmallTest 
     InnerBundleInfo info;
     int32_t userId = USERID;
     std::string bundleName = "com.example.test";
-    ErrCode res = installer.ProcessBundleUnInstallNative(info, userId, bundleName);
+    ErrCode res = installer.ProcessBundleUnInstallNative(info, userId, bundleName, "");
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -7959,7 +7959,7 @@ HWTEST_F(BmsBundleInstallerTest, ProcessBundleUnInstallNative_0100, Function | S
     innerBundleInfo.AddInnerModuleInfo(innerModuleInfos);
     int32_t userId = USERID;
     std::string bundleName;
-    ErrCode ret = installer.ProcessBundleUnInstallNative(innerBundleInfo, userId, bundleName);
+    ErrCode ret = installer.ProcessBundleUnInstallNative(innerBundleInfo, userId, bundleName, moduleName);
     EXPECT_EQ(ret, ERR_OK);
 }
 
