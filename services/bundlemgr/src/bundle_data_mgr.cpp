@@ -8316,23 +8316,6 @@ ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGro
     return res;
 }
 
-bool BundleDataMgr::CreateEl5Group(const InnerBundleInfo &info, int32_t userId)
-{
-    auto dataGroupInfoMap = info.GetDataGroupInfos();
-    if (dataGroupInfoMap.empty()) {
-        return true;
-    }
-    std::vector<DataGroupInfo> dataGroupInfos;
-    for (const auto &groupItem : dataGroupInfoMap) {
-        for (const DataGroupInfo &dataGroupInfo : groupItem.second) {
-            if (dataGroupInfo.userId == userId) {
-                dataGroupInfos.emplace_back(dataGroupInfo);
-            }
-        }
-    }
-    return CreateEl5GroupDirs(dataGroupInfos, userId) == ERR_OK;
-}
-
 ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId)
 {
     if (dataGroupInfos.empty()) {
@@ -8348,12 +8331,6 @@ ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &data
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
         // create el5 group dirs
         std::string dir = parentDir + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        bool isExist = false;
-        (void)InstalldClient::GetInstance()->IsExistDir(dir, isExist);
-        if (isExist) {
-            APP_LOGI("group dir(%{public}s) exist", dir.c_str());
-            continue;
-        }
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
             ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
