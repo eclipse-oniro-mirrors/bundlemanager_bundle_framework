@@ -368,7 +368,6 @@ ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId, int32_
     if (iter != appRunningControlRuleResult_.end()) {
         appRunningControlRuleResult_.erase(iter);
     }
-    commonEventMgr_->NotifyDeleteDisposedRule(appId, userId, Constants::MAIN_APP_INDEX);
     return ERR_OK;
 }
 
@@ -673,7 +672,6 @@ ErrCode AppControlManager::DeleteDisposedRule(
     std::string appIdKey = GenerateAppRunningRuleCacheKey(appId, userId, appIndex);
     std::string transformedAppIdKey = GenerateAppRunningRuleCacheKey(transformedAppId, userId, appIndex);
     DeleteAbilityRunningRuleCache({ appIdKey, transformedAppIdKey});
-    commonEventMgr_->NotifyDeleteDisposedRule(appId, userId, appIndex);
     return ERR_OK;
 }
 
