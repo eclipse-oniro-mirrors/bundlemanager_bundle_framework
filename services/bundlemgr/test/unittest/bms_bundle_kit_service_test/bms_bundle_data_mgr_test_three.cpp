@@ -3790,4 +3790,33 @@ HWTEST_F(BmsBundleDataMgrTest3, DeleteUninstallCloneBundleInfo_0006, Function | 
     bundleDataMgr->uninstallDataMgr_ = std::make_shared<UninstallDataMgrStorageRdb>();
     EXPECT_NE(bundleDataMgr->uninstallDataMgr_, nullptr);
 }
+
+/**
+ * @tc.number: HasGetAbilityInfoExcludeExtFlag_0001
+ * @tc.name: HasGetAbilityInfoExcludeExtFlag
+ * @tc.desc: test HasGetAbilityInfoExcludeExtFlag
+ */
+HWTEST_F(BmsBundleDataMgrTest3, HasGetAbilityInfoExcludeExtFlag_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    uint32_t flag = static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION);
+    bool ret = localBundleMgrHostImpl->HasGetAbilityInfoExcludeExtFlag(flag);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: HasGetAbilityInfoExcludeExtFlag_0002
+ * @tc.name: HasGetAbilityInfoExcludeExtFlag
+ * @tc.desc: test HasGetAbilityInfoExcludeExtFlag
+ */
+HWTEST_F(BmsBundleDataMgrTest3, HasGetAbilityInfoExcludeExtFlag_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    uint32_t flag = static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXTENSION);
+    bool ret = localBundleMgrHostImpl->HasGetAbilityInfoExcludeExtFlag(flag);
+    EXPECT_TRUE(ret);
+}
 } // OHOS
