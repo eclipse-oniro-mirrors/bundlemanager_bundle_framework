@@ -16,8 +16,8 @@ interfaces/inner_api/appexecfwk_core/include/bundle_framework_core_ipc_interface
 services/bundlemgr/include/bundle_framework_services_ipc_interface_code.h @wang19954
 
 [BUNDLE MANAGER]
-common/ @aafwk_ability
-etc/ @aafwk_ability
-interfaces/ @aafwk_ability
-services/ @aafwk_ability
-test/ @aafwk_ability
+common/ @afwk_helper
+etc/ @afwk_helper
+interfaces/ @afwk_helper
+services/ @afwk_helper
+test/ @afwk_helper
