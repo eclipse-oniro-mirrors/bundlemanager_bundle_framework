@@ -45,6 +45,7 @@ public:
      */
     ErrCode ParseFiles(const InstallCheckParam &checkParam);
 
+    ErrCode CheckWithInstalledInfo();
     /**
      * @brief Get the bundle name of current shared bundle to be installed.
      * @return Returns the bundle name of current shared bundle to be installed.
@@ -140,6 +141,7 @@ private:
     std::string cpuAbi_;
     std::string tempSoPath_;
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults_;
     std::vector<std::string> toDeleteTempHspPath_;
     // the key is the real path of each hsp file
     std::unordered_map<std::string, InnerBundleInfo> parsedBundles_;
