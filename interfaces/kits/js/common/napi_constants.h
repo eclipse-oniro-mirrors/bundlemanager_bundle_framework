@@ -184,6 +184,7 @@ constexpr const char* RECOVER_BACKUP_BUNDLE_DATA = "RecoverBackupBundleData";
 constexpr const char* REMOVE_BACKUP_BUNDLE_DATA = "RemoveBackupBundleData";
 
 inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1 };
+inline const std::set<int32_t> UNINSTALL_COMPONENT_TYPE_LIST = { 1, 2 };
 
 inline std::map<int32_t, std::string> APP_DISTRIBUTION_TYPE_MAP = {
     { ENUM_ONE, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },

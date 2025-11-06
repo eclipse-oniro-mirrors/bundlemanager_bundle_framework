@@ -889,7 +889,7 @@ bool ParseUninstallDisposedRule(napi_env env, napi_value nRule, UninstallDispose
         APP_LOGW("uninstallComponentType parseInt failed");
         return false;
     }
-    if (uninstallComponentType != static_cast<int32_t>(UninstallComponentType::EXTENSION)) {
+    if (UNINSTALL_COMPONENT_TYPE_LIST.find(uninstallComponentType) == UNINSTALL_COMPONENT_TYPE_LIST.end()) {
         APP_LOGW("uninstallComponentType not valid");
         return false;
     }
@@ -1125,6 +1125,10 @@ void CreateUninstallComponentType(napi_env env, napi_value value)
         &nExtensionAbilityType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "EXTENSION",
         nExtensionAbilityType));
+    napi_value nUIExtensionType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(UninstallComponentType::UI_EXTENSION),
+        &nUIExtensionType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UI_EXTENSION", nUIExtensionType));
 }
 
 void CreateDisposedType(napi_env env, napi_value value)
