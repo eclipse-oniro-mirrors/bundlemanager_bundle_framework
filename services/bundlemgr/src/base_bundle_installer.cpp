@@ -7993,15 +7993,26 @@ void BaseBundleInstaller::ProcessOldCodePath(
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "save bundle exception failed, error is %{public}d", result);
     }
-    // delete +old- code path
+    // rename first
     std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
-    result = InstalldClient::GetInstance()->RemoveDir(oldAppCodePath);
-    if (result != ERR_OK) {
+    std::string tempPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+        std::string(ServiceConstants::BUNDLE_TEMP_CODE_DIR) + bundleName;
+    result = InstalldClient::GetInstance()->RenameModuleDir(oldAppCodePath, tempPath);
+    if (result == ERR_OK) {
+        // delete +temp- code path
+        result = InstalldClient::GetInstance()->RemoveDir(tempPath);
+    } else {
+        LOG_W(BMS_TAG_INSTALLER, "rename bundle %{public}s old to temp path error is %{public}d",
+            bundleName.c_str(), result);
+        result = InstalldClient::GetInstance()->RemoveDir(oldAppCodePath);
+    }
+    if (result == ERR_OK) {
+        result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
+    } else {
         LOG_W(BMS_TAG_INSTALLER, "remove bundle %{public}s old code path error is %{public}d",
             bundleName.c_str(), result);
     }
-    result = DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "delete bundle %{public}s exception error is %{public}d",
             bundleName.c_str(), result);

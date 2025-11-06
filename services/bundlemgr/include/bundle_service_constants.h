@@ -252,6 +252,7 @@ constexpr const char* INSTALL_SOURCE_RECOVERY = "recovery";
 // bundle update
 constexpr const char* BUNDLE_NEW_CODE_DIR = "+new-";
 constexpr const char* BUNDLE_OLD_CODE_DIR = "+old-";
+constexpr const char* BUNDLE_TEMP_CODE_DIR = "+temp-";
 
 //ability start window
 constexpr const char* PROFILE_PATH = "resources/base/profile/";
