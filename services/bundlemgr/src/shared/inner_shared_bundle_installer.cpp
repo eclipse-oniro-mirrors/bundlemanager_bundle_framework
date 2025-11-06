@@ -73,12 +73,11 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
         APP_LOGD("hap syscap check failed %{public}d", result);
     }
     // verify signature info for all haps
-    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
-    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyResults);
+    result = bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyResults_);
     CHECK_RESULT(result, "hap files check signature info failed %{public}d");
 
     // parse bundle infos
-    result = bundleInstallChecker_->ParseHapFiles(bundlePaths, checkParam, hapVerifyResults, parsedBundles_);
+    result = bundleInstallChecker_->ParseHapFiles(bundlePaths, checkParam, hapVerifyResults_, parsedBundles_);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
 
     // check u1Enable
@@ -86,11 +85,11 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     CHECK_RESULT(result, "check u1Enable failed %{public}d");
 
     // check install permission
-    result = bundleInstallChecker_->CheckInstallPermission(checkParam, hapVerifyResults);
+    result = bundleInstallChecker_->CheckInstallPermission(checkParam, hapVerifyResults_);
     CHECK_RESULT(result, "check install permission failed %{public}d");
 
     // check hsp install condition
-    result = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyResults);
+    result = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyResults_);
     CHECK_RESULT(result, "check hsp install condition failed %{public}d");
 
     // to send notify of start install shared application
@@ -104,31 +103,40 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
             return ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR;
         }
     }
-
-    // check label info
-    result = CheckAppLabelInfo();
-    CHECK_RESULT(result, "check label info failed %{public}d");
-
-    // check AppDistributionType
-    result = CheckAppDistributionType(hapVerifyResults);
-    CHECK_RESULT(result, "check app distribution type info failed %{public}d");
-
-    // delivery sign profile to code signature
-    result = DeliveryProfileToCodeSign(hapVerifyResults);
-    CHECK_RESULT(result, "delivery sign profile failed %{public}d");
-
+    if (parsedBundles_.empty()) {
+        APP_LOGE("parsedBundles is empty");
+    } else {
+        bundleName_ = parsedBundles_.begin()->second.GetBundleName();
+    }
     // check native file
     result = bundleInstallChecker_->CheckMultiNativeFile(parsedBundles_);
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
 
     // check enterprise bundle
     /* At this place, hapVerifyResults cannot be empty and unnecessary to check it */
-    isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyResults[0]);
-    appIdentifier_ = (hapVerifyResults[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
-        DEBUG_APP_IDENTIFIER : hapVerifyResults[0].GetProvisionInfo().bundleInfo.appIdentifier;
+    isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyResults_[0]);
+    appIdentifier_ = (hapVerifyResults_[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
+        DEBUG_APP_IDENTIFIER : hapVerifyResults_[0].GetProvisionInfo().bundleInfo.appIdentifier;
     compileSdkType_ = parsedBundles_.empty() ? COMPILE_SDK_TYPE_OPEN_HARMONY :
         (parsedBundles_.begin()->second).GetBaseApplicationInfo().compileSdkType;
-    AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo());
+
+    return CheckWithInstalledInfo();
+}
+
+ErrCode InnerSharedBundleInstaller::CheckWithInstalledInfo()
+{
+    ErrCode result = ERR_OK;
+    // check label info
+    result = CheckAppLabelInfo();
+    CHECK_RESULT(result, "check label info failed %{public}d");
+
+    // check AppDistributionType
+    result = CheckAppDistributionType(hapVerifyResults_);
+    CHECK_RESULT(result, "check app distribution type info failed %{public}d");
+
+    // delivery sign profile to code signature
+    result = DeliveryProfileToCodeSign(hapVerifyResults_);
+    CHECK_RESULT(result, "delivery sign profile failed %{public}d");
     return result;
 }
 
@@ -193,8 +201,23 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
         APP_LOGD("no bundle to install");
         return ERR_OK;
     }
-
+    
+    if (hapVerifyResults_.empty()) {
+        return ERR_APPEXECFWK_HAP_VERIFY_RES_EMPTY;
+    }
     ErrCode result = ERR_OK;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+
+    bundleName_ = parsedBundles_.begin()->second.GetBundleName();
+    auto &mtx = dataMgr->GetBundleMutex(bundleName_);
+    std::lock_guard lock {mtx};
+    result = CheckWithInstalledInfo();
+    CHECK_RESULT(result, "CheckWithInstalledInfo failed %{public}d");
+    AddAppProvisionInfo(bundleName_, hapVerifyResults_[0].GetProvisionInfo());
     for (auto &item : parsedBundles_) {
         result = ExtractSharedBundles(item.first, item.second);
         item.second.SetApplicationFlags(installParam.preinstallSourceFlag);
@@ -242,7 +265,7 @@ void InnerSharedBundleInstaller::RollBack()
 
     // rollback database
     if (!isBundleExist_) {
-        if (dataMgr->DeleteSharedBundleInfo(bundleName_)) {
+        if (!dataMgr->DeleteSharedBundleInfo(bundleName_)) {
             APP_LOGE("rollback new bundle failed : %{public}s", bundleName_.c_str());
         }
         if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName_)) {
