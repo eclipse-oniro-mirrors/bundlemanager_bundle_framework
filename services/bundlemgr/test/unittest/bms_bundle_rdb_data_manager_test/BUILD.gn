@@ -37,6 +37,7 @@ ohos_unittest("BmsBundleRdbDataManagerTest") {
     "${services_path}/bundlemgr/src/event_report.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_install_client.cpp",
     "bms_bundle_rdb_data_manager_test.cpp",
     "mock_rdb_helper.cpp",
   ]
