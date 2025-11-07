@@ -20,6 +20,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_util.h"
 #include "event_report.h"
+#include "installd_client.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -110,9 +111,11 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
     rdbStoreConfig.SetAllowRebuild(true);
     rdbStoreConfig.SetHaMode(NativeRdb::HAMode::MAIN_REPLICA);
     // for check db exist or not
+    bool isNewDb = false;
     if (access(rdbStoreConfig.GetPath().c_str(), F_OK) != 0) {
         APP_LOGW_NOFUNC("bms db :%{public}s is not exist, need to create. errno:%{public}d",
             rdbStoreConfig.GetPath().c_str(), errno);
+        isNewDb = true;
     }
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
@@ -133,12 +136,19 @@ ErrCode RdbDataManager::GetRdbStoreFromNative()
     }
     NativeRdb::RebuiltType rebuildType = NativeRdb::RebuiltType::NONE;
     int32_t rebuildCode = rdbStore_->GetRebuilt(rebuildType);
+    if (isNewDb || rebuildType == NativeRdb::RebuiltType::REPAIRED) {
+        APP_LOGI("rdb repaired, reset rdb file");
+        InstalldClient::GetInstance()->ResetBmsDBSecurity();
+    }
     if (rebuildType == NativeRdb::RebuiltType::REBUILT || isNeedRebuildDb) {
         APP_LOGI("start %{public}s restore ret %{public}d, type:%{public}d", bmsRdbConfig_.dbName.c_str(),
             rebuildCode, static_cast<int32_t>(rebuildType));
         int32_t restoreRet = rdbStore_->Restore("");
         if (restoreRet != NativeRdb::E_OK) {
             APP_LOGE("rdb restore failed ret:%{public}d", restoreRet);
+        } else {
+            APP_LOGI("rdb rebuilt, reset rdb file");
+            InstalldClient::GetInstance()->ResetBmsDBSecurity();
         }
         SendDbErrorEvent(bmsRdbConfig_.dbName, static_cast<int32_t>(DB_OPERATION_TYPE::REBUILD), rebuildCode);
         return restoreRet;
