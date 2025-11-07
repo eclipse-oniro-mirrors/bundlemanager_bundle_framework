@@ -682,6 +682,21 @@ ErrCode AppControlManagerRdb::DeleteDisposedRuleByBundleExcludeEdm(const std::ve
     return ERR_OK;
 }
 
+ErrCode AppControlManagerRdb::DeleteAllDisposedRulesForUser(int32_t userId)
+{
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.NotEqualTo(CALLING_NAME, AppControlConstants::EDM_CALLING);
+
+    bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
+    if (!ret) {
+        LOG_E(BMS_TAG_DEFAULT, "Delete all disposed rules failed for userId:%{public}d.", userId);
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlManagerRdb::OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
     int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
 {

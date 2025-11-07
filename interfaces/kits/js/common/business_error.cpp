@@ -77,6 +77,35 @@ napi_value BusinessError::CreateCommonError(
     return CreateError(env, err, errMessage);
 }
 
+napi_value BusinessError::CreateNewCommonError(
+    napi_env env, int32_t err, const std::string &functionName, const std::string &permissionName)
+{
+    std::string errMessage = BusinessErrorNS::ERR_MSG_BUSINESS_ERROR;
+    auto iter = errMessage.find("$");
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, std::to_string(err));
+    }
+    std::unordered_map<int32_t, const char*> errMap;
+    BusinessErrorMap::GetNewErrMap(errMap);
+    if (errMap.find(err) != errMap.end()) {
+        errMessage += errMap[err];
+    } else {
+        BusinessErrorMap::GetErrMap(errMap);
+        if (errMap.find(err) != errMap.end()) {
+            errMessage += errMap[err];
+        }
+    }
+    iter = errMessage.find("$");
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, functionName);
+        iter = errMessage.find("$");
+        if (iter != std::string::npos) {
+            errMessage = errMessage.replace(iter, 1, permissionName);
+        }
+    }
+    return CreateError(env, err, errMessage);
+}
+
 napi_value BusinessError::CreateInstallError(
     napi_env env, int32_t err, int32_t innerCode,
     const std::string &functionName, const std::string &permissionName)

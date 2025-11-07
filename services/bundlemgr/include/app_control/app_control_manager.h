@@ -110,6 +110,8 @@ public:
     ErrCode DeleteUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
         int32_t appIndex, int32_t userId);
 
+    ErrCode DeleteAllDisposedRulesForUser(int32_t userId);
+
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
     ErrCode KillRunningAppOutWhiteList(int32_t userId) const;

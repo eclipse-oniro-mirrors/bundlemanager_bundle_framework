@@ -76,6 +76,7 @@ public:
         AppRunningControlRule &controlRuleResult) override;
     virtual ErrCode GetAllUserIdsForRunningControl(std::vector<int32_t> &outUserIds) override;
     virtual ErrCode GetAppIdsByUserId(int32_t userId, std::vector<std::string> &appIds) override;
+    virtual ErrCode DeleteAllDisposedRulesForUser(int32_t userId) override;
 
 private:
     ErrCode DeleteOldControlRule(const std::string &callingName, const std::string &controlRuleType,

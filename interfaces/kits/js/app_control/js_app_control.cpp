@@ -739,6 +739,60 @@ napi_value GetDisposedRule(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+void ConvertDisposedRuleConfiguration(
+    napi_env env, napi_value nRule, const DisposedRuleConfiguration &disposedRuleConfiguration)
+{
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, disposedRuleConfiguration.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "appIndex", nAppIndex));
+    napi_value nAppId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, disposedRuleConfiguration.appId.c_str(),
+        NAPI_AUTO_LENGTH, &nAppId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "appId", nAppId));
+
+    ConvertRuleInfo(env, nRule, disposedRuleConfiguration.disposedRule);
+}
+
+napi_value GetAllDisposedRules(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetAllDisposedRules called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ZERO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("AppControlProxy is null");
+        napi_value error = BusinessError::CreateNewCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            GET_ALL_DISPOSED_RULES);
+        napi_throw(env, error);
+        return nullptr;
+    }
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    ErrCode ret = ERR_OK;
+    ret = appControlProxy->GetDisposedRules(userId, disposedRuleConfigurations);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllDisposedRules failed");
+        napi_value businessError = BusinessError::CreateNewCommonError(
+            env, ret, GET_ALL_DISPOSED_RULES, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRuleArray = nullptr;
+    NAPI_CALL(env, napi_create_array_with_length(env, disposedRuleConfigurations.size(), &nRuleArray));
+    for (size_t i = 0; i < disposedRuleConfigurations.size(); i++) {
+        napi_value ndisposedRuleConfiguration = nullptr;
+        NAPI_CALL(env, napi_create_object(env, &ndisposedRuleConfiguration));
+        ConvertDisposedRuleConfiguration(env, ndisposedRuleConfiguration, disposedRuleConfigurations[i]);
+        napi_set_element(env, nRuleArray, i, ndisposedRuleConfiguration);
+    }
+    return nRuleArray;
+}
+
 static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, DisposedRule &rule, int32_t appIndex)
 {
     napi_value nRet;

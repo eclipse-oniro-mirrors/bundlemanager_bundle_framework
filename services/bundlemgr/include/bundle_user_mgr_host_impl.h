@@ -69,6 +69,7 @@ private:
         const std::optional<std::vector<std::string>> &allowList = std::nullopt);
     void UninstallBackupUninstallList(int32_t userId, bool needToSkipPreBundleInstall);
     void GetAdditionalBundleInfos(std::set<PreInstallBundleInfo> &preInstallBundleInfos);
+    void DeleteAllDisposedRulesForUser(int32_t userId);
 
     bool InnerProcessSkipPreInstallBundles(
         const std::set<std::string> &uninstallList, bool needToSkipPreBundleInstall);

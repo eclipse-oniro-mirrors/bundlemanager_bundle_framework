@@ -295,6 +295,7 @@ constexpr const char* SET_DISPOSED_STATUS_SYNC = "SetDisposedStatusSync";
 constexpr const char* DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
 constexpr const char* GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
 constexpr const char* GET_DISPOSED_RULE = "GetDisposedRule";
+constexpr const char* GET_ALL_DISPOSED_RULES = "GetAllDisposedRules";
 constexpr const char* APP_ID = "appId";
 constexpr const char* APP_IDENTIFIER = "appIdentifier";
 constexpr const char* DISPOSED_WANT = "disposedWant";
