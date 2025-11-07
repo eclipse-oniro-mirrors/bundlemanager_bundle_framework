@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,11 +26,13 @@ struct Element {
     std::string abilityName;
     std::string extensionName;
     std::string type;
+    int32_t appIndex = 0;
 
     bool operator==(const Element& other) const
     {
         if (this->bundleName == other.bundleName && this->moduleName == other.moduleName
-            && this->abilityName == other.abilityName && this->extensionName == other.extensionName) {
+            && this->abilityName == other.abilityName && this->extensionName == other.extensionName
+            && appIndex == other.appIndex) {
             return true;
         }
         return false;

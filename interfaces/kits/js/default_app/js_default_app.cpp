@@ -71,6 +71,10 @@ static void ConvertAbilityInfo(napi_env env, napi_value objAbilityInfo, const Ab
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, abilityInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "bundleName", nBundleName));
+    
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, Constants::APP_INDEX, nAppIndex));
 
     napi_value nModuleName;
     NAPI_CALL_RETURN_VOID(
@@ -116,6 +120,10 @@ static void ConvertExtensionInfo(napi_env env, napi_value objExtensionInfo, cons
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, extensionInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, "bundleName", nBundleName));
+
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfo.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, Constants::APP_INDEX, nAppIndex));
 
     napi_value nModuleName;
     NAPI_CALL_RETURN_VOID(
@@ -611,8 +619,8 @@ ErrCode ParamsProcessSetDefaultApplicationSync(napi_env env, napi_callback_info 
             }
         } else if (i == ARGS_POS_ONE) {
             if ((!CommonFunc::ParseElementName(env, args[i], want))) {
-                APP_LOGE("parseElementName failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, WANT_CHECK, TYPE_OBJECT);
+                APP_LOGE("parse ElementName failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ELEMENT_NAME, TYPE_OBJECT);
                 return ERROR_PARAM_CHECK_ERROR;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -819,6 +827,85 @@ napi_value ResetDefaultApplicationSync(napi_env env, napi_callback_info info)
     }
 
     APP_LOGD("call ResetDefaultApplicationSync done");
+    return nRet;
+}
+
+ErrCode ParamsProcessSetDefaultAppForAppClone(napi_env env, napi_callback_info info,
+    std::string& type, OHOS::AAFwk::Want& want, int32_t& userId, int32_t& appIndex)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FOUR)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        if (i == ARGS_POS_ZERO) {
+            if (!ParseType(env, args[i], type)) {
+                APP_LOGE("type %{public}s invalid", type.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, TYPE_CHECK, TYPE_STRING);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if ((!CommonFunc::ParseElementName(env, args[i], want))) {
+                APP_LOGE("parse ElementName failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ELEMENT_NAME, TYPE_OBJECT);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if ((!CommonFunc::ParseInt(env, args[i], appIndex))) {
+                APP_LOGE("parse appIndex failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+            }
+        } else if (i == ARGS_POS_THREE) {
+            if ((!CommonFunc::ParseInt(env, args[i], userId))) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
+            }
+        } else {
+            APP_LOGE("param check error");
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+napi_value SetDefaultApplicationForAppClone(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to SetDefaultApplicationForAppClone");
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    std::string type;
+    OHOS::AAFwk::Want want;
+    int32_t appIndex;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    if (ParamsProcessSetDefaultAppForAppClone(env, info, type, want, userId, appIndex) != ERR_OK) {
+        return nRet;
+    }
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            SET_DEFAULT_APPLICATION_FOR_APP_CLONE);
+        napi_throw(env, error);
+        return nRet;
+    }
+
+    ErrCode ret = defaultAppProxy->SetDefaultApplicationForAppClone(userId, appIndex, type, want);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetDefaultApplicationForAppClone failed: %{public}d", ret);
+        int32_t currentUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+        auto permission = (userId == currentUserId) ? Constants::PERMISSION_SET_DEFAULT_APPLICATION :
+            PERMISSION_SET_DEFAULT_APPLICATION_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS;
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, SET_DEFAULT_APPLICATION_FOR_APP_CLONE, permission);
+        napi_throw(env, businessError);
+        return nRet;
+    }
+
+    APP_LOGD("call SetDefaultApplicationForAppClone done");
     return nRet;
 }
 }

@@ -513,6 +513,7 @@ ani_object CommonFunAni::ConvertDefaultAppAbilityInfo(ani_env* env, const Abilit
         { .l = static_cast<ani_long>(abilityInfo.descriptionId) },
         { .r = icon },
         { .l = static_cast<ani_long>(abilityInfo.iconId) },
+        { .i = abilityInfo.appIndex },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
@@ -524,6 +525,7 @@ ani_object CommonFunAni::ConvertDefaultAppAbilityInfo(ani_env* env, const Abilit
         .AddLong()                                  // descriptionId: long
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // icon: string
         .AddLong()                                  // iconId: long
+        .AddInt()                                   // appIndex: int
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_ABILITY_INFO_INNER, ctorSig, args);
 }
@@ -551,6 +553,7 @@ ani_object CommonFunAni::ConvertDefaultAppExtensionInfo(ani_env* env, const Exte
         { .l = static_cast<ani_long>(extensionInfo.labelId) },
         { .l = static_cast<ani_long>(extensionInfo.descriptionId) },
         { .l = static_cast<ani_long>(extensionInfo.iconId) },
+        { .i = extensionInfo.appIndex },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
@@ -559,6 +562,7 @@ ani_object CommonFunAni::ConvertDefaultAppExtensionInfo(ani_env* env, const Exte
         .AddLong()                                  // labelId: long
         .AddLong()                                  // descriptionId: long
         .AddLong()                                  // iconId: long
+        .AddInt()                                   // appIndex: int
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_EXTENSION_ABILITY_INFO_INNER, ctorSig, args);
 }

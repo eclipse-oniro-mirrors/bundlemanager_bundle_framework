@@ -80,6 +80,10 @@ int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId)
 {
     return -1;
 }
+bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
+{
+    return false;
+}
 #else
 int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId)
 {
@@ -138,6 +142,10 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
 }
 
 bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex)
+{
+    return true;
+}
+bool BundlePermissionMgr::VerifyAcrossUserPermission(int userId)
 {
     return true;
 }

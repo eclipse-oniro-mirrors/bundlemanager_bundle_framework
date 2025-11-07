@@ -417,9 +417,10 @@ public:
      * @param callingName Indicates method caller
      * @param want Indicates the want
      * @param utd Indicates the utd
+     * @param appIndex Indicates the appIndex
      */
-    static void SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const std::string& callingName,
-        const std::string& want, const std::string& utd);
+    static void SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const int32_t appIndex,
+        const std::string& callingName, const std::string& want, const std::string& utd);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

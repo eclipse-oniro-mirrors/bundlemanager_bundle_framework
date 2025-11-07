@@ -26,7 +26,8 @@ const uint32_t CODE_IS_DEFAULT_APPLICATION = 0;
 const uint32_t CODE_GET_DEFAULT_APPLICATION = 1;
 const uint32_t CODE_SET_DEFAULT_APPLICATION = 2;
 const uint32_t CODE_RESET_DEFAULT_APPLICATION = 3;
-const uint32_t CODE_ERR = 4;
+const uint32_t CODE_SET_DEFAULT_APPLICATION_FOR_APP_CLONE = 4;
+const uint32_t CODE_ERR = 5;
 }
 
 namespace OHOS {
@@ -74,6 +75,9 @@ HWTEST_F(BmsDefaultAppHostTest, OnRemoteRequest_0100, Function | MediumTest | Le
     EXPECT_EQ(res, OBJECT_NULL);
 
     res = defaultAppHost.OnRemoteRequest(CODE_RESET_DEFAULT_APPLICATION, data, reply, option);
+    EXPECT_EQ(res, OBJECT_NULL);
+
+    res = defaultAppHost.OnRemoteRequest(CODE_SET_DEFAULT_APPLICATION_FOR_APP_CLONE, data, reply, option);
     EXPECT_EQ(res, OBJECT_NULL);
 
     res = defaultAppHost.OnRemoteRequest(CODE_ERR, data, reply, option);
@@ -138,6 +142,21 @@ HWTEST_F(BmsDefaultAppHostTest, HandleResetDefaultApplication_0100, Function | M
     MessageParcel reply;
     ErrCode res = defaultAppHost.HandleResetDefaultApplication(data, reply);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleSetDefaultApplicationForAppClone_0100
+ * @tc.name: test the HandleSetDefaultApplicationForAppClone
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetDefaultApplicationForAppClone
+ */
+HWTEST_F(BmsDefaultAppHostTest, HandleSetDefaultApplicationForAppClone_0100, Function | MediumTest | Level1)
+{
+    DefaultAppHost defaultAppHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = defaultAppHost.HandleSetDefaultApplicationForAppClone(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 } // AppExecFwk
 } // OHOS

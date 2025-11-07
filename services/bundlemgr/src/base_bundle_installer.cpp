@@ -379,7 +379,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         UtdHandler::UninstallUtdAsync(bundleName, userId_);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
         if (!installParam.isRemoveUser) {
-            DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
+            DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName, 0);
         }
 #endif
     }

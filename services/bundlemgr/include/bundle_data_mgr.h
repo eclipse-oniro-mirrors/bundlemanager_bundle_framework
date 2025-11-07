@@ -885,7 +885,8 @@ public:
     bool QueryInfoAndSkillsByElement(int32_t userId, const Element& element,
         AbilityInfo& abilityInfo, ExtensionAbilityInfo& extensionInfo, std::vector<Skill>& skills) const;
 
-    bool GetElement(int32_t userId, const ElementName& elementName, Element& element) const;
+    bool GetElement(int32_t userId, const int32_t appIndex, const ElementName& elementName,
+        Element& element) const;
 #endif
 
     int32_t GetUserId(int32_t userId = Constants::UNSPECIFIED_USERID) const;
