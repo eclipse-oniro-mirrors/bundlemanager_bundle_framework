@@ -89,7 +89,7 @@ const std::string DEVICE_TYPE_OF_DEFAULT = "default";
 const std::string TEMP_PREFIX = "temp_";
 const std::string EMPTY_STRING = "";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 const std::vector<std::string> BUNDLE_DATA_DIR_PAGENAME = {
     "cache",
     "files",

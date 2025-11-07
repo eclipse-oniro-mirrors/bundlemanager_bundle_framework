@@ -108,7 +108,7 @@ const nlohmann::json DEFAULT_CONFIG = R"(
 )"_json;
 const int32_t USER_ID = 100;
 const int32_t INVALID_USER_ID = 200;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 }  // namespace
 
 class BmsBundleDefaultAppTest : public testing::Test {

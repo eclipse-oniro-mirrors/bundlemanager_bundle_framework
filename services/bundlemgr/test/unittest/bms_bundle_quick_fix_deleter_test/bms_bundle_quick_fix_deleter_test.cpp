@@ -37,7 +37,7 @@ const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string RESULT_CODE = "resultCode";
 const std::string RESULT_BUNDLE_NAME = "bundleName";
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 }
 
 class BmsBundleQuickFixDeleterTest : public testing::Test {

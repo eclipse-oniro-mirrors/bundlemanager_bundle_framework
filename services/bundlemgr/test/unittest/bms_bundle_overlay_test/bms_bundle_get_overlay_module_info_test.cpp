@@ -43,7 +43,7 @@ const int32_t UNSPECIFIED_USERID = -2;
 const int32_t TEST_USERID = 101;
 const int32_t OVERLAY_MODULE_INFO_SIZE = 1;
 const int32_t DEFAULT_OVERLAY_MODULE_INFO_SIZE = 0;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 } // namespace
 
 class BmsBundleGetOverlayModuleInfoTest : public testing::Test {

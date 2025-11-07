@@ -51,7 +51,7 @@ const std::string HAP_FILE_PATH = "/data/app/el1/bundle/public/com.example.l3jsd
 const std::string PATCH_PATH = "/data/app/el1/bundle/public/com.example.l3jsdemo/patch_1000001";
 const int32_t VERSION_CODE = 1000001;
 const int32_t USERID = 100;
-const int32_t WAIT_TIME = 1; // wait for stopping service
+const int32_t WAIT_TIME = 2; // wait for stopping service
 }
 
 class BmsBundleQuickFixBootScannerTest : public testing::Test {

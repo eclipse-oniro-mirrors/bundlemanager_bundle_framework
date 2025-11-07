@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t WAIT_TIME = 1; // 1s
+const int32_t WAIT_TIME = 2; // 2s
 } // namespace
 
 void MockStatusReceiver::OnFinished(const int32_t resultCode, [[maybe_unused]] const std::string &resultMsg)

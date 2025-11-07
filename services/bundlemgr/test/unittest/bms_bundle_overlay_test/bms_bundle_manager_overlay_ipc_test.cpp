@@ -27,7 +27,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 namespace {
 const std::u16string TEST_HOST_DESCRIPTOR = u"ohos.bundleManager.test";
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 } // namespace
 class BundleMgrHostImplMock : public BundleMgrHostImpl {
 public:

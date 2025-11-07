@@ -37,7 +37,7 @@ const std::string TEST_BUNDLE_NAME = "testBundleName";
 const int32_t DEFAULT_TARGET_PRIORITY_SECOND = 1;
 const int32_t USERID = 100;
 const int32_t TEST_USERID = 101;
-const int32_t WAIT_TIME = 1; // init mocked bms
+const int32_t WAIT_TIME = 2; // init mocked bms
 } // namespace
 
 class BmsBundleSetOverlayEnabledTest : public testing::Test {
