@@ -58,7 +58,9 @@ ErrCode DriverInstaller::CopyDriverSoFile(const InnerBundleInfo &info, const std
         if (extAbilityInfo.second.type != ExtensionAbilityType::DRIVER) {
             continue;
         }
-
+        if (driverInstallExtHandler_ == nullptr) {
+            driverInstallExtHandler_ = std::make_shared<DriverInstallExtHandler>();
+        }
         auto &metadata = extAbilityInfo.second.metadata;
         auto filterFunc = [this, &result, &info, &dirMap, &isModuleExisted](const Metadata &meta) {
             result = FilterDriverSoFile(info, meta, dirMap, isModuleExisted);
@@ -144,6 +146,9 @@ void DriverInstaller::RemoveDriverSoFile(const InnerBundleInfo &info, const std:
                 static_cast<int32_t>(extAbilityInfo.second.type), moduleName.c_str());
             continue;
         }
+        if (driverInstallExtHandler_ == nullptr) {
+            driverInstallExtHandler_ = std::make_shared<DriverInstallExtHandler>();
+        }
         const auto &metadata = extAbilityInfo.second.metadata;
         for (const auto &meta : metadata) {
             if (std::find(DRIVER_PROPERTIES.cbegin(), DRIVER_PROPERTIES.cend(), meta.name) ==
@@ -185,7 +190,9 @@ std::string DriverInstaller::CreateDriverSoDestinedDir(const std::string &bundle
         return "";
     }
     std::string resStr = destinedDir;
-    DelayedSingleton<DriverInstallExtHandler>::GetInstance()->RedirectDriverInstallExtPath(resStr);
+    if (driverInstallExtHandler_ != nullptr) {
+        driverInstallExtHandler_->RedirectDriverInstallExtPath(resStr);
+    }
     if (resStr.back() != ServiceConstants::PATH_SEPARATOR[0]) {
         resStr += ServiceConstants::PATH_SEPARATOR;
     }

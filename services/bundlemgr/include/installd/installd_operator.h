@@ -362,7 +362,7 @@ private:
     static int32_t ForceCreateDirectory(const std::string &path, const OwnershipInfo &info);
     static int32_t MigrateDataCreateAhead(
         const std::string &sourcePaths, std::string &destinationPath, const OwnershipInfo &info);
-};
+    };
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_OPERATOR_H
