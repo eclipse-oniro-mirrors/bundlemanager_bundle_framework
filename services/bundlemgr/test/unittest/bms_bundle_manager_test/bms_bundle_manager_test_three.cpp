@@ -2497,6 +2497,6 @@ HWTEST_F(BmsBundleManagerTest3, CreateNewBundleEl5Dir_0001, Function | MediumTes
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     int32_t userId = 100;
     auto testRet = hostImpl->CreateNewBundleEl5Dir(userId);
-    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS
