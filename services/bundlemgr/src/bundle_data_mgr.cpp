@@ -11846,5 +11846,27 @@ ErrCode BundleDataMgr::GetPluginBundlePathForSelf(const std::string &pluginBundl
     codePath = it->second.codePath;
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::AtomicProcessWithBundleInfo(const std::string &bundleName,
+    const std::function<ErrCode(InnerBundleInfo&)>& callback)
+{
+    APP_LOGD("start to query innerBundleInfo");
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo innerBundleInfo = item->second;
+    ErrCode res = callback(innerBundleInfo);
+    if (res != ERR_OK) {
+        return res;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
+    }
+    bundleInfos_.at(bundleName) = innerBundleInfo;
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

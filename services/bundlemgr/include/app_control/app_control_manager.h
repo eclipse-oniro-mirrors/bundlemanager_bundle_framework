@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_CONTROL_MANAGER_H
 #define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_CONTROL_MANAGER_H
 
+#include <atomic>
 #include <mutex>
 #include <unordered_map>
 
@@ -134,7 +135,7 @@ private:
     ErrCode CheckAppControlRuleIntercept(const std::string &bundleName,
         int32_t userId, bool isSuccess, AppRunningControlRuleResult &controlRuleResult);
 
-    bool isAppInstallControlEnabled_ = false;
+    std::atomic<bool> isAppInstallControlEnabled_  { false };
     std::mutex appRunningControlMutex_;
     std::mutex abilityRunningControlRuleMutex_;
     std::mutex runningRuleSettingStatusMutex_;

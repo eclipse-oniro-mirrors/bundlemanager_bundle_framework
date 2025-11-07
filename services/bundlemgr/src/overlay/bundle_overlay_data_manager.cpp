@@ -660,53 +660,61 @@ ErrCode OverlayDataMgr::SetOverlayEnabled(const std::string &bundleName, const s
     if (GetBundleDataMgr() != ERR_OK) {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
-    InnerBundleInfo innerBundleInfo;
-    if (!dataMgr_->QueryOverlayInnerBundleInfo(bundleName, innerBundleInfo)) {
-        APP_LOGW("bundle is not existed %{public}s", bundleName.c_str());
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE;
-    }
     // 1. whether the specified bundle is installed under the specified userid
     InnerBundleUserInfo userInfo;
-    if (!innerBundleInfo.GetInnerBundleUserInfo(userId, userInfo)) {
+    bool needChangeState = false;
+    std::string callingName = GetCallingBundleName();
+    auto setEnabled = [&bundleName, &callingName, &moduleName, &isEnabled, &userId, &userInfo, &needChangeState]
+        (InnerBundleInfo &innerBundleInfo) -> ErrCode {
+        if (!innerBundleInfo.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGW("no userInfo of bundleName %{public}s under userId %{public}d",
             innerBundleInfo.GetBundleName().c_str(), userId);
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID;
-    }
-    // 2. whether bundle is overlay bundle
-    if ((GetCallingBundleName() != bundleName) && innerBundleInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
-        APP_LOGW("current bundle %{public}s is non-overlay bundle", bundleName.c_str());
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE;
-    }
-
-    if (!innerBundleInfo.FindModule(moduleName)) {
-        APP_LOGW("overlay bundle %{public}s does not contain module %{public}s", bundleName.c_str(),
-            moduleName.c_str());
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_MODULE;
-    }
-
-    // 3. whether module is overlay module
-    if (!innerBundleInfo.isOverlayModule(moduleName)) {
-        APP_LOGW("module %{public}s is non-overlay module", moduleName.c_str());
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_MODULE;
-    }
-
-    // 4. set enable state
-    auto &statesVec = userInfo.bundleUserInfo.overlayModulesState;
-    bool needChangeState = false;
-    for (auto &item : statesVec) {
-        if (item.find(moduleName + Constants::FILE_UNDERLINE) == std::string::npos) {
-            continue;
         }
-        std::string itemOld = item;
-        item = isEnabled ? (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_ENABLE)) :
-            (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_DISABLED));
-        needChangeState = (itemOld != item);
-        break;
-    }
+        // 2. whether bundle is overlay bundle
+        if ((callingName != bundleName) && innerBundleInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+            APP_LOGW("current bundle %{public}s is non-overlay bundle", bundleName.c_str());
+            return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE;
+        }
 
-    // 5. save to date storage
-    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
-    dataMgr_->SaveOverlayInfo(bundleName, innerBundleInfo);
+        if (!innerBundleInfo.FindModule(moduleName)) {
+            APP_LOGW("overlay bundle %{public}s does not contain module %{public}s", bundleName.c_str(),
+                moduleName.c_str());
+            return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_MODULE;
+        }
+
+        // 3. whether module is overlay module
+        if (!innerBundleInfo.isOverlayModule(moduleName)) {
+            APP_LOGW("module %{public}s is non-overlay module", moduleName.c_str());
+            return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_MODULE;
+        }
+
+        // 4. set enable state
+        auto &statesVec = userInfo.bundleUserInfo.overlayModulesState;
+        for (auto &item : statesVec) {
+            if (item.find(moduleName + Constants::FILE_UNDERLINE) == std::string::npos) {
+                continue;
+            }
+            std::string itemOld = item;
+            item = isEnabled ? (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_ENABLE)) :
+                (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_DISABLED));
+            needChangeState = (itemOld != item);
+            break;
+        }
+
+        // 5. save to date storage
+        innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+        innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        return ERR_OK;
+    };
+    ErrCode res = dataMgr_->AtomicProcessWithBundleInfo(bundleName, setEnabled);
+    if (res == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {
+        APP_LOGW("bundle is not existed %{public}s", bundleName.c_str());
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE;
+    }
+    if (res != ERR_OK) {
+        return res;
+    }
     if (needChangeState) {
         BundleResourceHelper::SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
     }

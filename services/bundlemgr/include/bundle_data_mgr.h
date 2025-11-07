@@ -1214,6 +1214,8 @@ public:
     ErrCode SwitchUninstallStateByUserId(const std::string &bundleName, const bool state,
         int32_t userId, bool &stateChange);
     ErrCode GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath);
+    ErrCode AtomicProcessWithBundleInfo(const std::string &bundleName,
+        const std::function<ErrCode(InnerBundleInfo&)>& callback);
 
 private:
     /**
