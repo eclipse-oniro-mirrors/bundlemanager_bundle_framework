@@ -1450,7 +1450,7 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
             preInstallBundleInfo.SetLabelId(resultBundleInfo.applicationInfo.labelResource.id);
             preInstallBundleInfo.SetIconId(resultBundleInfo.applicationInfo.iconResource.id);
             preInstallBundleInfo.SetModuleName(resultBundleInfo.applicationInfo.labelResource.moduleName);
-            if (!bundleInfo.hapModuleInfos.empty() &&
+            if (!resultBundleInfo.hapModuleInfos.empty() &&
                 resultBundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
                 break;
             }
