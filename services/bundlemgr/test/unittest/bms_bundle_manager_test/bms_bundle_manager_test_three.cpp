@@ -2482,4 +2482,21 @@ HWTEST_F(BmsBundleManagerTest3, RemoveBackupBundleData_0004, Function | MediumTe
     #endif
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
+
+/**
+ * @tc.number: CreateNewBundleEl5Dir_0001
+ * @tc.name: test CreateNewBundleEl5Dir
+ * @tc.desc: test CreateNewBundleEl5Dir
+ */
+HWTEST_F(BmsBundleManagerTest3, CreateNewBundleEl5Dir_0001, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t userId = 100;
+    auto testRet = hostImpl->CreateNewBundleEl5Dir(userId);
+    EXPECT_EQ(testRet, ERR_OK);
+}
 } // OHOS
