@@ -32,6 +32,7 @@ const std::string BUNDLE_NAME = "com.example.myapplication";
 const std::string OLD_BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/+old-com.example.myapplication";
 const std::string NEW_BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/+new-com.example.myapplication";
 const std::string REAL_BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/com.example.myapplication";
+const std::string TEMP_BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/+temp-com.example.myapplication";
 }  // namespace
 
 class BmsInstallExceptionMgrTest : public testing::Test {
@@ -221,10 +222,13 @@ HWTEST_F(BmsInstallExceptionMgrTest, installExceptionMgrTest_0008, TestSize.Leve
     EXPECT_TRUE(ans);
     ans = OHOS::ForceCreateDirectory(NEW_BUNDLE_DIR_NAME);
     EXPECT_TRUE(ans);
+    ans = OHOS::ForceCreateDirectory(TEMP_BUNDLE_DIR_NAME);
+    EXPECT_TRUE(ans);
     mgr->HandleAllBundleExceptionInfo();
     (void)OHOS::ForceRemoveDirectory(REAL_BUNDLE_DIR_NAME);
     (void)OHOS::ForceRemoveDirectory(NEW_BUNDLE_DIR_NAME);
     (void)OHOS::ForceRemoveDirectory(OLD_BUNDLE_DIR_NAME);
+    (void)OHOS::ForceRemoveDirectory(TEMP_BUNDLE_DIR_NAME);
 
     info.status = InstallRenameExceptionStatus::DELETE_OLD_PATH;
     ret = mgr->SaveBundleExceptionInfo(BUNDLE_NAME, info);
