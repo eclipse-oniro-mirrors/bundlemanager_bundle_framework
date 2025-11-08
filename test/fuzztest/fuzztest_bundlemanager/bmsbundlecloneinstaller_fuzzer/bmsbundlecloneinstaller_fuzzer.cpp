@@ -51,8 +51,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     installer.ProcessCloneBundleUninstall(emptyBundleName, randomUserId, appIndex, sync, param);
     installer.ProcessCloneBundleUninstall(randomBundleName, Constants::START_USERID, appIndex, sync, param);
     installer.ProcessCloneBundleUninstall(randomBundleName, Constants::START_USERID, randomAppIndex, sync, param);
-    bundleCloneInstall->UninstallCloneApp(bundleName, userId, appIndex, true, param);
-    bundleCloneInstall->UninstallAllCloneApps(bundleName, true, false, userId);
+    installer.UninstallCloneApp(bundleName, userId, appIndex, true, param);
+    installer.UninstallAllCloneApps(bundleName, true, false, userId);
 
     int32_t uid = fdp.ConsumeIntegral<int32_t>();
     InnerBundleInfo info;
