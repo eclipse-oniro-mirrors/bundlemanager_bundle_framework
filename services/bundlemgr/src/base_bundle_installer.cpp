@@ -1448,7 +1448,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     auto &mtx = dataMgr_->GetBundleMutex(bundleName_);
     std::lock_guard lock {mtx};
-
+    // add installing name, when parameters not set installingBundleName
+    AddInstallingBundleName(installParam);
+    ScopeGuard installBundleNameGuard([&] {
+        DeleteInstallingBundleName(installParam);
+    });
     // uninstall all sandbox app before
     UninstallAllSandboxApps(bundleName_);
     UpdateInstallerState(InstallerState::INSTALL_REMOVE_SANDBOX_APP);              // ---- 50%
@@ -8223,14 +8227,19 @@ bool BaseBundleInstaller::AddInstallingBundleName(const InstallParam &installPar
     if (installParam.isOTA || otaInstall_) {
         return false;
     }
+    if (!InitDataMgr()) {
+        return false;
+    }
+    if (!bundleName_.empty()) {
+        dataMgr_->AddInstallingBundleName(bundleName_, installParam.userId);
+    }
     auto iter = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_BUNDLE_NAME);
     if (iter == installParam.parameters.end()) {
         return false;
     }
-    if (!InitDataMgr()) {
-        return false;
+    if (iter->second != bundleName_) {
+        dataMgr_->AddInstallingBundleName(iter->second, installParam.userId);
     }
-    dataMgr_->AddInstallingBundleName(iter->second, installParam.userId);
     return true;
 }
 
@@ -8239,14 +8248,19 @@ bool BaseBundleInstaller::DeleteInstallingBundleName(const InstallParam &install
     if (installParam.isOTA || otaInstall_) {
         return false;
     }
+    if (!InitDataMgr()) {
+        return false;
+    }
+    if (!bundleName_.empty()) {
+        dataMgr_->DeleteInstallingBundleName(bundleName_, installParam.userId);
+    }
     auto iter = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_BUNDLE_NAME);
     if (iter == installParam.parameters.end()) {
         return false;
     }
-    if (!InitDataMgr()) {
-        return false;
+    if (iter->second != bundleName_) {
+        dataMgr_->DeleteInstallingBundleName(iter->second, installParam.userId);
     }
-    dataMgr_->DeleteInstallingBundleName(iter->second, installParam.userId);
     return true;
 }
 }  // namespace AppExecFwk

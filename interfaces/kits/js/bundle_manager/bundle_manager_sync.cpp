@@ -1136,5 +1136,26 @@ napi_value GetBundleInstallStatus(napi_env env, napi_callback_info info)
     APP_LOGD("call GetBundleInstallStatus done");
     return nBundleInstallStatus;
 }
+
+void CreateBundleInstallStatusObject(napi_env env, napi_value value)
+{
+    napi_value nBundleNotExist;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        BundleInstallStatus::BUNDLE_NOT_EXIST), &nBundleNotExist));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BUNDLE_NOT_EXIST",
+        nBundleNotExist));
+
+    napi_value nBundleInstalling;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        BundleInstallStatus::BUNDLE_INSTALLING), &nBundleInstalling));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BUNDLE_INSTALLING",
+        nBundleInstalling));
+
+    napi_value nBundleInstalled;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        BundleInstallStatus::BUNDLE_INSTALLED), &nBundleInstalled));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BUNDLE_INSTALLED",
+        nBundleInstalled));
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

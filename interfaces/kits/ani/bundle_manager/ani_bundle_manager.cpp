@@ -2062,6 +2062,26 @@ static void RemoveBackupBundleDataNative(ani_env* env,
     }
 }
 
+static ani_enum_item GetBundleInstallStatusNative(ani_env* env, ani_string aniBundleName)
+{
+    APP_LOGD("ani GetInstallBundleStatus called");
+    std::string bundleName;
+    if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
+        APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    ErrCode ret = BundleManagerHelper::InnerGetBundleInstallStatus(bundleName, status);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetBundleInstallStatus failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, GET_BUNDLE_INSTALL_STATUS,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        return nullptr;
+    }
+    return EnumUtils::EnumNativeToETS_BundleManager_BundleInstallStatus(env, static_cast<int32_t>(status));
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -2167,6 +2187,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(RecoverBackupBundleDataNative) },
         ani_native_function { "removeBackupBundleDataNative", nullptr,
             reinterpret_cast<void*>(RemoveBackupBundleDataNative) },
+        ani_native_function { "getBundleInstallStatusNative", nullptr,
+            reinterpret_cast<void*>(GetBundleInstallStatusNative) },
     };
 
     res = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

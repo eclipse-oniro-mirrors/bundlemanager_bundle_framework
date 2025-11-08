@@ -51,6 +51,7 @@ napi_value GetSandboxDataDirSync(napi_env env, napi_callback_info info);
 napi_value GetAppCloneIdentityBySandboxDataDirSync(napi_env env, napi_callback_info info);
 napi_value GetPluginBundlePathForSelfSync(napi_env env, napi_callback_info info);
 napi_value GetBundleInstallStatus(napi_env env, napi_callback_info info);
+void CreateBundleInstallStatusObject(napi_env env, napi_value value);
 
 bool ParseWantWithParameter(napi_env env, napi_value args, OHOS::AAFwk::Want &want);
 bool ParseWantListWithParameter(napi_env env, napi_value args, std::vector<OHOS::AAFwk::Want> &wants);

@@ -59,6 +59,8 @@ constexpr const char* CLASSNAME_APPCONTROL_DISPOSED_TYPE = "@ohos.bundle.appCont
 constexpr const char* CLASSNAME_APPCONTROL_CONTROL_TYPE = "@ohos.bundle.appControl.appControl.ControlType";
 constexpr const char* CLASSNAME_APPCONTROL_UNINSTALL_COMPONENT_TYPE =
     "@ohos.bundle.appControl.appControl.UninstallComponentType";
+constexpr const char* CLASSNAME_BUNDLEMANAGER_BUNDLE_INSTALL_STATUS =
+    "@ohos.bundle.bundleManager.bundleManager.BundleInstallStatus";
 } // namespace CommonFunAniNS
 class EnumUtils {
 private:
@@ -415,6 +417,17 @@ public:
     {
         return EnumNativeToETSByTable(
             env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_APPLICATION_FLAG, value, Array_BundleManager_ApplicationFlag);
+    }
+
+    /* bundleManager.BundleInstallStatus
+    enum BundleInstallStatus {
+        BUNDLE_NOT_EXIST = 1,
+        BUNDLE_INSTALLING = 2,
+        BUNDLE_INSTALLED = 3
+    }*/
+    static inline ani_enum_item EnumNativeToETS_BundleManager_BundleInstallStatus(ani_env* env, const int32_t value)
+    {
+        return EnumNativeToETSByOffset(env, CommonFunAniNS::CLASSNAME_BUNDLEMANAGER_BUNDLE_INSTALL_STATUS, value, 1);
     }
 
     /* bundleManager.CompatiblePolicy
