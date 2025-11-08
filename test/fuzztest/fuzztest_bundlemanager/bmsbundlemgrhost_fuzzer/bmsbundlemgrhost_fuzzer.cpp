@@ -17,7 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
-
+#define private public
 #include "bundle_mgr_host.h"
 #include "securec.h"
 #include "bms_fuzztest_util.h"
@@ -38,6 +38,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         MessageOption option;
         BundleMgrHost bundleMgrHost;
         bundleMgrHost.OnRemoteRequest(code, datas, reply, option);
+        bundleMgrHost.HandleGetDependentBundleInfo(datas, reply);
     }
     return true;
 }
