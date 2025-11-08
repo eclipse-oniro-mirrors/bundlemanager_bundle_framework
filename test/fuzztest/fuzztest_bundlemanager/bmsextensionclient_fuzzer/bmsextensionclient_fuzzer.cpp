@@ -24,44 +24,43 @@
 using Want = OHOS::AAFwk::Want;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
-namespace OHOS
+namespace OHOS {
+bool DoSomethingInterestingWithMyAPI(const uint8_t *data, size_t size)
 {
-    bool DoSomethingInterestingWithMyAPI(const uint8_t *data, size_t size)
-    {
-        Want want;
-        FuzzedDataProvider fdp(data, size);
-        std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
-        bool boolParam = fdp.ConsumeBool();
-        want.SetAction(bundleName);
-        std::vector<AbilityInfo> abilityInfos;
-        AbilityInfo abilityInfo;
-        std::vector<Want> wants;
-        const std::vector<std::string> bundleNames;
-        std::vector<BundleInfo> bundleInfos;
-        std::vector<int64_t> bundleStats;
-        sptr<IRemoteObject> callback;
-        BmsExtensionClient bmsExtensionClient;
-        BundleInfo bundleInfo;
-        int32_t userId = GenerateRandomUser(fdp);
-        int32_t flags = fdp.ConsumeIntegral<int32_t>();
-        bmsExtensionClient.QueryLauncherAbility(want, userId, abilityInfos);
-        bmsExtensionClient.QueryAbilityInfos(want, flags, userId, abilityInfos);
-        bmsExtensionClient.BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
-        bmsExtensionClient.QueryAbilityInfo(want, flags, userId, abilityInfo);
-        bmsExtensionClient.GetBundleInfos(flags, bundleInfos, userId);
-        bmsExtensionClient.GetBundleInfo(bundleName, flags, bundleInfo, userId, boolParam);
-        bmsExtensionClient.BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
-        bmsExtensionClient.ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, boolParam);
-        bmsExtensionClient.GetBundleStats(bundleName, userId, bundleStats);
-        bmsExtensionClient.ClearCache(bundleName, callback, userId);
-        bmsExtensionClient.ClearData(bundleName, userId);
-        int32_t uid = fdp.ConsumeIntegral<int32_t>();
-        bmsExtensionClient.GetUidByBundleName(bundleName, userId, uid);
-        bmsExtensionClient.GetBundleNameByUid(uid, bundleName);
-        bmsExtensionClient.ModifyLauncherAbilityInfo(abilityInfo);
-        bmsExtensionClient.GetDataMgr();
-        return true;
-    }
+    Want want;
+    FuzzedDataProvider fdp(data, size);
+    std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    bool boolParam = fdp.ConsumeBool();
+    want.SetAction(bundleName);
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo abilityInfo;
+    std::vector<Want> wants;
+    const std::vector<std::string> bundleNames;
+    std::vector<BundleInfo> bundleInfos;
+    std::vector<int64_t> bundleStats;
+    sptr<IRemoteObject> callback;
+    BmsExtensionClient bmsExtensionClient;
+    BundleInfo bundleInfo;
+    int32_t userId = GenerateRandomUser(fdp);
+    int32_t flags = fdp.ConsumeIntegral<int32_t>();
+    bmsExtensionClient.QueryLauncherAbility(want, userId, abilityInfos);
+    bmsExtensionClient.QueryAbilityInfos(want, flags, userId, abilityInfos);
+    bmsExtensionClient.BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
+    bmsExtensionClient.QueryAbilityInfo(want, flags, userId, abilityInfo);
+    bmsExtensionClient.GetBundleInfos(flags, bundleInfos, userId);
+    bmsExtensionClient.GetBundleInfo(bundleName, flags, bundleInfo, userId, boolParam);
+    bmsExtensionClient.BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
+    bmsExtensionClient.ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, boolParam);
+    bmsExtensionClient.GetBundleStats(bundleName, userId, bundleStats);
+    bmsExtensionClient.ClearCache(bundleName, callback, userId);
+    bmsExtensionClient.ClearData(bundleName, userId);
+    int32_t uid = fdp.ConsumeIntegral<int32_t>();
+    bmsExtensionClient.GetUidByBundleName(bundleName, userId, uid);
+    bmsExtensionClient.GetBundleNameByUid(uid, bundleName);
+    bmsExtensionClient.ModifyLauncherAbilityInfo(abilityInfo);
+    bmsExtensionClient.GetDataMgr();
+    return true;
+}
 }
 
 // Fuzzer entry point.
