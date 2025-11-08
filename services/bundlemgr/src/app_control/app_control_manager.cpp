@@ -245,7 +245,6 @@ ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId, int32_
     if (iter != appRunningControlRuleResult_.end()) {
         appRunningControlRuleResult_.erase(iter);
     }
-    commonEventMgr_->NotifyDeleteDiposedRule(appId, userId, Constants::MAIN_APP_INDEX);
     return ERR_OK;
 }
 
@@ -364,7 +363,6 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
     DeleteAbilityRunningRuleCache({ appIdKey, transformedAppIdKey });
     LOG_D(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
         callerName.c_str(), userId, appIndex);
-    commonEventMgr_->NotifySetDiposedRule(appId, userId, rule.ToString(), appIndex);
     return ERR_OK;
 }
 

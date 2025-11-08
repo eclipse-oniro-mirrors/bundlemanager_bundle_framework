@@ -423,6 +423,10 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
         userId = GetCallingUserId();
     }
     ret = appControlManager_->DeleteDisposedRule(callerName, appId, Constants::MAIN_APP_INDEX, userId);
+    if (ret == ERR_OK) {
+        std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+        commonEventMgr->NotifyDeleteDiposedRule(appId, userId, Constants::MAIN_APP_INDEX);
+    }
     SendAppControlEvent(ControlActionType::DISPOSE_STATUS, ControlOperationType::REMOVE_RULE,
         callerName, userId, Constants::MAIN_APP_INDEX, { appId }, Constants::EMPTY_STRING);
     return ret;
@@ -640,6 +644,11 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedRules(
                 ret, disposedRuleConfiguration.appId.c_str(), disposedRuleConfiguration.appIndex);
             continue;
         }
+        
+        std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+        commonEventMgr->NotifyDeleteDiposedRule(
+            disposedRuleConfiguration.appId, userId, disposedRuleConfiguration.appIndex);
+
         SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::REMOVE_RULE,
             callerName, userId, disposedRuleConfiguration.appIndex, { disposedRuleConfiguration.appId },
             Constants::EMPTY_STRING);
@@ -807,6 +816,9 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedRuleForCloneApp(const std::stri
     ret = appControlManager_->DeleteDisposedRule(callerName, appId, appIndex, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "DeleteDisposedRule error:%{public}d, appIndex:%{public}d", ret, appIndex);
+    } else {
+        std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+        commonEventMgr->NotifyDeleteDiposedRule(appId, userId, appIndex);
     }
     SendAppControlEvent(ControlActionType::DISPOSE_RULE, ControlOperationType::REMOVE_RULE,
         callerName, userId, appIndex, { appId }, Constants::EMPTY_STRING);
