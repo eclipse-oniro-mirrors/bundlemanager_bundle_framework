@@ -7977,7 +7977,7 @@ bool BundleDataMgr::QueryInnerBundleInfo(const std::string &bundleName, InnerBun
     std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        APP_LOGW_NOFUNC("QueryInnerBundleInfo not find %{public}s", bundleName.c_str());
+        APP_LOGD("QueryInnerBundleInfo not find %{public}s", bundleName.c_str());
         return false;
     }
     info = item->second;

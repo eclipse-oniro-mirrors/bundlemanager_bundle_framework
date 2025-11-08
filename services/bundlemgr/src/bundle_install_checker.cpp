@@ -202,7 +202,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
 {
     LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo");
     if (bundlePaths.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "check hap sign info failed due to empty bundlePaths");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "check sign failed paths empty");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
     for (const std::string &bundlePath : bundlePaths) {
