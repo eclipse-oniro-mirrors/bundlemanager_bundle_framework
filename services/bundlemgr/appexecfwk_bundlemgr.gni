@@ -175,6 +175,7 @@ bundle_install_external_deps = [
   "os_account:libaccountkits",
   "safwk:api_cache_manager",
   "storage_service:storage_manager_acl",
+  "window_manager:libmodal_system_ui_extension_client",
   "zlib:shared_libz",
 ]
 

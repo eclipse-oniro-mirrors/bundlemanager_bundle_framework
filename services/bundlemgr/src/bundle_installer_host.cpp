@@ -30,6 +30,7 @@
 #include "bundle_multiuser_installer.h"
 #include "bundle_permission_mgr.h"
 #include "ipc_skeleton.h"
+#include "modal_system_ui_extension.h"
 #include "parameters.h"
 #include "plugin_installer.h"
 
@@ -41,6 +42,7 @@ constexpr const char* BMS_PARA_BUNDLE_NAME = "ohos.bms.param.bundleName";
 constexpr const char* BMS_PARA_IS_KEEP_DATA = "ohos.bms.param.isKeepData";
 constexpr const char* BMS_PARA_USER_ID = "ohos.bms.param.userId";
 constexpr const char* BMS_PARA_APP_INDEX = "ohos.bms.param.appIndex";
+constexpr const char* UIEXTENSION_MODAL_TYPE = "ability.want.params.modalType";
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;
 int32_t UPPER_DLP_TYPE_BOUND = 3;
@@ -1164,6 +1166,15 @@ bool BundleInstallerHost::CheckUninstallDisposedRule(
         IPCSkeleton::SetCallingIdentity(identity);
         if (err != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "start extension ability failed code:%{public}d", err);
+        }
+    } else if (rule.uninstallComponentType == UninstallComponentType::UI_EXTENSION) {
+        rule.want->SetParam(UIEXTENSION_MODAL_TYPE, 1);
+        auto connection = std::make_shared<Rosen::ModalSystemUiExtension>();
+        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        bool err = connection->CreateModalUIExtension(*rule.want);
+        IPCSkeleton::SetCallingIdentity(identity);
+        if (!err) {
+            LOG_E(BMS_TAG_INSTALLER, "request modal UI extension failed");
         }
     } else {
         LOG_E(BMS_TAG_INSTALLER, "uninstallComponentType wrong type:%{public}d", rule.uninstallComponentType);

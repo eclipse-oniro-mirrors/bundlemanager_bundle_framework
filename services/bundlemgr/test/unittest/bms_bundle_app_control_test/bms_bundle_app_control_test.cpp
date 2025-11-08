@@ -2435,6 +2435,26 @@ HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_0900, Function | SmallTe
 }
 
 /**
+ * @tc.number: UninstallDisposedRule_2000
+ * @tc.name: Test GetUninstallDisposedRule by AppControlManagerRdb
+ * @tc.desc: 1.GetUninstallDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, UninstallDisposedRule_2000, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    UninstallDisposedRule rule;
+    rule.uninstallComponentType = UninstallComponentType::UI_EXTENSION;
+    rule.priority = 0;
+    rdb->SetUninstallDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, APP_INDEX, USERID);
+    UninstallDisposedRule uninstallDisposedRule;
+    auto res = rdb->GetUninstallDisposedRule(APPID, APP_INDEX, USERID, uninstallDisposedRule);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(rule.uninstallComponentType, uninstallDisposedRule.uninstallComponentType);
+    EXPECT_EQ(rule.priority, uninstallDisposedRule.priority);
+}
+
+/**
  * @tc.number: UninstallDisposedRule_1000
  * @tc.name: Test DeleteUninstallDisposedRule by AppControlManager
  * @tc.desc: 1.DeleteUninstallDisposedRule test
