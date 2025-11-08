@@ -32,6 +32,7 @@ export default namespace appControl {
 
   export enum UninstallComponentType {
     EXTENSION = 1,
+    UI_EXTENSION = 2
   }
 
   export enum DisposedType {

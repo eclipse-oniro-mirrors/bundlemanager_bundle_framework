@@ -535,6 +535,7 @@ public:
     /* appControl.UninstallComponentType
     enum UninstallComponentType {
         EXTENSION = 1,
+        UI_EXTENSION = 2
     } */
     static inline ani_enum_item EnumNativeToETS_AppControl_UninstallComponentType(ani_env* env, const int32_t value)
     {
