@@ -11801,6 +11801,55 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosWithDefault(const Want &want, in
     return ERR_OK;
 }
 
+void BundleDataMgr::AddInstallingBundleName(const std::string &bundleName, const int32_t userId)
+{
+    std::unique_lock<std::shared_mutex> lock(installingBundleNamesMutex_);
+    installingBundleNames_[bundleName].insert(userId);
+}
+
+void BundleDataMgr::DeleteInstallingBundleName(const std::string &bundleName, const int32_t userId)
+{
+    std::unique_lock<std::shared_mutex> lock(installingBundleNamesMutex_);
+    auto item = installingBundleNames_.find(bundleName);
+    if (item == installingBundleNames_.end()) {
+        return;
+    }
+    item->second.erase(userId);
+    if (item->second.empty()) {
+        installingBundleNames_.erase(bundleName);
+    }
+}
+
+void BundleDataMgr::GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+    BundleInstallStatus &bundleInstallStatus)
+{
+    {
+        std::shared_lock<std::shared_mutex> lock(installingBundleNamesMutex_);
+        auto item = installingBundleNames_.find(bundleName);
+        if (item != installingBundleNames_.end()) {
+            if ((item->second.find(userId) != item->second.end()) ||
+                (item->second.find(Constants::DEFAULT_USERID) != item->second.end()) ||
+                (item->second.find(Constants::U1) != item->second.end())) {
+                bundleInstallStatus = BundleInstallStatus::BUNDLE_INSTALLING;
+                return;
+            }
+        }
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        bundleInstallStatus = BundleInstallStatus::BUNDLE_NOT_EXIST;
+        return;
+    }
+    int32_t responseUserId = item->second.GetResponseUserId(userId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        APP_LOGW("-n %{public}s not exist in -u %{public}d", bundleName.c_str(), userId);
+        bundleInstallStatus = BundleInstallStatus::BUNDLE_NOT_EXIST;
+        return;
+    }
+    bundleInstallStatus = BundleInstallStatus::BUNDLE_INSTALLED;
+}
+
 ErrCode BundleDataMgr::GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath)
 {
     int32_t uid = IPCSkeleton::GetCallingUid();

@@ -6581,5 +6581,32 @@ bool BundleMgrHostImpl::HasGetAbilityInfoExcludeExtFlag(uint32_t flags) const
     }
     return false;
 }
+
+ErrCode BundleMgrHostImpl::GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+    BundleInstallStatus &bundleInstallStatus)
+{
+    APP_LOGD("start GetBundleInstallStatus, bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (bundleName.empty() || !dataMgr->HasUserId(userId)) {
+        bundleInstallStatus = BundleInstallStatus::BUNDLE_NOT_EXIST;
+        return ERR_OK;
+    }
+    dataMgr->GetBundleInstallStatus(bundleName, userId, bundleInstallStatus);
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

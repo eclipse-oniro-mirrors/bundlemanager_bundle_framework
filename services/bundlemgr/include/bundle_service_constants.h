@@ -280,6 +280,8 @@ constexpr const char* EXT_PROFILE = "ext_profile";
 constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
 constexpr const char* MANIFEST_JSON = "manifest.json";
 constexpr const char* CLOUD_PROFILE_PATH = "resources/base/profile/cloudkit_config.json";
+// for install param
+constexpr const char* BMS_PARA_INSTALL_BUNDLE_NAME = "ohos.bms.param.installBundleName";
 
 // no report for expected errcode
 const std::set<int32_t> EXPECTED_ERROR = {

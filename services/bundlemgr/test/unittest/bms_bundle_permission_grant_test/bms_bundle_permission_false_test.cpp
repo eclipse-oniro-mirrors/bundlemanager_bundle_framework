@@ -2002,6 +2002,21 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetAbilityResourceInfo_0002, Function | S
 }
 
 /**
+ * @tc.number: GetBundleInstallStatus_0001
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetBundleInstallStatus_0001, Function | SmallTest | Level1)
+{
+    std::string bundleName = "bundle_test";
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = bundleMgrHostImpl_->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(status, BundleInstallStatus::UNKNOWN_STATUS);
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_0001
  * @tc.name: test RecoverBackupBundleData
  * @tc.desc: test RecoverBackupBundleData

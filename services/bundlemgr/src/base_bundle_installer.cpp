@@ -207,6 +207,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to process bundle install");
+    AddInstallingBundleName(installParam);
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
@@ -250,6 +251,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
             installParam, sysEventInfo_.preBundleScene, result);
     }
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
+    DeleteInstallingBundleName(installParam);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallBundle finished -n %{public}s -u %{public}d",
         bundleName_.c_str(), installParam.userId);
     return result;
@@ -8214,6 +8216,38 @@ void BaseBundleInstaller::InnerProcessNewBundleDataDir(const bool isOta,
 void BaseBundleInstaller::SetIsAbcCompressed()
 {
     sysEventInfo_.isAbcCompressed = bundleInstallChecker_->GetIsAbcCompressed();
+}
+
+bool BaseBundleInstaller::AddInstallingBundleName(const InstallParam &installParam)
+{
+    if (installParam.isOTA || otaInstall_) {
+        return false;
+    }
+    auto iter = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_BUNDLE_NAME);
+    if (iter == installParam.parameters.end()) {
+        return false;
+    }
+    if (!InitDataMgr()) {
+        return false;
+    }
+    dataMgr_->AddInstallingBundleName(iter->second, installParam.userId);
+    return true;
+}
+
+bool BaseBundleInstaller::DeleteInstallingBundleName(const InstallParam &installParam)
+{
+    if (installParam.isOTA || otaInstall_) {
+        return false;
+    }
+    auto iter = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_BUNDLE_NAME);
+    if (iter == installParam.parameters.end()) {
+        return false;
+    }
+    if (!InitDataMgr()) {
+        return false;
+    }
+    dataMgr_->DeleteInstallingBundleName(iter->second, installParam.userId);
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

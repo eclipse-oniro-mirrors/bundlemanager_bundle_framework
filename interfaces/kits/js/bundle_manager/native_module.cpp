@@ -187,6 +187,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getPluginBundlePathForSelf", GetPluginBundlePathForSelfSync),
         DECLARE_NAPI_FUNCTION("recoverBackupBundleData", RecoverBackupBundleData),
         DECLARE_NAPI_FUNCTION("removeBackupBundleData", RemoveBackupBundleData),
+        DECLARE_NAPI_FUNCTION("getBundleInstallStatus", GetBundleInstallStatus),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

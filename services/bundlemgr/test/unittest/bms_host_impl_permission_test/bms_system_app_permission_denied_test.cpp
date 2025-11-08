@@ -870,6 +870,24 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0048, TestSize.Leve
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
+/*
+ * @tc.number: BundleMgrHostImpl_0049
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetBundleInstallStatus SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0049, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto ret = localBundleMgrHostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    EXPECT_EQ(status, BundleInstallStatus::UNKNOWN_STATUS);
+}
+
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 /**
  * @tc.number: BundleResourceHostImpl_0001
