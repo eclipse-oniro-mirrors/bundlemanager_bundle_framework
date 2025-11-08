@@ -1434,7 +1434,6 @@ private:
     void GetPreBundleSize(const std::string &name, std::vector<BundleStorageStats> &bundleStats) const;
     bool GetAdaptBaseShareBundleInfo(const InnerBundleInfo &innerBundleInfo, const Dependency &dependency,
         BaseSharedBundleInfo &baseSharedBundleInfo) const;
-    bool CreateEl5Group(const InnerBundleInfo &info, int32_t userId);
 
 private:
     bool initialUserFlag_ = false;
