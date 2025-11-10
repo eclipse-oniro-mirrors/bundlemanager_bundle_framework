@@ -152,6 +152,10 @@ void BundleInstallerHost::HandleInstallMessage(MessageParcel &data)
         return;
     }
     installParam->withCopyHaps = true;
+    installParam->pgoParams.clear();
+    if (installParam->parameters.find(ServiceConstants::ENTERPRISE_MANIFEST) != installParam->parameters.end()) {
+        installParam->parameters.erase(ServiceConstants::ENTERPRISE_MANIFEST);
+    }
     Install(bundlePath, *installParam, statusReceiver);
     LOG_D(BMS_TAG_INSTALLER, "handle install message finished");
 }
@@ -215,6 +219,10 @@ void BundleInstallerHost::HandleInstallMultipleHapsMessage(MessageParcel &data)
         return;
     }
     installParam->withCopyHaps = true;
+    installParam->pgoParams.clear();
+    if (installParam->parameters.find(ServiceConstants::ENTERPRISE_MANIFEST) != installParam->parameters.end()) {
+        installParam->parameters.erase(ServiceConstants::ENTERPRISE_MANIFEST);
+    }
     Install(pathVec, *installParam, statusReceiver);
     LOG_D(BMS_TAG_INSTALLER, "handle install multiple haps finished");
 }
