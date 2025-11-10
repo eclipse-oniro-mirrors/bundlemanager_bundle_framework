@@ -9064,6 +9064,10 @@ void BundleDataMgr::BuildExternalOverlayConnection(const std::string &moduleName
                 info.second.GetOverlayModuleState(overlayModule, innerUserId, state);
                 if (state == OverlayState::OVERLAY_INVALID) {
                     info.second.SetOverlayModuleState(overlayModule, OVERLAY_ENABLE, innerUserId);
+                    // need save info
+                    if (!dataStorage_->SaveStorageBundleInfo(info.second)) {
+                        APP_LOGE("update storage bundle:%{public}s failed", info.second.GetBundleName().c_str());
+                    }
                 }
             }
         }
