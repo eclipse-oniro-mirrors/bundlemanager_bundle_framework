@@ -15,6 +15,8 @@
 
 #include "bundle_resource_process.h"
 
+#include <cerrno>
+
 #include "account_helper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
@@ -32,6 +34,7 @@ constexpr const char* THEME_ICONS_A_FLAG = "/a/app/flag";
 constexpr const char* THEME_DESCRIPTION_FILE = "description.json";
 constexpr const char* THEME_KEY_ORIGIN = "origin";
 constexpr const char* THEME_KEY_THEME_TYPE_ONLINE = "online";
+constexpr const char* THEME_OTHER_ICON = "other_icons";
 }
 
 bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBundleInfo,
@@ -643,8 +646,8 @@ bool BundleResourceProcess::CheckThemeType(
     if (BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG)) {
         // flag exist in "/data/service/el1/public/themes/<userId>/a/app/flag"
         if (BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + bundleName)) {
-            isOnlineTheme = IsOnlineTheme(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A +
-                THEME_DESCRIPTION_FILE);
+            isOnlineTheme = IsOtherIconsMaskExist(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A +
+                THEME_OTHER_ICON);
             return true;
         }
         APP_LOGW("-n %{public}s -u %{public}d does not exist in theme a", bundleName.c_str(), userId);
@@ -652,12 +655,22 @@ bool BundleResourceProcess::CheckThemeType(
     }
     // flag exist in "/data/service/el1/public/themes/<userId>/b/app/flag"
     if (BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + bundleName)) {
-        isOnlineTheme = IsOnlineTheme(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B +
-            THEME_DESCRIPTION_FILE);
+        isOnlineTheme = IsOtherIconsMaskExist(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B +
+            THEME_OTHER_ICON);
         return true;
     }
     APP_LOGW("-n %{public}s -u %{public}d does not exist in theme b", bundleName.c_str(), userId);
     return false;
+}
+
+bool BundleResourceProcess::IsOtherIconsMaskExist(const std::string &themePath)
+{
+    if (access(themePath.c_str(), F_OK) != 0) {
+        APP_LOGE("access theme %{public}s failed errno %{public}d, preset theme", themePath.c_str(), errno);
+        return false;
+    }
+    APP_LOGI("OtherIcons exist, online theme");
+    return true;
 }
 
 bool BundleResourceProcess::IsOnlineTheme(const std::string &themePath)
