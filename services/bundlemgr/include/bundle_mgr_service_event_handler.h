@@ -534,6 +534,12 @@ private:
         const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap,
         Constants::AppType appType);
 
+    static bool InstallSystemBundleNeedCheckUserForPatch(const std::vector<std::string> &filePaths,
+        const std::string &bundleName, bool isOta);
+
+    static bool InnerMultiProcessBundleInstallForPatch(
+        const std::unordered_map<std::string, std::vector<std::string>> &needInstallMap, bool isOta);
+
     void ProcessCheckAppDataDir();
     void InnerProcessCheckAppDataDir();
 
