@@ -67,6 +67,7 @@ constexpr uint8_t DEFAULT_EMBEDDED_VALUE = 0;
 constexpr int16_t DMS_UID = 5522;
 // sa id
 constexpr int16_t DOWNLOAD_SERVICE_SA_ID = 3706;
+constexpr int32_t ACTIVATION_LOCK_SA_ID = 65920;
 // replace want int ecological rule
 constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 
@@ -130,6 +131,7 @@ void BundleConnectAbilityMgr::ProcessPreloadRequestToServiceCenter(int32_t flag,
             return;
         }
         mgr->LoadService(DOWNLOAD_SERVICE_SA_ID);
+        mgr->LoadService(ACTIVATION_LOCK_SA_ID);
         InstalldClient::GetInstance()->LoadInstalls();
     };
     std::thread loadServiceThread(task);
@@ -399,6 +401,7 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
             return;
         }
         mgr->LoadService(DOWNLOAD_SERVICE_SA_ID);
+        mgr->LoadService(ACTIVATION_LOCK_SA_ID);
         InstalldClient::GetInstance()->LoadInstalls();
     };
     std::thread loadServiceThread(task);
