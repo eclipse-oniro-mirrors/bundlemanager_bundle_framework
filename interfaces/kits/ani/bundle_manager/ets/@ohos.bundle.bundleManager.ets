@@ -440,7 +440,7 @@ namespace bundleManager {
       return getBundleInfoForSelfNative(bundleFlags, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
       callback(null, resultBundleInfo);
     }, (err: Error): void => {
@@ -454,7 +454,7 @@ namespace bundleManager {
         return getBundleInfoForSelfNative(bundleFlags, false);
       };
       let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let resultBundleInfo: BundleInfo = e as BundleInfo;
           resolve(resultBundleInfo);
         }, (err: Error): void => {
@@ -480,7 +480,7 @@ namespace bundleManager {
         return getBundleInfoNative(bundleName, bundleFlags, userIdInfo, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultBundleInfo: BundleInfo = e as BundleInfo;
         resolve(resultBundleInfo);
       }, (err: Error): void => {
@@ -496,7 +496,7 @@ namespace bundleManager {
       return getBundleInfoNative(bundleName, bundleFlags, EMPTY_VALUE, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
       callback(null, resultBundleInfo);
     },(err: Error): void => {
@@ -509,7 +509,7 @@ namespace bundleManager {
       return getBundleInfoNative(bundleName, bundleFlags, userId, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
       callback(null, resultBundleInfo);
     },(err: Error): void => {
@@ -533,7 +533,7 @@ namespace bundleManager {
         return getAllBundleInfoNative(bundleFlags, userIdInfo);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
         resolve(resultBundleInfos);
       }, (err: Error): void => {
@@ -549,7 +549,7 @@ namespace bundleManager {
       return getAllBundleInfoNative(bundleFlags, EMPTY_VALUE);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
       callback(null, resultBundleInfos);
     }, (err: Error): void => {
@@ -562,7 +562,7 @@ namespace bundleManager {
       return getAllBundleInfoNative(bundleFlags, userId);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
       callback(null, resultBundleInfos);
     }, (err: Error): void => {
@@ -578,7 +578,7 @@ namespace bundleManager {
         return getAllApplicationInfoNative(appFlags, userIdInfo);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultApplicationInfos: Array<ApplicationInfo> = e as Array<ApplicationInfo>;
         resolve(resultApplicationInfos);
       }, (err: Error): void => {
@@ -594,7 +594,7 @@ namespace bundleManager {
       return getAllApplicationInfoNative(appFlags, EMPTY_VALUE);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultApplicationInfos: Array<ApplicationInfo> = e as Array<ApplicationInfo>;
       callback(null, resultApplicationInfos);
     }, (err: Error): void => {
@@ -608,7 +608,7 @@ namespace bundleManager {
       return getAllApplicationInfoNative(appFlags, userId);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultApplicationInfos: Array<ApplicationInfo> = e as Array<ApplicationInfo>;
       callback(null, resultApplicationInfos);
     }, (err: Error): void => {
@@ -622,7 +622,7 @@ namespace bundleManager {
         return isApplicationEnabledNative(bundleName, appIndex, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let isEnabled: boolean = e as boolean;
         resolve(isEnabled);
       }, (err: Error): void => {
@@ -639,7 +639,7 @@ namespace bundleManager {
         return isApplicationEnabledNative(bundleName, 0, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let isEnabled: boolean = e as boolean;
         resolve(isEnabled);
       }, (err: Error): void => {
@@ -655,7 +655,7 @@ namespace bundleManager {
       return isApplicationEnabledNative(bundleName, 0, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let isEnabled: boolean = e as boolean;
       callback(null, isEnabled);
     }, (err: Error): void => {
@@ -671,7 +671,7 @@ namespace bundleManager {
         return queryAbilityInfoSyncNative(want, abilityFlags, userIdInfo, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultAbilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
         resolve(resultAbilityInfos);
       }, (err: Error): void => {
@@ -687,7 +687,7 @@ namespace bundleManager {
       return queryAbilityInfoSyncNative(want, abilityFlags, EMPTY_VALUE, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultAbilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
       callback(null, resultAbilityInfos);
     }, (err: Error): void => {
@@ -701,7 +701,7 @@ namespace bundleManager {
       return queryAbilityInfoSyncNative(want, abilityFlags, userId, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultAbilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
       callback(null, resultAbilityInfos);
     }, (err: Error): void => {
@@ -717,7 +717,7 @@ namespace bundleManager {
         return getApplicationInfoNative(bundleName, appFlags, userIdInfo, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultApplicationInfo: ApplicationInfo = e as ApplicationInfo;
         resolve(resultApplicationInfo);
       }, (err: Error): void => {
@@ -733,7 +733,7 @@ namespace bundleManager {
       return getApplicationInfoNative(bundleName, appFlags, EMPTY_VALUE, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultApplicationInfo: ApplicationInfo = e as ApplicationInfo;
       callback(null, resultApplicationInfo);
     },(err: Error): void => {
@@ -747,7 +747,7 @@ namespace bundleManager {
       return getApplicationInfoNative(bundleName, appFlags, userId, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultApplicationInfo: ApplicationInfo = e as ApplicationInfo;
       callback(null, resultApplicationInfo);
     },(err: Error): void => {
@@ -762,7 +762,7 @@ namespace bundleManager {
         return getAppCloneIdentityNative(uid);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultAppCloneIdentity: AppCloneIdentity = e as AppCloneIdentity;
         resolve(resultAppCloneIdentity);
       }, (err: Error): void => {
@@ -780,7 +780,7 @@ namespace bundleManager {
         return getAbilityLabelNative(bundleName, moduleName, abilityName, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let label: string = e as string;
         resolve(label);
       }, (err: Error): void => {
@@ -797,7 +797,7 @@ namespace bundleManager {
       return getAbilityLabelNative(bundleName, moduleName, abilityName, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let label: string = e as string;
       callback(null, label);
     },(err: Error): void => {
@@ -816,7 +816,7 @@ namespace bundleManager {
         return getLaunchWantForBundleNative(bundleName, userIdInfo, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let want: Want = e as Want;
         resolve(want);
       }, (err: Error): void => {
@@ -835,7 +835,7 @@ namespace bundleManager {
       return getLaunchWantForBundleNative(bundleName, userId, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let want: Want = e as Want;
       callback(null, want);
     },(err: Error): void => {
@@ -851,7 +851,7 @@ namespace bundleManager {
       return getLaunchWantForBundleNative(bundleName, EMPTY_VALUE, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let want: Want = e as Want;
       callback(null, want);
     },(err: Error): void => {
@@ -868,7 +868,7 @@ namespace bundleManager {
         return getAppCloneBundleInfoNative(bundleName, appIndex, bundleFlags, userIdInfo);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultBundleInfo: BundleInfo = e as BundleInfo;
         resolve(resultBundleInfo);
       }, (err: Error): void => {
@@ -884,7 +884,7 @@ namespace bundleManager {
       return getBundleNameByUidNative(uid, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: string = e as string;
       callback(null, result);
     }).catch((err: Error): void => {
@@ -898,7 +898,7 @@ namespace bundleManager {
         return getBundleNameByUidNative(uid, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: string = e as string;
         resolve(result);
       }).catch((err: Error): void => {
@@ -916,7 +916,7 @@ namespace bundleManager {
         want, extensionAbilityType, "", extensionAbilityFlags, EMPTY_VALUE, false, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let extensionAbilityInfos: Array<ExtensionAbilityInfo> = e as Array<ExtensionAbilityInfo>;
       callback(null, extensionAbilityInfos);
     },(err: Error): void => {
@@ -931,7 +931,7 @@ namespace bundleManager {
         want, extensionAbilityType, "", extensionAbilityFlags, userId, false, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let extensionAbilityInfos: Array<ExtensionAbilityInfo> = e as Array<ExtensionAbilityInfo>;
       callback(null, extensionAbilityInfos);
     },(err: Error): void => {
@@ -950,7 +950,7 @@ namespace bundleManager {
           want, extensionAbilityType, "", extensionAbilityFlags, userIdInfo, false, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let extensionAbilityInfos: Array<ExtensionAbilityInfo> = e as Array<ExtensionAbilityInfo>;
         resolve(extensionAbilityInfos);
       }, (err: Error): void => {
@@ -967,7 +967,7 @@ namespace bundleManager {
         return isAbilityEnabledNative(info, appIndex, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let isEnabled: boolean = e as boolean;
         resolve(isEnabled);
       }, (err: Error): void => {
@@ -984,7 +984,7 @@ namespace bundleManager {
         return isAbilityEnabledNative(info, 0, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let isEnabled: boolean = e as boolean;
         resolve(isEnabled);
       }, (err: Error): void => {
@@ -1000,7 +1000,7 @@ namespace bundleManager {
       return isAbilityEnabledNative(info, 0, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let isEnabled: boolean = e as boolean;
       callback(null, isEnabled);
     }, (err: Error): void => {
@@ -1009,13 +1009,13 @@ namespace bundleManager {
   }
 
   function setAbilityEnabled(info: AbilityInfo, appIndex: int, isEnabled: boolean): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return setAbilityEnabledNative(info, isEnabled, appIndex, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1025,13 +1025,13 @@ namespace bundleManager {
   }
 
   function setAbilityEnabled(info: AbilityInfo, isEnabled: boolean): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return setAbilityEnabledNative(info, isEnabled, 0, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1053,13 +1053,13 @@ namespace bundleManager {
   }
 
   function setApplicationEnabled(bundleName: string, appIndex: int, isEnabled: boolean): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return setApplicationEnabledNative(bundleName, isEnabled, appIndex, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1069,13 +1069,13 @@ namespace bundleManager {
   }
 
   function setApplicationEnabled(bundleName: string, isEnabled: boolean): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return setApplicationEnabledNative(bundleName, isEnabled, 0, false);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1103,7 +1103,7 @@ namespace bundleManager {
         return getDynamicIconNative(bundleName);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let icon: string = e as string;
         resolve(icon);
       }, (err: Error): void => {
@@ -1122,7 +1122,7 @@ namespace bundleManager {
         return queryAbilityInfoWithWantsNative(wants, abilityFlags, userIdInfo);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultAbilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
         resolve(resultAbilityInfos);
       }, (err: Error): void => {
@@ -1133,32 +1133,15 @@ namespace bundleManager {
     return p;
   }
 
-  function enableDynamicIcon(bundleName: string, moduleName: string): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
-      let bundleOptions = new BundleOptionsInner();
-      let execFun = (): void => {
-        return enableDynamicIconNative(bundleName, moduleName, bundleOptions);
-      };
-      let p1 = taskpool.execute(execFun);
-      p1.then((): void => {
-        resolve(undefined);
-      }, (err: Error): void => {
-        reject(err as BusinessError);
-      });
-    }
-    );
-    return p;
-  }
-
   function enableDynamicIcon(bundleName: string, moduleName: string, option?: BundleOptions): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let bundleOptions = option ?? new BundleOptionsInner();
       let execFun = (): void => {
         return enableDynamicIconNative(bundleName, moduleName, bundleOptions);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1172,7 +1155,7 @@ namespace bundleManager {
       return getBundleArchiveInfoNative(hapFilePath, bundleFlags, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultBundleInfo: BundleInfo = e as BundleInfo;
       callback(null, resultBundleInfo);
     }, (err: Error): void => {
@@ -1187,7 +1170,7 @@ namespace bundleManager {
         return getBundleArchiveInfoNative(hapFilePath, bundleFlags, false);
       };
       let p1 = taskpool.execute(execFun);
-        p1.then((e: NullishType) => {
+        p1.then((e: Any) => {
           let resultBundleInfo: BundleInfo = e as BundleInfo;
           resolve(resultBundleInfo);
         }, (err: Error): void => {
@@ -1206,7 +1189,7 @@ namespace bundleManager {
         return getProfileByAbilityNative(moduleName, abilityName, metadataNameInfo, AbilityProfileType.ABILITY_PROFILE, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let profile: Array<string> = e as Array<string>;
         resolve(profile);
       }, (err: Error): void => {
@@ -1223,7 +1206,7 @@ namespace bundleManager {
       return getProfileByAbilityNative(moduleName, abilityName, metadataName, AbilityProfileType.ABILITY_PROFILE, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let profile: Array<string> = e as Array<string>;
       callback(null, profile);
     }, (err: Error): void => {
@@ -1240,7 +1223,7 @@ namespace bundleManager {
         return getProfileByAbilityNative(moduleName, extensionAbilityName, metadataNameInfo, AbilityProfileType.EXTENSION_PROFILE, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let profile: Array<string> = e as Array<string>;
         resolve(profile);
       }, (err: Error): void => {
@@ -1257,7 +1240,7 @@ namespace bundleManager {
       return getProfileByAbilityNative(moduleName, extensionAbilityName, metadataName, AbilityProfileType.EXTENSION_PROFILE, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let profile: Array<string> = e as Array<string>;
       callback(null, profile);
     }, (err: Error): void => {
@@ -1272,7 +1255,7 @@ namespace bundleManager {
         return getPermissionDefNative(permissionName, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let permissionDef: PermissionDef = e as PermissionDef;
         resolve(permissionDef);
       }, (err: Error): void => {
@@ -1288,7 +1271,7 @@ namespace bundleManager {
       return getPermissionDefNative(permissionName, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let permissionDef: PermissionDef = e as PermissionDef;
       callback(null, permissionDef);
     }, (err: Error): void => {
@@ -1309,13 +1292,13 @@ namespace bundleManager {
   }
 
   function cleanBundleCacheFiles(bundleName: string): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Error) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
         return cleanBundleCacheFilesNative(bundleName, 0);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1328,13 +1311,13 @@ namespace bundleManager {
     if (appIndex < MAIN_APP_INDEX || appIndex > CLONE_APP_INDEX_MAX) {
       throw createBusinessError(ERROR_INVALID_APPINDEX_CODE, ERROR_INVALID_APPINDEX_MSG);
     }
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Error) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
         return cleanBundleCacheFilesNative(bundleName, appIndex);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1349,7 +1332,7 @@ namespace bundleManager {
         return getAllBundleCacheSizeNative();
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let size: long = e as long;
         resolve(size);
       }, (err: Error): void => {
@@ -1361,13 +1344,13 @@ namespace bundleManager {
   }
 
   function cleanAllBundleCache(): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: Error) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: Error) => void) : void => {
       let execFun = (): void => {
         return cleanAllBundleCacheNative();
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1387,7 +1370,7 @@ namespace bundleManager {
         return getAppProvisionInfoNative(bundleName, userIdInfo, false);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let appProvisionInfo: AppProvisionInfo = e as AppProvisionInfo;
         resolve(appProvisionInfo);
       }, (err: Error): void => {
@@ -1406,7 +1389,7 @@ namespace bundleManager {
       return getAppProvisionInfoNative(bundleName, userId, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let appProvisionInfo: AppProvisionInfo = e as AppProvisionInfo;
       callback(null, appProvisionInfo);
     }, (err: Error): void => {
@@ -1422,7 +1405,7 @@ namespace bundleManager {
       return getAppProvisionInfoNative(bundleName, EMPTY_VALUE, false);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let appProvisionInfo: AppProvisionInfo = e as AppProvisionInfo;
       callback(null, appProvisionInfo);
     }, (err: Error): void => {
@@ -1437,7 +1420,7 @@ namespace bundleManager {
         return getAllPreinstalledApplicationInfoNative();
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let applicationInfo: Array<PreinstalledApplicationInfo> = e as Array<PreinstalledApplicationInfo>;
         resolve(applicationInfo);
       }, (err: Error): void => {
@@ -1457,7 +1440,7 @@ namespace bundleManager {
         return getAllAppCloneBundleInfoNative(bundleName, bundleFlags, userIdInfo);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultBundleInfos: Array<BundleInfo> = e as Array<BundleInfo>;
         resolve(resultBundleInfos);
       }, (err: Error): void => {
@@ -1475,7 +1458,7 @@ namespace bundleManager {
         return getAllSharedBundleInfoNative();
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let sharedBundleInfos: Array<SharedBundleInfo> = e as Array<SharedBundleInfo>;
         resolve(sharedBundleInfos);
       }, (err: Error): void => {
@@ -1491,7 +1474,7 @@ namespace bundleManager {
       return getAllSharedBundleInfoNative();
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let sharedBundleInfos: Array<SharedBundleInfo> = e as Array<SharedBundleInfo>;
       callback(null, sharedBundleInfos);
     }, (err: Error): void => {
@@ -1506,7 +1489,7 @@ namespace bundleManager {
         return getSharedBundleInfoNative(bundleName, moduleName);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let sharedBundleInfos: Array<SharedBundleInfo> = e as Array<SharedBundleInfo>;
         resolve(sharedBundleInfos);
       }, (err: Error): void => {
@@ -1523,7 +1506,7 @@ namespace bundleManager {
       return getSharedBundleInfoNative(bundleName, moduleName);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let sharedBundleInfos: Array<SharedBundleInfo> = e as Array<SharedBundleInfo>;
       callback(null, sharedBundleInfos);
     }, (err: Error): void => {
@@ -1538,7 +1521,7 @@ namespace bundleManager {
         return getExtResourceNative(bundleName);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let extResource: Array<string> = e as Array<string>;
         resolve(extResource);
       }, (err: Error): void => {
@@ -1549,32 +1532,15 @@ namespace bundleManager {
     return p;
   }
 
-  function disableDynamicIcon(bundleName: string): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
-      let bundleOptions = new BundleOptionsInner();
-      let execFun = (): void => {
-        return disableDynamicIconNative(bundleName, bundleOptions);
-      };
-      let p1 = taskpool.execute(execFun);
-      p1.then((): void => {
-        resolve(undefined);
-      }, (err: Error): void => {
-        reject(err as BusinessError);
-      });
-    }
-    );
-    return p;
-  }
-
   function disableDynamicIcon(bundleName: string, option?: BundleOptions): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let bundleOptions = option ?? new BundleOptionsInner();
       let execFun = (): void => {
         return disableDynamicIconNative(bundleName, bundleOptions);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1590,7 +1556,7 @@ namespace bundleManager {
         return getDynamicIconInfoNative(bundleName);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let dynamicIconInfos: Array<DynamicIconInfo> = e as Array<DynamicIconInfo>;
         resolve(dynamicIconInfos);
       }, (err: Error): void => {
@@ -1609,7 +1575,7 @@ namespace bundleManager {
         return getAllDynamicIconInfoNative(userIdInfo);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let dynamicIconInfos: Array<DynamicIconInfo> = e as Array<DynamicIconInfo>;
         resolve(dynamicIconInfos);
       }, (err: Error): void => {
@@ -1621,13 +1587,13 @@ namespace bundleManager {
   }
 
   function verifyAbc(abcPaths: Array<string>, deleteOriginalFiles: boolean): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return verifyAbcNative(abcPaths, deleteOriginalFiles);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1655,7 +1621,7 @@ namespace bundleManager {
         return getRecoverableApplicationInfoNative();
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let applicationInfo: Array<RecoverableApplicationInfo> = e as Array<RecoverableApplicationInfo>;
         resolve(applicationInfo);
       }, (err: Error): void => {
@@ -1671,7 +1637,7 @@ namespace bundleManager {
       return getRecoverableApplicationInfoNative();
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let applicationInfo: Array<RecoverableApplicationInfo> = e as Array<RecoverableApplicationInfo>;
       callback(null, applicationInfo);
     }, (err: Error): void => {
@@ -1680,13 +1646,13 @@ namespace bundleManager {
   }
 
   function deleteAbc(abcPath: string): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return deleteAbcNative(abcPath);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1703,7 +1669,7 @@ namespace bundleManager {
         return getAllPluginInfoNative(hostBundleName, userIdInfo);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let pluginBundleInfo: Array<PluginBundleInfo> = e as Array<PluginBundleInfo>;
         resolve(pluginBundleInfo);
         }, (err: Error): void => {
@@ -1715,13 +1681,13 @@ namespace bundleManager {
   }
 
   function migrateData(sourcePaths: Array<string>, destinationPath: string): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return migrateDataNative(sourcePaths, destinationPath);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1740,7 +1706,7 @@ namespace bundleManager {
         return getAbilityInfoNative(uri, abilityFlags);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let abilityInfos: Array<AbilityInfo> = e as Array<AbilityInfo>;
         resolve(abilityInfos);
       }, (err: Error): void => {
@@ -1752,13 +1718,13 @@ namespace bundleManager {
   }
   
   function cleanBundleCacheFilesForSelf(): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return cleanBundleCacheFilesForSelfNative();
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1772,13 +1738,13 @@ namespace bundleManager {
   }
 
   function recoverBackupBundleData(bundleName: string, userId: int , appIndex: int): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return recoverBackupBundleDataNative(bundleName, userId, appIndex);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -1788,13 +1754,13 @@ namespace bundleManager {
   }
 
   function removeBackupBundleData(bundleName: string, userId: int , appIndex: int): Promise<void> {
-    let p = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         return removeBackupBundleDataNative(bundleName, userId, appIndex);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

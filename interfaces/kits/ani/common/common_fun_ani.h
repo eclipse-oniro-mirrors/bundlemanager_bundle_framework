@@ -35,7 +35,10 @@ namespace OHOS {
 namespace AppExecFwk {
 using Want = OHOS::AAFwk::Want;
 namespace CommonFunAniNS {
-constexpr const char* PROPERTYNAME_UNBOXED = "unboxed";
+constexpr const char* PROPERTYNAME_TOBOOLEAN = "toBoolean";
+constexpr const char* PROPERTYNAME_TOINT = "toInt";
+constexpr const char* PROPERTYNAME_TOLONG = "toLong";
+constexpr const char* PROPERTYNAME_TODOUBLE = "toDouble";
 } // namespace CommonFunAniNS
 
 #define RETURN_IF_NULL(ptr)          \
@@ -475,12 +478,12 @@ public:
             status = ANI_ERROR;
             if constexpr (std::is_same_v<valueType, ani_boolean>) {
                 status = env->Object_CallMethodByName_Boolean(
-                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":z", value);
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_TOBOOLEAN, ":z", value);
             } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
                                  std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
                 ani_int i = 0;
                 status = env->Object_CallMethodByName_Int(
-                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":i", &i);
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_TOINT, ":i", &i);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_CallMethodByName_Int %{public}s failed %{public}d", propertyName, status);
                     return false;
@@ -493,7 +496,7 @@ public:
             } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
                 ani_long l = 0;
                 status = env->Object_CallMethodByName_Long(
-                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":l", &l);
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_TOLONG, ":l", &l);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_CallMethodByName_Long %{public}s failed %{public}d", propertyName, status);
                     return false;
@@ -507,7 +510,7 @@ public:
                                  std::is_same_v<valueType, uint64_t>) {
                 double d = 0;
                 status = env->Object_CallMethodByName_Double(
-                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":d", &d);
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_TODOUBLE, ":d", &d);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_CallMethodByName_Double %{public}s failed %{public}d", propertyName, status);
                     return false;
@@ -560,7 +563,7 @@ public:
             if constexpr (std::is_same_v<valueType, ani_int>) {
                 ani_int i = 0;
                 status = env->Object_CallMethodByName_Int(
-                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_UNBOXED, ":i", &i);
+                    reinterpret_cast<ani_object>(ref), CommonFunAniNS::PROPERTYNAME_TOINT, ":i", &i);
                 if (status != ANI_OK) {
                     APP_LOGE("Object_CallMethodByName_Int %{public}s failed %{public}d", name, status);
                     return false;
@@ -600,63 +603,7 @@ public:
     }
 
     template<typename valueType>
-    static bool CallSetter(ani_env* env, ani_class cls, ani_object object, const char* propertyName, valueType value,
-        const char* valueClassName = nullptr)
-    {
-        RETURN_FALSE_IF_NULL(env);
-        RETURN_FALSE_IF_NULL(cls);
-        RETURN_FALSE_IF_NULL(object);
-
-        std::string setterSig;
-        ani_value setterParam { };
-        if constexpr (std::is_same_v<valueType, ani_boolean>) {
-            setterSig = "z:";
-            setterParam.z = value;
-        } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
-                             std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
-            setterSig = "i:";
-            setterParam.i = static_cast<ani_int>(value);
-        } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
-            setterSig = "l:";
-            setterParam.l = static_cast<ani_long>(value);
-        } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
-                             std::is_same_v<valueType, uint64_t>) {
-            setterSig = "d:";
-            setterParam.d = static_cast<ani_double>(value);
-        } else if constexpr (std::is_pointer_v<valueType> &&
-                             std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
-            if constexpr (std::is_same_v<valueType, ani_string>) {
-                valueClassName = CommonFunAniNS::CLASSNAME_STRING;
-            }
-            if (valueClassName != nullptr) {
-                setterSig.append("C{");
-                setterSig.append(valueClassName);
-                setterSig.append("}:");
-            }
-            setterParam.r = value;
-        } else {
-            APP_LOGE("Classname %{public}s Unsupported", propertyName);
-            return false;
-        }
-
-        std::string setterName("<set>");
-        setterName.append(propertyName);
-        ani_method setter;
-        ani_status status =
-            env->Class_FindMethod(cls, setterName.c_str(), setterSig.empty() ? nullptr : setterSig.c_str(), &setter);
-        if (status != ANI_OK) {
-            APP_LOGE("Class_FindMethod %{public}s failed %{public}d", propertyName, status);
-            return false;
-        }
-
-        status = env->Object_CallMethod_Void_A(object, setter, &setterParam);
-        if (status != ANI_OK) {
-            APP_LOGE("Object_CallMethod_Void_A %{public}s failed %{public}d", propertyName, status);
-            return false;
-        }
-
-        return true;
-    }
+    static bool CallSetter(ani_env* env, ani_class cls, ani_object object, const char* propertyName, valueType value);
 
     template<typename valueType>
     static ani_object BoxValue(ani_env* env, valueType value, const char** pValueClassName = nullptr)

@@ -65,13 +65,13 @@ export default namespace overlay {
     if (moduleName === "") {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
     }
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
         return setOverlayEnabledNative(moduleName, isEnabled);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -105,13 +105,13 @@ export default namespace overlay {
     if (moduleName === "") {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_MODULENAME_EMPTY_ERROR);
     }
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
         return setOverlayEnabledByBundleNameNative(bundleName, moduleName, isEnabled);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -128,7 +128,7 @@ export default namespace overlay {
       return getOverlayModuleInfoNative(moduleName);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: OverlayModuleInfo = e as OverlayModuleInfo;
       callback(null, result);
     }, (err: Error): void => {
@@ -145,7 +145,7 @@ export default namespace overlay {
         return getOverlayModuleInfoNative(moduleName);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: OverlayModuleInfo = e as OverlayModuleInfo;
         resolve(result);
       }, (err: Error): void => {
@@ -163,7 +163,7 @@ export default namespace overlay {
       return getTargetOverlayModuleInfosNative(targetModuleName);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
       callback(null, resultArray);
     }, (err: Error): void => {
@@ -180,7 +180,7 @@ export default namespace overlay {
         return getTargetOverlayModuleInfosNative(targetModuleName);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
         resolve(resultArray);
       }, (err: Error): void => {
@@ -198,7 +198,7 @@ export default namespace overlay {
       return getOverlayModuleInfoByBundleNameNative(bundleName, '');
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
       callback(null, resultArray);
     }, (err: Error): void => {
@@ -214,7 +214,7 @@ export default namespace overlay {
       return getOverlayModuleInfoByBundleNameNative(bundleName, moduleName);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
       callback(null, resultArray);
     }, (err: Error): void => {
@@ -232,7 +232,7 @@ export default namespace overlay {
         return getOverlayModuleInfoByBundleNameNative(bundleName, moduleNameInfo);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
         resolve(resultArray);
       }, (err: Error): void => {
@@ -250,7 +250,7 @@ export default namespace overlay {
       return getTargetOverlayModuleInfosByBundleNameNative(targetBundleName, '');
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
       callback(null, resultArray);
     }, (err: Error): void => {
@@ -266,7 +266,7 @@ export default namespace overlay {
       return getTargetOverlayModuleInfosByBundleNameNative(targetBundleName, moduleName);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
       callback(null, resultArray);
     }, (err: Error): void => {
@@ -284,7 +284,7 @@ export default namespace overlay {
         return getTargetOverlayModuleInfosByBundleNameNative(targetBundleName, moduleNameInfo);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let resultArray: Array<OverlayModuleInfo> = e as Array<OverlayModuleInfo>;
         resolve(resultArray);
       }, (err: Error): void => {

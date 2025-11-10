@@ -55,13 +55,13 @@ namespace freeInstall {
   }
 
   function setHapModuleUpgradeFlag(bundleName: string, moduleName: string, upgradeFlag: UpgradeFlag): Promise<void> {
-    let p: Promise<void> = new Promise<void>((resolve: (v:undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let execFun = (): void => {
         setHapModuleUpgradeFlagNative(bundleName, moduleName, upgradeFlag);
       };
       let p1 = taskpool.execute(execFun);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -74,7 +74,7 @@ namespace freeInstall {
       return isHapModuleRemovableNative(bundleName, moduleName);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: boolean = e as boolean;
       callback(null, result);
     }, (err: Error): void => {
@@ -88,7 +88,7 @@ namespace freeInstall {
         return isHapModuleRemovableNative(bundleName, moduleName);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: boolean = e as boolean;
         resolve(result);
       }, (err: Error): void => {
@@ -103,7 +103,7 @@ namespace freeInstall {
       return getBundlePackInfoNative(bundleName, bundlePackFlag);
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: BundlePackInfo = e as BundlePackInfo;
       callback(null, result);
     }, (err: Error): void => {
@@ -117,7 +117,7 @@ namespace freeInstall {
         return getBundlePackInfoNative(bundleName, bundlePackFlag);
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: BundlePackInfo = e as BundlePackInfo;
         resolve(result);
       }, (err: Error): void => {
@@ -132,7 +132,7 @@ namespace freeInstall {
       return getDispatchInfoNative();
     };
     let p1 = taskpool.execute(execFun);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: DispatchInfo = e as DispatchInfo;
       callback(null, result);
     }, (err: Error): void => {
@@ -146,7 +146,7 @@ namespace freeInstall {
         return getDispatchInfoNative();
       };
       let p1 = taskpool.execute(execFun);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: DispatchInfo = e as DispatchInfo;
         resolve(result);
       }, (err: Error): void => {

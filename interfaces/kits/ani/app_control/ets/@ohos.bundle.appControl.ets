@@ -148,13 +148,13 @@ export default namespace appControl {
   }
 
   function setDisposedStatus(appId: string, disposedWant: Want): Promise<void> {
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
         return setDisposedStatusNative(appId, disposedWant, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -172,7 +172,7 @@ export default namespace appControl {
       return getDisposedStatusNative(appId, false);
     };
     let p1 = taskpool.execute(cb);
-    p1.then((e: NullishType) => {
+    p1.then((e: Any) => {
       let result: Want = e as Want;
       callback(null, result);
     }, (err: Error): void => {
@@ -186,7 +186,7 @@ export default namespace appControl {
         return getDisposedStatusNative(appId, false);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: Want = e as Want;
         resolve(result);
       }, (err: Error): void => {
@@ -213,13 +213,13 @@ export default namespace appControl {
   }
 
   function deleteDisposedStatus(appId: string): Promise<void> {
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void) : void => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void) : void => {
       let cb = (): void => {
         return deleteDisposedStatusNative(appId, 0, false);
       };
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });

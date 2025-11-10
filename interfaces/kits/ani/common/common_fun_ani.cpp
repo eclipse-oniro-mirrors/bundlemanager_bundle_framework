@@ -98,6 +98,7 @@ constexpr const char* CLASSNAME_OVERLAY_MODULE_INFO_INNER =
 constexpr const char* CLASSNAME_WANT = "@ohos.app.ability.Want.Want";
 constexpr const char* CLASSNAME_ZLIB_CHECKSUM_INTERNAL = "@ohos.zlib.zlib.ChecksumInternal";
 constexpr const char* CLASSNAME_ZLIB_GZIP_INTERNAL = "@ohos.zlib.zlib.GZipInternal";
+constexpr const char* CLASSNAME_ZLIB_ZIP_INTERNAL = "@ohos.zlib.zlib.ZipInternal";
 constexpr const char* CLASSNAME_DISPOSED_RULE_INNER = "@ohos.bundle.appControl.appControl.DisposedRuleInner";
 constexpr const char* CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER =
     "@ohos.bundle.appControl.appControl.UninstallDisposedRuleInner";
@@ -176,6 +177,7 @@ static std::map<std::string, ANIClassCacheItem> g_aniClassCache = {
     { CLASSNAME_APP_PROVISION_INFO_INNER, { } },
     { CLASSNAME_ZLIB_CHECKSUM_INTERNAL, { } },
     { CLASSNAME_ZLIB_GZIP_INTERNAL, { } },
+    { CLASSNAME_ZLIB_ZIP_INTERNAL, { } },
     { CLASSNAME_DISPOSED_RULE_INNER, { } },
     { CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER, { } },
     { CLASSNAME_BUNDLE_RES_INFO_INNER, { } },
@@ -3055,6 +3057,60 @@ bool CommonFunAni::ParseElementName(ani_env* env, ani_object object, ElementName
     // abilityName: string
     RETURN_FALSE_IF_FALSE(CallGetter(env, object, PROPERTYNAME_ABILITY_NAME, &string));
     elementName.SetAbilityName(AniStrToString(env, string));
+
+    return true;
+}
+
+template<typename valueType>
+bool CommonFunAni::CallSetter(ani_env* env, ani_class cls, ani_object object, const char* propertyName, valueType value)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(cls);
+    RETURN_FALSE_IF_NULL(object);
+
+    std::string setterSig;
+    ani_value setterParam { };
+    if constexpr (std::is_same_v<valueType, ani_boolean>) {
+        setterSig = "z:";
+        setterParam.z = value;
+    } else if constexpr (std::is_same_v<valueType, ani_byte> || std::is_same_v<valueType, ani_char> ||
+                         std::is_same_v<valueType, ani_short> || std::is_same_v<valueType, ani_int>) {
+        setterSig = "i:";
+        setterParam.i = static_cast<ani_int>(value);
+    } else if constexpr (std::is_same_v<valueType, uint32_t> || std::is_same_v<valueType, ani_long>) {
+        setterSig = "l:";
+        setterParam.l = static_cast<ani_long>(value);
+    } else if constexpr (std::is_same_v<valueType, ani_float> || std::is_same_v<valueType, ani_double> ||
+                         std::is_same_v<valueType, uint64_t>) {
+        setterSig = "d:";
+        setterParam.d = static_cast<ani_double>(value);
+    } else if constexpr (std::is_pointer_v<valueType> &&
+                         std::is_base_of_v<__ani_ref, std::remove_pointer_t<valueType>>) {
+        if constexpr (std::is_same_v<valueType, ani_string>) {
+            setterSig.append("C{");
+            setterSig.append(CommonFunAniNS::CLASSNAME_STRING);
+            setterSig.append("}:");
+        }
+        setterParam.r = value;
+    } else {
+        APP_LOGE("Classname %{public}s Unsupported", propertyName);
+        return false;
+    }
+
+    ani_method setter;
+    ani_status status =
+        env->Class_FindMethod(cls, Builder::BuildSetterName(propertyName).c_str(),
+            setterSig.empty() ? nullptr : setterSig.c_str(), &setter);
+    if (status != ANI_OK) {
+        APP_LOGE("Class_FindMethod %{public}s failed %{public}d", propertyName, status);
+        return false;
+    }
+
+    status = env->Object_CallMethod_Void_A(object, setter, &setterParam);
+    if (status != ANI_OK) {
+        APP_LOGE("Object_CallMethod_Void_A %{public}s failed %{public}d", propertyName, status);
+        return false;
+    }
 
     return true;
 }

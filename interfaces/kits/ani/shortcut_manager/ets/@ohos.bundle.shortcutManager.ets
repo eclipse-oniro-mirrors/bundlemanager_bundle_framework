@@ -44,7 +44,7 @@ namespace shortcutManager {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
     }
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
-      let cb = (): NullishType => {
+      let cb = (): Any => {
         return addDesktopShortcutInfoNative(shortcutInfo, userId);
       }
       let p1 = taskpool.execute(cb);
@@ -62,7 +62,7 @@ namespace shortcutManager {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, INVALID_SHORTCUT_INFO_ERROR);
     }
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
-      let cb = (): NullishType => {
+      let cb = (): Any => {
         return deleteDesktopShortcutInfoNative(shortcutInfo, userId)
       }
       let p1 = taskpool.execute(cb);
@@ -81,7 +81,7 @@ namespace shortcutManager {
         return getAllDesktopShortcutInfoNative(userId);
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
         resolve(result);
       }, (err: Error): void => {
@@ -92,13 +92,13 @@ namespace shortcutManager {
   }
 
   function setShortcutVisibleForSelf(id: string, visible: boolean): Promise<void> {
-    let p = new Promise<void>((resolve: (v: undefined) => void, reject: (error: BusinessError) => void): void => {
-      let cb = (): NullishType => {
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
+      let cb = (): Any => {
         return setShortcutVisibleForSelfNative(id, visible);
       }
       let p1 = taskpool.execute(cb);
       p1.then((): void => {
-        resolve(undefined);
+        resolve(Promise.resolve());
       }, (err: Error): void => {
         reject(err as BusinessError);
       });
@@ -112,7 +112,7 @@ namespace shortcutManager {
         return getAllShortcutInfoForSelfNative();
       };
       let p1 = taskpool.execute(cb);
-      p1.then((e: NullishType) => {
+      p1.then((e: Any) => {
         let result: Array<ShortcutInfo> = e as Array<ShortcutInfo>;
         resolve(result);
       }, (err: Error): void => {
