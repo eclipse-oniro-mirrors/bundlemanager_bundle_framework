@@ -2699,38 +2699,61 @@ ErrCode InstalldHostImpl::ResetBmsDBSecurity()
         LOG_E(BMS_TAG_INSTALLD, "permission denied");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+    ResetBmsDBSecurityByPath(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH, ServiceConstants::BUNDLE_RDB_FLAG);
+    ResetBmsDBSecurityByPath(ServiceConstants::BUNDLE_RDB_BINLOG_PATH, ServiceConstants::BUNDLE_RDB_BINLOG);
+    ResetBmsDBSecurityByPath(ServiceConstants::BUNDLE_RESOURCE_RDB_PATH, ServiceConstants::BUNDLE_RESOURCE_RDB_FLAG);
+    ResetBmsDBSecurityByPath(ServiceConstants::BUNDLE_RESOURCE_BINLOG_PATH, ServiceConstants::BUNDLE_RDB_BINLOG);
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ResetBmsDBSecurityByPath(const std::string &parentPath, const std::string &fileFlag)
+{
+    if (!InstalldOperator::IsExistDir(parentPath)) {
+        LOG_W(BMS_TAG_INSTALLD, "ResetBmsDBSecurityByPath %{public}s does not existed", parentPath.c_str());
+        return ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED;
+    }
     FileStat fileStat;
-    fileStat.mode = (S_IRUSR | S_IWUSR) | (S_IRGRP | S_IWGRP);
     fileStat.uid = Constants::FOUNDATION_UID;
     fileStat.gid = Constants::FOUNDATION_UID;
-    const char *context = "u:object_r:bms_db_file:s0";
-    for (const auto& entry: std::filesystem::directory_iterator(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH)) {
+    for (const auto& entry: std::filesystem::directory_iterator(parentPath)) {
         const auto& fileName = entry.path().filename().string();
         const auto& targetPath = entry.path().string();
-        if (entry.is_regular_file() && fileName.find("bmsdb") == 0) {
-            struct stat s;
-            if (stat(targetPath.c_str(), &s) != 0) {
-                LOG_E(BMS_TAG_INSTALLD, "Stat file(%{public}s) failed errno %{public}d", targetPath.c_str(), errno);
-                return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-            }
-            if (fileStat.mode != static_cast<int32_t>(s.st_mode)) {
-                if (chmod(targetPath.c_str(), fileStat.mode) != 0) {
-                    LOG_E(BMS_TAG_INSTALLD, "ChangeFileStat chmod failed errno %{public}d", errno);
-                    return ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED;
-                }
-            }
-            if (fileStat.uid != static_cast<int32_t>(s.st_uid) || fileStat.gid != static_cast<int32_t>(s.st_gid)) {
-                if (chown(targetPath.c_str(), fileStat.uid, fileStat.gid) != 0) {
-                    LOG_E(BMS_TAG_INSTALLD, "ChangeFileStat chown failed errno %{public}d", errno);
-                    return ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED;
-                }
-#ifdef WITH_SELINUX
-                if (lsetfilecon(targetPath.c_str(), context) < 0) {
-                    LOG_E(BMS_TAG_INSTALLD, "setcon %{public}s failed errno:%{public}d", fileName.c_str(), errno);
-                }
-#endif
+        if (entry.is_regular_file() && fileName.find(fileFlag) == 0) {
+            auto res = ResetSecurityByPath(fileStat, targetPath);
+            if (ERR_OK != res) {
+                return res;
             }
         }
+    }
+    if (fileFlag == ServiceConstants::BUNDLE_RDB_BINLOG) {
+        ResetSecurityByPath(fileStat, parentPath);
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ResetSecurityByPath(const FileStat &fileStat, const std::string &targetPath)
+{
+    if (access(targetPath.c_str(), F_OK) != 0) {
+        LOG_W(BMS_TAG_INSTALLD, "ResetSecurityByPath %{public}s does not existed", targetPath.c_str());
+        return ERR_OK;
+    }
+    
+    struct stat s;
+    if (stat(targetPath.c_str(), &s) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Stat file(%{public}s) failed errno %{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (fileStat.uid != static_cast<int32_t>(s.st_uid) || fileStat.gid != static_cast<int32_t>(s.st_gid)) {
+        if (chown(targetPath.c_str(), fileStat.uid, fileStat.gid) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "ChangeFileStat chown failed errno %{public}d", errno);
+            return ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED;
+        }
+#ifdef WITH_SELINUX
+        const char *context = "u:object_r:bms_db_file:s0";
+        if (lsetfilecon(targetPath.c_str(), context) < 0) {
+            LOG_E(BMS_TAG_INSTALLD, "setcon %{public}s failed errno:%{public}d", targetPath.c_str(), errno);
+        }
+#endif
     }
     return ERR_OK;
 }
