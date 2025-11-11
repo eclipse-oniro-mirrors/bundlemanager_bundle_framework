@@ -2323,4 +2323,36 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13800, Function | Sm
     ret = InstalldOperator::ExtractTargetFile(extractor, "/..", param);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_13900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling CopyDir of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13900, Function | SmallTest | Level1)
+{
+    std::string srcPath;
+    std::string dstPath;
+    bool ret = InstalldOperator::CopyDir(srcPath, dstPath);
+    EXPECT_EQ(ret, false);
+
+    srcPath = "/data/test/plugins_1";
+    ret = InstalldOperator::CopyDir(srcPath, dstPath);
+    EXPECT_EQ(ret, false);
+
+    OHOS::ForceCreateDirectory(srcPath);
+    dstPath = "/data/test/plugins_2";
+    ret = InstalldOperator::CopyDir(srcPath, dstPath);
+    EXPECT_EQ(ret, true);
+
+    srcPath += "/test";
+    OHOS::ForceCreateDirectory(srcPath);
+
+    std::string filePath = srcPath + "/test.txt";
+    CreateFile(filePath, "test");
+    ret = InstalldOperator::CopyDir(srcPath, dstPath);
+    EXPECT_EQ(ret, true);
+    OHOS::ForceRemoveDirectory("/data/test/plugins_1");
+    OHOS::ForceRemoveDirectory("/data/test/plugins_2");
+}
 } // OHOS

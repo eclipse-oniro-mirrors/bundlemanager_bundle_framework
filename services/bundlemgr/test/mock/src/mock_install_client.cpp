@@ -419,5 +419,10 @@ ErrCode InstalldClient::ResetBmsDBSecurity()
     return ERR_OK;
 }
 
+ErrCode InstalldClient::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+{
+    return ERR_OK;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

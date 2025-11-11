@@ -275,6 +275,14 @@ public:
     virtual ErrCode RestoreconPath(const std::string &path) override;
         
     virtual ErrCode ResetBmsDBSecurity() override;
+    
+    /**
+     * @brief Copy directory Recursively from source dir to destination dir.
+     * @param sourceDir Indicates the source dir.
+     * @param destinationDir Indicates the destination dir.
+     * @return Returns ERR_OK if copy directory successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
 
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

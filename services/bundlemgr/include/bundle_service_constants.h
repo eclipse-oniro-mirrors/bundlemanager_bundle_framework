@@ -291,6 +291,9 @@ constexpr const char* CLOUD_PROFILE_PATH = "resources/base/profile/cloudkit_conf
 // for install param
 constexpr const char* BMS_PARA_INSTALL_BUNDLE_NAME = "ohos.bms.param.installBundleName";
 
+//plugin file path
+constexpr const char* PLUGIN_FILE_PATH = "+plugins";
+
 // no report for expected errcode
 const std::set<int32_t> EXPECTED_ERROR = {
     ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST,

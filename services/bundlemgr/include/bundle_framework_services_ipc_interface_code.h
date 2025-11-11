@@ -92,6 +92,7 @@ enum class InstalldInterfaceCode : uint32_t {
     RENAME_FILE = 64,
     RESTORE_CON_BMSDB = 65,
     CLEAN_BUNDLE_DIRS = 66,
+    COPY_DIR = 67,
 };
 
 } // namespace AppExecFwk

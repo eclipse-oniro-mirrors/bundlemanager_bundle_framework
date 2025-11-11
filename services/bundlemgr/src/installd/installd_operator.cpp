@@ -2782,5 +2782,64 @@ bool InstalldOperator::IsFileNameValid(const std::string &fileName)
     }
     return true;
 }
+
+bool InstalldOperator::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+{
+    LOG_D(BMS_TAG_INSTALLD, "sourceDir is %{public}s, destinationDir is %{public}s",
+        sourceDir.c_str(), destinationDir.c_str());
+    if (sourceDir.empty() || destinationDir.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Copy dir failed due to sourceDir or destinationDir is empty");
+        return false;
+    }
+
+    std::string realPath = "";
+    if (!PathToRealPath(sourceDir, realPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "sourceDir(%{public}s) is not real path", sourceDir.c_str());
+        return false;
+    }
+
+    if (!OHOS::ForceCreateDirectory(destinationDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "Failed to create destination directory");
+        return false;
+    }
+
+    DIR* directory = opendir(realPath.c_str());
+    if (directory == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "open dir(%{public}s) fail, errno:%{public}d", realPath.c_str(), errno);
+        return false;
+    }
+
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(directory)) != nullptr) {
+        std::string currentName(ptr->d_name);
+        if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
+            continue;
+        }
+
+        std::string curPath = sourceDir + ServiceConstants::PATH_SEPARATOR + currentName;
+        std::string destPath = destinationDir + ServiceConstants::PATH_SEPARATOR + currentName;
+        if (ptr->d_type == DT_DIR) {
+            if (!CopyDir(curPath, destPath)) {
+                LOG_E(BMS_TAG_INSTALLD, "Create directory(%{public}s) fail", curPath.c_str());
+            }
+            continue;
+        }
+        struct stat fileStat;
+        if (stat(curPath.c_str(), &fileStat) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "Failed to get file info: %s", curPath.c_str());
+            continue;
+        }
+        if (CopyFile(curPath, destPath)) {
+            ChangeFileAttr(destPath, fileStat.st_uid, fileStat.st_gid);
+            if (chmod(destPath.c_str(), fileStat.st_mode) != 0) {
+                LOG_E(BMS_TAG_INSTALLD, "chmod file(%{public}s) fail", destPath.c_str());
+            }
+        } else {
+            LOG_E(BMS_TAG_INSTALLD, "Copy file(%{public}s) to (%{public}s) fail", curPath.c_str(), destPath.c_str());
+        }
+    }
+    closedir(directory);
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

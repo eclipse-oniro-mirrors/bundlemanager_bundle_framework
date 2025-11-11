@@ -514,6 +514,11 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+    {
+        return ERR_OK;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

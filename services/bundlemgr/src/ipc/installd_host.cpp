@@ -264,6 +264,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::CLEAN_BUNDLE_DIRS):
             result = this->HandleCleanBundleDirs(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_DIR):
+            result = HandleCopyDir(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1189,6 +1192,16 @@ bool InstalldHost::HandleRestoreconPath(MessageParcel &data, MessageParcel &repl
 bool InstalldHost::HandleResetBmsDBSecurity(MessageParcel &data, MessageParcel &reply)
 {
     ErrCode result = ResetBmsDBSecurity();
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCopyDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::string srcDir = data.ReadString();
+    std::string destDir = data.ReadString();
+
+    ErrCode result = CopyDir(srcDir, destDir);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

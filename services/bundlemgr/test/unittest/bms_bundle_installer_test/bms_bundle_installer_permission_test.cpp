@@ -1247,4 +1247,18 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ParseSizeFromProvision_0010, Function
     installer.ParseSizeFromProvision(bundleName, uid, sizeMb);
     EXPECT_EQ(sizeMb, 1024);
 }
+
+/**
+ * @tc.number: CopyDir_0100
+ * @tc.name: test CopyDir
+ * @tc.desc: 1.Test the CopyDir of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, CopyDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string sourceDir = "test.source.dir";
+    std::string destinationDir = "test.destination.dir";
+    ErrCode ret = hostImpl.CopyDir(sourceDir, destinationDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS

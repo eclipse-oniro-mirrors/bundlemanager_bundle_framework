@@ -1191,5 +1191,17 @@ ErrCode InstalldProxy::ResetBmsDBSecurity()
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::RESTORE_CON_BMSDB, data, reply, option);
 }
+
+ErrCode InstalldProxy::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String, sourceDir);
+    INSTALLD_PARCEL_WRITE(data, String, destinationDir);
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_DIR, data, reply, option);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -886,6 +886,8 @@ private:
     ErrCode CheckInstallPermission(const std::string &appId, const std::string &appIdentifier,
         const std::vector<std::string> &allowedAppIds, const std::vector<std::string> &disallowedAppIds);
 #endif
+    ErrCode ProcessPluginFilesWhenUpdate(const InnerBundleInfo &oldInfo,
+        const std::string &oldPath, const std::string &newPath);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;
