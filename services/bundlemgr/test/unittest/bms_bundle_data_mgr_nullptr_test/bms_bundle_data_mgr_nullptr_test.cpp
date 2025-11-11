@@ -467,7 +467,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0010, Function | Mediu
 {
     BaseBundleInstaller installer;
     InnerBundleInfo newInfo;
-    installer.CreateEl5AndSetPolicy(newInfo);
+    installer.CreateEl5AndSetPolicy(newInfo, false);
     EXPECT_EQ(newInfo.GetBundleName().empty(), true);
 }
 
@@ -497,7 +497,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0012, Function | Mediu
 {
     BaseBundleInstaller installer;
     InnerBundleInfo newInfo;
-    installer.CreateEl5AndSetPolicy(newInfo);
+    installer.CreateEl5AndSetPolicy(newInfo, false);
     EXPECT_EQ(newInfo.GetBundleName().empty(), true);
 }
 

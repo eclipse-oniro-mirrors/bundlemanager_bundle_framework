@@ -3406,6 +3406,13 @@ void InnerBundleInfo::SetBundleUpdateTime(const int64_t time, int32_t userId)
     infoItem->second.updateTime = time;
 }
 
+void InnerBundleInfo::SetBundleUpdateTimeForAllUser(const int64_t time)
+{
+    for (auto &userInfo : innerBundleUserInfos_) {
+        userInfo.second.updateTime = time;
+    }
+}
+
 bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex) const
 {
     APP_LOGD("IsAbilityEnabled bundleName:%{public}s, userId:%{public}d", abilityInfo.bundleName.c_str(), userId);

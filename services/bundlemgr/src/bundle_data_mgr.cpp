@@ -8730,7 +8730,7 @@ void BundleDataMgr::ProcessAllUserDataGroupInfosWhenBundleUpdate(InnerBundleInfo
             DataGroupInfo dataGroupInfo;
             CreateNewDataGroupInfo(groupId, userId, dataItem.second[0], dataGroupInfo);
             innerBundleInfo.AddDataGroupInfo(groupId, dataGroupInfo);
-            // user path can not access, need create group dir when user unlocked
+            (void)CreateAppGroupDir(innerBundleInfo, userId);
         }
     }
 }
