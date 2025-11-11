@@ -1415,6 +1415,23 @@ HWTEST_F(BmsBundleMgrProxyTest, GetPluginBundlePathForSelf_0100, Function | Medi
 }
 
 /**
+ * @tc.number: GetBundleInstallStatus_0001
+ * @tc.name: test the GetBundleInstallStatus
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetBundleInstallStatus_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    BundleInstallStatus status;
+    auto ret = bundleMgrProxy.GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_0001
  * @tc.name: test the RecoverBackupBundleData
  * @tc.desc: 1. system running normally

@@ -11032,6 +11032,44 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllBundleDirs_0002, Function | MediumTest | Le
 }
 
 /**
+ * @tc.number: GetBundleInstallStatuse_0001
+ * @tc.name: test GetBundleInstallStatus interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetBundleInstallStatus
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInstallStatus_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInstallStatus_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto queryResult = bundleMgrProxy->GetBundleInstallStatus(appName, USERID, status);
+    EXPECT_EQ(queryResult, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLED);
+
+    status = BundleInstallStatus::UNKNOWN_STATUS;
+    queryResult = bundleMgrProxy->GetBundleInstallStatus(appName, INVALIED_ID, status);
+    EXPECT_EQ(queryResult, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetBundleInstallStatus_0001" << std::endl;
+}
+
+/**
  * @tc.number: GetAllBundleCacheStat_0001
  * @tc.name: test GetAllBundleCacheStat interface
  * @tc.desc: 1. call GetAllBundleCacheStat

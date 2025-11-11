@@ -6769,5 +6769,35 @@ ErrCode BundleMgrProxy::CreateNewBundleEl5Dir(int32_t userId)
     }
     return reply.ReadInt32();
 }
+
+ErrCode BundleMgrProxy::GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+    BundleInstallStatus &bundleInstallStatus)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundleInstallStatus due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_INSTALL_STATUS, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        bundleInstallStatus = static_cast<BundleInstallStatus>(reply.ReadUint8());
+    }
+    return ret;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

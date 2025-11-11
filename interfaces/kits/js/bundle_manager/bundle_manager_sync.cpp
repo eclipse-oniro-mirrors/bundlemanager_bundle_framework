@@ -1107,5 +1107,34 @@ napi_value GetPluginBundlePathForSelfSync(napi_env env, napi_callback_info info)
     APP_LOGD("call GetPluginBundlePathForSelfSync done");
     return nCodePath;
 }
+
+napi_value GetBundleInstallStatus(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetBundleInstallStatus called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    ErrCode ret = BundleManagerHelper::InnerGetBundleInstallStatus(bundleName, status);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetBundleInstallStatus failed ret=%{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_BUNDLE_INSTALL_STATUS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nBundleInstallStatus = nullptr;
+    napi_create_int32(env, static_cast<int32_t>(status), &nBundleInstallStatus);
+    APP_LOGD("call GetBundleInstallStatus done");
+    return nBundleInstallStatus;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

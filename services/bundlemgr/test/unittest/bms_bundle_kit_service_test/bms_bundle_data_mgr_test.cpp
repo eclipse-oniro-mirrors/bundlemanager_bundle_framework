@@ -179,6 +179,7 @@ constexpr int32_t MOCK_BUNDLE_MGR_EXT_FLAG = 10;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
 const std::string BUNDLE_NAME_FOR_TEST_U1ENABLE = "com.example.u1Enable_test";
 const int32_t TEST_U100 = 100;
+const int32_t TEST_U200 = 200;
 const int32_t TEST_U1 = 1;
 const nlohmann::json APP_LIST0 = R"(
 {
@@ -5117,6 +5118,184 @@ HWTEST_F(BmsBundleDataMgrTest, HandleGetPluginBundlePathForSelf_0100, Function |
 
     auto ret = localBundleMgrHost->HandleGetPluginBundlePathForSelf(data, reply);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AddInstallingBundleName_0100
+ * @tc.name: test AddInstallingBundleName
+ * @tc.desc: 1.system run normally
+ *           2.check AddInstallingBundleName failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, AddInstallingBundleName_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+        InnerBundleInfo innerBundleInfo;
+        dataMgr->bundleInfos_[BUNDLE_TEST1] = innerBundleInfo;
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleUserInfo.bundleUserInfo.userId = TEST_U200;
+        innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+        dataMgr->bundleInfos_[BUNDLE_TEST1] = innerBundleInfo;
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, -1, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, Constants::ANY_USERID, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLED);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U200, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLED);
+        dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+    }
+}
+
+/**
+ * @tc.number: AddInstallingBundleName_0200
+ * @tc.name: test AddInstallingBundleName
+ * @tc.desc: 1.system run normally
+ *           2.check AddInstallingBundleName failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, AddInstallingBundleName_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo innerBundleInfo;
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleUserInfo.bundleUserInfo.userId = 0;
+        innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+        dataMgr->bundleInfos_[BUNDLE_TEST1] = innerBundleInfo;
+        BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLED);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U1, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, 0, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLED);
+
+        innerBundleInfo.innerBundleUserInfos_.clear();
+        innerBundleUserInfo.bundleUserInfo.userId = TEST_U1;
+        innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+        dataMgr->bundleInfos_[BUNDLE_TEST1] = innerBundleInfo;
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLED);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, 0, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+        dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+    }
+}
+
+/**
+ * @tc.number: AddInstallingBundleName_0300
+ * @tc.name: test AddInstallingBundleName
+ * @tc.desc: 1.system run normally
+ *           2.check AddInstallingBundleName failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, AddInstallingBundleName_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        dataMgr->AddInstallingBundleName(BUNDLE_TEST1, TEST_U100);
+        BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U200, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+        dataMgr->DeleteInstallingBundleName(BUNDLE_TEST1, TEST_U100);
+
+        dataMgr->AddInstallingBundleName(BUNDLE_TEST1, 0);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, 0, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U1, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+        dataMgr->DeleteInstallingBundleName(BUNDLE_TEST1, 0);
+
+        dataMgr->AddInstallingBundleName(BUNDLE_TEST1, TEST_U1);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, 0, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U1, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+        dataMgr->DeleteInstallingBundleName(BUNDLE_TEST1, TEST_U1);
+    }
+}
+
+/**
+ * @tc.number: DeleteInstallingBundleName_0100
+ * @tc.name: test DeleteInstallingBundleName
+ * @tc.desc: 1.system run normally
+ *           2.check DeleteInstallingBundleName failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, DeleteInstallingBundleName_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        dataMgr->installingBundleNames_.erase(BUNDLE_TEST1);
+        BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+
+        dataMgr->AddInstallingBundleName(BUNDLE_TEST1, TEST_U100);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U200, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+
+        dataMgr->DeleteInstallingBundleName(BUNDLE_TEST1, TEST_U100);
+        dataMgr->AddInstallingBundleName(BUNDLE_TEST1, TEST_U1);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U1, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+
+        dataMgr->DeleteInstallingBundleName(BUNDLE_TEST1, TEST_U1);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U1, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+
+        dataMgr->AddInstallingBundleName(BUNDLE_TEST1, 0);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+
+        dataMgr->DeleteInstallingBundleName(BUNDLE_TEST1, 0);
+        status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST1, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+        dataMgr->installingBundleNames_.erase(BUNDLE_TEST1);
+    }
 }
 
 /**

@@ -113,6 +113,13 @@ struct SimpleAppInfo : public Parcelable {
     std::string ToString() const;
 };
 
+enum class BundleInstallStatus : uint8_t {
+    UNKNOWN_STATUS = 0,
+    BUNDLE_NOT_EXIST = 1,
+    BUNDLE_INSTALLING = 2,
+    BUNDLE_INSTALLED = 3,
+};
+
 // configuration information about a bundle
 struct BundleInfo : public Parcelable {
     bool isNewVersion = false;

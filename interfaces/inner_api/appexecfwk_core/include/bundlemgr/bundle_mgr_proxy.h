@@ -1295,6 +1295,10 @@ public:
         const int32_t userId, const int32_t appIndex) override;
 
     virtual ErrCode CreateNewBundleEl5Dir(int32_t userId) override;
+
+    virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+        BundleInstallStatus &bundleInstallStatus) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

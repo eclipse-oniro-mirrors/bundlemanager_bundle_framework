@@ -1922,6 +1922,12 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+        BundleInstallStatus &bundleInstallStatus)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

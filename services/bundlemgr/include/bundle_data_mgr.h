@@ -1133,6 +1133,10 @@ public:
 
     void GetBundleInfosForContinuation(std::vector<BundleInfo> &bundleInfos) const;
 
+    void AddInstallingBundleName(const std::string &bundleName, const int32_t userId);
+    void DeleteInstallingBundleName(const std::string &bundleName, const int32_t userId);
+    void GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
+        BundleInstallStatus &bundleInstallStatus);
     /**
      * @brief Get a list of application package names that continue the specified package name.
      * @param continueBundleName The package name that is being continued.
@@ -1447,6 +1451,7 @@ private:
     mutable std::shared_mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
     mutable std::shared_mutex bundleMutex_;
+    mutable std::shared_mutex installingBundleNamesMutex_;
     std::shared_ptr<IBundleDataStorage> dataStorage_;
     std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;
@@ -1480,6 +1485,8 @@ private:
     std::set<std::string> appServiceHspBundleName_;
     // using for plugin event callback
     std::map<std::string, std::vector<sptr<IBundleEventCallback>>> pluginCallbackMap_;
+    // using for bundle status
+    std::unordered_map<std::string, std::set<int32_t>> installingBundleNames_;
 
     static bool HasAppLinkingFlag(uint32_t flags);
 };

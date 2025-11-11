@@ -2326,6 +2326,114 @@ HWTEST_F(BmsBundleManagerTest3, RemoveSameAbilityResourceInfo_0001, Function | S
 }
 
 /**
+ * @tc.number: GetBundleInstallStatus_0001
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_BACKUP_NAME;
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleInstallStatus_0002
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus("", userId, status);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleInstallStatus_0003
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0003, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_BACKUP_NAME;
+    int32_t userId = 100000;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleInstallStatus_0004
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0004, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    std::string bundleName = BUNDLE_BACKUP_NAME;
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(status, BundleInstallStatus::UNKNOWN_STATUS);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = savedDataMgr;
+}
+
+/**
+ * @tc.number: GetBundleInstallStatus_0005
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0005, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_BACKUP_NAME;
+    int32_t userId = 100;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLED);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetBundleInstallStatus_0006
+ * @tc.name: test GetBundleInstallStatus
+ * @tc.desc: test GetBundleInstallStatus
+ */
+HWTEST_F(BmsBundleManagerTest3, GetBundleInstallStatus_0006, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundleName = BUNDLE_BACKUP_NAME;
+    int32_t userId = 101;
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    auto testRet = hostImpl->GetBundleInstallStatus(bundleName, userId, status);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_0001
  * @tc.name: test RecoverBackupBundleData
  * @tc.desc: test RecoverBackupBundleData

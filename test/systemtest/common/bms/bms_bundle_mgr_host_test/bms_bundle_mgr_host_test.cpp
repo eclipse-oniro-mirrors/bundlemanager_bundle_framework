@@ -2278,6 +2278,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetPluginBundlePathForSelf_0001, Function |
 }
 
 /**
+* @tc.number: HandleGetBundleInstallStatus_0001
+* @tc.name: test the HandleGetBundleInstallStatus
+* @tc.desc: 1. system running normally
+*           2. test HandleGetBundleInstallStatus
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleInstallStatus_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetBundleInstallStatus(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
 * @tc.number: HandleRecoverBackupBundleData_0001
 * @tc.name: test the HandleRecoverBackupBundleData
 * @tc.desc: 1. system running normally
