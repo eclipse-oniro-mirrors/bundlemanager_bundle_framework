@@ -1675,6 +1675,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0011, Function | SmallTest 
 {
     BaseBundleInstaller installer;
     installer.isAppExist_ = false;
+    installer.isHnpInstalled_ = true;
 
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseBundleInfo_->isPreInstallApp = true;
@@ -1695,6 +1696,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0012, Function | SmallTest 
 {
     BaseBundleInstaller installer;
     installer.isAppExist_ = false;
+    installer.isHnpInstalled_ = true;
 
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseBundleInfo_->isPreInstallApp = false;
@@ -1717,6 +1719,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0013, Function | SmallTest 
     BaseBundleInstaller installer;
     installer.isAppExist_ = false;
     installer.userId_ = 100;
+    installer.isHnpInstalled_ = true;
 
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->bundleName = "test.bundle";
@@ -1744,6 +1747,7 @@ HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0014, Function | SmallTest 
     BaseBundleInstaller installer;
     installer.isAppExist_ = false;
     installer.userId_ = 100;
+    installer.isHnpInstalled_ = true;
 
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->bundleName = "test.bundle";
