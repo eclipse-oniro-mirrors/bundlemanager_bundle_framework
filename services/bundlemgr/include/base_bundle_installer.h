@@ -878,6 +878,7 @@ private:
     bool CheckAddResultMsg(const InnerBundleInfo &info, bool isContainEntry);
     void ProcessUpdateShortcut();
     ErrCode CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    void VerifyDelayedAging(InnerBundleInfo &bundleInfo, int32_t uid);
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     ErrCode CheckInstallPermission(const std::string &appId, const std::string &appIdentifier,
         const std::vector<std::string> &allowedAppIds, const std::vector<std::string> &disallowedAppIds);
