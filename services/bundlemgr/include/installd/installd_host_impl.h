@@ -311,6 +311,8 @@ private:
     ErrCode CreateCommonDataDir(const CreateDirParam &createDirParam, const std::string &el);
     ErrCode CreateEl2DataDir(const CreateDirParam &createDirParam);
     void InnerCleanBundleDataDirByName(std::string &suffixName, const int userid, const int appIndex = 0);
+    ErrCode ResetBmsDBSecurityByPath(const std::string &parentPath, const std::string &fileFlag);
+    ErrCode ResetSecurityByPath(const FileStat &fileStat, const std::string &targetPath);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

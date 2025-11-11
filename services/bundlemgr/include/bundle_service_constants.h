@@ -161,6 +161,13 @@ constexpr const char* DATA_ABILITY_URI_PREFIX = "dataability://";
 constexpr const char* HOS_SYSTEM_APP = "hos_system_app";
 // rdb
 constexpr const char* BUNDLE_RDB_NAME = "/bmsdb.db";
+constexpr const char* BUNDLE_RDB_FLAG = "bmsdb";
+constexpr const char* BUNDLE_RDB_BINLOG_PATH = "/data/service/el1/public/bms/bundle_manager_service/bmsdb.db_binlog";
+constexpr const char* BUNDLE_RESOURCE_RDB_FLAG = "bundleResource";
+constexpr const char* BUNDLE_RESOURCE_RDB_PATH = "/data/service/el1/public/bms/bundle_resources";
+constexpr const char* BUNDLE_RESOURCE_BINLOG_PATH = "/data/service/el1/public/bms/bundle_resources.db_binlog";
+constexpr const char* BUNDLE_RDB_BINLOG = "binlog";
+
 // thread pool
 constexpr const char* RELATIVE_PATH = "../";
 // app detail ability
