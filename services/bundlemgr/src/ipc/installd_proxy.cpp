@@ -337,6 +337,20 @@ ErrCode InstalldProxy::CleanBundleDataDirByName(const std::string &bundleName, c
     return TransactInstalldCmd(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR_BY_NAME, data, reply, option);
 }
 
+ErrCode InstalldProxy::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+{
+    MessageParcel data;
+    int32_t dirSize = static_cast<int32_t>(dirs.size());
+    INSTALLD_PARCEL_WRITE(data, Int32, dirSize);
+    for (const std::string &dir : dirs) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
+    }
+    INSTALLD_PARCEL_WRITE(data, Bool, keepParent);
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::CLEAN_BUNDLE_DIRS, data, reply, option);
+}
+
 ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32_t userId,
     std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
     const uint32_t statFlag, const std::vector<std::string> &moduleNameList)

@@ -107,6 +107,11 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid,
     const int appIndex, const bool isAtomicService)
 {

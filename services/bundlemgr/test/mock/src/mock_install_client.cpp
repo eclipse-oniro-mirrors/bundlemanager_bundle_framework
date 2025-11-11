@@ -130,6 +130,11 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
     return 0;
 }
 
+ErrCode InstalldClient::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex,
     const bool isAtomicService)
 {

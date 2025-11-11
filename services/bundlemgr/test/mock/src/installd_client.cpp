@@ -158,6 +158,16 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
     return CallService(&IInstalld::CleanBundleDataDir, bundleDir);
 }
 
+ErrCode InstalldClient::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+{
+    if (dirs.empty()) {
+        APP_LOGE("dirs is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::CleanBundleDirs, dirs, keepParent);
+}
+
 ErrCode InstalldClient::CleanBundleDataDirByName(
     const std::string &bundleName, const int userid, const int appIndex, const bool isAtomicService)
 {

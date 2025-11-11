@@ -1135,21 +1135,6 @@ HWTEST_F(BmsBundleInstallerPermissionTest, BundleMgrHostImpl_0002, Function | Sm
     bool ret = localBundleMgrHostImpl->GetLabelByBundleName(bundleName, userId, result);
     EXPECT_EQ(ret, false);
 }
-
-/**
- * @tc.number: CleanArkStartupCache_0010
- * @tc.name: test CleanArkStartupCache
- * @tc.desc: 1.Test the CleanArkStartupCache of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerPermissionTest, CleanArkStartupCache_0010, Function | SmallTest | Level0)
-{
-    // test no FOUNDATION_UID
-    std::string cacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
-    std::string bundleName = "";
-    BaseBundleInstaller installer;
-    ErrCode ret = installer.CleanArkStartupCache(cacheDir, bundleName, 100);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
  
 /**
  * @tc.number: DeleteArkStartupCache_0010

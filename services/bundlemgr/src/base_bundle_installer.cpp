@@ -967,12 +967,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
             userGuard.Dismiss();
         }
-        ErrCode res = CleanShaderCache(oldInfo, bundleName_, userId_);
+        ErrCode res = CleanShaderAndArkStartupCache(oldInfo, bundleName_, userId_);
         if (res != ERR_OK) {
             LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean shader fail %{public}d", bundleName_.c_str(), res);
         }
-        // clean ark startup cache for bundle
-        CleanArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, bundleName_, userId_);
     }
 
     auto it = newInfos.begin();
@@ -1909,12 +1907,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_SAVE_FIRST_INSTALL_BUNDLE_ERROR;
     }
 
-    if (DeleteEl1ShaderCache(oldInfo, bundleName, userId_) != ERR_OK) {
+    if (DeleteEl1ShaderAndArkStartupCache(oldInfo, bundleName, userId_) != ERR_OK) {
         APP_LOGW("remove el1 shader cache dir failed for %{public}s", bundleName.c_str());
     }
-
-    // delete ark startup cache for bundle
-    DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, bundleName, userId_);
 
     if (installParam.isKeepData) {
         BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
@@ -6882,48 +6877,46 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
 }
 
-ErrCode BaseBundleInstaller::CleanBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
+ErrCode BaseBundleInstaller::CleanShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
     const std::string &bundleName, int32_t userId) const
 {
-    ErrCode ret = ERR_OK;
+    LOG_D(BMS_TAG_INSTALLER, "start for -n:%{public}s -u:%{public}d", bundleName.c_str(), userId);
+    std::vector<std::string> dirs;
+    std::string shaderCachePath = ServiceConstants::SHADER_CACHE_PATH + bundleName;
+    dirs.emplace_back(shaderCachePath);
+
+    std::vector<int32_t> allAppIndexes = {0};
+    std::vector<int32_t> cloneAppIndexes = dataMgr_->GetCloneAppIndexesByInnerBundleInfo(oldInfo, userId);
+    allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
     for (int32_t appIndex: allAppIndexes) {
         std::string cloneBundleName = bundleName;
         if (appIndex != 0) {
             cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
         }
-        std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
+        std::string el1ShaderCachePath = ServiceConstants::NEW_SHADER_CACHE_PATH + cloneBundleName;
         el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
-        el1ShaderCachePath = el1ShaderCachePath + cloneBundleName;
-        InstalldClient::GetInstance()->CleanBundleDataDir(el1ShaderCachePath);
+        dirs.emplace_back(el1ShaderCachePath);
 
         // clean shader cache in /system_optimize
         std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH +
             cloneBundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
         systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
             1, std::to_string(userId));
-        ret = InstalldClient::GetInstance()->CleanBundleDataDir(systemOptimizeShaderCache);
-        if (ret != ERR_OK) {
-            LOG_W(BMS_TAG_DEFAULT, "%{public}s clean shader cache fail %{public}d", bundleName.c_str(), ret);
-            return ret;
-        }
+        dirs.emplace_back(systemOptimizeShaderCache);
     }
-    return ret;
-}
 
-ErrCode BaseBundleInstaller::CleanShaderCache(const InnerBundleInfo &oldInfo,
-    const std::string &bundleName, int32_t userId) const
-{
-    std::string shaderCachePath;
-    shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-    LOG_D(BMS_TAG_INSTALLER, "CleanShaderCache %{public}s", shaderCachePath.c_str());
-    ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(shaderCachePath);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "CleanShaderCache %{public}s failed", shaderCachePath.c_str());
+    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH + bundleName +
+        ServiceConstants::ARK_STARTUP_CACHE_DIR;
+    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(userId));
+    dirs.emplace_back(el1ArkStartupCachePath);
+
+    ErrCode result = InstalldClient::GetInstance()->CleanBundleDirs(dirs, true);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "clean bundle shader cache dirs failed, error:%{public}d", result);
+        return result;
     }
-    std::vector<int32_t> allAppIndexes = {0};
-    std::vector<int32_t> cloneAppIndexes = dataMgr_->GetCloneAppIndexesByInnerBundleInfo(oldInfo, userId);
-    allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
-    return CleanBundleClonesShaderCache(allAppIndexes, bundleName, userId);
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const
@@ -6959,41 +6952,37 @@ ErrCode BaseBundleInstaller::DeleteCloudShader(const std::string &bundleName) co
     return InstalldClient::GetInstance()->RemoveDir(newShaderCloudPath);
 }
 
-ErrCode BaseBundleInstaller::DeleteBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
-    const std::string &bundleName, int32_t userId) const
-{
-    ErrCode ret = ERR_OK;
-    for (int32_t appIndex: allAppIndexes) {
-        std::string cloneBundleName = bundleName;
-        if (appIndex != 0) {
-            cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
-        }
-        std::string el1ShaderCachePath = std::string(ServiceConstants::NEW_SHADER_CACHE_PATH);
-        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
-        el1ShaderCachePath = el1ShaderCachePath + cloneBundleName;
-        InstalldClient::GetInstance()->RemoveDir(el1ShaderCachePath);
-
-        // Remove shader cache in /system_optimize
-        std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH +
-            cloneBundleName;
-        systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
-            1, std::to_string(userId));
-        ret = InstalldClient::GetInstance()->RemoveDir(systemOptimizeShaderCache);
-        if (ret != ERR_OK) {
-            LOG_W(BMS_TAG_DEFAULT, "%{public}s clean shader cache fail %{public}d", bundleName.c_str(), ret);
-            return ret;
-        }
-    }
-    return ret;
-}
-
-ErrCode BaseBundleInstaller::DeleteEl1ShaderCache(const InnerBundleInfo &oldInfo,
+ErrCode BaseBundleInstaller::DeleteEl1ShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
     const std::string &bundleName, int32_t userId) const
 {
     std::vector<int32_t> allAppIndexes = {0};
     std::vector<int32_t> cloneAppIndexes = dataMgr_->GetCloneAppIndexesByInnerBundleInfo(oldInfo, userId);
     allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
-    return DeleteBundleClonesShaderCache(allAppIndexes, bundleName, userId);
+
+    std::vector<std::string> dirs;
+    for (int32_t appIndex: allAppIndexes) {
+        std::string cloneBundleName = bundleName;
+        if (appIndex != 0) {
+            cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+        }
+        std::string el1ShaderCachePath = ServiceConstants::NEW_SHADER_CACHE_PATH + cloneBundleName;
+        el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(userId));
+        dirs.emplace_back(el1ShaderCachePath);
+        
+        // Remove shader cache in /system_optimize
+        std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH +
+            cloneBundleName;
+        systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
+            1, std::to_string(userId));
+        dirs.emplace_back(systemOptimizeShaderCache);
+    }
+
+    ErrCode result = InstalldClient::GetInstance()->CleanBundleDirs(dirs, false);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "delete el1 bundle shader cache dirs failed, error:%{public}d", result);
+        return result;
+    }
+    return ERR_OK;
 }
 
 ArkStartupCache BaseBundleInstaller::CreateArkStartupCacheParameter(const std::string &bundleName,
@@ -7045,15 +7034,6 @@ ErrCode BaseBundleInstaller::CreateArkStartupCache(const ArkStartupCache &create
         return result;
     }
     return InstalldClient::GetInstance()->SetArkStartupCacheApl(createArk.cacheDir);
-}
-
-ErrCode BaseBundleInstaller::CleanArkStartupCache(const std::string &cacheDir,
-    const std::string &bundleName, int32_t userId) const
-{
-    std::string el1ArkStartupCachePath = cacheDir + bundleName + ServiceConstants::ARK_STARTUP_CACHE_DIR;
-    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
-        std::to_string(userId));
-    return InstalldClient::GetInstance()->CleanBundleDataDir(el1ArkStartupCachePath);
 }
 
 ErrCode BaseBundleInstaller::DeleteArkStartupCache(const std::string &cacheDir,

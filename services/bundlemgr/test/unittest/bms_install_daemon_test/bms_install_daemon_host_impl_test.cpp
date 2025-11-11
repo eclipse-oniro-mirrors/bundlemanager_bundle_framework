@@ -1391,4 +1391,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7900, Function | Sma
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: InstalldHostImplTest_8000
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CleanBundleDirs of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8000, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> dirs;
+    auto ret = hostImpl->CleanBundleDirs(dirs, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS

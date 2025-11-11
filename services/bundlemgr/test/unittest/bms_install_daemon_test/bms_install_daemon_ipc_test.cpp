@@ -1362,4 +1362,21 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7200, Function | SmallTest |
     auto ret = proxy->SetArkStartupCacheApl(TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_7300
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling CleanBundleDirs of proxy
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7300, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    std::vector<std::string> dirs;
+    dirs.emplace_back(TEST_STRING);
+    auto ret = proxy->CleanBundleDirs(dirs, true);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

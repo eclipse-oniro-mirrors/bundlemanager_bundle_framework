@@ -743,20 +743,17 @@ private:
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
-    ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
-    ErrCode CleanBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
+    ErrCode CleanShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
         const std::string &bundleName, int32_t userId) const;
     void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteCloudShader(const std::string &bundleName) const;
-    ErrCode DeleteEl1ShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
-    ErrCode DeleteBundleClonesShaderCache(const std::vector<int32_t> allAppIndexes,
+    ErrCode DeleteEl1ShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
         const std::string &bundleName, int32_t userId) const;
     ArkStartupCache CreateArkStartupCacheParameter(const std::string &bundleName,
         int32_t userId, BundleType bundleType, int32_t uid);
     ErrCode ProcessArkStartupCache(const ArkStartupCache &createArk,
         int32_t moduleNum, int32_t userId) const;
     ErrCode CreateArkStartupCache(const ArkStartupCache &createArk) const;
-    ErrCode CleanArkStartupCache(const std::string &cacheDir, const std::string &bundleName, int32_t userId) const;
     ErrCode DeleteArkStartupCache(const std::string &cacheDir, const std::string &bundleName, int32_t userId) const;
     bool VerifyActivationLock() const;
     bool VerifyActivationLockToken() const;
