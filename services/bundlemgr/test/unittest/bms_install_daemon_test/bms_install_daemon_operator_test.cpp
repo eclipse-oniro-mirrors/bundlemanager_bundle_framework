@@ -2293,32 +2293,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13600, Function | Sm
 
 /**
  * @tc.number: InstalldOperatorTest_13700
- * @tc.name: test function of InstalldOperator with DriverInstallExtHandler
- * @tc.desc: 1. calling MoveFile of InstalldOperator
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13700, Function | SmallTest | Level1)
-{
-    std::string srcPath = "/data/service/el1/public/print_service/cups/serverbin/filter/test.txt";
-    std::string dstPath = "/data/service/el1/public/print_service/cups/serverbin/filter/test1.txt";
-    CreateFile(srcPath, "test");
-    DelayedSingleton<DriverInstallExtHandler>::GetInstance()->getDriverExecuteExtPathsFunc_ =
-        [](std::vector<std::string>& vec) -> void {
-            vec = std::vector<std::string>{"/print_service/cups/"};
-        };
-    bool ret = InstalldOperator::MoveFile(srcPath, dstPath);
-    EXPECT_EQ(ret, true);
-    DelayedSingleton<DriverInstallExtHandler>::GetInstance()->getDriverExecuteExtPathsFunc_ = nullptr;
-    ret = InstalldOperator::MoveFile(dstPath, srcPath);
-    EXPECT_EQ(ret, true);
-    DeleteFile(srcPath);
-}
-
-/**
- * @tc.number: InstalldOperatorTest_13800
  * @tc.name: test function of InstalldOperator with not DRIVER_EXECUTE_DIR path
  * @tc.desc: 1. calling MoveFile of InstalldOperator
 */
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13800, Function | SmallTest | Level1)
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13700, Function | SmallTest | Level1)
 {
     std::string srcPath = "/data/service/el1/public/print_service/cups/test.txt";
     std::string dstPath = "/data/service/el1/public/print_service/cups/test1.txt";

@@ -47,7 +47,7 @@ void DriverInstallExtHandler::RedirectDriverInstallExtPath(std::string &path)
         redirectDriverInstallExtPath_(path);
         return;
     }
-    APP_LOGW("redirectDriverInstallExtPath_ func is nullptr");
+    APP_LOGD("redirectDriverInstallExtPath_ func is nullptr");
 }
 
 void DriverInstallExtHandler::GetDriverExecuteExtPaths(std::vector<std::string> &paths)
@@ -62,12 +62,7 @@ void DriverInstallExtHandler::GetDriverExecuteExtPaths(std::vector<std::string> 
 bool DriverInstallExtHandler::IsExtSpaceEnable()
 {
     std::string extSpaceEnable = OHOS::system::GetParameter(PARAM_EXT_SPACE, "");
-    if (extSpaceEnable == EXT_SPACE_ENABLE) {
-        APP_LOGI("IsExtSpaceEnable return true.");
-        return true;
-    }
-    APP_LOGW("IsExtSpaceEnable return false.");
-    return false;
+    return extSpaceEnable == EXT_SPACE_ENABLE;
 }
 
 bool DriverInstallExtHandler::OpenDriverInstallHandler()

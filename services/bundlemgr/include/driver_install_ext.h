@@ -18,15 +18,13 @@
 #include <string>
 #include <vector>
 
-#include "singleton.h"
-
 namespace OHOS {
 namespace AppExecFwk {
 
 using RedirectPathFunc = void (*)(std::string &);
 using GetDriverExtPathsFunc = void (*)(std::vector<std::string> &);
 
-class DriverInstallExtHandler : public DelayedSingleton<DriverInstallExtHandler> {
+class DriverInstallExtHandler {
 public:
     DriverInstallExtHandler();
     ~DriverInstallExtHandler();

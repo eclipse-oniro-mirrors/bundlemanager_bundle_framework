@@ -46,6 +46,8 @@ private:
         const InnerBundleInfo &oldInfo) const;
 
     void RenameDriverFile(const InnerBundleInfo &info) const;
+
+    mutable std::shared_ptr<DriverInstallExtHandler> driverInstallExtHandler_ = nullptr;
 };
 } // AppExecFwk
 } // OHOS
