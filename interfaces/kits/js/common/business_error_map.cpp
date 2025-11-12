@@ -26,6 +26,8 @@ constexpr const char* ERR_MSG_PERMISSION_DENIED_ERROR =
     "Permission denied. An attempt was made to $ forbidden by permission: $.";
 constexpr const char* ERR_MSG_NOT_SYSTEM_APP =
     "Permission denied. Non-system APP calling system API";
+constexpr const char* ERR_NEW_MSG_NOT_SYSTEM_APP =
+    "Permission denied. A non-system application is not allowed to call a system API.";
 constexpr const char* ERR_MSG_PARAM_TYPE_ERROR = "Parameter error. The type of $ must be $.";
 constexpr const char* ERR_MSG_ABILITY_NOT_SUPPORTED =
     "Capability not supported. Function $ can not work correctly due to limited device capabilities.";
@@ -291,10 +293,18 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_DESTINATION_PATH_ACCESS_FAILED, ERROR_MSG_DESTINATION_PATH_ACCESS_FAILED},
     { ERROR_DATA_MIGRATION_COPY_FAILED, ERROR_MSG_DATA_MIGRATION_COPY_FAILED}
 };
+
+static std::unordered_map<int32_t, const char*> ERR_NEW_MSG_MAP = {
+    { ERROR_NOT_SYSTEM_APP, ERR_NEW_MSG_NOT_SYSTEM_APP },
+};
 } // namespace
 void BusinessErrorMap::GetErrMap(std::unordered_map<int32_t, const char*>& errMap)
 {
     errMap = ERR_MSG_MAP;
+}
+void BusinessErrorMap::GetNewErrMap(std::unordered_map<int32_t, const char*>& errMap)
+{
+    errMap = ERR_NEW_MSG_MAP;
 }
 }
 }

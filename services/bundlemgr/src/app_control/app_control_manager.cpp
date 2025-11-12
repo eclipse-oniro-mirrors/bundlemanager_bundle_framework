@@ -714,6 +714,20 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const InnerBundleInfo &
     return ERR_OK;
 }
 
+ErrCode AppControlManager::DeleteAllDisposedRulesForUser(int32_t userId)
+{
+    if (appControlManagerDb_ == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "appControlManagerDb is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto ret = appControlManagerDb_->DeleteAllDisposedRulesForUser(userId);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "rdb delete failed userId:%{public}d", userId);
+        return ret;
+    }
+    return ERR_OK;
+}
+
 void AppControlManager::DeleteAppRunningRuleCacheExcludeEdm(const std::string &key)
 {
     std::lock_guard<std::mutex> lock(appRunningControlMutex_);

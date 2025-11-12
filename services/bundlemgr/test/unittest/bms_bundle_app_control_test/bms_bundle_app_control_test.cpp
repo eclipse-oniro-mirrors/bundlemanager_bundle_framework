@@ -4825,4 +4825,46 @@ HWTEST_F(BmsBundleAppControlTest, DeleteAppRunningControlRuleCache_0300, Functio
     auto ret = appControlManager->GetAppRunningControlRuleCache(key, rule);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: DeleteAllDisposedRulesForUser_0100
+ * @tc.name: Test DeleteAllDisposedRulesForUser by AppControlManager
+ * @tc.desc: 1.DeleteAllDisposedRulesForUser test
+ */
+HWTEST_F(BmsBundleAppControlTest, DeleteAllDisposedRulesForUser_0100, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->appRunningControlRuleResult_.clear();
+    appControlManager->appControlManagerDb_ = nullptr;
+    auto ret = appControlManager->DeleteAllDisposedRulesForUser(USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: DeleteAllDisposedRulesForUser_0200
+ * @tc.name: Test DeleteAllDisposedRulesForUser by AppControlManager
+ * @tc.desc: 1.DeleteAllDisposedRulesForUser test
+ */
+HWTEST_F(BmsBundleAppControlTest, DeleteAllDisposedRulesForUser_0200, Function | SmallTest | Level1)
+{
+    auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
+    ASSERT_NE(appControlManager, nullptr);
+    appControlManager->appRunningControlRuleResult_.clear();
+    auto ret = appControlManager->DeleteAllDisposedRulesForUser(USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: DeleteAllDisposedRulesForUser_0300
+ * @tc.name: Test DeleteAllDisposedRulesForUser by AppControlManagerRdb
+ * @tc.desc: 1.DeleteAllDisposedRulesForUser test
+ */
+HWTEST_F(BmsBundleAppControlTest, DeleteAllDisposedRulesForUser_0300, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppControlManagerRdb>();
+    ASSERT_NE(rdb, nullptr);
+    auto ret = rdb->DeleteAllDisposedRulesForUser(USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

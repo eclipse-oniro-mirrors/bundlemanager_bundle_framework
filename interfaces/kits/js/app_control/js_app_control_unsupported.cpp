@@ -87,6 +87,15 @@ napi_value GetDisposedRule(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value GetAllDisposedRules(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("AppControl not supported");
+    napi_value error = BusinessError::CreateNewCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "GetAllDisposedRules");
+    napi_throw(env, error);
+    return nullptr;
+}
+
 napi_value SetDisposedRule(napi_env env, napi_callback_info info)
 {
     APP_LOGE("AppControl not supported");

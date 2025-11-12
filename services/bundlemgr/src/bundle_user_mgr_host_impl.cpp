@@ -443,6 +443,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
         dataMgr->RemoveUserId(userId);
         dataMgr->RemoveAppInstallDir(userId);
         dataMgr->DeleteFirstInstallBundleInfo(userId);
+        DeleteAllDisposedRulesForUser(userId);
         return ERR_OK;
     }
 
@@ -455,6 +456,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
     dataMgr->RemoveAppInstallDir(userId);
     dataMgr->DeleteFirstInstallBundleInfo(userId);
     dataMgr->RemoveUninstalledBundleinfos(userId);
+    DeleteAllDisposedRulesForUser(userId);
     BundleResourceHelper::DeleteUninstallBundleResourceForUser(userId);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
@@ -467,6 +469,18 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
     HandleNotifyBundleEventsAsync();
     APP_LOGI("RemoveUser end userId: (%{public}d)", userId);
     return ERR_OK;
+}
+
+void BundleUserMgrHostImpl::DeleteAllDisposedRulesForUser(int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+    if (appControlMgr == nullptr) {
+        APP_LOGE("appControlMgr is nullptr");
+        return;
+    }
+    appControlMgr->DeleteAllDisposedRulesForUser(userId);
+#endif
 }
 
 void BundleUserMgrHostImpl::RemoveArkProfile(int32_t userId)
