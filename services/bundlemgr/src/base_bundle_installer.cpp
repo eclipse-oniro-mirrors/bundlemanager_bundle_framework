@@ -6898,7 +6898,7 @@ ErrCode BaseBundleInstaller::CleanShaderAndArkStartupCache(const InnerBundleInfo
         dirs.emplace_back(el1ShaderCachePath);
 
         // clean shader cache in /system_optimize
-        std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH +
+        std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
             cloneBundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
         systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
             1, std::to_string(userId));
@@ -6970,7 +6970,7 @@ ErrCode BaseBundleInstaller::DeleteEl1ShaderAndArkStartupCache(const InnerBundle
         dirs.emplace_back(el1ShaderCachePath);
         
         // Remove shader cache in /system_optimize
-        std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH +
+        std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
             cloneBundleName;
         systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
             1, std::to_string(userId));

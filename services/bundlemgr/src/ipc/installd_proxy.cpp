@@ -340,10 +340,11 @@ ErrCode InstalldProxy::CleanBundleDataDirByName(const std::string &bundleName, c
 ErrCode InstalldProxy::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
 {
     MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     int32_t dirSize = static_cast<int32_t>(dirs.size());
-    INSTALLD_PARCEL_WRITE(data, Int32, dirSize);
+    INSTALLD_PARCEL_WRITE(data, Uint32, dirSize);
     for (const std::string &dir : dirs) {
-        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
+        INSTALLD_PARCEL_WRITE(data, String, dir);
     }
     INSTALLD_PARCEL_WRITE(data, Bool, keepParent);
     MessageParcel reply;

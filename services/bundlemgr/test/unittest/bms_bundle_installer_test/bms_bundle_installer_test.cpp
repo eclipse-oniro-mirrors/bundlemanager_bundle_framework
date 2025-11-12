@@ -3375,7 +3375,7 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_2100, Function | SmallTest | L
     dirs.emplace_back(el1ShaderCachePath);
 
     // clean shader cache in /system_optimize
-    std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH +
+    std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
         cloneBundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
     systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
         1, std::to_string(100));

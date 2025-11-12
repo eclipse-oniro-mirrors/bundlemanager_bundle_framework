@@ -5373,7 +5373,7 @@ ErrCode BMSEventHandler::CheckSystemOptimizeBundleShaderCache(const std::string 
         LOG_W(BMS_TAG_DEFAULT, "invalid uid for: %{public}s", cloneBundleName.c_str());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH;
+    std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
     systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
         1, std::to_string(userId));
     systemOptimizeShaderCache = systemOptimizeShaderCache +
@@ -5418,7 +5418,7 @@ ErrCode BMSEventHandler::CleanSystemOptimizeBundleShaderCache(const std::string 
         cloneBundleName = BundleCloneCommonHelper::GetCloneDataDir(bundleName,
             appIndex);
     }
-    std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH;
+    std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
     systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
         1, std::to_string(userId));
     systemOptimizeShaderCache = systemOptimizeShaderCache +

@@ -537,10 +537,18 @@ bool InstalldHost::HandleCleanBundleDataDirByName(MessageParcel &data, MessagePa
 
 bool InstalldHost::HandleCleanBundleDirs(MessageParcel &data, MessageParcel &reply)
 {
-    std::vector<std::string> dirs;
-    if (!data.ReadStringVector(&dirs)) {
+    uint32_t dirSize = data.ReadUint32();
+    if (dirSize == 0 || dirSize > MAX_VEC_SIZE) {
+        APP_LOGE("dir count is error");
         return false;
     }
+    std::vector<std::string> dirs;
+    for (uint32_t i = 0; i < dirSize; i++) {
+        std::string path;
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, data, path);
+        dirs.emplace_back(path);
+    }
+    
     bool keepParent = data.ReadBool();
     ErrCode result = CleanBundleDirs(dirs, keepParent);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);

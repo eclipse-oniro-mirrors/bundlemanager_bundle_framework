@@ -1375,7 +1375,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7300, Function | SmallTest |
     EXPECT_NE(proxy, nullptr);
 
     std::vector<std::string> dirs;
-    dirs.emplace_back(TEST_STRING);
+    dirs.push_back(TEST_STRING);
     auto ret = proxy->CleanBundleDirs(dirs, true);
     EXPECT_EQ(ret, ERR_OK);
 }

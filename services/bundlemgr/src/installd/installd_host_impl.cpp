@@ -589,7 +589,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             }
 
             // create shadercache in /system_optimize
-            std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH;
+            std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
             systemOptimizeShaderCachePath = systemOptimizeShaderCachePath.replace(
                 systemOptimizeShaderCachePath.find("%"),
                 1, std::to_string(userId));
@@ -2434,7 +2434,7 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
                 return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
             }
             // remove shadercache in /system_optimize
-            std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH;
+            std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
             systemOptimizeShaderCachePath = systemOptimizeShaderCachePath.replace(
                 systemOptimizeShaderCachePath.find("%"),
                 1, std::to_string(userId));
@@ -2750,6 +2750,7 @@ ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, 
     for (const std::string &dir : dirs) {
         if (dir.empty()) {
             LOG_W(BMS_TAG_INSTALLD, "failed for param invalid");
+            continue;
         }
 
         if (keepParent) {
