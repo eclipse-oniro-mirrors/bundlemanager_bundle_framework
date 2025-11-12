@@ -86,7 +86,7 @@ public:
      * @param dir Indicates the directory path that to be removed.
      * @return Returns ERR_OK if the  directory removed successfully; returns error code otherwise.
      */
-    ErrCode RemoveDir(const std::string &dir);
+    ErrCode RemoveDir(const std::string &dir, bool async = false);
     /**
      * @brief Get disk usage for dir.
      * @param dir Indicates the directory.

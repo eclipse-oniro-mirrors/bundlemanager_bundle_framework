@@ -1156,7 +1156,7 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
+ErrCode InstalldHostImpl::RemoveDir(const std::string &dir, bool async)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::RemoveDir:%{public}s", dir.c_str());
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
@@ -1167,7 +1167,7 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
         LOG_E(BMS_TAG_INSTALLD, "Calling the function RemoveDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::DeleteDir(dir)) {
+    if (!InstalldOperator::DeleteDirFlexible(dir, async)) {
         LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", dir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }

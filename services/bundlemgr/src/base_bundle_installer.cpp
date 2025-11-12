@@ -4078,7 +4078,7 @@ ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info,
         }
     }
     // remove bundle dir
-    result = RemoveBundleCodeDir(info);
+    result = RemoveBundleCodeDir(info, async);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove dir fail %{public}s error %{public}d", info.GetAppCodePath().c_str(), result);
         return result;
@@ -4086,9 +4086,9 @@ ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info,
     return result;
 }
 
-ErrCode BaseBundleInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info) const
+ErrCode BaseBundleInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info, const bool async) const
 {
-    auto result = InstalldClient::GetInstance()->RemoveDir(info.GetAppCodePath());
+    auto result = InstalldClient::GetInstance()->RemoveDir(info.GetAppCodePath(), async);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove bundle code dir %{public}s, error is %{public}d",
             info.GetAppCodePath().c_str(), result);

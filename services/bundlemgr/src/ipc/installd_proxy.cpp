@@ -256,11 +256,12 @@ ErrCode InstalldProxy::RemoveModuleDataDir(const std::string &ModuleName, const 
     return TransactInstalldCmd(InstalldInterfaceCode::REMOVE_MODULE_DATA_DIR, data, reply, option);
 }
 
-ErrCode InstalldProxy::RemoveDir(const std::string &dir)
+ErrCode InstalldProxy::RemoveDir(const std::string &dir, bool async)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
+    INSTALLD_PARCEL_WRITE(data, Bool, async);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);

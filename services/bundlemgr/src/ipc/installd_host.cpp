@@ -470,7 +470,8 @@ bool InstalldHost::HandleRemoveModuleDataDir(MessageParcel &data, MessageParcel 
 bool InstalldHost::HandleRemoveDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string removedDir = Str16ToStr8(data.ReadString16());
-    ErrCode result = RemoveDir(removedDir);
+    bool async = data.ReadBool();
+    ErrCode result = RemoveDir(removedDir, async);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

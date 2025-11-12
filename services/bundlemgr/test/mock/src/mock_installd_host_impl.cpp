@@ -87,7 +87,7 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
+ErrCode InstalldHostImpl::RemoveDir(const std::string &dir, bool async)
 {
     return ERR_OK;
 }
