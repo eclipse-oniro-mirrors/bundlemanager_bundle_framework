@@ -3858,6 +3858,10 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
                 LOG_E(BMS_TAG_INSTALLER, "hnp type err: %{public}s", hnpPackageInfo.type.c_str());
                 continue;
             }
+            if (hnpPackageInfo.package.find(ServiceConstants::RELATIVE_PATH_NAME) != std::string::npos) {
+                LOG_E(BMS_TAG_INSTALLER, "hnp package err: %{public}s", hnpPackageInfo.package.c_str());
+                continue;
+            }
             hnpPackageInfoMap[hnpPackageInfo.package] = hnpPackageInfo.type;
         }
         for (const auto &hnpPackageKV : hnpPackageInfoMap) {
