@@ -60,6 +60,13 @@ static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int 
     return nullptr;
 }
 
+static ani_object AniGetAllDisposedRules(ani_env* env)
+{
+    APP_LOGI("AppControl not supported");
+    BusinessErrorAni::ThrowCommonNewError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ALL_DISPOSED_RULES, "");
+    return nullptr;
+}
+
 static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object aniRule, ani_int aniAppIndex)
 {
     APP_LOGI("AppControl not supported");
@@ -114,6 +121,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getDisposedStatusNative", nullptr, reinterpret_cast<void*>(AniGetDisposedStatus) },
         ani_native_function { "deleteDisposedStatusNative", nullptr, reinterpret_cast<void*>(AniDeleteDisposedStatus) },
         ani_native_function { "getDisposedRuleNative", nullptr, reinterpret_cast<void*>(AniGetDisposedRule) },
+        ani_native_function { "getAllDisposedRulesNative", nullptr, reinterpret_cast<void*>(AniGetAllDisposedRules) },
         ani_native_function { "setDisposedRuleNative", nullptr, reinterpret_cast<void*>(AniSetDisposedRule) },
         ani_native_function { "setUninstallDisposedRuleNative", nullptr,
             reinterpret_cast<void*>(AniSetUninstallDisposedRule) },

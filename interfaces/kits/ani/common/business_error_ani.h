@@ -29,11 +29,15 @@ public:
     static ani_object CreateError(ani_env *env, int32_t code, const std::string &msg);
     static ani_object CreateCommonError(
         ani_env *env, int32_t err, const std::string &functionName = "", const std::string &permissionName = "");
+    static ani_object CreateNewCommonError(
+        ani_env *env, int32_t err, const std::string &functionName = "", const std::string &permissionName = "");
     static ani_object CreateInstallError(ani_env *env, int32_t err, int32_t innerCode,
         const std::string &functionName = "", const std::string &permissionName = "");
     static ani_object CreateEnumError(ani_env *env, const std::string &parameter, const std::string &enumClass);
     static void ThrowTooFewParametersError(ani_env *env, int32_t err);
     static void ThrowCommonError(ani_env *env, int32_t err,
+        const std::string &parameter, const std::string &type);
+    static void ThrowCommonNewError(ani_env *env, int32_t err,
         const std::string &parameter, const std::string &type);
     static void ThrowInstallError(ani_env *env, int32_t err, int32_t innerCode,
         const std::string &parameter, const std::string &type);

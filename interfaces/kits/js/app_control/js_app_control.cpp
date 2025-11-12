@@ -788,7 +788,7 @@ napi_value GetAllDisposedRules(napi_env env, napi_callback_info info)
         napi_value ndisposedRuleConfiguration = nullptr;
         NAPI_CALL(env, napi_create_object(env, &ndisposedRuleConfiguration));
         ConvertDisposedRuleConfiguration(env, ndisposedRuleConfiguration, disposedRuleConfigurations[i]);
-        napi_set_element(env, nRuleArray, i, ndisposedRuleConfiguration);
+        NAPI_CALL(env, napi_set_element(env, nRuleArray, i, ndisposedRuleConfiguration));
     }
     return nRuleArray;
 }

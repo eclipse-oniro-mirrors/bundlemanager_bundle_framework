@@ -25,6 +25,8 @@ using Want = OHOS::AAFwk::Want;
 
 namespace {
 constexpr const char* CLASSNAME_DISPOSED_RULE_INNER = "@ohos.bundle.appControl.appControl.DisposedRuleInner";
+constexpr const char* CLASSNAME_DISPOSED_RULE_CONFIGURATION_INNER =
+    "@ohos.bundle.appControl.appControl.DisposedRuleConfigurationInner";
 constexpr const char* CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER =
     "@ohos.bundle.appControl.appControl.UninstallDisposedRuleInner";
 constexpr const char* CLASSNAME_WANT = "@ohos.app.ability.Want.Want";
@@ -91,6 +93,33 @@ ani_object AniAppControlCommon::ConvertDisposedRule(ani_env* env, const Disposed
             .BuildSignatureDescriptor();
     return CommonFunAni::CreateNewObjectByClassV2(
         env, CLASSNAME_DISPOSED_RULE_INNER, disposedRule.want == nullptr? ctorSig: ctorSigWithWant, args);
+}
+
+ani_object AniAppControlCommon::ConvertDisposedRuleConfiguration(
+    ani_env* env, const DisposedRuleConfiguration& disposedRuleConfiguration)
+{
+    RETURN_NULL_IF_NULL(env);
+    ani_object disposedRuleObj = ConvertDisposedRule(env, disposedRuleConfiguration.disposedRule);
+    RETURN_NULL_IF_NULL(disposedRuleObj);
+
+    ani_string appIdObj = nullptr;
+    RETURN_NULL_IF_FALSE(CommonFunAni::StringToAniStr(env, disposedRuleConfiguration.appId, appIdObj));
+
+    ani_value args[] = {
+        { .r = disposedRuleObj },                    // disposedRule: DisposedRule
+        { .r = appIdObj },                           // appId: string
+        { .i = disposedRuleConfiguration.appIndex }  // appIndex: int
+    };
+
+    static const std::string ctorSig =
+        arkts::ani_signature::SignatureBuilder()
+            .AddClass(CLASSNAME_DISPOSED_RULE_INNER)     // disposedRule: DisposedRule
+            .AddClass(CommonFunAniNS::CLASSNAME_STRING)  // appId: string
+            .AddInt()                                    // appIndex: int
+            .BuildSignatureDescriptor();
+
+    return CommonFunAni::CreateNewObjectByClassV2(
+        env, CLASSNAME_DISPOSED_RULE_CONFIGURATION_INNER, ctorSig, args);
 }
 
 ani_object AniAppControlCommon::ConvertUninstallDisposedRule(ani_env* env,

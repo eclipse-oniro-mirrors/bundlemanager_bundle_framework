@@ -123,12 +123,20 @@ export default namespace appControl {
     public appId: string = '';
     public appIndex: int;
     public disposedRule: DisposedRule = new DisposedRuleInner;
+
+    constructor() { }
+    constructor(disposedRule: DisposedRuleInner, appId: string, appIndex: int) {
+        this.disposedRule = disposedRule;
+        this.appId = appId;
+        this.appIndex = appIndex;
+    }
   }
 
   native function setDisposedStatusNative(appId: string, disposedWant: Want, isSync: boolean): void;
   native function getDisposedStatusNative(appId: string, isSync: boolean): Want;
   native function deleteDisposedStatusNative(appId: string, appIndex: int, isSync: boolean): void;
   native function getDisposedRuleNative(appId: string, appIndex: int): DisposedRule;
+  native function getAllDisposedRulesNative(): Array<DisposedRuleConfiguration>;
   native function setDisposedRuleNative(appId: string, rule: DisposedRule, appIndex: int): void;
   native function setUninstallDisposedRuleNative(appIdentifier: string, rule: UninstallDisposedRule, appIndex: int): void;
   native function getUninstallDisposedRuleNative(appIdentifier: string, appIndex: int): UninstallDisposedRule;
@@ -239,6 +247,11 @@ export default namespace appControl {
   {
     let appIndexInfo = appIndex ?? 0;
     return getDisposedRuleNative(appId, appIndexInfo);
+  }
+
+  function getAllDisposedRules(): Array<DisposedRuleConfiguration>
+  {
+    return getAllDisposedRulesNative();
   }
 
   function setDisposedRule(appId: string, rule: DisposedRule, appIndex?: int): void
