@@ -170,6 +170,7 @@ constexpr const char* BUNDLE_RDB_BINLOG = "binlog";
 
 // thread pool
 constexpr const char* RELATIVE_PATH = "../";
+constexpr const char* RELATIVE_PATH_NAME = "..";
 // app detail ability
 constexpr const char* APP_DETAIL_ABILITY = "AppDetailAbility";
 // overlay installation
