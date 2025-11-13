@@ -203,7 +203,7 @@ static ani_object AniGetAllDisposedRules(ani_env* env)
     auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("appControlProxy is null");
-        BusinessErrorAni::ThrowCommonNewError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, GET_ALL_DISPOSED_RULES, "");
+        BusinessErrorAni::ThrowCommonNewError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_ALL_DISPOSED_RULES, "");
         return nullptr;
     }
     int32_t userId = Constants::UNSPECIFIED_USERID;
@@ -213,7 +213,7 @@ static ani_object AniGetAllDisposedRules(ani_env* env)
     if (ret != ERR_OK) {
         APP_LOGE("GetAllDisposedRules failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
-            GET_ALL_DISPOSED_RULES, PERMISSION_DISPOSED_STATUS);
+            GET_ALL_DISPOSED_RULES, PERMISSION_DISPOSED_APP_STATUS);
         return nullptr;
     }
 
