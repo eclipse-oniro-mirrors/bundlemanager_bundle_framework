@@ -112,7 +112,8 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
             (installResult.type == NotifyType::UNINSTALL_MODULE)) ?
             static_cast<uint8_t>(InstallType::UNINSTALL_CALLBACK) :
             static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
-    int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
+    int32_t bundleUserId = installResult.userId == Constants::INVALID_USERID ?
+        BundleUtil::GetUserIdByUid(installResult.uid) : installResult.userId;
     int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID || bundleUserId == Constants::U1) ?
         AccountHelper::GetUserIdByCallerType() : bundleUserId;
 

@@ -21,6 +21,7 @@
 
 #include "appexecfwk_errors.h"
 #include "bundle_data_mgr.h"
+#include "bundle_constants.h"
 #include "disposed_rule.h"
 #include "inner_bundle_info.h"
 
@@ -61,6 +62,7 @@ struct NotifyBundleEvents {
     int32_t bundleType = 0;
     int32_t atomicServiceModuleUpgrade = 0;
     int32_t appIndex = 0;
+    int32_t userId = Constants::INVALID_USERID;
     std::string bundleName = "";
     std::string modulePackage = "";
     std::string abilityName = "";
