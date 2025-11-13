@@ -5299,6 +5299,24 @@ HWTEST_F(BmsBundleDataMgrTest, DeleteInstallingBundleName_0100, Function | Small
 }
 
 /**
+ * @tc.number: DeleteInstallingBundleName_0200
+ * @tc.name: test DeleteInstallingBundleName
+ * @tc.desc: 1.system run normally
+ *           2.check DeleteInstallingBundleName
+ */
+HWTEST_F(BmsBundleDataMgrTest, DeleteInstallingBundleName_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        dataMgr->DeleteInstallingBundleName(BUNDLE_TEST2, TEST_U100);
+        BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+        dataMgr->GetBundleInstallStatus(BUNDLE_TEST2, TEST_U100, status);
+        EXPECT_EQ(status, BundleInstallStatus::BUNDLE_NOT_EXIST);
+    }
+}
+
+/**
  * @tc.number: BackupBundleData_0100
  * @tc.name: BackupBundleData
  * @tc.desc: test BackupBundleData of BmsExtensionClient

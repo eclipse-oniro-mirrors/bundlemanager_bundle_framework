@@ -217,6 +217,12 @@ namespace bundleManager {
     UNKNOWN_PROFILE = 2
   }
 
+  export enum BundleInstallStatus {
+    BUNDLE_NOT_EXIST = 1,
+    BUNDLE_INSTALLING = 2,
+    BUNDLE_INSTALLED = 3
+  }
+
   native function getBundleInfoForSelfNative(bundleFlags: int, isSync: boolean): BundleInfo;
 
   native function getBundleInfoNative(bundleName: string, bundleFlags: int, userId: int, isSync: boolean) : BundleInfo;
@@ -351,6 +357,8 @@ namespace bundleManager {
   native function recoverBackupBundleDataNative(bundleName: string, userId: int , appIndex: int): void;
 
   native function removeBackupBundleDataNative(bundleName: string, userId: int , appIndex: int): void;
+
+  native function getBundleInstallStatusNative(bundleName: string): BundleInstallStatus;
 
   function isApplicationEnabledSync(bundleName: string): boolean {
     return isApplicationEnabledNative(bundleName, 0, true);
@@ -1768,6 +1776,10 @@ namespace bundleManager {
     }
     );
     return p;
+  }
+
+  function getBundleInstallStatus(bundleName: string): BundleInstallStatus {
+    return getBundleInstallStatusNative(bundleName);
   }
 }
 

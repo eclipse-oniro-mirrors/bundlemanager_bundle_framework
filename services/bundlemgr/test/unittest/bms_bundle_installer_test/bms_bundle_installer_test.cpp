@@ -12772,6 +12772,54 @@ HWTEST_F(BmsBundleInstallerTest, AddInstallingBundleName_0300, Function | SmallT
 }
 
 /**
+ * @tc.number: AddInstallingBundleName_0400
+ * @tc.name: test AddInstallingBundleName
+ * @tc.desc: 1.Test the AddInstallingBundleName
+*/
+HWTEST_F(BmsBundleInstallerTest, AddInstallingBundleName_0400, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.isOTA = false;
+    installer.otaInstall_ = false;
+    installer.bundleName_ = "testName";
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_BUNDLE_NAME] = "bundleName";
+    bool ret = installer.AddInstallingBundleName(installParam);
+    EXPECT_TRUE(ret);
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    installer.dataMgr_->GetBundleInstallStatus(installer.bundleName_, installParam.userId, status);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+
+    status = BundleInstallStatus::UNKNOWN_STATUS;
+    installer.dataMgr_->GetBundleInstallStatus("bundleName", installParam.userId, status);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+    ret = installer.DeleteInstallingBundleName(installParam);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AddInstallingBundleName_0500
+ * @tc.name: test AddInstallingBundleName
+ * @tc.desc: 1.Test the AddInstallingBundleName
+*/
+HWTEST_F(BmsBundleInstallerTest, AddInstallingBundleName_0500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.isOTA = false;
+    installer.otaInstall_ = false;
+    installer.bundleName_ = "bundleName";
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_BUNDLE_NAME] = "bundleName";
+    bool ret = installer.AddInstallingBundleName(installParam);
+    EXPECT_TRUE(ret);
+    BundleInstallStatus status = BundleInstallStatus::UNKNOWN_STATUS;
+    installer.dataMgr_->GetBundleInstallStatus("bundleName", installParam.userId, status);
+    EXPECT_EQ(status, BundleInstallStatus::BUNDLE_INSTALLING);
+    ret = installer.DeleteInstallingBundleName(installParam);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: DeleteInstallingBundleName_0100
  * @tc.name: test DeleteInstallingBundleName
  * @tc.desc: 1.Test the DeleteInstallingBundleName
@@ -12816,6 +12864,26 @@ HWTEST_F(BmsBundleInstallerTest, DeleteInstallingBundleName_0200, Function | Sma
     bool ret = installer.DeleteInstallingBundleName(installParam);
     EXPECT_FALSE(ret);
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = savedMgr;
+}
+
+/**
+ * @tc.number: DeleteInstallingBundleName_0300
+ * @tc.name: test DeleteInstallingBundleName
+ * @tc.desc: 1.Test the DeleteInstallingBundleName
+*/
+HWTEST_F(BmsBundleInstallerTest, DeleteInstallingBundleName_0300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.isOTA = false;
+    installer.otaInstall_ = false;
+    installer.bundleName_ = "bundleName";
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_BUNDLE_NAME] = "bundleName";
+    bool ret = installer.DeleteInstallingBundleName(installParam);
+    EXPECT_TRUE(ret);
+    installer.bundleName_ = "testName";
+    ret = installer.DeleteInstallingBundleName(installParam);
+    EXPECT_TRUE(ret);
 }
 
 /**

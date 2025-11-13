@@ -11830,6 +11830,7 @@ void BundleDataMgr::GetBundleInstallStatus(const std::string &bundleName, const 
             if ((item->second.find(userId) != item->second.end()) ||
                 (item->second.find(Constants::DEFAULT_USERID) != item->second.end()) ||
                 (item->second.find(Constants::U1) != item->second.end())) {
+                APP_LOGI("-n %{public}s -u %{public}d is installing", bundleName.c_str(), userId);
                 bundleInstallStatus = BundleInstallStatus::BUNDLE_INSTALLING;
                 return;
             }
@@ -11847,6 +11848,7 @@ void BundleDataMgr::GetBundleInstallStatus(const std::string &bundleName, const 
         bundleInstallStatus = BundleInstallStatus::BUNDLE_NOT_EXIST;
         return;
     }
+    APP_LOGD("-n %{public}s -u %{public}d exist, bundle installed", bundleName.c_str(), responseUserId);
     bundleInstallStatus = BundleInstallStatus::BUNDLE_INSTALLED;
 }
 
