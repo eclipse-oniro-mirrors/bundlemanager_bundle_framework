@@ -5000,6 +5000,45 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0700, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: FormInfo_0800
+ * @tc.name: Test Unmarshalling
+ * @tc.desc: test the interface of FormInfo
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0800, Function | MediumTest | Level1)
+{
+    FormInfo formInfo;
+    Parcel parcel;
+    auto ret = formInfo.Unmarshalling(parcel);
+    EXPECT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.number: FormInfo_0900
+ * @tc.name: Test Unmarshalling
+ * @tc.desc: test the interface of FormInfo
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0900, Function | MediumTest | Level1)
+{
+    FormInfo formInfo;
+    formInfo.name = NAME;
+    formInfo.bundleName = BUNDLE_NAME1;
+    formInfo.moduleName = MODULE_NAME;
+    formInfo.updateEnabled = false;
+    Parcel parcel;
+    auto ret = formInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    auto info = formInfo.Unmarshalling(parcel);
+    EXPECT_NE(info, nullptr);
+    EXPECT_EQ(info->name, NAME);
+    EXPECT_EQ(info->bundleName, BUNDLE_NAME1);
+    EXPECT_EQ(info->moduleName, MODULE_NAME);
+    EXPECT_EQ(info->updateEnabled, false);
+    if (info != nullptr) {
+        delete info;
+    }
+}
+
+/**
  * @tc.number: ParseArkStartupCacheConfig_0100
  * @tc.name: Test ParseArkStartupCacheConfig
  * @tc.desc: test the ParseArkStartupCacheConfig of BundleParser
