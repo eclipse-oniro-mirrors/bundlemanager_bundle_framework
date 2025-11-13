@@ -273,6 +273,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .uid = uid,
             .bundleType = static_cast<int32_t>(bundleType_),
             .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_,
+            .userId = userId_,
             .bundleName = bundleName,
             .appDistributionType = appDistributionType_,
             .crossAppSharedConfig = isBundleCrossAppSharedConfig_,
@@ -2376,12 +2377,14 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         if (isAppExist_) {
             if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
                 LOG_D(BMS_TAG_INSTALLER, "shared bundle (%{public}s) is irrelevant to user", bundleName.c_str());
+                bundleType_ = BundleType::SHARED;
                 return ERR_OK;
             }
 
             versionCode_ = oldInfo.GetVersionCode();
             if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
                 LOG_D(BMS_TAG_INSTALLER, "Appservice (%{public}s) only install in U0", bundleName.c_str());
+                bundleType_ = BundleType::APP_SERVICE_FWK;
                 return ERR_OK;
             }
 
