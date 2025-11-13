@@ -3853,12 +3853,12 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     if (auto hnpPackageInfos = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
         std::map<std::string, std::string> hnpPackageInfoMap;
         std::stringstream hnpPackageInfoString;
-        for (const auto &hnp_packageInfo : *hnpPackageInfos) {
-            if (hnp_packageInfo.type != TYPE_PUBLIC && hnp_packageInfo.type != TYPE_PRIVATE) {
-                LOG_E(BMS_TAG_INSTALLER, "hnp type err: %{public}s", hnp_packageInfo.type.c_str());
-                return ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED;
+        for (const auto &hnpPackageInfo : *hnpPackageInfos) {
+            if (hnpPackageInfo.type != TYPE_PUBLIC && hnpPackageInfo.type != TYPE_PRIVATE) {
+                LOG_E(BMS_TAG_INSTALLER, "hnp type err: %{public}s", hnpPackageInfo.type.c_str());
+                continue;
             }
-            hnpPackageInfoMap[hnp_packageInfo.package] = hnp_packageInfo.type;
+            hnpPackageInfoMap[hnpPackageInfo.package] = hnpPackageInfo.type;
         }
         for (const auto &hnpPackageKV : hnpPackageInfoMap) {
             hnpPackageInfoString << "{" << hnpPackageKV.first << ":" << hnpPackageKV.second << "}";
