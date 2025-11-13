@@ -1820,7 +1820,7 @@ bool CheckModuleNameIsValid(const std::string &moduleName)
         APP_LOGE("module name size too long");
         return false;
     }
-    if (moduleName.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
+    if (moduleName.find(ServiceConstants::RELATIVE_PATH_NAME) != std::string::npos) {
         return false;
     }
     if (moduleName.find(ServiceConstants::MODULE_NAME_SEPARATOR) != std::string::npos) {
