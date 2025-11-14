@@ -181,6 +181,8 @@ struct EventInfo {
     ErrCode errCode = ERR_OK;
     int64_t costTimeSeconds = 0;
     int64_t timeStamp = 0;
+    int64_t startTime = 0;
+    int64_t endTime = 0;
     int64_t freeSize = 0;
     int32_t errorCode = 0;
     int32_t rebuildType = 0;

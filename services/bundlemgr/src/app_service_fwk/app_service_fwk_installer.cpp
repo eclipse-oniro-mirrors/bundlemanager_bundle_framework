@@ -84,6 +84,7 @@ AppServiceFwkInstaller::~AppServiceFwkInstaller()
 ErrCode AppServiceFwkInstaller::Install(
     const std::vector<std::string> &hspPaths, InstallParam &installParam)
 {
+    startTime_ = BundleUtil::GetCurrentTimeMs();
     ErrCode result = BeforeInstall(hspPaths, installParam);
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
@@ -1008,6 +1009,8 @@ void AppServiceFwkInstaller::SendBundleSystemEvent(
     sysEventInfo.preBundleScene = preBundleScene;
     sysEventInfo.filePath = hspPaths;
     sysEventInfo.callingUid = IPCSkeleton::GetCallingUid();
+    sysEventInfo.startTime = startTime_;
+    sysEventInfo.endTime = BundleUtil::GetCurrentTimeMs();
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
 }
 

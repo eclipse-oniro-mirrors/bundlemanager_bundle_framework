@@ -57,6 +57,7 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     APP_LOGD("InstallCloneApp %{public}s begin", bundleName.c_str());
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
+    startTime_ = BundleUtil::GetCurrentTimeMs();
 
     ErrCode result = ProcessCloneBundleInstall(bundleName, userId, appIndex);
     NotifyBundleEvents installRes = {
@@ -89,6 +90,7 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
     APP_LOGD("UninstallCloneApp %{public}s _ %{public}d begin", bundleName.c_str(), appIndex);
 
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
+    startTime_ = BundleUtil::GetCurrentTimeMs();
 
     ErrCode result = ProcessCloneBundleUninstall(bundleName, userId, appIndex, sync, destroyAppCloneParam);
     auto iter = destroyAppCloneParam.parameters.find(ServiceConstants::BMS_PARA_CLONE_IS_KEEP_DATA);
@@ -606,6 +608,8 @@ void BundleCloneInstaller::SendBundleSystemEvent(const std::string &bundleName, 
     sysEventInfo.versionCode = versionCode_;
     sysEventInfo.preBundleScene = preBundleScene;
     sysEventInfo.isKeepData = isKeepData_;
+    sysEventInfo.startTime = startTime_;
+    sysEventInfo.endTime = BundleUtil::GetCurrentTimeMs();
     GetCallingEventInfo(sysEventInfo);
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
 }
