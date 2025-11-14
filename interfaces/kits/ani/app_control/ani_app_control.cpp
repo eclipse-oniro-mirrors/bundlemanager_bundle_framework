@@ -197,6 +197,30 @@ static ani_object AniGetDisposedRule(ani_env* env, ani_string aniAppId, ani_int 
     return AniAppControlCommon::ConvertDisposedRule(env, disposedRule);
 }
 
+static ani_object AniGetAllDisposedRules(ani_env* env)
+{
+    APP_LOGD("ani GetAllDisposedRules called");
+    auto appControlProxy = CommonFunc::GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("appControlProxy is null");
+        BusinessErrorAni::ThrowCommonNewError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_ALL_DISPOSED_RULES, "");
+        return nullptr;
+    }
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    ErrCode ret = ERR_OK;
+    ret = appControlProxy->GetDisposedRules(userId, disposedRuleConfigurations);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllDisposedRules failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
+            GET_ALL_DISPOSED_RULES, PERMISSION_DISPOSED_APP_STATUS);
+        return nullptr;
+    }
+
+    return CommonFunAni::ConvertAniArray(
+        env, disposedRuleConfigurations, AniAppControlCommon::ConvertDisposedRuleConfiguration);
+}
+
 static void AniSetDisposedRule(ani_env* env, ani_string aniAppId, ani_object aniRule, ani_int aniAppIndex)
 {
     APP_LOGD("ani SetDisposedRule called");
@@ -443,6 +467,7 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getDisposedStatusNative", nullptr, reinterpret_cast<void*>(AniGetDisposedStatus) },
         ani_native_function { "deleteDisposedStatusNative", nullptr, reinterpret_cast<void*>(AniDeleteDisposedStatus) },
         ani_native_function { "getDisposedRuleNative", nullptr, reinterpret_cast<void*>(AniGetDisposedRule) },
+        ani_native_function { "getAllDisposedRulesNative", nullptr, reinterpret_cast<void*>(AniGetAllDisposedRules) },
         ani_native_function { "setDisposedRuleNative", nullptr, reinterpret_cast<void*>(AniSetDisposedRule) },
         ani_native_function { "setUninstallDisposedRuleNative", nullptr,
             reinterpret_cast<void*>(AniSetUninstallDisposedRule) },

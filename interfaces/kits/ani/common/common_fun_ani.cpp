@@ -99,6 +99,8 @@ constexpr const char* CLASSNAME_WANT = "@ohos.app.ability.Want.Want";
 constexpr const char* CLASSNAME_ZLIB_CHECKSUM_INTERNAL = "@ohos.zlib.zlib.ChecksumInternal";
 constexpr const char* CLASSNAME_ZLIB_GZIP_INTERNAL = "@ohos.zlib.zlib.GZipInternal";
 constexpr const char* CLASSNAME_ZLIB_ZIP_INTERNAL = "@ohos.zlib.zlib.ZipInternal";
+constexpr const char* CLASSNAME_DISPOSED_RULE_CONFIGURATION_INNER =
+    "@ohos.bundle.appControl.appControl.DisposedRuleConfigurationInner";
 constexpr const char* CLASSNAME_DISPOSED_RULE_INNER = "@ohos.bundle.appControl.appControl.DisposedRuleInner";
 constexpr const char* CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER =
     "@ohos.bundle.appControl.appControl.UninstallDisposedRuleInner";
@@ -179,6 +181,7 @@ static std::map<std::string, ANIClassCacheItem> g_aniClassCache = {
     { CLASSNAME_ZLIB_GZIP_INTERNAL, { } },
     { CLASSNAME_ZLIB_ZIP_INTERNAL, { } },
     { CLASSNAME_DISPOSED_RULE_INNER, { } },
+    { CLASSNAME_DISPOSED_RULE_CONFIGURATION_INNER, { } },
     { CLASSNAME_DISPOSED_UNINSTALL_RULE_INNER, { } },
     { CLASSNAME_BUNDLE_RES_INFO_INNER, { } },
     { CLASSNAME_LAUNCHER_ABILITY_RESOURCE_INFO_INNER, { } },

@@ -765,7 +765,7 @@ napi_value GetAllDisposedRules(napi_env env, napi_callback_info info)
     auto appControlProxy = CommonFunc::GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
-        napi_value error = BusinessError::CreateNewCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        napi_value error = BusinessError::CreateNewCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
             GET_ALL_DISPOSED_RULES);
         napi_throw(env, error);
         return nullptr;
@@ -778,7 +778,7 @@ napi_value GetAllDisposedRules(napi_env env, napi_callback_info info)
     if (ret != ERR_OK) {
         APP_LOGE("GetAllDisposedRules failed");
         napi_value businessError = BusinessError::CreateNewCommonError(
-            env, ret, GET_ALL_DISPOSED_RULES, PERMISSION_DISPOSED_STATUS);
+            env, ret, GET_ALL_DISPOSED_RULES, PERMISSION_DISPOSED_APP_STATUS);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -788,7 +788,7 @@ napi_value GetAllDisposedRules(napi_env env, napi_callback_info info)
         napi_value ndisposedRuleConfiguration = nullptr;
         NAPI_CALL(env, napi_create_object(env, &ndisposedRuleConfiguration));
         ConvertDisposedRuleConfiguration(env, ndisposedRuleConfiguration, disposedRuleConfigurations[i]);
-        napi_set_element(env, nRuleArray, i, ndisposedRuleConfiguration);
+        NAPI_CALL(env, napi_set_element(env, nRuleArray, i, ndisposedRuleConfiguration));
     }
     return nRuleArray;
 }
