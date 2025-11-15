@@ -84,6 +84,8 @@ const char* JSON_KEY_SUB_BUNDLE_NAME = "subBundleName";
 const char* JSON_KEY_KEEP_STATE_DURATION = "keepStateDuration";
 const char* JSON_KEY_RESIZABLE = "resizable";
 const char* JSON_KEY_GROUP_ID = "groupId";
+const char* JSON_KEY_SUPPORT_DEVICE_TYPE = "supportDeviceTypes";
+const char* JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES = "supportDevicePerformanceClasses";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -151,6 +153,12 @@ void FormInfo::SetInfoByFormExt(const ExtensionFormInfo &formInfo)
     }
     for (const auto &conditionUpdateType : formInfo.conditionUpdate) {
         conditionUpdate.push_back(conditionUpdateType);
+    }
+    for (const auto &deviceTypes : formInfo.supportDeviceTypes) {
+        supportDeviceTypes.push_back(deviceTypes);
+    }
+    for (const auto &devicePerformanceClasses : formInfo.supportDevicePerformanceClasses) {
+        supportDevicePerformanceClasses.push_back(devicePerformanceClasses);
     }
     dataProxyEnabled = formInfo.dataProxyEnabled;
     isDynamic = formInfo.isDynamic;
@@ -279,6 +287,20 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < formPreviewImagesSize; i++) {
         formPreviewImages.emplace_back(parcel.ReadUint32());
     }
+
+    int32_t supportDeviceTypeSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDeviceTypeSize);
+    CONTAINER_SECURITY_VERIFY(parcel, supportDeviceTypeSize, &supportDeviceTypes);
+    for (int32_t i = 0; i < supportDeviceTypeSize; i++) {
+        supportDeviceTypes.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+ 
+    int32_t supportDevicePerformanceClassesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDevicePerformanceClassesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, supportDevicePerformanceClassesSize, &supportDevicePerformanceClasses);
+    for (int32_t i = 0; i < supportDevicePerformanceClassesSize; i++) {
+        supportDevicePerformanceClasses.emplace_back(parcel.ReadInt32());
+    }
     enableBlurBackground = parcel.ReadBool();
     appFormVisibleNotify = parcel.ReadBool();
     funInteractionParams.abilityName = Str16ToStr8(parcel.ReadString16());
@@ -383,6 +405,19 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     for (auto i = 0; i < formPreviewImagesSize; i++) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, formPreviewImages[i]);
     }
+
+    const auto supportDeviceTypeSize = static_cast<int32_t>(supportDeviceTypes.size());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDeviceTypeSize);
+    for (auto i = 0; i < supportDeviceTypeSize; i++) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(supportDeviceTypes[i]));
+    }
+
+    const auto supportDevicePerformanceClassesSize = static_cast<int32_t>(supportDevicePerformanceClasses.size());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDevicePerformanceClassesSize);
+    for (auto i = 0; i < supportDevicePerformanceClassesSize; i++) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDevicePerformanceClasses[i]);
+    }
+
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enableBlurBackground);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, appFormVisibleNotify);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(funInteractionParams.abilityName));
@@ -483,7 +518,9 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_FUN_INTERACTION_PARAMS, formInfo.funInteractionParams},
         {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams},
         {JSON_KEY_RESIZABLE, formInfo.resizable},
-        {JSON_KEY_GROUP_ID, formInfo.groupId}
+        {JSON_KEY_GROUP_ID, formInfo.groupId},
+        {JSON_KEY_SUPPORT_DEVICE_TYPE, formInfo.supportDeviceTypes},
+        {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses}
     };
 }
 
@@ -921,6 +958,22 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         formInfo.groupId,
         false,
         parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SUPPORT_DEVICE_TYPE,
+        formInfo.supportDeviceTypes,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<int32_t>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES,
+        formInfo.supportDevicePerformanceClasses,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::NUMBER);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formInfo jsonObject error : %{public}d", parseResult);
     }
