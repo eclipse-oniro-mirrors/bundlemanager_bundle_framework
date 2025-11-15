@@ -1220,6 +1220,11 @@ public:
     ErrCode GetPluginBundlePathForSelf(const std::string &pluginBundleName, std::string &codePath);
     ErrCode AtomicProcessWithBundleInfo(const std::string &bundleName,
         const std::function<ErrCode(InnerBundleInfo&)>& callback);
+    std::string GetProfilePath(ProfileType profileType, const InnerModuleInfo &innerModuleInfo) const;
+    void GetProfileDataList(ProfileType profileType, int32_t requestUserId,
+        std::vector<BundleProfileData> &profileDataList) const;
+    ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
+        std::vector<JsonProfileInfo> &profileInfos) const;
 
 private:
     /**

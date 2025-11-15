@@ -1928,6 +1928,12 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
+        std::vector<JsonProfileInfo> &profileInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

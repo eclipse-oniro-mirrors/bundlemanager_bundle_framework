@@ -161,6 +161,7 @@ struct HapModuleInfo : public Parcelable {
     std::string moduleSourceDir;
     std::string buildHash;
     std::string fileContextMenu;
+    std::string easyGo;
     std::string routerMap;
     std::string packageName;
     std::string crossAppSharedConfig;

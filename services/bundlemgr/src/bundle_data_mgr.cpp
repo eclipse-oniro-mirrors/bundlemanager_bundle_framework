@@ -111,6 +111,7 @@ constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* RESOURCE_STRING_PREFIX = "$string:";
 constexpr const char* MEDIALIBRARYDATA = "com.ohos.medialibrary.medialibrarydata";
+constexpr const char* EMPTY_STRING = "";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -120,8 +121,10 @@ const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::PKG_CONTEXT_PROFILE, PKG_CONTEXT_PROFILE_PATH },
     { ProfileType::FILE_ICON_PROFILE, FILE_ICON_PROFILE_PATH },
     { ProfileType::INSIGHT_INTENT_PROFILE, INSIGHT_INTENT_PROFILE_PATH },
-    { ProfileType::CLOUD_PROFILE, ServiceConstants::CLOUD_PROFILE_PATH}
+    { ProfileType::CLOUD_PROFILE, ServiceConstants::CLOUD_PROFILE_PATH},
+    { ProfileType::EASY_GO_PROFILE, EMPTY_STRING}
 };
+const std::vector<ProfileType> PROFILE_TYPES = {ProfileType::EASY_GO_PROFILE};
 const std::string SCHEME_END = "://";
 const std::string LINK_FEATURE = "linkFeature";
 const std::string ATOMIC_SERVICE_DIR_PREFIX = "+auid-";
@@ -8549,6 +8552,33 @@ bool BundleDataMgr::QueryAppGalleryAbilityName(std::string &bundleName, std::str
     return true;
 }
 
+std::string BundleDataMgr::GetProfilePath(ProfileType profileType, const InnerModuleInfo &innerModuleInfo) const
+{
+    if (!innerModuleInfo.isEntry) {
+        APP_LOGD("not a entry module");
+        return EMPTY_STRING;
+    }
+    std::string profileConfig;
+    switch (profileType) {
+        case ProfileType::EASY_GO_PROFILE: {
+            profileConfig = innerModuleInfo.easyGo;
+            break;
+        }
+        default: {
+            APP_LOGE("unsupported profile type: %{public}d", profileType);
+            return EMPTY_STRING;
+        }
+    }
+    auto pos = profileConfig.find(PROFILE_PREFIX);
+    if (pos == std::string::npos) {
+        APP_LOGD("invalid profile config");
+        return EMPTY_STRING;
+    }
+    std::string profileFileName = profileConfig.substr(pos + PROFILE_PREFIX_LENGTH);
+    std::string profileFilePath = PROFILE_PATH + profileFileName + JSON_SUFFIX;
+    return profileFilePath;
+}
+
 ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string &bundleName,
     const std::string &moduleName, std::string &profile, int32_t userId) const
 {
@@ -8598,6 +8628,13 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
     if (!moduleInfo) {
         APP_LOGE("moduleName: %{public}s is not found", moduleNameTmp.c_str());
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    if (profilePath.empty()) {
+        profilePath = GetProfilePath(profileType, *moduleInfo);
+    }
+    if (profilePath.empty()) {
+        APP_LOGD("profile: %{public}d not config", profileType);
+        return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
     }
     return GetJsonProfileByExtractor(moduleInfo->hapPath, profilePath, profile);
 }
@@ -11894,6 +11931,78 @@ ErrCode BundleDataMgr::AtomicProcessWithBundleInfo(const std::string &bundleName
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
     bundleInfos_.at(bundleName) = innerBundleInfo;
+    return ERR_OK;
+}
+
+void BundleDataMgr::GetProfileDataList(ProfileType profileType, int32_t requestUserId,
+    std::vector<BundleProfileData> &profileDataList) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        std::string bundleName = info.GetBundleName();
+        if (info.GetApplicationBundleType() == BundleType::SHARED) {
+            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", bundleName.c_str());
+            continue;
+        }
+        int32_t responseUserId = info.GetResponseUserId(requestUserId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            APP_LOGD("bundle %{public}s is not installed in user %{public}d", bundleName.c_str(), requestUserId);
+            continue;
+        }
+        auto moduleInfo = info.GetInnerModuleInfoForEntry();
+        if (!moduleInfo) {
+            APP_LOGE("bundle %{public}s has no entry", bundleName.c_str());
+            continue;
+        }
+        std::string profilePath = GetProfilePath(profileType, *moduleInfo);
+        if (profilePath.empty()) {
+            APP_LOGD("bundle: %{public}s profile: %{public}d not config", bundleName.c_str(), profileType);
+            continue;
+        }
+        BundleProfileData bundleProfileData;
+        bundleProfileData.bundleName = bundleName;
+        bundleProfileData.moduleName = moduleInfo->moduleName;
+        bundleProfileData.hapPath = moduleInfo->hapPath;
+        bundleProfileData.profilePath = std::move(profilePath);
+        profileDataList.emplace_back(std::move(bundleProfileData));
+    }
+}
+
+ErrCode BundleDataMgr::GetAllJsonProfile(ProfileType profileType, int32_t userId,
+    std::vector<JsonProfileInfo> &profileInfos) const
+{
+    APP_LOGD("start GetAllJsonProfile");
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid userid :%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (std::find(PROFILE_TYPES.begin(), PROFILE_TYPES.end(), profileType) == PROFILE_TYPES.end()) {
+        APP_LOGE("profileType: %{public}d is invalid", profileType);
+        return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+    }
+    std::vector<BundleProfileData> profileDataList;
+    GetProfileDataList(profileType, requestUserId, profileDataList);
+    if (profileDataList.empty()) {
+        APP_LOGD("no bundle config profile: %{public}d", profileType);
+        return ERR_OK;
+    }
+    profileInfos.reserve(profileDataList.size());
+    for (const auto &data : profileDataList) {
+        std::string profile;
+        if (GetJsonProfileByExtractor(data.hapPath, data.profilePath, profile) != ERR_OK) {
+            APP_LOGW("get json string from %{public}s failed -n %{public}s", data.profilePath.c_str(),
+                data.bundleName.c_str());
+            continue;
+        }
+        JsonProfileInfo profileInfo;
+        profileInfo.profileType = profileType;
+        profileInfo.bundleName = data.bundleName;
+        profileInfo.moduleName = data.moduleName;
+        profileInfo.profile = std::move(profile);
+        profileInfos.emplace_back(std::move(profileInfo));
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

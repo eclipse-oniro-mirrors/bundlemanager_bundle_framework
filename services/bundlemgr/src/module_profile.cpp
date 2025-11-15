@@ -339,6 +339,7 @@ struct Module {
     std::string buildHash;
     std::string isolationMode;
     std::string fileContextMenu;
+    std::string easyGo;
     std::vector<std::string> querySchemes;
     std::string routerMap;
     std::vector<AppEnvironment> appEnvironments;
@@ -1660,6 +1661,12 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.fileContextMenu,
         false,
         g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_EASY_GO,
+        module.easyGo,
+        false,
+        g_parseResult);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         MODULE_QUERY_SCHEMES,
@@ -2645,6 +2652,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs || moduleJson.module.extractNativeLibs;
     innerModuleInfo.fileContextMenu = moduleJson.module.fileContextMenu;
+    innerModuleInfo.easyGo = moduleJson.module.easyGo;
 
     if (moduleJson.module.querySchemes.size() > Profile::MAX_QUERYSCHEMES_LENGTH) {
         APP_LOGE("The length of the querySchemes exceeds the limit");

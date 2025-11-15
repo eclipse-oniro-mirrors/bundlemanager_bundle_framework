@@ -6799,5 +6799,26 @@ ErrCode BundleMgrProxy::GetBundleInstallStatus(const std::string &bundleName, co
     }
     return ret;
 }
+
+ErrCode BundleMgrProxy::GetAllJsonProfile(ProfileType profileType, int32_t userId,
+    std::vector<JsonProfileInfo> &profileInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(profileType))) {
+        APP_LOGE("Write profile type fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write user id fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<JsonProfileInfo>(
+        BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE, data, profileInfos);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

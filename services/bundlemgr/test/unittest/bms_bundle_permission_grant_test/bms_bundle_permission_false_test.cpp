@@ -2017,6 +2017,19 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetBundleInstallStatus_0001, Function | S
 }
 
 /**
+ * @tc.number: GetAllJsonProfile_0001
+ * @tc.name: test GetAllJsonProfile
+ * @tc.desc: test GetAllJsonProfile
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetAllJsonProfile_0001, Function | SmallTest | Level1)
+{
+    std::vector<JsonProfileInfo> profileInfos;
+    int32_t userId = 100;
+    auto testRet = bundleMgrHostImpl_->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, userId, profileInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_0001
  * @tc.name: test RecoverBackupBundleData
  * @tc.desc: test RecoverBackupBundleData

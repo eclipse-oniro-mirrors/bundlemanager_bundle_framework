@@ -126,6 +126,7 @@ struct InnerModuleInfo {
     std::string buildHash;
     std::string isolationMode;
     std::string fileContextMenu;
+    std::string easyGo;
     std::string routerMap;
     std::string packageName;
     std::string appStartup;
@@ -2361,6 +2362,7 @@ public:
     void UpdateHasCloudkitConfig();
     int32_t GetModuleSize() const;
     bool GetModuleDeduplicateHar() const;
+    std::optional<InnerModuleInfo> GetInnerModuleInfoForEntry() const;
 
 private:
     bool IsExistLauncherAbility() const;

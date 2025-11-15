@@ -6608,5 +6608,24 @@ ErrCode BundleMgrHostImpl::GetBundleInstallStatus(const std::string &bundleName,
     dataMgr->GetBundleInstallStatus(bundleName, userId, bundleInstallStatus);
     return ERR_OK;
 }
+
+ErrCode BundleMgrHostImpl::GetAllJsonProfile(ProfileType profileType, int32_t userId,
+    std::vector<JsonProfileInfo> &profileInfos)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetAllJsonProfile(profileType, userId, profileInfos);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
