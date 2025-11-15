@@ -877,6 +877,7 @@ private:
     ErrCode CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool AddInstallingBundleName(const InstallParam &installParam);
     bool DeleteInstallingBundleName(const InstallParam &installParam);
+    void VerifyDelayedAging(InnerBundleInfo &bundleInfo, int32_t uid);
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     ErrCode CheckInstallPermission(const std::string &appId, const std::string &appIdentifier,
         const std::vector<std::string> &allowedAppIds, const std::vector<std::string> &disallowedAppIds);
