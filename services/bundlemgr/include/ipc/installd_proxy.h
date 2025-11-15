@@ -139,6 +139,8 @@ public:
      */
     virtual ErrCode CleanBundleDataDirByName(const std::string &bundleName, const int userid,
         const int appIndex = 0, const bool isAtomicService = false) override;
+
+    virtual ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent) override;
     /**
      * @brief Get bundle Stats.
      * @param bundleName Indicates the bundle name.

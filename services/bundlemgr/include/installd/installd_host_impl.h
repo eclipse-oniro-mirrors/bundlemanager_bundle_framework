@@ -128,6 +128,8 @@ public:
      * @return Returns ERR_OK if the data directory cleaned successfully; returns error code otherwise.
      */
     virtual ErrCode CleanBundleDataDir(const std::string &bundleDir) override;
+
+    virtual ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent) override;
     /**
      * @brief Clean a bundle data directory.
      * @param bundleName Indicates the bundleName data directory path that to be cleaned.

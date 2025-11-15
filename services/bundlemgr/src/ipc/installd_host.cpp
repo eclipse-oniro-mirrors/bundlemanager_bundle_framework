@@ -261,6 +261,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::RESTORE_CON_BMSDB):
             result = HandleResetBmsDBSecurity(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CLEAN_BUNDLE_DIRS):
+            result = this->HandleCleanBundleDirs(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -528,6 +531,26 @@ bool InstalldHost::HandleCleanBundleDataDirByName(MessageParcel &data, MessagePa
     int appIndex = data.ReadInt32();
     bool isAtomicService = data.ReadBool();
     ErrCode result = CleanBundleDataDirByName(bundleName, userid, appIndex, isAtomicService);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCleanBundleDirs(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t dirSize = data.ReadUint32();
+    if (dirSize == 0 || dirSize > MAX_VEC_SIZE) {
+        APP_LOGE("dir count is error");
+        return false;
+    }
+    std::vector<std::string> dirs;
+    for (uint32_t i = 0; i < dirSize; i++) {
+        std::string path;
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, data, path);
+        dirs.emplace_back(path);
+    }
+    
+    bool keepParent = data.ReadBool();
+    ErrCode result = CleanBundleDirs(dirs, keepParent);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

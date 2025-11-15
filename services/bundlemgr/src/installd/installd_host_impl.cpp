@@ -589,7 +589,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             }
 
             // create shadercache in /system_optimize
-            std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH;
+            std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
             systemOptimizeShaderCachePath = systemOptimizeShaderCachePath.replace(
                 systemOptimizeShaderCachePath.find("%"),
                 1, std::to_string(userId));
@@ -2434,7 +2434,7 @@ ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(
                 return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
             }
             // remove shadercache in /system_optimize
-            std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_SHADER_CACHE_PATH;
+            std::string systemOptimizeShaderCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
             systemOptimizeShaderCachePath = systemOptimizeShaderCachePath.replace(
                 systemOptimizeShaderCachePath.find("%"),
                 1, std::to_string(userId));
@@ -2756,6 +2756,37 @@ ErrCode InstalldHostImpl::ResetSecurityByPath(const FileStat &fileStat, const st
 #endif
     }
     return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (dirs.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    ErrCode ret = ERR_OK;
+    for (const std::string &dir : dirs) {
+        if (dir.empty()) {
+            LOG_W(BMS_TAG_INSTALLD, "failed for param invalid");
+            continue;
+        }
+
+        if (keepParent) {
+            if (!InstalldOperator::DeleteFiles(dir)) {
+                LOG_W(BMS_TAG_INSTALLD, "delete files in %{public}s failed errno:%{public}d", dir.c_str(), errno);
+            }
+        } else {
+            if (!InstalldOperator::DeleteDirFlexible(dir, true)) {
+                LOG_W(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", dir.c_str(), errno);
+            }
+        }
+    }
+    return ret;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

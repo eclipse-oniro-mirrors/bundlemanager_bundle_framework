@@ -774,29 +774,20 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0020, Function | SmallTest | Level0
     dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, info);
     BaseBundleInstaller installer;
     installer.InitDataMgr();
-    // test CleanShaderCache succeed
-    ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
-    EXPECT_EQ(ret, ERR_OK);
-
-    // test CleanBundleClonesShaderCache succeed
-    std::vector<int32_t> allAppIndexes = {0, TEST_APP_INDEX1, TEST_APP_INDEX2};
-    ret = installer.CleanBundleClonesShaderCache(allAppIndexes, BUNDLE_NAME, USERID);
+    // test CleanShaderAndArkStartupCache succeed
+    ret = installer.CleanShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, ERR_OK);
 
     // test DeleteShaderCache succeed
     ret = installer.DeleteShaderCache(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK);
 
-    // test DeleteBundleClonesShaderCache succeed
-    ret = installer.DeleteBundleClonesShaderCache(allAppIndexes, BUNDLE_NAME, USERID);
-    EXPECT_EQ(ret, ERR_OK);
-
     // test DeleteShaderCache succeed
     ret = installer.DeleteShaderCache(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK);
 
-    // test DeleteEl1ShaderCache succeed
-    ret = installer.DeleteEl1ShaderCache(info, BUNDLE_NAME, USERID);
+    // test DeleteEl1ShaderAndArkStartupCache succeed
+    ret = installer.DeleteEl1ShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, ERR_OK);
 
     // test DeleteCloudShader succeed
@@ -823,15 +814,9 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0030, Function | SmallTest | Level0
     dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, info);
     BaseBundleInstaller installer;
     installer.InitDataMgr();
-    // test CleanShaderCache failed
+    // test CleanShaderAndArkStartupCache failed
     StopInstalldService();
-    ErrCode ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
-    EXPECT_NE(ret, ERR_OK);
-
-    // test CleanEl1UserShaderCache failed
-    StopInstalldService();
-    std::vector<int32_t> allAppIndexes = {0, TEST_APP_INDEX1, TEST_APP_INDEX2};
-    ret = installer.CleanBundleClonesShaderCache(allAppIndexes, BUNDLE_NAME, USERID);
+    ErrCode ret = installer.CleanShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
     EXPECT_NE(ret, ERR_OK);
 
     // test DeleteShaderCache failed
@@ -844,15 +829,11 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0030, Function | SmallTest | Level0
     ret = installer.DeleteShaderCache(BUNDLE_NAME);
     EXPECT_NE(ret, ERR_OK);
 
-    // test DeleteEl1ShaderCache failed
+    // test DeleteEl1ShaderAndArkStartupCache failed
     StopInstalldService();
-    ret = installer.DeleteEl1ShaderCache(info, BUNDLE_NAME, USERID);
+    ret = installer.DeleteEl1ShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
     EXPECT_NE(ret, ERR_OK);
 
-    // test CleanEl1UserShaderCache failed
-    StopInstalldService();
-    ret = installer.DeleteBundleClonesShaderCache(allAppIndexes, BUNDLE_NAME, USERID);
-    EXPECT_NE(ret, ERR_OK);
     ClearBundleInfo();
 }
 
@@ -3367,6 +3348,46 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_2000, Function | SmallTest | L
     std::string userId = std::to_string(USERID);
     std::string packageName = "com.example.test";
     auto ret = impl.ProcessBundleUnInstallNative(userId, packageName);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_2100
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the CleanBundleDirs of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_2100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<std::string> dirs;
+    ErrCode ret = impl.CleanBundleDirs(dirs, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    std::string bundleName = "com.test.InstalldHostImpl_2100";
+    std::string shaderCachePath = ServiceConstants::SHADER_CACHE_PATH + bundleName;
+    ret = InstalldClient::GetInstance()->CreateBundleDir(shaderCachePath);
+    EXPECT_EQ(ret, ERR_OK);
+    dirs.emplace_back(shaderCachePath);
+
+    std::string cloneBundleName = "+clone-1+com.test.InstalldHostImpl_2100";
+    std::string el1ShaderCachePath = ServiceConstants::NEW_SHADER_CACHE_PATH + cloneBundleName;
+    el1ShaderCachePath = el1ShaderCachePath.replace(el1ShaderCachePath.find("%"), 1, std::to_string(100));
+    dirs.emplace_back(el1ShaderCachePath);
+
+    // clean shader cache in /system_optimize
+    std::string systemOptimizeShaderCache = ServiceConstants::SYSTEM_OPTIMIZE_PATH +
+        cloneBundleName + ServiceConstants::SHADER_CACHE_SUBDIR;
+    systemOptimizeShaderCache = systemOptimizeShaderCache.replace(systemOptimizeShaderCache.find("%"),
+        1, std::to_string(100));
+    dirs.emplace_back(systemOptimizeShaderCache);
+
+    std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH + bundleName +
+        ServiceConstants::ARK_STARTUP_CACHE_DIR;
+    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
+        std::to_string(100));
+    dirs.emplace_back(el1ArkStartupCachePath);
+
+    ret = impl.CleanBundleDirs(dirs, true);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -12252,21 +12273,6 @@ HWTEST_F(BmsBundleInstallerTest, GetConfirmUserId_0002, Function | SmallTest | L
 }
 
 /**
- * @tc.number: CleanArkStartupCache_0010
- * @tc.name: test CleanArkStartupCache
- * @tc.desc: 1.Test the CleanArkStartupCache of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, CleanArkStartupCache_0010, Function | SmallTest | Level0)
-{
-    // test no FOUNDATION_UID
-    std::string cacheDir = ServiceConstants::SYSTEM_OPTIMIZE_PATH;
-    std::string bundleName = "";
-    BaseBundleInstaller installer;
-    ErrCode ret = installer.CleanArkStartupCache(cacheDir, bundleName, 100);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
  * @tc.number: DeleteArkStartupCache_0010
  * @tc.name: test DeleteArkStartupCache
  * @tc.desc: 1.Test the DeleteArkStartupCache of BaseBundleInstaller
@@ -12345,9 +12351,6 @@ HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0030, Function | SmallTes
     // test bundlename in white list
     BaseBundleInstaller installer3;
     ErrCode ret = installer3.CreateArkStartupCache(ceateArk);
-    EXPECT_EQ(ret, ERR_OK);
-
-    ret = installer3.CleanArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, "com.test2", 100);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = installer3.DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, "com.test2", 101);
@@ -12539,9 +12542,6 @@ HWTEST_F(BmsBundleInstallerTest, ProcessArkStartupCache_0010, Function | SmallTe
     // test bundlename in white list
     BaseBundleInstaller installer3;
     ErrCode ret = installer3.ProcessArkStartupCache(ceateArk, 1, 100);
-    EXPECT_EQ(ret, ERR_OK);
-
-    ret = installer3.CleanArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, testBudnleName, 100);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = installer3.DeleteArkStartupCache(ServiceConstants::SYSTEM_OPTIMIZE_PATH, testBudnleName, 101);

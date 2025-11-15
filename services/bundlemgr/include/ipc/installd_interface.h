@@ -206,6 +206,11 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Get bundle Stats.
      * @param bundleName Indicates the bundle name.

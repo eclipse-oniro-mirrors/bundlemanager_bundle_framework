@@ -230,7 +230,6 @@ constexpr const char* NEW_SHADER_CACHE_PATH = "/data/app/el1/%/shader_cache/";
 constexpr const char* NEW_CLOUD_SHADER_PATH = "/data/app/el1/public/shader_cache/cloud/";
 // shader cache dir in /system_optimize
 constexpr const char* SHADER_CACHE_SUBDIR = "/shader_cache/";
-constexpr const char* SYSTEM_OPTIMIZE_SHADER_CACHE_PATH = "/data/app/el1/%/system_optimize/";
 // apiReleaseType
 constexpr const char* API_RELEASE_TYPE_RELEASE = "Release";
 constexpr const char* API_RELEASE_TYPE_BETA = "Beta";

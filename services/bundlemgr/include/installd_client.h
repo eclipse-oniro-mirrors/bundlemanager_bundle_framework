@@ -280,6 +280,13 @@ public:
     
     ErrCode ResetBmsDBSecurity();
 
+    /**
+     * @brief Clean a bundle data directory.
+     * @param dirs Indicates the directory path that to be cleaned.
+     * @return Returns ERR_OK if the bundle dirs cleaned successfully; returns error code otherwise.
+     */
+    ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();
