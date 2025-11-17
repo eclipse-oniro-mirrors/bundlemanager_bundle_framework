@@ -13,38 +13,25 @@
  * limitations under the License.
  */
 
-#include "bmsdefaultapphost_fuzzer.h"
-
+#define private public
 #include <cstddef>
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
-#define private public
-#include "default_app_host.h"
-#include "securec.h"
+#include "bmsbundleresparam_fuzzer.h"
+#include "bundle_resource_param.h"
 #include "bms_fuzztest_util.h"
+#include "securec.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-constexpr uint32_t CODE_MAX = 3;
-
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
-    MessageParcel datas;
-    std::u16string descriptor = DefaultAppHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    DefaultAppHost defaultAppHost;
     FuzzedDataProvider fdp(data, size);
-    uint8_t code = fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX);
-    defaultAppHost.OnRemoteRequest(code, datas, reply, option);
-    defaultAppHost.HandleIsDefaultApplication(datas, reply);
-    defaultAppHost.HandleGetDefaultApplication(datas, reply);
-    defaultAppHost.HandleSetDefaultApplication(datas, reply);
-    defaultAppHost.HandleResetDefaultApplication(datas, reply);
+    BundleResourceParam::GetSystemLanguage();
+    BundleResourceParam::GetSystemColorMode();
+    std::string key = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    BundleResourceParam::GetSystemParam(key);
     return true;
 }
 }

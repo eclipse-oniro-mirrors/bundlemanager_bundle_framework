@@ -66,6 +66,7 @@ group("bundlemanagerfuzztest") {
     "bmsbundleoverlay_fuzzer:BMSBundleOverlayFuzzTest",
     "bmsbundleoverlaydatamgr_fuzzer:BMSBundleOverlayDataMgrFuzzTest",
     "bmsbundleoverlayinstallerchecker_fuzzer:BMSBundleOverlayInstallerCheckerFuzzTest",
+    "bmsbundlereshostimpl_fuzzer:BMSBundleResHostImplFuzzTest",
     "bmsbundleresource_fuzzer:BMSBundleResourceFuzzTest",
     "bmsbundleresourcedrawable_fuzzer:BMSBundleResourceDrawableFuzzTest",
     "bmsbundleresourcehelper_fuzzer:BMSBundleResourceHelperFuzzTest",
@@ -74,6 +75,9 @@ group("bundlemanagerfuzztest") {
     "bmsbundleresourceproxy_fuzzer:BMSBundleResourceProxyFuzzTest",
     "bmsbundleresourcethemeprocess_fuzzer:BMSBundleResourceThemeProcessFuzzTest",
     "bmsbundleresourcemanager_fuzzer:BMSBundleResourceManagerFuzzTest",
+    "bmsbundleresparam_fuzzer:BMSBundleResParamFuzzTest",
+    "bmsbundleresparser_fuzzer:BMSBundleResParserFuzzTest",
+    "bmsbundleresprocess_fuzzer:BMSBundleResProcessFuzzTest",
     "bmsbundlestatuscallbackproxy_fuzzer:BMSBundleStatusCallbackProxyFuzzTest",
     "bmsbundlestreaminstallerhost_fuzzer:BMSBundleStreamInstallerHostFuzzTest",
     "bmsbundlestreaminstallerproxy_fuzzer:BMSBundleStreamInstallerProxyFuzzTest",
@@ -88,6 +92,7 @@ group("bundlemanagerfuzztest") {
     "bmscleancachecallbackhost_fuzzer:BMSCleanCacheCallbackHostFuzzTest",
     "bmscleancachecallbackproxy_fuzzer:BMSCleanCacheCallbackProxyFuzzTest",
     "bmscheckabilityenableinstall_fuzzer:BMSCheckAbilityEnableInstallFuzzTest",
+    "bmscommonevent_fuzzer:BMSCommonEventFuzzTest",
     "bmscompatibleabilityinfo_fuzzer:BMSCompatibleAbilityInfoFuzzTest",
     "bmscompatibleapplicationinfo_fuzzer:BMSCompatibleApplicationInfoFuzzTest",
     "bmsconverttargetabilityinfo_fuzzer:BMSConvertTargetAbilityInfoFuzzTest",
@@ -166,7 +171,7 @@ group("bundlemanagerfuzztest") {
   if (bundle_framework_default_app) {
     deps += [
       "bmsdefaultapp_fuzzer:BMSDefaultAppFuzzTest",
-      "bmsdefaultapphost_fuzzer:BMSDefaultAppHostFuzzTest"
+      "bmsdefaultapphost_fuzzer:BMSDefaultAppHostFuzzTest",
     ]
   }
 

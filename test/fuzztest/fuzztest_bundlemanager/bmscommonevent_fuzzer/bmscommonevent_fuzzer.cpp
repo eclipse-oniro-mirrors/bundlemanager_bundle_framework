@@ -13,39 +13,35 @@
  * limitations under the License.
  */
 
-#include "bmsdefaultapphost_fuzzer.h"
-
 #include <cstddef>
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
-#define private public
-#include "default_app_host.h"
-#include "securec.h"
+#include "common_event_info.h"
+#include "parcel.h"
+#include "bmscommonevent_fuzzer.h"
 #include "bms_fuzztest_util.h"
+#include "securec.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-constexpr uint32_t CODE_MAX = 3;
-
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
-    MessageParcel datas;
-    std::u16string descriptor = DefaultAppHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    DefaultAppHost defaultAppHost;
+    Parcel dataMessageParcel;
+    CommonEventInfo oldCommonEventInfo;
     FuzzedDataProvider fdp(data, size);
-    uint8_t code = fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX);
-    defaultAppHost.OnRemoteRequest(code, datas, reply, option);
-    defaultAppHost.HandleIsDefaultApplication(datas, reply);
-    defaultAppHost.HandleGetDefaultApplication(datas, reply);
-    defaultAppHost.HandleSetDefaultApplication(datas, reply);
-    defaultAppHost.HandleResetDefaultApplication(datas, reply);
-    return true;
+    oldCommonEventInfo.name = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    if (!oldCommonEventInfo.Marshalling(dataMessageParcel)) {
+        return false;
+    }
+    CommonEventInfo *info = new (std::nothrow) CommonEventInfo();
+    if (info == nullptr) {
+        return false;
+    }
+    bool ret = info->ReadFromParcel(dataMessageParcel);
+    delete info;
+    info = nullptr;
+    return ret;
 }
 }
 

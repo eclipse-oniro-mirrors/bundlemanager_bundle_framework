@@ -25,6 +25,9 @@
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
+const std::string FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/a.hsp";
+const std::string DIR_PATH_TWO = "/data/test/test";
+const std::string BUNDLE_NAME = "com.ohos.resourcedemo";
 void GenerateExtendResourceInfo(FuzzedDataProvider& fdp, ExtendResourceInfo &extendResourceInfo)
 {
     extendResourceInfo.iconId = fdp.ConsumeIntegral<uint32_t>();
@@ -73,7 +76,19 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 
     infos.emplace_back(extendResourceInfo);
     std::vector<std::string> moduleNames = GenerateStringArray(fdp);
+    std::vector<ExtendResourceInfo> extendResourceInfos;
+    impl.CheckModuleExist(bundleName, moduleNames, extendResourceInfos);
     impl.InnerRemoveExtendResources(bundleName, moduleNames, infos);
+    std::vector<std::string> oldFilePaths;
+    oldFilePaths.push_back(FILE_PATH);
+    std::vector<std::string> newFilePaths = GenerateStringArray(fdp);
+    newFilePaths.push_back(DIR_PATH_TWO);
+    impl.CopyToTempDir(BUNDLE_NAME, oldFilePaths, newFilePaths);
+    impl.CopyToTempDir(bundleName, oldFilePaths, newFilePaths);
+    std::string fileName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    int32_t fd = 0;
+    std::string filePath = "data/test";
+    impl.CreateFd(fileName, fd, filePath);
     return true;
 }
 }
