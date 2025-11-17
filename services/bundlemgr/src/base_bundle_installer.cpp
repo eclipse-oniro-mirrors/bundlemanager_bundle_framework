@@ -88,6 +88,7 @@ constexpr const char* PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr const char* BMS_SERVICE_PATH = "/data/service";
 constexpr const char* APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install/";
+constexpr const char* BACKUP_BUNDLES = "/backup/bundles/";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
@@ -3266,7 +3267,19 @@ ErrCode BaseBundleInstaller::SetDirApl(const CreateDirParam &createDirParam, con
             LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl databaseDir dir, error is %{public}d", result);
             return result;
         }
+        if (el == ServiceConstants::DIR_EL1 || el == ServiceConstants::DIR_EL2) {
+            std::string backupDir = std::string(BMS_SERVICE_PATH) + ServiceConstants::PATH_SEPARATOR + el +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(createDirParam.userId) + BACKUP_BUNDLES +
+                CloneBundleName;
+            (void)InstalldClient::GetInstance()->SetDirApl(backupDir, createDirParam.bundleName, createDirParam.apl,
+                createDirParam.isPreInstallApp, createDirParam.debug, createDirParam.uid);
+        }
     }
+    std::string sharefilesDir = std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::DIR_EL2 + ServiceConstants::PATH_SEPARATOR +
+        std::to_string(createDirParam.userId) + ServiceConstants::SHAREFILES + CloneBundleName;
+    (void)InstalldClient::GetInstance()->SetDirApl(sharefilesDir, createDirParam.bundleName, createDirParam.apl,
+        createDirParam.isPreInstallApp, createDirParam.debug, createDirParam.uid);
     return ERR_OK;
 }
 
