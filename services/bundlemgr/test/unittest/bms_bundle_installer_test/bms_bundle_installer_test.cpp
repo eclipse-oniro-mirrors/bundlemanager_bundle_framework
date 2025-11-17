@@ -838,6 +838,42 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0030, Function | SmallTest | Level0
 }
 
 /**
+ * @tc.number: DeleteUseLessSharefilesForDefaultUser_0010
+ * @tc.name: test DeleteUseLessSharefilesForDefaultUser
+ * @tc.desc: 1.DeleteUseLessSharefilesForDefaultUser
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteUseLessSharefilesForDefaultUser_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    
+    std::string bundleName = "com.test.DeleteUseLessSharefilesForDefaultUser_0010";
+    std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(Constants::START_USERID);
+    std::string shareFilesDataDir = dataDir + ServiceConstants::SHAREFILES + bundleName;
+
+    ErrCode ret = InstalldOperator::MkOwnerDir(shareFilesDataDir, 0, 0, 0);
+    EXPECT_TRUE(ret);
+
+    BaseBundleInstaller installer;
+    installer.InitDataMgr();
+
+    installer.DeleteUseLessSharefilesForDefaultUser(bundleName, USERID);
+    bool isDirExist = false;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(shareFilesDataDir, isDirExist);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_TRUE(isDirExist);
+
+
+    installer.DeleteUseLessSharefilesForDefaultUser(bundleName, 0);
+    isDirExist = false;
+    result = InstalldClient::GetInstance()->IsExistDir(shareFilesDataDir, isDirExist);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_FALSE(isDirExist);
+}
+
+
+/**
  * @tc.number: UninstallPreInstallBundle_0100
  * @tc.name: test unisntall  preinstall bundle
  * @tc.desc: 1.uninstall the hap
