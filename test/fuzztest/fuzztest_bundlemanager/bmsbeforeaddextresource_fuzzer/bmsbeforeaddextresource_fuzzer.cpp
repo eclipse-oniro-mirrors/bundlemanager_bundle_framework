@@ -28,6 +28,8 @@ const std::string FILE_PATH = "/data/service/el1/public/bms/bundle_manager_servi
 const std::string BUNDLE_NAME = "com.ohos.resourcedemo";
 const std::string INVALID_PATH = "/data/service/el1/public/bms/bundle_manager_service/../../a.hsp";
 const std::string EMPTY_STRING = "";
+const std::string INVALID_SUFFIX = "/data/service/el1/public/bms/bundle_manager_service/a.hap";
+const std::string INVALID_PREFIX = "/data/app/el1/bundle/public/a.hsp";
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     ExtendResourceManagerHostImpl impl;
@@ -40,6 +42,13 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     filePaths.emplace_back(FILE_PATH);
     filePaths.emplace_back(INVALID_PATH);
     auto ret = impl.BeforeAddExtResource(BUNDLE_NAME, filePaths);
+    std::string dir = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::string filePath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    impl.MkdirIfNotExist(dir);
+    impl.CheckFileParam(INVALID_PATH);
+    impl.CheckFileParam(INVALID_SUFFIX);
+    impl.CheckFileParam(INVALID_PREFIX);
+    impl.CheckFileParam(filePath);
     return true;
 }
 }
