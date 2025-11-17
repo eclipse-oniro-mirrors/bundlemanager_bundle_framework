@@ -45,7 +45,7 @@ namespace {
 constexpr int32_t BUNDLE_BROKER_SERVICE_ABILITY_ID = 0x00010500;
 constexpr int16_t EL5_FILEKEY_SERVICE_ABILITY_ID = 8250;
 constexpr const char* FUN_BMS_START = "BundleMgrService::Start";
-constexpr unsigned int BMS_START_TIME_OUT_SECONDS = 270;
+constexpr unsigned int BMS_START_TIME_OUT_SECONDS = 510;
 const std::string EXTENSION_BACKUP = "backup";
 const std::string EXTENSION_RESTORE = "restore";
 } // namespace
