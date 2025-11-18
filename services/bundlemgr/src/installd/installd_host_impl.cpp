@@ -2718,7 +2718,9 @@ ErrCode InstalldHostImpl::ResetBmsDBSecurityByPath(const std::string &parentPath
     for (const auto& entry: std::filesystem::directory_iterator(parentPath)) {
         const auto& fileName = entry.path().filename().string();
         const auto& targetPath = entry.path().string();
-        if (entry.is_regular_file() && fileName.find(fileFlag) == 0) {
+        if (entry.is_regular_file() && (fileName.find(fileFlag) == 0 ||
+            fileName.rfind(ServiceConstants::JSON_SUFFIX) ==
+            (fileName.length() - strlen(ServiceConstants::JSON_SUFFIX)))) {
             auto res = ResetSecurityByPath(fileStat, targetPath);
             if (ERR_OK != res) {
                 return res;
