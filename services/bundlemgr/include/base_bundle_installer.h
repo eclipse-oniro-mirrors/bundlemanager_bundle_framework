@@ -635,9 +635,9 @@ private:
     bool IsDataPreloadHap(const std::string &path) const;
     ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
         int32_t userId) const;
-    ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo, bool checkRepeat = false) const;
+    ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo, bool checkRepeat = false);
     ErrCode CopyPgoFileToArkProfileDir(const std::string &moduleName, const std::string &modulePath,
-        const std::string &bundleName, int32_t userId) const;
+        const std::string &bundleName, int32_t userId);
     ErrCode CopyPgoFile(const std::string &moduleName, const std::string &pgoPath,
         const std::string &bundleName, int32_t userId) const;
     ErrCode CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos, int32_t userId);
@@ -758,8 +758,8 @@ private:
     bool VerifyActivationLock() const;
     bool VerifyActivationLockToken() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
-    void CreateScreenLockProtectionDir();
-    void CreateEl5AndSetPolicy(InnerBundleInfo &info);
+    void CreateScreenLockProtectionDir(bool withOtherUsers = false);
+    void CreateEl5AndSetPolicy(InnerBundleInfo &info, bool withOtherUsers);
     void DeleteScreenLockProtectionDir(const std::string bundleName) const;
     void DeleteEncryptionKeyId(const InnerBundleInfo &info, bool isKeepData) const;
 #ifdef APP_DOMAIN_VERIFY_ENABLED

@@ -1524,7 +1524,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 
     // create Screen Lock File Protection Dir
-    CreateScreenLockProtectionDir();
+    CreateScreenLockProtectionDir(true);
     ScopeGuard ScreenLockFileProtectionDirGuard([&] { DeleteScreenLockProtectionDir(bundleName_); });
 
     // install cross-app hsp which has rollback operation in sharedBundleInstaller when some one failure occurs
@@ -2770,7 +2770,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
 
-    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
+    oldInfo.SetBundleUpdateTimeForAllUser(BundleUtil::GetCurrentTimeMs());
     if ((result = ProcessAsanDirectory(newInfo)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "process asan log directory failed");
         return result;
@@ -2871,7 +2871,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
 
     newInfo.RestoreModuleInfo(oldInfo);
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_FINISH);
-    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
+    oldInfo.SetBundleUpdateTimeForAllUser(BundleUtil::GetCurrentTimeMs());
     if (!dataMgr_->UpdateInnerBundleInfo(newInfo, oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "update innerBundleInfo %{public}s failed", bundleName_.c_str());
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
@@ -3506,7 +3506,7 @@ std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(co
     return dirs;
 }
 
-void BaseBundleInstaller::CreateScreenLockProtectionDir()
+void BaseBundleInstaller::CreateScreenLockProtectionDir(bool withOtherUsers)
 {
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
     InnerBundleInfo info;
@@ -3521,11 +3521,11 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
         return permission.name == ServiceConstants::PERMISSION_PROTECT_SCREEN_LOCK_DATA;
     });
     if (it != reqPermissions.end()) {
-        CreateEl5AndSetPolicy(info);
+        CreateEl5AndSetPolicy(info, withOtherUsers);
     }
 }
 
-void BaseBundleInstaller::CreateEl5AndSetPolicy(InnerBundleInfo &info)
+void BaseBundleInstaller::CreateEl5AndSetPolicy(InnerBundleInfo &info, bool withOtherUsers)
 {
     if (!InitDataMgr()) {
         LOG_E(BMS_TAG_INSTALLER, "init failed");
@@ -3540,6 +3540,16 @@ void BaseBundleInstaller::CreateEl5AndSetPolicy(InnerBundleInfo &info)
     el5Param.isPreInstallApp = info.IsPreInstallApp();
     el5Param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     params.emplace_back(el5Param);
+    if (withOtherUsers) {
+        for (const auto &otherUserId : info.GetUsers()) {
+            if (otherUserId == userId_) {
+                continue;
+            }
+            el5Param.userId = otherUserId;
+            el5Param.uid = info.GetUid(otherUserId);
+            params.emplace_back(el5Param);
+        }
+    }
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId_, userInfo)) {
         APP_LOGE("get user info failed");
@@ -3987,7 +3997,7 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo, bool checkRepeat) const
+ErrCode BaseBundleInstaller::ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo, bool checkRepeat)
 {
     if (!oldInfo.GetIsNewVersion()) {
         return ERR_OK;
@@ -4014,13 +4024,34 @@ ErrCode BaseBundleInstaller::CopyPgoFileToArkProfileDir(
     const std::string &moduleName,
     const std::string &modulePath,
     const std::string &bundleName,
-    int32_t userId) const
+    int32_t userId)
 {
+    ErrCode result = ERR_OK;
     auto it = pgoParams_.find(moduleName);
     if (it != pgoParams_.end()) {
-        return CopyPgoFile(moduleName, it->second, bundleName, userId);
+        result = CopyPgoFile(moduleName, it->second, bundleName, userId);
+    } else {
+        result = ExtractArkProfileFile(modulePath, bundleName, userId);
     }
-    return ExtractArkProfileFile(modulePath, bundleName, userId);
+    if (result != ERR_OK) {
+        return result;
+    }
+    std::set<int32_t> userIds;
+    if (!InitDataMgr() || !dataMgr_->GetInnerBundleInfoUsers(bundleName, userIds)) {
+        LOG_W(BMS_TAG_INSTALLER, "get users failed");
+        return ERR_OK;
+    }
+    for (const auto otherUserId : userIds) {
+        if (otherUserId == userId) {
+            continue;
+        }
+        if (it != pgoParams_.end()) {
+            (void)CopyPgoFile(moduleName, it->second, bundleName, otherUserId);
+        } else {
+            (void)ExtractArkProfileFile(modulePath, bundleName, otherUserId);
+        }
+    }
+    return ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::CopyPgoFile(

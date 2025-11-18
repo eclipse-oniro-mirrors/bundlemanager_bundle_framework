@@ -435,6 +435,7 @@ public:
      * @return
      */
     void SetBundleUpdateTime(const int64_t time, int32_t userId = Constants::UNSPECIFIED_USERID);
+    void SetBundleUpdateTimeForAllUser(const int64_t time);
     /**
      * @brief Get bundle update time.
      * @param userId Indicates the user ID.

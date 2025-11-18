@@ -8807,7 +8807,7 @@ HWTEST_F(BmsBundleInstallerTest, ProcessEncryptedKeyExisted_0100, Function | Sma
     int32_t res = ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     uint32_t type = CodeOperation::ADD;
     InnerBundleInfo innerBundleInfo;
-    installer.CreateEl5AndSetPolicy(innerBundleInfo);
+    installer.CreateEl5AndSetPolicy(innerBundleInfo, false);
     installer.ProcessEncryptedKeyExisted(res, type, infos);
     EXPECT_TRUE(infos.empty());
 }
@@ -9993,7 +9993,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8300, Function | MediumTest
     BaseBundleInstaller installer;
     installer.userId_ = 1001;
     InnerBundleInfo newInfo;
-    installer.CreateEl5AndSetPolicy(newInfo);
+    installer.CreateEl5AndSetPolicy(newInfo, false);
     EXPECT_EQ(newInfo.innerBundleUserInfos_.empty(), true);
 }
 
@@ -10016,7 +10016,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_8400, Function | MediumTest
 
     innerBundleUserInfo.cloneInfos["1"] = innerBundleCloneInfo;
     newInfo.innerBundleUserInfos_["com.example.test_100"] = innerBundleUserInfo;
-    installer.CreateEl5AndSetPolicy(newInfo);
+    installer.CreateEl5AndSetPolicy(newInfo, false);
     EXPECT_FALSE(newInfo.innerBundleUserInfos_.empty());
 }
 
