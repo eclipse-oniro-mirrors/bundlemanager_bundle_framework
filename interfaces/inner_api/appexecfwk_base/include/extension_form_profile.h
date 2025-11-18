@@ -66,6 +66,8 @@ constexpr const char* SUB_BUNDLE_NAME = "subBundleName";
 constexpr const char* KEEP_STATE_DURATION = "keepStateDuration";
 constexpr const char* RESIZABLE = "resizable";
 constexpr const char* GROUP_ID = "groupId";
+constexpr const char* SUPPORT_DEVICE_TYPES = "supportDeviceTypes";
+constexpr const char* SUPPORT_DEVICE_PERFORMANCE_CLASSES = "supportDevicePerformanceClasses";
 }
 
 class ExtensionFormProfile {

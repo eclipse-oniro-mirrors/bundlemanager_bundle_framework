@@ -113,6 +113,26 @@ const FormType UI_SYNTAX_MAP_VALUE[] = {
     FormType::ETS
 };
 
+constexpr const char* PERFORMANCE_MAP_KEY[] = {
+    "high",
+    "medium",
+    "low"
+};
+const int32_t PERFORMANCE_MAP_VALUE[] = {
+    0,
+    1,
+    2
+};
+
+constexpr const char* DEVICE_TYPE_VALUE[] = {
+    "phone",
+    "tablet",
+    "tv",
+    "wearable",
+    "car",
+    "2in1"
+};
+
 struct Window {
     int32_t designWidth = 720;
     bool autoDesignWidth = false;
@@ -163,6 +183,8 @@ struct ExtensionFormProfileInfo {
     std::vector<std::string> supportShapes {};
     std::vector<std::string> supportDimensions {};
     std::vector<std::string> conditionUpdate {};
+    std::vector<std::string> supportDeviceTypes {};
+    std::vector<std::string> supportDevicePerformanceClasses {};
     std::vector<Metadata> metadata {};
     std::vector<std::string> previewImages {};
     FormFunInteractionParams funInteractionParams;
@@ -469,6 +491,22 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.groupId,
         false,
         g_parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::SUPPORT_DEVICE_TYPES,
+        extensionFormProfileInfo.supportDeviceTypes,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::SUPPORT_DEVICE_PERFORMANCE_CLASSES,
+        extensionFormProfileInfo.supportDevicePerformanceClasses,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -607,6 +645,52 @@ bool GetPreviewImages(const ExtensionFormProfileInfo &form, ExtensionFormInfo &i
     return true;
 }
 
+bool GetSupportDeviceTypes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
+    std::set<std::string> SupportSupportDeviceTypesSet {};
+    size_t len = sizeof(DEVICE_TYPE_VALUE) / sizeof(DEVICE_TYPE_VALUE[0]);
+    for (const auto &deviceType: form.supportDeviceTypes) {
+        size_t i = 0;
+        for (i = 0; i < len; i++) {
+            if (DEVICE_TYPE_VALUE[i] == deviceType) {
+                break;
+            }
+        }
+        if (i == len) {
+            APP_LOGW("device type invalid form %{public}s", form.name.c_str());
+            continue;
+        }
+        SupportSupportDeviceTypesSet.emplace(DEVICE_TYPE_VALUE[i]);
+    }
+    for (const auto &supportDeviceTypes: SupportSupportDeviceTypesSet) {
+        info.supportDeviceTypes.emplace_back(supportDeviceTypes);
+    }
+    return true;
+}
+ 
+bool GetSupportPerformanceClasses(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
+    std::set<int32_t> SupportPerformanceClassesSet {};
+    size_t len = sizeof(PERFORMANCE_MAP_KEY) / sizeof(PERFORMANCE_MAP_KEY[0]);
+    for (const auto &performanceClasses: form.supportDevicePerformanceClasses) {
+        size_t i = 0;
+        for (i = 0; i < len; i++) {
+            if (PERFORMANCE_MAP_KEY[i] == performanceClasses) {
+                break;
+            }
+        }
+        if (i == len) {
+            APP_LOGW("performance classes invalid form %{public}s", form.name.c_str());
+            continue;
+        }
+        SupportPerformanceClassesSet.emplace(PERFORMANCE_MAP_VALUE[i]);
+    }
+    for (const auto &performanceClasses: SupportPerformanceClassesSet) {
+        info.supportDevicePerformanceClasses.emplace_back(performanceClasses);
+    }
+    return true;
+}
+
 bool GetConditionUpdate(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
     std::set<int32_t> conditionUpdateSet {};
@@ -718,6 +802,12 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
         return false;
     }
     if (!GetPreviewImages(form, info)) {
+        return false;
+    }
+    if (!GetSupportDeviceTypes(form, info)) {
+        return false;
+    }
+    if (!GetSupportPerformanceClasses(form, info)) {
         return false;
     }
     info.enableBlurBackground = form.enableBlurBackground;

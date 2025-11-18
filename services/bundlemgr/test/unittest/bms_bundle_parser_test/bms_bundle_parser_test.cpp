@@ -4984,6 +4984,22 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0600, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: FormInfo_0700
+ * @tc.name: Test to_json
+ * @tc.desc: test the interface of FormInfo
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0700, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    FormInfo formInfo;
+    formInfo.supportDeviceTypes = {"phone"};
+    formInfo.supportDevicePerformanceClasses = {0};
+    to_json(jsonObject, formInfo);
+    EXPECT_EQ(jsonObject["supportDeviceTypes"][0], "phone");
+    EXPECT_EQ(jsonObject["supportDevicePerformanceClasses"][0], 0);
+}
+
+/**
  * @tc.number: ParseArkStartupCacheConfig_0100
  * @tc.name: Test ParseArkStartupCacheConfig
  * @tc.desc: test the ParseArkStartupCacheConfig of BundleParser

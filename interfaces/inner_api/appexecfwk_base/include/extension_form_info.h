@@ -56,6 +56,8 @@ struct ExtensionFormInfo {
     std::vector<FormCustomizeData> metadata {};
     std::vector<int32_t> supportShapes {};
     std::vector<uint32_t> previewImages {};
+    std::vector<std::string> supportDeviceTypes {};
+    std::vector<int32_t> supportDevicePerformanceClasses {};
     FormFunInteractionParams funInteractionParams;
     FormSceneAnimationParams sceneAnimationParams;
 };
