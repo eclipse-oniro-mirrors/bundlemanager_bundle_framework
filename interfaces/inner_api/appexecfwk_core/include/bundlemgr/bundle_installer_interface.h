@@ -39,7 +39,10 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     virtual bool Install(const std::string &bundleFilePath, const InstallParam &installParam,
-        const sptr<IStatusReceiver> &statusReceiver) = 0;
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return false;
+    }
     /**
      * @brief Installs an application by bundleName, the final result will be notified from the statusReceiver object.
      * @param bundleName Indicates the bundleName of the application to install.
@@ -60,7 +63,10 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     virtual bool Install(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
-        const sptr<IStatusReceiver> &statusReceiver) = 0;
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return false;
+    }
 
     /**
      * @brief Uninstalls an application, the result will be notified from the statusReceiver object.

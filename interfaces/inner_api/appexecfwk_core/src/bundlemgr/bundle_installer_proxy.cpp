@@ -53,59 +53,6 @@ BundleInstallerProxy::~BundleInstallerProxy()
     LOG_D(BMS_TAG_INSTALLER, "destroy bundle installer proxy instance");
 }
 
-bool BundleInstallerProxy::Install(
-    const std::string &bundlePath, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-
-    PARCEL_WRITE_INTERFACE_TOKEN(data, GetDescriptor());
-    PARCEL_WRITE(data, String16, Str8ToStr16(bundlePath));
-    PARCEL_WRITE(data, Parcelable, &installParam);
-
-    if (statusReceiver == nullptr) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to install, for statusReceiver is nullptr");
-        return false;
-    }
-    if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
-        LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
-        return false;
-    }
-
-    return SendInstallRequest(BundleInstallerInterfaceCode::INSTALL, data, reply, option);
-}
-
-bool BundleInstallerProxy::Install(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
-    const sptr<IStatusReceiver> &statusReceiver)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-
-    PARCEL_WRITE_INTERFACE_TOKEN(data, GetDescriptor());
-    auto size = bundleFilePaths.size();
-    PARCEL_WRITE(data, Int32, size);
-    for (uint32_t i = 0; i < size; ++i) {
-        PARCEL_WRITE(data, String16, Str8ToStr16(bundleFilePaths[i]));
-    }
-    PARCEL_WRITE(data, Parcelable, &installParam);
-
-    if (statusReceiver == nullptr) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to install, for statusReceiver is nullptr");
-        return false;
-    }
-    if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
-        LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
-        return false;
-    }
-
-    return SendInstallRequest(BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS, data, reply,
-        option);
-}
-
 bool BundleInstallerProxy::Recover(const std::string &bundleName,
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
