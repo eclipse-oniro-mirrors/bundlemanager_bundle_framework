@@ -1278,7 +1278,8 @@ private:
         LauncherAbilityResourceInfo &resultAbilityResourceInfo);
     ErrCode ImplicitQueryAbilityInfosWithDefault(const Want &want,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
-    bool HasGetAbilityInfoExcludeExtFlag(uint32_t flags) const;
+    bool ShouldQueryBundleInfoExt(uint32_t flags) const;
+    bool ShouldQueryAbilityInfoExt(uint32_t flags) const;
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

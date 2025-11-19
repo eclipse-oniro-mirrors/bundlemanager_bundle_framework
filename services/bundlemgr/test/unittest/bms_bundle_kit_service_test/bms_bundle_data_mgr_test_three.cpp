@@ -3792,31 +3792,93 @@ HWTEST_F(BmsBundleDataMgrTest3, DeleteUninstallCloneBundleInfo_0006, Function | 
 }
 
 /**
- * @tc.number: HasGetAbilityInfoExcludeExtFlag_0001
- * @tc.name: HasGetAbilityInfoExcludeExtFlag
- * @tc.desc: test HasGetAbilityInfoExcludeExtFlag
+ * @tc.number: ShouldQueryAbilityInfoExt_0001
+ * @tc.name: ShouldQueryAbilityInfoExt
+ * @tc.desc: test ShouldQueryAbilityInfoExt
  */
-HWTEST_F(BmsBundleDataMgrTest3, HasGetAbilityInfoExcludeExtFlag_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest3, ShouldQueryAbilityInfoExt_0001, Function | MediumTest | Level1)
 {
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = true;
     uint32_t flag = static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION);
-    bool ret = localBundleMgrHostImpl->HasGetAbilityInfoExcludeExtFlag(flag);
+    bool ret = localBundleMgrHostImpl->ShouldQueryAbilityInfoExt(flag);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: ShouldQueryAbilityInfoExt_0002
+ * @tc.name: ShouldQueryAbilityInfoExt
+ * @tc.desc: test ShouldQueryAbilityInfoExt
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ShouldQueryAbilityInfoExt_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = true;
+    uint32_t flag = static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT);
+    bool ret = localBundleMgrHostImpl->ShouldQueryAbilityInfoExt(flag);
     EXPECT_FALSE(ret);
 }
 
 /**
- * @tc.number: HasGetAbilityInfoExcludeExtFlag_0002
- * @tc.name: HasGetAbilityInfoExcludeExtFlag
- * @tc.desc: test HasGetAbilityInfoExcludeExtFlag
+ * @tc.number: ShouldQueryAbilityInfoExt_0003
+ * @tc.name: ShouldQueryAbilityInfoExt
+ * @tc.desc: test ShouldQueryAbilityInfoExt
  */
-HWTEST_F(BmsBundleDataMgrTest3, HasGetAbilityInfoExcludeExtFlag_0002, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest3, ShouldQueryAbilityInfoExt_0003, Function | MediumTest | Level1)
 {
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = false;
+    uint32_t flag = static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION);
+    bool ret = localBundleMgrHostImpl->ShouldQueryAbilityInfoExt(flag);
+    EXPECT_FALSE(ret);
+}
 
-    uint32_t flag = static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXTENSION);
-    bool ret = localBundleMgrHostImpl->HasGetAbilityInfoExcludeExtFlag(flag);
+
+/**
+ * @tc.number: ShouldQueryBundleInfoExt_0001
+ * @tc.name: ShouldQueryBundleInfoExt
+ * @tc.desc: test ShouldQueryBundleInfoExt
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ShouldQueryBundleInfoExt_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = true;
+    uint32_t flag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    bool ret = localBundleMgrHostImpl->ShouldQueryBundleInfoExt(flag);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: ShouldQueryBundleInfoExt_0002
+ * @tc.name: ShouldQueryBundleInfoExt
+ * @tc.desc: test ShouldQueryBundleInfoExt
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ShouldQueryBundleInfoExt_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = true;
+    uint32_t flag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT);
+    bool ret = localBundleMgrHostImpl->ShouldQueryBundleInfoExt(flag);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ShouldQueryBundleInfoExt_0003
+ * @tc.name: ShouldQueryBundleInfoExt
+ * @tc.desc: test ShouldQueryBundleInfoExt
+ */
+HWTEST_F(BmsBundleDataMgrTest3, ShouldQueryBundleInfoExt_0003, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    localBundleMgrHostImpl->isBrokerServiceExisted_ = false;
+    uint32_t flag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    bool ret = localBundleMgrHostImpl->ShouldQueryBundleInfoExt(flag);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

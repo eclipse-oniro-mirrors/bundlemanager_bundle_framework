@@ -67,6 +67,7 @@ enum class GetBundleInfoFlag {
     GET_BUNDLE_INFO_EXCLUDE_CLONE = 0x00004000,
     GET_BUNDLE_INFO_WITH_CLOUD_KIT = 0x00008000,
     GET_BUNDLE_INFO_WITH_ENTRY_MODULE = 0x00010000,
+    GET_BUNDLE_INFO_EXCLUDE_EXT = 0x00020000,
 };
 
 struct RequestPermissionUsedScene : public Parcelable {

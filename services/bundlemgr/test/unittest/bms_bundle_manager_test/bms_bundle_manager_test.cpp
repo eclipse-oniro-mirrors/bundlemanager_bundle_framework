@@ -3309,10 +3309,244 @@ HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_3000, Function | MediumTest |
 
     int32_t flags =
         static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION) |
-        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXTENSION);
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT);
     ErrCode ret = localBundleMgrHostImpl->QueryAbilityInfosV9(want, flags, USERID, abilityInfos);
     EXPECT_EQ(ret, ERR_OK);
 
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: QueryAbilityInfo_1000
+ * @tc.name: test QueryAbilityInfo
+ * @tc.desc: 1.explicit query ability info
+ */
+HWTEST_F(BmsBundleManagerTest, QueryAbilityInfo_1000, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "MainAbility", "");
+    want.SetElement(elementName);
+
+    AbilityInfo abilityInfo;
+
+    int32_t flags =
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION) |
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT);
+    ErrCode ret = localBundleMgrHostImpl->QueryAbilityInfo(want, flags, INVALID_USERID, abilityInfo);
+    EXPECT_EQ(ret, false);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: QueryAbilityInfos_1000
+ * @tc.name: test QueryAbilityInfos
+ * @tc.desc: 1.explicit query ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, QueryAbilityInfos_1000, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "MainAbility", "");
+    want.SetElement(elementName);
+
+    std::vector<AbilityInfo> abilityInfos;
+
+    int32_t flags =
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION) |
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT);
+    ErrCode ret = localBundleMgrHostImpl->QueryAbilityInfos(want, flags, USERID, abilityInfos);
+    EXPECT_EQ(ret, true);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: BatchQueryAbilityInfos_1000
+ * @tc.name: test BatchQueryAbilityInfos_
+ * @tc.desc: 1.explicit query ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, BatchQueryAbilityInfos_1000, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "MainAbility", "");
+    want.SetElement(elementName);
+
+    std::vector<AbilityInfo> abilityInfos;
+
+    int32_t flags =
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION) |
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT);
+    ErrCode ret = localBundleMgrHostImpl->BatchQueryAbilityInfos({want}, flags, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: ImplicitQueryInfos_1000
+ * @tc.name: test ImplicitQueryInfos
+ * @tc.desc: 1.explicit query ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, ImplicitQueryInfos_1000, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "MainAbility", "");
+    want.SetElement(elementName);
+
+    std::vector<AbilityInfo> abilityInfos;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool findDefaultApp = false;
+    int32_t flags =
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION) |
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT);
+    ErrCode ret = localBundleMgrHostImpl->ImplicitQueryInfos(want, flags, USERID, true, abilityInfos,
+        extensionInfos, findDefaultApp);
+    EXPECT_EQ(ret, false);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetBundleInfo_0001
+ * @tc.name: test GetBundleInfo
+ * @tc.desc: 1.query bundle info success
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleInfo_0001, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT);
+    ErrCode ret = hostImpl->GetBundleInfo(BUNDLE_BACKUP_NAME, flags, bundleInfo, USERID);
+    EXPECT_EQ(ret, true);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetBundleInfoV9_0001
+ * @tc.name: test GetBundleInfoV9
+ * @tc.desc: 1.query bundle info success
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleInfoV9_0001, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT);
+    ErrCode ret = hostImpl->GetBundleInfoV9(BUNDLE_BACKUP_NAME, flags, bundleInfo, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: BatchGetBundleInfo_0001
+ * @tc.name: test BatchGetBundleInfo
+ * @tc.desc: 1.query bundle info success
+ */
+HWTEST_F(BmsBundleManagerTest, BatchGetBundleInfo_0001, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<BundleInfo> bundleInfos;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT);
+    ErrCode ret = hostImpl->BatchGetBundleInfo({BUNDLE_BACKUP_NAME}, flags, bundleInfos, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetBundleInfos_0001
+ * @tc.name: test GetBundleInfos
+ * @tc.desc: 1.query bundle infos success
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleInfos_0001, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<BundleInfo> bundleInfos;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT);
+    ErrCode ret = hostImpl->GetBundleInfos(flags, bundleInfos, USERID);
+    EXPECT_EQ(ret, true);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetBundleInfosV9_0002
+ * @tc.name: test GetBundleInfosV9
+ * @tc.desc: 1.query bundle infos v9 success
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleInfosV9_0002, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<BundleInfo> bundleInfos;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT);
+    ErrCode ret = hostImpl->GetBundleInfosV9(flags, bundleInfos, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetCloneBundleInfoExt_0001
+ * @tc.name: test GetCloneBundleInfoExt
+ * @tc.desc: 1.query bundle infos success
+ */
+HWTEST_F(BmsBundleManagerTest, GetCloneBundleInfoExt_0001, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT);
+    ErrCode ret = hostImpl->GetCloneBundleInfoExt(BUNDLE_BACKUP_NAME, flags, 0, INVALID_USERID, bundleInfo);
+    EXPECT_NE(ret, ERR_OK);
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 } // OHOS
