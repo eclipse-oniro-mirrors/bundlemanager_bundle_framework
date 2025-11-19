@@ -254,7 +254,8 @@ private:
      * @param uid Indicates the uid of the application.
      * @return Returns ERR_OK if the native bundle install successfully; returns error code otherwise.
      */
-    ErrCode ProcessBundleInstallNative(InnerBundleInfo &info, int32_t &userId);
+    ErrCode ProcessBundleInstallNative(InnerBundleInfo &info, int32_t &userId, bool removeDir = true);
+    ErrCode ProcessBundleInstallNative(InnerBundleInfo &info, const std::unordered_set<int32_t> &userIds);
     /**
      * @brief The process of uninstalling a native bundle.
      * @param info Indicates the InnerBundleInfo parsed from the config.json in the HAP package.
@@ -263,7 +264,9 @@ private:
      * @return Returns ERR_OK if the native bundle uninstall successfully; returns error code otherwise.
      */
     ErrCode ProcessBundleUnInstallNative(InnerBundleInfo &info, int32_t &userId, std::string bundleName,
-        std::string moduleName);
+        std::string moduleName = "");
+    ErrCode ProcessBundleUnInstallNative(InnerBundleInfo &info, const std::unordered_set<int32_t> &userIds,
+        std::string bundleName, std::string moduleName = "");
     /**
      * @brief The process of updating an exist bundle.
      * @param oldInfo Indicates the exist InnerBundleInfo object get from the database.
@@ -877,6 +880,7 @@ private:
     ErrCode CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool AddInstallingBundleName(const InstallParam &installParam);
     bool DeleteInstallingBundleName(const InstallParam &installParam);
+    void RollbackHnpInstall(const std::string &bundleName, const std::unordered_set<int32_t> userIds);
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     ErrCode CheckInstallPermission(const std::string &appId, const std::string &appIdentifier,
         const std::vector<std::string> &allowedAppIds, const std::vector<std::string> &disallowedAppIds);
@@ -901,6 +905,7 @@ private:
     bool needDeleteAppTempPath_ = false;
     bool isBundleExist_ = false;
     bool isBundleCrossAppSharedConfig_ = false;
+    bool isHnpInstalled_ = false;
     InstallerState state_ = InstallerState::INSTALL_START;
     uint32_t versionCode_ = 0;
     uint32_t accessTokenId_ = 0;

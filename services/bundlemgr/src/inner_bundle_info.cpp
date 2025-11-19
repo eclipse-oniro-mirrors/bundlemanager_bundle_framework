@@ -3152,7 +3152,7 @@ std::optional<std::vector<HnpPackage>> InnerBundleInfo::GetInnerModuleInfoHnpInf
 {
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         if (!(innerModuleInfo.second.hnpPackages.empty())) {
-            if (innerModuleInfo.second.moduleName == moduleName) {
+            if (innerModuleInfo.second.moduleName == moduleName || moduleName == Constants::EMPTY_STRING) {
                 return innerModuleInfo.second.hnpPackages;
             }
         }
