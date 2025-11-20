@@ -1566,7 +1566,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #endif
     DeleteUninstallBundleInfo(bundleName_);
     UpdateEncryptedStatus(oldInfo);
-    GetInstallEventInfo(oldInfo, sysEventInfo_);
+    GetInstallEventInfo(cacheInfo, sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     UpdateRouterInfo();
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
@@ -2003,6 +2003,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "fail to DeleteShaderCache, error is %{public}d", result);
         return result;
     }
+
+    DeleteUseLessSharefilesForDefaultUser(bundleName, userId_);
 
     if ((result = CleanAsanDirectory(oldInfo)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove asan log path, error is %{public}d", result);
@@ -6985,6 +6987,23 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
     LOG_D(BMS_TAG_INSTALLER, "DeleteShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
+}
+
+void BaseBundleInstaller::DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName,
+    int32_t userId) const
+{
+    if (userId == Constants::DEFAULT_USERID) {
+        LOG_D(BMS_TAG_INSTALLD, "bundle %{public}s delete useless sharefiles for userid:%{public}d",
+            bundleName.c_str(), userId);
+        std::set<int32_t> currentUserIds = dataMgr_->GetAllUser();
+        for (int32_t user : currentUserIds) {
+            std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(user);
+            std::string shareFilesDataDir = dataDir + ServiceConstants::SHAREFILES + bundleName;
+            InstalldClient::GetInstance()->RemoveDir(shareFilesDataDir);
+        }
+    }
+    return;
 }
 
 ErrCode BaseBundleInstaller::CleanShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,

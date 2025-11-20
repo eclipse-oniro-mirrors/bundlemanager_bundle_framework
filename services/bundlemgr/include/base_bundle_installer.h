@@ -746,6 +746,7 @@ private:
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
     ErrCode CleanShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
         const std::string &bundleName, int32_t userId) const;
     void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
