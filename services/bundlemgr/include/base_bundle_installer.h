@@ -735,7 +735,7 @@ private:
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
     ErrCode ExtractResFileDir(const std::string &modulePath) const;
-    ErrCode ExtractHnpFileDir(const std::string &cpuAbi, const std::string &hnpPackageInfoString,
+    ErrCode ExtractHnpFileDir(const std::string &cpuAbi, const std::map<std::string, std::string> &hnpPackageMap,
         const std::string &modulePath) const;
     void DeleteOldNativeLibraryPath() const;
     std::string GetRealSoPath(const std::string &bundleName, const std::string &nativeLibraryPath,

@@ -3941,11 +3941,8 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
             }
             hnpPackageInfoMap[hnpPackageInfo.package] = hnpPackageInfo.type;
         }
-        for (const auto &hnpPackageKV : hnpPackageInfoMap) {
-            hnpPackageInfoString << "{" << hnpPackageKV.first << ":" << hnpPackageKV.second << "}";
-        }
         std::string cpuAbi = info.GetCpuAbi();
-        result = ExtractHnpFileDir(cpuAbi, hnpPackageInfoString.str(), modulePath);
+        result = ExtractHnpFileDir(cpuAbi, hnpPackageInfoMap, modulePath);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to ExtractHnpsFileDir, error is %{public}d", result);
             return result;
@@ -3999,8 +3996,8 @@ ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) co
     return ret;
 }
 
-ErrCode BaseBundleInstaller::ExtractHnpFileDir(const std::string &cpuAbi, const std::string &hnpPackageInfoString,
-    const std::string &modulePath) const
+ErrCode BaseBundleInstaller::ExtractHnpFileDir(const std::string &cpuAbi,
+    const std::map<std::string, std::string> &hnpPackageMap, const std::string &modulePath) const
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractHnpFileDir begin");
     ExtractParam extractParam;
@@ -4013,7 +4010,7 @@ ErrCode BaseBundleInstaller::ExtractHnpFileDir(const std::string &cpuAbi, const 
     extractParam.cpuAbi = cpuAbi;
     LOG_D(BMS_TAG_INSTALLER, "ExtractHnpFileDir targetPath: %{public}s", extractParam.targetPath.c_str());
     extractParam.extractFileType = ExtractFileType::HNPS_FILE;
-    ErrCode ret = InstalldClient::GetInstance()->ExtractHnpFiles(hnpPackageInfoString, extractParam);
+    ErrCode ret = InstalldClient::GetInstance()->ExtractHnpFiles(hnpPackageMap, extractParam);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "ExtractHnpFileDir ExtractFiles failed, error is %{public}d", ret);
         return ret;

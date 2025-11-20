@@ -57,12 +57,13 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
     return CallService(&IInstalld::ExtractFiles, extractParam);
 }
 
-ErrCode InstalldClient::ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
+    const ExtractParam &extractParam)
 {
-    if (extractParam.srcPath.empty() || extractParam.targetPath.empty() || hnpPackageInfo.empty()) {
+    if (extractParam.srcPath.empty() || extractParam.targetPath.empty() || hnpPackageMap.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::ExtractHnpFiles, hnpPackageInfo, extractParam);
+    return CallService(&IInstalld::ExtractHnpFiles, hnpPackageMap, extractParam);
 }
 
 ErrCode InstalldClient::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,

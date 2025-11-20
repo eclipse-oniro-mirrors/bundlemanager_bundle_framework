@@ -42,7 +42,8 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
     return 0;
 }
 
-ErrCode InstalldClient::ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
+    const ExtractParam &extractParam)
 {
     return 0;
 }

@@ -1301,15 +1301,15 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7600, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7700, Function | SmallTest | Level0)
 {
     ExtractParam extractParam;
-    std::string hnpPackageInfo;
-    auto ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
+    std::map<std::string, std::string> hnpPackageMap;
+    auto ret = InstalldOperator::ExtractFiles(hnpPackageMap, extractParam);
     EXPECT_FALSE(ret);
 
     extractParam.srcPath = HAP_FILE_PATH;
     extractParam.targetPath = TEST_PATH;
     extractParam.cpuAbi = TEST_CPU_ABI;
     extractParam.extractFileType = ExtractFileType::HNPS_FILE;
-    ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
+    ret = InstalldOperator::ExtractFiles(hnpPackageMap, extractParam);
     EXPECT_FALSE(ret);
 }
 
@@ -1676,8 +1676,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10000, Function | Sm
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10100, Function | SmallTest | Level0)
 {
     ExtractParam extractParam;
-    std::string hnpPackageInfo = "{\"package\": \"hnpsample.hnp\", \"type\": \"public\"}";
-    auto ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
+    std::map<std::string, std::string> hnpPackageMap = {
+        {"package", "hnpsample.hnp"},
+        {"type", "public"}
+    };
+    auto ret = InstalldOperator::ExtractFiles(hnpPackageMap, extractParam);
     EXPECT_FALSE(ret);
 }
 
@@ -1693,8 +1696,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10200, Function | Sm
     extractParam.targetPath = TEST_PATH;
     extractParam.cpuAbi = TEST_CPU_ABI;
     extractParam.extractFileType = ExtractFileType::SO;
-    std::string hnpPackageInfo = "{\"package\": \"hnpsample.hnp\", \"type\": \"public\"}";
-    auto ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
+    std::map<std::string, std::string> hnpPackageMap = {
+        {"package", "hnpsample.hnp"},
+        {"type", "public"}
+    };
+    auto ret = InstalldOperator::ExtractFiles(hnpPackageMap, extractParam);
     EXPECT_FALSE(ret);
 }
 
@@ -1710,11 +1716,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_10300, Function | Sm
     extractParam.targetPath = TEST_PATH;
     extractParam.cpuAbi = TEST_CPU_ABI;
     extractParam.extractFileType = ExtractFileType::SO;
-    std::string hnpPackageInfo;
+    std::map<std::string, std::string> hnpPackageMap;
 #ifdef USE_ARM64
-    EXPECT_NO_THROW(InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam));
+    EXPECT_NO_THROW(InstalldOperator::ExtractFiles(hnpPackageMap, extractParam));
 #else
-    EXPECT_TRUE(InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam));
+    EXPECT_TRUE(InstalldOperator::ExtractFiles(hnpPackageMap, extractParam));
 #endif
 }
 

@@ -444,20 +444,10 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
     return true;
 }
 
-bool InstalldOperator::ExtractFiles(const std::string hnpPackageInfo, const ExtractParam &extractParam)
+bool InstalldOperator::ExtractFiles(const std::map<std::string, std::string> &hnpPackageMap,
+    const ExtractParam &extractParam)
 {
-    std::map<std::string, std::string> hnpPackageInfoMap;
-    std::stringstream hnpPackageInfoString(hnpPackageInfo);
-    std::string keyValue;
-    while (getline(hnpPackageInfoString, keyValue, '}')) {
-        size_t pos = keyValue.find(":");
-        if (pos != std::string::npos) {
-            std::string key = keyValue.substr(1, pos - 1);
-            std::string value = keyValue.substr(pos + 1);
-            hnpPackageInfoMap[key] = value;
-        }
-    }
-
+    std::map<std::string, std::string> hnpPackageInfoMap = hnpPackageMap;
     BundleExtractor extractor(extractParam.srcPath);
     if (!extractor.Init()) {
         LOG_E(BMS_TAG_INSTALLD, "extractor init failed");
@@ -494,6 +484,10 @@ bool InstalldOperator::ExtractFiles(const std::string hnpPackageInfo, const Extr
             }
             targetPathAndName = extractParam.targetPath + hnpPackageInfoMap[targetName]
                                 + ServiceConstants::PATH_SEPARATOR + targetName;
+            if (targetPathAndName.find("..") != std::string::npos) {
+                LOG_E(BMS_TAG_INSTALLD, "hnp type err: %{public}s", hnpPackageInfoMap[targetName].c_str());
+                continue;
+            }
             ExtractTargetHnpFile(extractor, entryName, targetPathAndName, extractParam.extractFileType);
             hnpPackageInfoMap.erase(targetName);
             continue;

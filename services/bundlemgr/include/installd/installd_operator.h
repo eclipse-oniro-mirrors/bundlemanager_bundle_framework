@@ -100,7 +100,8 @@ public:
     static bool IsNativeSo(const std::string &entryName, const std::string &cpuAbi);
 
     static bool ExtractFiles(const ExtractParam &extractParam);
-    static bool ExtractFiles(const std::string hnpPackageInfo, const ExtractParam &extractParam);
+    static bool ExtractFiles(const std::map<std::string, std::string> &hnpPackageMap,
+        const ExtractParam &extractParam);
     static bool ExtractTargetFile(
         const BundleExtractor &extractor,
         const std::string &entryName,
