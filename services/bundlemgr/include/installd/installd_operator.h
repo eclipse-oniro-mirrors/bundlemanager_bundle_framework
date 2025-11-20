@@ -321,6 +321,8 @@ public:
 
     static bool RestoreconPath(const std::string &path);
 
+    static bool IsFileNameValid(const std::string &fileName);
+
     static bool ResetBmsDBSecurity();
 
 private:
