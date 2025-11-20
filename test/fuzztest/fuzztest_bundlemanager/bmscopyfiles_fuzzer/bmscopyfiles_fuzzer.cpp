@@ -16,9 +16,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
-#define private public
-#include "bmsbundleagingmgr_fuzzer.h"
-#include "bundle_aging_mgr.h"
+#include "quick_fix_manager_proxy.h"
+#include "bmscopyfiles_fuzzer.h"
 #include "bms_fuzztest_util.h"
 #include "securec.h"
 
@@ -27,22 +26,19 @@ using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
-    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
+    sptr<IRemoteObject> object;
+    QuickFixManagerProxy quickFix(object);
     FuzzedDataProvider fdp(data, size);
-    bundleAgingMgr->running_ = fdp.ConsumeBool();
-    std::shared_ptr<BundleDataMgr> dataMgr = nullptr;
-    bundleAgingMgr->Start(BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
-    bundleAgingMgr->Start(BundleAgingMgr::AgingTriggertype::UPDATE_REMOVABLE_FLAG);
-    bundleAgingMgr->InitAgingtTimer();
-    bundleAgingMgr->ResetRequest();
-    bundleAgingMgr->IsReachStartAgingThreshold();
-    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
-    bundleAgingMgr->QueryBundleStatsInfoByInterval(results);
-    bundleAgingMgr->InitAgingRequest();
-    bundleAgingMgr->Process(dataMgr);
+    std::vector<std::string> sourceFiles;
+    std::string sourceFile = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    sourceFiles.push_back(sourceFile);
+    std::vector<std::string> destFiles;
+    std::string destFile = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    destFiles.push_back(destFile);
+    quickFix.CopyFiles(sourceFiles, destFiles);
     return true;
 }
-} // namespace OHOS
+}
 
 // Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
