@@ -78,6 +78,7 @@ group("bundlemanagerfuzztest") {
     "bmsbundleresparam_fuzzer:BMSBundleResParamFuzzTest",
     "bmsbundleresparser_fuzzer:BMSBundleResParserFuzzTest",
     "bmsbundleresprocess_fuzzer:BMSBundleResProcessFuzzTest",
+    "bmsbundleresrdb_fuzzer:BMSBundleResRdbFuzzTest",
     "bmsbundlestatuscallbackproxy_fuzzer:BMSBundleStatusCallbackProxyFuzzTest",
     "bmsbundlestreaminstallerhost_fuzzer:BMSBundleStreamInstallerHostFuzzTest",
     "bmsbundlestreaminstallerproxy_fuzzer:BMSBundleStreamInstallerProxyFuzzTest",
@@ -96,6 +97,7 @@ group("bundlemanagerfuzztest") {
     "bmscompatibleabilityinfo_fuzzer:BMSCompatibleAbilityInfoFuzzTest",
     "bmscompatibleapplicationinfo_fuzzer:BMSCompatibleApplicationInfoFuzzTest",
     "bmsconverttargetabilityinfo_fuzzer:BMSConvertTargetAbilityInfoFuzzTest",
+    "bmscopyfiles_fuzzer:BMSCopyFilesFuzzTest",
     "bmsdeletefirstinstallbundleinfo_fuzzer:BMSDeleteFirstInstallBundleInfoFuzzTest",
     "bmsdriverinstaller_fuzzer:BMSDriverInstallerFuzzTest",
     "bmsecologicalrulemgrserviceclient_fuzzer:BMSEcologicalRulemgrServiceClientFuzzTest",
@@ -172,6 +174,7 @@ group("bundlemanagerfuzztest") {
     deps += [
       "bmsdefaultapp_fuzzer:BMSDefaultAppFuzzTest",
       "bmsdefaultapphost_fuzzer:BMSDefaultAppHostFuzzTest",
+      "bmsdefaultappmgr_fuzzer:BMSDefaultAppMgrFuzzTest",
     ]
   }
 
