@@ -1062,9 +1062,28 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             bundleInfo.GetBundleName();
         PrepareBundleDirQuota(bundleInfo.GetBundleName(), uid, bundleDataDir,
             ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET);
+        VerifyDelayedAging(bundleInfo, uid);
+        tempInfo_.SetTempBundleInfo(bundleInfo);
     }
     mainAbility_ = bundleInfo.GetMainAbility();
     return result;
+}
+
+void BaseBundleInstaller::VerifyDelayedAging(InnerBundleInfo &bundleInfo, int32_t uid)
+{
+    LOG_D(BMS_TAG_INSTALLER, "Start verifying if there is a delay in aging");
+    bool isDelayedAging = false;
+    if (BundlePermissionMgr::VerifyPermission(bundleInfo.GetBundleName(), ServiceConstants::PERMISSION_MANAGE_AGING,
+        uid / Constants::BASE_USER_RANGE) != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+        APP_LOGD("no permission to delay aging %{public}s", bundleInfo.GetBundleName().c_str());
+        bundleInfo.SetDelayedAging(isDelayedAging);
+        return;
+    } else {
+        isDelayedAging = true;
+        bundleInfo.SetDelayedAging(isDelayedAging);
+    }
+    LOG_D(BMS_TAG_INSTALLER, "Verification of delayed aging permissions successful");
+    return;
 }
 
 void BaseBundleInstaller::ProcessUpdateShortcut()

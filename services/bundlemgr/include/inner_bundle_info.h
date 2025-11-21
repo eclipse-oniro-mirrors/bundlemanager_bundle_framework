@@ -2362,6 +2362,14 @@ public:
     void UpdateHasCloudkitConfig();
     int32_t GetModuleSize() const;
     bool GetModuleDeduplicateHar() const;
+    void SetDelayedAging(bool isDelayAging)
+    {
+        isDelayAging_ = isDelayAging;
+    }
+    bool GetDelayedAging() const
+    {
+        return isDelayAging_;
+    }
 
 private:
     bool IsExistLauncherAbility() const;
@@ -2403,6 +2411,9 @@ private:
 
     // need to send a notification when uninstallState_ change
     bool isNeedSendNotify_ = false;
+
+    // atomicservice Service Delay Aging
+    bool isDelayAging_ = false;
     
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     int32_t appIndex_ = Constants::INITIAL_APP_INDEX;
