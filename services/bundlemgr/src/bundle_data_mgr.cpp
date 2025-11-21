@@ -8228,17 +8228,20 @@ std::vector<int32_t> BundleDataMgr::GetUserIds(const std::string &bundleName) co
 
 void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId)
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto bundleInfoItem = bundleInfos_.find(bundleName);
-    if (bundleInfoItem == bundleInfos_.end()) {
-        APP_LOGW("%{public}s not found", bundleName.c_str());
-        return;
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto bundleInfoItem = bundleInfos_.find(bundleName);
+        if (bundleInfoItem == bundleInfos_.end()) {
+            APP_LOGW("%{public}s not found", bundleName.c_str());
+            return;
+        }
+        bool needCreateEl5Dir = bundleInfoItem->second.NeedCreateEl5Dir();
+        if (!needCreateEl5Dir) {
+            return;
+        }
+        dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
     }
-    bool needCreateEl5Dir = bundleInfoItem->second.NeedCreateEl5Dir();
-    if (!needCreateEl5Dir) {
-        return;
-    }
-    auto dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
     if (dataGroupInfoMap.empty()) {
         return;
     }
@@ -8258,6 +8261,13 @@ void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t 
 bool BundleDataMgr::CreateAppGroupDir(const InnerBundleInfo &info, int32_t userId, DataDirEl dirEl)
 {
     auto dataGroupInfoMap = info.GetDataGroupInfos();
+    bool needCreateEl5Dir = info.NeedCreateEl5Dir();
+    return CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl);
+}
+
+bool BundleDataMgr::CreateAppGroupDir(const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfoMap,
+    int32_t userId, bool needCreateEl5Dir, DataDirEl dirEl)
+{
     if (dataGroupInfoMap.empty()) {
         return true;
     }
@@ -8269,19 +8279,24 @@ bool BundleDataMgr::CreateAppGroupDir(const InnerBundleInfo &info, int32_t userI
             }
         }
     }
-    bool needCreateEl5Dir = info.NeedCreateEl5Dir();
     return CreateGroupDirs(dataGroupInfos, userId, needCreateEl5Dir, dirEl) == ERR_OK;
 }
 
 bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t userId)
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto bundleInfoItem = bundleInfos_.find(bundleName);
-    if (bundleInfoItem == bundleInfos_.end()) {
-        APP_LOGW("%{public}s not found", bundleName.c_str());
-        return false;
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
+    bool needCreateEl5Dir = false;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto bundleInfoItem = bundleInfos_.find(bundleName);
+        if (bundleInfoItem == bundleInfos_.end()) {
+            APP_LOGW("%{public}s not found", bundleName.c_str());
+            return false;
+        }
+        dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
+        needCreateEl5Dir = bundleInfoItem->second.NeedCreateEl5Dir();
     }
-    return CreateAppGroupDir(bundleInfoItem->second, userId);
+    return CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir);
 }
 
 ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId,

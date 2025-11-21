@@ -1018,6 +1018,8 @@ public:
         const std::unordered_set<std::string> &dataGroupIdList, int32_t userId,
         bool needSaveStorage = false);
     bool CreateAppGroupDir(const std::string &bundleName, int32_t userId);
+    bool CreateAppGroupDir(const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfoMap,
+        int32_t userId, bool needCreateEl5Dir, DataDirEl dirEl = DataDirEl::NONE);
     void CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId);
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
         std::unordered_set<int32_t> &uniqueIdSet) const;

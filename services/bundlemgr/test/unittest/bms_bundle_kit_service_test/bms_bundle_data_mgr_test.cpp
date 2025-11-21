@@ -5393,4 +5393,28 @@ HWTEST_F(BmsBundleDataMgrTest, RemoveBackupBundleData_0100, Function | MediumTes
     EXPECT_NE(ret, ERR_OK);
     #endif
 }
+
+/**
+ * @tc.number: CreateAppGroupDir_0100
+ * @tc.name: CreateAppGroupDir
+ * @tc.desc: test CreateAppGroupDir
+ */
+HWTEST_F(BmsBundleDataMgrTest, CreateAppGroupDir_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
+    int32_t userId = 100;
+    bool needCreateEl5Dir = true;
+    DataDirEl dirEl = DataDirEl::EL5;
+    auto ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl);
+    EXPECT_TRUE(ret);
+
+    DataGroupInfo groupInfo;
+    groupInfo.userId = 100;
+    groupInfo.dataGroupId = "123";
+    groupInfo.uuid = "321";
+    ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl);
+    EXPECT_TRUE(ret);
+}
 } // OHOS
