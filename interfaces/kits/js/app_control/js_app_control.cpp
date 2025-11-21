@@ -750,7 +750,10 @@ void ConvertDisposedRuleConfiguration(
         NAPI_AUTO_LENGTH, &nAppId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "appId", nAppId));
 
-    ConvertRuleInfo(env, nRule, disposedRuleConfiguration.disposedRule);
+    napi_value nDisposedRule = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nDisposedRule));
+    ConvertRuleInfo(env, nDisposedRule, disposedRuleConfiguration.disposedRule);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "disposedRule", nDisposedRule));
 }
 
 napi_value GetAllDisposedRules(napi_env env, napi_callback_info info)
