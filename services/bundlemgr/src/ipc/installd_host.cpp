@@ -431,7 +431,7 @@ bool InstalldHost::HandleCreateBundleDataDir(MessageParcel &data, MessageParcel 
 bool InstalldHost::HandleCreateBundleDataDirWithVector(MessageParcel &data, MessageParcel &reply)
 {
     auto createDirParamSize = data.ReadInt32();
-    if (createDirParamSize <= 0 || createDirParamSize > Constants::MAX_PARCEL_CAPACITY) {
+    if (createDirParamSize <= 0 || createDirParamSize > Constants::MAX_APP_UID) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
