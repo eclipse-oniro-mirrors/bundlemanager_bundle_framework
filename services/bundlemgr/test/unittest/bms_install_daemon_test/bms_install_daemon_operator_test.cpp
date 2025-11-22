@@ -2305,4 +2305,22 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13700, Function | Sm
     EXPECT_EQ(ret, true);
     DeleteFile(dstPath);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_13800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractTargetFile of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13800, Function | SmallTest | Level0)
+{
+    BundleExtractor extractor("");
+    ExtractParam param;
+    param.targetPath = "/data/app/el1/";
+    param.cpuAbi = TEST_CPU_ABI;
+    param.extractFileType = ExtractFileType::AP;
+    auto ret = InstalldOperator::ExtractTargetFile(extractor, "../", param);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::ExtractTargetFile(extractor, "/..", param);
+    EXPECT_FALSE(ret);
+}
 } // OHOS

@@ -650,6 +650,10 @@ bool InstalldOperator::ProcessBundleUnInstallNative(const std::string &userId, c
 bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
     const ExtractParam &param)
 {
+    if (!IsFileNameValid(entryName)) {
+        LOG_E(BMS_TAG_INSTALLD, "Invalid entryname %{public}s", entryName.c_str());
+        return false;
+    }
     // create dir if not exist
     if (!IsExistDir(param.targetPath)) {
         if (!MkRecursiveDir(param.targetPath, true)) {
@@ -2768,6 +2772,15 @@ bool InstalldOperator::RestoreconPath(const std::string &path)
     }
     LOG_E(BMS_TAG_INSTALLD, "RestoreconPath failed, ret: %{public}d", ret);
     return false;
+}
+
+bool InstalldOperator::IsFileNameValid(const std::string &fileName)
+{
+    if (fileName.find("../") != std::string::npos
+        || fileName.find("/..") != std::string::npos) {
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
