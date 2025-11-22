@@ -128,6 +128,7 @@ constexpr const char* MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames
 constexpr const char* MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
 constexpr const char* DATA_GROUP_INFOS = "dataGroupInfos";
 constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
+constexpr const char* MODULE_EASY_GO = "easyGo";
 constexpr const char* MODULE_IS_ENCRYPTED = "isEncrypted";
 constexpr const char* MODULE_RESIZEABLE = "resizeable";
 constexpr const char* MODULE_ROUTER_MAP = "routerMap";
@@ -488,6 +489,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames},
         {MODULE_AOT_COMPILE_STATUS, info.aotCompileStatus},
         {MODULE_FILE_CONTEXT_MENU, info.fileContextMenu},
+        {MODULE_EASY_GO, info.easyGo},
         {MODULE_IS_ENCRYPTED, info.isEncrypted},
         {MODULE_QUERY_SCHEMES, info.querySchemes},
         {MODULE_ROUTER_MAP, info.routerMap},
@@ -1011,6 +1013,12 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_FILE_CONTEXT_MENU,
         info.fileContextMenu,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        MODULE_EASY_GO,
+        info.easyGo,
         false,
         parseResult);
     BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
@@ -1716,6 +1724,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
     hapInfo.aotCompileStatus = it->second.aotCompileStatus;
     hapInfo.fileContextMenu = it->second.fileContextMenu;
+    hapInfo.easyGo = it->second.easyGo;
     hapInfo.routerMap = it->second.routerMap;
     hapInfo.appEnvironments = it->second.appEnvironments;
     hapInfo.packageName = it->second.packageName;
@@ -5703,6 +5712,16 @@ bool InnerBundleInfo::GetModuleDeduplicateHar() const
         }
     }
     return hasDedupLicateHarInHsp;
+}
+
+std::optional<InnerModuleInfo> InnerBundleInfo::GetInnerModuleInfoForEntry() const
+{
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        if (innerModuleInfo.second.isEntry) {
+            return innerModuleInfo.second;
+        }
+    }
+    return std::nullopt;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

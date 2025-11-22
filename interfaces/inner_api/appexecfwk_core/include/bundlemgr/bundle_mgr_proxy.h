@@ -1299,6 +1299,9 @@ public:
     virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
         BundleInstallStatus &bundleInstallStatus) override;
 
+    virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
+        std::vector<JsonProfileInfo> &profileInfos) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

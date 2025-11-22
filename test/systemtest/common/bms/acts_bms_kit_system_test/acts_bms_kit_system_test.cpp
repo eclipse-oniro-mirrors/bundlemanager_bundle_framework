@@ -9881,6 +9881,68 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0003, Function | MediumTest | Level1)
     std::cout << "END CanOpenLink_0003" << std::endl;
 }
 
+/**
+ * @tc.number: GetAllJsonProfile_0001
+ * @tc.name: test GetAllJsonProfile interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetAllJsonProfile
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllJsonProfile_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllJsonProfile_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<JsonProfileInfo> profileInfos;
+    auto queryResult = bundleMgrProxy->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, USERID, profileInfos);
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetAllJsonProfile_0001" << std::endl;
+}
+
+/**
+ * @tc.number: GetAllJsonProfile_0002
+ * @tc.name: test GetAllJsonProfile interface
+ * @tc.desc: call GetAllJsonProfile with invalid userId
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllJsonProfile_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllJsonProfile_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<JsonProfileInfo> profileInfos;
+    auto queryResult = bundleMgrProxy->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, 200, profileInfos);
+    EXPECT_EQ(queryResult, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    std::cout << "END GetAllJsonProfile_0002" << std::endl;
+}
+
+/**
+ * @tc.number: GetAllJsonProfile_0003
+ * @tc.name: test GetAllJsonProfile interface
+ * @tc.desc: call GetAllJsonProfile with invalid profile type
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllJsonProfile_0003, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllJsonProfile_0003" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<JsonProfileInfo> profileInfos;
+    auto queryResult = bundleMgrProxy->GetAllJsonProfile(static_cast<ProfileType>(-1), USERID, profileInfos);
+    EXPECT_EQ(queryResult, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST);
+    std::cout << "END GetAllJsonProfile_0003" << std::endl;
+}
 
 /**
  * @tc.number: GetAllPluginInfo_0001

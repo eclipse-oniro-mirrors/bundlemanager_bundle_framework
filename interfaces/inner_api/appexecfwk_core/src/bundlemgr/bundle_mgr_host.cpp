@@ -729,6 +729,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INSTALL_STATUS):
             errCode = HandleGetBundleInstallStatus(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE):
+            errCode = HandleGetAllJsonProfile(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -5153,6 +5156,26 @@ ErrCode BundleMgrHost::HandleGetBundleInstallStatus(MessageParcel &data, Message
     if (!reply.WriteUint8(static_cast<uint8_t>(status))) {
         APP_LOGE("write status failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllJsonProfile(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    ProfileType profileType = static_cast<ProfileType>(data.ReadInt32());
+    int32_t userId = data.ReadInt32();
+    std::vector<JsonProfileInfo> profileInfos;
+    auto ret = GetAllJsonProfile(profileType, userId, profileInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(profileInfos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

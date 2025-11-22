@@ -5201,6 +5201,161 @@ HWTEST_F(BmsBundleDataMgrTest, AddInstallingBundleName_0200, Function | SmallTes
 }
 
 /**
+ * @tc.number: GetProfilePath_0001
+ * @tc.name: test GetProfilePath
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfilePath
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfilePath_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerModuleInfo innerModuleInfo;
+        std::string res;
+        res = dataMgr->GetProfilePath(ProfileType::EASY_GO_PROFILE, innerModuleInfo);
+        EXPECT_TRUE(res.empty());
+        innerModuleInfo.isEntry = true;
+        res = dataMgr->GetProfilePath(ProfileType::EASY_GO_PROFILE, innerModuleInfo);
+        EXPECT_TRUE(res.empty());
+        res = dataMgr->GetProfilePath(static_cast<ProfileType>(-1), innerModuleInfo);
+        EXPECT_TRUE(res.empty());
+    }
+}
+
+/**
+ * @tc.number: GetProfilePath_0002
+ * @tc.name: test GetProfilePath
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfilePath
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfilePath_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerModuleInfo innerModuleInfo;
+        std::string res;
+        innerModuleInfo.isEntry = true;
+        innerModuleInfo.easyGo = "$profile:easy_go";
+        res = dataMgr->GetProfilePath(ProfileType::EASY_GO_PROFILE, innerModuleInfo);
+        EXPECT_EQ(res, "resources/base/profile/easy_go.json");
+    }
+}
+
+/**
+ * @tc.number: GetProfileDataList_0001
+ * @tc.name: test GetProfilePath
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfilePath
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        std::vector<BundleProfileData> profileDataList;
+        int32_t userId = 100;
+        dataMgr->GetProfileDataList(ProfileType::EASY_GO_PROFILE, userId, profileDataList);
+        EXPECT_TRUE(profileDataList.empty());
+    }
+}
+
+/**
+ * @tc.number: GetProfileDataList_0002
+ * @tc.name: test GetProfilePath
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfilePath
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo innerBundleInfo;
+        ApplicationInfo applicationInfo;
+        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+        GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+        std::vector<BundleProfileData> profileDataList;
+        int32_t userId = 100;
+        dataMgr->GetProfileDataList(ProfileType::EASY_GO_PROFILE, userId, profileDataList);
+        EXPECT_TRUE(profileDataList.empty());
+    }
+}
+
+/**
+ * @tc.number: GetProfileDataList_0003
+ * @tc.name: test GetProfilePath
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfilePath
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0003, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo innerBundleInfo;
+        ApplicationInfo applicationInfo;
+        applicationInfo.bundleType = BundleType::SHARED;
+        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+        GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+        std::vector<BundleProfileData> profileDataList;
+        int32_t userId = 100;
+        dataMgr->GetProfileDataList(ProfileType::EASY_GO_PROFILE, userId, profileDataList);
+        EXPECT_TRUE(profileDataList.empty());
+    }
+}
+
+/**
+ * @tc.number: GetAllJsonProfile_0001
+ * @tc.name: test GetAllJsonProfile
+ * @tc.desc: 1.system run normally
+ *           2.test GetAllJsonProfile
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllJsonProfile_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        std::vector<JsonProfileInfo> profileInfos;
+        auto ret1 = dataMgr->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, -1, profileInfos);
+        EXPECT_NE(ret1, ERR_OK);
+
+        auto ret2 = dataMgr->GetAllJsonProfile(ProfileType::UNSPECIFIED_PROFILE, Constants::ALL_USERID, profileInfos);
+        EXPECT_NE(ret2, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: GetInnerModuleInfoForEntry_0001
+ * @tc.name: test GetInnerModuleInfoForEntry
+ * @tc.desc: 1.system run normally
+ *           2.test GetInnerModuleInfoForEntry
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetInnerModuleInfoForEntry_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    auto ret = info.GetInnerModuleInfoForEntry();
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: GetInnerModuleInfoForEntry_0002
+ * @tc.name: test GetInnerModuleInfoForEntry
+ * @tc.desc: 1.system run normally
+ *           2.test GetInnerModuleInfoForEntry
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetInnerModuleInfoForEntry_0002, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isEntry = true;
+    info.innerModuleInfos_.try_emplace("entry", moduleInfo);
+    auto ret = info.GetInnerModuleInfoForEntry();
+    EXPECT_TRUE(ret->isEntry);
+}
+
+/**
  * @tc.number: AddInstallingBundleName_0300
  * @tc.name: test AddInstallingBundleName
  * @tc.desc: 1.system run normally

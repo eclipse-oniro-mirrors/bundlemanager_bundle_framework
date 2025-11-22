@@ -888,6 +888,21 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0049, TestSize.Leve
     EXPECT_EQ(status, BundleInstallStatus::UNKNOWN_STATUS);
 }
 
+/*
+ * @tc.number: BundleMgrHostImpl_0050
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetAllJsonProfile SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0050, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::vector<JsonProfileInfo> profileInfos;
+    int32_t userId = 100;
+    auto ret = localBundleMgrHostImpl->GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, userId, profileInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 /**
  * @tc.number: BundleResourceHostImpl_0001

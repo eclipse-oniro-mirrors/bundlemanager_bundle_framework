@@ -28,6 +28,45 @@ const std::string MODULE_INFO_MODULE_SOURCE_DIR = "moduleSourceDir";
 const std::string MODULE_INFO_PRELOADS = "preloads";
 }
 
+bool JsonProfileInfo::ReadFromParcel(Parcel &parcel)
+{
+    profileType = static_cast<ProfileType>(parcel.ReadInt32());
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    moduleName = Str16ToStr8(parcel.ReadString16());
+    profile = Str16ToStr8(parcel.ReadString16());
+    return true;
+}
+
+JsonProfileInfo *JsonProfileInfo::Unmarshalling(Parcel &parcel)
+{
+    JsonProfileInfo *info = new (std::nothrow) JsonProfileInfo();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+bool JsonProfileInfo::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(profileType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(profile));
+    return true;
+}
+
+std::string JsonProfileInfo::ToString() const
+{
+    return "[ profileType = " + std::to_string(static_cast<int32_t>(profileType))
+            + ", bundleName = " + bundleName
+            + ", moduleName = " + moduleName
+            + ", profile = " + profile
+            + "]";
+}
+
+
 bool ModuleInfo::ReadFromParcel(Parcel &parcel)
 {
     moduleName = Str16ToStr8(parcel.ReadString16());

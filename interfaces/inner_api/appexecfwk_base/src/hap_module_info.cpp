@@ -84,6 +84,7 @@ const char* HAP_MODULE_INFO_AOT_COMPILE_STATUS = "aotCompileStatus";
 const char* HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const char* HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const char* HAP_MODULE_INFO_FILE_CONTEXT_MENU = "fileContextMenu";
+const char* HAP_MODULE_INFO_EASY_GO = "easyGo";
 const char* HAP_MODULE_INFO_ROUTER_MAP = "routerMap";
 const char* HAP_MODULE_INFO_ROUTER_ARRAY = "routerArray";
 const char* ROUTER_ITEM_KEY_NAME = "name";
@@ -652,6 +653,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         nativeLibraryFileNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     fileContextMenu = Str16ToStr8(parcel.ReadString16());
+    easyGo = Str16ToStr8(parcel.ReadString16());
     routerMap = Str16ToStr8(parcel.ReadString16());
 
     int32_t routerArraySize;
@@ -812,6 +814,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileName));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileContextMenu));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(easyGo));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(routerMap));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, routerArray.size());
     for (auto &router : routerArray) {
@@ -888,6 +891,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS, hapModuleInfo.compressNativeLibs},
         {HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, hapModuleInfo.nativeLibraryFileNames},
         {HAP_MODULE_INFO_FILE_CONTEXT_MENU, hapModuleInfo.fileContextMenu},
+        {HAP_MODULE_INFO_EASY_GO, hapModuleInfo.easyGo},
         {HAP_MODULE_INFO_ROUTER_MAP, hapModuleInfo.routerMap},
         {HAP_MODULE_INFO_ROUTER_ARRAY, hapModuleInfo.routerArray},
         {HAP_MODULE_INFO_APP_ENVIRONMENTS, hapModuleInfo.appEnvironments},
@@ -1283,6 +1287,12 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_MODULE_INFO_FILE_CONTEXT_MENU,
         hapModuleInfo.fileContextMenu,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_EASY_GO,
+        hapModuleInfo.easyGo,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,

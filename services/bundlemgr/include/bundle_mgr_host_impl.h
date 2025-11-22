@@ -1209,6 +1209,8 @@ public:
     virtual ErrCode CreateNewBundleEl5Dir(int32_t userId) override;
     virtual ErrCode GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
         BundleInstallStatus &bundleInstallStatus) override;
+    virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
+        std::vector<JsonProfileInfo> &profileInfos) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);

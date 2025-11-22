@@ -2025,6 +2025,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetAllPluginInfo_0001, Function | MediumTes
 }
 
 /**
+ * @tc.number: HandleGetAllJsonProfile_0001
+ * @tc.name: test the HandleGetAllJsonProfile
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetAllJsonProfile
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAllJsonProfile_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetAllJsonProfile(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: HandleGetPluginInfosForSelf_0001
  * @tc.name: test the HandleGetPluginInfosForSelf
  * @tc.desc: 1. system running normally

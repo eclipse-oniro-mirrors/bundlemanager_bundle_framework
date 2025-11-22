@@ -1432,6 +1432,22 @@ HWTEST_F(BmsBundleMgrProxyTest, GetBundleInstallStatus_0001, Function | MediumTe
 }
 
 /**
+ * @tc.number: GetAllJsonProfile_0001
+ * @tc.name: test the GetAllJsonProfile
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllJsonProfile
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAllJsonProfile_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<JsonProfileInfo> profileInfos;
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.GetAllJsonProfile(ProfileType::EASY_GO_PROFILE, userId, profileInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_0001
  * @tc.name: test the RecoverBackupBundleData
  * @tc.desc: 1. system running normally
