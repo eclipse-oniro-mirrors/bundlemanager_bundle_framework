@@ -173,6 +173,8 @@ const std::string BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE =
 const std::string MODULE_NAME_EXT = "moduleName";
 const std::string BUNDLE_NAME_FOR_TEST = "com.example.example_test";
 const std::string BUNDLE_NAME_FOR_TEST_U1ENABLE = "com.example.u1Enable_test";
+const std::string PLUGIN_CODE_PATH_DIR_NEW = "/data/test/plugin_new";
+const std::string PLUGIN_CODE_PATH_DIR_OLD = "/data/test/plugin_old";
 const int32_t TEST_U100 = 100;
 const int32_t TEST_U1 = 1;
 const int32_t MAX_WAITING_TIME = 600;
@@ -12988,6 +12990,38 @@ HWTEST_F(BmsBundleInstallerTest, GetUninstallBundleInfo_0010, Function | SmallTe
 
     installer.GetUninstallBundleInfo(true, Constants::START_USERID, oldInfo, uninstallBundleInfo);
     EXPECT_FALSE(uninstallBundleInfo.userInfos.empty());
+}
+
+/**
+* @tc.number: ProcessPluginFilesWhenUpdate_0010
+* @tc.name: test ProcessPluginFilesWhenUpdate
+* @tc.desc: 1.Test ProcessPluginFilesWhenUpdate
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessPluginFilesWhenUpdate_0010, Function | MediumTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    BaseBundleInstaller installer;
+    ErrCode ret = installer.ProcessPluginFilesWhenUpdate(oldInfo, "", "");
+    EXPECT_EQ(ret, ERR_OK);
+
+    PluginBundleInfo pluginBundleInfo;
+    oldInfo.pluginBundleInfos_.insert({"plugin1", pluginBundleInfo});
+    ret = installer.ProcessPluginFilesWhenUpdate(oldInfo, "", "");
+    EXPECT_EQ(ret, ERR_OK);
+
+    OHOS::ForceCreateDirectory(PLUGIN_CODE_PATH_DIR_NEW);
+    OHOS::ForceCreateDirectory(PLUGIN_CODE_PATH_DIR_OLD);
+    ret = installer.ProcessPluginFilesWhenUpdate(oldInfo, PLUGIN_CODE_PATH_DIR_OLD, PLUGIN_CODE_PATH_DIR_NEW);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::string oldPluginPath = PLUGIN_CODE_PATH_DIR_OLD + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::PLUGIN_FILE_PATH;
+    OHOS::ForceCreateDirectory(oldPluginPath);
+    ret = installer.ProcessPluginFilesWhenUpdate(oldInfo, PLUGIN_CODE_PATH_DIR_OLD, PLUGIN_CODE_PATH_DIR_NEW);
+    EXPECT_EQ(ret, ERR_OK);
+
+    OHOS::ForceRemoveDirectory(PLUGIN_CODE_PATH_DIR_NEW);
+    OHOS::ForceRemoveDirectory(PLUGIN_CODE_PATH_DIR_OLD);
 }
 
 /**

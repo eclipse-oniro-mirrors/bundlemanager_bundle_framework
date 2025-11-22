@@ -902,4 +902,17 @@ HWTEST_F(BmsInstalldHostTest, HandleResetBmsDBSecurity_0100, Function | SmallTes
     EXPECT_TRUE(res);
 }
 
+/**
+ * @tc.number: HandleCopyDir_0100
+ * @tc.name: test HandleCopyDir_0100
+ * @tc.desc: 1.HandleCopyDir_0100 test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleCopyDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleCopyDir(data, reply);
+    EXPECT_TRUE(res);
+}
 } // OHOS

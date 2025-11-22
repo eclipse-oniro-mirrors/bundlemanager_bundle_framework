@@ -287,6 +287,8 @@ public:
      */
     ErrCode CleanBundleDirs(const std::vector<std::string> &dirs, bool keepParent);
 
+    ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();

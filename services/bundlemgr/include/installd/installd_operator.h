@@ -325,6 +325,14 @@ public:
 
     static bool ResetBmsDBSecurity();
 
+    /**
+     * @brief Copy directory Recursively from source dir to destination dir.
+     * @param sourceDir Indicates the source dir.
+     * @param destinationDir Indicates the destination dir.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    static bool CopyDir(const std::string &sourceDir, const std::string &destinationDir);
+
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);

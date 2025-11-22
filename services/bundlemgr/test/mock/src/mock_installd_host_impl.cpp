@@ -388,5 +388,10 @@ ErrCode InstalldHostImpl::ResetBmsDBSecurity()
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

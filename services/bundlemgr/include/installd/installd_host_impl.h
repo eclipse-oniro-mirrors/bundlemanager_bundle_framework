@@ -278,6 +278,8 @@ public:
 
     virtual ErrCode ResetBmsDBSecurity() override;
 
+    virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
+
 private:
     static std::string GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid);
     std::string GetExtensionConfigPath() const;

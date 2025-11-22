@@ -1379,4 +1379,18 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7300, Function | SmallTest |
     auto ret = proxy->CleanBundleDirs(dirs, true);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_7400
+ * @tc.name: test Marshalling function of CopyDir
+ * @tc.desc: 1. calling CopyDir of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7400, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->CopyDir("", "");
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

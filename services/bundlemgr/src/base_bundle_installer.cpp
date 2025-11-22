@@ -8045,6 +8045,11 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     if (result != ERR_OK) {
         APP_LOGE("copy extend resource to install path failed %{public}d", result);
     }
+    // process plugin dir
+    result = ProcessPluginFilesWhenUpdate(oldInfo, oldAppCodePath, realAppCodePath);
+    if (result != ERR_OK) {
+        APP_LOGE("copy plugin file to install path failed %{public}d", result);
+    }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBundleCodePath end -n %{public}s", bundleName.c_str());
     return ERR_OK;
 }
@@ -8085,6 +8090,35 @@ ErrCode BaseBundleInstaller::ProcessDynamicIconFileWhenUpdate(
         }
     }
     APP_LOGI("-n %{public}s has dynamic icon, process end", oldInfo.GetBundleName().c_str());
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ProcessPluginFilesWhenUpdate(
+    const InnerBundleInfo &oldInfo,
+    const std::string &oldPath,
+    const std::string &newPath)
+{
+    auto pluginInfos = oldInfo.GetAllPluginBundleInfo();
+    if (pluginInfos.empty()) {
+        return ERR_OK;
+    }
+    APP_LOGI("-n %{public}s has plugin", oldInfo.GetBundleName().c_str());
+    std::string oldPluginPath = oldPath + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::PLUGIN_FILE_PATH;
+    bool isPluginDir = false;
+    InstalldClient::GetInstance()->IsExistDir(oldPluginPath, isPluginDir);
+    if (!isPluginDir) {
+        APP_LOGW("-n %{public}s old plugin path not exist", oldInfo.GetBundleName().c_str());
+        return ERR_OK;
+    }
+    std::string newPluginPath = newPath + ServiceConstants::PATH_SEPARATOR +
+        ServiceConstants::PLUGIN_FILE_PATH;
+    auto result = InstalldClient::GetInstance()->CopyDir(oldPluginPath, newPluginPath);
+    if (result != ERR_OK) {
+        APP_LOGE("-n %{public}s copy plugin file failed", oldInfo.GetBundleName().c_str());
+        return result;
+    }
+    APP_LOGI("-n %{public}s process plugin file end", oldInfo.GetBundleName().c_str());
     return ERR_OK;
 }
 

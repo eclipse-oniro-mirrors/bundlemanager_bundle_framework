@@ -1943,5 +1943,18 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ResetBmsDBSecurity_0100, T
     ErrCode result = installClient_->ResetBmsDBSecurity();
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_CopyDir_0100
+ * @tc.name: CopyDir
+ * @tc.desc: Test whether CopyDir is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyDir_0100, TestSize.Level1)
+{
+    std::string srcDir = "/data/app/el1/bundle/public/com.example.source/";
+    std::string destDir = "/data/app/el1/bundle/public/com.example.destination/";
+    ErrCode result = installClient_->CopyDir(srcDir, destDir);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

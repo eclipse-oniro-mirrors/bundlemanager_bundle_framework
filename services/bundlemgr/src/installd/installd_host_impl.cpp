@@ -2790,5 +2790,22 @@ ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, 
     }
     return ret;
 }
+
+ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (sourceDir.empty() || destinationDir.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "empty sourceDir or destinationDir");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::CopyDir(sourceDir, destinationDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "CopyDir failed");
+        return ERR_APPEXECFWK_INSTALLD_COPY_DIR_FAILED;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

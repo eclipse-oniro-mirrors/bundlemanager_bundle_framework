@@ -259,6 +259,8 @@ private:
     bool HandleRestoreconPath(MessageParcel &data, MessageParcel &reply);
     
     bool HandleResetBmsDBSecurity(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCopyDir(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
