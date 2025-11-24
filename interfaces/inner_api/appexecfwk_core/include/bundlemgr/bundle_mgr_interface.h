@@ -1919,12 +1919,6 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode BatchGetCompatibleDeviceType(
-        const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
     virtual ErrCode CreateNewBundleEl5Dir(int32_t userId)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
@@ -1938,6 +1932,12 @@ public:
 
     virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode BatchGetCompatibleDeviceType(
+        const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

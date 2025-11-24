@@ -6749,40 +6749,6 @@ ErrCode BundleMgrProxy::RemoveBackupBundleData(const std::string &bundleName,
     }
     return reply.ReadInt32();
 }
- 
-ErrCode BundleMgrProxy::BatchGetCompatibleDeviceType(
-    const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    APP_LOGD("begin to batch get specified distributionType, bundle name count=%{public}u",
-        static_cast<unsigned int>(bundleNames.size()));
-    if (bundleNames.empty()) {
-        APP_LOGE("fail to BatchGetCompatibleDeviceType due to params empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
-        APP_LOGE("fail to BatchGetCompatibleDeviceType due to bundleName count is error");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to BatchGetCompatibleDeviceType due to write InterfaceToken fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteInt32(static_cast<int32_t>(bundleNames.size()))) {
-        APP_LOGE("fail to BatchGetCompatibleDeviceType due to write bundle name count fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        if (!data.WriteString(bundleNames[i])) {
-            APP_LOGE("write bundleName %{public}zu failed", i);
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-    }
- 
-    return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE,
-        data, compatibleDeviceTypes);
-}
 
 ErrCode BundleMgrProxy::CreateNewBundleEl5Dir(int32_t userId)
 {
@@ -6854,6 +6820,40 @@ ErrCode BundleMgrProxy::GetAllJsonProfile(ProfileType profileType, int32_t userI
     }
     return GetVectorFromParcelIntelligentWithErrCode<JsonProfileInfo>(
         BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE, data, profileInfos);
+}
+
+ErrCode BundleMgrProxy::BatchGetCompatibleDeviceType(
+    const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("begin to batch get specified distributionType, bundle name count=%{public}u",
+        static_cast<unsigned int>(bundleNames.size()));
+    if (bundleNames.empty()) {
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to bundleName count is error");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(bundleNames.size()))) {
+        APP_LOGE("fail to BatchGetCompatibleDeviceType due to write bundle name count fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (size_t i = 0; i < bundleNames.size(); i++) {
+        if (!data.WriteString(bundleNames[i])) {
+            APP_LOGE("write bundleName %{public}zu failed", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE,
+        data, compatibleDeviceTypes);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

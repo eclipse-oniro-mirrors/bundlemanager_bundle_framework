@@ -723,9 +723,6 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::REMOVE_BACKUP_BUNDLE_DATA):
             errCode = HandleRemoveBackupBundleData(data, reply);
             break;
-        case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE):
-            errCode = HandleBatchGetCompatibleDeviceType(data, reply);
-            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_NEW_BUNDLE_EL5_DIR):
             errCode = HandleCreateNewBundleEl5Dir(data, reply);
             break;
@@ -734,6 +731,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE):
             errCode = HandleGetAllJsonProfile(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE):
+            errCode = HandleBatchGetCompatibleDeviceType(data, reply);
             break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
