@@ -1177,6 +1177,8 @@ public:
 
     virtual ErrCode GetCompatibleDeviceTypeNative(std::string &deviceType) override;
     virtual ErrCode GetCompatibleDeviceType(const std::string &bundleName, std::string &deviceType) override;
+    virtual ErrCode BatchGetCompatibleDeviceType(const std::vector<std::string> &bundleNames,
+        std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes) override;
     virtual ErrCode GetBundleNameByAppId(const std::string &appId, std::string &bundleName) override;
     virtual ErrCode GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
         std::vector<PluginBundleInfo> &pluginBundleInfos) override;

@@ -5746,6 +5746,21 @@ ErrCode BundleMgrHostImpl::GetCompatibleDeviceType(const std::string &bundleName
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::BatchGetCompatibleDeviceType(
+    const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    return bmsExtensionDataMgr.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+}
+
 ErrCode BundleMgrHostImpl::GetAllPluginInfo(const std::string &hostBundleName, int32_t userId,
     std::vector<PluginBundleInfo> &pluginBundleInfos)
 {
