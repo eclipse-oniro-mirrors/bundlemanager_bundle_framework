@@ -139,6 +139,7 @@ constexpr const char* DEVELOPER_ID = "developerId";
 constexpr const char* ODID = "odid";
 constexpr const char* UNINSTALL_STATE = "uninstallState";
 constexpr const char* PLUGIN_BUNDLE_INFOS = "pluginBundleInfos";
+constexpr const char* IS_DELAY_ADING = "isDelayAging";
 constexpr int8_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -376,6 +377,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->odid_ = info.odid_;
     this->uninstallState_ = info.uninstallState_;
     this->pluginBundleInfos_ = info.pluginBundleInfos_;
+    this->isDelayAging_ = info.isDelayAging_;
     return *this;
 }
 
@@ -558,6 +560,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[DEVELOPER_ID] = developerId_;
     jsonObject[ODID] = odid_;
     jsonObject[UNINSTALL_STATE] = uninstallState_;
+    jsonObject[IS_DELAY_ADING] = isDelayAging_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -1592,6 +1595,12 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             jsonObjectEnd,
             UNINSTALL_STATE,
             uninstallState_,
+            false,
+            parseResult);
+        BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+            jsonObjectEnd,
+            IS_DELAY_ADING,
+            isDelayAging_,
             false,
             parseResult);
         if (parseResult != ERR_OK) {

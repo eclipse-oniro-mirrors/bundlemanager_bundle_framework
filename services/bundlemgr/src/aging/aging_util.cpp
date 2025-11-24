@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,12 @@ bool AgingUtil::SortTwoAgingBundleInfos(AgingBundleInfo &bundle1, AgingBundleInf
     int64_t time10DaysAgo = GetUnusedTimeMsBaseOnCurrentTime(currentTimeMs, AgingConstants::TIME_10_DAYS);
     int64_t time20DaysAgo = GetUnusedTimeMsBaseOnCurrentTime(currentTimeMs, AgingConstants::TIME_20_DAYS);
     int64_t time30DaysAgo = GetUnusedTimeMsBaseOnCurrentTime(currentTimeMs, AgingConstants::TIME_30_DAYS);
+    if (bundle1.IsDelayAging() && !bundle2.IsDelayAging()) {
+        return false;
+    }
+    if (!bundle1.IsDelayAging() && bundle2.IsDelayAging()) {
+        return true;
+    }
     bool sortByUseTimes =
         (bundle1.GetRecentlyUsedTime() >= time10DaysAgo && bundle2.GetRecentlyUsedTime() >= time10DaysAgo) ||
         (bundle1.GetRecentlyUsedTime() < time10DaysAgo && bundle1.GetRecentlyUsedTime() >= time20DaysAgo &&

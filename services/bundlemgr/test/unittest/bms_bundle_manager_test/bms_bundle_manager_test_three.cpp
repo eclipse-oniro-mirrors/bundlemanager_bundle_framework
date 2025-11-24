@@ -739,8 +739,8 @@ HWTEST_F(BmsBundleManagerTest3, AgingUtilTest_0001, Function | SmallTest | Level
 HWTEST_F(BmsBundleManagerTest3, AgingUtilTest_0002, Function | SmallTest | Level1)
 {
     std::vector<AgingBundleInfo> bundles;
-    AgingBundleInfo bundle1("bundle1", 0, 0);
-    AgingBundleInfo bundle2("bundle2", 0, 0);
+    AgingBundleInfo bundle1("bundle1", 0, 0, 0);
+    AgingBundleInfo bundle2("bundle2", 0, 0, 0);
     bundles.push_back(bundle1);
     bundles.push_back(bundle2);
     AgingUtil::SortAgingBundles(bundles);
