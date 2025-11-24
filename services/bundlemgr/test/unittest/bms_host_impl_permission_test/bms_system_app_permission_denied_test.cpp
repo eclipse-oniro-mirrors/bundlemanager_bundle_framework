@@ -908,7 +908,7 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0050, TestSize.Leve
  * @tc.name: BmsSystemAppPermissionDeniedTest
  * @tc.desc: BatchGetCompatibleDeviceType SystemAppPermission Denied
  */
-HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0049, TestSize.Level1)
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0051, TestSize.Level1)
 {
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
