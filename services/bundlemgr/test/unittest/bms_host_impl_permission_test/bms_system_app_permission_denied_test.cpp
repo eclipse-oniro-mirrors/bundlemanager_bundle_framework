@@ -904,7 +904,7 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0050, TestSize.Leve
 }
 
 /**
- * @tc.number: BundleMgrHostImpl_0049
+ * @tc.number: BundleMgrHostImpl_0051
  * @tc.name: BmsSystemAppPermissionDeniedTest
  * @tc.desc: BatchGetCompatibleDeviceType SystemAppPermission Denied
  */
