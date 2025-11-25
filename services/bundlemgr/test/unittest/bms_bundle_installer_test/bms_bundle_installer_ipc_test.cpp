@@ -860,6 +860,7 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_1600, Function | SmallTe
     MessageParcel datas;
     std::u16string descriptor = InstalldHost::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(0);
     datas.WriteBuffer(DATA, DATA_SIZE);
     datas.RewindRead(0);
     MessageParcel reply;
@@ -1259,8 +1260,7 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleExtractHnpFiles_0100, Function | Small
 {
     InstalldHost host;
     MessageParcel datas;
-    std::u16string descriptor = InstalldHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(0);
     datas.WriteBuffer(DATA, DATA_SIZE);
     datas.RewindRead(0);
     MessageParcel reply;

@@ -3364,9 +3364,9 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1700, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1800, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    std::string hnpPackageInfo;
+    std::map<std::string, std::string> hnpPackageMap;
     ExtractParam extractParam;
-    auto ret = impl.ExtractHnpFiles(hnpPackageInfo, extractParam);
+    auto ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -7167,9 +7167,9 @@ HWTEST_F(BmsBundleInstallerTest, ExtractHnpFileDir_0100, Function | SmallTest | 
 {
     BaseBundleInstaller installer;
     std::string cpuAbi;
-    std::string hnpPackageInfoString;
+    std::map<std::string, std::string> hnpPackageMap;
     std::string modulePath;
-    ErrCode ret = installer.ExtractHnpFileDir(cpuAbi, hnpPackageInfoString, modulePath);
+    ErrCode ret = installer.ExtractHnpFileDir(cpuAbi, hnpPackageMap, modulePath);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED);
 }
 

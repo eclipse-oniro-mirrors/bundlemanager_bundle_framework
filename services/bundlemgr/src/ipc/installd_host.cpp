@@ -314,14 +314,21 @@ bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
 
 bool InstalldHost::HandleExtractHnpFiles(MessageParcel &data, MessageParcel &reply)
 {
-    std::string hnpPackageInfo = Str16ToStr8(data.ReadString16());
+    std::map<std::string, std::string> hnpPackageMap;
+    int32_t mapSize = data.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(data, mapSize, &hnpPackageMap);
+    for (int32_t i = 0; i < mapSize; ++i) {
+        std::string package = Str16ToStr8(data.ReadString16());
+        std::string type = Str16ToStr8(data.ReadString16());
+        hnpPackageMap.try_emplace(package, type);
+    }
     std::unique_ptr<ExtractParam> info(data.ReadParcelable<ExtractParam>());
     if (info == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
         return false;
     }
 
-    ErrCode result = ExtractHnpFiles(hnpPackageInfo, *info);
+    ErrCode result = ExtractHnpFiles(hnpPackageMap, *info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

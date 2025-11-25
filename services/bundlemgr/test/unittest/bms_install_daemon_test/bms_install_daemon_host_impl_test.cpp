@@ -955,20 +955,20 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5300, Function | Sma
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
 
-    std::string hnpPackageInfo = "";
+    std::map<std::string, std::string> hnpPackageMap;
     ExtractParam extractParam;
     extractParam.srcPath = "";
     extractParam.targetPath = "";
-    ErrCode ret = installdProxy->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    ErrCode ret = installdProxy->ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_NE(ret, ERR_OK);
 
     extractParam.targetPath = TEST_PATH;
-    ret = installdProxy->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    ret = installdProxy->ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_NE(ret, ERR_OK);
 
     extractParam.targetPath = "";
     extractParam.srcPath = HAP_FILE_PATH;
-    ret = installdProxy->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    ret = installdProxy->ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_NE(ret, ERR_OK);
 }
 

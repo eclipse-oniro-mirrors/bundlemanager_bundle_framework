@@ -227,11 +227,11 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractFiles_0300, TestSiz
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0100 start";
-    std::string hnpPackageInfo = EMPTY_STRING;
+    std::map<std::string, std::string> hnpPackageMap;
     ExtractParam extractParam;
     extractParam.srcPath = EMPTY_STRING;
     extractParam.targetPath = TARGET_PATH;
-    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0100 end";
 }
@@ -244,11 +244,11 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0100, Test
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0200 start";
-    std::string hnpPackageInfo = "hnpPackageInfo";
+    std::map<std::string, std::string> hnpPackageMap;
     ExtractParam extractParam;
     extractParam.srcPath = SRC_PATH;
     extractParam.targetPath = EMPTY_STRING;
-    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0200 end";
 }
@@ -261,12 +261,15 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0200, Test
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0300, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0300 start";
-    std::string hnpPackageInfo = "hnpPackageInfo";
+    std::map<std::string, std::string> hnpPackageMap = {
+        {"package", "hello.hnp"},
+        {"typp", "public"}
+    };
     ExtractParam extractParam;
     extractParam.srcPath = SRC_PATH;
     extractParam.targetPath = TARGET_PATH;
-    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageInfo, extractParam);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractHnpFiles, hnpPackageInfo, extractParam));
+    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageMap, extractParam);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractHnpFiles, hnpPackageMap, extractParam));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0300 end";
 }
 

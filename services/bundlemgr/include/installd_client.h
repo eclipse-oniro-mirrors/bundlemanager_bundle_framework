@@ -209,7 +209,7 @@ public:
 
     ErrCode ExtractFiles(const ExtractParam &extractParam);
 
-    ErrCode ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam);
+    ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap, const ExtractParam &extractParam);
 
     ErrCode ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
         const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName);

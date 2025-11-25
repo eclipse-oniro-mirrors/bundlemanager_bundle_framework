@@ -413,9 +413,9 @@ bool BmsBundleInstallerPermissionTest::WriteToConfigFile(const std::string &bund
 HWTEST_F(BmsBundleInstallerPermissionTest, ExtractHnpFiles_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl installdHostImpl;
-    std::string hnpPackageInfo;
+    std::map<std::string, std::string> hnpPackageMap;
     ExtractParam extractParam;
-    auto ret = installdHostImpl.ExtractHnpFiles(hnpPackageInfo, extractParam);
+    auto ret = installdHostImpl.ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

@@ -40,7 +40,8 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
+    const ExtractParam &extractParam)
 {
     return ERR_OK;
 }

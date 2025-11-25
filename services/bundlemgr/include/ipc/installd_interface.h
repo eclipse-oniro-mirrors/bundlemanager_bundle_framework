@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_INSTALLD_INTERFACE_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_INSTALLD_INTERFACE_H
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -71,11 +72,12 @@ public:
 
     /**
      * @brief Extract the hnpFiles.
-     * @param hnpPackageInfo Indicates the hnpPackageInfo.
+     * @param hnpPackageMap Indicates the hnpPackageInfo.
      * @param extractParam Indicates the extractParam.
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
-    virtual ErrCode ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+    virtual ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
+        const ExtractParam &extractParam)
     {
         return ERR_OK;
     }
