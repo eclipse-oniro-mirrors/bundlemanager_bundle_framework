@@ -5761,6 +5761,39 @@ void InnerBundleInfo::UpdateHasCloudkitConfig()
     }
 }
 
+std::vector<HapHashAndDeveloperCert> InnerBundleInfo::GetModuleHapHash()
+{
+    std::vector<std::string> noHashHaps;
+    std::vector<HapHashAndDeveloperCert> hapHashAndDeveloperCerts;
+    for (auto it = innerModuleInfos_.begin(); it != innerModuleInfos_.end(); it++) {
+        if (!it->second.hapPath.empty()) {
+            std::string hapHash = it->second.hashValue;
+            // set hapsHash
+            if (hapHash.empty()) {
+                noHashHaps.push_back(it->second.hapPath);
+                continue;
+            }
+            APP_LOGD("Sha256File: %{public}s hash: %{public}s", it->second.hapPath.c_str(), hapHash.c_str());
+            HapHashAndDeveloperCert hap;
+            hap.path = it->second.hapPath;
+            hap.hash = hapHash;
+            hapHashAndDeveloperCerts.emplace_back(hap);
+        }
+    }
+    if (!noHashHaps.empty()) {
+        std::vector<std::string> hapsHash;
+        if (InstalldClient::GetInstance()->HashFiles(noHashHaps, hapsHash) == ERR_OK) {
+            for (size_t i = 0; i < noHashHaps.size(); i++) {
+                HapHashAndDeveloperCert hap;
+                hap.path = noHashHaps[i];
+                hap.hash = hapsHash[i];
+                hapHashAndDeveloperCerts.emplace_back(hap);
+            }
+        }
+    }
+    return hapHashAndDeveloperCerts;
+}
+
 bool InnerBundleInfo::GetModuleDeduplicateHar() const
 {
     bool hasDedupLicateHarInHsp = false;

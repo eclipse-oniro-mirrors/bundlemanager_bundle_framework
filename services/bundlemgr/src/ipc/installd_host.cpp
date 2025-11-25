@@ -252,6 +252,12 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::LOAD_INSTALLS):
             result = HandleLoadInstalls(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_SO_HASH):
+            result = HandleHashSoFile(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_FILES_HASH):
+            result = HandleHashFiles(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::CLEAR_DIR):
             result = HandleClearDir(data, reply);
             break;
@@ -1185,6 +1191,46 @@ bool InstalldHost::HandleClearDir(MessageParcel &data, MessageParcel &reply)
     std::string dir = data.ReadString();
     ErrCode result = ClearDir(dir);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleHashSoFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string soPath = data.ReadString();
+    uint32_t catchSoNum = data.ReadUint32();
+    uint64_t catchSoMaxSize = data.ReadUint64();
+    std::vector<std::string> soName;
+    std::vector<std::string> soHash;
+    ErrCode result = HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    
+    if (!reply.WriteStringVector(soName)) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to get so name from reply");
+        return false;
+    }
+    if (!reply.WriteStringVector(soHash)) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to get so hash from reply");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandleHashFiles(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t size = data.ReadInt32();
+    std::vector<std::string> files;
+    CONTAINER_SECURITY_VERIFY(data, size, &files);
+    for (int32_t index = 0; index < size; ++index) {
+        std::string path = Str16ToStr8(data.ReadString16());
+        files.emplace_back(path);
+    }
+    std::vector<std::string> filesHash;
+    ErrCode result = HashFiles(files, filesHash);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteStringVector(filesHash)) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to get so name from reply");
+        return false;
+    }
     return true;
 }
 

@@ -62,6 +62,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
 void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInfo);
 void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo);
 void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo);
+void to_json(nlohmann::json &jsonObject, const BundleInfoForException &bundleInfoForException);
+void from_json(const nlohmann::json &jsonObject, BundleInfoForException &bundleInfoForException);
 void to_json(nlohmann::json &jsonObject, const ModuleInfo &moduleInfo);
 void from_json(const nlohmann::json &jsonObject, ModuleInfo &moduleInfo);
 void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo);

@@ -236,6 +236,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     CREATE_NEW_BUNDLE_EL5_DIR = 210,
     GET_BUNDLE_INSTALL_STATUS = 211,
     GET_ALL_JSON_PROFILE = 212,
+    GET_BUNDLE_INFO_FOR_EXCEPTION = 213,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

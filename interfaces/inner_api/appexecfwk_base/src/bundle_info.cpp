@@ -85,6 +85,13 @@ const char* APP_IDENTIFIER = "appIdentifier";
 const char* BUNDLE_INFO_OLD_APPIDS = "oldAppIds";
 const char* BUNDLE_INFO_ROUTER_ARRAY = "routerArray";
 const char* BUNDLE_INFO_IS_NEW_VERSION = "isNewVersion";
+const char* BUNDLE_INFO_ALLOWED_ACLS = "allowedAcls";
+const char* BUNDLE_INFO_ABILITY_NAMES = "abilityNames";
+const char* BUNDLE_INFO_HAP_HASH_AND_DEVELOPER_CERT = "hapHashValueAndDevelopCerts";
+const char* BUNDLE_INFO_SO_HASH = "soHash";
+const char* HAP_PATH = "hapPath";
+const char* HAP_HASH_VALUE = "hapHashValue";
+const char* HAP_DEVELOPER_CERT = "hapDeveloperCert";
 const uint32_t BUNDLE_CAPACITY = 204800; // 200K
 }
 
@@ -220,6 +227,181 @@ std::string SimpleAppInfo::ToString() const
     nlohmann::json jsonObject;
     to_json(jsonObject, *this);
     return jsonObject.dump();
+}
+
+bool HapHashAndDeveloperCert::ReadFromParcel(Parcel &parcel)
+{
+    path = Str16ToStr8(parcel.ReadString16());
+    hash = Str16ToStr8(parcel.ReadString16());
+    developCert = Str16ToStr8(parcel.ReadString16());
+    return true;
+}
+
+bool HapHashAndDeveloperCert::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(path));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hash));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(developCert));
+    return true;
+}
+
+HapHashAndDeveloperCert *HapHashAndDeveloperCert::Unmarshalling(Parcel &parcel)
+{
+    HapHashAndDeveloperCert *info = new (std::nothrow) HapHashAndDeveloperCert();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const HapHashAndDeveloperCert &hapHashAndDeveloperCert)
+{
+    jsonObject = nlohmann::json {
+        {HAP_PATH, hapHashAndDeveloperCert.path},
+        {HAP_HASH_VALUE, hapHashAndDeveloperCert.hash},
+        {HAP_DEVELOPER_CERT, hapHashAndDeveloperCert.developCert}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, HapHashAndDeveloperCert &hapHashAndDeveloperCert)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_PATH,
+        hapHashAndDeveloperCert.path,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_HASH_VALUE,
+        hapHashAndDeveloperCert.hash,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_DEVELOPER_CERT,
+        hapHashAndDeveloperCert.developCert,
+        false,
+        parseResult);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read database error : %{public}d", parseResult);
+    }
+}
+
+bool BundleInfoForException::ReadFromParcel(Parcel &parcel)
+{
+    int32_t aclSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, aclSize);
+    CONTAINER_SECURITY_VERIFY(parcel, aclSize, &allowedAcls);
+    for (int32_t i = 0; i < aclSize; ++i) {
+        std::string acl = Str16ToStr8(parcel.ReadString16());
+        allowedAcls.emplace_back(acl);
+    }
+
+    int32_t abilitySize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilitySize);
+    CONTAINER_SECURITY_VERIFY(parcel, abilitySize, &abilityNames);
+    for (int32_t i = 0; i < abilitySize; ++i) {
+        std::string ability = Str16ToStr8(parcel.ReadString16());
+        abilityNames.emplace_back(ability);
+    }
+
+    int32_t hapSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapSize);
+    CONTAINER_SECURITY_VERIFY(parcel, hapSize, &hapHashValueAndDevelopCerts);
+    for (int32_t i = 0; i < hapSize; ++i) {
+        std::unique_ptr<HapHashAndDeveloperCert> hapHashAndCert(parcel.ReadParcelable<HapHashAndDeveloperCert>());
+        if (!hapHashAndCert) {
+            APP_LOGE("ReadParcelable<HapHashAndDeveloperCert> failed");
+            return false;
+        }
+        hapHashValueAndDevelopCerts.emplace_back(*hapHashAndCert);
+    }
+
+    int32_t soSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, soSize);
+    CONTAINER_SECURITY_VERIFY(parcel, soSize, &soHash);
+    for (int32_t i = 0; i < soSize; ++i) {
+        std::string soPath = Str16ToStr8(parcel.ReadString16());
+        std::string soHashValue = Str16ToStr8(parcel.ReadString16());
+        soHash.try_emplace(soPath, soHashValue);
+    }
+    return true;
+}
+
+bool BundleInfoForException::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, allowedAcls.size());
+    for (auto &acl : allowedAcls) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(acl));
+    }
+    
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityNames.size());
+    for (auto &ability : abilityNames) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(ability));
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapHashValueAndDevelopCerts.size());
+    for (auto &item : hapHashValueAndDevelopCerts) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, soHash.size());
+    for (auto &item : soHash) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item.second));
+    }
+
+    return true;
+}
+
+BundleInfoForException *BundleInfoForException::Unmarshalling(Parcel &parcel)
+{
+    BundleInfoForException *info = new (std::nothrow) BundleInfoForException();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const BundleInfoForException &bundleInfoForException)
+{
+    jsonObject = nlohmann::json {
+        {BUNDLE_INFO_ALLOWED_ACLS, bundleInfoForException.allowedAcls},
+        {BUNDLE_INFO_ABILITY_NAMES, bundleInfoForException.abilityNames},
+        {BUNDLE_INFO_HAP_HASH_AND_DEVELOPER_CERT, bundleInfoForException.hapHashValueAndDevelopCerts},
+        {BUNDLE_INFO_SO_HASH, bundleInfoForException.soHash}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, BundleInfoForException &bundleInfoForException)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, BUNDLE_INFO_ALLOWED_ACLS,
+        bundleInfoForException.allowedAcls, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, BUNDLE_INFO_ABILITY_NAMES,
+        bundleInfoForException.abilityNames, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::vector<HapHashAndDeveloperCert>>(jsonObject, jsonObjectEnd,
+        BUNDLE_INFO_HAP_HASH_AND_DEVELOPER_CERT,
+        bundleInfoForException.hapHashValueAndDevelopCerts, JsonType::ARRAY, false, parseResult, ArrayType::OBJECT);
+    GetMapValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_SO_HASH,
+        bundleInfoForException.soHash,
+        false,
+        parseResult,
+        JsonType::STRING,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("BundleInfoForException from_json error %{public}d", parseResult);
+    }
 }
 
 bool BundleInfo::ReadFromParcel(Parcel &parcel)

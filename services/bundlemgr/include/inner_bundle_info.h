@@ -2172,6 +2172,11 @@ public:
         baseApplicationInfo_->organization = organization;
     }
 
+    std::string GetOrganization()
+    {
+        return baseApplicationInfo_->organization;
+    }
+
     int32_t GetMultiAppMaxCount() const
     {
         return baseApplicationInfo_->multiAppMode.maxCount;
@@ -2375,6 +2380,7 @@ public:
     std::string GetApplicationArkTSMode() const;
     void UpdateHasCloudkitConfig();
     int32_t GetModuleSize() const;
+    std::vector<HapHashAndDeveloperCert> GetModuleHapHash();
     bool GetModuleDeduplicateHar() const;
     std::optional<InnerModuleInfo> GetInnerModuleInfoForEntry() const;
     void SetDelayedAging(bool isDelayAging)

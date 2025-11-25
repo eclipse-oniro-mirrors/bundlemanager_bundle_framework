@@ -676,6 +676,17 @@ ErrCode InstalldClient::ClearDir(const std::string &dir)
     return CallService(&IInstalld::ClearDir, dir);
 }
 
+ErrCode InstalldClient::HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+    std::vector<std::string> &soName, std::vector<std::string> &soHash)
+{
+    return CallService(&IInstalld::HashSoFile, soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+}
+
+ErrCode InstalldClient::HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash)
+{
+    return CallService(&IInstalld::HashFiles, files, filesHash);
+}
+
 ErrCode InstalldClient::RestoreconPath(const std::string &path)
 {
     return CallService(&IInstalld::RestoreconPath, path);
