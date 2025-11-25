@@ -182,6 +182,7 @@ ErrCode BmsExtensionDataMgr::GetBundleInfos(int32_t flags, std::vector<BundleInf
             LOG_W(BMS_TAG_QUERY, "bundleMgrExtPtr is nullptr");
             return ERR_APPEXECFWK_NULL_PTR;
         }
+        APP_LOGI_NOFUNC("EXT GetBundleInfos");
         return bundleMgrExtPtr->GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
     }
     LOG_W(BMS_TAG_QUERY, "access bms-extension failed");
@@ -198,9 +199,9 @@ ErrCode BmsExtensionDataMgr::GetBundleInfo(const std::string &bundleName, int32_
             LOG_W(BMS_TAG_QUERY, "bundleMgrExtPtr is nullptr");
             return ERR_APPEXECFWK_NULL_PTR;
         }
+        APP_LOGI_NOFUNC("EXT GetBundleInfo");
         return bundleMgrExtPtr->GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
     }
-    LOG_W(BMS_TAG_QUERY, "access bms-extension failed");
     return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
 }
 
@@ -213,6 +214,7 @@ ErrCode BmsExtensionDataMgr::Uninstall(const std::string &bundleName)
             APP_LOGW("bundleMgrExtPtr is nullptr");
             return ERR_APPEXECFWK_NULL_PTR;
         }
+        APP_LOGI_NOFUNC("EXT Uninstall -n %{public}s", bundleName.c_str());
         return bundleMgrExtPtr->Uninstall(bundleName);
     }
     APP_LOGW("access bms-extension failed");
@@ -247,6 +249,7 @@ ErrCode BmsExtensionDataMgr::ClearData(const std::string &bundleName, int32_t us
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT ClearData");
     return bundleMgrExtPtr->ClearData(bundleName, userId);
 }
 
@@ -263,6 +266,8 @@ ErrCode BmsExtensionDataMgr::BackupBundleData(const std::string &bundleName,
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT BackupBundleData -n %{public}s -u %{public}d -i %{public}d",
+        bundleName.c_str(), userId, appIndex);
     return bundleMgrExtPtr->BackupBundleData(bundleName, userId, appIndex);
 }
 
@@ -278,6 +283,7 @@ ErrCode BmsExtensionDataMgr::ClearCache(const std::string &bundleName, sptr<IRem
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT ClearCache -n %{public}s -u %{public}d", bundleName.c_str(), userId);
     return bundleMgrExtPtr->ClearCache(bundleName, callback, userId);
 }
 
@@ -293,6 +299,7 @@ ErrCode BmsExtensionDataMgr::GetUidByBundleName(const std::string &bundleName, i
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT GetUidByBundleName -n %{public}s -u %{public}d", bundleName.c_str(), userId);
     return bundleMgrExtPtr->GetUidByBundleName(bundleName, userId, uid);
 }
 
@@ -323,6 +330,7 @@ ErrCode BmsExtensionDataMgr::VerifyActivationLock(bool &res)
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT VerifyActivationLock");
     return bundleMgrExtPtr->VerifyActivationLock(res);
 }
 
@@ -338,6 +346,7 @@ ErrCode BmsExtensionDataMgr::GetBackupUninstallList(int32_t userId, std::set<std
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT GetBackupUninstallList -u %{public}d", userId);
     return bundleMgrExtPtr->GetBackupUninstallList(userId, uninstallBundles);
 }
 
@@ -353,6 +362,7 @@ ErrCode BmsExtensionDataMgr::ClearBackupUninstallFile(int32_t userId)
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT ClearBackupUninstallFile -u %{public}d", userId);
     return bundleMgrExtPtr->ClearBackupUninstallFile(userId);
 }
 
@@ -368,6 +378,7 @@ bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName, const 
         APP_LOGW("GetBundleMgrExt failed");
         return false;
     }
+    APP_LOGI_NOFUNC("EXT IsAppInBlocklist");
     return bundleMgrExtPtr->IsAppInBlocklist(bundleName, userId);
 }
 
@@ -384,6 +395,7 @@ bool BmsExtensionDataMgr::CheckWhetherCanBeUninstalled(const std::string &bundle
         APP_LOGW("GetBundleMgrExt failed");
         return true;
     }
+    APP_LOGI_NOFUNC("EXT CheckWhetherCanBeUninstalled");
     return bundleMgrExtPtr->CheckWhetherCanBeUninstalled(bundleName, appIdentifier);
 }
 
@@ -399,6 +411,7 @@ ErrCode BmsExtensionDataMgr::AddResourceInfoByBundleName(const std::string &bund
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT AddResourceInfoByBundleName -n %{public}s -u %{public}d", bundleName.c_str(), userId);
     ErrCode ret = bundleMgrExtPtr->AddResourceInfoByBundleName(bundleName, userId);
     APP_LOGD("call bundle mgr ext return %{public}d by bundleName:%{public}s userId:%{private}d",
         ret, bundleName.c_str(), userId);
@@ -418,6 +431,8 @@ ErrCode BmsExtensionDataMgr::AddResourceInfoByAbility(const std::string &bundleN
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT AddResourceInfoByAbility -n %{public}s -m %{public}s -a %{public}s -u %{public}d",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId);
     ErrCode ret = bundleMgrExtPtr->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId);
     APP_LOGD("call bundle mgr ext return %{public}d by bundleName:%{public}s moduleName:%{public}s \
         abilityName:%{public}s userId:%{private}d",
@@ -437,6 +452,7 @@ ErrCode BmsExtensionDataMgr::DeleteResourceInfo(const std::string &key)
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT DeleteResourceInfo key %{public}s", key.c_str());
     ErrCode ret = bundleMgrExtPtr->DeleteResourceInfo(key);
     APP_LOGD("call bundle mgr ext return %{public}d by key:%{private}s", ret, key.c_str());
     return ret;
@@ -455,6 +471,7 @@ ErrCode BmsExtensionDataMgr::KeyOperation(
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_OK;
     }
+    APP_LOGI_NOFUNC("EXT KeyOperation type %{public}d", type);
     auto ret = bundleMgrExtPtr->KeyOperation(codeProtectBundleInfos, type);
     if (!codeProtectBundleInfos.empty()) {
         APP_LOGI("KeyOperation %{public}s %{public}d ret %{public}d",
@@ -534,6 +551,7 @@ ErrCode BmsExtensionDataMgr::GetAllBundleResourceInfo(const uint32_t flags,
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT GetAllBundleResourceInfo");
     ErrCode ret = bundleMgrExtPtr->GetAllBundleResourceInfo(flags, bundleResourceInfos);
     APP_LOGD("call bundle mgr ext GetAllBundleResourceInfo, return %{public}d", ret);
     return ret;
@@ -552,6 +570,7 @@ ErrCode BmsExtensionDataMgr::GetAllLauncherAbilityResourceInfo(const uint32_t fl
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT GetAllLauncherAbilityResourceInfo");
     ErrCode ret = bundleMgrExtPtr->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
     APP_LOGD("call bundle mgr ext GetAllLauncherAbilityResourceInfo, return %{public}d", ret);
     return ret;
@@ -658,6 +677,7 @@ bool BmsExtensionDataMgr::IsNeedToSkipPreBundleInstall()
         APP_LOGW("GetBundleMgrExt failed");
         return false;
     }
+    APP_LOGI_NOFUNC("EXT IsNeedToSkipPreBundleInstall");
     return bundleMgrExtPtr->IsNeedToSkipPreBundleInstall();
 }
 
@@ -673,6 +693,7 @@ ErrCode BmsExtensionDataMgr::GetBundleNamesForUidExt(const int32_t uid, std::vec
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT GetBundleNamesForUidExt -uid %{public}d", uid);
     return bundleMgrExtPtr->GetBundleNamesForUidExt(uid, bundleNames);
 }
 
@@ -719,6 +740,7 @@ ErrCode BmsExtensionDataMgr::RecoverBackupBundleData(const std::string &bundleNa
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT RecoverBackupBundleData");
     return bundleMgrExtPtr->RecoverBackupBundleData(bundleName, userId, appIndex);
 }
 
@@ -735,6 +757,7 @@ ErrCode BmsExtensionDataMgr::RemoveBackupBundleData(const std::string &bundleNam
         APP_LOGW("GetBundleMgrExt failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
+    APP_LOGI_NOFUNC("EXT RemoveBackupBundleData");
     return bundleMgrExtPtr->RemoveBackupBundleData(bundleName, userId, appIndex);
 }
 } // AppExecFwk

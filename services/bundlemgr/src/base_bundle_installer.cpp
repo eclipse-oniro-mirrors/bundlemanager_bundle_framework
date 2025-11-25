@@ -7313,7 +7313,7 @@ bool BaseBundleInstaller::CheckWhetherCanBeUninstalled(const std::string &bundle
     const std::string &appIdentifier) const
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    LOG_I(BMS_TAG_INSTALLER, "CheckUninstall %{public}s", bundleName.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "CheckUninstall %{public}s", bundleName.c_str());
     bool res = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName, appIdentifier);
     if (!res) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall %{public}s rejected", bundleName.c_str());
