@@ -1690,6 +1690,24 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleCreateDataGroupDirs_0001, Function | S
 }
 
 /**
+ * @tc.number: HandleHashSoFile_0001
+ * @tc.name: HandleHashSoFile
+ * @tc.desc: test HandleHashSoFile of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleHashSoFile_0001, Function | SmallTest | Level0)
+{
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    InstalldHost installdHost;
+    int res = installdHost.HandleHashSoFile(datas, reply);
+    EXPECT_EQ(res, true);
+}
+
+/**
  * @tc.number: HandleDeleteDataGroupDirs_0001
  * @tc.name: HandleDeleteDataGroupDirs
  * @tc.desc: test HandleDeleteDataGroupDirs of InstalldHost

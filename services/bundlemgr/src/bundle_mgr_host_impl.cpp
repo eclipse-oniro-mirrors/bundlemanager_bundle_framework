@@ -78,6 +78,7 @@ const std::string FUNCTION_GET_BUNDLE_INFO = "BundleMgrHostImpl::GetBundleInfo";
 const std::string FUNCTION_GET_BUNDLE_INFO_V9 = "BundleMgrHostImpl::GetBundleInfoV9";
 const std::string FUNCTION_GET_BUNDLE_INFO_FOR_SELF = "BundleMgrHostImpl::GetBundleInfoForSelf";
 const std::string FUNCTION_GREAT_OR_EQUAL_API_TARGET_VERSION = "BundleMgrHostImpl::GreatOrEqualTargetAPIVersion";
+const std::string FUNCATION_GET_BUNDLE_INFO_FOR_EXCEPTION = "BundleMgrHostImpl::GetBundleInfoForException";
 const std::string CLONE_APP_DIR_PREFIX = "+clone-";
 const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.IAtomicServiceStatusCallback";
 const std::string PLUS = "+";
@@ -421,6 +422,71 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
         SendQueryBundleInfoEvent(info, intervalTime, false);
     }
     return res;
+}
+
+ErrCode BundleMgrHostImpl::GetBundleInfoForException(const std::string &bundleName, int32_t userId, uint32_t catchSoNum,
+    uint64_t catchSoMaxSize, BundleInfoForException &bundleInfoForException)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "GetBundleInfoForException, bundleName:%{public}s, userId:%{public}d",
+        bundleName.c_str(), userId);
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_BUNDLE_INFO_FOR_EXCEPTION);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+    bool permissionVerify = [bundleName]() {
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            return true;
+        }
+        if (BundlePermissionMgr::IsNativeTokenType()) {
+            return true;
+        }
+        return false;
+    }();
+    if (!permissionVerify) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfoForException");
+    int64_t intervalTime = ONE_DAY;
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    InnerBundleInfo innerBundleInfo;
+    bool isSuccess = dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
+    if (!isSuccess) {
+        APP_LOGE("get innerBundleInfo fail");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    bundleInfoForException.allowedAcls = innerBundleInfo.GetAllowedAcls();
+    bundleInfoForException.abilityNames = innerBundleInfo.GetAbilityNames();
+
+    // get hapHashValueAndDevelopCerts
+    bundleInfoForException.hapHashValueAndDevelopCerts = innerBundleInfo.GetModuleHapHash();
+    for (size_t i = 0; i < bundleInfoForException.hapHashValueAndDevelopCerts.size(); i++) {
+        std::string hapPath = bundleInfoForException.hapHashValueAndDevelopCerts[i].path;
+        // set developercert
+        Security::Verify::HapVerifyResult hapVerifyResult;
+        BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult);
+        Security::Verify::ProvisionInfo provision =  hapVerifyResult.GetProvisionInfo();
+        APP_LOGD("developerCert:%{public}s", provision.developerCert.c_str());
+        bundleInfoForException.hapHashValueAndDevelopCerts[i].developCert = provision.developerCert;
+    }
+    
+    // get so hash
+    std::string soPath = std::string(ServiceConstants::SO_PATH_PREFIX) + bundleName +
+        ServiceConstants::PATH_SEPARATOR + innerBundleInfo.GetNativeLibraryPath();
+    std::vector<std::string> soName;
+    std::vector<std::string> soHash;
+    InstalldClient::GetInstance()->HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+    for (size_t i = 0; i < soName.size(); i++) {
+        bundleInfoForException.soHash.try_emplace(soName[i], soHash[i]);
+    }
+
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,

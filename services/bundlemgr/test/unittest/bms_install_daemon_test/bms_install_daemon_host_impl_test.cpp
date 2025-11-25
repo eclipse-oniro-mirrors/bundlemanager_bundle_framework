@@ -1406,4 +1406,41 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8000, Function | Sma
     auto ret = hostImpl->CleanBundleDirs(dirs, true);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: InstalldHostImplTest_8100
+ * @tc.name: test HashSoFile
+ * @tc.desc: 1.Test the HashSoFile of InstalldHostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8100, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(installdProxy, nullptr);
+ 
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    std::string soPath = "/data/app/el1/bundle/public/";
+    std::vector<std::string> soName;
+    std::vector<std::string> soHash;
+ 
+    ErrCode res = installdProxy->HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_8200
+ * @tc.name: test HashFiles
+ * @tc.desc: 1.Test the HashFiles of InstalldHostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8200, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(installdProxy, nullptr);
+
+    std::vector<std::string> files;
+    std::vector<std::string> filesHash;
+ 
+    ErrCode res = installdProxy->HashFiles(files, filesHash);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS

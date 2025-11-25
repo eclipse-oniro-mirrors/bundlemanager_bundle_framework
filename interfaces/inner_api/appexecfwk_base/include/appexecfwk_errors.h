@@ -622,6 +622,9 @@ enum {
     ERR_APPEXECFWK_INSTALL_VERIFY_APP_SIGNATURE_FAILED = 8522655,
     // dynamicSkills
     ERR_APPEXECFWK_SET_ABILITY_FILE_TYPES_FOR_SELF = 8522661,
+
+    // hash file err
+    ERR_APPEXECFWK_NO_SO_EXISTED = 8522670,
 };
 
 // Error code for Hidump

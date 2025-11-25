@@ -277,6 +277,9 @@ public:
     virtual ErrCode RestoreconPath(const std::string &path) override;
 
     virtual ErrCode ResetBmsDBSecurity() override;
+    virtual ErrCode HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+        std::vector<std::string> &soName, std::vector<std::string> &soHash) override;
+    virtual ErrCode HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash) override;
 
     virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
 

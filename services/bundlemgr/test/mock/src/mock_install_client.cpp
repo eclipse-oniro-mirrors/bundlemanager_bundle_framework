@@ -409,6 +409,17 @@ ErrCode InstalldClient::ClearDir(const std::string &dir)
     return ERR_OK;
 }
 
+ErrCode InstalldClient::HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+    std::vector<std::string> &soName, std::vector<std::string> &soHash)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldClient::RestoreconPath(const std::string &path)
 {
     return ERR_OK;

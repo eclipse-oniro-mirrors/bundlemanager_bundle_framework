@@ -277,6 +277,11 @@ public:
     ErrCode ClearDir(const std::string &dir);
 
     ErrCode RestoreconPath(const std::string &path);
+
+    ErrCode HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+        std::vector<std::string> &soName, std::vector<std::string> &soHash);
+
+    ErrCode HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash);
     
     ErrCode ResetBmsDBSecurity();
 

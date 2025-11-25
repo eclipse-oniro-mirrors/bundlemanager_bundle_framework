@@ -13039,4 +13039,134 @@ HWTEST_F(BmsBundleInstallerTest, GetHapFlags_0100, Function | SmallTest | Level0
     ret = impl.GetHapFlags(false, false, true, 2);
     EXPECT_EQ(ret, 256);
 }
+
+/**
+ * @tc.number: Sha256File_0200
+ * @tc.name: test the Sha256File of InstalldOperator
+ * @tc.desc: 1.the Sha256File
+ */
+HWTEST_F(BmsBundleInstallerTest, Sha256File_0200, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::Sha256File("");
+    EXPECT_EQ(ret, "");
+    ret = InstalldOperator::Sha256File("source");
+    EXPECT_EQ(ret, "");
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ret = InstalldOperator::Sha256File(bundleFile);
+    EXPECT_NE(ret, "");
+}
+
+/**
+ * @tc.number: GetModuleHapHash_0100
+ * @tc.name: get module hap hash
+ * @tc.desc: 1.the bundle is already installing.
+ *           2.You can query the related info for hap hash
+ */
+HWTEST_F(BmsBundleInstallerTest, GetModuleHapHash_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    InnerBundleInfo info;
+    dataMgr->FetchInnerBundleInfo(SYSTEMFIEID_NAME, info);
+    std::vector<HapHashAndDeveloperCert> hapInfo =  info.GetModuleHapHash();
+    EXPECT_FALSE(hapInfo.empty());
+    UnInstallBundle(SYSTEMFIEID_NAME);
+
+    hapInfo.clear();
+    InnerBundleInfo info2;
+    hapInfo =  info2.GetModuleHapHash();
+    EXPECT_TRUE(hapInfo.empty());
+
+    hapInfo.clear();
+    InnerBundleInfo info3;
+    InnerModuleInfo innerModuleInfo1;
+    innerModuleInfo1.name = MODULE_NAME;
+    innerModuleInfo1.modulePackage = MODULE_NAME;
+    innerModuleInfo1.hapPath = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    innerModuleInfo1.hashValue = "123";
+    info3.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo1);
+
+    InnerModuleInfo innerModuleInfo2;
+    innerModuleInfo2.name = MODULE_NAME + "2";
+    innerModuleInfo2.modulePackage = MODULE_NAME + "2";
+    innerModuleInfo2.hapPath = "";
+    info3.InsertInnerModuleInfo(MODULE_NAME + "2", innerModuleInfo2);
+
+    InnerModuleInfo innerModuleInfo3;
+    innerModuleInfo3.name = MODULE_NAME + "3";;
+    innerModuleInfo3.modulePackage = MODULE_NAME + "3";;
+    innerModuleInfo3.hapPath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    innerModuleInfo3.hashValue = "";
+    info3.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo3);
+
+    hapInfo =  info3.GetModuleHapHash();
+    EXPECT_FALSE(hapInfo.empty());
+}
+
+/**
+ * @tc.number: HashSoFile_0010
+ * @tc.name: test HashSoFile
+ * @tc.desc: 1.Test the HashSoFile of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, HashSoFile_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    InstalldHostImpl installdHostImpl;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 10241024;
+    std::vector<std::string> soName;
+    std::vector<std::string> soHash;
+
+    std::string soPath1 = "/data/app/el1/bundle/public/" + UNINSTALL_PREINSTALL_BUNDLE_NAME + "/libs/arm/";
+    std::string soPath2 = "/data/app/el1/bundle/public/" + UNINSTALL_PREINSTALL_BUNDLE_NAME + "/libs/arm64/";
+    ErrCode ret = ERR_OK;
+    if (access(soPath1.c_str(), F_OK) == 0) {
+        ret = installdHostImpl.HashSoFile(soPath1, catchSoNum, catchSoMaxSize, soName, soHash);
+        EXPECT_EQ(ret, ERR_OK);
+        
+        catchSoMaxSize = 1024;
+        ret = installdHostImpl.HashSoFile(soPath1, catchSoNum, catchSoMaxSize, soName, soHash);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_NO_SO_EXISTED);
+    }
+
+    if (access(soPath2.c_str(), F_OK) == 0) {
+        ret = installdHostImpl.HashSoFile(soPath2, catchSoNum, catchSoMaxSize, soName, soHash);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+
+    std::string soPath = "/data/app/elx/100/group/";
+    ret = installdHostImpl.HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NO_SO_EXISTED);
+
+    soPath = bundleFile;
+    ret = installdHostImpl.HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NO_SO_EXISTED);
+}
+
+/**
+ * @tc.number: HashFiles_0010
+ * @tc.name: test HashFiles
+ * @tc.desc: 1.Test the HashFiles of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, HashFiles_0010, Function | SmallTest | Level0)
+{
+    InstalldHostImpl installdHostImpl;
+    std::vector<std::string> files;
+    std::vector<std::string> filesHash;
+
+    ErrCode ret = ERR_OK;
+    ret = installdHostImpl.HashFiles(files, filesHash);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    files.push_back(bundleFile);
+    ret = installdHostImpl.HashFiles(files, filesHash);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

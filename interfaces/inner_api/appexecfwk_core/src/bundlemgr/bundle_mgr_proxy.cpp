@@ -396,6 +396,49 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::GetBundleInfoForException(
+    const std::string &bundleName,
+    int32_t userId, uint32_t catchSoNum, uint64_t catchSoMaxSize, BundleInfoForException &bundleInfoForException)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        LOG_D(BMS_TAG_QUERY, "GetBundleInfoForException fail bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(catchSoNum)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write catchSoNum fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint64(catchSoMaxSize)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write catchSoMaxSize fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelInfoIntelligent<BundleInfoForException>(
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_EXCEPTION, data, bundleInfoForException);
+    if (res != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoForException fail -n %{public}s -u %{public}d error: %{public}d",
+            bundleName.c_str(), userId, res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<Want> &wants, int32_t flags,
     std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {

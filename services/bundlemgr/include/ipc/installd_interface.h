@@ -500,6 +500,17 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+        std::vector<std::string> &soName, std::vector<std::string> &soHash)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode ClearDir(const std::string &dir)
     {
         return ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;

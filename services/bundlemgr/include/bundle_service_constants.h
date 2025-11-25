@@ -284,6 +284,7 @@ constexpr const char* UPDATE_PERMISSIONS_FLAG_UPDATED = "updated";
 
 const std::set<std::string> OTA_NEW_INSTALL_BUNDLE_NAME_LIST = {};
 
+constexpr const char* SO_PATH_PREFIX = "/data/app/el1/bundle/public/";
 constexpr const char* EXT_PROFILE = "ext_profile";
 constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
 constexpr const char* MANIFEST_JSON = "manifest.json";

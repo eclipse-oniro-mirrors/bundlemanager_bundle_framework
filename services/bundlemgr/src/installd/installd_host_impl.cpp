@@ -2679,6 +2679,37 @@ ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+    std::vector<std::string> &soName, std::vector<std::string> &soHash)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    
+    return InstalldOperator::HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+}
+
+ErrCode InstalldHostImpl::HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (files.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "empty dir");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR; 
+    }
+
+    for (const auto& file : files) {
+        std::string hash = InstalldOperator::Sha256File(file);
+        filesHash.push_back(hash);
+    }
+
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::RestoreconPath(const std::string &path)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
