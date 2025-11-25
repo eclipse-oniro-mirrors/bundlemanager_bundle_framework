@@ -1296,4 +1296,19 @@ HWTEST_F(BmsBundleInstallerPermissionTest, VerifyDelayedAging_0200, Function | S
     g_testVerifyPermission = testNum2;
     EXPECT_EQ(bundleInfo.GetDelayedAging(), false);
 }
+
+/**
+ * @tc.number: InnerBundleInfo_0100
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1.Test the InnerBundleInfo assignment operator
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, InnerBundleInfo_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    bool isDelayAging = true;
+    innerBundleInfo2.SetDelayedAging(isDelayAging);
+    innerBundleInfo1 = innerBundleInfo2;
+    EXPECT_TRUE(innerBundleInfo1.GetDelayedAging());
+}
 } // OHOS
