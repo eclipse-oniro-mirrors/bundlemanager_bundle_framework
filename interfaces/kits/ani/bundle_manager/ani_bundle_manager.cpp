@@ -1339,6 +1339,23 @@ static ani_object GetAppProvisionInfoNative(
     return CommonFunAni::ConvertAppProvisionInfo(env, appProvisionInfo);
 }
 
+static ani_object GetAllAppProvisionInfoNative(ani_env* env, ani_int aniUserId)
+{
+    APP_LOGD("ani GetAllAppProvisionInfoNative called");
+    if (aniUserId == EMPTY_USER_ID) {
+        aniUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = BundleManagerHelper::InnerGetAllAppProvisionInfo(aniUserId, appProvisionInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("InnerGetAllAppProvisionInfo failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, ret, GET_ALL_APP_PROVISION_INFO,
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+        return nullptr;
+    }
+    return CommonFunAni::ConvertAniArray(env, appProvisionInfos, CommonFunAni::ConvertAppProvisionInfo);
+}
+
 static ani_boolean CanOpenLink(ani_env* env, ani_string aniLink)
 {
     APP_LOGD("ani CanOpenLink called");
@@ -2147,6 +2164,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(CleanAllBundleCacheNative) },
         ani_native_function { "getAppProvisionInfoNative", nullptr,
             reinterpret_cast<void*>(GetAppProvisionInfoNative) },
+        ani_native_function { "getAllAppProvisionInfoNative", nullptr,
+            reinterpret_cast<void*>(GetAllAppProvisionInfoNative) },
         ani_native_function { "canOpenLink", nullptr, reinterpret_cast<void*>(CanOpenLink) },
         ani_native_function { "getAllPreinstalledApplicationInfoNative", nullptr,
             reinterpret_cast<void*>(GetAllPreinstalledApplicationInfoNative) },

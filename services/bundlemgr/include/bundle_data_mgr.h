@@ -943,7 +943,8 @@ public:
 
     ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo);
-
+    void GetBundleNameList(const int32_t userId, std::vector<std::string>& bundleNameList);
+    ErrCode GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos);
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas) const;
 

@@ -450,6 +450,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APP_PROVISION_INFO):
             errCode = this->HandleGetAppProvisionInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_APP_PROVISION_INFO):
+            errCode = this->HandleGetAllAppProvisionInfo(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PROVISION_METADATA):
             errCode = this->HandleGetProvisionMetadata(data, reply);
             break;
@@ -3472,6 +3475,23 @@ ErrCode BundleMgrHost::HandleGetAppProvisionInfo(MessageParcel &data, MessagePar
     }
     if ((ret == ERR_OK) && !reply.WriteParcelable(&appProvisionInfo)) {
         APP_LOGE("write appProvisionInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllAppProvisionInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int32_t userId = data.ReadInt32();
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = GetAllAppProvisionInfo(userId, appProvisionInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetAllAppProvisionInfo write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !WriteParcelableVector(appProvisionInfos, reply)) {
+        APP_LOGE("write appProvisionInfos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

@@ -4545,6 +4545,17 @@ void GetAppProvisionInfoExec(napi_env env, void *data)
     }
 }
 
+void GetAllAppProvisionInfoExec(napi_env env, void *data)
+{
+    AllAppProvisionInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<AllAppProvisionInfoCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetAllAppProvisionInfo(
+        asyncCallbackInfo->userId, asyncCallbackInfo->appProvisionInfos);
+}
+
 void GetAppProvisionInfoComplete(napi_env env, napi_status status, void *data)
 {
     AppProvisionInfoCallbackInfo *asyncCallbackInfo =
@@ -4564,6 +4575,55 @@ void GetAppProvisionInfoComplete(napi_env env, napi_status status, void *data)
             GET_APP_PROVISION_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     CommonFunc::NapiReturnDeferred<AppProvisionInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+void GetAllAppProvisionInfoComplete(napi_env env, napi_status status, void *data)
+{
+    AllAppProvisionInfoCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<AllAppProvisionInfoCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<AllAppProvisionInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        CommonFunc::ConvertAllAppProvisionInfo(env, asyncCallbackInfo->appProvisionInfos, result[ARGS_POS_ONE]);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+        GET_ALL_APP_PROVISION_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+    }
+    CommonFunc::NapiReturnDeferred<AllAppProvisionInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetAllAppProvisionInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("napi GetAllAppProvisionInfo called");
+    NapiArg args(env, info);
+    AllAppProvisionInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) AllAppProvisionInfoCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<AllAppProvisionInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_POS_ZERO, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    if (args.GetMaxArgc() > ARGS_POS_ZERO) {
+        if (!CommonFunc::ParseInt(env, args[0], asyncCallbackInfo->userId)) {
+            APP_LOGW("userId is invalid");
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<AllAppProvisionInfoCallbackInfo>(
+        env, asyncCallbackInfo, GET_ALL_APP_PROVISION_INFO, GetAllAppProvisionInfoExec, GetAllAppProvisionInfoComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetAllAppProvisionInfo done");
+    return promise;
 }
 
 napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)

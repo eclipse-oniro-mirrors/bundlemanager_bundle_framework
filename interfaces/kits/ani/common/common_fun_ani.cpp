@@ -1775,6 +1775,10 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
     ani_string organization = nullptr;
     RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.organization, organization));
 
+    // bundleName: string
+    ani_string bundleName = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, appProvisionInfo.bundleName, bundleName));
+
     ani_value args[] = {
         { .l = static_cast<ani_long>(appProvisionInfo.versionCode) },
         { .r = versionName },
@@ -1788,6 +1792,7 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
         { .r = issuer },
         { .r = appIdentifier },
         { .r = organization },
+        { .r = bundleName},
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddLong()                                  // versionCode: long
@@ -1802,6 +1807,7 @@ ani_object CommonFunAni::ConvertAppProvisionInfo(ani_env* env, const AppProvisio
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // issuer: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // appIdentifier: string
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // organization: string
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // bundleName: string
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_APP_PROVISION_INFO_INNER, ctorSig, args);
 }

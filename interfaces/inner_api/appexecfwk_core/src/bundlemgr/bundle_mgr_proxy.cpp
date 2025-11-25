@@ -4101,6 +4101,22 @@ ErrCode BundleMgrProxy::GetAppProvisionInfo(const std::string &bundleName, int32
         data, appProvisionInfo);
 }
 
+ErrCode BundleMgrProxy::GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAllAppProvisionInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAllAppProvisionInfo due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<AppProvisionInfo>(BundleMgrInterfaceCode::GET_ALL_APP_PROVISION_INFO,
+        data, appProvisionInfos);
+}
+
 ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
     std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos, GetDependentBundleInfoFlag flag)
 {
