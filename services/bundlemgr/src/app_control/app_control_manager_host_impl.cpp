@@ -568,10 +568,15 @@ void AppControlManagerHostImpl::GetCallerByUid(const int32_t uid, std::string &c
         callerName = item->second;
         return;
     }
-    auto ret = dataMgr_->GetNameForUid(uid, callerName);
+    int32_t appIndex = 0;
+    auto ret = dataMgr_->GetBundleNameAndIndexForUid(uid, callerName, appIndex);
     if (ret != ERR_OK) {
-        LOG_D(BMS_TAG_DEFAULT, "caller not recognized");
         callerName = std::to_string(uid);
+        LOG_D(BMS_TAG_DEFAULT, "caller not recognized");
+        return;
+    }
+    if (appIndex > 0) {
+        callerName.append("_").append(std::to_string(appIndex));
     }
 }
 
