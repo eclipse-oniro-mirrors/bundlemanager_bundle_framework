@@ -192,6 +192,17 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param uid Indicates the uid.
+     * @param assetGroupInfo Indicates the obtained AssetGroupInfo object.
+     * @return Returns ERR_OK if the AssetGroupInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetAssetGroupsInfo(const int uid, AssetGroupInfo &assetGroupInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     /**
      * @brief Obtains the BundleInfos by the given want list through the proxy object.
      * @param wants Indicates the imformation of the abilities to be queried.

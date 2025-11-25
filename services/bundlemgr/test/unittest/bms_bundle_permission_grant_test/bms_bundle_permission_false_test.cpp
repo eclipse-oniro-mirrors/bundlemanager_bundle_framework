@@ -2044,6 +2044,19 @@ HWTEST_F(BmsBundlePermissionFalseTest, RecoverBackupBundleData_0001, Function | 
 }
 
 /**
+ * @tc.number: GetAssetGroupsInfo_0001
+ * @tc.name: test GetAssetGroupsInfo
+ * @tc.desc: test GetAssetGroupsInfo
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetAssetGroupsInfo_0001, Function | SmallTest | Level1)
+{
+    int32_t uid = -1;
+    AssetGroupInfo assetGroupInfo;
+    auto testRet = bundleMgrHostImpl_->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: RemoveBackupBundleData_0001
  * @tc.name: test RemoveBackupBundleData
  * @tc.desc: test RemoveBackupBundleData

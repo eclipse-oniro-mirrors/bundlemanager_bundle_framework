@@ -189,6 +189,19 @@ struct BundleInfo : public Parcelable {
     virtual bool Marshalling(Parcel &parcel) const override;
     static BundleInfo *Unmarshalling(Parcel &parcel);
 };
+
+struct AssetGroupInfo : public Parcelable {
+    int32_t appIndex;
+    std::string bundleName;
+    std::string appId;
+    std::string appIdentifier;
+    std::string developerId;
+    std::vector<std::string> assetAccessGroups;
+ 
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static AssetGroupInfo *Unmarshalling(Parcel &parcel);
+};
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_INFO_H

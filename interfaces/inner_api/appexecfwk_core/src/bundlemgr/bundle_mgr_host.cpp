@@ -732,6 +732,8 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE):
             errCode = HandleGetAllJsonProfile(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ASSET_GROUPS_INFOS_BY_UID):
+            errCode = this->HandleGetAssetGroupsInfo(data, reply);
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -969,6 +971,25 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9(MessageParcel &data, Me
     }
     return ERR_OK;
 }
+
+ErrCode BundleMgrHost::HandleGetAssetGroupsInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int uid = data.ReadInt32();
+    APP_LOGD("uid %{public}d", uid);
+    AssetGroupInfo assetGroupInfo;
+    auto ret = GetAssetGroupsInfo(uid, assetGroupInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+        return WriteParcelInfoIntelligent<AssetGroupInfo>(assetGroupInfo, reply);
+    }
+    return ERR_OK;
+}
+
 
 ErrCode BundleMgrHost::HandleBatchGetBundleInfo(MessageParcel &data, MessageParcel &reply)
 {

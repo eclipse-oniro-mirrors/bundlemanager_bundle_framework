@@ -75,6 +75,7 @@ const std::string FUNCTION_GET_SHARED_BUNDLE_INFO_BY_SELF = "BundleMgrHostImpl::
 const std::string FUNCTION_GET_HAP_MODULE_INFO = "BundleMgrHostImpl::GetHapModuleInfo";
 const std::string FUNCTION_BATCH_BUNDLE_INFO = "BundleMgrHostImpl::BatchGetBundleInfo";
 const std::string FUNCTION_GET_BUNDLE_INFO = "BundleMgrHostImpl::GetBundleInfo";
+const std::string FUNCATION_GET_ASSET_GROUPS_INFO = "BundleMgrHostImpl::GetAssetGroupsInfo";
 const std::string FUNCTION_GET_BUNDLE_INFO_V9 = "BundleMgrHostImpl::GetBundleInfoV9";
 const std::string FUNCTION_GET_BUNDLE_INFO_FOR_SELF = "BundleMgrHostImpl::GetBundleInfoForSelf";
 const std::string FUNCTION_GREAT_OR_EQUAL_API_TARGET_VERSION = "BundleMgrHostImpl::GreatOrEqualTargetAPIVersion";
@@ -421,6 +422,34 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
         SendQueryBundleInfoEvent(info, intervalTime, false);
     }
     return res;
+}
+
+ErrCode BundleMgrHostImpl::GetAssetGroupsInfo(const int uid, AssetGroupInfo &assetGroupInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "GetAssetGroupsInfo, uid:%{public}d", uid);
+    bool permissionVerify = []() {
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            return true;
+        }
+        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+            BundlePermissionMgr::IsSystemApp()) {
+            return true;
+        }
+        return false;
+    }();
+    if (!permissionVerify) {
+        APP_LOGW("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    return dataMgr->GetAssetGroupsInfo(uid, assetGroupInfo);
 }
 
 ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,

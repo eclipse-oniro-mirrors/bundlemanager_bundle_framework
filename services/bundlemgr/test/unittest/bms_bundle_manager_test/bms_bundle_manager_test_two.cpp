@@ -2616,6 +2616,39 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleGids_0100, Function | SmallTest | Level
     EXPECT_EQ(result, false);
 }
 
+/**
+ * @tc.number: BundleMgrHostImpl_GetAssetGroupsInfo_1000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.GetAssetGroupsInfo failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetAssetGroupsInfo_1000, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    int uid = -1;
+    AssetGroupInfo assetGroupInfo;
+    ErrCode getInfoResult = hostImpl->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleDataMgr_GetAssetGroupsInfo_1000
+ * @tc.name: test GetAssetGroupsInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleDataMgr_GetAssetGroupsInfo_1000, Function | SmallTest | Level1)
+{
+    int uid = 0;
+    AssetGroupInfo assetGroupInfo;
+    auto res = GetBundleDataMgr()->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_UID);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    res = GetBundleDataMgr()->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleSpaceSize_0100

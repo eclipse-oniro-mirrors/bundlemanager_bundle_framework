@@ -2323,6 +2323,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleRecoverBackupBundleData_0001, Function | Me
 }
 
 /**
+* @tc.number: HandleGetAssetGroupsInfo_0001
+* @tc.name: test the HandleGetAssetGroupsInfo
+* @tc.desc: 1. system running normally
+*           2. test HandleGetAssetGroupsInfo
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAssetGroupsInfo_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetAssetGroupsInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
 * @tc.number: HandleRemoveBackupBundleData_0001
 * @tc.name: test the HandleRemoveBackupBundleData
 * @tc.desc: 1. system running normally
