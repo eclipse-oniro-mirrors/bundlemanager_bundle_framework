@@ -672,6 +672,22 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, con
     return true;
 }
 
+bool BundlePermissionMgr::VerifyAcrossUserPermission(const int32_t userId)
+{
+    // sa no need to check across user permission
+    if (BundlePermissionMgr::IsNativeTokenType()) {
+        return true;
+    }
+    if (userId == BundleUtil::GetUserIdByCallingUid()) {
+        return true;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS)) {
+        LOG_E(BMS_TAG_DEFAULT, "verify permission across local account failed");
+        return false;
+    }
+    return true;
+}
+
 bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();

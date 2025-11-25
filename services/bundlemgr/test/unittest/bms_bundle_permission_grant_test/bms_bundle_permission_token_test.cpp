@@ -267,4 +267,18 @@ HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1200, Functi
     auto ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID);
 }
+
+/**
+ * @tc.number: BmsBundlePermissionTokenTest_1300
+ * @tc.name: test VerifyAcrossUserPermission of BundlePermissionMgr
+ * @tc.desc: 1. system running normally
+ *           2. GetSandboxHapModuleInfo false by no permission
+ */
+HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1300, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::VerifyAcrossUserPermission(USERID);
+    EXPECT_EQ(ret, true);
+    ret = BundlePermissionMgr::VerifyAcrossUserPermission(USERID+1);
+    EXPECT_EQ(ret, true);
+}
 } // OHOS

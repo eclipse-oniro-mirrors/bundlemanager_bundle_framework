@@ -26,6 +26,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_verify_mgr.h"
+#include "default_app_host_impl.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -72,6 +73,7 @@ public:
 private:
     std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
     std::shared_ptr<BundleInstallerHost> bundleInstallerHost_ = std::make_unique<BundleInstallerHost>();
+    std::shared_ptr<DefaultAppHostImpl> defaultAppHostImpl_ = std::make_unique<DefaultAppHostImpl>();
     static std::shared_ptr<InstalldService> installdService_;
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
@@ -2055,5 +2057,22 @@ HWTEST_F(BmsBundlePermissionFalseTest, RemoveBackupBundleData_0001, Function | S
     int32_t appIndex = 0;
     auto testRet = bundleMgrHostImpl_->RemoveBackupBundleData(bundleName, userId, appIndex);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: SetDefaultApplicationForAppClone_0001
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1. SetDefaultApplicationForAppClone failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, SetDefaultApplicationForAppClone_0001, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    int32_t userId = 101;
+    int32_t appIndex = 1;
+    auto res = defaultAppHostImpl_->SetDefaultApplicationForAppClone(userId, appIndex, DEFAULT_APP_VIDEO,
+        want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS

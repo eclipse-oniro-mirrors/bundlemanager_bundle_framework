@@ -44,6 +44,8 @@ export default namespace defaultAppManager {
   native function getDefaultApplicationNative(type: string, userId: int, isSync: boolean): BundleInfo;
   native function setDefaultApplicationNative(type: string, elementName: ElementName, userId: int, isSync: boolean): void;
   native function resetDefaultApplicationNative(type: string, userId: int, isSync: boolean): void;
+  native function setDefaultApplicationForAppCloneNative(type: string, elementName: ElementName, appIndex: int,
+    userId: int): void;
 
   function isDefaultApplication(type: string, callback: AsyncCallback<boolean>): void {
     let cb = (): boolean => {
@@ -218,5 +220,11 @@ export default namespace defaultAppManager {
   function resetDefaultApplicationSync(type: string, userId?: int): void {
     let userIdInfo: int = userId ?? EMPTY_USER_ID;
     return resetDefaultApplicationNative(type, userIdInfo, true);
+  }
+  
+  function setDefaultApplicationForAppClone(type: string, elementName: ElementName, appIndex: int, userId?: int): 
+  void {
+    let userIdInfo: int = userId ?? EMPTY_USER_ID;
+    return setDefaultApplicationForAppCloneNative(type, elementName, appIndex, userIdInfo);
   }
 }

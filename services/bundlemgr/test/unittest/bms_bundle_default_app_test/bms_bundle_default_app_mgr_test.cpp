@@ -576,6 +576,22 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, GetBundleInfo_0040, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: GetBundleInfo_0050
+ * @tc.name: Test GetBundleInfo by DefaultAppMgr
+ * @tc.desc: 1.GetBundleInfo
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, GetBundleInfo_0050, Function | SmallTest | Level1)
+{
+    int32_t userId = 100;
+    std::string type{ "AUDIO" };
+    Element element{ BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, "", "", 1 };
+    BundleInfo bundleInfo;
+
+    auto ret = DefaultAppMgr::GetInstance().GetBundleInfo(userId, type, element, bundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: GetDefaultApplicationInternal_0100
  * @tc.name: Test GetDefaultApplicationInternal by DefaultAppMgr
  * @tc.desc: 1.GetDefaultApplicationInternal
@@ -1352,7 +1368,7 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, HandleUninstallBundle_0001, Function | Smal
     int32_t userId = 0;
     const std::string bundleName = "testname";
     std::map<std::string, Element> currentInfos;
-    DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName);
+    DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName, 0);
     ASSERT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos));
 }
 
@@ -1380,5 +1396,27 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, GetBundleInfoByUtd_0001, Function | SmallTe
     int32_t userId = 100;
     auto ret = DefaultAppMgr::GetInstance().GetBundleInfoByUtd(userId, EMAIL, bundleInfo, false);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
+}
+
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0010, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    int32_t appIndex = 6;
+    auto res = impl.SetDefaultApplicationForAppClone(USER_ID, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0020, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    int32_t appIndex = 0;
+    auto res = impl.SetDefaultApplicationForAppClone(USER_ID, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
 } // namespace OHOS
