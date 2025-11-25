@@ -2998,10 +2998,8 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_6100, Function | SmallTest 
     res = installer.ProcessBundleInstallNative(info, userId, false);
     EXPECT_EQ(res, ERR_OK);
 
-    res = installer.ProcessBundleInstallNative(info, { userId }, true);
-    EXPECT_EQ(res, ERR_OK);
-
-    res = installer.ProcessBundleInstallNative(info, { userId }, false);
+    std::unordered_set<int32_t> userIds = {userId};
+    res = installer.ProcessBundleInstallNative(info, userIds);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -3019,7 +3017,8 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_6200, Function | SmallTest 
     ErrCode res = installer.ProcessBundleUnInstallNative(info, userId, bundleName, "");
     EXPECT_EQ(res, ERR_OK);
 
-    res = installer.ProcessBundleUnInstallNative(info, { userId }, bundleName, "");
+    std::unordered_set<int32_t> userIds = {userId};
+    res = installer.ProcessBundleUnInstallNative(info, userIds, bundleName, "");
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -8007,7 +8006,8 @@ HWTEST_F(BmsBundleInstallerTest, ProcessBundleInstallNative_0100, Function | Sma
     int32_t userId = USERID;
     ErrCode ret = installer.ProcessBundleInstallNative(innerBundleInfo, userId);
     EXPECT_NE(ret, ERR_OK);
-    ret = installer.ProcessBundleInstallNative(innerBundleInfo, { userId });
+    std::unordered_set<int32_t> userIds = {userId};
+    ret = installer.ProcessBundleInstallNative(innerBundleInfo, userIds);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -8034,7 +8034,8 @@ HWTEST_F(BmsBundleInstallerTest, ProcessBundleUnInstallNative_0100, Function | S
     std::string bundleName;
     ErrCode ret = installer.ProcessBundleUnInstallNative(innerBundleInfo, userId, bundleName, moduleName);
     EXPECT_EQ(ret, ERR_OK);
-    ret = installer.ProcessBundleUnInstallNative(innerBundleInfo, { userId }, bundleName, moduleName);
+    std::unordered_set<int32_t> userIds = {userId};
+    ret = installer.ProcessBundleUnInstallNative(innerBundleInfo, userIds, bundleName, moduleName);
     EXPECT_EQ(ret, ERR_OK);
 }
 
