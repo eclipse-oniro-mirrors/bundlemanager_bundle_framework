@@ -40,6 +40,7 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
     "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
+    "${services_path}/bundlemgr/src/account_helper.cpp",
     "${services_path}/bundlemgr/src/bundle_util.cpp",
     "${services_path}/bundlemgr/src/data/inner_ability_info.cpp",
     "${services_path}/bundlemgr/src/data/inner_extension_info.cpp",

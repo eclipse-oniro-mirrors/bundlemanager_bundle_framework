@@ -161,6 +161,7 @@ struct InnerModuleInfo {
     std::vector<ProxyData> proxyDatas;
     std::vector<AppEnvironment> appEnvironments;
     std::map<std::string, bool> isRemovable;
+    std::set<std::string> isRemovableSet;
     MetaData metaData;
 };
 
@@ -1588,6 +1589,18 @@ public:
      * @return
      */
     void DeleteModuleRemovable(const std::string &moduleName, int32_t userId);
+
+    /**
+     * @brief Set module removable status in the removable set.
+     * @param moduleName Indicates the moduleName.
+     * @param isEnable Indicates the module isRemovable is enable.
+     * @param userId Indicates the userId.
+     * @param callingBundleName Indicates the calling bundle name.
+     * @return
+     */
+    void SetModuleRemovableSet(const std::string &moduleName,
+        bool isEnable, const int32_t userId, const std::string &callingBundleName);
+
     /**
      * @brief Delete removable info.
      * @param info Indicates the innerModuleInfo of module.

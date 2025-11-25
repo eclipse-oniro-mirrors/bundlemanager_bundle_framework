@@ -5471,7 +5471,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetModuleRemovable_0300, Function | SmallTest 
 {
     ClearBundleInfo(BUNDLE_NAME_TEST_CLEAR);
     bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST_CLEAR, MODULE_NAME_TEST_CLEAR, true,
-        DEFAULT_USER_ID_TEST);
+        DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_FALSE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST_CLEAR, MODULE_NAME_TEST_CLEAR, isRemovable,

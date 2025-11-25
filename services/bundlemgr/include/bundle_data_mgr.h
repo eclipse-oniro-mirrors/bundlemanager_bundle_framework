@@ -810,10 +810,11 @@ public:
      * @param moduleName Indicates the moduleName.
      * @param isEnable Set module isRemovable is enable.
      * @param userId Indicates the user ID.
+     * @param callingUid Indicates the  calling uid.
      * @return Returns true if the module isRemovable is set success; returns false otherwise.
      */
     bool SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable,
-        int32_t userId);
+        const int32_t userId, const int32_t callingUid);
     /**
      * @brief Get Module isRemovable by bundleName and moduleName.
      * @param bundleName Indicates the application bundle name to be queried.
