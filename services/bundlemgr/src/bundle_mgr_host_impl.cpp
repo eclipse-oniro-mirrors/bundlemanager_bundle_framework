@@ -2507,7 +2507,8 @@ bool BundleMgrHostImpl::SetModuleRemovable(const std::string &bundleName, const 
         return false;
     }
     int32_t userId = AccountHelper::GetUserIdByCallerType();
-    return dataMgr->SetModuleRemovable(bundleName, moduleName, isEnable, userId);
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    return dataMgr->SetModuleRemovable(bundleName, moduleName, isEnable, userId, callingUid);
 }
 
 bool BundleMgrHostImpl::GetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName)
@@ -5577,6 +5578,46 @@ bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
     return false;
 }
 
+void BundleMgrHostImpl::SetAtomicServiceRemovable(const ShortcutInfo &shortcutInfo, bool isEnable, int32_t userId)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    BundleType type;
+    dataMgr->GetBundleType(shortcutInfo.bundleName, type);
+    if (type != BundleType::ATOMIC_SERVICE) {
+        APP_LOGE("BundleType is not atomic service");
+        return;
+    }
+    std::string moduleName = shortcutInfo.moduleName;
+    if (moduleName.empty()) {
+        std::vector<ShortcutInfo> shortcutInfos;
+        ErrCode res = dataMgr->GetAllDesktopShortcutInfo(userId, shortcutInfos);
+        if (res != ERR_OK) {
+            APP_LOGE("GetAllDesktopShortcutInfo failed res:%{public}d", res);
+            return;
+        }
+        for (const auto& info : shortcutInfos) {
+            APP_LOGD("info.bundleName = %{public}s info.id = %{public}s info.appIndex= %{public}d",
+                info.bundleName.c_str(), info.id.c_str(), info.appIndex);
+            if (info.bundleName == shortcutInfo.bundleName &&
+                info.id == shortcutInfo.id &&
+                info.appIndex == shortcutInfo.appIndex) {
+                moduleName = info.moduleName;
+                break;
+            }
+        }
+    }
+    APP_LOGI("module = %{public}s", moduleName.c_str());
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    bool result = dataMgr->SetModuleRemovable(shortcutInfo.bundleName, moduleName, isEnable, userId, callingUid);
+    if (!result) {
+        APP_LOGE("SetModuleRemovable failed");
+    }
+}
+
 ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -5592,7 +5633,13 @@ ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutIn
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+    ErrCode res = dataMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+    if (res != ERR_OK) {
+        APP_LOGE("AddDesktopShortcutInfo failed");
+        return res;
+    }
+    SetAtomicServiceRemovable(shortcutInfo, false, userId);
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
@@ -5610,6 +5657,7 @@ ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcu
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    SetAtomicServiceRemovable(shortcutInfo, true, userId);
     return dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
 }
 

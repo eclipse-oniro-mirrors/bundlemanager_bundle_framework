@@ -5172,7 +5172,8 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
     return ERR_OK;
 }
 
-bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable, int32_t userId)
+bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, 
+    bool isEnable, const int32_t userId, const int32_t callingUid)
 {
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGW("bundleName or moduleName is empty");
@@ -5181,6 +5182,10 @@ bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std:
     if (userId == Constants::INVALID_USERID) {
         APP_LOGW("get a invalid userid, bundleName: %{public}s", bundleName.c_str());
         return false;
+    }
+    std::string callingBundleName;
+    if (GetNameForUid(callingUid, callingBundleName) != ERR_OK) {
+        callingBundleName = std::to_string(callingUid);
     }
     APP_LOGD("bundleName:%{public}s, moduleName:%{public}s, userId:%{public}d",
         bundleName.c_str(), moduleName.c_str(), userId);
@@ -5191,9 +5196,11 @@ bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std:
         return false;
     }
     InnerBundleInfo newInfo = infoItem->second;
+    newInfo.SetModuleRemovableSet(moduleName, isEnable, userId, callingBundleName);
     bool ret = newInfo.SetModuleRemovable(moduleName, isEnable, userId);
     if (ret && dataStorage_->SaveStorageBundleInfo(newInfo)) {
         ret = infoItem->second.SetModuleRemovable(moduleName, isEnable, userId);
+        infoItem->second.SetModuleRemovableSet(moduleName, isEnable, userId, callingBundleName);
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
         if (isEnable) {
             // call clean task

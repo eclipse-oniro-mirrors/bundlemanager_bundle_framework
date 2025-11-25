@@ -33,6 +33,7 @@ constexpr const char* EMPTY_STRING = "";
 constexpr const char* FILE_UNDERLINE = "_";
 constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
 constexpr const char* CACHE_DIR = "cache";
+constexpr const char* UID_SEPARATOR = "#";
 constexpr int8_t START_USERID = 100;
 constexpr int8_t DEFAULT_USERID = 0;
 constexpr int8_t U1 = 1;
