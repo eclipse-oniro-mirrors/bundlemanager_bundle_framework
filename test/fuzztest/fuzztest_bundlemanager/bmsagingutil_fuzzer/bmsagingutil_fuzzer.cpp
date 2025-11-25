@@ -32,13 +32,15 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     AgingBundleInfo agingBundleInfo1{
         fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH),
         fdp.ConsumeIntegral<int64_t>(),
-        fdp.ConsumeIntegral<int32_t>()
+        fdp.ConsumeIntegral<int32_t>(),
+        fdp.ConsumeBool()
     };
 
     AgingBundleInfo agingBundleInfo2{
         fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH),
         fdp.ConsumeIntegral<int64_t>(),
-        fdp.ConsumeIntegral<int32_t>()
+        fdp.ConsumeIntegral<int32_t>(),
+        fdp.ConsumeBool()
     };
     std::vector<AgingBundleInfo> bundles{agingBundleInfo1, agingBundleInfo2};
     AgingUtil::SortAgingBundles(bundles);

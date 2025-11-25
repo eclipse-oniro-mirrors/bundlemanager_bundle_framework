@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #include "bundle_permission_mgr.h"
 
 namespace OHOS {
+int32_t g_testVerifyPermission = 0;
 namespace AppExecFwk {
 using namespace Security::AccessToken;
 
@@ -172,7 +173,7 @@ void BundlePermissionMgr::UnInit()
 int32_t BundlePermissionMgr::VerifyPermission(const std::string &bundleName, const std::string &permissionName,
     const int32_t userId)
 {
-    return 0;
+    return g_testVerifyPermission;
 }
 
 ErrCode BundlePermissionMgr::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
