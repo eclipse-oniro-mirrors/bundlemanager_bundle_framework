@@ -163,7 +163,7 @@ public:
 
     bool IsContainModuleName(const InnerBundleInfo &newInfo, const InnerBundleInfo &info) const;
 
-    ErrCode CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    ErrCode CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos, ErrCode checkSysCapRes) const;
 
     bool IsSubSet(const std::vector<std::string> &mainSet, const std::vector<std::string> &subSet) const;
 

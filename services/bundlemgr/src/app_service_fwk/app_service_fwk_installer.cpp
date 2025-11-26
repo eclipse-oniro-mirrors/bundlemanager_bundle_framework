@@ -407,9 +407,8 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     CHECK_RESULT(result, "Hsp suffix check failed %{public}d");
 
     // check syscap
-    result = bundleInstallChecker_->CheckSysCap(checkedHspPaths);
-    bool isSysCapValid = (result == ERR_OK);
-    if (!isSysCapValid) {
+    ErrCode checkSysCapRes = bundleInstallChecker_->CheckSysCap(checkedHspPaths);
+    if (checkSysCapRes != ERR_OK) {
         APP_LOGI("Hsp syscap check failed %{public}d", result);
     }
 
@@ -436,8 +435,8 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     CHECK_RESULT(result, "Check hsp install condition failed %{public}d");
 
     // check device type
-    if (!isSysCapValid) {
-        result = bundleInstallChecker_->CheckDeviceType(newInfos);
+    if (checkSysCapRes != ERR_OK) {
+        result = bundleInstallChecker_->CheckDeviceType(newInfos, checkSysCapRes);
         if (result != ERR_OK) {
             APP_LOGE("Check device type failed : %{public}d", result);
             return ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR;

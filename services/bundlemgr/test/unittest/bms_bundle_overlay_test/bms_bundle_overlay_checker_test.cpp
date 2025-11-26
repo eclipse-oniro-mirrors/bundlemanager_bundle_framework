@@ -3217,8 +3217,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0300, Function | Small
 
     installer->GenerateOdid(infos, hapVerifyRes);
 
-    bool isSysCapValid = false;
-    ErrCode ret = installer->CheckInstallCondition(hapVerifyRes, infos, isSysCapValid);
+    ErrCode ret = installer->CheckInstallCondition(hapVerifyRes, infos, ERR_OK);
     EXPECT_EQ(ret, ERR_OK);
 }
 

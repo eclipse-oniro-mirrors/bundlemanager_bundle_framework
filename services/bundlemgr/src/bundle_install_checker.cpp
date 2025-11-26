@@ -66,6 +66,9 @@ constexpr int8_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
+constexpr const char* IS_ROOT_MODE_PARAM = "const.debuggable";
+const int32_t ROOT_MODE = 1;
+const int32_t USER_MODE = 0;
 
 const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivilegeCapability)>
         PRIVILEGE_MAP = {
@@ -1546,7 +1549,8 @@ bool BundleInstallChecker::CheckSupportAppTypes(
     return true;
 }
 
-ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const
+ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos,
+    ErrCode checkSysCapRes) const
 {
     std::string supportAppTypes = OHOS::system::GetParameter(SUPPORT_APP_TYPES, "");
     if (!supportAppTypes.empty() && CheckSupportAppTypes(infos, supportAppTypes)) {
@@ -1557,6 +1561,11 @@ ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, In
     for (const auto &info : infos) {
         std::vector<std::string> devVec = info.second.GetDeviceType(info.second.GetCurrentModulePackage());
         if (devVec.empty()) {
+            if (checkSysCapRes == ERR_APPEXECFWK_INSTALL_CHECK_SYSCAP_FAILED &&
+                GetIntParameter(IS_ROOT_MODE_PARAM, USER_MODE) == ROOT_MODE) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLER, "deviceTypes is empty and in root mode and check syscap failed");
+                return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
+            }
             LOG_NOFUNC_W(BMS_TAG_INSTALLER, "deviceTypes is empty");
             continue;
         }
