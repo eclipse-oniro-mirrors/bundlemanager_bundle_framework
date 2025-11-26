@@ -108,7 +108,7 @@ ErrCode InstalldClient::RemoveModuleDataDir(const std::string &ModuleName, const
     return 0;
 }
 
-ErrCode InstalldClient::RemoveDir(const std::string &dir)
+ErrCode InstalldClient::RemoveDir(const std::string &dir, bool async)
 {
     if (dir.empty()) {
         return -1;
