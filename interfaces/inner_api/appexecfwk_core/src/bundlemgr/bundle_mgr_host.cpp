@@ -729,6 +729,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INSTALL_STATUS):
             errCode = HandleGetBundleInstallStatus(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_EXCEPTION):
+            errCode = this->HandleGetBundleInfoForException(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE):
             errCode = HandleGetAllJsonProfile(data, reply);
             break;
@@ -969,6 +972,32 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9(MessageParcel &data, Me
     if (ret == ERR_OK) {
         reply.SetDataCapacity(Constants::CAPACITY_SIZE);
         return WriteParcelInfoIntelligent<BundleInfo>(info, reply);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleInfoForException(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string name = data.ReadString();
+    if (name.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    int32_t userId = data.ReadInt32();
+    uint32_t catchSoNum = data.ReadUint32();
+    uint64_t catchSoMaxSize = data.ReadUint64();
+    APP_LOGI("name %{public}s", name.c_str());
+    BundleInfoForException info;
+    auto ret = GetBundleInfoForException(name, userId, catchSoNum, catchSoMaxSize, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+        return WriteParcelInfoIntelligent<BundleInfoForException>(info, reply);
     }
     return ERR_OK;
 }

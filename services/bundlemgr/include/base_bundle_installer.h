@@ -254,8 +254,8 @@ private:
      * @param uid Indicates the uid of the application.
      * @return Returns ERR_OK if the native bundle install successfully; returns error code otherwise.
      */
-    ErrCode ProcessBundleInstallNative(InnerBundleInfo &info, int32_t &userId, bool removeDir = true);
-    ErrCode ProcessBundleInstallNative(InnerBundleInfo &info, const std::unordered_set<int32_t> &userIds);
+    ErrCode ProcessBundleInstallNative(const InnerBundleInfo &info, int32_t userId, bool removeDir = true);
+    ErrCode ProcessBundleInstallNative(const InnerBundleInfo &info, const std::unordered_set<int32_t> &userIds);
     /**
      * @brief The process of uninstalling a native bundle.
      * @param info Indicates the InnerBundleInfo parsed from the config.json in the HAP package.
@@ -263,10 +263,10 @@ private:
      * @param bundleName Indicates the bundleName of the application.
      * @return Returns ERR_OK if the native bundle uninstall successfully; returns error code otherwise.
      */
-    ErrCode ProcessBundleUnInstallNative(InnerBundleInfo &info, int32_t &userId, std::string bundleName,
-        std::string moduleName = "");
-    ErrCode ProcessBundleUnInstallNative(InnerBundleInfo &info, const std::unordered_set<int32_t> &userIds,
-        std::string bundleName, std::string moduleName = "");
+    ErrCode ProcessBundleUnInstallNative(const InnerBundleInfo &info, int32_t userId, const std::string &bundleName,
+        const std::string &moduleName = "");
+    ErrCode ProcessBundleUnInstallNative(const InnerBundleInfo &info, const std::unordered_set<int32_t> &userIds,
+        const std::string &bundleName, const std::string &moduleName = "");
     /**
      * @brief The process of updating an exist bundle.
      * @param oldInfo Indicates the exist InnerBundleInfo object get from the database.
@@ -735,7 +735,7 @@ private:
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
     ErrCode ExtractResFileDir(const std::string &modulePath) const;
-    ErrCode ExtractHnpFileDir(const std::string &cpuAbi, const std::string &hnpPackageInfoString,
+    ErrCode ExtractHnpFileDir(const std::string &cpuAbi, const std::map<std::string, std::string> &hnpPackageMap,
         const std::string &modulePath) const;
     void DeleteOldNativeLibraryPath() const;
     std::string GetRealSoPath(const std::string &bundleName, const std::string &nativeLibraryPath,
@@ -881,7 +881,8 @@ private:
     ErrCode CheckArkTSMode(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool AddInstallingBundleName(const InstallParam &installParam);
     bool DeleteInstallingBundleName(const InstallParam &installParam);
-    void RollbackHnpInstall(const std::string &bundleName, const std::unordered_set<int32_t> userIds);
+    void RollbackHnpInstall(const std::string &bundleName, const std::unordered_set<int32_t> &userIds);
+    void VerifyDelayedAging(InnerBundleInfo &bundleInfo, int32_t uid);
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     ErrCode CheckInstallPermission(const std::string &appId, const std::string &appIdentifier,
         const std::vector<std::string> &allowedAppIds, const std::vector<std::string> &disallowedAppIds);

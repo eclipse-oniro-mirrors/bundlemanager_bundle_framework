@@ -183,21 +183,20 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
 }
 
 
-ErrCode InstalldHostImpl::ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
+    const ExtractParam &extractParam)
 {
-    LOG_D(BMS_TAG_INSTALLD, "ExtractHnpFiles hnpPackageInfo %{public}s", hnpPackageInfo.c_str());
-    LOG_D(BMS_TAG_INSTALLD, "ExtractHnpFiles extractParam %{public}s", extractParam.ToString().c_str());
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
 
-    if (extractParam.srcPath.empty() || extractParam.targetPath.empty() || hnpPackageInfo.empty()) {
+    if (extractParam.srcPath.empty() || extractParam.targetPath.empty() || hnpPackageMap.empty()) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function ExtractFiles with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    if (!InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam)) {
+    if (!InstalldOperator::ExtractFiles(hnpPackageMap, extractParam)) {
         LOG_E(BMS_TAG_INSTALLD, "extract failed errno:%{public}d", errno);
         return ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED;
     }
@@ -2676,6 +2675,37 @@ ErrCode InstalldHostImpl::ClearDir(const std::string &dir)
         LOG_E(BMS_TAG_INSTALLD, "ClearDir failed");
         return ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
     }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+    std::vector<std::string> &soName, std::vector<std::string> &soHash)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    
+    return InstalldOperator::HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+}
+
+ErrCode InstalldHostImpl::HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (files.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "empty dir");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR; 
+    }
+
+    for (const auto& file : files) {
+        std::string hash = InstalldOperator::Sha256File(file);
+        filesHash.push_back(hash);
+    }
+
     return ERR_OK;
 }
 

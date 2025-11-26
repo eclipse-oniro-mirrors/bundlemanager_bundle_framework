@@ -172,6 +172,7 @@ bundle_install_external_deps = [
   "ffrt:libffrt",
   "hitrace:libhitracechain",
   "memmgr:memmgrclient",
+  "openssl:libcrypto_shared",
   "os_account:libaccountkits",
   "safwk:api_cache_manager",
   "storage_service:storage_manager_acl",

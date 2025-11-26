@@ -810,10 +810,11 @@ public:
      * @param moduleName Indicates the moduleName.
      * @param isEnable Set module isRemovable is enable.
      * @param userId Indicates the user ID.
+     * @param callingUid Indicates the  calling uid.
      * @return Returns true if the module isRemovable is set success; returns false otherwise.
      */
     bool SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable,
-        int32_t userId);
+        const int32_t userId, const int32_t callingUid);
     /**
      * @brief Get Module isRemovable by bundleName and moduleName.
      * @param bundleName Indicates the application bundle name to be queried.
@@ -885,7 +886,8 @@ public:
     bool QueryInfoAndSkillsByElement(int32_t userId, const Element& element,
         AbilityInfo& abilityInfo, ExtensionAbilityInfo& extensionInfo, std::vector<Skill>& skills) const;
 
-    bool GetElement(int32_t userId, const ElementName& elementName, Element& element) const;
+    bool GetElement(int32_t userId, const int32_t appIndex, const ElementName& elementName,
+        Element& element) const;
 #endif
 
     int32_t GetUserId(int32_t userId = Constants::UNSPECIFIED_USERID) const;

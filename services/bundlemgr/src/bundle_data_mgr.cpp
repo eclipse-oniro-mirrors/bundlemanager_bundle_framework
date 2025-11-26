@@ -5172,7 +5172,8 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
     return ERR_OK;
 }
 
-bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, bool isEnable, int32_t userId)
+bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std::string &moduleName, 
+    bool isEnable, const int32_t userId, const int32_t callingUid)
 {
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGW("bundleName or moduleName is empty");
@@ -5181,6 +5182,10 @@ bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std:
     if (userId == Constants::INVALID_USERID) {
         APP_LOGW("get a invalid userid, bundleName: %{public}s", bundleName.c_str());
         return false;
+    }
+    std::string callingBundleName;
+    if (GetNameForUid(callingUid, callingBundleName) != ERR_OK) {
+        callingBundleName = std::to_string(callingUid);
     }
     APP_LOGD("bundleName:%{public}s, moduleName:%{public}s, userId:%{public}d",
         bundleName.c_str(), moduleName.c_str(), userId);
@@ -5191,9 +5196,11 @@ bool BundleDataMgr::SetModuleRemovable(const std::string &bundleName, const std:
         return false;
     }
     InnerBundleInfo newInfo = infoItem->second;
+    newInfo.SetModuleRemovableSet(moduleName, isEnable, userId, callingBundleName);
     bool ret = newInfo.SetModuleRemovable(moduleName, isEnable, userId);
     if (ret && dataStorage_->SaveStorageBundleInfo(newInfo)) {
         ret = infoItem->second.SetModuleRemovable(moduleName, isEnable, userId);
+        infoItem->second.SetModuleRemovableSet(moduleName, isEnable, userId, callingBundleName);
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
         if (isEnable) {
             // call clean task
@@ -7475,15 +7482,17 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
     const std::string& moduleName = element.moduleName;
     const std::string& abilityName = element.abilityName;
     const std::string& extensionName = element.extensionName;
+    const int32_t appIndex = element.appIndex;
     Want want;
     ElementName elementName("", bundleName, abilityName, moduleName);
     want.SetElement(elementName);
     bool isAbility = !element.abilityName.empty();
-    bool ret = false;
+
     if (isAbility) {
         // get ability info
-        ret = ExplicitQueryAbilityInfo(want, GET_ABILITY_INFO_DEFAULT, userId, abilityInfo);
-        if (!ret) {
+        ErrCode ret = ExplicitQueryCloneAbilityInfoV9(elementName,
+            static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), userId, appIndex, abilityInfo);
+        if (ret != ERR_OK) {
             LOG_I(BMS_TAG_QUERY, "ExplicitQueryAbility no match -n %{public}s -m %{public}s -a %{public}s"
                 " -u %{public}d", bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId);
             return false;
@@ -7492,8 +7501,10 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
         // get extension info
         elementName.SetAbilityName(extensionName);
         want.SetElement(elementName);
-        ret = ExplicitQueryExtensionInfo(want, GET_EXTENSION_INFO_DEFAULT, userId, extensionInfo);
-        if (!ret) {
+        ErrCode ret = ExplicitQueryExtensionInfoV9(want,
+            static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT),
+            userId, extensionInfo, appIndex);
+        if (ret != ERR_OK) {
             APP_LOGD("ExplicitQueryExtensionInfo failed, extensionName:%{public}s", extensionName.c_str());
             return false;
         }
@@ -7538,7 +7549,8 @@ bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& e
     return true;
 }
 
-bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, Element& element) const
+bool BundleDataMgr::GetElement(int32_t userId, const int32_t appIndex, const ElementName& elementName, 
+    Element& element) const
 {
     APP_LOGD("begin to GetElement");
     const std::string& bundleName = elementName.GetBundleName();
@@ -7551,22 +7563,27 @@ bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, E
     Want want;
     want.SetElement(elementName);
     AbilityInfo abilityInfo;
-    bool ret = ExplicitQueryAbilityInfo(want, GET_ABILITY_INFO_DEFAULT, userId, abilityInfo);
-    if (ret) {
+    ErrCode ret = ExplicitQueryCloneAbilityInfoV9(elementName,
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), userId, appIndex, abilityInfo);
+    if (ret == ERR_OK) {
         APP_LOGD("ElementName is ability");
         element.bundleName = bundleName;
         element.moduleName = moduleName;
         element.abilityName = abilityName;
+        element.appIndex = appIndex;
         return true;
     }
 
     ExtensionAbilityInfo extensionInfo;
-    ret = ExplicitQueryExtensionInfo(want, GET_EXTENSION_INFO_DEFAULT, userId, extensionInfo);
-    if (ret) {
+    ret = ExplicitQueryExtensionInfoV9(want,
+        static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT),
+        userId, extensionInfo, appIndex);
+    if (ret == ERR_OK) {
         APP_LOGD("ElementName is extension");
         element.bundleName = bundleName;
         element.moduleName = moduleName;
         element.extensionName = abilityName;
+        element.appIndex = appIndex;
         return true;
     }
 

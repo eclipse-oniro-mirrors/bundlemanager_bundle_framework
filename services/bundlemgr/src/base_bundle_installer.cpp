@@ -379,7 +379,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         UtdHandler::UninstallUtdAsync(bundleName, userId_);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
         if (!installParam.isRemoveUser) {
-            DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
+            DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName, 0);
         }
 #endif
     }
@@ -1062,9 +1062,28 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             bundleInfo.GetBundleName();
         PrepareBundleDirQuota(bundleInfo.GetBundleName(), uid, bundleDataDir,
             ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET);
+        VerifyDelayedAging(bundleInfo, uid);
+        tempInfo_.SetTempBundleInfo(bundleInfo);
     }
     mainAbility_ = bundleInfo.GetMainAbility();
     return result;
+}
+
+void BaseBundleInstaller::VerifyDelayedAging(InnerBundleInfo &bundleInfo, int32_t uid)
+{
+    LOG_D(BMS_TAG_INSTALLER, "Start verifying if there is a delay in aging");
+    bool isDelayedAging = false;
+    if (BundlePermissionMgr::VerifyPermission(bundleInfo.GetBundleName(), ServiceConstants::PERMISSION_MANAGE_AGING,
+        uid / Constants::BASE_USER_RANGE) != Security::AccessToken::PermissionState::PERMISSION_GRANTED) {
+        APP_LOGD("no permission to delay aging %{public}s", bundleInfo.GetBundleName().c_str());
+        bundleInfo.SetDelayedAging(isDelayedAging);
+        return;
+    } else {
+        isDelayedAging = true;
+        bundleInfo.SetDelayedAging(isDelayedAging);
+    }
+    LOG_D(BMS_TAG_INSTALLER, "Verification of delayed aging permissions successful");
+    return;
 }
 
 void BaseBundleInstaller::ProcessUpdateShortcut()
@@ -2550,7 +2569,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, int32_t &userId, bool removeDir)
+ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &info, int32_t userId, bool removeDir)
 {
     if (info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
         LOG_I(BMS_TAG_INSTALLER, "hnp install: %{public}s, %{public}d", info.GetCurModuleName().c_str(), userId);
@@ -2571,7 +2590,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, i
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info,
+ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &info,
     const std::unordered_set<int32_t> &userIds)
 {
     for (int32_t userId : userIds) {
@@ -2587,8 +2606,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info,
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
-    int32_t &userId, std::string bundleName, std::string moduleName)
+ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(const InnerBundleInfo &info,
+    int32_t userId, const std::string &bundleName, const std::string &moduleName)
 {
     if (info.GetInnerModuleInfoHnpInfo(moduleName)) {
         LOG_I(BMS_TAG_INSTALLER, "hnp uninstall: %{public}s, %{public}d", moduleName.c_str(), userId);
@@ -2602,8 +2621,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
-    const std::unordered_set<int32_t> &userIds, std::string bundleName, std::string moduleName)
+ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(const InnerBundleInfo &info,
+    const std::unordered_set<int32_t> &userIds, const std::string &bundleName, const std::string &moduleName)
 {
     for (int32_t userId : userIds) {
         ErrCode ret = ProcessBundleUnInstallNative(info, userId, bundleName, moduleName);
@@ -2614,7 +2633,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
     return ERR_OK;
 }
 
-void BaseBundleInstaller::RollbackHnpInstall(const std::string &bundleName, const std::unordered_set<int32_t> userIds)
+void BaseBundleInstaller::RollbackHnpInstall(const std::string &bundleName, const std::unordered_set<int32_t> &userIds)
 {
     for (int32_t userId : userIds) {
         ErrCode ret = InstalldClient::GetInstance()->ProcessBundleUnInstallNative(
@@ -3943,11 +3962,8 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
             }
             hnpPackageInfoMap[hnpPackageInfo.package] = hnpPackageInfo.type;
         }
-        for (const auto &hnpPackageKV : hnpPackageInfoMap) {
-            hnpPackageInfoString << "{" << hnpPackageKV.first << ":" << hnpPackageKV.second << "}";
-        }
         std::string cpuAbi = info.GetCpuAbi();
-        result = ExtractHnpFileDir(cpuAbi, hnpPackageInfoString.str(), modulePath);
+        result = ExtractHnpFileDir(cpuAbi, hnpPackageInfoMap, modulePath);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to ExtractHnpsFileDir, error is %{public}d", result);
             return result;
@@ -4001,8 +4017,8 @@ ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) co
     return ret;
 }
 
-ErrCode BaseBundleInstaller::ExtractHnpFileDir(const std::string &cpuAbi, const std::string &hnpPackageInfoString,
-    const std::string &modulePath) const
+ErrCode BaseBundleInstaller::ExtractHnpFileDir(const std::string &cpuAbi,
+    const std::map<std::string, std::string> &hnpPackageMap, const std::string &modulePath) const
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractHnpFileDir begin");
     ExtractParam extractParam;
@@ -4015,7 +4031,7 @@ ErrCode BaseBundleInstaller::ExtractHnpFileDir(const std::string &cpuAbi, const 
     extractParam.cpuAbi = cpuAbi;
     LOG_D(BMS_TAG_INSTALLER, "ExtractHnpFileDir targetPath: %{public}s", extractParam.targetPath.c_str());
     extractParam.extractFileType = ExtractFileType::HNPS_FILE;
-    ErrCode ret = InstalldClient::GetInstance()->ExtractHnpFiles(hnpPackageInfoString, extractParam);
+    ErrCode ret = InstalldClient::GetInstance()->ExtractHnpFiles(hnpPackageMap, extractParam);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "ExtractHnpFileDir ExtractFiles failed, error is %{public}d", ret);
         return ret;

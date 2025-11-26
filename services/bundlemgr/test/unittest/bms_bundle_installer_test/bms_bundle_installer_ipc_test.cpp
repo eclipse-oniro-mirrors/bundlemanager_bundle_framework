@@ -860,6 +860,7 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_1600, Function | SmallTe
     MessageParcel datas;
     std::u16string descriptor = InstalldHost::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(0);
     datas.WriteBuffer(DATA, DATA_SIZE);
     datas.RewindRead(0);
     MessageParcel reply;
@@ -1259,8 +1260,7 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleExtractHnpFiles_0100, Function | Small
 {
     InstalldHost host;
     MessageParcel datas;
-    std::u16string descriptor = InstalldHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(0);
     datas.WriteBuffer(DATA, DATA_SIZE);
     datas.RewindRead(0);
     MessageParcel reply;
@@ -1687,6 +1687,24 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleCreateDataGroupDirs_0001, Function | S
     InstalldHost installdHost;
     int res = installdHost.HandleCreateDataGroupDirs(datas, reply);
     EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: HandleHashSoFile_0001
+ * @tc.name: HandleHashSoFile
+ * @tc.desc: test HandleHashSoFile of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleHashSoFile_0001, Function | SmallTest | Level0)
+{
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    InstalldHost installdHost;
+    int res = installdHost.HandleHashSoFile(datas, reply);
+    EXPECT_EQ(res, true);
 }
 
 /**

@@ -78,11 +78,17 @@ ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_FILES, data, reply, option);
 }
 
-ErrCode InstalldProxy::ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+ErrCode InstalldProxy::ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
+    const ExtractParam &extractParam)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hnpPackageInfo));
+    int32_t mapSize = static_cast<int32_t>(hnpPackageMap.size());
+    INSTALLD_PARCEL_WRITE(data, Int32, mapSize);
+    for (const auto &[package, type] : hnpPackageMap) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(package));
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(type));
+    }
     if (!data.WriteParcelable(&extractParam)) {
         LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractParam failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1170,6 +1176,49 @@ ErrCode InstalldProxy::ClearDir(const std::string &dir)
     MessageParcel reply;
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::CLEAR_DIR, data, reply, option);
+}
+
+ErrCode InstalldProxy::HashSoFile(const std::string &soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+    std::vector<std::string> &soName, std::vector<std::string> &soHash)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String, soPath);
+    INSTALLD_PARCEL_WRITE(data, Uint32, catchSoNum);
+    INSTALLD_PARCEL_WRITE(data, Uint64, catchSoMaxSize);
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_SO_HASH, data, reply, option);
+    if (ret == ERR_OK) {
+        if (reply.ReadStringVector(&soName) && reply.ReadStringVector(&soHash)) {
+            return ERR_OK;
+        } else {
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ret;
+}
+
+ErrCode InstalldProxy::HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(files.size()));
+    for (auto &path : files) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(path));
+    }
+    
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_FILES_HASH, data, reply, option);
+    if (ret == ERR_OK) {
+        if (reply.ReadStringVector(&filesHash)) {
+            return ERR_OK;
+        } else {
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
 }
 
 ErrCode InstalldProxy::RestoreconPath(const std::string &path)

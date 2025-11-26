@@ -149,6 +149,7 @@ constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permissio
 constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 constexpr const char* PERMISSION_SUPPORT_PLUGIN = "ohos.permission.kernel.SUPPORT_PLUGIN";
 constexpr const char* PERMISSION_MANAGE_STORAGE = "ohos.permission.atomicService.MANAGE_STORAGE";
+constexpr const char* PERMISSION_MANAGE_AGING = "ohos.permission.atomicService.MANAGE_AGING";
 
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
@@ -284,6 +285,7 @@ constexpr const char* UPDATE_PERMISSIONS_FLAG_UPDATED = "updated";
 
 const std::set<std::string> OTA_NEW_INSTALL_BUNDLE_NAME_LIST = {};
 
+constexpr const char* SO_PATH_PREFIX = "/data/app/el1/bundle/public/";
 constexpr const char* EXT_PROFILE = "ext_profile";
 constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
 constexpr const char* MANIFEST_JSON = "manifest.json";

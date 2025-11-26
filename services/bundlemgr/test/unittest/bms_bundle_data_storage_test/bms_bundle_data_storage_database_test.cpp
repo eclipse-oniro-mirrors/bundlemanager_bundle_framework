@@ -20,6 +20,7 @@
 
 #include "ability_info.h"
 #include "access_token.h"
+#include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
@@ -3170,9 +3171,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2800, Function | Smal
 {
     InnerBundleInfo info;
     InnerModuleInfo moduleInfo;
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    std::string stringUserId = std::to_string(currentUserId);
     moduleInfo.moduleName = MODULE_NAME;
     moduleInfo.installationFree = true;
-    moduleInfo.isRemovable.try_emplace(MODULE_NAME, false);
+    moduleInfo.isRemovable.try_emplace(stringUserId, false);
     moduleInfo.isRemovable.try_emplace(MODULE_NAME_TEST, true);
     info.innerModuleInfos_.try_emplace(MODULE_NAME, moduleInfo);
     bool ret = info.IsBundleRemovable();
@@ -5794,6 +5797,97 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13400, Function | Sma
     info.ConvertPluginBundleInfo(BUNDLE_NAME, pluginBundleInfo);
     EXPECT_EQ(pluginBundleInfo.pluginBundleName, info.GetBundleName());
     EXPECT_EQ(pluginBundleInfo.pluginModuleInfos.size(), info.innerModuleInfos_.size());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_13500
+ * @tc.name: Test SetModuleRemovableSet
+ * @tc.desc: Test the SetModuleRemovableSet of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    EXPECT_TRUE(info.innerModuleInfos_.empty());
+    info.SetModuleRemovableSet(MODULE_NAME, false, Constants::START_USERID, NORMAL_BUNDLE_NAME);
+    EXPECT_TRUE(info.innerModuleInfos_.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_13600
+ * @tc.name: Test SetModuleRemovableSet
+ * @tc.desc: Test the SetModuleRemovableSet of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string moduleName = MODULE_NAME;
+    info.innerModuleInfos_[moduleName] = InnerModuleInfo();
+    info.SetModuleRemovableSet(moduleName, false, Constants::START_USERID, NORMAL_BUNDLE_NAME);
+    std::string callingNameUid = NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR +
+        std::to_string(Constants::START_USERID);
+    EXPECT_EQ(info.innerModuleInfos_[moduleName].isRemovableSet.size(), 1);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_13700
+ * @tc.name: Test SetModuleRemovableSet
+ * @tc.desc: Test the SetModuleRemovableSet of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13700, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string moduleName = MODULE_NAME;
+    info.innerModuleInfos_[MODULE_NAME] = InnerModuleInfo();
+    std::string callingNameUid = NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR +
+        std::to_string(Constants::START_USERID);
+    info.innerModuleInfos_[MODULE_NAME].isRemovableSet.insert(callingNameUid);
+    info.SetModuleRemovableSet(MODULE_NAME, false, Constants::START_USERID, NORMAL_BUNDLE_NAME);
+    EXPECT_EQ(info.innerModuleInfos_[MODULE_NAME].isRemovableSet.size(), 1);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_13800
+ * @tc.name: Test IsBundleRemovable
+ * @tc.desc: Test the IsBundleRemovable of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13800, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    info.SetIsPreInstallApp(false);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+    moduleInfo.installationFree = true;
+    std::string callingNameUid = NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR +
+        std::to_string(currentUserId);
+    moduleInfo.isRemovableSet.insert(callingNameUid);
+    info.innerModuleInfos_.try_emplace(MODULE_NAME, moduleInfo);
+    bool ret = info.IsBundleRemovable();
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_13900
+ * @tc.name: Test DeleteModuleRemovableInfo
+ * @tc.desc: Test the DeleteModuleRemovableInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13900, Function | SmallTest | Level1)
+{
+    const std::string targetUser = "100";
+    const std::string otherUser  = "200";
+    InnerModuleInfo module;
+    module.isRemovableSet.insert(NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + targetUser);
+    module.isRemovableSet.insert(NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + otherUser);
+    module.isRemovable[targetUser] = false;
+    module.isRemovable[otherUser]  = true;
+    InnerBundleInfo info;
+    info.DeleteModuleRemovableInfo(module, targetUser);
+    EXPECT_EQ(module.isRemovableSet.count(NORMAL_BUNDLE_NAME +
+        Constants::UID_SEPARATOR + targetUser), 0);
+    EXPECT_EQ(module.isRemovableSet.count(NORMAL_BUNDLE_NAME +
+        Constants::UID_SEPARATOR + otherUser), 1);
+    EXPECT_EQ(module.isRemovable.count(targetUser), 0);
+    EXPECT_EQ(module.isRemovable.count(otherUser), 1);
 }
 
 /**

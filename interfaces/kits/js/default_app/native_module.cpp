@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,6 +58,7 @@ static napi_value DefaultAppExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setDefaultApplicationSync", SetDefaultApplicationSync),
         DECLARE_NAPI_FUNCTION("resetDefaultApplication", ResetDefaultApplication),
         DECLARE_NAPI_FUNCTION("resetDefaultApplicationSync", ResetDefaultApplicationSync),
+        DECLARE_NAPI_FUNCTION("setDefaultApplicationForAppClone", SetDefaultApplicationForAppClone),
         DECLARE_NAPI_PROPERTY("ApplicationType", applicationType),
     };
 

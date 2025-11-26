@@ -80,13 +80,15 @@ export class ExtensionAbilityInfoInner implements ExtensionAbilityInfo {
     name: string,
     labelId: long,
     descriptionId: long,
-    iconId: long) {
+    iconId: long,
+    appIndex: int) {
       this.bundleName = bundleName;
       this.moduleName = moduleName;
       this.name = name;
       this.labelId = labelId;
       this.descriptionId = descriptionId;
       this.iconId = iconId;
+      this.appIndex = appIndex;
   }
 }
 

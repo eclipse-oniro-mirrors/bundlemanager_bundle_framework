@@ -55,11 +55,12 @@ public:
 
     /**
      * @brief Extract the hnpFiles.
-     * @param hnpPackageInfo Indicates the hnpPackageInfo.
+     * @param hnpPackageMap Indicates the hnpPackageInfo.
      * @param extractParam Indicates the extractParam.
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
-    virtual ErrCode ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam) override;
+    virtual ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
+        const ExtractParam &extractParam) override;
 
     virtual ErrCode ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
         const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName) override;
@@ -273,6 +274,10 @@ public:
     virtual ErrCode ClearDir(const std::string &dir) override;
 
     virtual ErrCode RestoreconPath(const std::string &path) override;
+
+    virtual ErrCode HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+        std::vector<std::string> &soName, std::vector<std::string> &soHash) override;
+    virtual ErrCode HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash) override;
         
     virtual ErrCode ResetBmsDBSecurity() override;
     

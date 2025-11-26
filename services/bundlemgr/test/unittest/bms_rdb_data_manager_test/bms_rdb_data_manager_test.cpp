@@ -856,7 +856,7 @@ HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0500, Function | SmallTest | Level
     ret = defaultAppDb->GetDefaultApplicationInfo(TEST_USERID, TEST_DEFAULT_APP_TYPE, element2);
     EXPECT_TRUE(ret);
 
-    DefaultAppMgr::GetInstance().HandleUninstallBundle(TEST_USERID, "");
+    DefaultAppMgr::GetInstance().HandleUninstallBundle(TEST_USERID, "", 0);
     ret = defaultAppDb->DeleteDefaultApplicationInfos(TEST_USERID);
     EXPECT_TRUE(ret);
 }

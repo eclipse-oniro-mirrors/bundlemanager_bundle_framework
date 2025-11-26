@@ -338,7 +338,7 @@ HWTEST_F(BmsBundleMultiuserInstallPermissionTest, BaseBundleInstaller_0011, Func
     info.currentPackage_ = "entry";
     info.innerModuleInfos_["entry"] = innerModuleInfo;
 
-    int32_t userId;
+    int32_t userId = USERID;
     std::string bundleName;
     ErrCode ret = installer.ProcessBundleUnInstallNative(info, userId, bundleName, "entry");
     EXPECT_EQ(ret, ERR_OK);

@@ -64,6 +64,7 @@ const std::string ABILITY_NAME_EMPTY = "";
 const std::string DEVICE_ID = "PHONE-001";
 const int32_t USERID = 100;
 const int32_t OTHER_USERID = 101;
+const int32_t CALLING_UID = 200;
 const int32_t WAIT_TIME = 2; // init mocked bms
 const int32_t UPGRADE_FLAG = 1;
 const int32_t FLAG_ONE = 1;
@@ -375,7 +376,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0005, Function | Sma
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
-        bool result = bundleMgr->SetModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, true, USERID);
+        bool result = bundleMgr->SetModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, true, USERID, CALLING_UID);
         EXPECT_TRUE(result);
         bool isRemovable = false;
         ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable, USERID);

@@ -753,7 +753,8 @@ void InnerEventReport::InnerSendDefaultAppEvent(const EventInfo& eventInfo)
         EVENT_PARAM_CALLING_NAME, eventInfo.callingName,
         EVENT_PARAM_ACTION_TYPE, eventInfo.actionType,
         EVENT_PARAM_WANT, eventInfo.want,
-        EVENT_PARAM_UTD, eventInfo.utd);
+        EVENT_PARAM_UTD, eventInfo.utd,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
 }
 
 template<typename... Types>

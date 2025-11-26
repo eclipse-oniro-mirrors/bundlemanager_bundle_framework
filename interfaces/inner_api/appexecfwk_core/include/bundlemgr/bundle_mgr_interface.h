@@ -194,6 +194,20 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
+     * @brief Obtains the BundleInfo based on a given bundle name through the proxy object.
+     * @param bundleInfoForException Indicates the application bundle name to be queried.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @param catchSoNum Indicates the num of catched hash values of so.
+     * @param catchSoMaxSize Indicates the max size of catched so.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoForException(const std::string &bundleName,
+        int32_t userId, uint32_t catchSoNum, uint64_t catchSoMaxSize, BundleInfoForException &bundleInfoForException)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
      * @brief Obtains the BundleInfos by the given want list through the proxy object.
      * @param wants Indicates the imformation of the abilities to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.

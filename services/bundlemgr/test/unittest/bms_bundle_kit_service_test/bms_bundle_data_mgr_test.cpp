@@ -2797,7 +2797,7 @@ HWTEST_F(BmsBundleDataMgrTest, SetModuleRemovable_0100, Function | SmallTest | L
 {
     bool isEnabled = false;
     bool res = GetBundleDataMgr()->SetModuleRemovable(
-        BUNDLE_NAME_TEST, BUNDLE_NAME_TEST, isEnabled, TEST_U100);
+        BUNDLE_NAME_TEST, BUNDLE_NAME_TEST, isEnabled, TEST_U100, TEST_U200);
     EXPECT_EQ(res, false);
 }
 
@@ -2816,7 +2816,7 @@ HWTEST_F(BmsBundleDataMgrTest, SetModuleRemovable_0200, Function | SmallTest | L
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     bool res = GetBundleDataMgr()->SetModuleRemovable(
-        BUNDLE_NAME_TEST, BUNDLE_NAME_TEST, isEnabled, TEST_U100);
+        BUNDLE_NAME_TEST, BUNDLE_NAME_TEST, isEnabled, TEST_U100, TEST_U200);
     EXPECT_EQ(res, false);
 }
 

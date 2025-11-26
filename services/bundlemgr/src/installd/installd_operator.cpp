@@ -58,6 +58,20 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+
+struct SoFileInfo {
+    std::string filename;
+    std::string fullpath;
+    uint64_t size;
+    
+    SoFileInfo() : filename(""), fullpath(""), size(0) {}
+    SoFileInfo(const std::string& name, const std::string& path, uint64_t sz)
+        : filename(name), fullpath(path), size(sz) {}
+    bool operator<(const SoFileInfo& other) const
+    {
+        return size > other.size;
+    }
+};
 namespace {
 constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 constexpr const char* PREFIX_LIBS_PATH = "/libs/";
@@ -70,6 +84,8 @@ static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15
     "EnforceMetadataProcessForAppERKNSt3__h13unordered_mapINS3_12basic_stringIcNS3_11char_traitsIcEENS"
     "3_9allocatorIcEEEESA_NS3_4hashISA_EENS3_8equal_toISA_EENS8_INS3_4pairIKSA_SA_EEEEEERKNS2_17CodeCryptoHapInfoERb";
 #endif
+
+constexpr int64_t BUFFER_SIZE = 8192;
 static constexpr int32_t PERMISSION_DENIED = 13;
 static constexpr int32_t RESULT_OK = 0;
 static constexpr int16_t INSTALLS_UID = 3060;
@@ -444,20 +460,10 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
     return true;
 }
 
-bool InstalldOperator::ExtractFiles(const std::string hnpPackageInfo, const ExtractParam &extractParam)
+bool InstalldOperator::ExtractFiles(const std::map<std::string, std::string> &hnpPackageMap,
+    const ExtractParam &extractParam)
 {
-    std::map<std::string, std::string> hnpPackageInfoMap;
-    std::stringstream hnpPackageInfoString(hnpPackageInfo);
-    std::string keyValue;
-    while (getline(hnpPackageInfoString, keyValue, '}')) {
-        size_t pos = keyValue.find(":");
-        if (pos != std::string::npos) {
-            std::string key = keyValue.substr(1, pos - 1);
-            std::string value = keyValue.substr(pos + 1);
-            hnpPackageInfoMap[key] = value;
-        }
-    }
-
+    std::map<std::string, std::string> hnpPackageInfoMap = hnpPackageMap;
     BundleExtractor extractor(extractParam.srcPath);
     if (!extractor.Init()) {
         LOG_E(BMS_TAG_INSTALLD, "extractor init failed");
@@ -494,6 +500,10 @@ bool InstalldOperator::ExtractFiles(const std::string hnpPackageInfo, const Extr
             }
             targetPathAndName = extractParam.targetPath + hnpPackageInfoMap[targetName]
                                 + ServiceConstants::PATH_SEPARATOR + targetName;
+            if (targetPathAndName.find("..") != std::string::npos) {
+                LOG_E(BMS_TAG_INSTALLD, "hnp type err: %{public}s", hnpPackageInfoMap[targetName].c_str());
+                continue;
+            }
             ExtractTargetHnpFile(extractor, entryName, targetPathAndName, extractParam.extractFileType);
             hnpPackageInfoMap.erase(targetName);
             continue;
@@ -2761,6 +2771,76 @@ bool InstalldOperator::ClearDir(const std::string &dir)
     }
     LOG_I(BMS_TAG_INSTALLD, "clearDir success");
     return true;
+}
+
+std::string InstalldOperator::Sha256File(const std::string& filePath)
+{
+    if (filePath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "failed due to filePath is empty");
+        return "";
+    }
+
+    std::ifstream file(filePath, std::ios::binary);
+    if (!file) {
+        LOG_E(BMS_TAG_INSTALLD, "failed due to open filePath failed errno:%{public}d", errno);
+        return "";
+    }
+
+    SHA256_CTX sha256;
+    SHA256_Init(&sha256);
+
+    std::vector<char> buffer(BUFFER_SIZE);
+    while (file.read(buffer.data(), buffer.size()) || file.gcount() > 0) {
+        SHA256_Update(&sha256, buffer.data(), file.gcount());
+    }
+
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256_Final(hash, &sha256);
+
+    std::stringstream ss;
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+    }
+
+    return ss.str();
+}
+
+ErrCode InstalldOperator::HashSoFile(const std::string& soPath,
+    uint32_t catchSoNum,
+    uint64_t catchSoMaxSize,
+    std::vector<std::string> &soName,
+    std::vector<std::string> &soHash)
+{
+    if (!std::filesystem::exists(soPath) || !std::filesystem::is_directory(soPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "soPath not exist or is not dir");
+        return ERR_APPEXECFWK_NO_SO_EXISTED;
+    }
+    uint64_t maxSize = static_cast<uint64_t>(catchSoMaxSize);
+    std::vector<SoFileInfo> soFiles;
+    for (const auto& entry : std::filesystem::recursive_directory_iterator(soPath)) {
+        const auto& path = entry.path();
+        uint64_t fileSize = std::filesystem::file_size(path);
+        if (fileSize <= maxSize) {
+            soFiles.emplace_back(SoFileInfo(path.filename().string(), path.string(), fileSize));
+        }
+    }
+
+    if (soFiles.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "no so file existed");
+        return ERR_APPEXECFWK_NO_SO_EXISTED;
+    }
+
+    std::sort(soFiles.begin(), soFiles.end());
+    if (soFiles.size() > static_cast<size_t>(catchSoNum)) {
+        soFiles.resize(catchSoNum);
+    }
+
+    for (const auto& soFile : soFiles) {
+        std::string hash = Sha256File(soFile.fullpath);
+        soName.push_back(soFile.filename);
+        soHash.push_back(hash);
+    }
+    return ERR_OK;
 }
 
 bool InstalldOperator::RestoreconPath(const std::string &path)

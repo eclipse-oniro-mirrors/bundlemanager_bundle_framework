@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -67,6 +67,7 @@ const int32_t USERID = 100;
 const int32_t WAIT_TIME = 2; // init mocked bms
 const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/libs/arm";
 }  // namespace
+extern int32_t g_testVerifyPermission;
 
 class BmsBundleInstallerPermissionTest : public testing::Test {
 public:
@@ -412,9 +413,9 @@ bool BmsBundleInstallerPermissionTest::WriteToConfigFile(const std::string &bund
 HWTEST_F(BmsBundleInstallerPermissionTest, ExtractHnpFiles_0100, Function | SmallTest | Level1)
 {
     InstalldHostImpl installdHostImpl;
-    std::string hnpPackageInfo;
+    std::map<std::string, std::string> hnpPackageMap;
     ExtractParam extractParam;
-    auto ret = installdHostImpl.ExtractHnpFiles(hnpPackageInfo, extractParam);
+    auto ret = installdHostImpl.ExtractHnpFiles(hnpPackageMap, extractParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -1206,6 +1207,39 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ProcessArkStartupCache_0010, Function
 }
 
 /**
+ * @tc.number: HashSoFile_0010
+ * @tc.name: test HashSoFile
+ * @tc.desc: 1.Test the HashSoFile of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, HashSoFile_0010, Function | SmallTest | Level0)
+{
+    // test no FOUNDATION_UID
+    InstalldHostImpl installdHostImpl;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    std::string soPath = "/data/app/el1/";
+    std::vector<std::string> soName;
+    std::vector<std::string> soHash;
+    auto ret = installdHostImpl.HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: HashFiles_0010
+ * @tc.name: test HashFiles
+ * @tc.desc: 1.Test the HashFiles of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, HashFiles_0010, Function | SmallTest | Level0)
+{
+    // test no FOUNDATION_UID
+    InstalldHostImpl installdHostImpl;
+    std::vector<std::string> files;
+    std::vector<std::string> filesHash;
+    auto ret = installdHostImpl.HashFiles(files, filesHash);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
 * @tc.number: ParseSizeFromProvision_0010
 * @tc.name: test arseSizeFromProvision
 * @tc.desc: 1.Test arseSizeFromProvision
@@ -1260,5 +1294,39 @@ HWTEST_F(BmsBundleInstallerPermissionTest, CopyDir_0100, Function | SmallTest | 
     std::string destinationDir = "test.destination.dir";
     ErrCode ret = hostImpl.CopyDir(sourceDir, destinationDir);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: VerifyDelayedAging_0100
+ * @tc.name: test VerifyDelayedAging
+ * @tc.desc: test the VerifyDelayedAging success
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, VerifyDelayedAging_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo bundleInfo;
+    int32_t uid = -1;
+    int32_t testUid = bundleInfo.GetUid(uid);
+    installer.VerifyDelayedAging(bundleInfo, testUid);
+    EXPECT_EQ(bundleInfo.GetDelayedAging(), true);
+}
+
+/**
+ * @tc.number: VerifyDelayedAging_0200
+ * @tc.name: test VerifyDelayedAging
+ * @tc.desc: test the VerifyDelayedAging fail
+ */
+HWTEST_F(BmsBundleInstallerPermissionTest, VerifyDelayedAging_0200, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo bundleInfo;
+    int32_t uid = -1;
+    int32_t testUid = bundleInfo.GetUid(uid);
+    int32_t testNum1 = 1;
+    int32_t testNum2 = 0;
+    g_testVerifyPermission = testNum1;
+    installer.VerifyDelayedAging(bundleInfo, testUid);
+    g_testVerifyPermission = testNum2;
+    EXPECT_EQ(bundleInfo.GetDelayedAging(), false);
 }
 } // OHOS

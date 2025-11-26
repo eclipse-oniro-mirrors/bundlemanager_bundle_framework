@@ -254,6 +254,10 @@ private:
 
     bool HandleClearDir(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleHashSoFile(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleHashFiles(MessageParcel &data, MessageParcel &reply);
+
     CriticalManager criticalManager_;
 
     bool HandleRestoreconPath(MessageParcel &data, MessageParcel &reply);

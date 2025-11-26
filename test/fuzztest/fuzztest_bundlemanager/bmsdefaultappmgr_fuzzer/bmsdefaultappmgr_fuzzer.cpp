@@ -43,7 +43,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     errorCode = DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type, ret);
     DefaultAppMgr::GetInstance().HandleCreateUser(userId);
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
-    DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, type);
+    DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, type, 0);
     auto normalizedTypeVector = DefaultAppMgr::GetInstance().Normalize(type);
     errorCode = DefaultAppMgr::GetInstance().GetDefaultApplication(
         userId, type, bundleInfo);

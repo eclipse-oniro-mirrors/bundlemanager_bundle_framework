@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,8 +24,8 @@ namespace AppExecFwk {
 class AgingBundleInfo {
 public:
     AgingBundleInfo() = default;
-    AgingBundleInfo(const std::string &name, int64_t time, int32_t startCount)
-        : bundleName_(name), recentlyUsedTime_(time), startCount_(startCount)
+    AgingBundleInfo(const std::string &name, int64_t time, int32_t startCount, bool isDelayAging)
+        : bundleName_(name), recentlyUsedTime_(time), startCount_(startCount), isDelayAging_(isDelayAging)
     {};
     ~AgingBundleInfo() = default;
 
@@ -44,10 +44,16 @@ public:
         return startCount_;
     };
 
+    bool IsDelayAging() const
+    {
+        return isDelayAging_;
+    };
+
 private:
     std::string bundleName_;
     int64_t recentlyUsedTime_ = 0;
     int32_t startCount_ = 0;
+    bool isDelayAging_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

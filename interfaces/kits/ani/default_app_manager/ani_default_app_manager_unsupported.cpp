@@ -63,6 +63,14 @@ static void AniResetDefaultApplication(ani_env *env, ani_string aniType, ani_int
         isSync ? RESET_DEFAULT_APPLICATION_SYNC : RESET_DEFAULT_APPLICATION, "");
 }
 
+static void AniSetDefaultApplicationForAppClone(ani_env *env, ani_string aniType, ani_object aniElementName,
+    ani_int aniAppIndex, ani_int aniUserId)
+{
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        SET_DEFAULT_APPLICATION_FOR_APP_CLONE, "");
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -87,7 +95,9 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "setDefaultApplicationNative", nullptr,
             reinterpret_cast<void*>(AniSetDefaultApplication) },
         ani_native_function { "resetDefaultApplicationNative", nullptr,
-            reinterpret_cast<void*>(AniResetDefaultApplication) }
+            reinterpret_cast<void*>(AniResetDefaultApplication) },
+        ani_native_function { "setDefaultApplicationForAppCloneNative", nullptr,
+            reinterpret_cast<void*>(AniSetDefaultApplicationForAppClone) }
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

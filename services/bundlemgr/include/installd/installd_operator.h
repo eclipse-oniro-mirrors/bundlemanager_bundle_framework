@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_OPERATOR_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_OPERATOR_H
 
+#include <openssl/sha.h>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -100,7 +101,8 @@ public:
     static bool IsNativeSo(const std::string &entryName, const std::string &cpuAbi);
 
     static bool ExtractFiles(const ExtractParam &extractParam);
-    static bool ExtractFiles(const std::string hnpPackageInfo, const ExtractParam &extractParam);
+    static bool ExtractFiles(const std::map<std::string, std::string> &hnpPackageMap,
+        const ExtractParam &extractParam);
     static bool ExtractTargetFile(
         const BundleExtractor &extractor,
         const std::string &entryName,
@@ -320,6 +322,13 @@ public:
     static bool ClearDir(const std::string &dir);
 
     static bool RestoreconPath(const std::string &path);
+    static std::string Sha256File(const std::string& filePath);
+ 
+    static ErrCode HashSoFile(const std::string& soPath,
+        uint32_t catchSoNum,
+        uint64_t catchSoMaxSize,
+        std::vector<std::string> &soName,
+        std::vector<std::string> &soHash);
 
     static bool IsFileNameValid(const std::string &fileName);
 

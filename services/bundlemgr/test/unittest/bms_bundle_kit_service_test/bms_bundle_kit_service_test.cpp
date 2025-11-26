@@ -1815,7 +1815,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0200, Function | SmallTes
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, true,
-        DEFAULT_USER_ID_TEST);
+        DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_TRUE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
@@ -1837,7 +1837,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0300, Function | SmallTes
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, false,
-        DEFAULT_USER_ID_TEST);
+        DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_TRUE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
@@ -1846,7 +1846,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0300, Function | SmallTes
     EXPECT_FALSE(isRemovable);
 
     bool testRet2 = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, true,
-        DEFAULT_USER_ID_TEST);
+        DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_TRUE(testRet2);
     isRemovable = false;
     auto testRet3 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
@@ -1882,7 +1882,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0500, Function | SmallTes
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    bool testRet = GetBundleDataMgr()->SetModuleRemovable("", "", true, DEFAULT_USER_ID_TEST);
+    bool testRet = GetBundleDataMgr()->SetModuleRemovable("", "", true, DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_FALSE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
@@ -1904,7 +1904,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0600, Function | SmallTes
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, true,
-        DEFAULT_USER_ID_TEST);
+        DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_TRUE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable("", "", isRemovable, DEFAULT_USER_ID_TEST);
@@ -1929,7 +1929,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0700, Function | SmallTes
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    bool testRet = GetBundleDataMgr()->SetModuleRemovable("", "", true, DEFAULT_USER_ID_TEST);
+    bool testRet = GetBundleDataMgr()->SetModuleRemovable("", "", true, DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_FALSE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
@@ -8814,6 +8814,24 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfosV9_0400, Function | SmallTe
 
     ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetBundleInfoForSg_0100
+ * @tc.name: Test GetBundleInfoForException
+ * @tc.desc: 1.Test the GetBundleInfoForException by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoForSg_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfoForException bundleInfoForException;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    ErrCode getInfoResult = hostImpl->GetBundleInfoForException(BUNDLE_NAME_DEMO, DEFAULT_USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    MockUninstallBundle(BUNDLE_NAME_DEMO);
 }
 
 /**
