@@ -37,6 +37,39 @@ void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &is
     if (isBundleValid && (info.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK)) {
         InnerCheckSystemHspPath(info);
     }
+    if (isBundleValid && (info.GetApplicationBundleType() == BundleType::SHARED)) {
+        CheckSharedAndRmvInvalidModule(info, isBundleValid);
+    }
+}
+
+void BundleExceptionHandler::CheckSharedAndRmvInvalidModule(InnerBundleInfo &info, bool &isBundleValid)
+{
+    auto sharedInfos = info.GetInnerSharedModuleInfos();
+    for (auto &modulesIt : sharedInfos) {
+        BaseSharedBundleInfo maxShared;
+        bool needBreak = false;
+        if (info.GetMaxVerBaseSharedBundleInfo(modulesIt.first, maxShared)) {
+            auto versionCode = maxShared.versionCode;
+            for (auto module : modulesIt.second) {
+                if (module.versionCode == static_cast<uint32_t>(versionCode) &&
+                    module.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0 &&
+                    access(module.hapPath.c_str(), F_OK) != 0) {
+                    APP_LOGI("-v %{public}u %{public}s not exist, need rmv", versionCode,
+                        module.hapPath.c_str());
+                    info.DeleteHspModuleByVersion(versionCode);
+                    needBreak = true;
+                    break;
+                }
+            }
+        }
+        if (needBreak) {
+            break;
+        }
+    }
+    if (info.GetInnerSharedModuleInfos().size() == 0) {
+        isBundleValid = false;
+        DeleteBundleInfoFromStorage(info);
+    }
 }
 
 void BundleExceptionHandler::InnerCheckSystemHspPath(const InnerBundleInfo &info)

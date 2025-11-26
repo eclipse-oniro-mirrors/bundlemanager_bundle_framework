@@ -58,6 +58,8 @@ private:
 
     void InnerCheckSystemHspPath(const InnerBundleInfo &info);
 
+    void CheckSharedAndRmvInvalidModule(InnerBundleInfo &info, bool &isBundleValid);
+
     std::weak_ptr<IBundleDataStorage> dataStorage_;
 };
 }  // namespace AppExecFwk

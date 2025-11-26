@@ -313,6 +313,51 @@ HWTEST_F(BmsBundleExceptionHandlerTest, DeleteBundleInfoFromStorageTest_1100, Te
     GTEST_LOG_(INFO) << "DeleteBundleInfoFromStorageTest_1100 end";
 }
 
+
+/**
+ * @tc.number: HandleInvalidBundleTest_1000
+ * @tc.name: HandleInvalidBundle
+ * @tc.desc: test CheckSharedAndRmvInvalidModule (Set the bundle status to BundleStatus::ENABLED)
+ */
+HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_1000, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleInvalidBundleTest_1000 start";
+    bool isBundleValid = true;
+    InnerBundleInfo info;
+    const InnerBundleInfo::BundleStatus data = InnerBundleInfo::BundleStatus::ENABLED;
+    info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::INSTALL_FINISH);
+    info.SetBundleStatus(data);
+    info.SetApplicationBundleType(BundleType::SHARED);
+    bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
+    EXPECT_EQ(isBundleValid, false);
+    GTEST_LOG_(INFO) << "HandleInvalidBundleTest_1000 end";
+}
+
+/**
+ * @tc.number: HandleInvalidBundleTest_1100
+ * @tc.name: HandleInvalidBundle
+ * @tc.desc: test CheckSharedAndRmvInvalidModule (Set the bundle status to BundleStatus::ENABLED)
+ */
+HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_1100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "HandleInvalidBundleTest_1100 start";
+    bool isBundleValid = true;
+    InnerBundleInfo info;
+    const InnerBundleInfo::BundleStatus data = InnerBundleInfo::BundleStatus::ENABLED;
+    info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::INSTALL_FINISH);
+    info.SetBundleStatus(data);
+    info.SetApplicationBundleType(BundleType::SHARED);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.versionCode = 1;
+    InnerModuleInfo innerModuleInfo2;
+    innerModuleInfo2.versionCode = 2;
+    info.InsertInnerSharedModuleInfo("test", innerModuleInfo);
+    info.InsertInnerSharedModuleInfo("test", innerModuleInfo2);
+    bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
+    EXPECT_EQ(isBundleValid, true);
+    GTEST_LOG_(INFO) << "HandleInvalidBundleTest_1100 end";
+}
+
 /**
  * @tc.number: InnerBundleInfo_0100
  * @tc.name: SetNeedSendNotify

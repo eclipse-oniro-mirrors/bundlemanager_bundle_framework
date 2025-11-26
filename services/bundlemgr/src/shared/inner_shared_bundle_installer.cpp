@@ -274,8 +274,10 @@ void InnerSharedBundleInstaller::RollBack()
         return;
     }
 
-    if (dataMgr->UpdateInnerBundleInfo(oldBundleInfo_)) {
-        APP_LOGE("rollback old bundle failed : %{public}s", bundleName_.c_str());
+    if (!dataMgr->UpdateInnerBundleInfo(oldBundleInfo_)) {
+        if (!dataMgr->UpdateInnerBundleInfo(oldBundleInfo_, false)) {
+            APP_LOGE("rollback old bundle failed : %{public}s", bundleName_.c_str());
+        }
     }
 
     PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
