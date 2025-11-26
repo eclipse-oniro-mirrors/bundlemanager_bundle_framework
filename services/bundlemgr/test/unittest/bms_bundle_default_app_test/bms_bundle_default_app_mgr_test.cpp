@@ -1370,6 +1370,8 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, HandleUninstallBundle_0001, Function | Smal
     std::map<std::string, Element> currentInfos;
     DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName, 0);
     ASSERT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos));
+    DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName, 1);
+    ASSERT_FALSE(DefaultAppMgr::GetInstance().defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos));
 }
 
 /**
