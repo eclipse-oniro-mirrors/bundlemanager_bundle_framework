@@ -21,6 +21,7 @@
 #include "ability_info.h"
 #include "appexecfwk_errors.h"
 #include "bms_extension.h"
+#include "bundle_compatible_device_type.h"
 #include "bundle_info.h"
 #include "bundle_resource_info.h"
 #include "code_protect_bundle_info.h"
@@ -86,6 +87,8 @@ public:
     bool IsMCFlagSet();
     ErrCode RecoverBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode RemoveBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
+    ErrCode BatchGetCompatibleDeviceType(
+        const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes);
 private:
     bool OpenHandler();
     static void *handler_;

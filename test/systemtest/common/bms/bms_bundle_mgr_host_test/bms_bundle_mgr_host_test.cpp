@@ -23,6 +23,7 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace AppExecFwk {
+constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 
 class BmsBundleMgrHostTest : public testing::Test {
 public:
@@ -2082,6 +2083,85 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetCompatibleDeviceTypeNative_0001, Functio
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleGetCompatibleDeviceTypeNative(data, reply);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleBatchGetCompatibleDeviceType_0001
+ * @tc.name: test the HandleBatchGetCompatibleDeviceType
+ * @tc.desc: 1. system running normally
+ *           2. test HandleBatchGetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleBatchGetCompatibleDeviceType_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsZero
+ * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_0002
+ * @tc.desc  : 1. bundleNameCount is zero
+ *             2. test HandleBatchGetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleMgrHostTest,
+         HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsZero,
+         Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    data.WriteInt32(0);
+
+    ErrCode ret = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsTooLarge
+ * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_0003
+ * @tc.desc  : 1. bundleNameCount is more than MAX_BATCH_QUERY_BUNDLE_SIZE
+ *             2. test HandleBatchGetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleMgrHostTest,
+         HandleBatchGetCompatibleDeviceType_ShouldReturnInvalidParameter_WhenBundleNameCountIsTooLarge,
+         Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    data.WriteInt32(MAX_BATCH_QUERY_BUNDLE_SIZE + 1);
+
+    ErrCode ret = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : HandleBatchGetCompatibleDeviceType_ShouldReturnOK_WhenAllOperationsSucceed
+ * @tc.number: HandleBatchGetCompatibleDeviceTypeTest_0004
+ * @tc.desc  : 1. bundleNameCount is one
+ *             2. test HandleBatchGetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleMgrHostTest,
+         HandleBatchGetCompatibleDeviceType_ShouldReturnOK_WhenAllOperationsSucceed,
+         Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+
+    data.WriteInt32(1);
+    data.WriteString("testBundleName");
+
+    ErrCode ret = bundleMgrHost.HandleBatchGetCompatibleDeviceType(data, reply);
+
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
