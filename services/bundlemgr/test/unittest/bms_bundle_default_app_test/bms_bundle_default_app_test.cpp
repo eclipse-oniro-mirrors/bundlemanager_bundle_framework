@@ -26,6 +26,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_verify_mgr.h"
+#include "default_app_proxy.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -126,6 +127,8 @@ public:
     void StartBundleService();
     ErrCode SetDefaultApplicationWrap(sptr<IDefaultApp> defaultAppProxy, const std::string& type,
         const std::string& abilityName) const;
+    ErrCode SetDefaultApplicationForAppCloneWrap(sptr<IDefaultApp> defaultAppProxy, const std::string& type,
+        const std::string& abilityName, const int appIndex) const;
     static std::set<std::string> invalidTypeSet;
     void ClearDataMgr();
     void ResetDataMgr();
@@ -266,7 +269,6 @@ ErrCode BmsBundleDefaultAppTest::SetDefaultApplicationWrap(sptr<IDefaultApp> def
     want.SetElement(elementName);
     return defaultAppProxy->SetDefaultApplication(USER_ID, type, want);
 }
-
 
 /**
  * @tc.number: UTD_0100
@@ -1322,14 +1324,15 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5500, Function | SmallTest
 
     ElementName elementName;
     Element element;
-    auto ret = dataMgr->GetElement(USER_ID, elementName, element);
+    int32_t appIndex = 0;
+    auto ret = dataMgr->GetElement(USER_ID, appIndex, elementName, element);
     EXPECT_EQ(ret, false);
 
     elementName.SetBundleName(BUNDLE_NAME);
     elementName.SetModuleName(MODULE_NAME);
     elementName.SetAbilityName(ABILITY_NAME);
 
-    ret = dataMgr->GetElement(USER_ID, elementName, element);
+    ret = dataMgr->GetElement(USER_ID, appIndex, elementName, element);
     EXPECT_EQ(ret, true);
 }
 
@@ -2398,9 +2401,10 @@ HWTEST_F(BmsBundleDefaultAppTest, SendEventTest_0100, Function | SmallTest | Lev
     std::string type = ".txt";
 
     EXPECT_NO_THROW(EventReport::SendDefaultAppEvent(
-        DefaultAppActionType::SET, USER_ID, "testSet", want.ToString(), type));
+        DefaultAppActionType::SET, USER_ID, Constants::DEFAULT_APP_INDEX, "testSet", want.ToString(), type));
     EXPECT_NO_THROW(EventReport::SendDefaultAppEvent(
-        DefaultAppActionType::RESET, USER_ID, "testReset", Constants::EMPTY_STRING, type));
+        DefaultAppActionType::RESET, USER_ID, Constants::DEFAULT_APP_INDEX, "testReset",
+        Constants::EMPTY_STRING, type));
 }
 
 /**
@@ -2514,5 +2518,52 @@ HWTEST_F(BmsBundleDefaultAppTest, ImplicitQueryAbilityInfosWithDefault_0200, Fun
     setuid(0);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_NE(launcherAbilityResourceInfos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_8300
+ * @tc.name: test the SetDefaultApplicationForAppClone
+ * param is general.avi, config is general.avi
+ * @tc.desc: 1. call SetDefaultApplicationForAppClone, return false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_8300, Function | MediumTest | Level1)
+{
+    DefaultAppProxy defaultAppProxy(nullptr);
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    ErrCode result = defaultAppProxy.SetDefaultApplicationForAppClone(USER_ID, 1, ABILITY_PPT, want);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_8400
+ * @tc.name: test SetDefaultApplicationForAppCloneWrap
+ * @tc.desc: 1. call SetDefaultApplicationForAppCloneWrap, return false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_8400, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, ABILITY_PPT, MODULE_NAME);
+    want.SetElement(elementName);
+    ErrCode result = defaultAppProxy->SetDefaultApplicationForAppClone(USER_ID, 1, DEFAULT_APP_PPT, want);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_8500
+ * @tc.name: test the SetDefaultApplicationForAppClone
+ * @tc.desc: 1. call SetDefaultApplicationForAppClone, return true
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_8500, Function | MediumTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    ErrCode result = defaultAppProxy->SetDefaultApplicationForAppClone(USER_ID, 1, ABILITY_PPT, want);
+    EXPECT_EQ(result, ERR_OK);
 }
 } // OHOS

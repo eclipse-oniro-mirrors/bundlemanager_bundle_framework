@@ -120,6 +120,29 @@ enum class BundleInstallStatus : uint8_t {
     BUNDLE_INSTALLED = 3,
 };
 
+struct HapHashAndDeveloperCert : public Parcelable {
+    std::string path;
+    std::string hash;
+    std::string developCert;
+ 
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static HapHashAndDeveloperCert *Unmarshalling(Parcel &parcel);
+};
+ 
+// configuration information about a bundle
+struct BundleInfoForException : public Parcelable {
+    std::vector<std::string> allowedAcls;
+    std::vector<std::string> abilityNames;
+    std::vector<HapHashAndDeveloperCert> hapHashValueAndDevelopCerts;
+    // key: soname, value:hash
+    std::map<std::string, std::string> soHash;
+ 
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static BundleInfoForException *Unmarshalling(Parcel &parcel);
+};
+
 // configuration information about a bundle
 struct BundleInfo : public Parcelable {
     bool isNewVersion = false;
@@ -191,7 +214,7 @@ struct BundleInfo : public Parcelable {
 };
 
 struct AssetGroupInfo : public Parcelable {
-    int32_t appIndex;
+    int32_t appIndex = 0;
     std::string bundleName;
     std::string appId;
     std::string appIdentifier;

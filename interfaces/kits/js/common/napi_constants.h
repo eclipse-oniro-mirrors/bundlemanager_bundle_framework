@@ -312,6 +312,8 @@ constexpr const char* SET_DISPOSED_RULE = "SetDisposedRule";
 constexpr const char* SET_DISPOSED_RULES = "SetDisposedRules";
 
 // default_app_manager
+constexpr const char* PERMISSION_SET_DEFAULT_APPLICATION_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
+    "ohos.permission.SET_DEFAULT_APPLICATION and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
 const std::unordered_map<std::string, std::string> TYPE_MAPPING = {
     {"Web Browser", "BROWSER"},
     {"Image Gallery", "IMAGE"},
@@ -331,8 +333,10 @@ constexpr const char* SET_DEFAULT_APPLICATION = "SetDefaultApplication";
 constexpr const char* SET_DEFAULT_APPLICATION_SYNC = "SetDefaultApplicationSync";
 constexpr const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
 constexpr const char* RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
+constexpr const char* SET_DEFAULT_APPLICATION_FOR_APP_CLONE = "SetDefaultApplicationForAppClone";
 constexpr const char* TYPE_CHECK = "type";
 constexpr const char* WANT_CHECK = "want";
+constexpr const char* ELEMENT_NAME = "ElementName";
 }
 }
 }

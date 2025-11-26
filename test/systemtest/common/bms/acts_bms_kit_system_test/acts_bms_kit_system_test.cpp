@@ -909,6 +909,63 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_1100, Function | MediumTest | Level
 }
 
 /**
+ * @tc.number: GetBundleInfoForSg_0010
+ * @tc.name: test query bundle information for sg
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.query bundleInfoForException
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSg_0010, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInfoForSg_0010" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfoForException bundleInfoForException;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    auto getInfoResult = bundleMgrProxy->GetBundleInfoForException("", USERID, catchSoNum, catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    getInfoResult = bundleMgrProxy->GetBundleInfoForException("test1", USERID, catchSoNum, catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    std::cout << "END GetBundleInfoForSg_0010" << std::endl;
+}
+
+/**
+ * @tc.number: GetBundleInfoForSg_0011
+ * @tc.name: test query bundle information for sg
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.query bundleInfoForException
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSg_0011, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInfoForSg_0011" << std::endl;
+    std::vector<std::string> resvec;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    
+    BundleInfoForException bundleInfoForException;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    auto getInfoResult = bundleMgrProxy->GetBundleInfoForException(appName, USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetBundleInfoForSg_0011" << std::endl;
+}
+
+/**
  * @tc.number: GetBundleInfoV9_0010
  * @tc.name: test query bundle information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -11215,6 +11272,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetAssetGroupsInfo_0001, Function | MediumTest | 
     AssetGroupInfo assetGroupInfo;
     auto ret = bundleMgrProxy->GetAssetGroupsInfo(uid, assetGroupInfo);
     EXPECT_EQ(ret, ERR_OK);
+
+    ret = bundleMgrProxy->GetAssetGroupsInfo(-1, assetGroupInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 
     Uninstall(appName, resvec);
     std::cout << "END GetAssetGroupsInfo_0001" << std::endl;

@@ -1207,6 +1207,39 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ProcessArkStartupCache_0010, Function
 }
 
 /**
+ * @tc.number: HashSoFile_0010
+ * @tc.name: test HashSoFile
+ * @tc.desc: 1.Test the HashSoFile of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, HashSoFile_0010, Function | SmallTest | Level0)
+{
+    // test no FOUNDATION_UID
+    InstalldHostImpl installdHostImpl;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    std::string soPath = "/data/app/el1/";
+    std::vector<std::string> soName;
+    std::vector<std::string> soHash;
+    auto ret = installdHostImpl.HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: HashFiles_0010
+ * @tc.name: test HashFiles
+ * @tc.desc: 1.Test the HashFiles of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, HashFiles_0010, Function | SmallTest | Level0)
+{
+    // test no FOUNDATION_UID
+    InstalldHostImpl installdHostImpl;
+    std::vector<std::string> files;
+    std::vector<std::string> filesHash;
+    auto ret = installdHostImpl.HashFiles(files, filesHash);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
 * @tc.number: ParseSizeFromProvision_0010
 * @tc.name: test arseSizeFromProvision
 * @tc.desc: 1.Test arseSizeFromProvision

@@ -56,6 +56,7 @@ const char* HAP_MODULE_INFO_INSTALLATION_FREE = "installationFree";
 const char* HAP_MODULE_INFO_IS_MODULE_JSON = "isModuleJson";
 const char* HAP_MODULE_INFO_IS_STAGE_BASED_MODEL = "isStageBasedModel";
 const char* HAP_MODULE_INFO_IS_REMOVABLE = "isRemovable";
+const char* HAP_MODULE_INFO_IS_REMOVABLESET = "isRemovableSet";
 const char* HAP_MODULE_INFO_MODULE_TYPE = "moduleType";
 const char* HAP_MODULE_INFO_EXTENSION_INFOS = "extensionInfos";
 const char* HAP_MODULE_INFO_META_DATA = "metadata";
@@ -580,6 +581,14 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         bool isRemove = parcel.ReadBool();
         isRemovable[key] = isRemove;
     }
+
+    int32_t isRemovableSetSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, isRemovableSetSize);
+    CONTAINER_SECURITY_VERIFY(parcel, isRemovableSetSize, &isRemovableSet);
+    for (auto i = 0; i < isRemovableSetSize; i++) {
+        isRemovableSet.insert(Str16ToStr8(parcel.ReadString16()));
+    }
+
     moduleType = static_cast<ModuleType>(parcel.ReadInt32());
 
     int32_t metadataSize;
@@ -777,6 +786,11 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, item.second);
     }
 
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, isRemovableSet.size());
+    for (auto &callingNameUid : isRemovableSet) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(callingNameUid));
+    }
+
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(moduleType));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadata.size());
@@ -870,6 +884,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_IS_MODULE_JSON, hapModuleInfo.isModuleJson},
         {HAP_MODULE_INFO_IS_STAGE_BASED_MODEL, hapModuleInfo.isStageBasedModel},
         {HAP_MODULE_INFO_IS_REMOVABLE, hapModuleInfo.isRemovable},
+        {HAP_MODULE_INFO_IS_REMOVABLESET, hapModuleInfo.isRemovableSet},
         {HAP_MODULE_INFO_UPGRADE_FLAG, hapModuleInfo.upgradeFlag},
         {HAP_MODULE_INFO_MODULE_TYPE, hapModuleInfo.moduleType},
         {HAP_MODULE_INFO_EXTENSION_INFOS, hapModuleInfo.extensionInfos},
@@ -1137,6 +1152,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         parseResult,
         JsonType::BOOLEAN,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::set<std::string>>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_IS_REMOVABLESET,
+        hapModuleInfo.isRemovableSet,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_UPGRADE_FLAG,

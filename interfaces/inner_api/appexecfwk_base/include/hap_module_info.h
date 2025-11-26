@@ -192,6 +192,7 @@ struct HapModuleInfo : public Parcelable {
     std::vector<RouterItem> routerArray;
     std::vector<AppEnvironment> appEnvironments;
     std::map<std::string, bool> isRemovable;
+    std::set<std::string> isRemovableSet;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

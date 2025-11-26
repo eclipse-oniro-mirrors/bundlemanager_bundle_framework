@@ -396,26 +396,44 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     return ERR_OK;
 }
 
-ErrCode BundleMgrProxy::GetAssetGroupsInfo(const int uid, AssetGroupInfo &assetGroupInfo)
+ErrCode BundleMgrProxy::GetBundleInfoForException(
+    const std::string &bundleName,
+    int32_t userId, uint32_t catchSoNum, uint64_t catchSoMaxSize, BundleInfoForException &bundleInfoForException)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    APP_LOGI("begin to GetAssetGroupsInfo of %{public}d", uid);
+    LOG_D(BMS_TAG_QUERY, "begin to get bundle info of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        LOG_D(BMS_TAG_QUERY, "GetBundleInfoForException fail bundleName empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAssetGroupsInfo due to write InterfaceToken fail");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(catchSoNum)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write catchSoNum fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint64(catchSoMaxSize)) {
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForException write catchSoMaxSize fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!data.WriteInt32(uid)) {
-        APP_LOGE("fail to GetAssetGroupsInfo due to write uid fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    auto res = GetParcelInfoIntelligent<AssetGroupInfo>(
-        BundleMgrInterfaceCode::GET_ASSET_GROUPS_INFOS_BY_UID, data, assetGroupInfo);
+    auto res = GetParcelInfoIntelligent<BundleInfoForException>(
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_EXCEPTION, data, bundleInfoForException);
     if (res != ERR_OK) {
-        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetAssetGroupsInfo fail -u %{public}d error: %{public}d",
-            uid, res);
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoForException fail -n %{public}s -u %{public}d error: %{public}d",
+            bundleName.c_str(), userId, res);
         return res;
     }
     return ERR_OK;
@@ -6844,6 +6862,31 @@ ErrCode BundleMgrProxy::GetAllJsonProfile(ProfileType profileType, int32_t userI
     }
     return GetVectorFromParcelIntelligentWithErrCode<JsonProfileInfo>(
         BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE, data, profileInfos);
+}
+
+ErrCode BundleMgrProxy::GetAssetGroupsInfo(const int uid, AssetGroupInfo &assetGroupInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGI("begin to GetAssetGroupsInfo of %{public}d", uid);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAssetGroupsInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!data.WriteInt32(uid)) {
+        APP_LOGE("fail to GetAssetGroupsInfo due to write uid fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelInfoIntelligent<AssetGroupInfo>(
+        BundleMgrInterfaceCode::GET_ASSET_GROUPS_INFOS_BY_UID, data, assetGroupInfo);
+    if (res != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetAssetGroupsInfo fail -u %{public}d error: %{public}d",
+            uid, res);
+        return res;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

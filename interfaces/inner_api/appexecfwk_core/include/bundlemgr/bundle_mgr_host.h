@@ -964,6 +964,7 @@ private:
     ErrCode HandleRemoveBackupBundleData(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleCreateNewBundleEl5Dir(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetBundleInstallStatus(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetBundleInfoForException(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllJsonProfile(MessageParcel &data, MessageParcel &reply);
 
 private:

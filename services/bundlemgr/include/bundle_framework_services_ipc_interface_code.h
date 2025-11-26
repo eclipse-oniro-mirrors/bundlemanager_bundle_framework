@@ -93,6 +93,8 @@ enum class InstalldInterfaceCode : uint32_t {
     RESTORE_CON_BMSDB = 65,
     CLEAN_BUNDLE_DIRS = 66,
     COPY_DIR = 67,
+    GET_SO_HASH = 68,
+    GET_FILES_HASH = 69,
 };
 
 } // namespace AppExecFwk

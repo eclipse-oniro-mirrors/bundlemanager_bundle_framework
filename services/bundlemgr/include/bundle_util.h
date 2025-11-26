@@ -249,6 +249,7 @@ public:
     static std::string ExtractStringFromJson(nlohmann::json &jsonObject, const std::string &key);
     static std::unordered_map<std::string, std::string> ParseMapFromJson(const std::string &jsonStr);
     static std::vector<std::string> FileTypeNormalize(const std::string &fileType);
+    static std::string Sha256File(const std::string& filePath);
 private:
     static std::mutex g_mutex;
 };

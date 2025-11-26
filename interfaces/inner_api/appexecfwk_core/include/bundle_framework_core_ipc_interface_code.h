@@ -236,7 +236,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     CREATE_NEW_BUNDLE_EL5_DIR = 210,
     GET_BUNDLE_INSTALL_STATUS = 211,
     GET_ALL_JSON_PROFILE = 212,
-    GET_ASSET_GROUPS_INFOS_BY_UID = 213,
+    GET_BUNDLE_INFO_FOR_EXCEPTION = 213,
+    GET_ASSET_GROUPS_INFOS_BY_UID = 214,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -336,6 +337,7 @@ enum class DefaultAppInterfaceCode : uint8_t {
     GET_DEFAULT_APPLICATION = 1,
     SET_DEFAULT_APPLICATION = 2,
     RESET_DEFAULT_APPLICATION = 3,
+    SET_DEFAULT_APPLICATION_FOR_APP_CLONE = 4,
 };
 
 /* SAID: 401-100 Interface No.100 subservice also provides the following interfaces */

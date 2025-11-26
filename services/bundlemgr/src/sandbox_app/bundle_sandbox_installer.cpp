@@ -95,6 +95,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
         APP_LOGE("the origin application is not installed at current user");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
     }
+    info.CleanInnerBundleUserInfos();
     ScopeGuard sandboxAppGuard([&] { SandboxAppRollBack(info, userId_); });
 
     // 4. generate the accesstoken id and inherit original permissions
@@ -124,7 +125,6 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     }
 
     // 5. create data dir and generate uid and gid
-    info.CleanInnerBundleUserInfos();
     userInfo.bundleName = std::to_string(newAppIndex) + Constants::FILE_UNDERLINE + bundleName_;
     userInfo.gids.clear();
     dataMgr_->GenerateUidAndGid(userInfo);

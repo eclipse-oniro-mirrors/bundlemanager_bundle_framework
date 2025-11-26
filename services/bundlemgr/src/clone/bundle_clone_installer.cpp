@@ -100,6 +100,14 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
         DeleteUninstalledCloneData(bundleName, userId, appIndex)) {
         return ERR_OK;
     }
+    
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    if (result == ERR_OK) {
+        if (!sync) {
+            DefaultAppMgr::GetInstance().HandleUninstallBundle(userId, bundleName, appIndex);
+        }
+    }
+#endif
     NotifyBundleEvents installRes = {
         .type = NotifyType::UNINSTALL_BUNDLE,
         .resultCode = result,

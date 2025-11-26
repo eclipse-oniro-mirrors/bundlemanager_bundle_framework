@@ -130,6 +130,18 @@ public:
      */
     virtual ErrCode GetBundleInfoV9(const std::string &bundleName, int32_t flags,
         BundleInfo &bundleInfo, int32_t userId) override;
+
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name through the proxy object.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param bundleInfoForException Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @param catchSoNum Indicates the num of catched hash values of so.
+     * @param catchSoMaxSize Indicates the max size of catched so.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoForException(const std::string &bundleName,
+        int32_t userId, uint32_t catchSoNum, uint64_t catchSoMaxSize, BundleInfoForException &bundleInfoForException) override;
     /**
      * @brief Obtains the BundleInfo based on a given bundle name.
      * @param uid Indicates the uid.

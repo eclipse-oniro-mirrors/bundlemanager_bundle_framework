@@ -122,8 +122,8 @@ static void AniSetDefaultApplication(ani_env *env,
     }
     ElementName elementName;
     if (!CommonFunAni::ParseElementName(env, aniElementName, elementName)) {
-        APP_LOGE("ParseElementName failed");
-        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, WANT_CHECK, TYPE_OBJECT);
+        APP_LOGE("Parse ElementName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ELEMENT_NAME, TYPE_OBJECT);
         return;
     }
     Want want;
@@ -181,6 +181,45 @@ static void AniResetDefaultApplication(ani_env *env, ani_string aniType, ani_int
     }
 }
 
+static void AniSetDefaultApplicationForAppClone(ani_env *env,
+    ani_string aniType, ani_object aniElementName, ani_int aniAppIndex, ani_int aniUserId)
+{
+    APP_LOGD("ani SetDefaultApplicationForAppClone called");
+    std::string type;
+    if (!ParseType(env, aniType, type)) {
+        APP_LOGE("type invalid");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, TYPE_CHECK, TYPE_STRING);
+        return;
+    }
+    ElementName elementName;
+    if (!CommonFunAni::ParseElementName(env, aniElementName, elementName)) {
+        APP_LOGE("Parse ElementName failed");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_PARAM_CHECK_ERROR, ELEMENT_NAME, TYPE_OBJECT);
+        return;
+    }
+    Want want;
+    want.SetElement(elementName);
+    if (aniUserId == EMPTY_USER_ID) {
+        aniUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    auto defaultAppProxy = CommonFunc::GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        APP_LOGE("defaultAppProxy is null");
+        BusinessErrorAni::ThrowCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            SET_DEFAULT_APPLICATION_FOR_APP_CLONE, "");
+        return;
+    }
+    ErrCode ret = defaultAppProxy->SetDefaultApplicationForAppClone(aniUserId, aniAppIndex, type, want);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetDefaultApplicationForAppClone failed ret: %{public}d", ret);
+        int32_t currentUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+        auto permission = (aniUserId == currentUserId) ? Constants::PERMISSION_SET_DEFAULT_APPLICATION :
+            PERMISSION_SET_DEFAULT_APPLICATION_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS;
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            SET_DEFAULT_APPLICATION_FOR_APP_CLONE, permission);
+    }
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -204,7 +243,9 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "setDefaultApplicationNative", nullptr,
             reinterpret_cast<void*>(AniSetDefaultApplication) },
         ani_native_function { "resetDefaultApplicationNative", nullptr,
-            reinterpret_cast<void*>(AniResetDefaultApplication) }
+            reinterpret_cast<void*>(AniResetDefaultApplication) },
+        ani_native_function { "setDefaultApplicationForAppCloneNative", nullptr,
+            reinterpret_cast<void*>(AniSetDefaultApplicationForAppClone) }
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

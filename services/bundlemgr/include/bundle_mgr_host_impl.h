@@ -157,12 +157,16 @@ public:
     virtual ErrCode GetBundleInfoV9(const std::string &bundleName,
         int32_t flags, BundleInfo &bundleInfo, int32_t userId) override;
     /**
-     * @brief Obtains the BundleInfo based on a given bundle name.
-     * @param uid Indicates the uid.
-     * @param assetGroupInfo Indicates the obtained AssetGroupInfo object.
-     * @return Returns ERR_OK if the AssetGroupInfo is successfully obtained; returns error code otherwise.
+     * @brief Obtains the BundleInfo based on a given bundle name through the proxy object.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param bundleInfoForException Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @param catchSoNum Indicates the num of catched hash values of so.
+     * @param catchSoMaxSize Indicates the max size of catched so.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
-    virtual ErrCode GetAssetGroupsInfo(const int uid, AssetGroupInfo &assetGroupInfo) override;
+    virtual ErrCode GetBundleInfoForException(const std::string &bundleName,
+        int32_t userId, uint32_t catchSoNum, uint64_t catchSoMaxSize, BundleInfoForException &bundleInfoForException) override;
     /**
      * @brief Batch obtains the BundleInfos based on a given bundle name list.
      * @param bundleNames Indicates the application bundle name list to be queried.
@@ -1218,6 +1222,13 @@ public:
         BundleInstallStatus &bundleInstallStatus) override;
     virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos) override;
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param uid Indicates the uid.
+     * @param assetGroupInfo Indicates the obtained AssetGroupInfo object.
+     * @return Returns ERR_OK if the AssetGroupInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetAssetGroupsInfo(const int uid, AssetGroupInfo &assetGroupInfo) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);
@@ -1287,6 +1298,7 @@ private:
         LauncherAbilityResourceInfo &resultAbilityResourceInfo);
     ErrCode ImplicitQueryAbilityInfosWithDefault(const Want &want,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
+    void SetAtomicServiceRemovable(const ShortcutInfo &shortcutInfo, bool isEnable, int32_t userId);
     bool HasGetAbilityInfoExcludeExtFlag(uint32_t flags) const;
 
     std::atomic<bool> isBrokerServiceExisted_ = false;

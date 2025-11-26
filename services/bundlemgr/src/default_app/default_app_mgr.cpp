@@ -176,14 +176,15 @@ ErrCode DefaultAppMgr::IsDefaultApplicationInternal(
         return ERR_OK;
     }
     std::string callingBundleName;
-    ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-    if (!ret) {
+    int32_t appIndex = 0;
+    ErrCode result = dataMgr->GetBundleNameAndIndexForUid(IPCSkeleton::GetCallingUid(), callingBundleName, appIndex);
+    if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "GetBundleNameForUid failed");
         isDefaultApp = false;
         return ERR_OK;
     }
     LOG_I(BMS_TAG_DEFAULT, "callingBundleName:%{public}s", callingBundleName.c_str());
-    isDefaultApp = element.bundleName == callingBundleName;
+    isDefaultApp = (element.bundleName == callingBundleName) && (element.appIndex == appIndex);
     return ERR_OK;
 }
 
@@ -367,7 +368,7 @@ ErrCode DefaultAppMgr::ResetDefaultApplicationInternal(int32_t userId, const std
     return ERR_OK;
 }
 
-void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bundleName) const
+void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bundleName, int32_t appIndex) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     LOG_D(BMS_TAG_DEFAULT, "begin");
@@ -381,7 +382,7 @@ void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bun
     std::map<std::string, Element> newInfos;
     std::vector<std::string> changedTypeVec;
     for (const auto& item : currentInfos) {
-        if (item.second.bundleName != bundleName) {
+        if (item.second.bundleName != bundleName || item.second.appIndex != appIndex) {
             newInfos.emplace(item.first, item.second);
             continue;
         }
@@ -612,9 +613,10 @@ bool DefaultAppMgr::GetBundleInfo(int32_t userId, const std::string& type, const
         LOG_W(BMS_TAG_DEFAULT, "GetBundleInfo, type and skills not match");
         return false;
     }
-    ret = dataMgr->GetBundleInfo(element.bundleName, GET_BUNDLE_DEFAULT, bundleInfo, userId);
-    if (!ret) {
-        LOG_W(BMS_TAG_DEFAULT, "GetBundleInfo failed");
+    ErrCode errCode = dataMgr->GetCloneBundleInfo(element.bundleName, GET_BUNDLE_DEFAULT,
+        element.appIndex, bundleInfo, userId);
+    if (errCode != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "GetCloneBundleInfo failed, errCode: %{public}d", errCode);
         return false;
     }
     bool isAbility = !element.abilityName.empty();

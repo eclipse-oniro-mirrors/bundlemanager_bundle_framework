@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,8 @@ public:
     virtual ErrCode GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) override;
     virtual ErrCode SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) override;
     virtual ErrCode ResetDefaultApplication(int32_t userId, const std::string& type) override;
+    virtual ErrCode SetDefaultApplicationForAppClone(const int32_t userId, const int32_t appIndex,
+        const std::string& type, const Want& want) override;
 
 private:
     template <typename T>

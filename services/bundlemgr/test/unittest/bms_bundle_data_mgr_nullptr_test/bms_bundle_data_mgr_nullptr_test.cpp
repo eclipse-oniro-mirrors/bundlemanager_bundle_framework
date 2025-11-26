@@ -1034,7 +1034,7 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BaseBundleInstaller_0044, Function | Small
     info.currentPackage_ = "entry";
     info.innerModuleInfos_["entry"] = innerModuleInfo;
 
-    int32_t userId;
+    int32_t userId = 100;
     std::string bundleName;
     ErrCode ret = installer.ProcessBundleUnInstallNative(info, userId, bundleName, "entry");
     EXPECT_NE(ret, ERR_OK);

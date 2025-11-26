@@ -103,11 +103,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH));
 
     // test HandleUninstallBundle
-    defaultAppMgr.HandleUninstallBundle(INVALID_USERID, "");
-    defaultAppMgr.HandleUninstallBundle(TEST_USERID_100, "");
-    defaultAppMgr.HandleUninstallBundle(TEST_USERID_100, "com.test");
+    defaultAppMgr.HandleUninstallBundle(INVALID_USERID, "", 0);
+    defaultAppMgr.HandleUninstallBundle(TEST_USERID_100, "", 0);
+    defaultAppMgr.HandleUninstallBundle(TEST_USERID_100, "com.test", 0);
     defaultAppMgr.HandleUninstallBundle(fdp.ConsumeIntegral<int32_t>(),
-        fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH));
+        fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH), 0);
 
     // test IsBrowserWant
     ElementName name;

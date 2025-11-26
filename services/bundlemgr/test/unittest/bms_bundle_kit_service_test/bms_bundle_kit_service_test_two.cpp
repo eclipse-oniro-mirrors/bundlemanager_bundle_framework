@@ -5471,7 +5471,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetModuleRemovable_0300, Function | SmallTest 
 {
     ClearBundleInfo(BUNDLE_NAME_TEST_CLEAR);
     bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST_CLEAR, MODULE_NAME_TEST_CLEAR, true,
-        DEFAULT_USER_ID_TEST);
+        DEFAULT_USER_ID_TEST, NEW_USER_ID_TEST);
     EXPECT_FALSE(testRet);
     bool isRemovable = false;
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST_CLEAR, MODULE_NAME_TEST_CLEAR, isRemovable,
@@ -6938,6 +6938,61 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_3000, Function | SmallTest | Level
     AbilityInfo abilityInfo2;
     parcel.ReadString(abilityName2);
     EXPECT_EQ(abilityName2, "");
+}
+
+/**
+ * @tc.number: AssetGroupInfo_0001
+ * @tc.name: AssetGroupInfo to_json and from_json branch cover
+ * @tc.desc: 1.Test AssetGroupInfo to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, AssetGroupInfo_0001, Function | SmallTest | Level1)
+{
+    AssetGroupInfo assetGroupInfo;
+    assetGroupInfo.appId = "appid123";
+    assetGroupInfo.appIndex = 1;
+
+    nlohmann::json jsonObj;
+    to_json(jsonObj, assetGroupInfo);
+    AssetGroupInfo result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.appId, "appid123");
+    EXPECT_EQ(result.appIndex, 1);
+}
+
+/**
+ * @tc.number: AssetGroupInfo_0002
+ * @tc.name: test AssetGroupInfo Unmarshalling
+ * @tc.desc: 1.system run normally
+ *           2. AssetGroupInfo Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, AssetGroupInfo_0002, Function | SmallTest | Level1)
+{
+    AssetGroupInfo assetGroupInfo;
+    Parcel parcel;
+    AssetGroupInfo *info = assetGroupInfo.Unmarshalling(parcel);
+    EXPECT_EQ(info, nullptr);
+}
+
+/**
+ * @tc.number: AssetGroupInfo_0003
+ * @tc.name: test AssetGroupInfo Marshalling
+ * @tc.desc: 1.system run normally
+ *           2. AssetGroupInfo Marshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, AssetGroupInfo_0003, Function | SmallTest | Level1)
+{
+    AssetGroupInfo assetGroupInfo;
+    assetGroupInfo.appIndex = 1;
+    Parcel parcel;
+    auto ret = hapHashAndDeveloperCert.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    AssetGroupInfo *info = AssetGroupInfo::Unmarshalling(parcel);
+    EXPECT_NE(info, nullptr);
+    if (info != nullptr) {
+        EXPECT_EQ(assetGroupInfo.appIndex, info->appIndex);
+        delete info;
+    }
 }
 
 /**

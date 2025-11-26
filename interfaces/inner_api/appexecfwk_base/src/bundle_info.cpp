@@ -87,6 +87,13 @@ const char* BUNDLE_INFO_ROUTER_ARRAY = "routerArray";
 const char* BUNDLE_INFO_IS_NEW_VERSION = "isNewVersion";
 const char* BUNDLE_INFO_DEVELOPER_ID = "developerId";
 const char* BUNDLE_INFO_ASSET_ACCESS_GROUPS = "assetAccessGroups";
+const char* BUNDLE_INFO_ALLOWED_ACLS = "allowedAcls";
+const char* BUNDLE_INFO_ABILITY_NAMES = "abilityNames";
+const char* BUNDLE_INFO_HAP_HASH_AND_DEVELOPER_CERT = "hapHashValueAndDevelopCerts";
+const char* BUNDLE_INFO_SO_HASH = "soHash";
+const char* HAP_PATH = "hapPath";
+const char* HAP_HASH_VALUE = "hapHashValue";
+const char* HAP_DEVELOPER_CERT = "hapDeveloperCert";
 const uint32_t BUNDLE_CAPACITY = 204800; // 200K
 }
 
@@ -224,40 +231,25 @@ std::string SimpleAppInfo::ToString() const
     return jsonObject.dump();
 }
 
-bool AssetGroupInfo::ReadFromParcel(Parcel &parcel)
+bool HapHashAndDeveloperCert::ReadFromParcel(Parcel &parcel)
 {
-    appIndex = parcel.ReadInt32();
-    bundleName = Str16ToStr8(parcel.ReadString16());
-    appId = Str16ToStr8(parcel.ReadString16());
-    appIdentifier = Str16ToStr8(parcel.ReadString16());
-    developerId = Str16ToStr8(parcel.ReadString16());
-
-    int32_t groups;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, groups);
-    CONTAINER_SECURITY_VERIFY(parcel, groups, &assetAccessGroups);
-    for (auto i = 0; i < groups; i++) {
-        assetAccessGroups.emplace_back(Str16ToStr8(parcel.ReadString16()));
-    }
+    path = Str16ToStr8(parcel.ReadString16());
+    hash = Str16ToStr8(parcel.ReadString16());
+    developCert = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
-bool AssetGroupInfo::Marshalling(Parcel &parcel) const
+bool HapHashAndDeveloperCert::Marshalling(Parcel &parcel) const
 {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appId));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(developerId));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, assetAccessGroups.size());
-    for (auto &group : assetAccessGroups) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(group));
-    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(path));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hash));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(developCert));
     return true;
 }
 
-AssetGroupInfo *AssetGroupInfo::Unmarshalling(Parcel &parcel)
+HapHashAndDeveloperCert *HapHashAndDeveloperCert::Unmarshalling(Parcel &parcel)
 {
-    AssetGroupInfo *info = new (std::nothrow) AssetGroupInfo();
+    HapHashAndDeveloperCert *info = new (std::nothrow) HapHashAndDeveloperCert();
     if (info && !info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         delete info;
@@ -266,62 +258,152 @@ AssetGroupInfo *AssetGroupInfo::Unmarshalling(Parcel &parcel)
     return info;
 }
 
-void to_json(nlohmann::json &jsonObject, const AssetGroupInfo &assetGroupInfo)
+void to_json(nlohmann::json &jsonObject, const HapHashAndDeveloperCert &hapHashAndDeveloperCert)
 {
     jsonObject = nlohmann::json {
-        {BUNDLE_INFO_APP_INDEX, assetGroupInfo.appIndex},
-        {BUNDLE_INFO_NAME, assetGroupInfo.bundleName},
-        {BUNDLE_INFO_APPID, assetGroupInfo.appId},
-        {APP_IDENTIFIER, assetGroupInfo.appIdentifier},
-        {BUNDLE_INFO_DEVELOPER_ID, assetGroupInfo.developerId},
-        {BUNDLE_INFO_ASSET_ACCESS_GROUPS, assetGroupInfo.assetAccessGroups},
+        {HAP_PATH, hapHashAndDeveloperCert.path},
+        {HAP_HASH_VALUE, hapHashAndDeveloperCert.hash},
+        {HAP_DEVELOPER_CERT, hapHashAndDeveloperCert.developCert}
     };
 }
 
-void from_json(const nlohmann::json &jsonObject, AssetGroupInfo &assetGroupInfo)
+void from_json(const nlohmann::json &jsonObject, HapHashAndDeveloperCert &hapHashAndDeveloperCert)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<int32_t>(jsonObject,
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
         jsonObjectEnd,
-        BUNDLE_INFO_APP_INDEX,
-        assetGroupInfo.appIndex,
-        JsonType::NUMBER,
+        HAP_PATH,
+        hapHashAndDeveloperCert.path,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_HASH_VALUE,
+        hapHashAndDeveloperCert.hash,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HAP_DEVELOPER_CERT,
+        hapHashAndDeveloperCert.developCert,
+        false,
+        parseResult);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read database error : %{public}d", parseResult);
+    }
+}
+
+bool BundleInfoForException::ReadFromParcel(Parcel &parcel)
+{
+    int32_t aclSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, aclSize);
+    CONTAINER_SECURITY_VERIFY(parcel, aclSize, &allowedAcls);
+    for (int32_t i = 0; i < aclSize; ++i) {
+        std::string acl = Str16ToStr8(parcel.ReadString16());
+        allowedAcls.emplace_back(acl);
+    }
+
+    int32_t abilitySize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilitySize);
+    CONTAINER_SECURITY_VERIFY(parcel, abilitySize, &abilityNames);
+    for (int32_t i = 0; i < abilitySize; ++i) {
+        std::string ability = Str16ToStr8(parcel.ReadString16());
+        abilityNames.emplace_back(ability);
+    }
+
+    int32_t hapSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapSize);
+    CONTAINER_SECURITY_VERIFY(parcel, hapSize, &hapHashValueAndDevelopCerts);
+    for (int32_t i = 0; i < hapSize; ++i) {
+        std::unique_ptr<HapHashAndDeveloperCert> hapHashAndCert(parcel.ReadParcelable<HapHashAndDeveloperCert>());
+        if (!hapHashAndCert) {
+            APP_LOGE("ReadParcelable<HapHashAndDeveloperCert> failed");
+            return false;
+        }
+        hapHashValueAndDevelopCerts.emplace_back(*hapHashAndCert);
+    }
+
+    int32_t soSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, soSize);
+    CONTAINER_SECURITY_VERIFY(parcel, soSize, &soHash);
+    for (int32_t i = 0; i < soSize; ++i) {
+        std::string soPath = Str16ToStr8(parcel.ReadString16());
+        std::string soHashValue = Str16ToStr8(parcel.ReadString16());
+        soHash.try_emplace(soPath, soHashValue);
+    }
+    return true;
+}
+
+bool BundleInfoForException::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, allowedAcls.size());
+    for (auto &acl : allowedAcls) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(acl));
+    }
+    
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityNames.size());
+    for (auto &ability : abilityNames) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(ability));
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapHashValueAndDevelopCerts.size());
+    for (auto &item : hapHashValueAndDevelopCerts) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
+    }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, soHash.size());
+    for (auto &item : soHash) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item.second));
+    }
+
+    return true;
+}
+
+BundleInfoForException *BundleInfoForException::Unmarshalling(Parcel &parcel)
+{
+    BundleInfoForException *info = new (std::nothrow) BundleInfoForException();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const BundleInfoForException &bundleInfoForException)
+{
+    jsonObject = nlohmann::json {
+        {BUNDLE_INFO_ALLOWED_ACLS, bundleInfoForException.allowedAcls},
+        {BUNDLE_INFO_ABILITY_NAMES, bundleInfoForException.abilityNames},
+        {BUNDLE_INFO_HAP_HASH_AND_DEVELOPER_CERT, bundleInfoForException.hapHashValueAndDevelopCerts},
+        {BUNDLE_INFO_SO_HASH, bundleInfoForException.soHash}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, BundleInfoForException &bundleInfoForException)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, BUNDLE_INFO_ALLOWED_ACLS,
+        bundleInfoForException.allowedAcls, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, BUNDLE_INFO_ABILITY_NAMES,
+        bundleInfoForException.abilityNames, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::vector<HapHashAndDeveloperCert>>(jsonObject, jsonObjectEnd,
+        BUNDLE_INFO_HAP_HASH_AND_DEVELOPER_CERT,
+        bundleInfoForException.hapHashValueAndDevelopCerts, JsonType::ARRAY, false, parseResult, ArrayType::OBJECT);
+    GetMapValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_SO_HASH,
+        bundleInfoForException.soHash,
         false,
         parseResult,
+        JsonType::STRING,
         ArrayType::NOT_ARRAY);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_INFO_NAME,
-        assetGroupInfo.bundleName,
-        false,
-        parseResult);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_INFO_APPID,
-        assetGroupInfo.appId,
-        false,
-        parseResult);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        APP_IDENTIFIER,
-        assetGroupInfo.appIdentifier,
-        false,
-        parseResult);
-    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_INFO_DEVELOPER_ID,
-        assetGroupInfo.developerId,
-        false,
-        parseResult);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_INFO_ASSET_ACCESS_GROUPS,
-        assetGroupInfo.assetAccessGroups,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::STRING);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("BundleInfoForException from_json error %{public}d", parseResult);
+    }
 }
 
 bool BundleInfo::ReadFromParcel(Parcel &parcel)
@@ -1208,6 +1290,106 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
     if (parseResult != ERR_OK) {
         APP_LOGE("BundleInfo from_json error %{public}d", parseResult);
     }
+}
+
+bool AssetGroupInfo::ReadFromParcel(Parcel &parcel)
+{
+    appIndex = parcel.ReadInt32();
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    appId = Str16ToStr8(parcel.ReadString16());
+    appIdentifier = Str16ToStr8(parcel.ReadString16());
+    developerId = Str16ToStr8(parcel.ReadString16());
+
+    int32_t groups;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, groups);
+    CONTAINER_SECURITY_VERIFY(parcel, groups, &assetAccessGroups);
+    for (auto i = 0; i < groups; i++) {
+        assetAccessGroups.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+    return true;
+}
+
+bool AssetGroupInfo::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(developerId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, assetAccessGroups.size());
+    for (auto &group : assetAccessGroups) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(group));
+    }
+    return true;
+}
+
+AssetGroupInfo *AssetGroupInfo::Unmarshalling(Parcel &parcel)
+{
+    AssetGroupInfo *info = new (std::nothrow) AssetGroupInfo();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const AssetGroupInfo &assetGroupInfo)
+{
+    jsonObject = nlohmann::json {
+        {BUNDLE_INFO_APP_INDEX, assetGroupInfo.appIndex},
+        {BUNDLE_INFO_NAME, assetGroupInfo.bundleName},
+        {BUNDLE_INFO_APPID, assetGroupInfo.appId},
+        {APP_IDENTIFIER, assetGroupInfo.appIdentifier},
+        {BUNDLE_INFO_DEVELOPER_ID, assetGroupInfo.developerId},
+        {BUNDLE_INFO_ASSET_ACCESS_GROUPS, assetGroupInfo.assetAccessGroups},
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, AssetGroupInfo &assetGroupInfo)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_APP_INDEX,
+        assetGroupInfo.appIndex,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_NAME,
+        assetGroupInfo.bundleName,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_APPID,
+        assetGroupInfo.appId,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        APP_IDENTIFIER,
+        assetGroupInfo.appIdentifier,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_DEVELOPER_ID,
+        assetGroupInfo.developerId,
+        false,
+        parseResult);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_ASSET_ACCESS_GROUPS,
+        assetGroupInfo.assetAccessGroups,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

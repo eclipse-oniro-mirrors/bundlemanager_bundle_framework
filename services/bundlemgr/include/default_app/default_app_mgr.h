@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,7 +36,7 @@ public:
     ErrCode SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const;
     ErrCode ResetDefaultApplication(int32_t userId, const std::string& type) const;
 
-    void HandleUninstallBundle(int32_t userId, const std::string& bundleName) const;
+    void HandleUninstallBundle(int32_t userId, const std::string& bundleName, const int32_t appIndex) const;
     void HandleCreateUser(int32_t userId) const;
     void HandleRemoveUser(int32_t userId) const;
 

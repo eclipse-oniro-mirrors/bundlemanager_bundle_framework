@@ -112,6 +112,8 @@ public:
     static bool IsBundleSelfCalling(const std::string &bundleName);
     static bool IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex);
 
+    static bool VerifyAcrossUserPermission(const int32_t userId);
+
     // for old api
     static bool VerifyCallingBundleSdkVersion(int32_t beginApiVersion = Constants::INVALID_API_VERSION);
 

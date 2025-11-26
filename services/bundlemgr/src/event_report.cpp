@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -249,8 +249,8 @@ void EventReport::ReportDataPartitionUsageEvent()
     EventReport::SendSystemEvent(BMSEventType::DATA_PARTITION_USAGE_EVENT, eventInfo);
 }
 
-void EventReport::SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const std::string& callingName,
-    const std::string& want, const std::string& utd)
+void EventReport::SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const int32_t appIndex,
+    const std::string& callingName, const std::string& want, const std::string& utd)
 {
     EventInfo eventInfo;
     eventInfo.actionType = static_cast<int32_t>(actionType);
@@ -258,6 +258,7 @@ void EventReport::SendDefaultAppEvent(DefaultAppActionType actionType, int32_t u
     eventInfo.callingName = callingName;
     eventInfo.want = want;
     eventInfo.utd = utd;
+    eventInfo.appIndex = appIndex;
     EventReport::SendSystemEvent(BMSEventType::DEFAULT_APP, eventInfo);
 }
 

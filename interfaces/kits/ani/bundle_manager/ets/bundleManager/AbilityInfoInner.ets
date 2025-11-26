@@ -104,7 +104,8 @@ export class AbilityInfoInner implements AbilityInfo {
     description: string,
     descriptionId: long,
     icon: string,
-    iconId: long) {
+    iconId: long,
+    appIndex: int) {
       this.bundleName = bundleName;
       this.moduleName = moduleName;
       this.name = name;
@@ -114,6 +115,7 @@ export class AbilityInfoInner implements AbilityInfo {
       this.descriptionId = descriptionId;
       this.icon = icon;
       this.iconId = iconId;
+      this.appIndex = appIndex;
   }
 }
 

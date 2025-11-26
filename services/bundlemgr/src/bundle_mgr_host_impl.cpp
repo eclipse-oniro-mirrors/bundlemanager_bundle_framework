@@ -79,6 +79,7 @@ const std::string FUNCATION_GET_ASSET_GROUPS_INFO = "BundleMgrHostImpl::GetAsset
 const std::string FUNCTION_GET_BUNDLE_INFO_V9 = "BundleMgrHostImpl::GetBundleInfoV9";
 const std::string FUNCTION_GET_BUNDLE_INFO_FOR_SELF = "BundleMgrHostImpl::GetBundleInfoForSelf";
 const std::string FUNCTION_GREAT_OR_EQUAL_API_TARGET_VERSION = "BundleMgrHostImpl::GreatOrEqualTargetAPIVersion";
+const std::string FUNCATION_GET_BUNDLE_INFO_FOR_EXCEPTION = "BundleMgrHostImpl::GetBundleInfoForException";
 const std::string CLONE_APP_DIR_PREFIX = "+clone-";
 const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.IAtomicServiceStatusCallback";
 const std::string PLUS = "+";
@@ -424,32 +425,69 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
     return res;
 }
 
-ErrCode BundleMgrHostImpl::GetAssetGroupsInfo(const int uid, AssetGroupInfo &assetGroupInfo)
+ErrCode BundleMgrHostImpl::GetBundleInfoForException(const std::string &bundleName, int32_t userId, uint32_t catchSoNum,
+    uint64_t catchSoMaxSize, BundleInfoForException &bundleInfoForException)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    LOG_D(BMS_TAG_QUERY, "GetAssetGroupsInfo, uid:%{public}d", uid);
-    bool permissionVerify = []() {
+    LOG_D(BMS_TAG_QUERY, "GetBundleInfoForException, bundleName:%{public}s, userId:%{public}d",
+        bundleName.c_str(), userId);
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t timerId = XCollieHelper::SetRecoveryTimer(FUNCATION_GET_BUNDLE_INFO_FOR_EXCEPTION);
+    ScopeGuard cancelTimerIdGuard([timerId] { XCollieHelper::CancelTimer(timerId); });
+    bool permissionVerify = [bundleName]() {
         if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
             return true;
         }
-        if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
-            BundlePermissionMgr::IsSystemApp()) {
+        if (BundlePermissionMgr::IsNativeTokenType()) {
             return true;
         }
         return false;
     }();
     if (!permissionVerify) {
-        APP_LOGW("verify permission failed");
+        APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-
+    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfoForException");
+    int64_t intervalTime = ONE_DAY;
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
-    return dataMgr->GetAssetGroupsInfo(uid, assetGroupInfo);
+    InnerBundleInfo innerBundleInfo;
+    bool isSuccess = dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
+    if (!isSuccess) {
+        APP_LOGE("get innerBundleInfo fail");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    bundleInfoForException.allowedAcls = innerBundleInfo.GetAllowedAcls();
+    bundleInfoForException.abilityNames = innerBundleInfo.GetAbilityNames();
+
+    // get hapHashValueAndDevelopCerts
+    bundleInfoForException.hapHashValueAndDevelopCerts = innerBundleInfo.GetModuleHapHash();
+    for (size_t i = 0; i < bundleInfoForException.hapHashValueAndDevelopCerts.size(); i++) {
+        std::string hapPath = bundleInfoForException.hapHashValueAndDevelopCerts[i].path;
+        // set developercert
+        Security::Verify::HapVerifyResult hapVerifyResult;
+        BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult);
+        Security::Verify::ProvisionInfo provision =  hapVerifyResult.GetProvisionInfo();
+        APP_LOGD("developerCert:%{public}s", provision.developerCert.c_str());
+        bundleInfoForException.hapHashValueAndDevelopCerts[i].developCert = provision.developerCert;
+    }
+    
+    // get so hash
+    std::string soPath = std::string(ServiceConstants::SO_PATH_PREFIX) + bundleName +
+        ServiceConstants::PATH_SEPARATOR + innerBundleInfo.GetNativeLibraryPath();
+    std::vector<std::string> soName;
+    std::vector<std::string> soHash;
+    InstalldClient::GetInstance()->HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+    for (size_t i = 0; i < soName.size(); i++) {
+        bundleInfoForException.soHash.try_emplace(soName[i], soHash[i]);
+    }
+
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
@@ -2536,7 +2574,8 @@ bool BundleMgrHostImpl::SetModuleRemovable(const std::string &bundleName, const 
         return false;
     }
     int32_t userId = AccountHelper::GetUserIdByCallerType();
-    return dataMgr->SetModuleRemovable(bundleName, moduleName, isEnable, userId);
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    return dataMgr->SetModuleRemovable(bundleName, moduleName, isEnable, userId, callingUid);
 }
 
 bool BundleMgrHostImpl::GetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName)
@@ -5606,6 +5645,46 @@ bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
     return false;
 }
 
+void BundleMgrHostImpl::SetAtomicServiceRemovable(const ShortcutInfo &shortcutInfo, bool isEnable, int32_t userId)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    BundleType type;
+    dataMgr->GetBundleType(shortcutInfo.bundleName, type);
+    if (type != BundleType::ATOMIC_SERVICE) {
+        APP_LOGE("BundleType is not atomic service");
+        return;
+    }
+    std::string moduleName = shortcutInfo.moduleName;
+    if (moduleName.empty()) {
+        std::vector<ShortcutInfo> shortcutInfos;
+        ErrCode res = dataMgr->GetAllDesktopShortcutInfo(userId, shortcutInfos);
+        if (res != ERR_OK) {
+            APP_LOGE("GetAllDesktopShortcutInfo failed res:%{public}d", res);
+            return;
+        }
+        for (const auto& info : shortcutInfos) {
+            APP_LOGD("info.bundleName = %{public}s info.id = %{public}s info.appIndex= %{public}d",
+                info.bundleName.c_str(), info.id.c_str(), info.appIndex);
+            if (info.bundleName == shortcutInfo.bundleName &&
+                info.id == shortcutInfo.id &&
+                info.appIndex == shortcutInfo.appIndex) {
+                moduleName = info.moduleName;
+                break;
+            }
+        }
+    }
+    APP_LOGI("module = %{public}s", moduleName.c_str());
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    bool result = dataMgr->SetModuleRemovable(shortcutInfo.bundleName, moduleName, isEnable, userId, callingUid);
+    if (!result) {
+        APP_LOGE("SetModuleRemovable failed");
+    }
+}
+
 ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -5621,7 +5700,13 @@ ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutIn
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+    ErrCode res = dataMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+    if (res != ERR_OK) {
+        APP_LOGE("AddDesktopShortcutInfo failed");
+        return res;
+    }
+    SetAtomicServiceRemovable(shortcutInfo, false, userId);
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
@@ -5639,6 +5724,7 @@ ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcu
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    SetAtomicServiceRemovable(shortcutInfo, true, userId);
     return dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
 }
 
@@ -6655,6 +6741,22 @@ ErrCode BundleMgrHostImpl::GetAllJsonProfile(ProfileType profileType, int32_t us
         return ERR_APPEXECFWK_NULL_PTR;
     }
     return dataMgr->GetAllJsonProfile(profileType, userId, profileInfos);
+}
+
+ErrCode BundleMgrHostImpl::GetAssetGroupsInfo(const int uid, AssetGroupInfo &assetGroupInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    LOG_D(BMS_TAG_QUERY, "GetAssetGroupsInfo, uid:%{public}d", uid);
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAssetGroupsInfo(uid, assetGroupInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

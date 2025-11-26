@@ -583,6 +583,7 @@ ohos_shared_library("installs") {
     "init:libbegetutil",
     "ipc:ipc_single",
     "memmgr:memmgrclient",
+    "openssl:libcrypto_shared",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",

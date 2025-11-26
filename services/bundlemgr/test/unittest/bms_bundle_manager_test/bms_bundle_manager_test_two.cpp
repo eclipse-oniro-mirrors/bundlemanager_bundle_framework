@@ -347,6 +347,25 @@ void BmsBundleManagerTest2::ClearBundleInfo()
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_GetBundleInfoForSg_1000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.GetBundleInfoForException failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetBundleInfoForSg_1000, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    BundleInfoForException bundleInfoForException;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    ErrCode getInfoResult = hostImpl->GetBundleInfoForException("", USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
  * @tc.number: BundleMgrHostImpl_1000
  * @tc.name: test BundleMgrHostImpl
  * @tc.desc: 1.query infos failed by data mgr is empty

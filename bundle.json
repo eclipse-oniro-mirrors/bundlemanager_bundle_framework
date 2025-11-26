@@ -70,6 +70,7 @@
                 "libpng",
                 "libuv",
                 "napi",
+                "openssl",
                 "os_account",
                 "power_manager",
                 "safwk",

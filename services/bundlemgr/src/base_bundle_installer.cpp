@@ -379,7 +379,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         UtdHandler::UninstallUtdAsync(bundleName, userId_);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
         if (!installParam.isRemoveUser) {
-            DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName);
+            DefaultAppMgr::GetInstance().HandleUninstallBundle(userId_, bundleName, 0);
         }
 #endif
     }
@@ -2569,7 +2569,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, int32_t &userId, bool removeDir)
+ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &info, int32_t userId, bool removeDir)
 {
     if (info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
         LOG_I(BMS_TAG_INSTALLER, "hnp install: %{public}s, %{public}d", info.GetCurModuleName().c_str(), userId);
@@ -2590,7 +2590,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, i
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info,
+ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &info,
     const std::unordered_set<int32_t> &userIds)
 {
     for (int32_t userId : userIds) {
@@ -2606,8 +2606,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info,
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
-    int32_t &userId, std::string bundleName, std::string moduleName)
+ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(const InnerBundleInfo &info,
+    int32_t userId, const std::string &bundleName, const std::string &moduleName)
 {
     if (info.GetInnerModuleInfoHnpInfo(moduleName)) {
         LOG_I(BMS_TAG_INSTALLER, "hnp uninstall: %{public}s, %{public}d", moduleName.c_str(), userId);
@@ -2621,8 +2621,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
-    const std::unordered_set<int32_t> &userIds, std::string bundleName, std::string moduleName)
+ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(const InnerBundleInfo &info,
+    const std::unordered_set<int32_t> &userIds, const std::string &bundleName, const std::string &moduleName)
 {
     for (int32_t userId : userIds) {
         ErrCode ret = ProcessBundleUnInstallNative(info, userId, bundleName, moduleName);
@@ -2633,7 +2633,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
     return ERR_OK;
 }
 
-void BaseBundleInstaller::RollbackHnpInstall(const std::string &bundleName, const std::unordered_set<int32_t> userIds)
+void BaseBundleInstaller::RollbackHnpInstall(const std::string &bundleName, const std::unordered_set<int32_t> &userIds)
 {
     for (int32_t userId : userIds) {
         ErrCode ret = InstalldClient::GetInstance()->ProcessBundleUnInstallNative(
