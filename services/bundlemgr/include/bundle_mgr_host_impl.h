@@ -1292,7 +1292,8 @@ private:
     ErrCode ImplicitQueryAbilityInfosWithDefault(const Want &want,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
     void SetAtomicServiceRemovable(const ShortcutInfo &shortcutInfo, bool isEnable, int32_t userId);
-    bool HasGetAbilityInfoExcludeExtFlag(uint32_t flags) const;
+    bool IsQueryBundleInfoExt(uint32_t flags) const;
+    bool IsQueryAbilityInfoExt(uint32_t flags) const;
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

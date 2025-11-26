@@ -33,7 +33,9 @@ enum AbilityInfoFlag : uint16_t {
     GET_ABILITY_INFO_SYSTEMAPP_ONLY = 0x00000080,
     GET_ABILITY_INFO_WITH_DISABLE = 0x00000100,
     GET_ABILITY_INFO_WITH_SKILL_URI = 0x00000200,
-    GET_ABILITY_INFO_WITH_SKILL = 0x00000400
+    GET_ABILITY_INFO_WITH_SKILL = 0x00000400,
+    // the flag only for C++ interface passing
+    GET_ABILITY_INFO_EXCLUDE_EXT = 0x00020000,
 };
 
 enum class GetAbilityInfoFlag : uint16_t {
@@ -46,7 +48,8 @@ enum class GetAbilityInfoFlag : uint16_t {
     GET_ABILITY_INFO_WITH_SKILL_URI = 0x00000020,
     GET_ABILITY_INFO_WITH_APP_LINKING = 0x00000040,
     GET_ABILITY_INFO_WITH_SKILL = 0x00000080,
-    GET_ABILITY_INFO_EXCLUDE_EXTENSION = 0x00000100,
+    // the flag only for C++ interface passing
+    GET_ABILITY_INFO_EXCLUDE_EXT = 0x00020000,
 };
 
 enum class AbilityType {
