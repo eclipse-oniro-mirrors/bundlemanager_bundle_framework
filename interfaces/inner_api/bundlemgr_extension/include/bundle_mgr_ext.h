@@ -211,6 +211,11 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual bool GetInstallAndRecoverList(const int32_t userId, const std::vector<std::string> &bundleList,
+        std::vector<std::string> &installList, std::vector<std::string> &recoverList)
+    {
+        return false;
+    }
 };
 
 } // AppExecFwk

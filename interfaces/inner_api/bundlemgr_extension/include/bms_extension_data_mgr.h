@@ -92,6 +92,8 @@ public:
     ErrCode RemoveBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode BatchGetCompatibleDeviceType(
         const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes);
+    bool GetInstallAndRecoverList(const int32_t userId, const std::vector<std::string> &bundleList,
+        std::vector<std::string> &installList, std::vector<std::string> &recoverList);
 private:
     bool OpenHandler();
     static void *handler_;
