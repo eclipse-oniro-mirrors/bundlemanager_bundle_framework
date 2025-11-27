@@ -1393,4 +1393,54 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7400, Function | SmallTest |
     auto ret = proxy->CopyDir("", "");
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_7500
+ * @tc.name: test Marshalling function of CopyDir
+ * @tc.desc: 1. calling CopyDir of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7500, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+ 
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 10241024;
+    std::vector<std::string> soName;
+    std::vector<std::string> soHash;
+ 
+    std::string bundleName = "com.ohos.telephonydataability";
+ 
+    std::string soPath1 = "/data/app/el1/bundle/public/" + bundleName + "/libs/arm/";
+    std::string soPath2 = "/data/app/el1/bundle/public/" + bundleName + "/libs/arm64/";
+    ErrCode ret = ERR_OK;
+    if (access(soPath1.c_str(), F_OK) == 0) {
+        ret = proxy->HashSoFile(soPath1, catchSoNum, catchSoMaxSize, soName, soHash);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+ 
+    if (access(soPath2.c_str(), F_OK) == 0) {
+        ret = proxy->HashSoFile(soPath2, catchSoNum, catchSoMaxSize, soName, soHash);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+}
+ 
+/**
+ * @tc.number: InstalldProxyTest_7600
+ * @tc.name: test Marshalling function of CopyDir
+ * @tc.desc: 1. calling CopyDir of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7600, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+ 
+    std::vector<std::string> files;
+    files.push_back("/data/test/1");
+    files.push_back("/data/test/2");
+    std::vector<std::string> filesHash;
+    
+    auto ret = proxy->HashFiles(files, filesHash);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

@@ -1219,7 +1219,7 @@ ErrCode InstalldProxy::HashFiles(const std::vector<std::string> &files, std::vec
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    return ERR_OK;
+    return ret;
 }
 
 ErrCode InstalldProxy::RestoreconPath(const std::string &path)
