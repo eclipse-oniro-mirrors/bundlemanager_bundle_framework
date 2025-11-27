@@ -486,7 +486,10 @@ bool BundleInstallerHost::Install(
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-
+    if (!CheckInstallDowngradeParam(installParam)) {
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
     manager_->CreateInstallTask(bundleFilePath, installParam, statusReceiver);
     return true;
 }
@@ -522,7 +525,10 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-
+    if (!CheckInstallDowngradeParam(installParam)) {
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
     manager_->CreateInstallTask(bundleFilePaths, installParam, statusReceiver);
     return true;
 }
@@ -1193,6 +1199,20 @@ bool BundleInstallerHost::CheckUninstallDisposedRule(
     LOG_I(BMS_TAG_INSTALLER, "BUNDLE_FRAMEWORK_APP_CONTROL or ABILITY_RUNTIME_ENABLE is false");
     return false;
 #endif
+}
+
+bool BundleInstallerHost::CheckInstallDowngradeParam(const InstallParam &installParam)
+{
+    auto item = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE);
+    if ((item == installParam.parameters.end()) || (item->second != ServiceConstants::BMS_TRUE)) {
+        return true;
+    }
+    if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ALLOW_DOWNGRADE)) {
+        return true;
+    }
+    LOG_E(BMS_TAG_INSTALLER, "no permission to install allow downgrade");
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

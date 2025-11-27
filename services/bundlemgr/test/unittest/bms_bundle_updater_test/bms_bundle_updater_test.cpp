@@ -68,7 +68,7 @@ public:
     ErrCode InstallBundle(const std::string &bundlePath) const;
     ErrCode UninstallBundle(const std::string &bundleName) const;
     ErrCode UpdateBundle(const std::string &bundlePath) const;
-    ErrCode UpdateBundle(const std::string &bundlePath, const bool needCheckInfo) const;
+    ErrCode UpdateBundle(const std::string &bundlePath, const bool needCheckInfo, bool downgrade = false) const;
 
     void StopInstalldService() const;
     void StartInstalldService() const;
@@ -185,7 +185,8 @@ ErrCode BmsBundleUpdaterTest::UpdateBundle(const std::string &bundlePath) const
     return receiver->GetResultCode();
 }
 
-ErrCode BmsBundleUpdaterTest::UpdateBundle(const std::string &bundlePath, const bool needCheckInfo) const
+ErrCode BmsBundleUpdaterTest::UpdateBundle(
+    const std::string &bundlePath, const bool needCheckInfo, bool downgrade) const
 {
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     if (!installer) {
@@ -201,6 +202,9 @@ ErrCode BmsBundleUpdaterTest::UpdateBundle(const std::string &bundlePath, const 
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.withCopyHaps = true;
+    if (downgrade) {
+        installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = ServiceConstants::BMS_TRUE;
+    }
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
 
@@ -466,6 +470,24 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0800, Function | SmallTest | Level2)
 
     isExist = CheckBundleInfo(VERSION_3, true);
     EXPECT_TRUE(isExist);
+
+    installResult = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(installResult, ERR_OK);
+}
+
+/**
+ * @tc.number: Update_0900
+ * @tc.name: test the lower version bundle can't be updated
+ * @tc.desc: 1. the bundle file is the lower version
+ *           2. test allow install downgrade
+ */
+HWTEST_F(BmsBundleUpdaterTest, Update_0900, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(BUNDLE_FILE_DIR + V2_BUNDLE);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    ErrCode updateResult = UpdateBundle(BUNDLE_FILE_DIR + V1_BUNDLE, false, true);
+    EXPECT_EQ(updateResult, ERR_OK);
 
     installResult = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(installResult, ERR_OK);

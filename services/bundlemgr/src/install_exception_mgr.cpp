@@ -66,7 +66,7 @@ void InstallExceptionMgr::HandleBundleExceptionInfo(
             if ((dataMgr != nullptr) && (!dataMgr->FetchInnerBundleInfo(bundleName, bundleInfo))) {
                 APP_LOGW("bundle %{public}s not exist", bundleName.c_str());
             }
-            if (bundleInfo.GetVersionCode() <= installExceptionInfo.versionCode) {
+            if (bundleInfo.GetVersionCode() == installExceptionInfo.versionCode) {
                 std::string realPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
                     bundleName;
                 std::string oldPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +

@@ -843,6 +843,8 @@ private:
         const InstallParam &installParam, bool isRecover);
     ErrCode CheckShellCanInstallPreApp(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool DeleteUninstallBundleInfoFromDb(const std::string &bundleName);
+    void CheckInstallAllowDowngrade(const InstallParam &installParam, bool isSystemApp,
+        bool hasEntry, ErrCode &result);
 
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
         Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);

@@ -639,6 +639,7 @@ bool BundleStreamInstallerHostImpl::Install()
 
     bool res;
     if (installParam_.isSelfUpdate) {
+        installParam_.parameters.erase(ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE);
         res = installer->UpdateBundleForSelf(pathVec, installParam_, receiver_);
     } else {
         res = installer->Install(pathVec, installParam_, receiver_);

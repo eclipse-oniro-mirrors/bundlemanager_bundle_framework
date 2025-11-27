@@ -12994,6 +12994,77 @@ HWTEST_F(BmsBundleInstallerTest, GetUninstallBundleInfo_0010, Function | SmallTe
 }
 
 /**
+ * @tc.number: CheckInstallAllowDowngrade_0100
+ * @tc.name: test CheckInstallAllowDowngrade
+ * @tc.desc: 1.Test the CheckInstallAllowDowngrade
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    ErrCode result = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    installer.CheckInstallAllowDowngrade(installParam, true, false, result);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    result = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    installer.CheckInstallAllowDowngrade(installParam, false, false, result);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    installer.CheckInstallAllowDowngrade(installParam, true, false, result);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
+
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    installer.CheckInstallAllowDowngrade(installParam, false, false, result);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
+
+    installer.isContainEntry_ = true;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "false";
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    installer.CheckInstallAllowDowngrade(installParam, false, false, result);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
+
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    installer.CheckInstallAllowDowngrade(installParam, false, false, result);
+    EXPECT_EQ(result, ERR_OK);
+
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    installer.CheckInstallAllowDowngrade(installParam, false, true, result);
+    EXPECT_EQ(result, ERR_OK);
+
+    installer.isContainEntry_ = false;
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    installer.CheckInstallAllowDowngrade(installParam, false, true, result);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_NOT_COMPATIBLE);
+
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    installer.CheckInstallAllowDowngrade(installParam, false, false, result);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallDowngradeParam_0100
+ * @tc.name: test CheckInstallDowngradeParam
+ * @tc.desc: 1.Test CheckInstallDowngradeParam
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallDowngradeParam_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    BundleInstallerHost bundleInstallerHost;
+    bool ret = bundleInstallerHost.CheckInstallDowngradeParam(installParam);
+    EXPECT_TRUE(ret);
+
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "false";
+    ret = bundleInstallerHost.CheckInstallDowngradeParam(installParam);
+    EXPECT_TRUE(ret);
+
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+    ret = bundleInstallerHost.CheckInstallDowngradeParam(installParam);
+    EXPECT_TRUE(ret);
+}
+
+/**
 * @tc.number: ProcessPluginFilesWhenUpdate_0010
 * @tc.name: test ProcessPluginFilesWhenUpdate
 * @tc.desc: 1.Test ProcessPluginFilesWhenUpdate

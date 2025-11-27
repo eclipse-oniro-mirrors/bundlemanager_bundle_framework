@@ -2045,6 +2045,19 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetAllJsonProfile_0001, Function | SmallT
 }
 
 /**
+ * @tc.number: CheckInstallDowngradeParam_0100
+ * @tc.name: test CheckInstallDowngradeParam
+ * @tc.desc: 1.Test CheckInstallDowngradeParam
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, CheckInstallDowngradeParam_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+    bool ret = bundleInstallerHost_->CheckInstallDowngradeParam(installParam);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_0001
  * @tc.name: test RecoverBackupBundleData
  * @tc.desc: test RecoverBackupBundleData
