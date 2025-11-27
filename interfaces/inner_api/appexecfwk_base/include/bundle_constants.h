@@ -108,7 +108,6 @@ constexpr const char* PERMISSION_CLEAN_APPLICATION_DATA = "ohos.permission.CLEAN
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
     "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED or "
     "(ohos.permission.GET_BUNDLE_INFO_PRIVILEGED and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
-
 enum class AppType {
     SYSTEM_APP = 0,
     THIRD_SYSTEM_APP,
