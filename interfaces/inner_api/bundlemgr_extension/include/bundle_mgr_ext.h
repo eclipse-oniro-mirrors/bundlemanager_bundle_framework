@@ -18,6 +18,7 @@
 
 #include "appexecfwk_errors.h"
 #include "ability_info.h"
+#include "bundle_compatible_device_type.h"
 #include "bundle_info.h"
 #include "bundle_resource_info.h"
 #include "code_protect_bundle_info.h"
@@ -170,6 +171,11 @@ public:
     virtual std::string GetCompatibleDeviceType(const std::string &bundleName)
     {
         return GetDeviceType();
+    }
+    virtual ErrCode BatchGetCompatibleDeviceType(
+        const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
     virtual ErrCode VerifyActivationLockToken(bool &res)
     {

@@ -22,6 +22,7 @@
 #include "app_provision_info.h"
 #include "bundle_additional_info.h"
 #include "bundle_constants.h"
+#include "bundle_compatible_device_type.h"
 #include "bundle_dir.h"
 #include "bundle_distribution_type.h"
 #include "bundle_event_callback_interface.h"
@@ -1956,6 +1957,12 @@ public:
 
     virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode BatchGetCompatibleDeviceType(
+        const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

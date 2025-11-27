@@ -10988,6 +10988,100 @@ HWTEST_F(ActsBmsKitSystemTest, GetCompatibleDeviceType_0002, Function | MediumTe
 }
 
 /**
+ * @tc.number: BBatchGetCompatibleDeviceType_0001
+ * @tc.name: test BatchGetCompatibleDeviceType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back(BASE_BUNDLE_NAME);
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+        if (ret != ERR_OK) {
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+            EXPECT_TRUE(compatibleDeviceTypes.empty());
+        } else {
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(compatibleDeviceTypes.size(), 1);
+            EXPECT_EQ(compatibleDeviceTypes[0].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        }
+    }
+}
+
+/**
+ * @tc.number: BatchGetCompatibleDeviceType_0002
+ * @tc.name: test BatchGetCompatibleDeviceType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0002, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    }
+}
+
+/**
+ * @tc.number: BatchGetCompatibleDeviceType_0003
+ * @tc.name: test BatchGetCompatibleDeviceType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0003, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames(1001, "BASE_BUNDLE_NAME");
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+    }
+}
+
+/**
+ * @tc.number: BatchGetCompatibleDeviceType_0004
+ * @tc.name: test BatchGetCompatibleDeviceType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0004, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back("");
+    bundleNames.push_back("BASE_BUNDLE_NAME");
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+        ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+        if (ret != ERR_OK) {
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+            EXPECT_TRUE(compatibleDeviceTypes.empty());
+        } else {
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_EQ(compatibleDeviceTypes.size(), 2);
+            EXPECT_EQ(compatibleDeviceTypes[0].bundleName, "");
+            EXPECT_EQ(compatibleDeviceTypes[1].errCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        }
+    }
+}
+
+/**
  * @tc.number: GetBundleNameByAppId_0001
  * @tc.name: test GetBundleNameByAppId interface
  * @tc.desc: GetBundleNameByAppId failed for calling bundle name is invalid
@@ -11257,7 +11351,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetTestRunner_0001, Function | MediumTest | Level
 HWTEST_F(ActsBmsKitSystemTest, GetAssetGroupsInfo_0001, Function | MediumTest | Level1)
 {
     std::cout << "START GetAssetGroupsInfo_0001" << std::endl;
-    CommonTool commonTool;
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";

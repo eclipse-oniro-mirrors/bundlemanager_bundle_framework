@@ -139,14 +139,14 @@ ErrCode InstalldClient::RemoveModuleDataDir(const std::string &ModuleName, const
     return CallService(&IInstalld::RemoveModuleDataDir, ModuleName, userid);
 }
 
-ErrCode InstalldClient::RemoveDir(const std::string &dir)
+ErrCode InstalldClient::RemoveDir(const std::string &dir, bool async)
 {
     if (dir.empty()) {
         APP_LOGE("dir removed is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::RemoveDir, dir);
+    return CallService(&IInstalld::RemoveDir, dir, async);
 }
 
 ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)

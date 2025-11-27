@@ -563,7 +563,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveDir_0200, TestSize.L
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveDir_0200 start";
     std::string dir = DIR;
     ErrCode result = installClient_->RemoveDir(dir);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::RemoveDir, dir));
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::RemoveDir, dir, false));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveDir_0200 end";
 }
 

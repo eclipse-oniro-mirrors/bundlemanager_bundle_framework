@@ -1826,6 +1826,25 @@ HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_3400, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_3401
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test BatchGetCompatibleDeviceType
+ */
+HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_3401, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+    std::vector<std::string> bundleNames = {BUNDLE_NAME};
+    std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+    ErrCode retCode = hostImpl->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(retCode, ERR_OK);
+    #else
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
+}
+
+/**
  * @tc.number: BundleMgrHostImpl_3500
  * @tc.name: test BundleMgrHostImpl
  * @tc.desc: 1.test GetCompatibleDeviceTypeNative

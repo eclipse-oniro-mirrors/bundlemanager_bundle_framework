@@ -6984,7 +6984,7 @@ HWTEST_F(BmsBundleKitServiceTest, AssetGroupInfo_0003, Function | SmallTest | Le
     AssetGroupInfo assetGroupInfo;
     assetGroupInfo.appIndex = 1;
     Parcel parcel;
-    auto ret = hapHashAndDeveloperCert.Marshalling(parcel);
+    auto ret = assetGroupInfo.Marshalling(parcel);
     EXPECT_TRUE(ret);
 
     AssetGroupInfo *info = AssetGroupInfo::Unmarshalling(parcel);
