@@ -1636,6 +1636,46 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_4300, Function | SmallTe
 }
 
 /**
+ * @tc.number: OnRemoteRequestTest_4400
+ * @tc.name: test OnRemoteRequest of InstalldHost
+ * @tc.desc: 1. Calling function with InstalldInterfaceCode GET_SO_HASH
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_4400, Function | SmallTest | Level0)
+{
+    uint32_t code = static_cast<uint32_t>(InstalldInterfaceCode::GET_SO_HASH);
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    InstalldHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_4500
+ * @tc.name: test OnRemoteRequest of InstalldHost
+ * @tc.desc: 1. Calling function with InstalldInterfaceCode GET_FILES_HASH
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_4500, Function | SmallTest | Level0)
+{
+    uint32_t code = static_cast<uint32_t>(InstalldInterfaceCode::GET_FILES_HASH);
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    InstalldHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
  * @tc.number: HandleDeleteUninstallTmpDirs_0001
  * @tc.name: HandleDeleteUninstallTmpDirs
  * @tc.desc: test HandleDeleteUninstallTmpDirs of InstalldHost

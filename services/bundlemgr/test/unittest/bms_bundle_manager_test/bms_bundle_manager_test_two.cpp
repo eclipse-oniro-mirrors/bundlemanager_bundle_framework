@@ -347,22 +347,44 @@ void BmsBundleManagerTest2::ClearBundleInfo()
 }
 
 /**
- * @tc.number: BundleMgrHostImpl_GetBundleInfoForSg_1000
+ * @tc.number: BundleMgrHostImpl_GetBundleInfoForException_1000
  * @tc.name: test BundleMgrHostImpl
  * @tc.desc: 1.GetBundleInfoForException failed by data mgr is empty
  */
-HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetBundleInfoForSg_1000, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetBundleInfoForException_1000, Function | MediumTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
-
+ 
     BundleInfoForException bundleInfoForException;
     uint32_t catchSoNum = 10;
     uint64_t catchSoMaxSize = 1024;
     ErrCode getInfoResult = hostImpl->GetBundleInfoForException("", USERID, catchSoNum,
         catchSoMaxSize, bundleInfoForException);
     EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+ 
+/**
+ * @tc.number: BundleMgrHostImpl_GetBundleInfoForException_1100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.GetBundleInfoForException failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetBundleInfoForException_1100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+ 
+    BundleInfoForException bundleInfoForException;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    ErrCode getInfoResult = hostImpl->GetBundleInfoForException(BUNDLE_BACKUP_NAME, USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+ 
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
 /**

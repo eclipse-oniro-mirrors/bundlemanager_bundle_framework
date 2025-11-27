@@ -1426,7 +1426,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8100, Function | Sma
     ErrCode res = installdProxy->HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
-
+ 
 /**
  * @tc.number: InstalldHostImplTest_8200
  * @tc.name: test HashFiles
@@ -1436,11 +1436,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8200, Function | Sma
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     ASSERT_NE(installdProxy, nullptr);
-
+ 
     std::vector<std::string> files;
     std::vector<std::string> filesHash;
  
     ErrCode res = installdProxy->HashFiles(files, filesHash);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 } // OHOS

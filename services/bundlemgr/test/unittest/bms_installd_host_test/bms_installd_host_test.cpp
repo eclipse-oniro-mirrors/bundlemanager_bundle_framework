@@ -915,4 +915,32 @@ HWTEST_F(BmsInstalldHostTest, HandleCopyDir_0100, Function | SmallTest | Level1)
     bool res = installdHost.HandleCopyDir(data, reply);
     EXPECT_TRUE(res);
 }
+
+/**
+ * @tc.number: HandleHashFiles_0100
+ * @tc.name: test HandleHashFiles
+ * @tc.desc: 1.HandleHashFiles test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleHashFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleHashFiles(data, reply);
+    EXPECT_TRUE(res);
+}
+ 
+/**
+ * @tc.number: HandleHashSoFile_0100
+ * @tc.name: test HandleHashSoFile
+ * @tc.desc: 1.HandleHashSoFile test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleHashSoFile_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleHashSoFile(data, reply);
+    EXPECT_TRUE(res);
+}
 } // OHOS

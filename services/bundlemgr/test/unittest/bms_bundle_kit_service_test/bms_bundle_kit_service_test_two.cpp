@@ -7171,4 +7171,136 @@ HWTEST_F(BmsBundleKitServiceTest, IsRenameInstall_4000, Function | SmallTest | L
     parcel.ReadUint32(size);
     EXPECT_EQ(size, 0);
 }
+
+/**
+ * @tc.number: GetBundleInfoForException_0100
+ * @tc.name: Test GetBundleInfoForException
+ * @tc.desc: 1.Test the GetBundleInfoForException by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoForException_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfoForException bundleInfoForException;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    ErrCode getInfoResult = hostImpl->GetBundleInfoForException(BUNDLE_NAME_DEMO, DEFAULT_USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    getInfoResult = hostImpl->GetBundleInfoForException("", DEFAULT_USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+/**
+ * @tc.number: HapHashAndDeveloperCert_0001
+ * @tc.name: HapHashAndDeveloperCert to_json and from_json branch cover
+ * @tc.desc: 1.Test HapHashAndDeveloperCert to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, HapHashAndDeveloperCert_0001, Function | SmallTest | Level1)
+{
+    HapHashAndDeveloperCert hapHashAndDeveloperCert;
+    hapHashAndDeveloperCert.developCert = "CN=test";
+    hapHashAndDeveloperCert.hash = "123456";
+    hapHashAndDeveloperCert.path = "/data/app/test";
+
+    nlohmann::json jsonObj;
+    to_json(jsonObj, hapHashAndDeveloperCert);
+    HapHashAndDeveloperCert result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.developCert, "CN=test");
+    EXPECT_EQ(result.hash, "123456");
+    EXPECT_EQ(result.path, "/data/app/test");
+}
+
+/**
+ * @tc.number: HapHashAndDeveloperCert_0002
+ * @tc.name: test HapHashAndDeveloperCert Marshalling
+ * @tc.desc: 1.system run normally
+ *           2. HapHashAndDeveloperCert Marshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, HapHashAndDeveloperCert_0002, Function | SmallTest | Level1)
+{
+    HapHashAndDeveloperCert hapHashAndDeveloperCert;
+    hapHashAndDeveloperCert.hash = "123";
+    Parcel parcel;
+    auto ret = hapHashAndDeveloperCert.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    HapHashAndDeveloperCert *info = HapHashAndDeveloperCert::Unmarshalling(parcel);
+    EXPECT_NE(info, nullptr);
+    if (info != nullptr) {
+        EXPECT_EQ(hapHashAndDeveloperCert.hash, info->hash);
+        delete info;
+    }
+}
+
+/**
+ * @tc.number: BundleInfoForException_0001
+ * @tc.name: BundleInfoForException to_json and from_json branch cover
+ * @tc.desc: 1.Test BundleInfoForException to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, BundleInfoForException_0001, Function | SmallTest | Level1)
+{
+    BundleInfoForException bundleInfoForException;
+    std::vector<std::string> allowedAcls;
+    allowedAcls.push_back("ohos.permission.READ_PASTEBOARD");
+    std::vector<std::string> abilityNames;
+    abilityNames.push_back("com.test.kwai.BackupExtensionAbility");
+    std::vector<HapHashAndDeveloperCert> hapHashValueAndDevelopCerts;
+    std::map<std::string, std::string> soHash;
+
+    bundleInfoForException.allowedAcls = allowedAcls;
+    bundleInfoForException.abilityNames = abilityNames;
+    bundleInfoForException.hapHashValueAndDevelopCerts = hapHashValueAndDevelopCerts;
+    bundleInfoForException.soHash = soHash;
+
+    nlohmann::json jsonObj;
+    to_json(jsonObj, bundleInfoForException);
+    BundleInfoForException result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.allowedAcls.empty(), false);
+    EXPECT_EQ(result.abilityNames.empty(), false);
+    EXPECT_EQ(result.hapHashValueAndDevelopCerts.empty(), true);
+    EXPECT_EQ(result.soHash.empty(), true);
+}
+
+/**
+ * @tc.number: BundleInfoForException_0002
+ * @tc.name: test BundleInfoForException Unmarshalling
+ * @tc.desc: 1.system run normally
+ *           2. BundleInfoForException Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, BundleInfoForException_0002, Function | SmallTest | Level1)
+{
+    BundleInfoForException bundleInfoForException;
+    Parcel parcel;
+    BundleInfoForException *info = bundleInfoForException.Unmarshalling(parcel);
+    EXPECT_EQ(info, nullptr);
+}
+
+/**
+ * @tc.number: BundleInfoForException_0003
+ * @tc.name: test BundleInfoForException Marshalling
+ * @tc.desc: 1.system run normally
+ *           2. BundleInfoForException Marshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, BundleInfoForException_0003, Function | SmallTest | Level1)
+{
+    BundleInfoForException bundleInfoForException;
+    std::vector<std::string> allowedAcls;
+    allowedAcls.push_back("ohos.permission.READ_PASTEBOARD");
+    bundleInfoForException.allowedAcls = allowedAcls;
+    Parcel parcel;
+    auto ret = bundleInfoForException.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    BundleInfoForException *info = BundleInfoForException::Unmarshalling(parcel);
+    EXPECT_NE(info, nullptr);
+    if (info != nullptr) {
+        EXPECT_EQ(bundleInfoForException.allowedAcls.back(), info->allowedAcls.back());
+        delete info;
+    }
+}
 }
