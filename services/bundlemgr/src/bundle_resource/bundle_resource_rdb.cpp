@@ -272,7 +272,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
     int32_t appIndex)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    APP_LOGI_NOFUNC("rdb -n %{public}s -i %{public}d", bundleName.c_str(), appIndex);
+    APP_LOGD("rdb -n %{public}s -i %{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
@@ -298,7 +298,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
             bundleName.c_str(), ret, systemState.c_str());
         return false;
     }
-    APP_LOGI_NOFUNC("rdb end");
+    APP_LOGD("rdb end");
     return ConvertToBundleResourceInfo(absSharedResultSet, flags, bundleResourceInfo);
 }
 

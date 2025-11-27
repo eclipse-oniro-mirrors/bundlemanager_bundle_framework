@@ -47,7 +47,7 @@ ErrCode BmsExtensionClient::QueryLauncherAbility(const Want &want, int32_t userI
     std::string bundleName = want.GetElement().GetBundleName();
     InnerBundleInfo info;
     if (!bundleName.empty() && dataMgr->QueryInnerBundleInfo(bundleName, info)) {
-        LOG_NOFUNC_I(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
+        LOG_D(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
@@ -88,7 +88,7 @@ ErrCode BmsExtensionClient::QueryAbilityInfos(const Want &want, int32_t flags, i
     std::string bundleName = want.GetElement().GetBundleName();
     InnerBundleInfo info;
     if (!bundleName.empty() && dataMgr->QueryInnerBundleInfo(bundleName, info)) {
-        LOG_NOFUNC_I(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
+        LOG_D(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
@@ -130,7 +130,7 @@ ErrCode BmsExtensionClient::BatchQueryAbilityInfos(const std::vector<Want> &want
         std::string bundleName = wants[i].GetElement().GetBundleName();
         InnerBundleInfo info;
         if (!bundleName.empty() && dataMgr->QueryInnerBundleInfo(bundleName, info)) {
-            LOG_NOFUNC_I(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
+            LOG_D(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
 
@@ -221,7 +221,7 @@ ErrCode BmsExtensionClient::GetBundleInfo(const std::string &bundleName, int32_t
     }
     InnerBundleInfo info;
     if (dataMgr->QueryInnerBundleInfo(bundleName, info)) {
-        LOG_NOFUNC_I(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
+        LOG_D(BMS_TAG_QUERY, "bundle %{public}s exist no need to query bms ext", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 

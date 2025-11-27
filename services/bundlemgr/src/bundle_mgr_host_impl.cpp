@@ -2167,7 +2167,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
 
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     auto ret = bmsExtensionClient->BackupBundleData(bundleName, userId, appIndex);
-    APP_LOGI("BackupBundleData ret : %{public}d", ret);
+    APP_LOGI_NOFUNC("BackupBundleData ret : %{public}d", ret);
     bool isAtomicService = applicationInfo.bundleType == BundleType::ATOMIC_SERVICE;
     if (InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userId, appIndex,
         isAtomicService) != ERR_OK) {
@@ -5137,7 +5137,11 @@ ErrCode BundleMgrHostImpl::GetOdid(std::string &odid)
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetOdid(odid);
+    ErrCode ret = dataMgr->GetOdid(odid);
+    if (odid.empty()) {
+        APP_LOGI_NOFUNC("GetOdid empty");
+    }
+    return ret;
 }
 
 ErrCode BundleMgrHostImpl::GetAllPreinstalledApplicationInfos(
@@ -6602,7 +6606,7 @@ ErrCode BundleMgrHostImpl::GetPluginBundlePathForSelf(const std::string &pluginB
 ErrCode BundleMgrHostImpl::RecoverBackupBundleData(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex)
 {
-    APP_LOGI("start RecoverBackupBundleData, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+    APP_LOGI_NOFUNC("ecoverBackupBundleData -n %{public}s -u %{public}d -i %{public}d",
         bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
@@ -6645,7 +6649,7 @@ ErrCode BundleMgrHostImpl::RecoverBackupBundleData(const std::string &bundleName
 ErrCode BundleMgrHostImpl::RemoveBackupBundleData(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex)
 {
-    APP_LOGI("start RemoveBackupBundleData, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+    APP_LOGI_NOFUNC("RemoveBackupBundleData -n %{public}s -u %{public}d -i %{public}d",
         bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
