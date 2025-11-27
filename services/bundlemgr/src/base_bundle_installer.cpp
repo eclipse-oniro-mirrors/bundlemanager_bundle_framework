@@ -757,6 +757,7 @@ void BaseBundleInstaller::SaveOldRemovableInfo(
             LOG_E(BMS_TAG_INSTALLER, "can not find module %{public}s in oldInfo", newModuleInfo.modulePackage.c_str());
             return;
         }
+        newModuleInfo.isRemovableSet = oldModule->second.isRemovableSet;
         for (const auto &remove : oldModule->second.isRemovable) {
             auto result = newModuleInfo.isRemovable.try_emplace(remove.first, remove.second);
             if (!result.second) {

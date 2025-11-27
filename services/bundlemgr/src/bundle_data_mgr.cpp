@@ -817,6 +817,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(InnerBundleInfo &newInfo, InnerBundleI
         oldInfo.KeepOldOverlayConnection(newInfo);
     }
     ProcessAllowedAcls(newInfo, oldInfo);
+    newInfo.UpdateModuleRemovable(oldInfo);
     oldInfo.UpdateModuleInfo(newInfo);
     oldInfo.SetDFXParamStatus();
     // 1.exist entry, update entry.
