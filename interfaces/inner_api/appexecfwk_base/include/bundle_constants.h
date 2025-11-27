@@ -104,7 +104,9 @@ constexpr const char* PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS = "ohos.perm
 constexpr const char* PERMISSION_MANAGE_SELF_SKILLS = "ohos.permission.MANAGE_SELF_SKILLS";
 constexpr const char* PERMISSION_RECOVER_BUNDLE = "ohos.permission.RECOVER_BUNDLE";
 constexpr const char* PERMISSION_CLEAN_APPLICATION_DATA = "ohos.permission.CLEAN_APPLICATION_DATA";
-
+constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
+    "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED or "
+    "(ohos.permission.GET_BUNDLE_INFO_PRIVILEGED and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
 enum class AppType {
     SYSTEM_APP = 0,
     THIRD_SYSTEM_APP,

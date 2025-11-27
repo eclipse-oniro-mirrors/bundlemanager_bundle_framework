@@ -193,6 +193,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("removeBackupBundleData", RemoveBackupBundleData),
         DECLARE_NAPI_FUNCTION("getBundleInstallStatus", GetBundleInstallStatus),
         DECLARE_NAPI_PROPERTY("BundleInstallStatus", nBundleInstallStatus),
+        DECLARE_NAPI_FUNCTION("getAllAppProvisionInfo", GetAllAppProvisionInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

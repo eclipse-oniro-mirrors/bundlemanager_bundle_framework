@@ -303,6 +303,8 @@ namespace bundleManager {
 
   native function getAppProvisionInfoNative(bundleName: string, userId: int, isSync: boolean): AppProvisionInfo;
 
+  native function getAllAppProvisionInfoNative(userId: int): Array<AppProvisionInfo>;
+
   native function canOpenLink(link: string): boolean;
 
   native function getAllPreinstalledApplicationInfoNative(): Array<PreinstalledApplicationInfo>;
@@ -1368,6 +1370,25 @@ namespace bundleManager {
     return p;
   }
   
+  function getAllAppProvisionInfo(userId?: int): Promise<Array<AppProvisionInfo>>{
+    let p = new Promise<Array<AppProvisionInfo>>((resolve: (appProvisionInfo: Array<AppProvisionInfo>)
+      => void, reject: (error: Error) => void) => {
+      let userIdInfo: int = userId ?? EMPTY_VALUE;
+      let execFun = (): Array<AppProvisionInfo> => {
+        return getAllAppProvisionInfoNative(userIdInfo);
+      };
+      let p1 = taskpool.execute(execFun);
+      p1.then((e: Any) => {
+        let appProvisionInfo: Array<AppProvisionInfo> = e as Array<AppProvisionInfo>;
+        resolve(appProvisionInfo);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    }
+    );
+    return p;
+  }
+
   function getAppProvisionInfo(bundleName: string, userId?: int): Promise<AppProvisionInfo> {
     if (bundleName === "") {
       throw createBusinessError(ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLENAME_EMPTY_ERROR);

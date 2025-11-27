@@ -68,7 +68,10 @@ using namespace OHOS::AppExecFwk;
 using OHOS::AAFwk::Want;
 using namespace OHOS::DisplayPowerMgr;
 using namespace OHOS::PowerMgr;
-
+void SetSystemAppForTest(bool value);
+void SetNativeTokenTypeForTest(bool value);
+void SetVerifyCallingPermissionForTest(bool value);
+void ResetTestValues();
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
@@ -6598,6 +6601,173 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheTaskGetCleanSize_0100, Functio
     uint64_t uid = 1;
     hostImpl->CleanBundleCacheTaskGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cacheSize, uid, BUNDLE_NAME_TEST);
     EXPECT_FALSE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.empty());
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0100
+ * @tc.name: test GetAllAppProvisionInfo normal case
+ * @tc.desc: 1. test GetAllAppProvisionInfo with system app and permission
+ *           2. should return ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppProvisionInfo_0100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = hostImpl->GetAllAppProvisionInfo(DEFAULT_USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0200
+ * @tc.name: test GetAllAppProvisionInfo with non-system app
+ * @tc.desc: 1. test GetAllAppProvisionInfo when caller is non-system app
+ *           2. should return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppProvisionInfo_0200, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(false);
+    SetNativeTokenTypeForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = hostImpl->GetAllAppProvisionInfo(DEFAULT_USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0300
+ * @tc.name: test GetAllAppProvisionInfo with no permission
+ * @tc.desc: 1. test GetAllAppProvisionInfo when no permission granted
+ *           2. should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppProvisionInfo_0300, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = hostImpl->GetAllAppProvisionInfo(DEFAULT_USERID, appProvisionInfos);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0400
+ * @tc.name: test GetAllAppProvisionInfo with multiple bundles
+ * @tc.desc: 1. test GetAllAppProvisionInfo with multiple installed bundles
+ *           2. should return all app provision infos
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppProvisionInfo_0400, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_NAME_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST1);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = hostImpl->GetAllAppProvisionInfo(DEFAULT_USERID, appProvisionInfos);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GE(appProvisionInfos.size(), 2);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST1);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CheckAcrossUserPermission_0100
+ * @tc.name: test CheckAcrossUserPermission with native token type
+ * @tc.desc: 1. test when caller has native token type
+ *           2. should return true directly
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0100, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->CheckAcrossUserPermission(DEFAULT_USERID);
+
+    EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CheckAcrossUserPermission_0200
+ * @tc.name: test CheckAcrossUserPermission with same user ID
+ * @tc.desc: 1. test when target user ID equals calling user ID
+ *           2. should return true directly
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0200, Function | SmallTest | Level1)
+{
+    SetNativeTokenTypeForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->CheckAcrossUserPermission(0);
+
+    EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CheckAcrossUserPermission_0300
+ * @tc.name: test CheckAcrossUserPermission with different user ID and permission granted
+ * @tc.desc: 1. test when target user ID differs and cross-account permission granted
+ *           2. should return true
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0300, Function | SmallTest | Level1)
+{
+    SetNativeTokenTypeForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->CheckAcrossUserPermission(999);
+
+    EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CheckAcrossUserPermission_0400
+ * @tc.name: test CheckAcrossUserPermission with different user ID and permission denied
+ * @tc.desc: 1. test when target user ID differs and cross-account permission denied
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0400, Function | SmallTest | Level1)
+{
+    SetNativeTokenTypeForTest(false);
+    SetVerifyCallingPermissionForTest(false);
+    
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->CheckAcrossUserPermission(100);
+    
+    EXPECT_EQ(result, false);
+    ResetTestValues();
 }
 
 /**

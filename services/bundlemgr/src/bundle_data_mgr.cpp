@@ -7781,6 +7781,42 @@ void BundleDataMgr::SaveOverlayInfo(const std::string &bundleName, InnerBundleIn
     bundleInfos_.at(bundleName) = innerBundleInfo;
 }
 
+void BundleDataMgr::GetBundleNameList(const int32_t userId, std::vector<std::string>& bundleNameList)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto& [bundleName, infoItem] : bundleInfos_) {
+        if (infoItem.GetApplicationBundleType() == BundleType::SHARED) {
+                continue;
+        } else {
+            int32_t responseUserId = infoItem.GetResponseUserId(userId);
+            if (responseUserId == Constants::INVALID_USERID) {
+                continue;
+            }
+        }
+        bundleNameList.emplace_back(bundleName);
+    }
+}
+
+ErrCode BundleDataMgr::GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos)
+{
+    if (!HasUserId(userId)) {
+        APP_LOGW("GetAllAppProvisionInfo user is not existed.");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::vector<std::string> bundleNameList;
+    GetBundleNameList(userId, bundleNameList);
+    for (const auto& bundleName : bundleNameList) {
+        AppProvisionInfo appProvisionInfo;
+        if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName, appProvisionInfo)) {
+            APP_LOGW("bundleName:%{public}s GetAllAppProvisionInfo failed", bundleName.c_str());
+            continue;
+        }
+        appProvisionInfo.bundleName = bundleName;
+        appProvisionInfos.emplace_back(appProvisionInfo);
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
     AppProvisionInfo &appProvisionInfo)
 {
@@ -7804,6 +7840,7 @@ ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_
         APP_LOGW("bundleName:%{public}s GetAppProvisionInfo failed", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    appProvisionInfo.bundleName = bundleName;
     return ERR_OK;
 }
 

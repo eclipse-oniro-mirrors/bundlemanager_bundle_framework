@@ -436,6 +436,7 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_1100, Function | MediumTest | 
     std::vector<int64_t> bundleStats;
     std::vector<Metadata> provisionMetadatas;
     AppProvisionInfo appProvisionInfo;
+    std::vector<AppProvisionInfo> appProvisionInfos;
 
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
@@ -462,6 +463,9 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_1100, Function | MediumTest | 
 
     retCode = hostImpl->GetAppProvisionInfo("", USERID, appProvisionInfo);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    retCode = hostImpl->GetAllAppProvisionInfo(USERID, appProvisionInfos);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_NULL_PTR);
 
     retCode = hostImpl->GetProvisionMetadata("", USERID, provisionMetadatas);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);

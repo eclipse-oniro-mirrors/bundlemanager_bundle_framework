@@ -438,6 +438,9 @@ ohos_unittest("BmsBundleKitServiceTwoTest") {
 
   sources += [ "bms_bundle_kit_service_test_two.cpp" ]
 
+  sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
+  sources +=
+      [ "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp" ]
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
@@ -615,7 +618,8 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
-  sources -= [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources += [ "bms_bundle_get_window_properties_test.cpp" ]
@@ -1194,9 +1198,7 @@ ohos_unittest("BmsAgingTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = [
-    "${core_path}:appexecfwk_core",
-  ]
+  deps = [ "${core_path}:appexecfwk_core" ]
   deps += bundle_install_deps
 
   external_deps = [
@@ -1337,7 +1339,7 @@ ohos_unittest("BmsCleanAllBundleCacheTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ 
+  include_dirs = [
     "mock/include",
     "${kits_path}/js/bundle_manager",
   ]
@@ -1566,7 +1568,7 @@ ohos_unittest("BmsBundleDataMgrSharedTest") {
     "${services_path}/bundlemgr/test/mock/src/mock_ability_manager_helper.cpp",
   ]
 
-  sources += ["bms_bundle_data_mgr_shared_test.cpp"]
+  sources += [ "bms_bundle_data_mgr_shared_test.cpp" ]
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
@@ -1758,7 +1760,7 @@ ohos_unittest("BmsBundleDataMgrSharedTestNoMock") {
   sources +=
       [ "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp" ]
 
-  sources += ["bms_bundle_data_mgr_shared_test_no_mock.cpp"]
+  sources += [ "bms_bundle_data_mgr_shared_test_no_mock.cpp" ]
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
@@ -1917,8 +1919,8 @@ group("unittest") {
   if (ability_runtime_enable) {
     deps = [
       ":BmsAgingTest",
-      ":BmsBundleDataMgrSharedTestNoMock",
       ":BmsBundleDataMgrSharedTest",
+      ":BmsBundleDataMgrSharedTestNoMock",
       ":BmsBundleDataMgrTest",
       ":BmsBundleDataMgrTest2",
       ":BmsBundleDataMgrTest3",

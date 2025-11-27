@@ -119,8 +119,15 @@ static void ConvertStringArrays(napi_env env, const std::vector<std::string> &st
 
 static void ConvertValidity(napi_env env, const Validity &validity, napi_value objValidity);
 
+static void SetStringProperty(napi_env env, napi_value obj, const std::string& value, const char* propName);
+
+static void SetUint32Property(napi_env env, napi_value obj, uint32_t value, const char* propName);
+
 static void ConvertAppProvisionInfo(
     napi_env env, const AppProvisionInfo &appProvisionInfo, napi_value objAppProvisionInfo);
+
+static void ConvertAllAppProvisionInfo(napi_env env,
+    const std::vector<AppProvisionInfo> &appProvisionInfos, napi_value objAppProvisionInfo);
 
 static void ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo, napi_value objExtensionInfo);
 

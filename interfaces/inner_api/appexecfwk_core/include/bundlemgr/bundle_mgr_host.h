@@ -777,6 +777,8 @@ private:
 
     ErrCode HandleGetAppProvisionInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAllAppProvisionInfo(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetProvisionMetadata(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetBaseSharedBundleInfos(MessageParcel &data, MessageParcel &reply);

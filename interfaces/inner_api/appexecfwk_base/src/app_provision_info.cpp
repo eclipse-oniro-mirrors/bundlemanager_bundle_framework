@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,7 @@ bool AppProvisionInfo::ReadFromParcel(Parcel &parcel)
     appIdentifier = Str16ToStr8(parcel.ReadString16());
     appServiceCapabilities = Str16ToStr8(parcel.ReadString16());
     organization = Str16ToStr8(parcel.ReadString16());
+    bundleName = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -64,6 +65,7 @@ bool AppProvisionInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appServiceCapabilities));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(organization));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     return true;
 }
 
