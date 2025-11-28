@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
+#include "bundle_option.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_extension_profile.h"
 #include "bundle_mgr_service.h"
@@ -2392,5 +2393,23 @@ HWTEST_F(BmsExtensionDataMgrTest, RemoveBackupBundleData_002, Function | SmallTe
     int32_t appIndex = 0;
     auto res = bundleMgrExtTest.RemoveBackupBundleData(bundleName, userId, appIndex);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfo_0001
+ * @tc.name: GetLauncherAbilityResourceInfo
+ * @tc.desc: GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetLauncherAbilityResourceInfo_0001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+    BundleOptionInfo optiont;
+    optiont.bundleName = "bundleNameTest";
+    optiont.abilityName = "abilityNameTest";
+
+    ErrCode res = bmsExtensionDataMgr.GetLauncherAbilityResourceInfo(
+        optiont, static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 }
 } // OHOS

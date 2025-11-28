@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
 
 #include "base_cb_info.h"
+#include "bundle_option.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -37,7 +38,7 @@ struct AllBundleResourceInfoCallback : public BaseCallbackInfo {
 
 struct AllLauncherAbilityResourceInfoCallback : public BaseCallbackInfo {
     explicit AllLauncherAbilityResourceInfoCallback(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-
+    std::vector<BundleOptionInfo> optionsList;
     uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
 };
@@ -46,6 +47,7 @@ napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetAllBundleResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info info);
+napi_value GetLauncherAbilityResourceInfoList(napi_env env, napi_callback_info info);
 napi_value GetExtensionAbilityResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetAllUninstallBundleResourceInfo(napi_env env, napi_callback_info info);
 void CreateBundleResourceFlagObject(napi_env env, napi_value value);

@@ -776,5 +776,23 @@ ErrCode BmsExtensionDataMgr::BatchGetCompatibleDeviceType(
     }
     return bundleMgrExtPtr->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
 }
+
+ErrCode BmsExtensionDataMgr::GetLauncherAbilityResourceInfo(const BundleOptionInfo &options, const uint32_t flags,
+    LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    ErrCode ret = bundleMgrExtPtr->GetLauncherAbilityResourceInfo(options, flags, launcherAbilityResourceInfo);
+    APP_LOGD("call bundle mgr ext GetLauncherAbilityResourceInfo, return %{public}d", ret);
+    return ret;
+}
 } // AppExecFwk
 } // OHOS

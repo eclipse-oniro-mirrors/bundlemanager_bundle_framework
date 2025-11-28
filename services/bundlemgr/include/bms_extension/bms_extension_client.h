@@ -70,6 +70,8 @@ public:
         BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
     ErrCode GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
+    ErrCode GetLauncherAbilityResourceInfo(const BundleOptionInfo &options, const uint32_t flags,
+        LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
     ErrCode GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
     ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);

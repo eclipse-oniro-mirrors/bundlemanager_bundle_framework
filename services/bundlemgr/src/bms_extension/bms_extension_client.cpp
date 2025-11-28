@@ -448,6 +448,17 @@ ErrCode BmsExtensionClient::GetLauncherAbilityResourceInfo(const std::string &bu
     return bmsExtensionImpl_->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex);
 }
 
+ErrCode BmsExtensionClient::GetLauncherAbilityResourceInfo(const BundleOptionInfo &options, const uint32_t flags,
+    LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->GetLauncherAbilityResourceInfo(options, flags, launcherAbilityResourceInfo);
+}
+
 ErrCode BmsExtensionClient::GetAllBundleResourceInfo(const uint32_t flags,
     std::vector<BundleResourceInfo> &bundleResourceInfos)
 {

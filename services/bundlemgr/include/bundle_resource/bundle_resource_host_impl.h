@@ -51,10 +51,15 @@ public:
     virtual ErrCode GetAllUninstallBundleResourceInfo(const int32_t userId, const uint32_t flags,
         std::vector<BundleResourceInfo> &bundleResourceInfos) override;
 
+    virtual ErrCode GetLauncherAbilityResourceInfoList(const std::vector<BundleOptionInfo>& optionsList,
+        const uint32_t flags, std::vector<LauncherAbilityResourceInfo>& launcherAbilityResourceInfo) override;
 private:
     ErrCode CheckBundleNameValid(const std::string &bundleName, int32_t appIndex);
     ErrCode CheckExtensionAbilityValid(const std::string &bundleName, const ExtensionAbilityType extensionAbilityType,
         const uint32_t flags, int32_t appIndex);
+    ErrCode GetElementLauncherAbilityResourceInfo(const std::vector<LauncherAbilityResourceInfo>& allResources,
+        const std::string& moduleName, const std::string& abilityName, const int32_t appIndex,
+        LauncherAbilityResourceInfo& resourceInfo);
 };
 } // AppExecFwk
 } // OHOS

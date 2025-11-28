@@ -33,6 +33,8 @@ public:
     static ErrCode InnerGetAllBundleResourceInfo(uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
     static ErrCode InnerGetAllLauncherAbilityResourceInfo(uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
+    static ErrCode InnerGetLauncherAbilityResourceInfoList(const std::vector<BundleOptionInfo>& optionsList,
+        const uint32_t flags, std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
     static ErrCode InnerGetExtensionAbilityResourceInfo(const std::string& bundleName,
         ExtensionAbilityType extensionAbilityType, uint32_t flags, int32_t appIndex,
         std::vector<LauncherAbilityResourceInfo>& extensionAbilityResourceInfos);

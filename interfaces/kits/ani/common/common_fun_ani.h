@@ -249,6 +249,7 @@ public:
     static bool ParsePluginParam(ani_env* env, ani_object object, InstallPluginParam& installPluginParam);
     static bool ParseAbilityInfo(ani_env* env, ani_object object, AbilityInfo& abilityInfo);
     static bool ParseElementName(ani_env* env, ani_object object, ElementName& elementName);
+    static bool ParseBundleOption(ani_env* env, ani_object object, BundleOptionInfo& option);
 
     template<typename fromType, typename toType>
     static bool TryCastTo(const fromType fromValue, toType* toValue)

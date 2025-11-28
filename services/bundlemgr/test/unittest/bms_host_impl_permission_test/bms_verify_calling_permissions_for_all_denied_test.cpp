@@ -19,6 +19,7 @@
 
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
+#include "bundle_option.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource_host_impl.h"
 #endif
@@ -615,15 +616,15 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0035, TestS
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
 
-    ElementName element;
-    element.SetBundleName("com.example.test");
-    element.SetModuleName("entry");
-    element.SetAbilityName("com.example.test.MainAbility");
+    ElementName optiont;
+    optiont.SetBundleName("com.example.test");
+    optiont.SetModuleName("entry");
+    optiont.SetAbilityName("com.example.test.MainAbility");
     int32_t flags = 0; // Example flags
     int32_t appIndex = 0; // Example app index
     AbilityInfo abilityInfo;
     int32_t userId = 0; // Example user ID
-    auto ret = localBundleMgrHostImpl->QueryCloneAbilityInfo(element, flags, appIndex, abilityInfo, userId);
+    auto ret = localBundleMgrHostImpl->QueryCloneAbilityInfo(optiont, flags, appIndex, abilityInfo, userId);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -691,16 +692,16 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0039, TestS
     std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
     ASSERT_NE(localBundleMgrHostImpl, nullptr);
 
-    ElementName element;
-    element.SetBundleName("com.example.test");
-    element.SetModuleName("entry");
-    element.SetAbilityName("com.example.test.MainAbility");
+    ElementName optiont;
+    optiont.SetBundleName("com.example.test");
+    optiont.SetModuleName("entry");
+    optiont.SetAbilityName("com.example.test.MainAbility");
     int32_t flags = 0; // Example flags
     int32_t appIndex = 0; // Example app index
     ExtensionAbilityInfo extensionAbilityInfo;
     int32_t userId = 0; // Example user ID
     auto ret = localBundleMgrHostImpl->QueryCloneExtensionAbilityInfoWithAppIndex(
-        element, flags, appIndex, extensionAbilityInfo, userId);
+        optiont, flags, appIndex, extensionAbilityInfo, userId);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -1273,6 +1274,28 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleResourceHostImpl_0009, 
     int32_t appIndex = 0; // Example app index
     auto ret = localBundleResourceHostImpl->GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType, flags,
         extensionAbilityResourceInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BundleResourceHostImpl_0010
+ * @tc.name: VerifyCallingPermissionsForAllDeniedTest
+ * @tc.desc: GetLauncherAbilityResourceInfoList SystemAppPermission Denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleResourceHostImpl_0010, TestSize.Level1)
+{
+    std::shared_ptr<BundleResourceHostImpl> localBundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(localBundleResourceHostImpl, nullptr);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = "com.example.test";
+    optiont.abilityName = "com.example.test.MainAbility";
+    optiontList.push_back(optiont);
+    uint32_t flags = 0; // Example flags
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    auto ret = localBundleResourceHostImpl->GetLauncherAbilityResourceInfoList(
+        optiontList, flags, launcherAbilityResourceInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 #endif

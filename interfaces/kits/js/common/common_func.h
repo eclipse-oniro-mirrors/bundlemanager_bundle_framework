@@ -102,6 +102,10 @@ static bool ParseParameters(
 
 static bool ParseParameterItem(napi_env env, napi_value param, std::string &key, std::string &value);
 
+static bool ParseBundleOption(napi_env env, napi_value value, BundleOptionInfo& option);
+
+static napi_value ParseBundleOptionArray(napi_env env, std::vector<BundleOptionInfo>& optionsList, napi_value args);
+
 static ErrCode ConvertErrCode(ErrCode nativeErrCode);
 
 static void ConvertWindowSize(napi_env env, const AbilityInfo &abilityInfo, napi_value value);
