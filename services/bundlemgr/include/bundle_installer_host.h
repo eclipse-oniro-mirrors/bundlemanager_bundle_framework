@@ -159,25 +159,11 @@ public:
     virtual ErrCode InstallExisted(const std::string &bundleName, int32_t userId) override;
 private:
     /**
-     * @brief Handles the Install function called from a IBundleInstaller proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return
-     */
-    void HandleInstallMessage(MessageParcel &data);
-    /**
      * @brief Handles the Install by bundleName function called from a IBundleInstaller proxy object.
      * @param data Indicates the data to be read.
      * @return
      */
     void HandleRecoverMessage(MessageParcel &data);
-    /**
-     * @brief Handles the Install multiple haps function called from a IBundleInstaller proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return
-     */
-    void HandleInstallMultipleHapsMessage(MessageParcel &data);
     /**
      * @brief Handles the Uninstall bundle function called from a IBundleInstaller proxy object.
      * @param data Indicates the data to be read.
