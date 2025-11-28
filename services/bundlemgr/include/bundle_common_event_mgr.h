@@ -97,6 +97,8 @@ public:
     void NotifyPluginEvents(const NotifyBundleEvents &event, const std::shared_ptr<BundleDataMgr> &dataMgr);
     void NotifyShortcutVisibleChanged(
         const std::string &bundlename, const std::string &id, int32_t userId, int32_t appIndex, bool visible);
+    void NotifyDynamicShortcutChanged(const std::string &bundlename,
+        const std::vector<std::string> &ids, int32_t userId, int32_t appIndex, const std::string &operationType);
     void NotifyPluginCommonEvents(const std::string &hostBundleName, const std::string &pluginBundleName,
         const NotifyType &type);
     void NotifyUninstalledBundleCleared(const NotifyBundleEvents &installResult);

@@ -979,6 +979,12 @@ public:
     virtual ErrCode CleanAllBundleCache(const sptr<IProcessCacheCallback> processCacheCallback) override;
 
     virtual ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible) override;
+
+    virtual ErrCode AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId) override;
+
+    virtual ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const std::vector<std::string> &ids) override;
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif

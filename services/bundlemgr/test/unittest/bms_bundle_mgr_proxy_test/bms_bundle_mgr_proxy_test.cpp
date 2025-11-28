@@ -35,6 +35,7 @@ namespace {
 const int32_t ERR_CODE = 8388613;
 const uint32_t ACCESS_TOKEN_ID = 1765341;
 const int32_t MAX_WAITING_TIME = 600;
+const int32_t MAX_SHORTCUT_INFOS = 101;
 }
 
 class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
@@ -1494,6 +1495,76 @@ HWTEST_F(BmsBundleMgrProxyTest, CreateNewBundleEl5Dir_0001, Function | MediumTes
     int32_t userId = 100;
     auto ret = bundleMgrProxy.CreateNewBundleEl5Dir(userId);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfosProxy_0001
+ * @tc.name: test the AddDynamicShortcutInfos
+ * @tc.desc: test AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleMgrProxyTest, AddDynamicShortcutInfosProxy_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    ShortcutInfo shortcutInfo;
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfosProxy_0002
+ * @tc.name: test the AddDynamicShortcutInfos
+ * @tc.desc: test AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleMgrProxyTest, AddDynamicShortcutInfosProxy_0002, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.clear();
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfosProxy_0003
+ * @tc.name: test the AddDynamicShortcutInfos
+ * @tc.desc: test AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleMgrProxyTest, AddDynamicShortcutInfosProxy_0003, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    ShortcutInfo shortcutInfo;
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.reserve(MAX_SHORTCUT_INFOS);
+    for (int i = 0; i < MAX_SHORTCUT_INFOS; ++i) {
+        shortcutInfos.push_back(shortcutInfo);
+    }
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfosProxy_0001
+ * @tc.name: test the DeleteDynamicShortcutInfos
+ * @tc.desc: test DeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleMgrProxyTest, DeleteDynamicShortcutInfosProxy_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<std::string> ids;
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto ret = bundleMgrProxy.DeleteDynamicShortcutInfos(bundleName, appIndex, userId, ids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 }
 }

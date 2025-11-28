@@ -5816,5 +5816,17 @@ std::optional<InnerModuleInfo> InnerBundleInfo::GetInnerModuleInfoForEntry() con
     }
     return std::nullopt;
 }
+
+bool InnerBundleInfo::isAbilityNameExist(const std::string &moduleName, const std::string &abilityName) const
+{
+    for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
+        if (innerAbilityInfo.name == abilityName && innerAbilityInfo.moduleName == moduleName) {
+            return true;
+        }
+    }
+    APP_LOGE("bundleName: %{public}s not find moduleName:%{public}s, abilityName:%{public}s",
+        GetBundleName().c_str(), moduleName.c_str(), abilityName.c_str());
+    return false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

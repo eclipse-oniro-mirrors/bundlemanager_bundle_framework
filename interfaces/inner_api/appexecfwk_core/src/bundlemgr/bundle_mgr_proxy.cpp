@@ -51,6 +51,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr int32_t MAX_SHORTCUT_INFO_SIZE = 100;
 constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 constexpr int64_t GET_BUNDLE_FOR_SELF_CACHE_TIME = 800; // 800ms
@@ -5386,6 +5387,40 @@ ErrCode BundleMgrProxy::WriteParcelInfoIntelligent(const T &parcelInfo, MessageP
     return ERR_OK;
 }
 
+template<typename T>
+ErrCode BundleMgrProxy::WriteVectorToParcel(const std::vector<T> &parcelVector, MessageParcel &reply)
+{
+    MessageParcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
+    if (!tempParcel.WriteInt32(static_cast<int32_t>(parcelVector.size()))) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    for (auto &parcel : parcelVector) {
+        if (!tempParcel.WriteParcelable(&parcel)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    size_t dataSize = tempParcel.GetDataSize();
+    if (!reply.WriteUint32(dataSize)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (dataSize > MAX_IPC_REWDATA_SIZE) {
+        APP_LOGE("datasize is too large");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+        APP_LOGE("write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result)
 {
     MessageParcel reply;
@@ -6628,6 +6663,72 @@ ErrCode BundleMgrProxy::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &sho
     }
     return GetVectorFromParcelIntelligentWithErrCode<ShortcutInfo>(
         BundleMgrInterfaceCode::GET_ALL_SHORTCUT_INFO_FOR_SELF, data, shortcutInfos);
+}
+
+ErrCode BundleMgrProxy::AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (shortcutInfos.empty() || shortcutInfos.size() > MAX_SHORTCUT_INFO_SIZE) {
+        APP_LOGE("AddDynamicShortcutInfos shortcutInfos size invalid");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("AddDynamicShortcutInfos write InterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = WriteVectorToParcel(shortcutInfos, data);
+    if (ret != ERR_OK) {
+        APP_LOGE("AddDynamicShortcutInfos write shortcutInfos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("AddDynamicShortcutInfos write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::ADD_DYNAMIC_SHORTCUT_INFOS, data, reply)) {
+        APP_LOGE("fail to AddDynamicShortcutInfos from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
+    const int32_t userId, const std::vector<std::string> &ids)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("DeleteDynamicShortcutInfos write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("DeleteDynamicShortcutInfos write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("DeleteDynamicShortcutInfos write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("DeleteDynamicShortcutInfos write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ids.size() > MAX_SHORTCUT_INFO_SIZE) {
+        APP_LOGE("DeleteDynamicShortcutInfos ids size invalid");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (!data.WriteStringVector(ids)) {
+        APP_LOGE("DeleteDynamicShortcutInfos write ids fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::DELETE_DYNAMIC_SHORTCUT_INFOS, data, reply)) {
+        APP_LOGE("fail to DeleteDynamicShortcutInfos from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
 }
 
 bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,

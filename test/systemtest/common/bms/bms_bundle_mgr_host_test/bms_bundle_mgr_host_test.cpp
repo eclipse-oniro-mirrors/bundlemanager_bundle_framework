@@ -2449,5 +2449,35 @@ HWTEST_F(BmsBundleMgrHostTest, HandleRemoveBackupBundleData_0001, Function | Med
     ErrCode res = bundleMgrHost.HandleRemoveBackupBundleData(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+* @tc.number: HandleAddDynamicShortcutInfos_0001
+* @tc.name: test the HandleAddDynamicShortcutInfos
+* @tc.desc: 1. system running normally
+*           2. test HandleAddDynamicShortcutInfos
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleAddDynamicShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleAddDynamicShortcutInfos(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+* @tc.number: HandleDeleteDynamicShortcutInfos_0001
+* @tc.name: test the HandleDeleteDynamicShortcutInfos
+* @tc.desc: 1. system running normally
+*           2. test HandleDeleteDynamicShortcutInfos
+*/
+HWTEST_F(BmsBundleMgrHostTest, HandleDeleteDynamicShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleDeleteDynamicShortcutInfos(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS

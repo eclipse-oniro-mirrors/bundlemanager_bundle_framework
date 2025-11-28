@@ -29,6 +29,7 @@
 #include "ipc_skeleton.h"
 #include "ipc_types.h"
 #include "json_util.h"
+#include "parcel_macro.h"
 #include "preinstalled_application_info.h"
 #include "string_ex.h"
 #include "securec.h"
@@ -38,6 +39,7 @@ namespace AppExecFwk {
 namespace {
 const int32_t MAX_LIMIT_SIZE = 100;
 const int8_t ASHMEM_LEN = 16;
+constexpr int32_t MAX_SHORTCUT_INFO_SIZE = 100;
 constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
 constexpr int32_t PREINSTALL_PARCEL_CAPACITY  = 400 * 1024; // 400K
@@ -740,6 +742,12 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE):
             errCode = HandleBatchGetCompatibleDeviceType(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::ADD_DYNAMIC_SHORTCUT_INFOS):
+            errCode = HandleAddDynamicShortcutInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::DELETE_DYNAMIC_SHORTCUT_INFOS):
+            errCode = HandleDeleteDynamicShortcutInfos(data, reply);
             break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
@@ -3243,6 +3251,51 @@ bool BundleMgrHost::WriteVectorToParcelIntelligent(std::vector<T> &parcelableVec
     return true;
 }
 
+template<typename T>
+ErrCode BundleMgrHost::GetVectorParcelInfoIntelligent(MessageParcel &data,
+    std::vector<T> &parcelInfos, const int32_t maxVectorSize)
+{
+    size_t dataSize = data.ReadUint32();
+    if (dataSize == 0) {
+        APP_LOGE("Parcel no data");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    void *buffer = nullptr;
+    if (dataSize > MAX_IPC_REWDATA_SIZE) {
+        APP_LOGE("dataSize is too large");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    } else {
+        if (!GetData(buffer, dataSize, data.ReadRawData(dataSize))) {
+            APP_LOGE("GetData failed dataSize: %{public}zu", dataSize);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    MessageParcel tempParcel;
+    if (!tempParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        APP_LOGE("Fail to ParseFrom");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    int32_t infoSize = tempParcel.ReadInt32();
+    if (infoSize == 0 || infoSize > maxVectorSize) {
+        APP_LOGE("infoSize invalid");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    CONTAINER_SECURITY_VERIFY(tempParcel, infoSize, &parcelInfos);
+    for (int32_t i = 0; i < infoSize; i++) {
+        std::unique_ptr<T> info(tempParcel.ReadParcelable<T>());
+        if (info == nullptr) {
+            APP_LOGE("Read Parcelable infos failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        parcelInfos.emplace_back(*info);
+    }
+
+    return ERR_OK;
+}
+
 int32_t BundleMgrHost::AllocatAshmemNum()
 {
     std::lock_guard<std::mutex> lock(bundleAshmemMutex_);
@@ -5011,6 +5064,47 @@ ErrCode BundleMgrHost::HandleGetAllShortcutInfoForSelf(MessageParcel &data, Mess
     }
     if (ret == ERR_OK && !WriteVectorToParcelIntelligent(infos, reply)) {
         APP_LOGE("Write shortcut infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleAddDynamicShortcutInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto ret = GetVectorParcelInfoIntelligent(data, shortcutInfos, MAX_SHORTCUT_INFO_SIZE);
+    if (ret != ERR_OK) {
+        APP_LOGE("Read ParcelInfo failed");
+        return ret;
+    }
+    int32_t userId = data.ReadInt32();
+    ret = AddDynamicShortcutInfos(shortcutInfos, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleDeleteDynamicShortcutInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string bundleName = data.ReadString();
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<std::string> ids;
+    if (!data.ReadStringVector(&ids)) {
+        APP_LOGE("ReadStringVector failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ids.size() > MAX_SHORTCUT_INFO_SIZE) {
+        APP_LOGE("Shortcut ids size invalid");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    ErrCode ret = DeleteDynamicShortcutInfos(bundleName, appIndex, userId, ids);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

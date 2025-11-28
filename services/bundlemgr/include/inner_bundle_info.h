@@ -2391,6 +2391,7 @@ public:
     {
         return isDelayAging_;
     }
+    bool isAbilityNameExist(const std::string &moduleName, const std::string &abilityName) const;
 
 private:
     bool IsExistLauncherAbility() const;

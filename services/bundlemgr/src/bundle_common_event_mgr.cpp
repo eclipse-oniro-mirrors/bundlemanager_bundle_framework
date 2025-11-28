@@ -52,6 +52,8 @@ constexpr const char* UTD_IDS = "utdIds";
 constexpr const char* USER_ID = "userId";
 constexpr const char* SHORTCUT_CHANGED = "usual.event.SHORTCUT_CHANGED";
 constexpr const char* SHORTCUT_ID = "shortcutId";
+constexpr const char* SHORTCUT_IDS = "shortcutIds";
+constexpr const char* SHORTCUT_OPERATION_TYPE = "operationType";
 constexpr const char* MANAGE_SHORTCUTS = "ohos.permission.MANAGE_SHORTCUTS";
 constexpr const char* IS_BUNDLE_EXIST = "isBundleExist";
 constexpr const char* CROSS_APP_SHARED_CONFIG = "crossAppSharedConfig";
@@ -495,6 +497,29 @@ void BundleCommonEventMgr::NotifyShortcutVisibleChanged(
     want.SetParam(USER_ID, userId);
     want.SetParam(APP_INDEX, appIndex);
     want.SetParam("visible", visible);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { MANAGE_SHORTCUTS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+}
+
+void BundleCommonEventMgr::NotifyDynamicShortcutChanged(const std::string &bundlename,
+    const std::vector<std::string> &ids, int32_t userId, int32_t appIndex, const std::string &operationType)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(SHORTCUT_CHANGED);
+    ElementName element;
+    element.SetBundleName(bundlename);
+    want.SetElement(element);
+    want.SetParam(SHORTCUT_IDS, ids);
+    want.SetParam(USER_ID, userId);
+    want.SetParam(APP_INDEX, appIndex);
+    want.SetParam(SHORTCUT_OPERATION_TYPE, operationType);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { MANAGE_SHORTCUTS };

@@ -184,10 +184,35 @@ ShortcutInfo BmsDataMgrTest::InitShortcutInfo()
     shortcutInfos.icon = "$media:16777224";
     shortcutInfos.label = "shortcutLabel";
     shortcutInfos.disableMessage = "shortcutDisableMessage";
+    shortcutInfos.moduleName = "test_entry";
     shortcutInfos.isStatic = true;
     shortcutInfos.isHomeShortcut = true;
     shortcutInfos.isEnables = true;
     return shortcutInfos;
+}
+
+InnerBundleInfo CreateAddDynamicShortcutInfosInnerBundleInfo(const ShortcutInfo &shortcutInfo)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string moduleName = "test_entry";
+    std::string hostAbility = "hostAbility";
+    std::string shortcutId = "id_test1";
+    int32_t userId = 100;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = moduleName;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    innerBundleInfo.InsertInnerModuleInfo(bundleName, innerModuleInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = hostAbility;
+    innerAbilityInfo.moduleName = moduleName;
+    innerBundleInfo.InsertAbilitiesInfo(hostAbility, innerAbilityInfo);
+    return innerBundleInfo;
 }
 
 std::vector<Skill> BmsDataMgrTest::CreateSkillsForMatchShareTest()
@@ -6021,48 +6046,6 @@ HWTEST_F(BmsDataMgrTest, BundleBackupMgr_0300, Function | MediumTest | Level1)
 }
 
 /**
- * @tc.number: GetShortcutVisibleStatus_0001
- * @tc.name: GetShortcutVisibleStatus
- * @tc.desc: test GetShortcutVisibleStatus(
- *     const std::string &bundleName, const std::string &shortcutId, int32_t userId, int32_t appIndex) const
- */
-HWTEST_F(BmsDataMgrTest, GetShortcutVisibleStatus_0001, Function | MediumTest | Level1)
-{
-    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
-        std::make_shared<ShortcutVisibleDataStorageRdb>();
-    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
-    ShortcutInfo shortcutInfo;
-    shortcutInfo.bundleName = "";
-    shortcutInfo.id = "";
-    shortcutInfo.visible = true;
-    int32_t appIndex = 0;
-    auto ret = shortcutVisibleDataStorageRdb->GetShortcutVisibleStatus(USERID, appIndex, shortcutInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
-    EXPECT_EQ(shortcutInfo.visible, true);
-}
-
-/**
- * @tc.number: GetShortcutVisibleStatus_0002
- * @tc.name: GetShortcutVisibleStatus
- * @tc.desc: test GetShortcutVisibleStatus(
- *     const std::string &bundleName, const std::string &shortcutId, int32_t userId, int32_t appIndex) const
- */
-HWTEST_F(BmsDataMgrTest, GetShortcutVisibleStatus_0002, Function | MediumTest | Level1)
-{
-    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
-        std::make_shared<ShortcutVisibleDataStorageRdb>();
-    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
-    ShortcutInfo shortcutInfo;
-    shortcutInfo.bundleName = "bundleName";
-    shortcutInfo.id = "shortcutId";
-    shortcutInfo.visible = false;
-    int32_t appIndex = 0;
-    auto ret = shortcutVisibleDataStorageRdb->GetShortcutVisibleStatus(USERID, appIndex, shortcutInfo);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_EQ(shortcutInfo.visible, false);
-}
-
-/**
  * @tc.number: GetAllExtensionBundleNames_0001
  * @tc.name: GetAllExtensionBundleNames
  * @tc.desc: test GetAllExtensionBundleNames
@@ -6695,5 +6678,663 @@ HWTEST_F(BmsDataMgrTest, GetPluginBundlePathForSelf_0040, TestSize.Level1)
     ret = bundleMgrHostImpl->GetPluginBundlePathForSelf(pluginBundleName, pluginCodePath);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(pluginCodePath, pluginBundleInfo.codePath);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfos_0001
+ * @tc.name: AddDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, AddDynamicShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    int32_t userId = -1;
+    BundleDataMgr bundleDataMgr;
+    auto result = bundleDataMgr.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfos_0002
+ * @tc.name: AddDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, AddDynamicShortcutInfos_0002, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    int32_t userId = 100;
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    auto result = bundleDataMgr.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfos_0003
+ * @tc.name: AddDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, AddDynamicShortcutInfos_0003, Function | MediumTest | Level1)
+{
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    int32_t userId = 100;
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    auto result = bundleDataMgr.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfos_0004
+ * @tc.name: AddDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, AddDynamicShortcutInfos_0004, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    int32_t userId = 100;
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto result = bundleDataMgr.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfos_0005
+ * @tc.name: AddDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, AddDynamicShortcutInfos_0005, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    int32_t userId = 100;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    auto innerBundleInfo = CreateAddDynamicShortcutInfosInnerBundleInfo(shortcutInfo);
+
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto result = bundleDataMgr.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfos_0006
+ * @tc.name: AddDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, AddDynamicShortcutInfos_0006, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    int32_t userId = 100;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    ShortcutInfo shortcutInfo2 = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo2.id = "id_test2";
+    shortcutInfo2.sourceType = 2;
+    shortcutInfos.push_back(shortcutInfo2);
+    auto innerBundleInfo = CreateAddDynamicShortcutInfosInnerBundleInfo(shortcutInfo);
+
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bool boolRet = bundleDataMgr.shortcutVisibleStorage_->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_TRUE(boolRet);
+    auto result = bundleDataMgr.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+
+    result = bundleDataMgr.DeleteShortcutVisibleInfo(bundleName, userId, 0);
+    EXPECT_EQ(result, ERR_OK);
+    bundleDataMgr.bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfos_0007
+ * @tc.name: AddDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::AddDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, AddDynamicShortcutInfos_0007, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    int32_t userId = 100;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    ShortcutInfo shortcutInfo2 = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo2.id = "id_test2";
+    shortcutInfo2.iconId = 1;
+    shortcutInfo2.labelId = 1;
+    shortcutInfos.push_back(shortcutInfo2);
+    auto innerBundleInfo = CreateAddDynamicShortcutInfosInnerBundleInfo(shortcutInfo);
+
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto result = bundleDataMgr.AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(result, ERR_OK);
+
+    result = bundleDataMgr.DeleteShortcutVisibleInfo(bundleName, userId, 0);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfos_0001
+ * @tc.name: DeleteDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::DeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDynamicShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    int32_t appIndex = 0;
+    int32_t userId = -1;
+    BundleDataMgr bundleDataMgr;
+    auto result = bundleDataMgr.DeleteDynamicShortcutInfos(bundleName, appIndex, userId, {shortcutId});
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfos_0002
+ * @tc.name: DeleteDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::DeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDynamicShortcutInfos_0002, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    auto result = bundleDataMgr.DeleteDynamicShortcutInfos(bundleName, appIndex, userId, {shortcutId});
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfos_0003
+ * @tc.name: DeleteDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::DeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDynamicShortcutInfos_0003, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool visible = true;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.enabled = false;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsNewVersion(false);
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto result = bundleDataMgr.DeleteDynamicShortcutInfos(bundleName, appIndex, userId, {shortcutId});
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfos_0004
+ * @tc.name: DeleteDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::DeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDynamicShortcutInfos_0004, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    bool visible = true;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto result = bundleDataMgr.DeleteDynamicShortcutInfos(bundleName, appIndex, userId, {});
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfos_0005
+ * @tc.name: DeleteDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::DeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDynamicShortcutInfos_0005, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool visible = true;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto result = bundleDataMgr.DeleteDynamicShortcutInfos(bundleName, appIndex, userId, {shortcutId});
+    EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfos_0006
+ * @tc.name: DeleteDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::DeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDynamicShortcutInfos_0006, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test2";
+    bool visible = true;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo.sourceType = 2;
+    shortcutInfos.push_back(shortcutInfo);
+    bool boolRet = bundleDataMgr.shortcutVisibleStorage_->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_TRUE(boolRet);
+
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto result = bundleDataMgr.DeleteDynamicShortcutInfos(bundleName, appIndex, userId, {shortcutId});
+    EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+
+    result = bundleDataMgr.DeleteShortcutVisibleInfo(bundleName, userId, 0);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfos_0007
+ * @tc.name: DeleteDynamicShortcutInfos
+ * @tc.desc: test BundleDataMgr::DeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDynamicShortcutInfos_0007, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool visible = true;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(userId);
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo.sourceType = 2;
+    ShortcutInfo shortcutInfo2 = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo2.id = "id_test2";
+    shortcutInfo2.sourceType = 2;
+    shortcutInfos.push_back(shortcutInfo);
+    shortcutInfos.push_back(shortcutInfo2);
+    bool boolRet = bundleDataMgr.shortcutVisibleStorage_->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_TRUE(boolRet);
+
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto result = bundleDataMgr.DeleteDynamicShortcutInfos(bundleName, appIndex, userId, {shortcutId, "id_test2"});
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: GetStorageShortcutInfos_0001
+ * @tc.name: test GetStorageShortcutInfos
+ * @tc.desc: test GetStorageShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, GetStorageShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
+        std::make_shared<ShortcutVisibleDataStorageRdb>();
+    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+    shortcutVisibleDataStorageRdb->rdbDataManager_ = nullptr;
+    auto ret = shortcutVisibleDataStorageRdb->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_FALSE(ret);
+
+    ret = shortcutVisibleDataStorageRdb->DeleteDynamicShortcutInfos(bundleName, appIndex, userId, {shortcutId});
+    EXPECT_FALSE(ret);
+
+    shortcutVisibleDataStorageRdb->GetStorageShortcutInfos(bundleName, appIndex, userId, shortcutInfos);
+    EXPECT_FALSE(shortcutInfos.empty());
+}
+
+/**
+ * @tc.number: GetStorageShortcutInfos_0002
+ * @tc.name: test GetStorageShortcutInfos
+ * @tc.desc: test GetStorageShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, GetStorageShortcutInfos_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
+        std::make_shared<ShortcutVisibleDataStorageRdb>();
+    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo.sourceType = 2;
+    shortcutInfo.icon = "iconString";
+    shortcutInfo.label = "labelString";
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+
+    auto ret = shortcutVisibleDataStorageRdb->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_TRUE(ret);
+    std::vector<ShortcutInfo> storgeShortcutInfos;
+    shortcutVisibleDataStorageRdb->GetStorageShortcutInfos(bundleName, appIndex, userId, storgeShortcutInfos, true);
+    EXPECT_EQ(storgeShortcutInfos.size(), 1);
+
+    std::vector<ShortcutInfo> storgeShortcutInfos2;
+    ret = shortcutVisibleDataStorageRdb->DeleteDynamicShortcutInfos(bundleName, appIndex, userId, {shortcutId});
+    EXPECT_TRUE(ret);
+    shortcutVisibleDataStorageRdb->GetStorageShortcutInfos(bundleName, appIndex, userId, storgeShortcutInfos2);
+    EXPECT_TRUE(storgeShortcutInfos2.empty());
+}
+
+/**
+ * @tc.number: GetStorageShortcutInfos_0003
+ * @tc.name: test GetStorageShortcutInfos
+ * @tc.desc: test GetStorageShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, GetStorageShortcutInfos_0003, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
+        std::make_shared<ShortcutVisibleDataStorageRdb>();
+    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo.icon = "$iconString:123456";
+    shortcutInfo.label = "$labelString:123456";
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+
+    auto ret = shortcutVisibleDataStorageRdb->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_TRUE(ret);
+    std::vector<ShortcutInfo> storgeShortcutInfos;
+    shortcutInfo.visible = false;
+    storgeShortcutInfos.push_back(shortcutInfo);
+    shortcutVisibleDataStorageRdb->GetStorageShortcutInfos(bundleName, appIndex, userId, storgeShortcutInfos);
+    ASSERT_EQ(storgeShortcutInfos.size(), 1);
+    EXPECT_EQ(storgeShortcutInfos[0].visible, true);
+
+    std::vector<ShortcutInfo> storgeShortcutInfos2;
+    shortcutVisibleDataStorageRdb->GetStorageShortcutInfos(bundleName, appIndex, userId, storgeShortcutInfos2);
+    EXPECT_TRUE(storgeShortcutInfos2.empty());
+}
+
+/**
+ * @tc.number: GetStorageShortcutInfos_0004
+ * @tc.name: test GetStorageShortcutInfos
+ * @tc.desc: test GetStorageShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, GetStorageShortcutInfos_0004, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
+        std::make_shared<ShortcutVisibleDataStorageRdb>();
+    ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo.sourceType = 2;
+    shortcutInfo.icon = "$iconString:123456";
+    shortcutInfo.label = "$labelString:123456";
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+
+    auto ret = shortcutVisibleDataStorageRdb->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_TRUE(ret);
+    shortcutInfo.sourceType = 1;
+    std::vector<ShortcutInfo> storgeShortcutInfos;
+    storgeShortcutInfos.push_back(shortcutInfo);
+    shortcutVisibleDataStorageRdb->GetStorageShortcutInfos(bundleName, appIndex, userId, storgeShortcutInfos);
+    ASSERT_EQ(storgeShortcutInfos.size(), 1);
+    EXPECT_EQ(storgeShortcutInfos[0].sourceType, 2);
+
+    bool result = shortcutVisibleDataStorageRdb->DeleteShortcutVisibleInfo(bundleName, userId, 0);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckModuleNameAndAbilityName_0001
+ * @tc.name: CheckModuleNameAndAbilityName
+ * @tc.desc: test BundleDataMgr::CheckModuleNameAndAbilityName
+ */
+HWTEST_F(BmsDataMgrTest, CheckModuleNameAndAbilityName_0001, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string hostAbility = "hostAbility";
+    std::string moduleName = "test_entry";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    ShortcutInfo shortcutInfo2 = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    shortcutInfos.push_back(shortcutInfo2);
+    BundleDataMgr bundleDataMgr;
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = hostAbility;
+    innerAbilityInfo.moduleName = moduleName;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = moduleName;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertInnerModuleInfo(bundleName, innerModuleInfo);
+    innerBundleInfo.InsertAbilitiesInfo(hostAbility, innerAbilityInfo);
+    auto result = bundleDataMgr.CheckModuleNameAndAbilityName(shortcutInfos, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckModuleNameAndAbilityName_0002
+ * @tc.name: CheckModuleNameAndAbilityName
+ * @tc.desc: test BundleDataMgr::CheckModuleNameAndAbilityName
+ */
+HWTEST_F(BmsDataMgrTest, CheckModuleNameAndAbilityName_0002, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string hostAbility = "hostAbility";
+    std::string moduleName = "test_entry";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo.hostAbility = "";
+    shortcutInfos.push_back(shortcutInfo);
+    BundleDataMgr bundleDataMgr;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = moduleName;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertInnerModuleInfo(bundleName, innerModuleInfo);
+    auto result = bundleDataMgr.CheckModuleNameAndAbilityName(shortcutInfos, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckModuleNameAndAbilityName_0003
+ * @tc.name: CheckModuleNameAndAbilityName
+ * @tc.desc: test BundleDataMgr::CheckModuleNameAndAbilityName
+ */
+HWTEST_F(BmsDataMgrTest, CheckModuleNameAndAbilityName_0003, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string hostAbility = "hostAbility";
+    std::string invalidKey = "invalidKey";
+    std::string moduleName = "test_entry";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = moduleName;
+    innerBundleInfo.InsertInnerModuleInfo(bundleName, innerModuleInfo);
+
+    InnerAbilityInfo innerAbilityInfo;
+    innerAbilityInfo.name = invalidKey;
+    innerAbilityInfo.moduleName = moduleName;
+    innerBundleInfo.InsertAbilitiesInfo(hostAbility, innerAbilityInfo);
+    innerAbilityInfo.name = hostAbility;
+    innerAbilityInfo.moduleName = invalidKey;
+    innerBundleInfo.InsertAbilitiesInfo(hostAbility, innerAbilityInfo);
+
+    auto result = bundleDataMgr.CheckModuleNameAndAbilityName(shortcutInfos, innerBundleInfo);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: UpdateShortcutInfoResId_0001
+ * @tc.name: UpdateShortcutInfoResId
+ * @tc.desc: test BundleDataMgr::UpdateShortcutInfoResId
+ */
+HWTEST_F(BmsDataMgrTest, UpdateShortcutInfoResId_0001, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    int32_t userId = 100;
+    std::vector<ShortcutInfo> shortcutInfos;
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.UpdateShortcutInfoResId(bundleName, userId);
+    bundleDataMgr.shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, -1, userId, shortcutInfos, true);
+    EXPECT_TRUE(shortcutInfos.empty());
+}
+
+/**
+ * @tc.number: UpdateShortcutInfoResId_0002
+ * @tc.name: UpdateShortcutInfoResId
+ * @tc.desc: test BundleDataMgr::UpdateShortcutInfoResId
+ */
+HWTEST_F(BmsDataMgrTest, UpdateShortcutInfoResId_0002, Function | MediumTest | Level1)
+{
+    int32_t userId = 100;
+    std::string bundleName = "com.ohos.hello";
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo.sourceType = 2;
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.shortcutVisibleStorage_->AddDynamicShortcutInfos(shortcutInfos, userId);
+
+    bundleDataMgr.UpdateShortcutInfoResId("", userId);
+    bundleDataMgr.shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, -1, userId, shortcutInfos, true);
+    ASSERT_FALSE(shortcutInfos.empty());
+    EXPECT_EQ(shortcutInfos[0].iconId, 0);
+    EXPECT_EQ(shortcutInfos[0].labelId, 0);
+    bool result = bundleDataMgr.shortcutVisibleStorage_->DeleteShortcutVisibleInfo(bundleName, userId, 0);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: UpdateShortcutInfoResId_0003
+ * @tc.name: UpdateShortcutInfoResId
+ * @tc.desc: test BundleDataMgr::UpdateShortcutInfoResId
+ */
+HWTEST_F(BmsDataMgrTest, UpdateShortcutInfoResId_0003, Function | MediumTest | Level1)
+{
+    int32_t userId = 100;
+    std::string bundleName = "com.ohos.hello";
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo.sourceType = 2;
+    shortcutInfo.labelId = 1;
+    shortcutInfo.iconId = 1;
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.shortcutVisibleStorage_->AddDynamicShortcutInfos(shortcutInfos, userId);
+
+    bundleDataMgr.UpdateShortcutInfoResId(bundleName, userId);
+    bundleDataMgr.shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, -1, userId, shortcutInfos, true);
+    ASSERT_FALSE(shortcutInfos.empty());
+    EXPECT_EQ(shortcutInfos[0].iconId, 1);
+    EXPECT_EQ(shortcutInfos[0].labelId, 1);
+
+    shortcutInfos.clear();
+    shortcutInfo.icon = "";
+    shortcutInfo.labelId = 0;
+    shortcutInfos.push_back(shortcutInfo);
+    bundleDataMgr.shortcutVisibleStorage_->AddDynamicShortcutInfos(shortcutInfos, userId);
+    bundleDataMgr.UpdateShortcutInfoResId(bundleName, userId);
+    bundleDataMgr.shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, -1, userId, shortcutInfos, true);
+    EXPECT_EQ(shortcutInfos[0].iconId, 1);
+    EXPECT_EQ(shortcutInfos[0].labelId, 0);
+    bool result = bundleDataMgr.shortcutVisibleStorage_->DeleteShortcutVisibleInfo(bundleName, userId, 0);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckUserId_0001
+ * @tc.name: CheckUserId
+ * @tc.desc: test BundleDataMgr::CheckUserId
+ */
+HWTEST_F(BmsDataMgrTest, CheckUserId_0001, Function | MediumTest | Level1)
+{
+    int32_t userId = -2;
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.AddUserId(bundleDataMgr.GetUserIdByCallingUid());
+    ErrCode ret = bundleDataMgr.CheckUserId(userId);
+    EXPECT_EQ(ret, ERR_OK);
+    userId = -3;
+    ret = bundleDataMgr.CheckUserId(userId);
+    EXPECT_EQ(ret, ERR_OK);
+    userId = -4;
+    ret = bundleDataMgr.CheckUserId(userId);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS

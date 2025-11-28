@@ -1207,6 +1207,10 @@ public:
     ErrCode SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible);
     ErrCode DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
     ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos);
+    ErrCode AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId);
+    ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex, int32_t userId,
+        const std::vector<std::string> &ids);
+    void UpdateShortcutInfoResId(const std::string &bundleName, const int32_t userId);
     bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
         const int32_t patchVersion);
     ErrCode GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32_t userId, std::unordered_map<std::string,
@@ -1448,6 +1452,11 @@ private:
     void GetPreBundleSize(const std::string &name, std::vector<BundleStorageStats> &bundleStats) const;
     bool GetAdaptBaseShareBundleInfo(const InnerBundleInfo &innerBundleInfo, const Dependency &dependency,
         BaseSharedBundleInfo &baseSharedBundleInfo) const;
+    ErrCode CheckShortcutIdsUnique(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+        const std::vector<ShortcutInfo> &shortcutInfos, std::vector<std::string> &ids) const;
+    ErrCode CheckModuleNameAndAbilityName(const std::vector<ShortcutInfo>& shortcutInfos,
+        const InnerBundleInfo& innerBundleInfo) const;
+    ErrCode CheckUserId(int32_t &userId) const;
 
 private:
     bool initialUserFlag_ = false;

@@ -320,3 +320,10 @@ DEFAULT_APP:
   UTD: {type: STRING, desc: utd}
   APP_INDEX: {type: INT32, desc: app index}
 
+BUNDLE_DYNAMIC_SHORTCUTINFO:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: dynamic shortcutInfo}
+  USERID: {type: INT32, desc: userId of the bundle}
+  SHORTCUT_ID: {type: STRING, desc: shortcut id}
+  BUNDLE_NAME: {type: STRING, desc: bundle name}
+  OP_TYPE: {type: STRING, desc: dynamic shortcut operation type}
+  CALLING_UID: {type: INT32, desc: calling uid}
