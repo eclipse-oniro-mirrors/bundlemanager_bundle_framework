@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,6 +47,8 @@ enum BundleFlag {
     GET_BUNDLE_WITH_ROUTER_MAP = 0x00000080,
     // get bundle info include skill info
     GET_BUNDLE_WITH_SKILL = 0x00000800,
+    // the flag only for C++ interface passing
+    GET_BUNDLE_INFO_EXCLUDE_EXT = 0x00020000,
 };
 
 enum class GetBundleInfoFlag {
@@ -67,6 +69,8 @@ enum class GetBundleInfoFlag {
     GET_BUNDLE_INFO_EXCLUDE_CLONE = 0x00004000,
     GET_BUNDLE_INFO_WITH_CLOUD_KIT = 0x00008000,
     GET_BUNDLE_INFO_WITH_ENTRY_MODULE = 0x00010000,
+    // the flag only for C++ interface passing
+    GET_BUNDLE_INFO_EXCLUDE_EXT = 0x00020000,
 };
 
 struct RequestPermissionUsedScene : public Parcelable {
