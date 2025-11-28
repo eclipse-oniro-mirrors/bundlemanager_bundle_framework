@@ -12019,6 +12019,15 @@ void BundleDataMgr::GetProfileDataList(ProfileType profileType, int32_t requestU
             APP_LOGD("bundle %{public}s is not installed in user %{public}d", bundleName.c_str(), requestUserId);
             continue;
         }
+        bool isEnabled = false;
+        if (info.GetApplicationEnabledV9(responseUserId, isEnabled) != ERR_OK) {
+            APP_LOGD("get application enabled failed, bundle: %{public}s", bundleName.c_str());
+            continue;
+        }
+        if (!isEnabled) {
+            APP_LOGD("bundle: %{public}s is disabled", bundleName.c_str());
+            continue;
+        }
         auto moduleInfo = info.GetInnerModuleInfoForEntry();
         if (!moduleInfo) {
             APP_LOGE("bundle %{public}s has no entry", bundleName.c_str());
