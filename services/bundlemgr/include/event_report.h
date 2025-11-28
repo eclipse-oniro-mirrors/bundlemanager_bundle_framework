@@ -55,6 +55,7 @@ enum class BMSEventType : uint8_t {
     DATA_PARTITION_USAGE_EVENT,
     DEFAULT_APP,
     QUERY_BUNDLE_INFO,
+    BUNDLE_DYNAMIC_SHORTCUTINFO,
 };
 
 enum class BundleEventType : uint8_t {
@@ -215,7 +216,11 @@ struct EventInfo {
     std::vector<std::string> bundleNameList;
     std::vector<std::string> callingAppIdList;
     std::vector<std::string> callingBundleNameList;
-    
+
+    // for dynamic shortcut create/delete
+    std::string shortcutOperationType;
+    std::string shortcutIds;
+
     std::string want;
     std::string utd;
 
@@ -282,6 +287,8 @@ struct EventInfo {
         targetAPIVersion = 0;
         minAPIVersion = 0;
         uid = 0;
+        shortcutOperationType.clear();
+        shortcutIds.clear();
         isAbcCompressed = false;
     }
 };
@@ -421,6 +428,17 @@ public:
      */
     static void SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const int32_t appIndex,
         const std::string& callingName, const std::string& want, const std::string& utd);
+
+    /**
+     * @brief Send info when add or delete dynamic shortcuts.
+     * @param bundleName Indicates the bundleName.
+     * @param userId Indicates the shortcutIds.
+     * @param shortcutIds set default app method type.
+     * @param operationType Operation types include Add and Delete.
+     * @param callingUid Indicates method caller uid.
+     */
+    static void SendDynamicShortcutEvent(const std::string &bundleName, int32_t userId,
+        const std::vector<std::string> &shortcutIds, const std::string &operationType, int32_t callingUid);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

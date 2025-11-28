@@ -16,6 +16,7 @@
 #include "event_report.h"
 
 #include <set>
+#include <sstream>
 #include "app_log_wrapper.h"
 #include "bundle_util.h"
 #include "bundle_file_util.h"
@@ -260,6 +261,25 @@ void EventReport::SendDefaultAppEvent(DefaultAppActionType actionType, int32_t u
     eventInfo.utd = utd;
     eventInfo.appIndex = appIndex;
     EventReport::SendSystemEvent(BMSEventType::DEFAULT_APP, eventInfo);
+}
+
+void EventReport::SendDynamicShortcutEvent(const std::string &bundleName,
+    int32_t userId, const std::vector<std::string> &shortcutIds, const std::string &operationType, int32_t callingUid)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = bundleName;
+    eventInfo.userId = userId;
+    std::ostringstream oss;
+    for (size_t i = 0; i < shortcutIds.size(); ++i) {
+        if (i != 0) {
+            oss << ",";
+        }
+        oss << shortcutIds[i];
+    }
+    eventInfo.shortcutIds = oss.str();
+    eventInfo.shortcutOperationType = operationType;
+    eventInfo.callingUid = callingUid;
+    EventReport::SendSystemEvent(BMSEventType::BUNDLE_DYNAMIC_SHORTCUTINFO, eventInfo);
 }
 
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)

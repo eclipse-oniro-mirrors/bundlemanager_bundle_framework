@@ -1035,6 +1035,40 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0059, TestS
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
+/**
+ * @tc.number: BundleMgrHostImpl_0060
+ * @tc.name: VerifyCallingPermissionsForAllDeniedTest
+ * @tc.desc: AddDynamicShortcutInfos VerifyCallingPermissionsForAll denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0060, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    int32_t userId = 100;
+    auto ret = localBundleMgrHostImpl->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_0061
+ * @tc.name: VerifyCallingPermissionsForAllDeniedTest
+ * @tc.desc: DeleteDynamicShortcutInfos VerifyCallingPermissionsForAll denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0061, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    std::vector<std::string> ids;
+    auto ret = localBundleMgrHostImpl->DeleteDynamicShortcutInfos(bundleName, appIndex, userId, ids);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 /**
  * @tc.number: VerifyManagerHostImpl_0001

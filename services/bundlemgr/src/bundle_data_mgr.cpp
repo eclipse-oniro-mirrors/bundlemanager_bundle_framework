@@ -42,6 +42,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#include "event_report.h"
 #include "hitrace_meter.h"
 #include "inner_bundle_clone_common.h"
 #include "installd_client.h"
@@ -112,6 +113,8 @@ constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* RESOURCE_STRING_PREFIX = "$string:";
 constexpr const char* MEDIALIBRARYDATA = "com.ohos.medialibrary.medialibrarydata";
 constexpr const char* EMPTY_STRING = "";
+constexpr const char* SHORTCUT_OPERATION_CREATE = "ADD";
+constexpr const char* SHORTCUT_OPERATION_DELETE = "DEL";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -144,6 +147,14 @@ const std::string USER_ID = "USER_ID";
 const std::string APP_INDEX = "APP_INDEX";
 #ifndef BUNDLE_FRAMEWORK_FREE_INSTALL
 constexpr int APP_MGR_SERVICE_ID = 501;
+#endif
+#ifdef GLOBAL_RESMGR_ENABLE
+const std::string DOT_SEPARATOR = ".";
+const std::string COLON_SEPARATOR = ":";
+const std::string PREFIX_APP = "app.";
+const std::string PREFIX_DOLLAR = "$";
+const std::string FIELD_MEDIA = "media";
+const std::string FIELD_STRING = "string";
 #endif
 }
 
@@ -5752,6 +5763,58 @@ bool BundleDataMgr::GetFormsInfoByApp(const std::string &bundleName, std::vector
     return true;
 }
 
+void BundleDataMgr::UpdateShortcutInfoResId(const std::string &bundleName, const int32_t userId)
+{
+#ifdef GLOBAL_RESMGR_ENABLE
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, Constants::ALL_CLONE_APP_INDEX,
+        userId, shortcutInfos, true);
+    if (shortcutInfos.empty()) {
+        APP_LOGW("shortcutInfos is empty");
+        return;
+    }
+    auto ProcessResourceField = [](const std::shared_ptr<OHOS::Global::Resource::ResourceManager> &resManager,
+        const std::string &prefix, const std::string &field, uint32_t &resId) {
+        if (resManager == nullptr) {
+            APP_LOGW("resManager is nullptr");
+            return;
+        }
+        if (field.empty() || resId == 0) {
+            return;
+        }
+        std::string resType = PREFIX_DOLLAR + prefix + COLON_SEPARATOR;
+        std::string resourceName;
+        if (field.compare(0, resType.size(), resType) == 0) {
+            resourceName = PREFIX_APP + prefix + DOT_SEPARATOR + field.substr(resType.size());
+        } else {
+            resourceName = PREFIX_APP + prefix + DOT_SEPARATOR + field;
+        }
+        if (resManager->GetResId(resourceName, resId) != Global::Resource::SUCCESS) {
+            APP_LOGW("Get resId by name error, name:%{public}s", resourceName.c_str());
+        }
+    };
+    std::unordered_map<std::string, std::shared_ptr<OHOS::Global::Resource::ResourceManager>> resManagers;
+    for (auto &info : shortcutInfos) {
+        auto [iter, inserted] = resManagers.emplace(info.moduleName, nullptr);
+        if (inserted) {
+            iter->second = GetResourceManager(info.bundleName, info.moduleName, userId);
+            if (iter->second == nullptr) {
+                APP_LOGW("InitResourceManager failed");
+                resManagers.erase(iter);
+                continue;
+            }
+        }
+        ProcessResourceField(iter->second, FIELD_MEDIA, info.icon, info.iconId);
+        ProcessResourceField(iter->second, FIELD_STRING, info.label, info.labelId);
+    }
+    if (!shortcutVisibleStorage_->AddDynamicShortcutInfos(shortcutInfos, userId)) {
+        APP_LOGE("rdb AddDynamicShortcutInfos failed");
+    }
+#else
+    APP_LOGW("GLOBAL_RESMGR_ENABLE disable");
+#endif
+}
+
 bool BundleDataMgr::GetShortcutInfos(
     const std::string &bundleName, int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) const
 {
@@ -5771,10 +5834,8 @@ bool BundleDataMgr::GetShortcutInfos(
     }
     GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
 
-    // get shortcut visible status
-    for (auto &info : shortcutInfos) {
-        shortcutVisibleStorage_->GetShortcutVisibleStatus(requestUserId, Constants::MAIN_APP_INDEX, info);
-    }
+    shortcutVisibleStorage_->GetStorageShortcutInfos(
+        bundleName, Constants::MAIN_APP_INDEX, requestUserId, shortcutInfos);
     return true;
 }
 
@@ -5957,10 +6018,9 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
     }
 
     GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
-    // get shortcut visible status
-    for (auto &info : shortcutInfos) {
-        shortcutVisibleStorage_->GetShortcutVisibleStatus(requestUserId, Constants::MAIN_APP_INDEX, info);
-    }
+
+    shortcutVisibleStorage_->GetStorageShortcutInfos(
+        bundleName, Constants::MAIN_APP_INDEX, requestUserId, shortcutInfos);
     return ERR_OK;
 }
 
@@ -5988,9 +6048,9 @@ ErrCode BundleDataMgr::GetShortcutInfoByAppIndex(const std::string &bundleName, 
 
     GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
     for (auto &info : shortcutInfos) {
-        shortcutVisibleStorage_->GetShortcutVisibleStatus(requestUserId, appIndex, info);
         info.appIndex = appIndex;
     }
+    shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, requestUserId, shortcutInfos);
     return ERR_OK;
 }
 
@@ -11631,12 +11691,185 @@ ErrCode BundleDataMgr::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shor
         }
     }
     for (auto &info : shortcutInfos) {
-        ret = shortcutVisibleStorage_->GetShortcutVisibleStatus(userId, appIndex, info);
-        if (ret != ERR_OK) {
-            APP_LOGD("visible not exist in table");
-        }
         info.appIndex = appIndex;
     }
+
+    shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, userId, shortcutInfos);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::CheckShortcutIdsUnique(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+    const std::vector<ShortcutInfo> &shortcutInfos, std::vector<std::string> &ids) const
+{
+    std::unordered_set<std::string> staticShortcutIds;
+    {
+        std::vector<ShortcutInfo> staticShortcutInfos;
+        GetShortcutInfosByInnerBundleInfo(innerBundleInfo, staticShortcutInfos);
+        staticShortcutIds.reserve(staticShortcutInfos.size());
+        for (const auto &shortcutInfo : staticShortcutInfos) {
+            staticShortcutIds.insert(shortcutInfo.id);
+        }
+    }
+    for (const auto &shortcut : shortcutInfos) {
+        if (staticShortcutIds.count(shortcut.id) > 0) {
+            APP_LOGE("Shortcut ID:%{public}s conflicts with static shortcut ids", shortcut.id.c_str());
+            return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+        }
+    }
+
+    std::unordered_set<std::string> storageShortcutIds;
+    {
+        std::vector<ShortcutInfo> storageShortcutInfos;
+        shortcutVisibleStorage_->GetStorageShortcutInfos(
+            shortcutInfos.begin()->bundleName, shortcutInfos.begin()->appIndex, userId, storageShortcutInfos, true);
+        storageShortcutIds.reserve(storageShortcutInfos.size());
+        for (const auto &shortcutInfo : storageShortcutInfos) {
+            storageShortcutIds.insert(shortcutInfo.id);
+        }
+    }
+    for (const auto &shortcut : shortcutInfos) {
+        if (storageShortcutIds.count(shortcut.id) > 0) {
+            APP_LOGE("Shortcut ID:%{public}s already exists in the database", shortcut.id.c_str());
+            return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+        }
+        ids.emplace_back(shortcut.id);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::CheckModuleNameAndAbilityName(const std::vector<ShortcutInfo>& shortcutInfos,
+    const InnerBundleInfo& innerBundleInfo) const
+{
+    std::unordered_set<std::string> processedModules;
+    std::set<std::pair<std::string, std::string>> processedAbilities;
+    for (const auto &info : shortcutInfos) {
+        if (processedModules.insert(info.moduleName).second) {
+            if (!innerBundleInfo.GetInnerModuleInfoByModuleName(info.moduleName)) {
+                APP_LOGE("moduleName:%{public}s is not found", info.moduleName.c_str());
+                return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+            }
+        }
+
+        if (!info.hostAbility.empty() && processedAbilities.emplace(info.moduleName, info.hostAbility).second) {
+            if (!innerBundleInfo.isAbilityNameExist(info.moduleName, info.hostAbility)) {
+                APP_LOGE("abilityName:%{public}s is not found", info.hostAbility.c_str());
+                return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::CheckUserId(int32_t &userId) const
+{
+    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID || userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetUserIdByCallingUid();
+    }
+
+    if (!HasUserId(userId)) {
+        APP_LOGD("user is not existed");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
+{
+    APP_LOGD("AddDynamicShortcutInfos begin");
+    ErrCode ret = CheckUserId(userId);
+    if (ret != ERR_OK) {
+        APP_LOGW("input invalid userId, userId:%{public}d", userId);
+        return ret;
+    }
+    if (shortcutInfos.empty()) {
+        APP_LOGE("shortcutInfos is empty");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    std::string bundleName = shortcutInfos.begin()->bundleName;
+    int32_t appIndex = shortcutInfos.begin()->appIndex;
+    InnerBundleInfo innerBundleInfo;
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        ret = GetInnerBundleInfoWithFlagsV9(bundleName,
+            BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, userId, appIndex);
+        if (ret != ERR_OK) {
+            APP_LOGD("GetInnerBundleInfoWithFlagsV9 failed, bundleName:%{public}s, userId:%{public}d",
+                bundleName.c_str(), userId);
+            return ret;
+        }
+    }
+    ret = CheckModuleNameAndAbilityName(shortcutInfos, innerBundleInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckModuleNameAndAbilityName failed");
+        return ret;
+    }
+    std::vector<std::string> ids;
+    ret = CheckShortcutIdsUnique(innerBundleInfo, userId, shortcutInfos, ids);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckShortcutIdsUnique failed");
+        return ret;
+    }
+
+    if (!shortcutVisibleStorage_->AddDynamicShortcutInfos(shortcutInfos, userId)) {
+        APP_LOGE("rdb AddDynamicShortcutInfos failed");
+        return ERR_APPEXECFWK_DB_BATCH_INSERT_ERROR;
+    }
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyDynamicShortcutChanged(
+        bundleName, ids, userId, appIndex, SHORTCUT_OPERATION_CREATE);
+    EventReport::SendDynamicShortcutEvent(
+        bundleName, userId, ids, SHORTCUT_OPERATION_CREATE, IPCSkeleton::GetCallingUid());
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex, int32_t userId,
+    const std::vector<std::string> &ids)
+{
+    APP_LOGD("DeleteDynamicShortcutInfos begin");
+    ErrCode ret = CheckUserId(userId);
+    if (ret != ERR_OK) {
+        APP_LOGW("input invalid userId, userId:%{public}d", userId);
+        return ret;
+    }
+    bool isEnabled = false;
+    ret = IsApplicationEnabled(bundleName, appIndex, isEnabled, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("IsApplicationEnabled failed");
+        return ret;
+    }
+    if (!isEnabled) {
+        APP_LOGE("application is disabled");
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+
+    if (!ids.empty()) {
+        std::vector<ShortcutInfo> dynamicShortcutInfos;
+        shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, userId, dynamicShortcutInfos, true);
+        std::unordered_set<std::string> dynamicShortcutIds;
+        if (dynamicShortcutInfos.empty()) {
+            APP_LOGE("no specified dynamic shortcutInfos in the database");
+            return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+        }
+        dynamicShortcutIds.reserve(dynamicShortcutInfos.size());
+        for (const auto &shortcutInfo : dynamicShortcutInfos) {
+            dynamicShortcutIds.insert(shortcutInfo.id);
+        }
+        for (const auto &id : ids) {
+            if (dynamicShortcutIds.find(id) == dynamicShortcutIds.end()) {
+                APP_LOGE("shortcut id %{public}s not exists in the database", id.c_str());
+                return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+            }
+        }
+    }
+    if (!shortcutVisibleStorage_->DeleteDynamicShortcutInfos(bundleName, appIndex, userId, ids)) {
+        APP_LOGE("delete dynamic shortcutInfos failed");
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyDynamicShortcutChanged(bundleName, ids, userId, appIndex, SHORTCUT_OPERATION_DELETE);
+    EventReport::SendDynamicShortcutEvent(
+        bundleName, userId, ids, SHORTCUT_OPERATION_DELETE, IPCSkeleton::GetCallingUid());
     return ERR_OK;
 }
 

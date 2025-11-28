@@ -946,6 +946,66 @@ HWTEST_F(BmsBundleManagerTest3, GetAdditionalInfo_0200, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: AddDynamicShortcutInfos_0100
+ * @tc.name: test AddDynamicShortcutInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest3, AddDynamicShortcutInfos_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = hostImpl->AddDynamicShortcutInfos(shortcutInfos, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: AddDynamicShortcutInfos_0200
+ * @tc.name: test AddDynamicShortcutInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest3, AddDynamicShortcutInfos_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ShortcutInfo> shortcutInfos;
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    ErrCode ret = hostImpl->AddDynamicShortcutInfos(shortcutInfos, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfos_0100
+ * @tc.name: test DeleteDynamicShortcutInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest3, DeleteDynamicShortcutInfos_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> ids;
+    ErrCode ret = hostImpl->DeleteDynamicShortcutInfos(BUNDLE_NAME, 0, USERID, ids);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: DeleteDynamicShortcutInfos_0200
+ * @tc.name: test DeleteDynamicShortcutInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest3, DeleteDynamicShortcutInfos_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> ids;
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    ErrCode ret = hostImpl->DeleteDynamicShortcutInfos(BUNDLE_NAME, 0, USERID, ids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
  * @tc.number: GetBundleArchiveInfoBySandBoxPath_0100
  * @tc.name: test GetBundleArchiveInfoBySandBoxPath
  * @tc.desc: 1.system run normally

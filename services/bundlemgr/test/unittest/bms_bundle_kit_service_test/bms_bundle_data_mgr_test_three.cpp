@@ -159,6 +159,7 @@ const std::string TEST_URI_HTTP = "http://www.test.com";
 const std::string META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr int32_t MOCK_BUNDLE_MGR_EXT_FLAG = 10;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
+const std::vector<std::string> TEST_SHORTCUT_ID = {"shortcutId1", "shortcutId2"};
 const nlohmann::json APP_LIST0 = R"(
 {
     "app_list": [
@@ -3818,5 +3819,58 @@ HWTEST_F(BmsBundleDataMgrTest3, HasGetAbilityInfoExcludeExtFlag_0002, Function |
     uint32_t flag = static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXTENSION);
     bool ret = localBundleMgrHostImpl->HasGetAbilityInfoExcludeExtFlag(flag);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: HandleAddDynamicShortcutInfos_0001
+ * @tc.name: test HandleAddDynamicShortcutInfos
+ * @tc.desc: test HandleAddDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest3, HandleAddDynamicShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    data.WriteInt32(100);
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleAddDynamicShortcutInfos(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleDeleteDynamicShortcutInfos_0001
+ * @tc.name: test HandleDeleteDynamicShortcutInfos
+ * @tc.desc: test HandleDeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest3, HandleDeleteDynamicShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    data.WriteString(BUNDLE_TEST1);
+    data.WriteInt32(0);
+    data.WriteInt32(100);
+    data.WriteStringVector(TEST_SHORTCUT_ID);
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleDeleteDynamicShortcutInfos(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleDeleteDynamicShortcutInfos_0002
+ * @tc.name: test HandleDeleteDynamicShortcutInfos
+ * @tc.desc: test HandleDeleteDynamicShortcutInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest3, HandleDeleteDynamicShortcutInfos_0002, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    data.WriteString(BUNDLE_TEST1);
+    data.WriteInt32(0);
+    data.WriteInt32(100);
+    std::vector<std::string> ids;
+    ids.resize(101);
+    data.WriteStringVector(ids);
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleDeleteDynamicShortcutInfos(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 } // OHOS

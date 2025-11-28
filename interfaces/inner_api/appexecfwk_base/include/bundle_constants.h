@@ -126,6 +126,12 @@ enum AbilityProfileType : uint32_t {
     UNKNOWN_PROFILE = 2
 };
 
+enum ShortcutSourceType : int32_t {
+    DEFAULT_SHORTCUT = 0,
+    STATIC_SHORTCUT = 1,
+    DYNAMIC_SHORTCUT = 2
+};
+
 constexpr const char* ACTION_HOME = "action.system.home";
 constexpr const char* WANT_ACTION_HOME = "ohos.want.action.home";
 constexpr const char* ENTITY_HOME = "entity.system.home";
@@ -191,6 +197,7 @@ constexpr const char* SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 // clone application
 constexpr int32_t MAIN_APP_INDEX = 0;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
+constexpr int32_t ALL_CLONE_APP_INDEX = -1;
 
 //param key-value
 constexpr const char* VERIFY_UNINSTALL_FORCED_KEY = "ohos.bms.param.verifyUninstallForced";

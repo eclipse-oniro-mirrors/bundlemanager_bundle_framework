@@ -134,6 +134,9 @@ constexpr ErrCode ERROR_ENABLE_DYNAMIC_ICON_DUE_TO_EXISTING_CUSTOM_THEMES = 1770
 // setAbilityFileTypesForSelf
 constexpr ErrCode ERROR_SET_ABILITY_FILE_TYPES_FOR_SELF = 17700351;
 
+// dynamicShortcutInfo
+constexpr ErrCode ERROR_BUNDLENAME_APPINDEX_NOT_UNIQUE = 18100001;
+
 // zlib errCode
 constexpr ErrCode ERR_ZLIB_SRC_FILE_INVALID = 900001;
 constexpr ErrCode ERR_ZLIB_DEST_FILE_INVALID = 900002;

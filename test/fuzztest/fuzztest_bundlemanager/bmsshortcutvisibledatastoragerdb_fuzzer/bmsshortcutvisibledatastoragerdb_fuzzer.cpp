@@ -39,13 +39,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     shortcutVisibleDataStorageRdb.IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
     shortcutVisibleDataStorageRdb.SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);
     shortcutVisibleDataStorageRdb.DeleteShortcutVisibleInfo(bundleName, userId, appIndex);
-    ShortcutInfo emptyShortcutInfo;
-    shortcutVisibleDataStorageRdb.GetShortcutVisibleStatus(userId, appIndex, emptyShortcutInfo);
-    ShortcutInfo shortcutInfo;
-    shortcutInfo.bundleName = "test";
-    shortcutInfo.id = "test";
-    shortcutVisibleDataStorageRdb.GetShortcutVisibleStatus(userId, appIndex, shortcutInfo);
-
     shortcutVisibleDataStorageRdb.rdbDataManager_ = nullptr;
     shortcutVisibleDataStorageRdb.IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
     shortcutVisibleDataStorageRdb.SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);

@@ -43,6 +43,7 @@ constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
 constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
 constexpr uint32_t EXPLICIT_QUERY_RESULT_LEN = 1;
 constexpr int32_t EMPTY_USER_ID = -500;
+constexpr uint32_t MAX_SHORTCUT_INFO_SIZE = 100;
 
 constexpr int32_t ENUM_ONE = 1;
 constexpr int32_t ENUM_TWO = 2;
@@ -231,8 +232,19 @@ constexpr const char* GET_ALL_DESKTOP_SHORTCUT_INFO = "GetAllDesktopShortcutInfo
 constexpr const char* SET_SHORTCUT_VISIBLE = "SetShortcutVisibleForSelf";
 constexpr const char* GET_ALL_SHORTCUT_INFO_FOR_SELF = "GetAllShortcutInfoForSelf";
 constexpr const char* SHORTCUT_ID = "shortcutId";
+constexpr const char* SHORTCUT_IDS = "ids";
 constexpr const char* INVALID_SHORTCUT_INFO_ERROR =
     "invalid ShortcutInfo: parameter type error, or appIndex is less than 0";
+constexpr const char* ADD_DYNAMIC_SHORTCUT_INFOS = "AddDynamicShortcutInfos";
+constexpr const char* DELETE_DYNAMIC_SHORTCUT_INFOS = "DeleteDynamicShortcutInfos";
+constexpr const char* SHORTCUT_INFO_LENGTH_ERROR = "shortcutInfo length invalid";
+constexpr const char* SHORTCUT_IDS_LENGTH_ERROR = "shortcut Ids length invalid";
+constexpr const char* BUNDLENAME_APPINDEX_NOT_UNIQUE =
+    "BusinessError 18100001: A combination of bundleName and appIndex"
+    "in the shortcutInfo list is different from the others.";
+constexpr const char* PERMISSION_DYNAMIC_SHORTCUT_INFO =
+    "ohos.permission.MANAGE_SHORTCUTS or "
+    "(ohos.permission.MANAGE_SHORTCUTS and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
 
 // free_install
 constexpr const char* RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE = "isHapModuleRemovable";

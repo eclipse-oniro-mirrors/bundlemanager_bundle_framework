@@ -919,6 +919,40 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0051, TestSize.Leve
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
+/*
+ * @tc.number: BundleMgrHostImpl_0052
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: AddDynamicShortcutInfos SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0052, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    int32_t userId = 100;
+    auto ret = localBundleMgrHostImpl->AddDynamicShortcutInfos(shortcutInfos, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/*
+ * @tc.number: BundleMgrHostImpl_0053
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: DeleteDynamicShortcutInfos SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0053, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string bundleName = "bundle";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    std::vector<std::string> ids;
+    auto ret = localBundleMgrHostImpl->DeleteDynamicShortcutInfos(bundleName, appIndex, userId, ids);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 /**
  * @tc.number: BundleResourceHostImpl_0001

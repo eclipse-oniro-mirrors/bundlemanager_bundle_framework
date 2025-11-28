@@ -7395,6 +7395,9 @@ ErrCode BaseBundleInstaller::MarkInstallFinish()
                 return ERR_APPEXECFWK_ADD_BUNDLE_ERROR;
             }
         }
+        for (const auto &userInfo : info.GetInnerBundleUserInfos()) {
+            dataMgr_->UpdateShortcutInfoResId(bundleName_, userInfo.second.bundleUserInfo.userId);
+        }
         PrintStartWindowIconId(info);
         return ERR_OK;
     }

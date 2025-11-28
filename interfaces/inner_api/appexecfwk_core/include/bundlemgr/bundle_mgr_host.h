@@ -944,6 +944,8 @@ private:
     ErrCode HandleGreatOrEqualTargetAPIVersion(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleSetShortcutVisibleForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllShortcutInfoForSelf(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleAddDynamicShortcutInfos(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleDeleteDynamicShortcutInfos(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginInfo(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetTestRunner(MessageParcel &data, MessageParcel &reply);
 
@@ -976,6 +978,11 @@ private:
 
     template<typename T>
     bool WriteVectorToParcelIntelligent(std::vector<T> &parcelableVector, MessageParcel &reply);
+
+    template<typename T>
+    ErrCode GetVectorParcelInfoIntelligent(
+        MessageParcel &data, std::vector<T> &parcelInfos, const int32_t maxVectorSize);
+
     /**
      * @brief Allocat ashmem num.
      * @return Returns ashmem num.

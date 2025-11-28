@@ -1292,6 +1292,11 @@ public:
 
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
 
+    virtual ErrCode AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId) override;
+
+    virtual ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
+        const int32_t userId, const std::vector<std::string> &ids) override;
+
     virtual bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
         const int32_t minorVersion, const int32_t patchVersion) override;
 
@@ -1405,6 +1410,9 @@ private:
 
     template<typename T>
     ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;
+
+    template<typename T>
+    ErrCode WriteVectorToParcel(const std::vector<T> &parcelVector, MessageParcel &reply);
 
     ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
 
