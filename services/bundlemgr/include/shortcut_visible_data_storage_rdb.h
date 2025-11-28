@@ -27,10 +27,8 @@ public:
     ShortcutVisibleDataStorageRdb();
     ~ShortcutVisibleDataStorageRdb();
 
-    bool IsShortcutVisibleInfoExist(
-        const std::string &bundleName, const std::string &shortcutId, int32_t appIndex, int32_t userId, bool visible);
-    bool SaveStorageShortcutVisibleInfo(
-        const std::string &bundleName, const std::string &shortcutId, int32_t appIndex, int32_t userId, bool visible);
+    bool SaveStorageShortcutVisibleInfo(const std::string &bundleName, const std::string &shortcutId, int32_t appIndex,
+        int32_t userId, const ShortcutInfo &shortcutInfo);
     bool DeleteShortcutVisibleInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
     bool AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId);

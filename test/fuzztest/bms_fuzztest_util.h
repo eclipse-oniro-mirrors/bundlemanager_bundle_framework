@@ -67,6 +67,26 @@ std::vector<std::string> GenerateStringArray(FuzzedDataProvider& fdp, size_t arr
     return result;
 }
 
+void GenerateDynamicShortcutInfo(FuzzedDataProvider& fdp, const std::string& shortcutId, const std::string& bundleName,
+    const int32_t appIndex, ShortcutInfo &shortcutInfo)
+{
+    shortcutInfo.isStatic = fdp.ConsumeBool();
+    shortcutInfo.isHomeShortcut = fdp.ConsumeBool();
+    shortcutInfo.isEnables = fdp.ConsumeBool();
+    shortcutInfo.visible = fdp.ConsumeBool();
+    shortcutInfo.iconId = fdp.ConsumeIntegral<uint32_t>();
+    shortcutInfo.labelId = fdp.ConsumeIntegral<uint32_t>();
+    shortcutInfo.appIndex = appIndex;
+    shortcutInfo.sourceType = fdp.ConsumeIntegral<int32_t>();
+    shortcutInfo.id = shortcutId;
+    shortcutInfo.bundleName = bundleName;
+    shortcutInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.hostAbility = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.icon = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    shortcutInfo.disableMessage = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+}
+
 Resource GenerateResource(FuzzedDataProvider& fdp)
 {
     Resource info;

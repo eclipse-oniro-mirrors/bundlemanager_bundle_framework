@@ -20,8 +20,7 @@ module_output_path = fuzz_test_path
 ohos_fuzztest("BMSShortcutVisibleDataStorageRdbFuzzTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  fuzz_config_file =
-      "../../../fuzztest/fuzztest_bundlemanager/bmsshortcutvisibledatastoragerdb_fuzzer"
+  fuzz_config_file = "../../../fuzztest/fuzztest_bundlemanager/bmsshortcutvisibledatastoragerdb_fuzzer"
   include_dirs = [ "${test_path}/fuzztest" ]
   sources = bundle_mgr_source
   sources += [
@@ -60,6 +59,7 @@ ohos_fuzztest("BMSShortcutVisibleDataStorageRdbFuzzTest") {
     "appspawn:hnpapi",
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
+    "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",

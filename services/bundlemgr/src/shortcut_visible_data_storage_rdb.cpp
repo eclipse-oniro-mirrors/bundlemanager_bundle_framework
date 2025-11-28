@@ -65,56 +65,30 @@ ShortcutVisibleDataStorageRdb::~ShortcutVisibleDataStorageRdb()
     APP_LOGI_NOFUNC("ShortcutVisibleDataStorageRdb instance is destroyed");
 }
 
-bool ShortcutVisibleDataStorageRdb::IsShortcutVisibleInfoExist(
-    const std::string &bundleName, const std::string &shortcutId, int32_t appIndex, int32_t userId, bool visible)
+bool ShortcutVisibleDataStorageRdb::SaveStorageShortcutVisibleInfo(const std::string &bundleName,
+    const std::string &shortcutId, int32_t appIndex, int32_t userId, const ShortcutInfo &shortcutInfo)
 {
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
         return false;
     }
-    NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_VISIBLE_RDB_TABLE_NAME);
-    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
-    absRdbPredicates.EqualTo(SHORTCUT_ID, shortcutId);
-    absRdbPredicates.EqualTo(APP_INDEX, appIndex);
-    absRdbPredicates.EqualTo(USER_ID, userId);
-    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
-    if (absSharedResultSet == nullptr) {
-        APP_LOGE("absSharedResultSet is null.");
-        return false;
-    }
-    int32_t visibleValue;
-    if (absSharedResultSet->GoToFirstRow() != NativeRdb::E_OK) {
-        APP_LOGD("absSharedResultSet GoToFirstRow is null.");
-        return false;
-    }
-    if (absSharedResultSet->GetInt(VISIBLE_INDEX, visibleValue) != NativeRdb::E_OK) {
-        APP_LOGE("absSharedResultSet GetInt is null.");
-        return false;
-    }
-    bool visibleResult = visibleValue == 1 ? true : false;
-    if (visible == visibleResult) {
-        return true;
-    }
-    return false;
-}
-
-bool ShortcutVisibleDataStorageRdb::SaveStorageShortcutVisibleInfo(
-    const std::string &bundleName, const std::string &shortcutId, int32_t appIndex, int32_t userId, bool visible)
-{
-    if (rdbDataManager_ == nullptr) {
-        APP_LOGE("rdbDataManager is null");
-        return false;
-    }
-    int32_t visibleValue = visible ? 1 : 0;
+    int32_t visibleValue = shortcutInfo.visible ? 1 : 0;
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BUNDLE_NAME, bundleName);
     valuesBucket.PutString(SHORTCUT_ID, shortcutId);
     valuesBucket.PutInt(USER_ID, userId);
     valuesBucket.PutInt(APP_INDEX, appIndex);
     valuesBucket.PutInt(VISIBLE, visibleValue);
-    bool ret = rdbDataManager_->InsertData(valuesBucket);
-    APP_LOGD("SaveStorageShortcutVisibleInfo %{public}d", ret);
-    return ret;
+    valuesBucket.PutInt(SOURCE_TYPE, shortcutInfo.sourceType);
+    nlohmann::json jsonObject;
+    to_json(jsonObject, shortcutInfo);
+    std::string value = jsonObject.dump();
+    valuesBucket.PutString(SHORTCUT_INFO, value);
+    if (!rdbDataManager_->InsertData(valuesBucket)) {
+        APP_LOGE("InsertData failed");
+        return false;
+    }
+    return true;
 }
 
 bool ShortcutVisibleDataStorageRdb::AddDynamicShortcutInfos(
@@ -214,7 +188,7 @@ void ShortcutVisibleDataStorageRdb::ProcessStaticShortcutInfos(const NativeRdb::
             APP_LOGE("GetString shortcutId failed");
             return;
         }
-        int32_t visibleValue;
+        int32_t visibleValue = 0;
         if (absSharedResultSet->GetInt(VISIBLE_INDEX, visibleValue) != NativeRdb::E_OK) {
             APP_LOGE("GetInt visibleValue failed");
             return;

@@ -11636,19 +11636,25 @@ ErrCode BundleDataMgr::SetShortcutVisibleForSelf(const std::string &shortcutId, 
         }
     }
     bool isShortcutIdExist = false;
+    ShortcutInfo targetShortcutInfo;
+    shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, userId, shortcutInfos);
     for (const auto& shortcut : shortcutInfos) {
         if (shortcut.id == shortcutId) {
             isShortcutIdExist = true;
+            targetShortcutInfo = shortcut;
+            if (targetShortcutInfo.visible == visible) {
+                return ERR_OK;
+            }
+            break;
         }
     }
     if (!isShortcutIdExist) {
         APP_LOGE("shortcut id %{public}s not exist", shortcutId.c_str());
         return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
     }
-    if (shortcutVisibleStorage_->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible)) {
-        return ERR_OK;
-    }
-    if (!shortcutVisibleStorage_->SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible)) {
+    targetShortcutInfo.visible = visible;
+    if (!shortcutVisibleStorage_->SaveStorageShortcutVisibleInfo(
+        bundleName, shortcutId, appIndex, userId, targetShortcutInfo)) {
         APP_LOGE("SaveStorageShortcutVisibleInfo failed");
         return ERR_APPEXECFWK_DB_INSERT_ERROR;
     }
@@ -11760,27 +11766,12 @@ ErrCode BundleDataMgr::CheckModuleNameAndAbilityName(const std::vector<ShortcutI
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::CheckUserId(int32_t &userId) const
-{
-    if (userId == Constants::ANY_USERID || userId == Constants::ALL_USERID || userId == Constants::UNSPECIFIED_USERID) {
-        userId = GetUserIdByCallingUid();
-    }
-
-    if (!HasUserId(userId)) {
-        APP_LOGD("user is not existed");
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
-
-    return ERR_OK;
-}
-
 ErrCode BundleDataMgr::AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &shortcutInfos, int32_t userId)
 {
     APP_LOGD("AddDynamicShortcutInfos begin");
-    ErrCode ret = CheckUserId(userId);
-    if (ret != ERR_OK) {
+    if (!HasUserId(userId)) {
         APP_LOGW("input invalid userId, userId:%{public}d", userId);
-        return ret;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     if (shortcutInfos.empty()) {
         APP_LOGE("shortcutInfos is empty");
@@ -11791,7 +11782,7 @@ ErrCode BundleDataMgr::AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &
     InnerBundleInfo innerBundleInfo;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        ret = GetInnerBundleInfoWithFlagsV9(bundleName,
+        ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName,
             BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, userId, appIndex);
         if (ret != ERR_OK) {
             APP_LOGD("GetInnerBundleInfoWithFlagsV9 failed, bundleName:%{public}s, userId:%{public}d",
@@ -11799,7 +11790,7 @@ ErrCode BundleDataMgr::AddDynamicShortcutInfos(const std::vector<ShortcutInfo> &
             return ret;
         }
     }
-    ret = CheckModuleNameAndAbilityName(shortcutInfos, innerBundleInfo);
+    ErrCode ret = CheckModuleNameAndAbilityName(shortcutInfos, innerBundleInfo);
     if (ret != ERR_OK) {
         APP_LOGE("CheckModuleNameAndAbilityName failed");
         return ret;
@@ -11827,13 +11818,12 @@ ErrCode BundleDataMgr::DeleteDynamicShortcutInfos(const std::string &bundleName,
     const std::vector<std::string> &ids)
 {
     APP_LOGD("DeleteDynamicShortcutInfos begin");
-    ErrCode ret = CheckUserId(userId);
-    if (ret != ERR_OK) {
+    if (!HasUserId(userId)) {
         APP_LOGW("input invalid userId, userId:%{public}d", userId);
-        return ret;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     bool isEnabled = false;
-    ret = IsApplicationEnabled(bundleName, appIndex, isEnabled, userId);
+    ErrCode ret = IsApplicationEnabled(bundleName, appIndex, isEnabled, userId);
     if (ret != ERR_OK) {
         APP_LOGE("IsApplicationEnabled failed");
         return ret;
