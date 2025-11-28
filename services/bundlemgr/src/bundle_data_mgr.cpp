@@ -3081,11 +3081,11 @@ ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInf
     InnerBundleInfo innerBundleInfo;
     if (GetInnerBundleInfoAndIndexByUid(uid, innerBundleInfo, appIndex) != ERR_OK) {
         if (sandboxAppHelper_ == nullptr) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoForSelf failed uid:%{public}d", uid);
+            LOG_D(BMS_TAG_QUERY, "GetBundleInfoForSelf failed uid:%{public}d", uid);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoForSelf failed uid:%{public}d", uid);
+            LOG_NOFUNC_W(BMS_TAG_QUERY, "sandbox GetBundleInfoForSelf failed uid:%{public}d", uid);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
@@ -7805,6 +7805,42 @@ void BundleDataMgr::SaveOverlayInfo(const std::string &bundleName, InnerBundleIn
     bundleInfos_.at(bundleName) = innerBundleInfo;
 }
 
+void BundleDataMgr::GetBundleNameList(const int32_t userId, std::vector<std::string>& bundleNameList)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto& [bundleName, infoItem] : bundleInfos_) {
+        if (infoItem.GetApplicationBundleType() == BundleType::SHARED) {
+                continue;
+        } else {
+            int32_t responseUserId = infoItem.GetResponseUserId(userId);
+            if (responseUserId == Constants::INVALID_USERID) {
+                continue;
+            }
+        }
+        bundleNameList.emplace_back(bundleName);
+    }
+}
+
+ErrCode BundleDataMgr::GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos)
+{
+    if (!HasUserId(userId)) {
+        APP_LOGW("GetAllAppProvisionInfo user is not existed.");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::vector<std::string> bundleNameList;
+    GetBundleNameList(userId, bundleNameList);
+    for (const auto& bundleName : bundleNameList) {
+        AppProvisionInfo appProvisionInfo;
+        if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName, appProvisionInfo)) {
+            APP_LOGW("bundleName:%{public}s GetAllAppProvisionInfo failed", bundleName.c_str());
+            continue;
+        }
+        appProvisionInfo.bundleName = bundleName;
+        appProvisionInfos.emplace_back(appProvisionInfo);
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
     AppProvisionInfo &appProvisionInfo)
 {
@@ -7828,6 +7864,7 @@ ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_
         APP_LOGW("bundleName:%{public}s GetAppProvisionInfo failed", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    appProvisionInfo.bundleName = bundleName;
     return ERR_OK;
 }
 
@@ -9659,7 +9696,7 @@ int32_t BundleDataMgr::GetUidByBundleName(const std::string &bundleName, int32_t
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGW_NOFUNC("FetchInnerBundleInfo not found %{public}s", bundleName.c_str());
+        APP_LOGW_NOFUNC("GetUidByBundleName not found %{public}s", bundleName.c_str());
         return Constants::INVALID_UID;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;

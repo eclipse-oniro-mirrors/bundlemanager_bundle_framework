@@ -15,6 +15,31 @@
 
 #include "bundle_permission_mgr.h"
 
+bool g_isSystemApp = true;
+bool g_isNativeTokenType = true;
+bool g_verifyPermission = true;
+
+void SetSystemAppForTest(bool value)
+{
+    g_isSystemApp = value;
+}
+
+void SetNativeTokenTypeForTest(bool value)
+{
+    g_isNativeTokenType = value;
+}
+
+void SetVerifyCallingPermissionForTest(bool value)
+{
+    g_verifyPermission = value;
+}
+
+void ResetTestValues()
+{
+    g_isNativeTokenType = true;
+    g_verifyPermission = true;
+    g_isSystemApp = true;
+}
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
 namespace AppExecFwk {
@@ -114,7 +139,7 @@ bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &pe
 
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
 {
-    return true;
+    return g_verifyPermission;
 }
 
 bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)
@@ -160,7 +185,7 @@ bool BundlePermissionMgr::IsNativeTokenType()
 #else
 bool BundlePermissionMgr::IsNativeTokenType()
 {
-    return true;
+    return g_isNativeTokenType;
 }
 #endif
 
@@ -241,7 +266,7 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 
 bool BundlePermissionMgr::IsSystemApp()
 {
-    return true;
+    return g_isSystemApp;
 }
 
 bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)

@@ -1008,6 +1008,8 @@ public:
     virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
     virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo) override;
+    virtual ErrCode GetAllAppProvisionInfo(const int32_t userId,
+        std::vector<AppProvisionInfo> &appProvisionInfos) override;
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas) override;
     virtual ErrCode GetBaseSharedBundleInfos(const std::string &bundleName,
@@ -1302,6 +1304,7 @@ private:
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
     void SetAtomicServiceRemovable(const ShortcutInfo &shortcutInfo, bool isEnable, int32_t userId);
     bool HasGetAbilityInfoExcludeExtFlag(uint32_t flags) const;
+    bool CheckAcrossUserPermission(const int32_t userId);
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

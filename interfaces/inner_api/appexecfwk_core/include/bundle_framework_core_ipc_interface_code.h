@@ -238,7 +238,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_ALL_JSON_PROFILE = 212,
     GET_BUNDLE_INFO_FOR_EXCEPTION = 213,
     BATCH_GET_COMPATIBLED_DEVICE_TYPE = 214,
-    GET_ASSET_GROUPS_INFOS_BY_UID = 215,
+    GET_ALL_APP_PROVISION_INFO = 215,
+    GET_ASSET_GROUPS_INFOS_BY_UID = 216,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

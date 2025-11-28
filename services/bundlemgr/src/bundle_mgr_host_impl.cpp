@@ -2168,7 +2168,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
 
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     auto ret = bmsExtensionClient->BackupBundleData(bundleName, userId, appIndex);
-    APP_LOGI("BackupBundleData ret : %{public}d", ret);
+    APP_LOGI_NOFUNC("BackupBundleData ret : %{public}d", ret);
     bool isAtomicService = applicationInfo.bundleType == BundleType::ATOMIC_SERVICE;
     if (InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userId, appIndex,
         isAtomicService) != ERR_OK) {
@@ -4071,6 +4071,49 @@ bool BundleMgrHostImpl::VerifySystemApi(int32_t beginApiVersion)
     return BundlePermissionMgr::VerifySystemApp(beginApiVersion);
 }
 
+bool BundleMgrHostImpl::CheckAcrossUserPermission(const int32_t userId)
+{
+    if (BundlePermissionMgr::IsNativeTokenType()) {
+        return true;
+    }
+    if (userId == BundleUtil::GetUserIdByCallingUid()) {
+        return true;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS)) {
+        APP_LOGE("verify permission across local account failed");
+        return false;
+    }
+    return true;
+}
+
+ErrCode BundleMgrHostImpl::GetAllAppProvisionInfo(const int32_t userId,
+    std::vector<AppProvisionInfo> &appProvisionInfos)
+{
+    APP_LOGD("begin to GetAllAppProvisionInfo userId: %{public}d", userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckAcrossUserPermission(userId)) {
+        APP_LOGE("verify permission across local account failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    ErrCode ret = dataMgr->GetAllAppProvisionInfo(userId, appProvisionInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllAppProvisionInfo ErrCode: %{public}d", ret);
+    }
+    return ret;
+}
+
 ErrCode BundleMgrHostImpl::GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
     AppProvisionInfo &appProvisionInfo)
 {
@@ -5138,7 +5181,11 @@ ErrCode BundleMgrHostImpl::GetOdid(std::string &odid)
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetOdid(odid);
+    ErrCode ret = dataMgr->GetOdid(odid);
+    if (odid.empty()) {
+        APP_LOGI_NOFUNC("GetOdid empty");
+    }
+    return ret;
 }
 
 ErrCode BundleMgrHostImpl::GetAllPreinstalledApplicationInfos(
@@ -6603,7 +6650,7 @@ ErrCode BundleMgrHostImpl::GetPluginBundlePathForSelf(const std::string &pluginB
 ErrCode BundleMgrHostImpl::RecoverBackupBundleData(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex)
 {
-    APP_LOGI("start RecoverBackupBundleData, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+    APP_LOGI_NOFUNC("ecoverBackupBundleData -n %{public}s -u %{public}d -i %{public}d",
         bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
@@ -6646,7 +6693,7 @@ ErrCode BundleMgrHostImpl::RecoverBackupBundleData(const std::string &bundleName
 ErrCode BundleMgrHostImpl::RemoveBackupBundleData(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex)
 {
-    APP_LOGI("start RemoveBackupBundleData, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+    APP_LOGI_NOFUNC("RemoveBackupBundleData -n %{public}s -u %{public}d -i %{public}d",
         bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");

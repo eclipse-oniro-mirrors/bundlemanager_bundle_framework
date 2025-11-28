@@ -8817,24 +8817,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfosV9_0400, Function | SmallTe
 }
 
 /**
- * @tc.number: GetBundleInfoForSg_0100
- * @tc.name: Test GetBundleInfoForException
- * @tc.desc: 1.Test the GetBundleInfoForException by BundleMgrHostImpl
- */
-HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoForSg_0100, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    BundleInfoForException bundleInfoForException;
-    uint32_t catchSoNum = 10;
-    uint64_t catchSoMaxSize = 1024;
-    ErrCode getInfoResult = hostImpl->GetBundleInfoForException(BUNDLE_NAME_DEMO, DEFAULT_USERID, catchSoNum,
-        catchSoMaxSize, bundleInfoForException);
-    EXPECT_EQ(getInfoResult, ERR_OK);
-    MockUninstallBundle(BUNDLE_NAME_DEMO);
-}
-
-/**
  * @tc.number: GetBundleInfoV9_0100
  * @tc.name: Test GetBundleInfoV9
  * @tc.desc: 1.Test the GetBundleInfoV9 by BundleMgrHostImpl

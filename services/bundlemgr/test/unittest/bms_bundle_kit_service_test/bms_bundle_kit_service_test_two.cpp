@@ -68,7 +68,10 @@ using namespace OHOS::AppExecFwk;
 using OHOS::AAFwk::Want;
 using namespace OHOS::DisplayPowerMgr;
 using namespace OHOS::PowerMgr;
-
+void SetSystemAppForTest(bool value);
+void SetNativeTokenTypeForTest(bool value);
+void SetVerifyCallingPermissionForTest(bool value);
+void ResetTestValues();
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
@@ -6601,6 +6604,173 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheTaskGetCleanSize_0100, Functio
 }
 
 /**
+ * @tc.number: GetAllAppProvisionInfo_0100
+ * @tc.name: test GetAllAppProvisionInfo normal case
+ * @tc.desc: 1. test GetAllAppProvisionInfo with system app and permission
+ *           2. should return ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppProvisionInfo_0100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = hostImpl->GetAllAppProvisionInfo(DEFAULT_USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0200
+ * @tc.name: test GetAllAppProvisionInfo with non-system app
+ * @tc.desc: 1. test GetAllAppProvisionInfo when caller is non-system app
+ *           2. should return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppProvisionInfo_0200, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(false);
+    SetNativeTokenTypeForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = hostImpl->GetAllAppProvisionInfo(DEFAULT_USERID, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0300
+ * @tc.name: test GetAllAppProvisionInfo with no permission
+ * @tc.desc: 1. test GetAllAppProvisionInfo when no permission granted
+ *           2. should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppProvisionInfo_0300, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = hostImpl->GetAllAppProvisionInfo(DEFAULT_USERID, appProvisionInfos);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0400
+ * @tc.name: test GetAllAppProvisionInfo with multiple bundles
+ * @tc.desc: 1. test GetAllAppProvisionInfo with multiple installed bundles
+ *           2. should return all app provision infos
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppProvisionInfo_0400, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_NAME_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST1);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = hostImpl->GetAllAppProvisionInfo(DEFAULT_USERID, appProvisionInfos);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GE(appProvisionInfos.size(), 2);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST1);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CheckAcrossUserPermission_0100
+ * @tc.name: test CheckAcrossUserPermission with native token type
+ * @tc.desc: 1. test when caller has native token type
+ *           2. should return true directly
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0100, Function | SmallTest | Level1)
+{
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->CheckAcrossUserPermission(DEFAULT_USERID);
+
+    EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CheckAcrossUserPermission_0200
+ * @tc.name: test CheckAcrossUserPermission with same user ID
+ * @tc.desc: 1. test when target user ID equals calling user ID
+ *           2. should return true directly
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0200, Function | SmallTest | Level1)
+{
+    SetNativeTokenTypeForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->CheckAcrossUserPermission(0);
+
+    EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CheckAcrossUserPermission_0300
+ * @tc.name: test CheckAcrossUserPermission with different user ID and permission granted
+ * @tc.desc: 1. test when target user ID differs and cross-account permission granted
+ *           2. should return true
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0300, Function | SmallTest | Level1)
+{
+    SetNativeTokenTypeForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->CheckAcrossUserPermission(999);
+
+    EXPECT_EQ(result, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CheckAcrossUserPermission_0400
+ * @tc.name: test CheckAcrossUserPermission with different user ID and permission denied
+ * @tc.desc: 1. test when target user ID differs and cross-account permission denied
+ *           2. should return false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckAcrossUserPermission_0400, Function | SmallTest | Level1)
+{
+    SetNativeTokenTypeForTest(false);
+    SetVerifyCallingPermissionForTest(false);
+    
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->CheckAcrossUserPermission(100);
+    
+    EXPECT_EQ(result, false);
+    ResetTestValues();
+}
+
+/**
  * @tc.number: PluginBundleInfoTest
  * @tc.name: PluginBundleInfoTest to_json and from_json branch cover
  * @tc.desc: 1.Test to_json and from_json
@@ -6947,9 +7117,12 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_3000, Function | SmallTest | Level
  */
 HWTEST_F(BmsBundleKitServiceTest, AssetGroupInfo_0001, Function | SmallTest | Level1)
 {
+    std::vector<std::string> assetAccessGroups;
+    assetAccessGroups.push_back("group1");
     AssetGroupInfo assetGroupInfo;
     assetGroupInfo.appId = "appid123";
     assetGroupInfo.appIndex = 1;
+    assetGroupInfo.assetAccessGroups = assetAccessGroups;
 
     nlohmann::json jsonObj;
     to_json(jsonObj, assetGroupInfo);
@@ -7055,5 +7228,137 @@ HWTEST_F(BmsBundleKitServiceTest, IsRenameInstall_4000, Function | SmallTest | L
     uint32_t size;
     parcel.ReadUint32(size);
     EXPECT_EQ(size, 0);
+}
+
+/**
+ * @tc.number: GetBundleInfoForException_0100
+ * @tc.name: Test GetBundleInfoForException
+ * @tc.desc: 1.Test the GetBundleInfoForException by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoForException_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_DEMO, MODULE_NAME_DEMO, ABILITY_NAME_DEMO);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfoForException bundleInfoForException;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    ErrCode getInfoResult = hostImpl->GetBundleInfoForException(BUNDLE_NAME_DEMO, DEFAULT_USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    getInfoResult = hostImpl->GetBundleInfoForException("", DEFAULT_USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+/**
+ * @tc.number: HapHashAndDeveloperCert_0001
+ * @tc.name: HapHashAndDeveloperCert to_json and from_json branch cover
+ * @tc.desc: 1.Test HapHashAndDeveloperCert to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, HapHashAndDeveloperCert_0001, Function | SmallTest | Level1)
+{
+    HapHashAndDeveloperCert hapHashAndDeveloperCert;
+    hapHashAndDeveloperCert.developCert = "CN=test";
+    hapHashAndDeveloperCert.hash = "123456";
+    hapHashAndDeveloperCert.path = "/data/app/test";
+
+    nlohmann::json jsonObj;
+    to_json(jsonObj, hapHashAndDeveloperCert);
+    HapHashAndDeveloperCert result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.developCert, "CN=test");
+    EXPECT_EQ(result.hash, "123456");
+    EXPECT_EQ(result.path, "/data/app/test");
+}
+
+/**
+ * @tc.number: HapHashAndDeveloperCert_0002
+ * @tc.name: test HapHashAndDeveloperCert Marshalling
+ * @tc.desc: 1.system run normally
+ *           2. HapHashAndDeveloperCert Marshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, HapHashAndDeveloperCert_0002, Function | SmallTest | Level1)
+{
+    HapHashAndDeveloperCert hapHashAndDeveloperCert;
+    hapHashAndDeveloperCert.hash = "123";
+    Parcel parcel;
+    auto ret = hapHashAndDeveloperCert.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    HapHashAndDeveloperCert *info = HapHashAndDeveloperCert::Unmarshalling(parcel);
+    EXPECT_NE(info, nullptr);
+    if (info != nullptr) {
+        EXPECT_EQ(hapHashAndDeveloperCert.hash, info->hash);
+        delete info;
+    }
+}
+
+/**
+ * @tc.number: BundleInfoForException_0001
+ * @tc.name: BundleInfoForException to_json and from_json branch cover
+ * @tc.desc: 1.Test BundleInfoForException to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, BundleInfoForException_0001, Function | SmallTest | Level1)
+{
+    BundleInfoForException bundleInfoForException;
+    std::vector<std::string> allowedAcls;
+    allowedAcls.push_back("ohos.permission.READ_PASTEBOARD");
+    std::vector<std::string> abilityNames;
+    abilityNames.push_back("com.test.kwai.BackupExtensionAbility");
+    std::vector<HapHashAndDeveloperCert> hapHashValueAndDevelopCerts;
+    std::map<std::string, std::string> soHash;
+
+    bundleInfoForException.allowedAcls = allowedAcls;
+    bundleInfoForException.abilityNames = abilityNames;
+    bundleInfoForException.hapHashValueAndDevelopCerts = hapHashValueAndDevelopCerts;
+    bundleInfoForException.soHash = soHash;
+
+    nlohmann::json jsonObj;
+    to_json(jsonObj, bundleInfoForException);
+    BundleInfoForException result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.allowedAcls.empty(), false);
+    EXPECT_EQ(result.abilityNames.empty(), false);
+    EXPECT_EQ(result.hapHashValueAndDevelopCerts.empty(), true);
+    EXPECT_EQ(result.soHash.empty(), true);
+}
+
+/**
+ * @tc.number: BundleInfoForException_0002
+ * @tc.name: test BundleInfoForException Unmarshalling
+ * @tc.desc: 1.system run normally
+ *           2. BundleInfoForException Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, BundleInfoForException_0002, Function | SmallTest | Level1)
+{
+    BundleInfoForException bundleInfoForException;
+    Parcel parcel;
+    BundleInfoForException *info = bundleInfoForException.Unmarshalling(parcel);
+    EXPECT_EQ(info, nullptr);
+}
+
+/**
+ * @tc.number: BundleInfoForException_0003
+ * @tc.name: test BundleInfoForException Marshalling
+ * @tc.desc: 1.system run normally
+ *           2. BundleInfoForException Marshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, BundleInfoForException_0003, Function | SmallTest | Level1)
+{
+    BundleInfoForException bundleInfoForException;
+    std::vector<std::string> allowedAcls;
+    allowedAcls.push_back("ohos.permission.READ_PASTEBOARD");
+    bundleInfoForException.allowedAcls = allowedAcls;
+    Parcel parcel;
+    auto ret = bundleInfoForException.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    BundleInfoForException *info = BundleInfoForException::Unmarshalling(parcel);
+    EXPECT_NE(info, nullptr);
+    if (info != nullptr) {
+        EXPECT_EQ(bundleInfoForException.allowedAcls.back(), info->allowedAcls.back());
+        delete info;
+    }
 }
 }

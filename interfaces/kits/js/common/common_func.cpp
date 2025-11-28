@@ -1222,69 +1222,70 @@ void CommonFunc::ConvertValidity(napi_env env, const Validity &validity, napi_va
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objValidity, "notAfter", notAfter));
 }
 
+void CommonFunc::SetStringProperty(napi_env env, napi_value obj,
+    const std::string& value, const char* propName)
+{
+    napi_value napiValue;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, value.c_str(), NAPI_AUTO_LENGTH, &napiValue));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, obj, propName, napiValue));
+}
+
+void CommonFunc::SetUint32Property(napi_env env, napi_value obj,
+    uint32_t value, const char* propName)
+{
+    napi_value napiValue;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, value, &napiValue));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, obj, propName, napiValue));
+}
+
 void CommonFunc::ConvertAppProvisionInfo(
     napi_env env, const AppProvisionInfo &appProvisionInfo, napi_value objAppProvisionInfo)
 {
-    napi_value versionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appProvisionInfo.versionCode, &versionCode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "versionCode", versionCode));
+    SetUint32Property(env, objAppProvisionInfo, appProvisionInfo.versionCode, "versionCode");
 
-    napi_value versionName;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.versionName.c_str(), NAPI_AUTO_LENGTH, &versionName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "versionName", versionName));
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.versionName, "versionName");
 
-    napi_value uuid;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.uuid.c_str(), NAPI_AUTO_LENGTH, &uuid));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "uuid", uuid));
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.uuid, "uuid");
 
-    napi_value type;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.type.c_str(), NAPI_AUTO_LENGTH, &type));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "type", type));
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.type, "type");
 
-    napi_value appDistributionType;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.appDistributionType.c_str(),
-        NAPI_AUTO_LENGTH, &appDistributionType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "appDistributionType",
-        appDistributionType));
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.appDistributionType, "appDistributionType");
 
-    napi_value developerId;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.developerId.c_str(), NAPI_AUTO_LENGTH, &developerId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "developerId", developerId));
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.developerId, "developerId");
 
-    napi_value certificate;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.certificate.c_str(), NAPI_AUTO_LENGTH, &certificate));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "certificate", certificate));
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.certificate, "certificate");
 
-    napi_value apl;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.apl.c_str(), NAPI_AUTO_LENGTH, &apl));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "apl", apl));
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.apl, "apl");
 
-    napi_value issuer;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.issuer.c_str(), NAPI_AUTO_LENGTH, &issuer));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "issuer", issuer));
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.issuer, "issuer");
+
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.appIdentifier, "appIdentifier");
+
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.organization, "organization");
+
+    SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.bundleName, "bundleName");
 
     napi_value validity;
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &validity));
     ConvertValidity(env, appProvisionInfo.validity, validity);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "validity", validity));
+}
 
-    napi_value appIdentifier;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.appIdentifier.c_str(), NAPI_AUTO_LENGTH, &appIdentifier));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "appIdentifier", appIdentifier));
-
-    napi_value organization;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.organization.c_str(), NAPI_AUTO_LENGTH, &organization));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "organization", organization));
+void CommonFunc::ConvertAllAppProvisionInfo(napi_env env,
+    const std::vector<AppProvisionInfo> &appProvisionInfos, napi_value objAppProvisionInfo)
+{
+    if (appProvisionInfos.empty()) {
+        APP_LOGD("appProvisionInfos is empty");
+        return;
+    }
+    size_t index = 0;
+    for (const auto &item : appProvisionInfos) {
+        napi_value objInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objInfo));
+        ConvertAppProvisionInfo(env, item, objInfo);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, objAppProvisionInfo, index, objInfo));
+        index++;
+    }
 }
 
 void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo,

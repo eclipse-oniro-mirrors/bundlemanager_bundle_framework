@@ -2698,7 +2698,7 @@ ErrCode InstalldHostImpl::HashFiles(const std::vector<std::string> &files, std::
 
     if (files.empty()) {
         LOG_E(BMS_TAG_INSTALLD, "empty dir");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR; 
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
     for (const auto& file : files) {

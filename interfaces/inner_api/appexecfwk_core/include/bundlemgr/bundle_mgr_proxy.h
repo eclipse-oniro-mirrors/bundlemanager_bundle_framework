@@ -141,7 +141,8 @@ public:
      * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode GetBundleInfoForException(const std::string &bundleName,
-        int32_t userId, uint32_t catchSoNum, uint64_t catchSoMaxSize, BundleInfoForException &bundleInfoForException) override;
+        int32_t userId, uint32_t catchSoNum, uint64_t catchSoMaxSize,
+        BundleInfoForException &bundleInfoForException) override;
     /**
      * @brief Obtains the BundleInfo based on a given bundle name.
      * @param uid Indicates the uid.
@@ -1017,6 +1018,9 @@ public:
 
     virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo) override;
+
+    virtual ErrCode GetAllAppProvisionInfo(const int32_t userId,
+        std::vector<AppProvisionInfo> &appProvisionInfos) override;
 
     virtual ErrCode GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) override;
     virtual ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,

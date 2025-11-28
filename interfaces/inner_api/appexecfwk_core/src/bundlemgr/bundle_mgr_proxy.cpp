@@ -3455,7 +3455,7 @@ bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
 bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userId,
     std::vector<int64_t> &bundleStats, int32_t appIndex, uint32_t statFlag)
 {
-    APP_LOGI("begin %{public}s", bundleName.c_str());
+    APP_LOGI_NOFUNC("GetBundleStats -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -4099,6 +4099,22 @@ ErrCode BundleMgrProxy::GetAppProvisionInfo(const std::string &bundleName, int32
     }
     return GetParcelableInfoWithErrCode<AppProvisionInfo>(BundleMgrInterfaceCode::GET_APP_PROVISION_INFO,
         data, appProvisionInfo);
+}
+
+ErrCode BundleMgrProxy::GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAllAppProvisionInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAllAppProvisionInfo due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<AppProvisionInfo>(BundleMgrInterfaceCode::GET_ALL_APP_PROVISION_INFO,
+        data, appProvisionInfos);
 }
 
 ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,

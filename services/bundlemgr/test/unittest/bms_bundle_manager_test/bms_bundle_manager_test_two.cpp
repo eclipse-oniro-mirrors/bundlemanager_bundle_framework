@@ -347,22 +347,44 @@ void BmsBundleManagerTest2::ClearBundleInfo()
 }
 
 /**
- * @tc.number: BundleMgrHostImpl_GetBundleInfoForSg_1000
+ * @tc.number: BundleMgrHostImpl_GetBundleInfoForException_1000
  * @tc.name: test BundleMgrHostImpl
  * @tc.desc: 1.GetBundleInfoForException failed by data mgr is empty
  */
-HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetBundleInfoForSg_1000, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetBundleInfoForException_1000, Function | MediumTest | Level1)
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
-
+ 
     BundleInfoForException bundleInfoForException;
     uint32_t catchSoNum = 10;
     uint64_t catchSoMaxSize = 1024;
     ErrCode getInfoResult = hostImpl->GetBundleInfoForException("", USERID, catchSoNum,
         catchSoMaxSize, bundleInfoForException);
     EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+ 
+/**
+ * @tc.number: BundleMgrHostImpl_GetBundleInfoForException_1100
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.GetBundleInfoForException failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetBundleInfoForException_1100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+ 
+    BundleInfoForException bundleInfoForException;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    ErrCode getInfoResult = hostImpl->GetBundleInfoForException(BUNDLE_BACKUP_NAME, USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+ 
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
 /**
@@ -436,6 +458,7 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_1100, Function | MediumTest | 
     std::vector<int64_t> bundleStats;
     std::vector<Metadata> provisionMetadatas;
     AppProvisionInfo appProvisionInfo;
+    std::vector<AppProvisionInfo> appProvisionInfos;
 
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
@@ -462,6 +485,9 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_1100, Function | MediumTest | 
 
     retCode = hostImpl->GetAppProvisionInfo("", USERID, appProvisionInfo);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    retCode = hostImpl->GetAllAppProvisionInfo(USERID, appProvisionInfos);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_NULL_PTR);
 
     retCode = hostImpl->GetProvisionMetadata("", USERID, provisionMetadatas);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
@@ -2653,6 +2679,26 @@ HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetAssetGroupsInfo_1000, Funct
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_GetAssetGroupsInfo_1100
+ * @tc.name: test GetAssetGroupsInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetAssetGroupsInfo_1100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    int uid = GetBundleDataMgr()->GetUidByBundleName(BUNDLE_BACKUP_NAME, 100, 0);
+    AssetGroupInfo assetGroupInfo;
+    ErrCode getInfoResult = hostImpl->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
  * @tc.number: BundleDataMgr_GetAssetGroupsInfo_1000
  * @tc.name: test GetAssetGroupsInfo
  * @tc.desc: 1.system run normally
@@ -2666,6 +2712,24 @@ HWTEST_F(BmsBundleManagerTest2, BundleDataMgr_GetAssetGroupsInfo_1000, Function 
     GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
     res = GetBundleDataMgr()->GetAssetGroupsInfo(uid, assetGroupInfo);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: BundleDataMgr_GetAssetGroupsInfo_1100
+ * @tc.name: test GetAssetGroupsInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleDataMgr_GetAssetGroupsInfo_1100, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    int uid = GetBundleDataMgr()->GetUidByBundleName(BUNDLE_BACKUP_NAME, 100, 0);
+    AssetGroupInfo assetGroupInfo;
+    auto res = GetBundleDataMgr()->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(res, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL

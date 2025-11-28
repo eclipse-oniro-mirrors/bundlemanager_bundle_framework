@@ -151,6 +151,7 @@ constexpr const char* CLEAN_BUNDLE_CACHE_FILES_FOR_SELF = "CleanBundleCacheFiles
 constexpr const char* GET_ALL_BUNDLE_CACHE_SIZE = "getAllBundleCacheSize";
 constexpr const char* CLEAN_ALL_BUNDLE_CACHE = "cleanAllBundleCache";
 constexpr const char* GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
+constexpr const char* GET_ALL_APP_PROVISION_INFO = "GetAllAppProvisionInfo";
 constexpr const char* CAN_OPEN_LINK = "CanOpenLink";
 constexpr const char* GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
 constexpr const char* GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";

@@ -5572,4 +5572,244 @@ HWTEST_F(BmsBundleDataMgrTest, CreateAppGroupDir_0100, Function | SmallTest | Le
     ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl);
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: GetBundleNameList_0100
+ * @tc.name: test GetBundleNameList empty result
+ * @tc.desc: 1.Empty result when no matching bundles
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleNameList_0100, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.clear();
+
+    std::vector<std::string> bundleNameList;
+    GetBundleDataMgr()->GetBundleNameList(USERID, bundleNameList);
+
+    EXPECT_TRUE(bundleNameList.empty());
+}
+
+/**
+ * @tc.number: GetBundleNameList_0200
+ * @tc.name: test GetBundleNameList with invalid user permission
+ * @tc.desc: 1.Bundle without user permission should be filtered out
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleNameList_0200, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.clear();
+
+    InnerBundleInfo sharedBundleInfo;
+    sharedBundleInfo.SetApplicationBundleType(BundleType::SHARED);
+    InnerBundleUserInfo sharedUserInfo;
+    sharedUserInfo.bundleUserInfo.userId = USERID;
+    sharedBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_TEST1, sharedUserInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, sharedBundleInfo);
+
+    std::vector<std::string> bundleNameList;
+    GetBundleDataMgr()->GetBundleNameList(USERID, bundleNameList);
+
+    EXPECT_TRUE(bundleNameList.empty());
+    
+    GetBundleDataMgr()->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetBundleNameList_0300
+ * @tc.name: test GetBundleNameList filters APP bundle without user info
+ * @tc.desc: 1.APP bundle without user information should be filtered out
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleNameList_0300, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.clear();
+
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetApplicationBundleType(BundleType::APP);
+
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, bundleInfo);
+
+    std::vector<std::string> bundleNameList;
+    GetBundleDataMgr()->GetBundleNameList(USERID, bundleNameList);
+
+    EXPECT_TRUE(bundleNameList.empty());
+    
+    GetBundleDataMgr()->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetBundleNameList_0400
+ * @tc.name: test GetBundleNameList with valid bundle
+ * @tc.desc: 1.Valid APP bundle with user permission should be included
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleNameList_0400, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.clear();
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    BundleInfo bundleInfo;
+    bool getRet = GetBundleDataMgr()->GetBundleInfo(BUNDLE_TEST1, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    EXPECT_TRUE(getRet);
+
+    std::vector<std::string> bundleNameList;
+    GetBundleDataMgr()->GetBundleNameList(USERID, bundleNameList);
+
+    EXPECT_EQ(bundleNameList.size(), 1);
+    EXPECT_EQ(bundleNameList[0], BUNDLE_TEST1);
+    
+    MockUninstallBundle(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetBundleNameList_0500
+ * @tc.name: test GetBundleNameList mixed scenario
+ * @tc.desc: 1.Test mixed scenario with SHARED, APP without user, and valid APP bundles
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleNameList_0500, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->bundleInfos_.clear();
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    InnerBundleInfo sharedBundle;
+    sharedBundle.SetApplicationBundleType(BundleType::SHARED);
+    InnerBundleUserInfo sharedUser;
+    sharedUser.bundleUserInfo.userId = USERID;
+    sharedBundle.innerBundleUserInfos_.emplace(BUNDLE_TEST2, sharedUser);
+
+    ApplicationInfo sharedAppInfo;
+    sharedAppInfo.bundleName = BUNDLE_TEST2;
+    sharedBundle.SetBaseApplicationInfo(sharedAppInfo);
+    
+    BundleInfo sharedBundleInfo;
+    sharedBundleInfo.name = BUNDLE_TEST2;
+    sharedBundle.SetBaseBundleInfo(sharedBundleInfo);
+    
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST2, sharedBundle);
+
+    InnerBundleInfo noUserBundle;
+    noUserBundle.SetApplicationBundleType(BundleType::APP);
+    
+    ApplicationInfo noUserAppInfo;
+    noUserAppInfo.bundleName = BUNDLE_TEST3;
+    noUserBundle.SetBaseApplicationInfo(noUserAppInfo);
+    
+    BundleInfo noUserBundleInfo;
+    noUserBundleInfo.name = BUNDLE_TEST3;
+    noUserBundle.SetBaseBundleInfo(noUserBundleInfo);
+    
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST3, noUserBundle);
+
+    std::vector<std::string> bundleNameList;
+    GetBundleDataMgr()->GetBundleNameList(USERID, bundleNameList);
+
+    EXPECT_EQ(bundleNameList.size(), 1);
+    EXPECT_EQ(bundleNameList[0], BUNDLE_TEST1);
+
+    MockUninstallBundle(BUNDLE_TEST1);
+    GetBundleDataMgr()->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetBundleNameList_0600
+ * @tc.name: test GetBundleNameList with multiple valid bundles
+ * @tc.desc: 1.Multiple valid APP bundles should all be included
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleNameList_0600, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+
+    MockInstallBundle(BUNDLE_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_TEST2, MODULE_NAME_TEST1, ABILITY_NAME_TEST1);
+
+    std::vector<std::string> bundleNameList;
+    GetBundleDataMgr()->GetBundleNameList(USERID, bundleNameList);
+
+    EXPECT_EQ(bundleNameList.size(), 2);
+    EXPECT_TRUE(std::find(bundleNameList.begin(), bundleNameList.end(), BUNDLE_TEST1) != bundleNameList.end());
+    EXPECT_TRUE(std::find(bundleNameList.begin(), bundleNameList.end(), BUNDLE_TEST2) != bundleNameList.end());
+
+    MockUninstallBundle(BUNDLE_TEST1);
+    MockUninstallBundle(BUNDLE_TEST2);
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0100
+ * @tc.name: test GetAllAppProvisionInfo
+ * @tc.desc: 1.Test the GetAllAppProvisionInfo by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllAppProvisionInfo_0100, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->multiUserIdsSet_.clear();
+    int32_t userId = 101;
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = GetBundleDataMgr()->GetAllAppProvisionInfo(userId, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0200
+ * @tc.name: test GetAllAppProvisionInfo
+ * @tc.desc: 1.Test the GetAllAppProvisionInfo by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllAppProvisionInfo_0200, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->bundleInfos_.clear();
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
+
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = GetBundleDataMgr()->GetAllAppProvisionInfo(USERID, appProvisionInfos);
+    EXPECT_TRUE(appProvisionInfos.empty());
+    EXPECT_EQ(ret, ERR_OK);
+
+    GetBundleDataMgr()->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0300
+ * @tc.name: test GetAllAppProvisionInfo
+ * @tc.desc: 1.Test the GetAllAppProvisionInfo by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllAppProvisionInfo_0300, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    innerBundleInfo.innerBundleUserInfos_.clear();
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    int32_t userId = 100;
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = GetBundleDataMgr()->GetAllAppProvisionInfo(userId, appProvisionInfos);
+    EXPECT_TRUE(appProvisionInfos.empty());
+    EXPECT_EQ(ret, ERR_OK);
+    GetBundleDataMgr()->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0400
+ * @tc.name: test GetAllAppProvisionInfo
+ * @tc.desc: 1.Test the GetAllAppProvisionInfo by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllAppProvisionInfo_0400, Function | SmallTest | Level1)
+{
+    GetBundleDataMgr()->multiUserIdsSet_.insert(Constants::ANY_USERID);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 100;
+    innerBundleInfo.innerBundleUserInfos_.emplace(BUNDLE_TEST1, innerBundleUserInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    int32_t userId = Constants::ANY_USERID;
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = GetBundleDataMgr()->GetAllAppProvisionInfo(userId, appProvisionInfos);
+    EXPECT_TRUE(appProvisionInfos.empty());
+    EXPECT_EQ(ret, ERR_OK);
+    GetBundleDataMgr()->bundleInfos_.clear();
+}
 } // OHOS
