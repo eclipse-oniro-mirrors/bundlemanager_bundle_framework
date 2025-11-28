@@ -558,5 +558,26 @@ HWTEST_F(BmsAgingTest, SortAgingBundles_0001, Function | SmallTest | Level0)
     EXPECT_EQ(TestAgingBundles[1].GetBundleName(), "com.example.app2");
     EXPECT_EQ(TestAgingBundles[2].GetBundleName(), "com.example.app1");
 }
+
+/**
+ * @tc.number: SortAgingBundles_0002
+ * @tc.name: SortAgingBundles_0002
+ * @tc.desc: test sorting aging bundleInfo
+ */
+HWTEST_F(BmsAgingTest, SortAgingBundles_0002, Function | SmallTest | Level0)
+{
+    AgingRequest request;
+    AgingBundleInfo agingBundleInfoFirst("com.example.app1", 2000, 5, 1);
+    AgingBundleInfo agingBundleInfoSecond("com.example.app2", 1000, 6, 0);
+    AgingBundleInfo agingBundleInfoThree("com.example.app3", 2000, 7, 1);
+    request.AddAgingBundle(agingBundleInfoFirst);
+    request.AddAgingBundle(agingBundleInfoSecond);
+    request.AddAgingBundle(agingBundleInfoThree);
+    request.SortAgingBundles();
+    auto TestAgingBundles = request.GetAgingBundles();
+    EXPECT_EQ(TestAgingBundles[0].GetBundleName(), "com.example.app2");
+    EXPECT_EQ(TestAgingBundles[1].GetBundleName(), "com.example.app1");
+    EXPECT_EQ(TestAgingBundles[2].GetBundleName(), "com.example.app3");
+}
 #endif
 }
