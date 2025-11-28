@@ -9434,7 +9434,7 @@ bool BundleDataMgr::IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &old
     return newInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK ||
         !oldInfo.HasEntry() || newInfo.HasEntry() ||
         (oldInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE &&
-        oldInfo.GetVersionCode() < newInfo.GetVersionCode());
+        oldInfo.GetVersionCode() != newInfo.GetVersionCode());
 }
 
 std::string BundleDataMgr::GetModuleNameByBundleAndAbility(
@@ -9876,7 +9876,7 @@ void BundleDataMgr::HandleOTACodeEncryption()
 
 void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
 {
-    if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
+    if (oldInfo.GetVersionCode() != newInfo.GetVersionCode()) {
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         return;
     }

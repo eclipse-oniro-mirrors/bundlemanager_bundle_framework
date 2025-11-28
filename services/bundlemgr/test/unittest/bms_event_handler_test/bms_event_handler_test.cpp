@@ -1987,7 +1987,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessPatchInfo_0001, Function | SmallTest | Leve
     EXPECT_FALSE(PatchDataMgr::GetInstance().GetInnerPatchInfo("test", innerPatchInfo));
 
     PatchDataMgr::GetInstance().ProcessPatchInfo("bundleName", installSources, 1, AppPatchType::INTERNAL, false);
-    EXPECT_TRUE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));
+    EXPECT_FALSE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));
 
     PatchDataMgr::GetInstance().ProcessPatchInfo("bundleName", installSources, 3, AppPatchType::INTERNAL, false);
     EXPECT_FALSE(PatchDataMgr::GetInstance().GetInnerPatchInfo("bundleName", innerPatchInfo));

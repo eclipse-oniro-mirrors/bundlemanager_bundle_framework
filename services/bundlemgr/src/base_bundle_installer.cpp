@@ -920,6 +920,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         CHECK_RESULT(result, "CheckInstallationFree failed %{public}d");
         // to guarantee that the hap version can be compatible.
         result = CheckVersionCompatibility(oldInfo);
+        CheckInstallAllowDowngrade(installParam, oldInfo.IsSystemApp(), oldInfo.HasEntry(), result);
         CHECK_RESULT(result, "The app has been installed and update lower version bundle %{public}d");
         // to check native file between oldInfo and newInfos.
         result = CheckNativeFileWithOldInfo(oldInfo, newInfos);
@@ -4582,7 +4583,7 @@ void BaseBundleInstaller::GetRemoveExtensionDirs(
     std::vector<std::string> oldModuleNames;
     const auto &innerBundleInfo = newInfos.begin()->second;
     oldInfo.GetModuleNames(oldModuleNames);
-    if (innerBundleInfo.GetVersionCode() > oldInfo.GetVersionCode()) {
+    if (innerBundleInfo.GetVersionCode() != oldInfo.GetVersionCode()) {
         std::set<std::string> newModules;
         for (const auto &item : newInfos) {
             std::vector<std::string> curModules;
@@ -4934,6 +4935,27 @@ bool BaseBundleInstaller::InitDataMgr()
     return true;
 }
 
+void BaseBundleInstaller::CheckInstallAllowDowngrade(
+    const InstallParam &installParam, bool isSystemApp, bool hasEntry, ErrCode &result)
+{
+    if ((result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) || isSystemApp) {
+        return;
+    }
+    auto item = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE);
+    if ((item == installParam.parameters.end()) || (item->second != ServiceConstants::BMS_TRUE)) {
+        return;
+    }
+    if (hasEntry && !isContainEntry_) {
+        LOG_E(BMS_TAG_INSTALLER, "-n %{public}s -v %{public}d only has lower version feature",
+            bundleName_.c_str(), versionCode_);
+        result = ERR_APPEXECFWK_INSTALL_VERSION_NOT_COMPATIBLE;
+        return;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "-n %{public}s -v %{public}d lower than installed", bundleName_.c_str(), versionCode_);
+    isFeatureNeedUninstall_ = true;
+    result = ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::CheckVersionCompatibility(const InnerBundleInfo &oldInfo)
 {
     if (oldInfo.GetEntryInstallationFree()) {
@@ -4969,7 +4991,7 @@ ErrCode BaseBundleInstaller::CheckVersionCompatibilityForApplication(const Inner
         }
     }
 
-    if (versionCode_ > oldInfo.GetVersionCode()) {
+    if (versionCode_ != oldInfo.GetVersionCode()) {
         if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
             LOG_E(BMS_TAG_INSTALLER, "Not alloweded instal appService hap(%{public}s) due to the hsp does not exist",
                 oldInfo.GetBundleName().c_str());
@@ -5195,7 +5217,7 @@ bool BaseBundleInstaller::HasAllOldModuleUpdate(
 {
     const auto &newInfo = newInfos.begin()->second;
     bool allOldModuleUpdate = true;
-    if (newInfo.GetVersionCode() > oldInfo.GetVersionCode()) {
+    if (newInfo.GetVersionCode() != oldInfo.GetVersionCode()) {
         LOG_D(BMS_TAG_INSTALLER, "All installed haps will be updated");
         DeleteOldArkNativeFile(oldInfo);
         return allOldModuleUpdate;
@@ -5863,7 +5885,7 @@ NotifyType BaseBundleInstaller::GetNotifyType()
 
 ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const
 {
-    if (newInfo.GetVersionCode() > oldInfo.GetVersionCode()) {
+    if (newInfo.GetVersionCode() != oldInfo.GetVersionCode()) {
         const auto userInfos = oldInfo.GetInnerBundleUserInfos();
         for (auto iter = userInfos.begin(); iter != userInfos.end(); iter++) {
             int32_t userId = iter->second.bundleUserInfo.userId;
@@ -6403,7 +6425,7 @@ bool BaseBundleInstaller::IsBundleEncrypted(const std::unordered_map<std::string
     }
     // infos does not contain encrypted module
     // if upgrade, no need to check old bundle
-    if (infos.empty() || infos.begin()->second.GetVersionCode() > oldInfo.GetVersionCode()) {
+    if (infos.empty() || infos.begin()->second.GetVersionCode() != oldInfo.GetVersionCode()) {
         return false;
     }
     // if not upgrade and old bundle is not encrypted, the new bundle is alse not encrypted
@@ -6814,8 +6836,8 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
         return false;
     }
 
-    if ((versionCode_ > oldInfo.GetVersionCode())) {
-        LOG_D(BMS_TAG_INSTALLER, "Higher versionCode");
+    if ((versionCode_ != oldInfo.GetVersionCode())) {
+        LOG_D(BMS_TAG_INSTALLER, "versionCode not same");
         return true;
     }
 

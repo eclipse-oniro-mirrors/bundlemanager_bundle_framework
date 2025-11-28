@@ -229,6 +229,7 @@ private:
     void HandleInstallExisted(MessageParcel &data, MessageParcel &reply);
 private:
     InstallParam CheckInstallParam(const InstallParam &installParam);
+    bool CheckInstallDowngradeParam(const InstallParam &installParam);
     bool IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2);
     bool CheckUninstallDisposedRule(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isKeepData,
         const std::string &modulePackage = "");

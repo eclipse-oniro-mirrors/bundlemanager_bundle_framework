@@ -292,6 +292,8 @@ constexpr const char* MANIFEST_JSON = "manifest.json";
 constexpr const char* CLOUD_PROFILE_PATH = "resources/base/profile/cloudkit_config.json";
 // for install param
 constexpr const char* BMS_PARA_INSTALL_BUNDLE_NAME = "ohos.bms.param.installBundleName";
+// for install downgrade
+constexpr const char* BMS_PARA_INSTALL_ALLOW_DOWNGRADE = "ohos.bms.param.installAllowDowngrade";
 
 //plugin file path
 constexpr const char* PLUGIN_FILE_PATH = "+plugins";

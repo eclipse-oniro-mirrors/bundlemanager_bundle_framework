@@ -5472,6 +5472,109 @@ HWTEST_F(BmsBundleDataMgrTest, DeleteInstallingBundleName_0200, Function | Small
 }
 
 /**
+ * @tc.number: ProcessAllowedAcls_0100
+ * @tc.name: test ProcessAllowedAcls
+ * @tc.desc: 1.system run normally
+ *           2.check ProcessAllowedAcls
+ */
+HWTEST_F(BmsBundleDataMgrTest, ProcessAllowedAcls_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo oldInfo;
+        oldInfo.baseBundleInfo_->versionCode = 1000;
+        std::vector<std::string> acls;
+        acls.push_back("aaa");
+        acls.push_back("bbb");
+        oldInfo.allowedAcls_ = acls;
+        InnerBundleInfo newInfo;
+        newInfo.baseBundleInfo_->versionCode = 2000;
+        dataMgr->ProcessAllowedAcls(newInfo, oldInfo);
+        EXPECT_TRUE(oldInfo.GetAllowedAcls().empty());
+    }
+}
+
+/**
+ * @tc.number: ProcessAllowedAcls_0200
+ * @tc.name: test ProcessAllowedAcls
+ * @tc.desc: 1.system run normally
+ *           2.check ProcessAllowedAcls
+ */
+HWTEST_F(BmsBundleDataMgrTest, ProcessAllowedAcls_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo oldInfo;
+        oldInfo.baseBundleInfo_->versionCode = 1000;
+        InnerBundleInfo newInfo;
+        newInfo.baseBundleInfo_->versionCode = 1000;
+        std::vector<std::string> acls;
+        acls.push_back("aaa");
+        acls.push_back("bbb");
+        newInfo.allowedAcls_ = acls;
+        dataMgr->ProcessAllowedAcls(newInfo, oldInfo);
+        EXPECT_FALSE(oldInfo.GetAllowedAcls().empty());
+    }
+}
+
+/**
+ * @tc.number: IsUpdateInnerBundleInfoSatisified_0100
+ * @tc.name: test IsUpdateInnerBundleInfoSatisified
+ * @tc.desc: 1.system run normally
+ *           2.check IsUpdateInnerBundleInfoSatisified
+ */
+HWTEST_F(BmsBundleDataMgrTest, IsUpdateInnerBundleInfoSatisified_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo oldInfo;
+        oldInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+        InnerModuleInfo moduleInfo;
+        moduleInfo.isEntry = true;
+        oldInfo.innerModuleInfos_[BUNDLE_NAME_TEST] = moduleInfo;
+        oldInfo.baseBundleInfo_->versionCode = 1000;
+        InnerBundleInfo newInfo;
+        newInfo.baseBundleInfo_->versionCode = 1000;
+        bool ret = dataMgr->IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo);
+        EXPECT_FALSE(ret);
+        newInfo.baseBundleInfo_->versionCode = 2000;
+        ret = dataMgr->IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: IsUpdateInnerBundleInfoSatisified_0200
+ * @tc.name: test IsUpdateInnerBundleInfoSatisified
+ * @tc.desc: 1.system run normally
+ *           2.check IsUpdateInnerBundleInfoSatisified
+ */
+HWTEST_F(BmsBundleDataMgrTest, IsUpdateInnerBundleInfoSatisified_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo oldInfo;
+        InnerBundleInfo newInfo;
+        newInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
+        bool ret = dataMgr->IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo);
+        EXPECT_TRUE(ret);
+        newInfo.SetApplicationBundleType(BundleType::APP);
+        ret = dataMgr->IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo);
+        EXPECT_TRUE(ret);
+        InnerModuleInfo moduleInfo;
+        moduleInfo.isEntry = true;
+        newInfo.innerModuleInfos_[BUNDLE_NAME_TEST] = moduleInfo;
+        oldInfo.innerModuleInfos_[BUNDLE_NAME_TEST] = moduleInfo;
+        ret = dataMgr->IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: BackupBundleData_0100
  * @tc.name: BackupBundleData
  * @tc.desc: test BackupBundleData of BmsExtensionClient

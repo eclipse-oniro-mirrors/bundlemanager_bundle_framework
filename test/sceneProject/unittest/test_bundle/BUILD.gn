@@ -73,6 +73,8 @@ group("test_bundle") {
     "thumbnailTest:thumbnailTest",
     "thumbnailTest2:thumbnailTest2",
     "twelfth_right:twelfth_right",
+    "versionNormalHapTest1:versionNormalHapTest1",
+    "versionNormalHapTest2:versionNormalHapTest2",
     "versionTest1:versionTest1",
     "versionTest2:versionTest2",
     "versionTest3:versionTest3",

@@ -3249,6 +3249,12 @@ HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0400, Function | Small
     oldInfo.SetBaseBundleInfo(bundleInfo);
     oldInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
     ret = installer->NeedDeleteOldNativeLib(newInfos, oldInfo);
+    EXPECT_TRUE(ret);
+
+    bundleInfo.versionCode = 100;
+    oldInfo.SetBaseBundleInfo(bundleInfo);
+    oldInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
+    ret = installer->NeedDeleteOldNativeLib(newInfos, oldInfo);
     EXPECT_FALSE(ret);
 }
 } // OHOS
