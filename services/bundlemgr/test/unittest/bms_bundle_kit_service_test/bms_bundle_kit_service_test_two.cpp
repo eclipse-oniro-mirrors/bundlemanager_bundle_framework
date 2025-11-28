@@ -7123,7 +7123,6 @@ HWTEST_F(BmsBundleKitServiceTest, AssetGroupInfo_0001, Function | SmallTest | Le
     assetGroupInfo.appId = "appid123";
     assetGroupInfo.appIndex = 1;
     assetGroupInfo.assetAccessGroups = assetAccessGroups;
-
     nlohmann::json jsonObj;
     to_json(jsonObj, assetGroupInfo);
     AssetGroupInfo result;
