@@ -1463,7 +1463,6 @@ private:
         const std::vector<ShortcutInfo> &shortcutInfos, std::vector<std::string> &ids) const;
     ErrCode CheckModuleNameAndAbilityName(const std::vector<ShortcutInfo>& shortcutInfos,
         const InnerBundleInfo& innerBundleInfo) const;
-    ErrCode CheckUserId(int32_t &userId) const;
 
 private:
     bool initialUserFlag_ = false;

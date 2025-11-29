@@ -5712,28 +5712,13 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisible_0001, Function | MediumTest | Level1
     int32_t userId = 100;
     bool visible = true;
     BundleDataMgr bundleDataMgr;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
     EXPECT_NE(result, ERR_OK);
 
-    bool ret =
-        shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
-    EXPECT_EQ(ret, false);
-
-    shortcutVisibleDataStorageRdb->SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);
-    ret = shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
+    bool ret = shortcutVisibleDataStorageRdb->SaveStorageShortcutVisibleInfo(
+        bundleName, shortcutId, appIndex, userId, shortcutInfo);
     EXPECT_EQ(ret, true);
-
-    visible = false;
-    ret = shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
-    EXPECT_EQ(ret, false);
-
-    appIndex = 1;
-    ret = shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
-    EXPECT_EQ(ret, false);
-
-    userId = 110;
-    ret = shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
-    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -5751,12 +5736,10 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0002, Function | MediumTest |
     int32_t appIndex = 0;
     int32_t userId = 100;
     bool visible = true;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
     shortcutVisibleDataStorageRdb->rdbDataManager_ = nullptr;
-    bool ret = shortcutVisibleDataStorageRdb->
-        IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
-    EXPECT_EQ(ret, false);
-    ret = shortcutVisibleDataStorageRdb->
-        SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);
+    auto ret = shortcutVisibleDataStorageRdb->
+        SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, shortcutInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -5780,7 +5763,7 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0003, Function | MediumTest |
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
     EXPECT_EQ(result, ERR_OK);
     bundleDataMgr.shortcutVisibleStorage_->rdbDataManager_ = nullptr;
-    result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
+    result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, false);
     EXPECT_EQ(result, ERR_APPEXECFWK_DB_INSERT_ERROR);
 }
 
@@ -5847,7 +5830,34 @@ HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0006, Function | MediumTest |
     bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
     bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
     bundleDataMgr.shortcutVisibleStorage_->
-        SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);
+        SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, shortcutInfo);
+    auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
+    EXPECT_EQ(result, ERR_OK);
+    auto ret = bundleDataMgr.DeleteShortcutVisibleInfo(bundleName, userId, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetShortcutVisibleForSelf_0007
+ * @tc.name: SetShortcutVisibleForSelf
+ * @tc.desc: test SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutVisibleForSelf_0007, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool visible = false;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    bundleDataMgr.shortcutVisibleStorage_->
+        SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, shortcutInfo);
     auto result = bundleDataMgr.SetShortcutVisibleForSelf(shortcutId, visible);
     EXPECT_EQ(result, ERR_OK);
 }
@@ -5867,16 +5877,15 @@ HWTEST_F(BmsDataMgrTest, DeleteShortcutVisibleInfo_0001, Function | MediumTest |
     int32_t appIndex = 0;
     int32_t userId = 100;
     bool visible = true;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
     BundleDataMgr bundleDataMgr;
 
-    shortcutVisibleDataStorageRdb->SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);
-    bool ret =
-        shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
-    EXPECT_EQ(ret, true);
+    bool boolRet = shortcutVisibleDataStorageRdb->SaveStorageShortcutVisibleInfo(
+        bundleName, shortcutId, appIndex, userId, shortcutInfo);
+    EXPECT_EQ(boolRet, true);
 
-    bundleDataMgr.DeleteShortcutVisibleInfo(bundleName, userId, appIndex);
-    ret = shortcutVisibleDataStorageRdb->IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
-    EXPECT_EQ(ret, false);
+    auto ret = bundleDataMgr.DeleteShortcutVisibleInfo(bundleName, userId, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -6159,8 +6168,9 @@ HWTEST_F(BmsDataMgrTest, GetAllShortcutInfoForSelf_0040, Function | MediumTest |
     std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleDataStorageRdb =
         std::make_shared<ShortcutVisibleDataStorageRdb>();
     ASSERT_NE(shortcutVisibleDataStorageRdb, nullptr);
+    shortcutInfo.visible = false;
     shortcutVisibleDataStorageRdb->SaveStorageShortcutVisibleInfo(
-        bundleName, shortcutId, 0, 100, false);
+        bundleName, shortcutId, 0, 100, shortcutInfo);
     ret = bundleDataMgr.GetAllShortcutInfoForSelf(shortcutInfos);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_FALSE(shortcutInfos[0].visible);
@@ -7316,25 +7326,5 @@ HWTEST_F(BmsDataMgrTest, UpdateShortcutInfoResId_0003, Function | MediumTest | L
     EXPECT_EQ(shortcutInfos[0].labelId, 0);
     bool result = bundleDataMgr.shortcutVisibleStorage_->DeleteShortcutVisibleInfo(bundleName, userId, 0);
     EXPECT_TRUE(result);
-}
-
-/**
- * @tc.number: CheckUserId_0001
- * @tc.name: CheckUserId
- * @tc.desc: test BundleDataMgr::CheckUserId
- */
-HWTEST_F(BmsDataMgrTest, CheckUserId_0001, Function | MediumTest | Level1)
-{
-    int32_t userId = -2;
-    BundleDataMgr bundleDataMgr;
-    bundleDataMgr.AddUserId(bundleDataMgr.GetUserIdByCallingUid());
-    ErrCode ret = bundleDataMgr.CheckUserId(userId);
-    EXPECT_EQ(ret, ERR_OK);
-    userId = -3;
-    ret = bundleDataMgr.CheckUserId(userId);
-    EXPECT_EQ(ret, ERR_OK);
-    userId = -4;
-    ret = bundleDataMgr.CheckUserId(userId);
-    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS

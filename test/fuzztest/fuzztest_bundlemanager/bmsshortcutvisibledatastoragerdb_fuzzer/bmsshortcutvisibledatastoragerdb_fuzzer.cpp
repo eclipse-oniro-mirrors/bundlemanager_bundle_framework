@@ -35,13 +35,16 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string shortcutId = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     int32_t appIndex = fdp.ConsumeIntegral<int32_t>();
     int32_t userId = GenerateRandomUser(fdp);
-    bool visible = fdp.ConsumeBool();
-    shortcutVisibleDataStorageRdb.IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
-    shortcutVisibleDataStorageRdb.SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);
+    ShortcutInfo shortcutInfo;
+    GenerateDynamicShortcutInfo(fdp, shortcutId, bundleName, appIndex, shortcutInfo);
+
+    shortcutVisibleDataStorageRdb.SaveStorageShortcutVisibleInfo(
+        bundleName, shortcutId, appIndex, userId, shortcutInfo);
     shortcutVisibleDataStorageRdb.DeleteShortcutVisibleInfo(bundleName, userId, appIndex);
+
     shortcutVisibleDataStorageRdb.rdbDataManager_ = nullptr;
-    shortcutVisibleDataStorageRdb.IsShortcutVisibleInfoExist(bundleName, shortcutId, appIndex, userId, visible);
-    shortcutVisibleDataStorageRdb.SaveStorageShortcutVisibleInfo(bundleName, shortcutId, appIndex, userId, visible);
+    shortcutVisibleDataStorageRdb.SaveStorageShortcutVisibleInfo(
+        bundleName, shortcutId, appIndex, userId, shortcutInfo);
     shortcutVisibleDataStorageRdb.DeleteShortcutVisibleInfo(bundleName, userId, appIndex);
     return true;
 }
