@@ -819,58 +819,6 @@ HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0005, Function | MediumTest | L
 }
 
 /**
- * @tc.number: InnerBundleInfo_0006
- * @tc.name: test SetkeyId
- * @tc.desc: 1.Test SetkeyId in the InnerBundleInfo
-*/
-HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0006, Function | MediumTest | Level1)
-{
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.baseApplicationInfo_->bundleName = "com.example.test";
-
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = "com.example.test";
-    userInfo.uid = 100;
-    innerBundleInfo.innerBundleUserInfos_["com.example.test_100"] = userInfo;
-
-    int32_t userId = 100;
-    std::string keyId = "test";
-    int32_t appIndex = 1;
-    innerBundleInfo.SetkeyId(userId, keyId, appIndex);
-    EXPECT_EQ(innerBundleInfo.GetBundleName(), "com.example.test");
-}
-
-/**
- * @tc.number: InnerBundleInfo_0007
- * @tc.name: test SetkeyId
- * @tc.desc: 1.Test SetkeyId in the InnerBundleInfo
-*/
-HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0007, Function | MediumTest | Level1)
-{
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.baseApplicationInfo_->bundleName = "com.example.test";
-
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = "com.example.test";
-    userInfo.uid = 100;
-
-    std::map<std::string, InnerBundleCloneInfo> cloneInfos;
-    InnerBundleCloneInfo innerBundleCloneInfo;
-    std::vector<std::string> disabledAbilities;
-    disabledAbilities.push_back("ability");
-    innerBundleCloneInfo.disabledAbilities = disabledAbilities;
-    cloneInfos.insert(std::make_pair("1", innerBundleCloneInfo));
-    userInfo.cloneInfos = cloneInfos;
-    innerBundleInfo.innerBundleUserInfos_["com.example.test_100"] = userInfo;
-
-    int32_t userId = 100;
-    std::string keyId = "test";
-    int32_t appIndex = 1;
-    innerBundleInfo.SetkeyId(userId, keyId, appIndex);
-    EXPECT_EQ(innerBundleInfo.GetBundleName(), "com.example.test");
-}
-
-/**
  * @tc.number: InnerBundleInfo_0008
  * @tc.name: test ShouldReplacePermission
  * @tc.desc: 1.Test ShouldReplacePermission in the InnerBundleInfo

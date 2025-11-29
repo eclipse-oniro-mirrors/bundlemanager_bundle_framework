@@ -2132,7 +2132,6 @@ HWTEST_F(BmsEventHandlerTest, ProcessAppEl5Dir_0001, Function | SmallTest | Leve
     EXPECT_TRUE(dataMgr->FetchInnerBundleInfo("com.test.test", fetchedBundleInfo));
     InnerBundleUserInfo fetchedUserInfo;
     EXPECT_TRUE(fetchedBundleInfo.GetInnerBundleUserInfo(100, fetchedUserInfo));
-    EXPECT_EQ(fetchedUserInfo.cloneInfos["1"].keyId, "");
 }
 
 /**

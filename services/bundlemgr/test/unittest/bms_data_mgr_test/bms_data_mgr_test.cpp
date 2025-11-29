@@ -6450,39 +6450,6 @@ HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0002, Function | MediumTest |
 }
 
 /**
- * @tc.number: UpdateEl5KeyId_0001
- * @tc.name: UpdateEl5KeyId
- * @tc.desc: test BundleDataMgr::UpdateEl5KeyId
- */
-HWTEST_F(BmsDataMgrTest, UpdateEl5KeyId_0001, TestSize.Level1)
-{
-    BundleDataMgr dataMgr;
-    CreateDirParam param1;
-    param1.bundleName = "";
-    bool ret1 = dataMgr.UpdateEl5KeyId(param1, "keyid", true);
-    EXPECT_FALSE(ret1);
-
-    CreateDirParam param2;
-    param2.bundleName = "not_exist_bundle";
-    bool ret2 = dataMgr.UpdateEl5KeyId(param2, "keyid", true);
-    EXPECT_FALSE(ret2);
-
-    InnerBundleInfo info;
-    dataMgr.bundleInfos_.emplace("test_bundle", info);
-    CreateDirParam param3;
-    param3.bundleName = "test_bundle";
-    param3.userId = 100;
-    param3.appIndex = 1;
-    bool ret3 = dataMgr.UpdateEl5KeyId(param3, "keyid", false);
-    EXPECT_TRUE(ret3);
-
-    bool ret4 = dataMgr.UpdateEl5KeyId(param3, "keyid", true);
-    EXPECT_TRUE(ret4);
-
-    dataMgr.bundleInfos_.erase("test_bundle");
-}
-
-/**
  * @tc.number: GetPluginInfo_0001
  * @tc.name: GetPluginInfo
  * @tc.desc: test BundleDataMgr::GetPluginInfo

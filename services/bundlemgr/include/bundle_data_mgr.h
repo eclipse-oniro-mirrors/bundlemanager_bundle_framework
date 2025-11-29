@@ -144,7 +144,6 @@ public:
     void UpdateBaseBundleInfoIntoOld(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo, bool needSaveStorage = true);
     bool UpdatePartialInnerBundleInfo(const InnerBundleInfo &info);
-    bool UpdateEl5KeyId(const CreateDirParam &el5Param, const std::string keyId, bool needSaveStorage = true);
     /**
      * @brief Generate UID and GID for a bundle.
      * @param innerBundleUserInfo Indicates the InnerBundleUserInfo object.

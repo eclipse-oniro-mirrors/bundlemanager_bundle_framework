@@ -410,20 +410,4 @@ HWTEST_F(BmsBundleExceptionHandlerTest, InnerBundleInfo_0400, Function | SmallTe
     auto ret = info.GetLastInstallationTime();
     EXPECT_EQ(ret, 0);
 }
-
-/**
- * @tc.number: InnerBundleInfo_0500
- * @tc.name: SetkeyId
- * @tc.desc: test SetkeyId
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, InnerBundleInfo_0500, Function | SmallTest | Level0)
-{
-    InnerBundleInfo info;
-    InnerBundleUserInfo userInfo;
-    std::string key = Constants::FILE_UNDERLINE + std::to_string(USERID);
-    info.innerBundleUserInfos_[key] = userInfo;
-    info.SetkeyId(USERID, BUNDLE_NAME);
-    auto infoItem = info.innerBundleUserInfos_.find(key);
-    EXPECT_EQ(infoItem->second.keyId, BUNDLE_NAME);
-}
 }  // namespace OHOS

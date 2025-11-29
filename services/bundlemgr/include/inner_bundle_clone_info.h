@@ -47,8 +47,6 @@ struct InnerBundleCloneInfo {
 
     std::string setEnabledCaller;
 
-    std::string keyId;
-
     std::vector<int32_t> gids;
 
     // disabled abilities of the user.

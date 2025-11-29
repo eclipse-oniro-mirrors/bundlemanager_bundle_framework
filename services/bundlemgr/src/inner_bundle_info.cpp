@@ -3375,56 +3375,6 @@ void InnerBundleInfo::SetAccessTokenIdExWithAppIndex(
     cloneItem->second.accessTokenIdEx = accessTokenIdEx.tokenIDEx;
 }
 
-void InnerBundleInfo::SetkeyId(const int32_t userId, const std::string &keyId, const int32_t appIndex)
-{
-    if (keyId.empty()) {
-        APP_LOGE("SetkeyId failed, keyId is empty");
-        return;
-    }
-    InnerSetKeyId(userId, keyId, appIndex);
-}
-
-void InnerBundleInfo::InnerSetKeyId(const int32_t userId, const std::string &keyId, const int32_t appIndex)
-{
-    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
-    auto infoItem = innerBundleUserInfos_.find(key);
-    if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("SetkeyId failed, not find userInfo for userId %{public}d", userId);
-        return;
-    }
-    if (appIndex == 0) {
-        infoItem->second.keyId = keyId;
-        return;
-    }
-    std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = infoItem->second.cloneInfos;
-    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
-    if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
-        APP_LOGE("key:%{public}s not found", key.c_str());
-        return;
-    }
-    mpCloneInfos.at(appIndexKey).keyId = keyId;
-}
-
-std::string InnerBundleInfo::GetKeyId(const int32_t userId, const int32_t appIndex)
-{
-    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
-    auto infoItem = innerBundleUserInfos_.find(key);
-    if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("GetKeyId failed, not find userInfo for userId %{public}d", userId);
-        return "";
-    }
-    if (appIndex == 0) {
-        return infoItem->second.keyId;
-    }
-    std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = infoItem->second.cloneInfos;
-    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
-    if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
-        APP_LOGE("key:%{public}s not found", key.c_str());
-        return "";
-    }
-    return mpCloneInfos.at(appIndexKey).keyId;
-}
-
 void InnerBundleInfo::SetBundleUpdateTime(const int64_t time, int32_t userId)
 {
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
