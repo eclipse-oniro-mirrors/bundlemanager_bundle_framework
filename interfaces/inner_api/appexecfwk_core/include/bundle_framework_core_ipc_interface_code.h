@@ -241,6 +241,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_ALL_APP_PROVISION_INFO = 215,
     ADD_DYNAMIC_SHORTCUT_INFOS = 216,
     DELETE_DYNAMIC_SHORTCUT_INFOS = 217,
+    GET_ASSET_GROUPS_INFOS_BY_UID = 218,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

@@ -3090,7 +3090,7 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1690, Function | SmallTest | 
 }
 
 /**
- * @tc.number: OnRemoteRequest_1700
+ * @tc.number: OnRemoteRequest_1690
  * @tc.name: test the OnRemoteRequest
  * @tc.desc: 1. system running normally
  */
@@ -3108,7 +3108,7 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1700, Function | SmallTest | 
 }
 
 /**
- * @tc.number: OnRemoteRequest_1710
+ * @tc.number: OnRemoteRequest_1700
  * @tc.name: test the OnRemoteRequest
  * @tc.desc: 1. system running normally
  */
@@ -3116,6 +3116,24 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1710, Function | SmallTest | 
 {
     BundleMgrHost bundleMgrHost;
     uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::DELETE_DYNAMIC_SHORTCUT_INFOS);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1690
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1720, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ASSET_GROUPS_INFOS_BY_UID);
     MessageParcel data;
     std::u16string descriptor = BundleMgrHost::GetDescriptor();
     data.WriteInterfaceToken(descriptor);

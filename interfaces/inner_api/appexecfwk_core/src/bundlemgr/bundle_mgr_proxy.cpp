@@ -6982,6 +6982,31 @@ ErrCode BundleMgrProxy::GetAllJsonProfile(ProfileType profileType, int32_t userI
         BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE, data, profileInfos);
 }
 
+ErrCode BundleMgrProxy::GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &assetGroupInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGI("begin to GetAssetGroupsInfo of %{public}d", uid);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAssetGroupsInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!data.WriteInt32(uid)) {
+        APP_LOGE("fail to GetAssetGroupsInfo due to write uid fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelInfoIntelligent<AssetGroupInfo>(
+        BundleMgrInterfaceCode::GET_ASSET_GROUPS_INFOS_BY_UID, data, assetGroupInfo);
+    if (res != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "GetAssetGroupsInfo fail -u %{public}d error: %{public}d",
+            uid, res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::BatchGetCompatibleDeviceType(
     const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes)
 {

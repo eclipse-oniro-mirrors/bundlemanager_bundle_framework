@@ -2661,6 +2661,77 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleGids_0100, Function | SmallTest | Level
     EXPECT_EQ(result, false);
 }
 
+/**
+ * @tc.number: BundleMgrHostImpl_GetAssetGroupsInfo_1000
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.GetAssetGroupsInfo failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetAssetGroupsInfo_1000, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    int32_t uid = -1;
+    AssetGroupInfo assetGroupInfo;
+    ErrCode getInfoResult = hostImpl->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_GetAssetGroupsInfo_1100
+ * @tc.name: test GetAssetGroupsInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleMgrHostImpl_GetAssetGroupsInfo_1100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    int32_t uid = GetBundleDataMgr()->GetUidByBundleName(BUNDLE_BACKUP_NAME, 100, 0);
+    AssetGroupInfo assetGroupInfo;
+    ErrCode getInfoResult = hostImpl->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: BundleDataMgr_GetAssetGroupsInfo_1000
+ * @tc.name: test GetAssetGroupsInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleDataMgr_GetAssetGroupsInfo_1000, Function | SmallTest | Level1)
+{
+    int32_t uid = 0;
+    AssetGroupInfo assetGroupInfo;
+    auto res = GetBundleDataMgr()->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_UID);
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    res = GetBundleDataMgr()->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: BundleDataMgr_GetAssetGroupsInfo_1100
+ * @tc.name: test GetAssetGroupsInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest2, BundleDataMgr_GetAssetGroupsInfo_1100, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    int32_t uid = GetBundleDataMgr()->GetUidByBundleName(BUNDLE_BACKUP_NAME, 100, 0);
+    AssetGroupInfo assetGroupInfo;
+    auto res = GetBundleDataMgr()->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(res, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleSpaceSize_0100

@@ -3048,6 +3048,30 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &assetGroupInfo) const
+{
+    InnerBundleInfo innerBundleInfo;
+    if (GetInnerBundleInfoAndIndexByUid(uid, innerBundleInfo, assetGroupInfo.appIndex) != ERR_OK) {
+        if (sandboxAppHelper_ == nullptr) {
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
+        if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
+    }
+
+    assetGroupInfo.bundleName = innerBundleInfo.GetBundleName();
+    assetGroupInfo.appId = innerBundleInfo.GetAppId();
+    assetGroupInfo.appIdentifier = innerBundleInfo.GetAppIdentifier();
+    assetGroupInfo.developerId = innerBundleInfo.GetDeveloperId();
+    assetGroupInfo.assetAccessGroups = innerBundleInfo.GetAssetAccessGroups();
+
+    APP_LOGD("-u:%{public}d, -n:%{public}s, -i:%{public}d, ai:%{public}s, air:%{public}s, d:%{public}s",
+        uid, assetGroupInfo.bundleName.c_str(), assetGroupInfo.appIndex, assetGroupInfo.appId.c_str(),
+        assetGroupInfo.appIdentifier.c_str(), assetGroupInfo.developerId.c_str());
+    return ERR_OK;
+}
+
 void BundleDataMgr::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
     std::vector<BundleInfo> &bundleInfos, int32_t userId) const
 {
