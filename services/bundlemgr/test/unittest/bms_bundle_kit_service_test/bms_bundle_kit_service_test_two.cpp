@@ -7194,6 +7194,48 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoForException_0100, Function | Sma
 }
 
 /**
+ * @tc.number: GetBundleInfoForException_0200
+ * @tc.name: test GetBundleInfoForException
+ * @tc.desc: 1.GetBundleInfoForException
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoForException_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.test.GetBundleInfoForException_0200";
+
+    dataMgr->multiUserIdsSet_.insert(DEFAULT_USERID);
+    // test bundle in bundleinfos
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = bundleName;
+    applicationInfo.bundleName = bundleName;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsPreInstallApp(true);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = bundleName;
+    innerBundleUserInfo.bundleUserInfo.userId = DEFAULT_USERID;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    BundleInfoForException bundleInfoForException;
+    uint32_t catchSoNum = 10;
+    uint64_t catchSoMaxSize = 1024;
+    ErrCode getInfoResult = bundleMgrHostImpl_->GetBundleInfoForException(bundleName, DEFAULT_USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+
+    innerBundleInfo.SetNativeLibraryPath("libs/arm");
+    dataMgr->bundleInfos_[bundleName] = innerBundleInfo;
+    getInfoResult = bundleMgrHostImpl_->GetBundleInfoForException(bundleName, DEFAULT_USERID, catchSoNum,
+        catchSoMaxSize, bundleInfoForException);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+
+    dataMgr->multiUserIdsSet_.erase(DEFAULT_USERID);
+}
+
+/**
  * @tc.number: HapHashAndDeveloperCert_0001
  * @tc.name: HapHashAndDeveloperCert to_json and from_json branch cover
  * @tc.desc: 1.Test HapHashAndDeveloperCert to_json and from_json

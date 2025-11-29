@@ -2811,13 +2811,30 @@ ErrCode InstalldOperator::HashSoFile(const std::string& soPath,
     std::vector<std::string> &soName,
     std::vector<std::string> &soHash)
 {
-    if (!std::filesystem::exists(soPath) || !std::filesystem::is_directory(soPath)) {
-        LOG_E(BMS_TAG_INSTALLD, "soPath not exist or is not dir");
-        return ERR_APPEXECFWK_NO_SO_EXISTED;
-    }
     uint64_t maxSize = static_cast<uint64_t>(catchSoMaxSize);
     std::vector<SoFileInfo> soFiles;
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(soPath)) {
+    std::error_code ec;
+    if (!std::filesystem::exists(soPath, ec) || !std::filesystem::is_directory(soPath, ec)) {
+        LOG_W(BMS_TAG_INSTALLD, "invalid path:%{public}s,err:%{public}s", soPath.c_str(), ec.message().c_str());
+        return ERR_APPEXECFWK_NO_SO_EXISTED;
+    }
+    std::filesystem::directory_iterator dirIter(soPath,
+        std::filesystem::directory_options::skip_permission_denied, ec);
+    std::filesystem::directory_iterator endIter;
+    if (ec) {
+        LOG_W(BMS_TAG_INSTALLD, "create iterator failed,%{public}s,err:%{public}s",
+            soPath.c_str(), ec.message().c_str());
+        return ERR_APPEXECFWK_NO_SO_EXISTED;
+    }
+    for (; dirIter != endIter; dirIter.increment(ec)) {
+        if (ec) {
+            LOG_W(BMS_TAG_INSTALLD, "iteration failed,%{public}s,err:%{public}s", soPath.c_str(), ec.message().c_str());
+            return ERR_APPEXECFWK_NO_SO_EXISTED;
+        }
+        const std::filesystem::directory_entry &entry = *dirIter;
+        if (!entry.is_regular_file()) {
+            continue;
+        }
         const auto& path = entry.path();
         uint64_t fileSize = std::filesystem::file_size(path);
         if (fileSize <= maxSize) {
