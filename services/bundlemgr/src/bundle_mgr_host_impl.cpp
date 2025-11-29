@@ -478,13 +478,16 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForException(const std::string &bundleNa
     }
     
     // get so hash
-    std::string soPath = std::string(ServiceConstants::SO_PATH_PREFIX) + bundleName +
-        ServiceConstants::PATH_SEPARATOR + innerBundleInfo.GetNativeLibraryPath();
-    std::vector<std::string> soName;
-    std::vector<std::string> soHash;
-    InstalldClient::GetInstance()->HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
-    for (size_t i = 0; i < soName.size(); i++) {
-        bundleInfoForException.soHash.try_emplace(soName[i], soHash[i]);
+    std::string nativeLibraryPath = innerBundleInfo.GetNativeLibraryPath();
+    if (!nativeLibraryPath.empty()) {
+        std::string soPath = std::string(ServiceConstants::SO_PATH_PREFIX) + bundleName +
+            ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
+        std::vector<std::string> soName;
+        std::vector<std::string> soHash;
+        InstalldClient::GetInstance()->HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
+        for (size_t i = 0; i < soName.size(); i++) {
+            bundleInfoForException.soHash.try_emplace(soName[i], soHash[i]);
+        }
     }
 
     return ERR_OK;
