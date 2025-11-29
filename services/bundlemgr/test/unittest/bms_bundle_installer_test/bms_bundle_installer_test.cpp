@@ -12965,6 +12965,44 @@ HWTEST_F(BmsBundleInstallerTest, AddInnerBundleUserInfo_0100, Function | SmallTe
 }
 
 /**
+ * @tc.number: SetAtomicServiceRemovable_0100
+ * @tc.name: test AddDesktopShortcutInfo with non-empty moduleName
+ * @tc.desc: 1. Install atomic service bundle successfully
+ *           2. Verify the bundle type is ATOMIC_SERVICE
+ *           3. Create ShortcutInfo with a non-empty moduleName
+ *           4. Add desktop shortcut info and expect success
+ *           5. Delete the desktop shortcut info and expect success
+ *           6. Uninstall the bundle to clean up
+ */
+HWTEST_F(BmsBundleInstallerTest, SetAtomicServiceRemovable_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string bundlePath = RESOURCE_ROOT_PATH + ATOMIC_FEATURE_V1_HAP;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    BundleType type;
+    ErrCode err = dataMgr->GetBundleType(VERSION_UPDATE_BUNDLE_NAME, type);
+    EXPECT_EQ(type, BundleType::ATOMIC_SERVICE);
+    ShortcutInfo shortcutInfo;
+    shortcutInfo.bundleName = VERSION_UPDATE_BUNDLE_NAME;
+    shortcutInfo.id = "id_test1";
+    shortcutInfo.moduleName = "entry";
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    int32_t userId = 100;
+    dataMgr->AddUserId(userId);
+    auto ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto ret1 = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    EXPECT_EQ(ret1, ERR_OK);
+    UnInstallBundle(VERSION_UPDATE_BUNDLE_NAME);
+}
+
+/**
  * @tc.number: GetUninstallBundleInfo_0010
  * @tc.name: test GetUninstallBundleInfo
  * @tc.desc: 1.Test the GetUninstallBundleInfo

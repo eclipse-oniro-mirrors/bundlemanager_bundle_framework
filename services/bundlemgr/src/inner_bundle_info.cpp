@@ -2316,6 +2316,17 @@ void InnerBundleInfo::UpdateRemovable(bool isPreInstall, bool removable)
     baseApplicationInfo_->removable = removable;
 }
 
+void InnerBundleInfo::UpdateModuleRemovable(const InnerBundleInfo &innerBundleInfo)
+{
+    for (auto &[infoKey, infoValue] : innerBundleInfo.innerModuleInfos_) {
+        auto it = innerModuleInfos_.find(infoKey);
+        if (it != innerModuleInfos_.end()) {
+            it->second.isRemovable = infoValue.isRemovable;
+            it->second.isRemovableSet = infoValue.isRemovableSet;
+        }
+    }
+}
+
 void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)
 {
     if (newInfo.currentPackage_.empty()) {
@@ -3908,13 +3919,9 @@ bool InnerBundleInfo::IsBundleRemovable() const
                 innerModuleInfo.first.c_str(), stringUserId.c_str());
             return false;
         }
-        for (const auto& stateSetIter : innerModuleInfo.second.isRemovableSet) {
-            size_t pos = stateSetIter.find(Constants::UID_SEPARATOR);
-            if (pos != std::string::npos && stateSetIter.substr(pos + 1) == stringUserId) {
-                APP_LOGD("module %{public}s is not removable for user %{public}s",
-                    innerModuleInfo.first.c_str(), stringUserId.c_str());
-                return false;
-            }
+
+        if (IsRemovableSet(innerModuleInfo.second, userId)) {
+            return false;
         }
     }
     return true;
@@ -3967,6 +3974,25 @@ bool InnerBundleInfo::GetFreeInstallModules(std::vector<std::string> &freeInstal
     return !freeInstallModule.empty();
 }
 
+bool InnerBundleInfo::IsRemovableSet(const InnerModuleInfo &innerInfo, int32_t userId) const
+{
+    std::string userIdStr = std::to_string(userId);
+    APP_LOGD("isRemovableSet size:%{public}zu", innerInfo.isRemovableSet.size());
+
+    for (const auto &item : innerInfo.isRemovableSet) {
+        size_t pos = item.rfind(Constants::UID_SEPARATOR);
+        if (pos != std::string::npos) {
+            std::string suffix = item.substr(pos + 1);
+            if (suffix == userIdStr) {
+                APP_LOGD("userId:%{public}d exist moduleName:%{public}s item:%{public}s", userId,
+                    innerInfo.moduleName.c_str(), item.c_str());
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t userId) const
 {
     APP_LOGD("userId:%{public}d moduleName:%{public}s", userId, moduleName.c_str());
@@ -3974,6 +4000,10 @@ bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t u
     if (!modInfoItem) {
         APP_LOGE("get InnerModuleInfo by moduleName(%{public}s) failed", moduleName.c_str());
         return false;
+    }
+
+    if (IsRemovableSet(modInfoItem.value(), userId)) {
+        return true;
     }
 
     auto item = modInfoItem->isRemovable.find(std::to_string(userId));
@@ -3994,6 +4024,11 @@ ErrCode InnerBundleInfo::IsModuleRemovable(
     if (!modInfoItem) {
         APP_LOGE("get InnerModuleInfo by moduleName(%{public}s) failed", moduleName.c_str());
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+
+    if (IsRemovableSet(modInfoItem.value(), userId)) {
+        isRemovable = false;
+        return ERR_OK;
     }
 
     auto item = modInfoItem->isRemovable.find(std::to_string(userId));

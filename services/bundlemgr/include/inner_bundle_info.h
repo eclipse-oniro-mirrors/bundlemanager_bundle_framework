@@ -2249,6 +2249,8 @@ public:
 
     void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
     void UpdateRemovable(bool isPreInstall, bool removable);
+    void UpdateModuleRemovable(const InnerBundleInfo &innerBundleInfo);
+    bool IsRemovableSet(const InnerModuleInfo &innerInfo, int32_t userId) const;
     bool FetchNativeSoAttrs(
         const std::string &requestPackage, std::string &cpuAbi, std::string &nativeLibraryPath) const;
     void UpdateNativeLibAttrs(const ApplicationInfo &applicationInfo);

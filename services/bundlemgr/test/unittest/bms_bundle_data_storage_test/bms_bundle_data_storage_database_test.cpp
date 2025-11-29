@@ -5891,6 +5891,313 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_13900, Function | Sma
 }
 
 /**
+ * @tc.number: InnerBundleInfo_14000
+ * @tc.name: Test DeleteModuleRemovableInfo with bundle name without UID_SEPARATOR
+ * @tc.desc: Test deleting removable info when isRemovableSet contains entries
+ *           without UID_SEPARATOR along with matching user entry
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14000, Function | SmallTest | Level1)
+{
+    const std::string targetUser = "100";
+    InnerModuleInfo module;
+    module.isRemovableSet.insert("bundleWithoutSeparator");
+    module.isRemovableSet.insert(NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + targetUser);
+    module.isRemovable[targetUser] = false;
+
+    InnerBundleInfo info;
+    info.DeleteModuleRemovableInfo(module, targetUser);
+
+    EXPECT_EQ(module.isRemovableSet.count(NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + targetUser), 0);
+    EXPECT_EQ(module.isRemovableSet.count("bundleWithoutSeparator"), 1);
+    EXPECT_EQ(module.isRemovable.count(targetUser), 0);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_14100
+ * @tc.name: Test DeleteModuleRemovableInfo with only entries without UID_SEPARATOR
+ * @tc.desc: Test that entries in isRemovableSet without UID_SEPARATOR are preserved after deletion
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14100, Function | SmallTest | Level1)
+{
+    const std::string targetUser = "100";
+    InnerModuleInfo module;
+    module.isRemovableSet.insert("bundleWithoutSeparator1");
+    module.isRemovableSet.insert("bundleWithoutSeparator2");
+    module.isRemovable[targetUser] = false;
+
+    InnerBundleInfo info;
+    info.DeleteModuleRemovableInfo(module, targetUser);
+
+    EXPECT_EQ(module.isRemovableSet.count("bundleWithoutSeparator1"), 1);
+    EXPECT_EQ(module.isRemovableSet.count("bundleWithoutSeparator2"), 1);
+    EXPECT_EQ(module.isRemovable.count(targetUser), 0);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_14200
+ * @tc.name: Test DeleteModuleRemovableInfo with empty isRemovableSet
+ * @tc.desc: Test safety of DeleteModuleRemovableInfo when isRemovableSet is empty
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14200, Function | SmallTest | Level1)
+{
+    const std::string targetUser = "100";
+    InnerModuleInfo module;
+    module.isRemovable[targetUser] = false;
+
+    InnerBundleInfo info;
+    info.DeleteModuleRemovableInfo(module, targetUser);
+
+    EXPECT_EQ(module.isRemovableSet.size(), 0);
+    EXPECT_EQ(module.isRemovable.count(targetUser), 0);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_14300
+ * @tc.name: Test DeleteModuleRemovableInfo with mixed removable set entries
+ * @tc.desc: Test deletion when isRemovableSet includes matching, non-matching and no UID_SEPARATOR entries
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14300, Function | SmallTest | Level1)
+{
+    const std::string targetUser = "100";
+    const std::string otherUser = "200";
+    InnerModuleInfo module;
+    module.isRemovableSet.insert("bundleWithoutSeparator");
+    module.isRemovableSet.insert(NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + otherUser);
+    module.isRemovableSet.insert(NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + targetUser);
+    module.isRemovable[targetUser] = false;
+    module.isRemovable[otherUser] = true;
+
+    InnerBundleInfo info;
+    info.DeleteModuleRemovableInfo(module, targetUser);
+
+    EXPECT_EQ(module.isRemovableSet.count(NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + targetUser), 0);
+    EXPECT_EQ(module.isRemovableSet.count("bundleWithoutSeparator"), 1);
+    EXPECT_EQ(module.isRemovableSet.count(NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + otherUser), 1);
+    EXPECT_EQ(module.isRemovable.count(targetUser), 0);
+    EXPECT_EQ(module.isRemovable.count(otherUser), 1);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_14400
+ * @tc.name: Test DeleteModuleRemovableInfo with empty userId string
+ * @tc.desc: Test DeleteModuleRemovableInfo behavior when the userId string is empty
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14400, Function | SmallTest | Level1)
+{
+    const std::string targetUser = "";
+    InnerModuleInfo module;
+    module.isRemovableSet.insert(NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + "100");
+    module.isRemovableSet.insert("bundleWithoutSeparator");
+    module.isRemovable[targetUser] = false;
+
+    InnerBundleInfo info;
+    info.DeleteModuleRemovableInfo(module, targetUser);
+
+    EXPECT_EQ(module.isRemovableSet.count(NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + "100"), 1);
+    EXPECT_EQ(module.isRemovableSet.count("bundleWithoutSeparator"), 1);
+    EXPECT_EQ(module.isRemovable.count(targetUser), 0);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_14500
+ * @tc.name: Test UpdateModuleRemovable basic coverage
+ * @tc.desc: Verify UpdateModuleRemovable copies isRemovable and isRemovableSet for matching module keys
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    InnerModuleInfo oldModule;
+    oldModule.moduleName = "testModule";
+    oldModule.isRemovable["uid123"] = true;
+    oldModule.isRemovableSet.insert("bundleA:123");
+    oldInfo.innerModuleInfos_["testModule"] = oldModule;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo newModule;
+    newModule.moduleName = "testModule";
+    newInfo.innerModuleInfos_["testModule"] = newModule;
+
+    oldInfo.UpdateModuleRemovable(newInfo);
+
+    auto it = newInfo.innerModuleInfos_.find("testModule");
+    ASSERT_NE(it, newInfo.innerModuleInfos_.end());
+    EXPECT_EQ(it->second.isRemovable.size(), 1);
+    EXPECT_EQ(it->second.isRemovable["uid123"], true);
+    EXPECT_EQ(it->second.isRemovableSet.count("bundleA:123"), 1);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_14600
+ * @tc.name: Test UpdateModuleRemovable with empty old innerModuleInfos_
+ * @tc.desc: Verify function handles empty oldInfo.innerModuleInfos_ without error (loop not entered)
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    // oldInfo.innerModuleInfos_ is empty
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo newModule;
+    newModule.moduleName = "moduleX";
+    newInfo.innerModuleInfos_["moduleX"] = newModule;
+
+    // should run smoothly, nothing updated, no crash
+    oldInfo.UpdateModuleRemovable(newInfo);
+
+    // newInfo keeps original state (no updates happened)
+    auto it = newInfo.innerModuleInfos_.find("moduleX");
+    ASSERT_NE(it, newInfo.innerModuleInfos_.end());
+    EXPECT_TRUE(it->second.isRemovable.empty());
+    EXPECT_TRUE(it->second.isRemovableSet.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_14700
+ * @tc.name: Test UpdateModuleRemovable with no matching keys in newInfo
+ * @tc.desc: Verify that if keys in oldInfo are not present in newInfo,
+ *           no update is done and function completes gracefully
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14700, Function | SmallTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    InnerModuleInfo oldModule;
+    oldModule.moduleName = "moduleY";
+    oldModule.isRemovable["uidY"] = true;
+    oldModule.isRemovableSet.insert("bundleY:999");
+    oldInfo.innerModuleInfos_["moduleY"] = oldModule;
+
+    InnerBundleInfo newInfo;
+    InnerModuleInfo newModule;
+    newModule.moduleName = "moduleZ";
+    newInfo.innerModuleInfos_["moduleZ"] = newModule;
+
+    oldInfo.UpdateModuleRemovable(newInfo);
+
+    auto it = newInfo.innerModuleInfos_.find("moduleZ");
+    ASSERT_NE(it, newInfo.innerModuleInfos_.end());
+    EXPECT_TRUE(it->second.isRemovable.empty());
+    EXPECT_TRUE(it->second.isRemovableSet.empty());
+    EXPECT_EQ(newInfo.innerModuleInfos_.count("moduleY"), 0);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_14800
+ * @tc.name: IsRemovableSet returns false on empty set
+ * @tc.desc: Test IsRemovableSet returns false when isRemovableSet is empty
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14800, Function | SmallTest | Level1)
+{
+    InnerModuleInfo module;
+    module.moduleName = "testModule";
+    module.isRemovableSet.clear();
+
+    InnerBundleInfo info;
+    bool result = info.IsRemovableSet(module, 123);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_14900
+ * @tc.name: IsRemovableSet returns true when matching userId present
+ * @tc.desc: Test IsRemovableSet returns true when isRemovableSet contains entry with matching userId suffix
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14900, Function | SmallTest | Level1)
+{
+    InnerModuleInfo module;
+    module.moduleName = "testModule";
+    module.isRemovableSet.insert(std::string("somebundle") + std::string(Constants::UID_SEPARATOR) + "123");
+    module.isRemovableSet.insert(std::string("otherbundle") + std::string(Constants::UID_SEPARATOR) + "456");
+
+    InnerBundleInfo info;
+    bool result = info.IsRemovableSet(module, 123);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_15000
+ * @tc.name: IsRemovableSet returns false when no matching userId found
+ * @tc.desc: Test IsRemovableSet returns false when isRemovableSet contains entries but none match userId
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15000, Function | SmallTest | Level1)
+{
+    InnerModuleInfo module;
+    module.moduleName = "testModule";
+    module.isRemovableSet.insert(std::string("somebundle") + std::string(Constants::UID_SEPARATOR) + "999");
+    module.isRemovableSet.insert(std::string("otherbundle") + std::string(Constants::UID_SEPARATOR) + "456");
+
+    InnerBundleInfo info;
+    bool result = info.IsRemovableSet(module, 123);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_15100
+ * @tc.name: IsRemovableSet skips entries without separator
+ * @tc.desc: Test IsRemovableSet correctly skips entries that do not contain the UID_SEPARATOR
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15100, Function | SmallTest | Level1)
+{
+    InnerModuleInfo module;
+    module.moduleName = "testModule";
+    module.isRemovableSet.insert("bundleWithoutSeparator");
+    module.isRemovableSet.insert(std::string("anotherBundle") + std::string(Constants::UID_SEPARATOR) + "456");
+
+    InnerBundleInfo info;
+    bool result = info.IsRemovableSet(module, 123);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_15200
+ * @tc.name: Test IsBundleRemovable with IsRemovableSet
+ * @tc.desc: Test IsBundleRemovable returns false when IsRemovableSet returns true
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.SetIsPreInstallApp(false);
+
+    int32_t userId = AccountHelper::GetUserIdByCallerType();
+    std::string stringUserId = std::to_string(userId);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+    moduleInfo.installationFree = true;
+
+    moduleInfo.isRemovable.try_emplace(stringUserId, true);
+
+    std::string callingNameUid = NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + std::to_string(userId);
+    moduleInfo.isRemovableSet.insert(callingNameUid);
+
+    info.innerModuleInfos_.try_emplace(MODULE_NAME, moduleInfo);
+    bool ret = info.IsBundleRemovable();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_15300
+ * @tc.name: Test IsUserExistModule with IsRemovableSet true
+ * @tc.desc: Test IsUserExistModule returns true when IsRemovableSet returns true
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    info.SetBaseBundleInfo(bundleInfo);
+    int32_t userId = Constants::START_USERID;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+
+    std::string callingNameUid = NORMAL_BUNDLE_NAME + Constants::UID_SEPARATOR + std::to_string(userId);
+    innerModuleInfo.isRemovableSet.insert(callingNameUid);
+    info.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+
+    bool ret = info.IsUserExistModule(MODULE_NAME, userId);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: GetApplicationArkTSMode_0001
  * @tc.name: test GetApplicationArkTSMode
  * @tc.desc: 1. test GetApplicationArkTSMode of InnerBundleInfo on empty innerModuleInfos_

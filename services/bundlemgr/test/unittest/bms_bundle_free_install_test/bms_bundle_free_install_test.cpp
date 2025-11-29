@@ -1025,6 +1025,41 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0043, Function | Sma
 }
 
 /**
+ * @tc.number: BmsBundleFreeInstallTest_0044
+ * Function: IsModuleRemovable
+ * @tc.name: test IsModuleRemovable
+ * @tc.require: issueI5MZ7R
+ * @tc.desc: test IsRemovableSet returns true, isRemovable should be false
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0044, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    std::string callingNameUid = BUNDLE_NAME + Constants::UID_SEPARATOR + std::to_string(USERID);
+    moduleInfo.isRemovableSet.insert(callingNameUid);
+    
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+    
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(BUNDLE_NAME, innerBundleInfo);
+    
+    bool isRemovable = true;
+    ErrCode ret = dataMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable, USERID);
+    
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isRemovable);
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: BundleConnectAbilityMgr_0001
  * Function: GetBundleConnectAbilityMgr
  * @tc.name: test GetBundleConnectAbilityMgr
