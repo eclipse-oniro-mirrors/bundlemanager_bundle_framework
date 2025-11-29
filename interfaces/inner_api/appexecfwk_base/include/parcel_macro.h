@@ -47,7 +47,7 @@ namespace AppExecFwk {
     } while (0)
 
 #define CHECK_PARCEL_CAPACITY(parcel, capacity)                               \
-    while ((parcel).GetMaxCapacity() - (parcel).GetDataSize() < (capacity)) { \
+    while ((parcel).GetMaxCapacity() < (capacity) + (parcel).GetDataSize()) { \
         size_t newMaxCapacity = (parcel).GetMaxCapacity() * 2;                \
         APP_LOGD("parcel capacity expansion %{public}zu", newMaxCapacity);    \
         (parcel).SetMaxCapacity(newMaxCapacity);                              \
