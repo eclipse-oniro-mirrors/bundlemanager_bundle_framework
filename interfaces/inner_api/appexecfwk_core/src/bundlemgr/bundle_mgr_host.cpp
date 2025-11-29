@@ -740,6 +740,8 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_JSON_PROFILE):
             errCode = HandleGetAllJsonProfile(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ASSET_GROUPS_INFOS_BY_UID):
+            errCode = this->HandleGetAssetGroupsInfo(data, reply);
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE):
             errCode = HandleBatchGetCompatibleDeviceType(data, reply);
             break;
@@ -5348,6 +5350,24 @@ ErrCode BundleMgrHost::HandleGetAllJsonProfile(MessageParcel &data, MessageParce
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAssetGroupsInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    int32_t uid = data.ReadInt32();
+    APP_LOGD("uid %{public}d", uid);
+    AssetGroupInfo assetGroupInfo;
+    auto ret = GetAssetGroupsInfo(uid, assetGroupInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+        return WriteParcelInfoIntelligent<AssetGroupInfo>(assetGroupInfo, reply);
     }
     return ERR_OK;
 }

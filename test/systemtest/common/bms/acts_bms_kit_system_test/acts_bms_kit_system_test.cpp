@@ -11344,6 +11344,36 @@ HWTEST_F(ActsBmsKitSystemTest, GetTestRunner_0001, Function | MediumTest | Level
 }
 
 /**
+ * @tc.number: GetAssetGroupsInfo_0001
+ * @tc.name: test GetAssetGroupsInfo interface
+ * @tc.desc: 1.query bundles by uid
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAssetGroupsInfo_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAssetGroupsInfo_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    int32_t uid = bundleInfo.uid;
+    
+    AssetGroupInfo assetGroupInfo;
+    auto ret = bundleMgrProxy->GetAssetGroupsInfo(uid, assetGroupInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = bundleMgrProxy->GetAssetGroupsInfo(-1, assetGroupInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+
+    Uninstall(appName, resvec);
+    std::cout << "END GetAssetGroupsInfo_0001" << std::endl;
+}
+ 
+/**
  * @tc.number: GetTestRunner_0002
  * @tc.name: test GetTestRunner interface
  * @tc.desc: 1. call GetTestRunner

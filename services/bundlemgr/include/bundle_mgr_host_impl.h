@@ -1232,6 +1232,13 @@ public:
         BundleInstallStatus &bundleInstallStatus) override;
     virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos) override;
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param uid Indicates the uid.
+     * @param assetGroupInfo Indicates the obtained AssetGroupInfo object.
+     * @return Returns ERR_OK if the AssetGroupInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &assetGroupInfo) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);
