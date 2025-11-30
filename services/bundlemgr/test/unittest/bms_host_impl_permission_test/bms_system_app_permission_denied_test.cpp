@@ -19,6 +19,7 @@
 
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
+#include "bundle_option.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource_host_impl.h"
 #endif
@@ -1097,6 +1098,29 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0009, TestSize
     int32_t appIndex = 0; // Example app index
     auto ret = localBundleResourceHostImpl->GetExtensionAbilityResourceInfo(bundleName, extensionAbilityType, flags,
         extensionAbilityResourceInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BundleResourceHostImpl_0010
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetLauncherAbilityResourceInfoList SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0010, TestSize.Level1)
+{
+    std::shared_ptr<BundleResourceHostImpl> localBundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    ASSERT_NE(localBundleResourceHostImpl, nullptr);
+
+    std::vector<BundleOptionInfo> optiontList;
+    BundleOptionInfo optiont;
+    optiont.bundleName = "com.example.test";
+    optiont.abilityName = "com.example.test.MainAbility";
+    optiontList.push_back(optiont);
+
+    uint32_t flags = 0; // Example flags
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
+    auto ret = localBundleResourceHostImpl->GetLauncherAbilityResourceInfoList(
+        optiontList, flags, launcherAbilityResourceInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 #endif

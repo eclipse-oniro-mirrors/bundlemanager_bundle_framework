@@ -150,4 +150,7 @@ export class DynamicIconInfoInner implements DynamicIconInfo {
 export class BundleOptionsInner implements BundleOptions {
   public userId?: int | undefined;
   public appIndex?: int | undefined;
+  public bundleName?: string | undefined;
+  public moduleName?: string | undefined;
+  public abilityName?: string | undefined;
 }

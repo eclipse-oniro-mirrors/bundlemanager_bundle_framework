@@ -96,6 +96,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST, ERROR_BUNDLE_NOT_EXIST },
     { ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST, ERROR_MODULE_NOT_EXIST },
     { ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST, ERROR_ABILITY_NOT_EXIST },
+    { ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST, ERROR_INVALID_APPINDEX },
     { ERR_BUNDLE_MANAGER_INVALID_USER_ID, ERROR_INVALID_USER_ID },
     { ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED, ERROR_PERMISSION_NOT_EXIST },
     { ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST, ERROR_DEVICE_ID_NOT_EXIST },
@@ -646,6 +647,79 @@ bool CommonFunc::ParseElementName(napi_env env, napi_value args, Want &want)
     ElementName elementName("", bundleName, abilityName, moduleName);
     want.SetElement(elementName);
     return true;
+}
+
+bool CommonFunc::ParseBundleOption(napi_env env, napi_value value, BundleOptionInfo& option)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, value, &valueType);
+    if (valueType != napi_object) {
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, value, USER_ID, &prop);
+    if (!CommonFunc::ParseInt(env, prop, option.userId)) {
+        APP_LOGE("ParseInt failed");
+    }
+
+    prop = nullptr;
+    napi_get_named_property(env, value, APP_INDEX, &prop);
+    if (!CommonFunc::ParseInt(env, prop, option.appIndex)) {
+        option.appIndex = -1;
+    }
+
+    prop = nullptr;
+    napi_get_named_property(env, value, BUNDLE_NAME, &prop);
+    if (!CommonFunc::ParseString(env, prop, option.bundleName)) {
+        option.bundleName = "";
+    }
+
+    prop = nullptr;
+    napi_get_named_property(env, value, MODULE_NAME, &prop);
+    if (!CommonFunc::ParseString(env, prop, option.moduleName)) {
+        option.moduleName = "";
+    }
+
+    prop = nullptr;
+    napi_get_named_property(env, value, ABILITY_NAME, &prop);
+    if (!CommonFunc::ParseString(env, prop, option.abilityName)) {
+        option.abilityName = "";
+    }
+    return true;
+}
+
+napi_value CommonFunc::ParseBundleOptionArray(
+    napi_env env, std::vector<BundleOptionInfo>& optionsList, napi_value args)
+{
+    APP_LOGD("begin to parse string array");
+    bool isArray = false;
+    NAPI_CALL(env, napi_is_array(env, args, &isArray));
+    if (!isArray) {
+        return nullptr;
+    }
+    uint32_t arrayLength = 0;
+    NAPI_CALL(env, napi_get_array_length(env, args, &arrayLength));
+    APP_LOGD("length=%{public}ud", arrayLength);
+    for (uint32_t j = 0; j < arrayLength; j++) {
+        napi_value value = nullptr;
+        NAPI_CALL(env, napi_get_element(env, args, j, &value));
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, value, &valueType));
+        if (valueType != napi_object) {
+            optionsList.clear();
+            return nullptr;
+        }
+        BundleOptionInfo bundleOption;
+        if (ParseBundleOption(env, value, bundleOption)) {
+            optionsList.push_back(bundleOption);
+        }
+    }
+    napi_value result;
+    napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
+    if (status != napi_ok) {
+        return nullptr;
+    }
+    return result;
 }
 
 bool CommonFunc::ParseElementName(napi_env env, napi_value args, ElementName &elementName)

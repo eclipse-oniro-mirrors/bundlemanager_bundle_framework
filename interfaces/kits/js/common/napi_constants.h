@@ -137,6 +137,10 @@ constexpr const char* PARAM_MODULENAME_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter moduleName is empty";
 constexpr const char* PARAM_ABILITYNAME_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter abilityName is empty";
+constexpr const char* PARAM_BUNDLE_OPTIONS_EMPTY_ERROR =
+    "Parameter error. parameter array is empty";
+constexpr const char* PARAM_BUNDLE_OPTIONS_NUMBER_ERROR =
+    "Parameter error. array size exceeds maximum allowed limit of 1000 elements";
 constexpr const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
 constexpr const char* PARAM_DEVELOPER_ID_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter developerId is empty";
@@ -222,6 +226,7 @@ constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
 constexpr const char* GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = "GetAllLauncherAbilityResourceInfo";
+constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST = "GetLauncherAbilityResourceInfoList";
 constexpr const char* GET_EXTENSION_ABILITY_RESOURCE_INFO = "GetExtensionAbilityResourceInfo";
 constexpr const char* GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO = "GetAllUninstalledBundleResourceInfo";
 
@@ -351,6 +356,7 @@ constexpr const char* SET_DEFAULT_APPLICATION_FOR_APP_CLONE = "SetDefaultApplica
 constexpr const char* TYPE_CHECK = "type";
 constexpr const char* WANT_CHECK = "want";
 constexpr const char* ELEMENT_NAME = "ElementName";
+constexpr const char* BUNDLE_OPTION = "BundleOption";
 }
 }
 }

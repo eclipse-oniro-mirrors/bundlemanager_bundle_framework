@@ -30,6 +30,7 @@ namespace AppExecFwk {
 namespace {
 constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
+const int32_t CLONE_APP_INDEX_MAX = 5;
 bool GetData(size_t size, const void *data, void *&buffer)
 {
     if (data == nullptr) {
@@ -120,6 +121,51 @@ ErrCode BundleResourceProxy::GetLauncherAbilityResourceInfo(const std::string &b
 
     return GetVectorParcelInfo<LauncherAbilityResourceInfo>(
         BundleResourceInterfaceCode::GET_LAUNCHER_ABILITY_RESOURCE_INFO, data, launcherAbilityResourceInfo);
+}
+
+ErrCode BundleResourceProxy::CheckBundleOptionInfoInvalid(const std::vector<BundleOptionInfo>& optionsList)
+{
+    for (const auto& options : optionsList) {
+        if (options.bundleName.empty()) {
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        } else if (options.moduleName.empty()) {
+            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+        } else if (options.abilityName.empty()) {
+            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        } else if (options.appIndex < 0 || options.appIndex > CLONE_APP_INDEX_MAX) {
+            return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleResourceProxy::GetLauncherAbilityResourceInfoList(const std::vector<BundleOptionInfo>& optionsList,
+    const uint32_t flags, std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    APP_LOGD("start, optionsList size:%{public}zu, flags:%{public}u", optionsList.size(), flags);
+
+    ErrCode ret = CheckBundleOptionInfoInvalid(optionsList);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to write optionsList");
+        return ret;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ret = WriteParcelableVector(optionsList, data);
+    if (ret != ERR_OK) {
+        APP_LOGE("fail to write optionsList");
+        return ret;
+    }
+    if (!data.WriteUint32(flags)) {
+        APP_LOGE("fail to write flags");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorParcelInfo<LauncherAbilityResourceInfo>(
+        BundleResourceInterfaceCode::GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST, data, launcherAbilityResourceInfo);
 }
 
 ErrCode BundleResourceProxy::GetAllBundleResourceInfo(const uint32_t flags,
@@ -464,6 +510,23 @@ bool BundleResourceProxy::SendRequest(BundleResourceInterfaceCode code,
         return false;
     }
     return true;
+}
+
+template <typename T>
+ErrCode BundleResourceProxy::WriteParcelableVector(const std::vector<T> &parcelableVector, MessageParcel &data)
+{
+    if (!data.WriteInt32(parcelableVector.size())) {
+        APP_LOGE("write ParcelableVector failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    for (const auto &parcelable : parcelableVector) {
+        if (!data.WriteParcelable(&parcelable)) {
+            APP_LOGE("write ParcelableVector failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
 }
 } // AppExecFwk
 } // OHOS

@@ -390,6 +390,7 @@ enum class BundleResourceInterfaceCode : uint8_t {
     DELETE_RESOURCE_INFO = 6,
     GET_EXTENSION_ABILITY_RESOURCE_INFO = 7,
     GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO = 8,
+    GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST = 9,
 };
 
 /* SAID: 401-127 Interface No.127 subservice also provides the following interfaces */

@@ -23,6 +23,7 @@
 #include "bms_extension.h"
 #include "bundle_compatible_device_type.h"
 #include "bundle_info.h"
+#include "bundle_option.h"
 #include "bundle_resource_info.h"
 #include "code_protect_bundle_info.h"
 #include "launcher_ability_resource_info.h"
@@ -72,6 +73,8 @@ public:
         BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
     ErrCode GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
+    ErrCode GetLauncherAbilityResourceInfo(const BundleOptionInfo &options, const uint32_t flags,
+        LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
     ErrCode GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
     ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);

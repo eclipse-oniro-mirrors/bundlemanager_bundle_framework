@@ -39,6 +39,8 @@ private:
 
     ErrCode HandleGetLauncherAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetLauncherAbilityResourceInfoList(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAllBundleResourceInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllLauncherAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);
@@ -62,6 +64,9 @@ private:
 
     template<typename T>
     ErrCode WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply);
+
+    template<typename T>
+    ErrCode ReadParcelableVector(MessageParcel &data, std::vector<T> &parcelableInfos);
 
     int32_t ashmemNum_ = 0;
     std::mutex bundleAshmemMutex_;

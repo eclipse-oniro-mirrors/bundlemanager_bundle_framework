@@ -71,4 +71,7 @@ export interface DynamicIconInfo {
 export interface BundleOptions {
   userId?: int;
   appIndex?: int;
+  bundleName?: string;
+  moduleName?: string;
+  abilityName?: string;
 }

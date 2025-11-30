@@ -53,6 +53,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/bundle_dir.cpp",
     "src/bundle_distribution_type.cpp",
     "src/bundle_info.cpp",
+    "src/bundle_option.cpp",
     "src/bundle_pack_info.cpp",
     "src/bundle_resource/bundle_resource_info.cpp",
     "src/bundle_resource/bundle_system_state.cpp",
@@ -82,6 +83,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/install_param.cpp",
     "src/mime_type_mgr.cpp",
     "src/module_info.cpp",
+    "src/module_test_runner.cpp",
     "src/overlay/overlay_bundle_info.cpp",
     "src/overlay/overlay_module_info.cpp",
     "src/perf_profile.cpp",
@@ -100,7 +102,6 @@ ohos_shared_library("appexecfwk_base") {
     "src/shared/shared_module_info.cpp",
     "src/shortcut_info.cpp",
     "src/skill.cpp",
-    "src/module_test_runner.cpp",
   ]
 
   public_configs = [

@@ -173,17 +173,17 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
     return false;
 }
 
-bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+bool BundleResourceManager::GetSingleLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex)
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
-    if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags,
+    if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, flags,
         launcherAbilityResourceInfo, appIndex)) {
-        if (IsNeedProcessResourceIconInfo(resourceFlags)) {
+        if (IsNeedProcessResourceIconInfo(flags)) {
             int32_t userId = GetUserId();
             std::vector<LauncherAbilityResourceInfo> resourceIconInfos;
-            if (!bundleResourceIconRdb_->GetResourceIconInfos(bundleName, userId, appIndex, resourceFlags,
+            if (!bundleResourceIconRdb_->GetResourceIconInfos(bundleName, userId, appIndex, flags,
                 resourceIconInfos) || resourceIconInfos.empty()) {
                 return true;
             }
@@ -209,6 +209,17 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
                 }
             }
         }
+        return true;
+    }
+    return false;
+}
+
+bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex)
+{
+    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
+    uint32_t resourceFlags = CheckResourceFlags(flags);
+    if (GetSingleLauncherAbilityResourceInfo(bundleName, resourceFlags, launcherAbilityResourceInfo, appIndex)) {
         return true;
     }
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();

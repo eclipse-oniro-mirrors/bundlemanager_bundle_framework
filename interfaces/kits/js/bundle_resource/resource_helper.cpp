@@ -125,6 +125,22 @@ ErrCode ResourceHelper::InnerGetAllLauncherAbilityResourceInfo(uint32_t flags,
     return CommonFunc::ConvertErrCode(ret);
 }
 
+ErrCode ResourceHelper::InnerGetLauncherAbilityResourceInfoList(const std::vector<BundleOptionInfo>& optionsList,
+    const uint32_t flags, std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+{
+    auto bundleResourceProxy = ResourceHelper::GetBundleResourceMgr();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetLauncherAbilityResourceInfoList(
+        optionsList, flags, launcherAbilityResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, errCode: %{public}d", ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 ErrCode ResourceHelper::InnerGetExtensionAbilityResourceInfo(const std::string& bundleName,
     ExtensionAbilityType extensionAbilityType, uint32_t flags, int32_t appIndex,
     std::vector<LauncherAbilityResourceInfo>& extensionAbilityResourceInfos)

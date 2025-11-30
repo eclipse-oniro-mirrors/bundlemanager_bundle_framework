@@ -89,6 +89,66 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
     return ERR_OK;
 }
 
+ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfoList(const std::vector<BundleOptionInfo>& optionsList,
+    const uint32_t flags, std::vector<LauncherAbilityResourceInfo>& launcherAbilityResourceInfo)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    launcherAbilityResourceInfo.clear();
+    std::vector<LauncherAbilityResourceInfo> allResources;
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    for (const auto& options : optionsList) {
+        const std::string& bundleName = options.bundleName;
+        const std::string& moduleName = options.moduleName;
+        const std::string& abilityName = options.abilityName;
+        const int32_t appIndex = options.appIndex;
+        if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
+            APP_LOGE("get bundle resource Fail, appIndex: %{public}d not in valid range", appIndex);
+            return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+        }
+        allResources.clear();
+        LauncherAbilityResourceInfo singleResource;
+        if (manager->GetSingleLauncherAbilityResourceInfo(bundleName, flags, allResources, appIndex)) {
+            auto ret = GetElementLauncherAbilityResourceInfo(
+                allResources, moduleName, abilityName, appIndex, singleResource);
+            if (ret != ERR_OK) {
+                return ret;
+            }
+            launcherAbilityResourceInfo.emplace_back(std::move(singleResource));
+            continue;
+        }
+        BundleOptionInfo option;
+        option.bundleName = options.bundleName;
+        option.moduleName = options.moduleName;
+        option.abilityName = options.abilityName;
+        option.appIndex = options.appIndex;
+        option.userId = manager->GetUserId();
+        auto result = bmsExtensionClient->GetLauncherAbilityResourceInfo(option, flags, singleResource);
+        if (result == ERR_OK) {
+            launcherAbilityResourceInfo.emplace_back(std::move(singleResource));
+            continue;
+        }
+        APP_LOGE_NOFUNC("get resource failed -n %{public}s -f %{public}u", bundleName.c_str(), flags);
+        return CheckBundleNameValid(bundleName, appIndex);
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
     std::vector<BundleResourceInfo> &bundleResourceInfos)
 {
@@ -408,6 +468,43 @@ ErrCode BundleResourceHostImpl::GetAllUninstallBundleResourceInfo(const int32_t 
     }
     APP_LOGI_NOFUNC("GetAllUninstallBundleResourceInfo count:%{public}zu", bundleResourceInfos.size());
     return ERR_OK;
+}
+
+ErrCode BundleResourceHostImpl::GetElementLauncherAbilityResourceInfo(
+    const std::vector<LauncherAbilityResourceInfo>& allResources,
+    const std::string& moduleName,
+    const std::string& abilityName,
+    const int32_t appIndex,
+    LauncherAbilityResourceInfo& resourceInfo)
+{
+    bool moduleExists = false;
+    bool abilityExists = false;
+    auto iter = std::find_if(allResources.begin(), allResources.end(),
+        [&moduleName, &abilityName, appIndex, &moduleExists, &abilityExists]
+        (const LauncherAbilityResourceInfo& info) {
+            if (info.moduleName == moduleName) {
+                moduleExists = true;
+                if (info.abilityName == abilityName) {
+                    abilityExists = true;
+                    return info.appIndex == appIndex;
+                }
+            }
+            return false;
+        });
+    if (iter != allResources.end()) {
+        resourceInfo = *iter;
+        return ERR_OK;
+    }
+    if (!moduleExists) {
+        APP_LOGE("module %{public}s not found", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    } else if (!abilityExists) {
+        APP_LOGE("ability %{public}s not found in module %{public}s", abilityName.c_str(), moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    } else {
+        APP_LOGE("appIndex %{public}d not match for ability %{public}s", appIndex, abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
+    }
 }
 } // AppExecFwk
 } // OHOS
