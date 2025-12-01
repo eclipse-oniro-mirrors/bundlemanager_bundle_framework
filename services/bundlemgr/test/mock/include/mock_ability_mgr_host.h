@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,13 +37,13 @@ public:
     MockAbilityMgrStub() = default;
     virtual ~MockAbilityMgrStub() = default;
 
-    virtual int StartAbility(
-        const AAFwk::Want &want, int32_t userId = DEFAULT_INVAL_VALUE, int requestCode = -1) override
+    virtual int StartAbility(const AAFwk::Want &want, int32_t userId = DEFAULT_INVAL_VALUE, int requestCode = -1,
+        uint64_t specifiedFullTokenId = 0) override
     {
         return 0;
     }
-    virtual int StartAbility(
-        const Want &want, const sptr<IRemoteObject> &callerToken, int32_t userId, int requestCode) override
+    virtual int StartAbility(const Want &want, const sptr<IRemoteObject> &callerToken, int32_t userId, int requestCode,
+        uint64_t specifiedFullTokenId = 0) override
     {
         return 0;
     }
