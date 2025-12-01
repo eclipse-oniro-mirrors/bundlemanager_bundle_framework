@@ -5307,6 +5307,58 @@ HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0003, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: GetProfileDataList_0004
+ * @tc.name: test GetProfilePath
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfilePath
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0004, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        dataMgr->multiUserIdsSet_.insert(USERID);
+        InnerBundleInfo innerBundleInfo;
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleUserInfo.bundleName = BUNDLE_TEST1;
+        innerBundleUserInfo.bundleUserInfo.userId = USERID;
+        innerBundleUserInfo.bundleUserInfo.enabled = true;
+        innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+        GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+        std::vector<BundleProfileData> profileDataList;
+        dataMgr->GetProfileDataList(ProfileType::EASY_GO_PROFILE, USERID, profileDataList);
+        EXPECT_TRUE(profileDataList.empty());
+        dataMgr->multiUserIdsSet_.erase(USERID);
+    }
+}
+
+/**
+ * @tc.number: GetProfileDataList_0005
+ * @tc.name: test GetProfilePath
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfilePath
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0005, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        dataMgr->multiUserIdsSet_.insert(USERID);
+        InnerBundleInfo innerBundleInfo;
+        InnerBundleUserInfo innerBundleUserInfo;
+        innerBundleUserInfo.bundleName = BUNDLE_TEST1;
+        innerBundleUserInfo.bundleUserInfo.userId = USERID;
+        innerBundleUserInfo.bundleUserInfo.enabled = false;
+        innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+        GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+        std::vector<BundleProfileData> profileDataList;
+        dataMgr->GetProfileDataList(ProfileType::EASY_GO_PROFILE, USERID, profileDataList);
+        EXPECT_TRUE(profileDataList.empty());
+        dataMgr->multiUserIdsSet_.erase(USERID);
+    }
+}
+
+/**
  * @tc.number: GetAllJsonProfile_0001
  * @tc.name: test GetAllJsonProfile
  * @tc.desc: 1.system run normally
