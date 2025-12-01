@@ -4950,7 +4950,7 @@ void BaseBundleInstaller::CheckInstallAllowDowngrade(
     auto provisionInfo = verifyRes_.GetProvisionInfo();
     // emulator support no signature
     if (provisionInfo.profileBlockLength != 0) {
-        auto newProvisionType = (verifyRes_.GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
+        auto newProvisionType = (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) ?
             Constants::APP_PROVISION_TYPE_DEBUG : Constants::APP_PROVISION_TYPE_RELEASE;
         if (oldBundleInfo.GetAppProvisionType() != newProvisionType) {
             LOG_E(BMS_TAG_INSTALLER, "%{public}s update from %{public}s to %{public}s denied", bundleName_.c_str(),
