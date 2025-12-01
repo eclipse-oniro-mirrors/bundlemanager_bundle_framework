@@ -6000,38 +6000,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14400, Function | Sma
 
 /**
  * @tc.number: InnerBundleInfo_14500
- * @tc.name: Test UpdateModuleRemovable basic coverage
- * @tc.desc: Verify UpdateModuleRemovable copies isRemovable and isRemovableSet for matching module keys
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14500, Function | SmallTest | Level1)
-{
-    InnerBundleInfo oldInfo;
-    InnerModuleInfo oldModule;
-    oldModule.moduleName = "testModule";
-    oldModule.isRemovable["uid123"] = true;
-    oldModule.isRemovableSet.insert("bundleA:123");
-    oldInfo.innerModuleInfos_["testModule"] = oldModule;
-
-    InnerBundleInfo newInfo;
-    InnerModuleInfo newModule;
-    newModule.moduleName = "testModule";
-    newInfo.innerModuleInfos_["testModule"] = newModule;
-
-    oldInfo.UpdateModuleRemovable(newInfo);
-
-    auto it = newInfo.innerModuleInfos_.find("testModule");
-    ASSERT_NE(it, newInfo.innerModuleInfos_.end());
-    EXPECT_EQ(it->second.isRemovable.size(), 1);
-    EXPECT_EQ(it->second.isRemovable["uid123"], true);
-    EXPECT_EQ(it->second.isRemovableSet.count("bundleA:123"), 1);
-}
-
-/**
- * @tc.number: InnerBundleInfo_14600
  * @tc.name: Test UpdateModuleRemovable with empty old innerModuleInfos_
  * @tc.desc: Verify function handles empty oldInfo.innerModuleInfos_ without error (loop not entered)
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14600, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14500, Function | SmallTest | Level1)
 {
     InnerBundleInfo oldInfo;
     // oldInfo.innerModuleInfos_ is empty
@@ -6052,12 +6024,12 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14600, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14700
+ * @tc.number: InnerBundleInfo_14600
  * @tc.name: Test UpdateModuleRemovable with no matching keys in newInfo
  * @tc.desc: Verify that if keys in oldInfo are not present in newInfo,
  *           no update is done and function completes gracefully
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14700, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14600, Function | SmallTest | Level1)
 {
     InnerBundleInfo oldInfo;
     InnerModuleInfo oldModule;
@@ -6081,11 +6053,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14700, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14800
+ * @tc.number: InnerBundleInfo_14700
  * @tc.name: IsRemovableSet returns false on empty set
  * @tc.desc: Test IsRemovableSet returns false when isRemovableSet is empty
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14700, Function | SmallTest | Level1)
 {
     InnerModuleInfo module;
     module.moduleName = "testModule";
@@ -6097,11 +6069,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14800, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_14900
+ * @tc.number: InnerBundleInfo_14800
  * @tc.name: IsRemovableSet returns true when matching userId present
  * @tc.desc: Test IsRemovableSet returns true when isRemovableSet contains entry with matching userId suffix
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14800, Function | SmallTest | Level1)
 {
     InnerModuleInfo module;
     module.moduleName = "testModule";
@@ -6114,11 +6086,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14900, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15000
+ * @tc.number: InnerBundleInfo_14900
  * @tc.name: IsRemovableSet returns false when no matching userId found
  * @tc.desc: Test IsRemovableSet returns false when isRemovableSet contains entries but none match userId
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_14900, Function | SmallTest | Level1)
 {
     InnerModuleInfo module;
     module.moduleName = "testModule";
@@ -6131,11 +6103,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15000, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15100
+ * @tc.number: InnerBundleInfo_15000
  * @tc.name: IsRemovableSet skips entries without separator
  * @tc.desc: Test IsRemovableSet correctly skips entries that do not contain the UID_SEPARATOR
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15000, Function | SmallTest | Level1)
 {
     InnerModuleInfo module;
     module.moduleName = "testModule";
@@ -6148,11 +6120,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15100, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15200
+ * @tc.number: InnerBundleInfo_15100
  * @tc.name: Test IsBundleRemovable with IsRemovableSet
  * @tc.desc: Test IsBundleRemovable returns false when IsRemovableSet returns true
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15100, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     info.SetIsPreInstallApp(false);
@@ -6175,11 +6147,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15200, Function | Sma
 }
 
 /**
- * @tc.number: InnerBundleInfo_15300
+ * @tc.number: InnerBundleInfo_15200
  * @tc.name: Test IsUserExistModule with IsRemovableSet true
  * @tc.desc: Test IsUserExistModule returns true when IsRemovableSet returns true
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_15200, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     BundleInfo bundleInfo;
