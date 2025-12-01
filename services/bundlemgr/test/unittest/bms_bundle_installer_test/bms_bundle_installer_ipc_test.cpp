@@ -40,7 +40,9 @@ constexpr int32_t TEST_INSTALLER_UID = 100;
 constexpr int32_t INVAILD_ID = -1;
 const int32_t ERR_CODE = 8388613;
 enum BundleInstallerInterfaceCode : uint32_t {
-    UNINSTALL = 2,
+    INSTALL = 0,
+    INSTALL_MULTIPLE_HAPS,
+    UNINSTALL,
     UNINSTALL_MODULE,
     UNINSTALL_BY_UNINSTALL_PARAM,
     RECOVER,
@@ -180,6 +182,25 @@ HWTEST_F(BmsBundleInstallerIPCTest, FileStatTest_0300, Function | SmallTest | Le
 
     auto ret = proxy->DestoryBundleStreamInstaller(DEFAULT_INSTALLER_ID);
     EXPECT_TRUE(ret);
+}
+
+
+/**
+ * @tc.number: InstallTest_0100
+ * @tc.name: test Install function of BundleInstallerProxy
+ * @tc.desc: 1. Obtain bundleInstallerProxy
+ *           2. Calling function Install
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, InstallTest_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallerProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver;
+    auto ret = proxy->Install("", installParam, statusReceiver);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -514,6 +535,48 @@ HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_1400, Function | Sm
 
     id = proxy->CreateExtProfileFileStream(FILE_NAME);
     EXPECT_EQ(id, fd);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_0100
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_0100, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_0200
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_0200, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
 }
 
 /**
