@@ -445,7 +445,8 @@ static bool CheckShortcutInfo(napi_env env, const std::string &referenceBundleNa
     return true;
 }
 
-static bool ParseShortcutInfos(napi_env env, napi_value nShortcutInfos, std::vector<ShortcutInfo> &shortcutInfos)
+static bool ParseShortcutInfos(napi_env env, napi_value nShortcutInfos, std::vector<ShortcutInfo> &shortcutInfos,
+    bool isRelative)
 {
     bool isArray = false;
     NAPI_CALL_BASE(env, napi_is_array(env, nShortcutInfos, &isArray), false);
@@ -461,7 +462,6 @@ static bool ParseShortcutInfos(napi_env env, napi_value nShortcutInfos, std::vec
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, SHORTCUT_INFO_LENGTH_ERROR);
         return false;
     }
-
     std::string referenceBundleName;
     int32_t referenceAppIndex = -1;
     std::unordered_set<std::string> shortcutIds;
@@ -483,17 +483,18 @@ static bool ParseShortcutInfos(napi_env env, napi_value nShortcutInfos, std::vec
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
             return false;
         }
-        if (i == 0) {
-            referenceBundleName = shortcutInfo.bundleName;
-            referenceAppIndex = shortcutInfo.appIndex;
-        }
-        if (!CheckShortcutInfo(env, referenceBundleName, referenceAppIndex, shortcutIds, shortcutInfo)) {
-            APP_LOGE("CheckShortcutInfo failed");
-            return false;
+        if (isRelative) {
+            if (i == 0) {
+                referenceBundleName = shortcutInfo.bundleName;
+                referenceAppIndex = shortcutInfo.appIndex;
+            }
+            if (!CheckShortcutInfo(env, referenceBundleName, referenceAppIndex, shortcutIds, shortcutInfo)) {
+                APP_LOGE("CheckShortcutInfo failed");
+                return false;
+            }
         }
         shortcutInfos.push_back(shortcutInfo);
     }
-
     return true;
 }
 
@@ -559,7 +560,7 @@ napi_value AddDynamicShortcutInfos(napi_env env, napi_callback_info info)
     std::unique_ptr<AddDynamicShortcutInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
 
     if (args.GetArgc() == ARGS_SIZE_TWO) {
-        if (!ParseShortcutInfos(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfos)) {
+        if (!ParseShortcutInfos(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfos, true)) {
             APP_LOGE("shortcutInfos invalid");
             return nullptr;
         }
@@ -579,6 +580,95 @@ napi_value AddDynamicShortcutInfos(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("Call AddDynamicShortcutInfos done");
     return promise;
+}
+
+static ErrCode InnerSetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        return ERR_APPEXECFWK_SERVICE_NOT_READY;
+    }
+    return iBundleMgr->SetShortcutsEnabled(shortcutInfos, isEnabled);
+}
+
+void SetShortcutsEnabledExec(napi_env env, void *data)
+{
+    SetShortcutsEnabledCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<SetShortcutsEnabledCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerSetShortcutsEnabled(asyncCallbackInfo->shortcutInfos, asyncCallbackInfo->isEnabled);
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+}
+
+void SetShortcutsEnabledComplete(napi_env env, napi_status status, void *data)
+{
+    SetShortcutsEnabledCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<SetShortcutsEnabledCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<SetShortcutsEnabledCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_POS_ONE] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+    } else {
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, SET_SHORTCUTS_ENABLED);
+    }
+    CommonFunc::NapiReturnDeferred<SetShortcutsEnabledCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_POS_ONE);
+}
+
+napi_value SetShortcutsEnabled(napi_env env, napi_callback_info info)
+{
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
+    APP_LOGD("Napi begin SetShortcutsEnabled");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("Args init is error");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    SetShortcutsEnabledCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) SetShortcutsEnabledCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<SetShortcutsEnabledCallbackInfo> callbackPtr {asyncCallbackInfo};
+
+    if (args.GetArgc() == ARGS_SIZE_TWO) {
+        if (!ParseShortcutInfos(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfos, false)) {
+            APP_LOGE("shortcutInfos invalid");
+            return nullptr;
+        }
+        if (!CommonFunc::ParseBool(env, args[ARGS_SIZE_ONE], asyncCallbackInfo->isEnabled)) {
+            APP_LOGE("Parse isEnabled is error");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, "isEnabled", TYPE_BOOLEAN);
+            return nullptr;
+        }
+    } else {
+        APP_LOGE("Parameters error");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    auto promise = CommonFunc::AsyncCallNativeMethod<SetShortcutsEnabledCallbackInfo>(env, asyncCallbackInfo,
+        SET_SHORTCUTS_ENABLED, SetShortcutsEnabledExec, SetShortcutsEnabledComplete);
+    callbackPtr.release();
+    APP_LOGD("Call SetShortcutsEnabled done");
+    return promise;
+#else
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "SetShortcutsEnabled");
+    napi_throw(env, error);
+    return nullptr;
+#endif
 }
 
 static ErrCode InnerDeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,

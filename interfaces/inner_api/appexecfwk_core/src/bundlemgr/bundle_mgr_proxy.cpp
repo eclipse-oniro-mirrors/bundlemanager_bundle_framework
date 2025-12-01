@@ -6731,6 +6731,35 @@ ErrCode BundleMgrProxy::DeleteDynamicShortcutInfos(const std::string &bundleName
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (shortcutInfos.empty() || shortcutInfos.size() > MAX_SHORTCUT_INFO_SIZE) {
+        APP_LOGE("SetShortcutsEnabled shortcutInfos size invalid");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("SetShortcutsEnabled write InterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = WriteVectorToParcel(shortcutInfos, data);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetShortcutsEnabled write shortcutInfos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isEnabled)) {
+        APP_LOGE("SetShortcutsEnabled write isEnabled fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_SHORTCUTS_ENABLED, data, reply)) {
+        APP_LOGE("fail to SetShortcutsEnabled from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
 bool BundleMgrProxy::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
     const int32_t patchVersion)
 {

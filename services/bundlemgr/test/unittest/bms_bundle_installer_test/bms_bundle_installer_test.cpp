@@ -9868,6 +9868,35 @@ HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0014, Function | Small
 }
 
 /**
+ * @tc.number: BundleMultiUserInstaller_0015
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.test ProcessBundleInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, BundleMultiUserInstaller_0015, Function | SmallTest | Level0)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    int32_t userId = 110;
+    dataMgr->AddUserId(userId);
+
+    BundleMultiUserInstaller installer;
+    std::string bundleName = SYSTEMFIEID_NAME;
+    auto ret = installer.ProcessBundleInstall(bundleName, userId);
+    EXPECT_EQ(ret, ERR_OK);
+    dataMgr->RemoveUserId(userId);
+
+    UnInstallBundle(SYSTEMFIEID_NAME);
+    InstallState state = InstallState::UNINSTALL_SUCCESS;
+    dataMgr->shortcutEnabledStorage_->rdbDataManager_ = nullptr;
+    dataMgr->DeleteBundleInfo(SYSTEMFIEID_NAME, state, false);
+    dataMgr->installStates_.erase(SYSTEMFIEID_NAME);
+}
+
+/**
  * @tc.number: BaseBundleInstaller_7300
  * @tc.name: test CheckShellInstall
  * @tc.desc: 1.test CheckShellInstall

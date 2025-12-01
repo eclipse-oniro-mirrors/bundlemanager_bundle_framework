@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -72,6 +72,12 @@ struct DeleteDynamicShortcutInfosCallbackInfo : public BaseCallbackInfo {
     std::vector<std::string> shortcutIds;
 };
 
+struct SetShortcutsEnabledCallbackInfo : public BaseCallbackInfo {
+    explicit SetShortcutsEnabledCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    bool isEnabled = true;
+    std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
+};
+
 napi_value AddDesktopShortcutInfo(napi_env env, napi_callback_info info);
 napi_value DeleteDesktopShortcutInfo(napi_env env, napi_callback_info info);
 napi_value GetAllDesktopShortcutInfo(napi_env env, napi_callback_info info);
@@ -79,6 +85,7 @@ napi_value SetShortcutVisibleForSelf(napi_env env, napi_callback_info info);
 napi_value GetAllShortcutInfoForSelf(napi_env env, napi_callback_info info);
 napi_value AddDynamicShortcutInfos(napi_env env, napi_callback_info info);
 napi_value DeleteDynamicShortcutInfos(napi_env env, napi_callback_info info);
+napi_value SetShortcutsEnabled(napi_env env, napi_callback_info info);
 }
 }
 #endif

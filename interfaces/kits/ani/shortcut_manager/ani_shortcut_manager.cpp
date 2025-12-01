@@ -214,6 +214,37 @@ static void DeleteDynamicShortcutInfosNative(ani_env* env,
     }
 }
 
+static void SetShortcutsEnabledNative(ani_env* env, ani_object aniShortcutInfo, ani_boolean aniIsEnabled)
+{
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
+    APP_LOGD("ani SetShortcutsEnabledNative called");
+    std::vector<ShortcutInfo> shortcutInfos;
+    if (!CommonFunAni::ParseAniArray(env, aniShortcutInfo, shortcutInfos, CommonFunAni::ParseShortcutInfo)) {
+        APP_LOGE("Parse aniShortcutInfo failed");
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return;
+    }
+    bool isEnabled = CommonFunAni::AniBooleanToBool(aniIsEnabled);
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ERR_APPEXECFWK_SERVICE_NOT_READY),
+            SET_SHORTCUTS_ENABLED, Constants::PERMISSION_MANAGER_SHORTCUT);
+        return;
+    }
+
+    ErrCode ret = iBundleMgr->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetShortcutsEnabled failed ret:%{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+            SET_SHORTCUTS_ENABLED, Constants::PERMISSION_MANAGER_SHORTCUT);
+    }
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_SHORTCUTS_ENABLED, "");
+#endif
+}
+
 extern "C" {
 ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
 {
@@ -245,6 +276,8 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
             reinterpret_cast<void*>(AddDynamicShortcutInfosNative) },
         ani_native_function { "deleteDynamicShortcutInfosNative", nullptr,
             reinterpret_cast<void*>(DeleteDynamicShortcutInfosNative) },
+        ani_native_function { "setShortcutsEnabledNative", nullptr,
+            reinterpret_cast<void*>(SetShortcutsEnabledNative) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

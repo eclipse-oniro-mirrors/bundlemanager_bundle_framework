@@ -242,6 +242,7 @@ constexpr const char* INVALID_SHORTCUT_INFO_ERROR =
     "invalid ShortcutInfo: parameter type error, or appIndex is less than 0";
 constexpr const char* ADD_DYNAMIC_SHORTCUT_INFOS = "AddDynamicShortcutInfos";
 constexpr const char* DELETE_DYNAMIC_SHORTCUT_INFOS = "DeleteDynamicShortcutInfos";
+constexpr const char* SET_SHORTCUTS_ENABLED = "SetShortcutsEnabled";
 constexpr const char* SHORTCUT_INFO_LENGTH_ERROR = "shortcutInfo length invalid";
 constexpr const char* SHORTCUT_IDS_LENGTH_ERROR = "shortcut Ids length invalid";
 constexpr const char* BUNDLENAME_APPINDEX_NOT_UNIQUE =

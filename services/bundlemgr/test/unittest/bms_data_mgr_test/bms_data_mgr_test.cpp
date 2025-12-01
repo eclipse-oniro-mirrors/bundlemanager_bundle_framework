@@ -5906,6 +5906,477 @@ HWTEST_F(BmsDataMgrTest, DeleteShortcutVisibleInfo_0002, Function | MediumTest |
 }
 
 /**
+ * @tc.number: SetShortcutsEnabled_0001
+ * @tc.name: SetShortcutsEnabled
+ * @tc.desc: test SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    bool isEnabled = true;
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetShortcutsEnabled_0002
+ * @tc.name: SetShortcutsEnabled
+ * @tc.desc: test SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0002, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool isEnabled = true;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(result, ERR_OK);
+    bundleDataMgr.shortcutEnabledStorage_->rdbDataManager_ = nullptr;
+    result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(result, ERR_APPEXECFWK_DB_INSERT_ERROR);
+}
+
+/**
+ * @tc.number: SetShortcutsEnabled_0003
+ * @tc.name: SetShortcutsEnabled
+ * @tc.desc: test SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+ */
+HWTEST_F(BmsDataMgrTest, SetShortcutsEnabled_0003, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool isEnabled = true;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfo.id = "error_id";
+    shortcutInfos.push_back(shortcutInfo);
+    auto result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+}
+
+/**
+ * @tc.number: DeleteShortcutEnabledInfo_0001
+ * @tc.name: DeleteShortcutEnabledInfo
+ * @tc.desc: test DeleteShortcutEnabledInfo(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteShortcutEnabledInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    bool isEnabled = false;
+    bool boolRet = bundleDataMgr.shortcutEnabledStorage_->SaveStorageShortcutEnabledInfos(shortcutInfos, isEnabled);
+    EXPECT_EQ(boolRet, true);
+
+    auto ret = bundleDataMgr.DeleteShortcutEnabledInfo(shortcutInfo.bundleName);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteShortcutEnabledInfo_0002
+ * @tc.name: DeleteShortcutEnabledInfo
+ * @tc.desc: test DeleteShortcutEnabledInfo(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteShortcutEnabledInfo_0002, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.shortcutEnabledStorage_->rdbDataManager_ = nullptr;
+    auto ret = bundleDataMgr.DeleteShortcutEnabledInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_DELETE_ERROR);
+}
+
+/**
+ * @tc.number: DeleteShortcutEnabledInfo_0003
+ * @tc.name: DeleteShortcutEnabledInfo
+ * @tc.desc: test DeleteShortcutEnabledInfo(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteShortcutEnabledInfo_0003, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    bool isEnabled = false;
+    bool boolRet = shortcutEnabledStorageRdb->SaveStorageShortcutEnabledInfos(shortcutInfos, isEnabled);
+    EXPECT_EQ(boolRet, true);
+
+    std::vector<std::string> shortcutIds;
+    shortcutIds.push_back(shortcutInfo.id);
+    boolRet = shortcutEnabledStorageRdb->DeleteShortcutEnabledInfo(shortcutInfo.bundleName, shortcutIds);
+    EXPECT_EQ(boolRet, true);
+}
+
+/**
+ * @tc.number: DeleteShortcutEnabledInfo_0004
+ * @tc.name: DeleteShortcutEnabledInfo
+ * @tc.desc: test DeleteShortcutEnabledInfo(const std::string &bundleName,
+        const std::vector<std::string> &shortcutIdList)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteShortcutEnabledInfo_0004, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::vector<std::string> shortcutIdList;
+    shortcutIdList.clear();
+    auto ret = shortcutEnabledStorageRdb->DeleteShortcutEnabledInfo(bundleName, shortcutIdList);
+    EXPECT_EQ(ret, true);
+    shortcutEnabledStorageRdb->rdbDataManager_ = nullptr;
+    ret = shortcutEnabledStorageRdb->DeleteShortcutEnabledInfo(bundleName, shortcutIdList);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: UpdateShortcutEnabledInfo_0001
+ * @tc.name: UpdateShortcutEnabledInfo
+ * @tc.desc: test UpdateShortcutEnabledInfo
+ */
+HWTEST_F(BmsDataMgrTest, UpdateShortcutEnabledInfo_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    shortcutEnabledStorageRdb->rdbDataManager_ = nullptr;
+    auto ret = shortcutEnabledStorageRdb->UpdateShortcutEnabledInfo(bundleName, shortcutInfos);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: UpdateShortcutEnabledInfo_0002
+ * @tc.name: UpdateShortcutEnabledInfo
+ * @tc.desc: test UpdateShortcutEnabledInfo
+ */
+HWTEST_F(BmsDataMgrTest, UpdateShortcutEnabledInfo_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    ASSERT_NE(shortcutEnabledStorageRdb->rdbDataManager_, nullptr);
+    shortcutEnabledStorageRdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
+
+    std::string bundleName = "com.ohos.hello";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    auto ret = shortcutEnabledStorageRdb->UpdateShortcutEnabledInfo(bundleName, shortcutInfos);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: UpdateShortcutEnabledInfo_0003
+ * @tc.name: UpdateShortcutEnabledInfo
+ * @tc.desc: test UpdateShortcutEnabledInfo
+ */
+HWTEST_F(BmsDataMgrTest, UpdateShortcutEnabledInfo_0003, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    bool isEnabled = false;
+    auto ret = shortcutEnabledStorageRdb->SaveStorageShortcutEnabledInfos(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, true);
+    ret = shortcutEnabledStorageRdb->UpdateShortcutEnabledInfo(bundleName, shortcutInfos);
+    EXPECT_EQ(ret, true);
+    shortcutInfos.clear();
+    ret = shortcutEnabledStorageRdb->UpdateShortcutEnabledInfo(bundleName, shortcutInfos);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: UpdateShortcutEnabledInfo_0004
+ * @tc.name: UpdateShortcutEnabledInfo
+ * @tc.desc: test UpdateShortcutEnabledInfo
+ */
+HWTEST_F(BmsDataMgrTest, UpdateShortcutEnabledInfo_0004, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    auto ret = shortcutEnabledStorageRdb->UpdateShortcutEnabledInfo(bundleName, shortcutInfos);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: GetShortcutEnabledStatus_0001
+ * @tc.name: GetShortcutEnabledStatus
+ * @tc.desc: test GetShortcutEnabledStatus
+ */
+HWTEST_F(BmsDataMgrTest, GetShortcutEnabledStatus_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool isEnabled = true;
+    shortcutEnabledStorageRdb->rdbDataManager_ = nullptr;
+    auto ret = shortcutEnabledStorageRdb->GetShortcutEnabledStatus(bundleName, shortcutId, isEnabled);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: GetShortcutEnabledStatus_0002
+ * @tc.name: GetShortcutEnabledStatus
+ * @tc.desc: test GetShortcutEnabledStatus
+ */
+HWTEST_F(BmsDataMgrTest, GetShortcutEnabledStatus_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    ASSERT_NE(shortcutEnabledStorageRdb->rdbDataManager_, nullptr);
+    shortcutEnabledStorageRdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool isEnabled = true;
+    auto ret = shortcutEnabledStorageRdb->GetShortcutEnabledStatus(bundleName, shortcutId, isEnabled);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
+}
+
+/**
+ * @tc.number: GetShortcutEnabledStatus_0003
+ * @tc.name: GetShortcutEnabledStatus
+ * @tc.desc: test GetShortcutEnabledStatus
+ */
+HWTEST_F(BmsDataMgrTest, GetShortcutEnabledStatus_0003, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool isEnabled = false;
+    auto ret = shortcutEnabledStorageRdb->GetShortcutEnabledStatus(bundleName, shortcutId, isEnabled);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(isEnabled, true);
+}
+
+/**
+ * @tc.number: GetShortcutEnabledStatus_0004
+ * @tc.name: GetShortcutEnabledStatus
+ * @tc.desc: test GetShortcutEnabledStatus
+ */
+HWTEST_F(BmsDataMgrTest, GetShortcutEnabledStatus_0004, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool isEnabled = false;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    auto ret = shortcutEnabledStorageRdb->SaveStorageShortcutEnabledInfos(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, true);
+    isEnabled = true;
+    ret = shortcutEnabledStorageRdb->GetShortcutEnabledStatus(bundleName, shortcutId, isEnabled);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(isEnabled, false);
+    auto boolRet = shortcutEnabledStorageRdb->DeleteShortcutEnabledInfo(bundleName);
+    EXPECT_EQ(boolRet, true);
+}
+
+/**
+ * @tc.number: FilterShortcutInfosEnabled_0001
+ * @tc.name: FilterShortcutInfosEnabled
+ * @tc.desc: test FilterShortcutInfosEnabled
+ */
+HWTEST_F(BmsDataMgrTest, FilterShortcutInfosEnabled_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    shortcutEnabledStorageRdb->rdbDataManager_ = nullptr;
+    shortcutEnabledStorageRdb->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
+    EXPECT_EQ(shortcutInfos.empty(), false);
+}
+
+/**
+ * @tc.number: FilterShortcutInfosEnabled_0002
+ * @tc.name: FilterShortcutInfosEnabled
+ * @tc.desc: test FilterShortcutInfosEnabled
+ */
+HWTEST_F(BmsDataMgrTest, FilterShortcutInfosEnabled_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    ASSERT_NE(shortcutEnabledStorageRdb->rdbDataManager_, nullptr);
+    shortcutEnabledStorageRdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
+    std::string bundleName = "com.ohos.hello";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    shortcutEnabledStorageRdb->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
+    EXPECT_EQ(shortcutInfos.empty(), false);
+}
+
+/**
+ * @tc.number: FilterShortcutInfosEnabled_0003
+ * @tc.name: FilterShortcutInfosEnabled
+ * @tc.desc: test FilterShortcutInfosEnabled
+ */
+HWTEST_F(BmsDataMgrTest, FilterShortcutInfosEnabled_0003, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    shortcutEnabledStorageRdb->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
+    EXPECT_EQ(shortcutInfos.empty(), false);
+}
+
+/**
+ * @tc.number: FilterShortcutInfosEnabled_0004
+ * @tc.name: FilterShortcutInfosEnabled
+ * @tc.desc: test FilterShortcutInfosEnabled
+ */
+HWTEST_F(BmsDataMgrTest, FilterShortcutInfosEnabled_0004, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    std::string bundleName = "com.ohos.hello";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    bool isEnabled = false;
+    auto boolRet = shortcutEnabledStorageRdb->SaveStorageShortcutEnabledInfos(shortcutInfos, isEnabled);
+    EXPECT_EQ(boolRet, true);
+    shortcutEnabledStorageRdb->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
+    EXPECT_EQ(shortcutInfos.empty(), true);
+    boolRet = shortcutEnabledStorageRdb->DeleteShortcutEnabledInfo(bundleName);
+    EXPECT_EQ(boolRet, true);
+}
+
+/**
+ * @tc.number: SaveStorageShortcutEnabledInfos_0001
+ * @tc.name: SaveStorageShortcutEnabledInfos
+ * @tc.desc: test SaveStorageShortcutEnabledInfos
+ */
+HWTEST_F(BmsDataMgrTest, SaveStorageShortcutEnabledInfos_0001, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    shortcutEnabledStorageRdb->rdbDataManager_ = nullptr;
+    bool isEnabled = false;
+    auto ret = shortcutEnabledStorageRdb->SaveStorageShortcutEnabledInfos(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: SaveStorageShortcutEnabledInfos_0002
+ * @tc.name: SaveStorageShortcutEnabledInfos
+ * @tc.desc: test SaveStorageShortcutEnabledInfos
+ */
+HWTEST_F(BmsDataMgrTest, SaveStorageShortcutEnabledInfos_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+    ASSERT_NE(shortcutEnabledStorageRdb->rdbDataManager_, nullptr);
+    shortcutEnabledStorageRdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    shortcutEnabledStorageRdb->rdbDataManager_ = nullptr;
+    bool isEnabled = false;
+    auto ret = shortcutEnabledStorageRdb->SaveStorageShortcutEnabledInfos(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetTargetShortcutInfo_0001
+ * @tc.name: GetTargetShortcutInfo
+ * @tc.desc: test GetTargetShortcutInfo
+ */
+HWTEST_F(BmsDataMgrTest, GetTargetShortcutInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfo.sourceType = Constants::ShortcutSourceType::STATIC_SHORTCUT;
+    shortcutInfos.push_back(shortcutInfo);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    ShortcutInfo targetShortcutInfo;
+    bool isEnabled = false;
+    auto result = bundleDataMgr.shortcutEnabledStorage_->GetShortcutEnabledStatus(bundleName, shortcutId, isEnabled);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(isEnabled, true);
+    isEnabled = false;
+    result = bundleDataMgr.GetTargetShortcutInfo(bundleName, shortcutId, shortcutInfos, targetShortcutInfo);
+    EXPECT_EQ(result, ERR_OK);
+    result = bundleDataMgr.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(result, ERR_OK);
+    result = bundleDataMgr.GetTargetShortcutInfo(bundleName, shortcutId, shortcutInfos, targetShortcutInfo);
+    EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+    std::string errorId = "error_id";
+    result = bundleDataMgr.GetTargetShortcutInfo(bundleName, errorId, shortcutInfos, targetShortcutInfo);
+    EXPECT_EQ(result, ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL);
+    shortcutInfo.sourceType = Constants::ShortcutSourceType::DYNAMIC_SHORTCUT;
+    shortcutInfos.clear();
+    shortcutInfos.push_back(shortcutInfo);
+    result = bundleDataMgr.GetTargetShortcutInfo(bundleName, shortcutId, shortcutInfos, targetShortcutInfo);
+    EXPECT_EQ(result, ERR_OK);
+    bundleDataMgr.shortcutEnabledStorage_->rdbDataManager_ = nullptr;
+    result = bundleDataMgr.GetTargetShortcutInfo(bundleName, shortcutId, shortcutInfos, targetShortcutInfo);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
  * @tc.number: OnExtension_0010
  * @tc.name: OnExtension
  * @tc.desc: test OnExtension can backup and restore
@@ -6439,14 +6910,14 @@ HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0001, Function | MediumTest |
 }
 
 /**
- * @tc.number: UpdateDesktopShortcutInfo_0002
- * @tc.name: UpdateDesktopShortcutInfo
- * @tc.desc: test UpdateDesktopShortcutInfo
+ * @tc.number: UpdateShortcutInfos_0002
+ * @tc.name: UpdateShortcutInfos
+ * @tc.desc: test UpdateShortcutInfos
  */
-HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+HWTEST_F(BmsDataMgrTest, UpdateShortcutInfos_0002, Function | MediumTest | Level1)
 {
     BundleDataMgr bundleDataMgr;
-    bundleDataMgr.UpdateDesktopShortcutInfo(BUNDLE_NAME);
+    bundleDataMgr.UpdateShortcutInfos(BUNDLE_NAME);
 
     std::vector<ShortcutInfo> shortcutInfos;
     bundleDataMgr.GetAllDesktopShortcutInfo(USERID, shortcutInfos);
@@ -6454,7 +6925,7 @@ HWTEST_F(BmsDataMgrTest, UpdateDesktopShortcutInfo_0002, Function | MediumTest |
 
     InnerBundleInfo info;
     bundleDataMgr.bundleInfos_.emplace(BUNDLE_NAME, info);
-    bundleDataMgr.UpdateDesktopShortcutInfo(BUNDLE_NAME);
+    bundleDataMgr.UpdateShortcutInfos(BUNDLE_NAME);
     bundleDataMgr.GetAllDesktopShortcutInfo(USERID, shortcutInfos);
     EXPECT_EQ(shortcutInfos.size(), 0);
 }

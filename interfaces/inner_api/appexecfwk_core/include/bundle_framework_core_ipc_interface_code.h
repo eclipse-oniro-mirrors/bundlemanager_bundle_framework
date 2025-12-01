@@ -242,6 +242,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     ADD_DYNAMIC_SHORTCUT_INFOS = 216,
     DELETE_DYNAMIC_SHORTCUT_INFOS = 217,
     GET_ASSET_GROUPS_INFOS_BY_UID = 218,
+    SET_SHORTCUTS_ENABLED = 219,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

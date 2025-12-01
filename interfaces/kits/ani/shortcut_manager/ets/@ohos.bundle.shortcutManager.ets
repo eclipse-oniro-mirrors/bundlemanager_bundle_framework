@@ -54,6 +54,7 @@ namespace shortcutManager {
   native function getAllShortcutInfoForSelfNative(): Array<ShortcutInfo>;
   native function addDynamicShortcutInfosNative(shortcutInfo: Array<ShortcutInfo>, userId: int): void;
   native function deleteDynamicShortcutInfosNative(bundleName: string, appIndex: int, userId: int, ids: Array<string>): void;
+  native function setShortcutsEnabledNative(shortcutInfo: Array<ShortcutInfo>, isEnabled: boolean): void;
 
   function addDesktopShortcutInfo(shortcutInfo: ShortcutInfo, userId: int): Promise<void> {
     if (shortcutInfo.appIndex < MAIN_APP_INDEX || shortcutInfo.sourceType === ERROR_SOURCETYPE) {
@@ -202,6 +203,24 @@ namespace shortcutManager {
     let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
       let cb = (): Any => {
         return deleteDynamicShortcutInfosNative(bundleName, appIndex, userId, idsValue);
+      }
+      let p1 = taskpool.execute(cb);
+      p1.then((): void => {
+        resolve(Promise.resolve());
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function setShortcutsEnabled(shortcutInfo: Array<ShortcutInfo>, isEnabled: boolean): Promise<void> {
+    if (shortcutInfo.length <= 0 || shortcutInfo.length > MAX_SHORTCUT_INFO_SIZE) {
+      throw createBusinessError(ERROR_PARAM_CHECK_ERROR, SHORTCUT_INFO_LENGTH_ERROR);
+    }
+    let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void): void => {
+      let cb = (): Any => {
+        return setShortcutsEnabledNative(shortcutInfo, isEnabled);
       }
       let p1 = taskpool.execute(cb);
       p1.then((): void => {

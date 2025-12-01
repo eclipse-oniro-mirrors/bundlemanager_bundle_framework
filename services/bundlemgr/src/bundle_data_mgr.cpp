@@ -167,6 +167,7 @@ BundleDataMgr::BundleDataMgr()
     bundleStateStorage_ = std::make_shared<BundleStateStorage>();
     shortcutStorage_ = std::make_shared<ShortcutDataStorageRdb>();
     shortcutVisibleStorage_ = std::make_shared<ShortcutVisibleDataStorageRdb>();
+    shortcutEnabledStorage_ = std::make_shared<ShortcutEnabledDataStorageRdb>();
     routerStorage_ = std::make_shared<RouterDataStorageRdb>();
     uninstallDataMgr_ = std::make_shared<UninstallDataMgrStorageRdb>();
     firstInstallDataMgr_ = std::make_shared<FirstInstallDataMgrStorageRdb>();
@@ -4893,6 +4894,9 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
         APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
     }
     bundleInfos_.erase(bundleName);
+    if (DeleteShortcutEnabledInfo(bundleName) != ERR_OK) {
+        APP_LOGW("DeleteShortcutEnabledInfo failed, bundleName: %{public}s", bundleName.c_str());
+    }
     std::lock_guard<std::mutex> hspLock(hspBundleNameMutex_);
     if (appServiceHspBundleName_.find(bundleName) != appServiceHspBundleName_.end()) {
         appServiceHspBundleName_.erase(bundleName);
@@ -5861,6 +5865,7 @@ bool BundleDataMgr::GetShortcutInfos(
 
     shortcutVisibleStorage_->GetStorageShortcutInfos(
         bundleName, Constants::MAIN_APP_INDEX, requestUserId, shortcutInfos);
+    shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return true;
 }
 
@@ -6046,6 +6051,7 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
 
     shortcutVisibleStorage_->GetStorageShortcutInfos(
         bundleName, Constants::MAIN_APP_INDEX, requestUserId, shortcutInfos);
+    shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
 }
 
@@ -6076,6 +6082,7 @@ ErrCode BundleDataMgr::GetShortcutInfoByAppIndex(const std::string &bundleName, 
         info.appIndex = appIndex;
     }
     shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, requestUserId, shortcutInfos);
+    shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
 }
 
@@ -11637,6 +11644,33 @@ std::string BundleDataMgr::GetCurDynamicIconModule(
     return item->second.GetCurDynamicIconModule(userId, appIndex);
 }
 
+ErrCode BundleDataMgr::GetTargetShortcutInfo(const std::string &bundleName, const std::string &shortcutId,
+    const std::vector<ShortcutInfo> &shortcutInfos, ShortcutInfo &targetShortcutInfo) const
+{
+    bool isEnabled = true;
+    bool isShortcutIdExist = false;
+    auto ret = shortcutEnabledStorage_->GetShortcutEnabledStatus(bundleName, shortcutId, isEnabled);
+    if (ret != ERR_OK) {
+        APP_LOGW("Get isEnabled status failed, shortcut id %{public}s", shortcutId.c_str());
+    }
+    for (const auto& shortcut : shortcutInfos) {
+        if (shortcut.id == shortcutId) {
+            if (shortcut.sourceType == Constants::ShortcutSourceType::STATIC_SHORTCUT && !isEnabled) {
+                APP_LOGE("shortcut id %{public}s is disabled", shortcutId.c_str());
+                return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+            }
+            isShortcutIdExist = true;
+            targetShortcutInfo = shortcut;
+            break;
+        }
+    }
+    if (!isShortcutIdExist) {
+        APP_LOGE("shortcut id %{public}s not exist", shortcutId.c_str());
+        return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::SetShortcutVisibleForSelf(const std::string &shortcutId, bool visible)
 {
     APP_LOGD("SetShortcutVisibleForSelf begin");
@@ -11660,22 +11694,14 @@ ErrCode BundleDataMgr::SetShortcutVisibleForSelf(const std::string &shortcutId, 
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
-    bool isShortcutIdExist = false;
-    ShortcutInfo targetShortcutInfo;
     shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, userId, shortcutInfos);
-    for (const auto& shortcut : shortcutInfos) {
-        if (shortcut.id == shortcutId) {
-            isShortcutIdExist = true;
-            targetShortcutInfo = shortcut;
-            if (targetShortcutInfo.visible == visible) {
-                return ERR_OK;
-            }
-            break;
-        }
+    ShortcutInfo targetShortcutInfo;
+    ret = GetTargetShortcutInfo(bundleName, shortcutId, shortcutInfos, targetShortcutInfo);
+    if (ret != ERR_OK) {
+        return ret;
     }
-    if (!isShortcutIdExist) {
-        APP_LOGE("shortcut id %{public}s not exist", shortcutId.c_str());
-        return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+    if (targetShortcutInfo.visible == visible) {
+        return ERR_OK;
     }
     targetShortcutInfo.visible = visible;
     if (!shortcutVisibleStorage_->SaveStorageShortcutVisibleInfo(
@@ -11726,6 +11752,7 @@ ErrCode BundleDataMgr::GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shor
     }
 
     shortcutVisibleStorage_->GetStorageShortcutInfos(bundleName, appIndex, userId, shortcutInfos);
+    shortcutEnabledStorage_->FilterShortcutInfosEnabled(bundleName, shortcutInfos);
     return ERR_OK;
 }
 
@@ -12018,9 +12045,9 @@ void BundleDataMgr::FilterShortcutJson(nlohmann::json &jsonResult)
     }
 }
 
-void BundleDataMgr::UpdateDesktopShortcutInfo(const std::string &bundleName)
+void BundleDataMgr::UpdateShortcutInfos(const std::string &bundleName)
 {
-    APP_LOGD("UpdateDesktopShortcutInfo begin");
+    APP_LOGD("UpdateShortcutInfos begin");
     std::vector<ShortcutInfo> shortcutInfos;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -12033,9 +12060,64 @@ void BundleDataMgr::UpdateDesktopShortcutInfo(const std::string &bundleName)
         }
     }
     if (shortcutInfos.empty()) {
+        shortcutEnabledStorage_->DeleteShortcutEnabledInfo(bundleName);
         return;
+    } else {
+        shortcutStorage_->UpdateDesktopShortcutInfo(bundleName, shortcutInfos);
+        shortcutEnabledStorage_->UpdateShortcutEnabledInfo(bundleName, shortcutInfos);
     }
-    shortcutStorage_->UpdateDesktopShortcutInfo(bundleName, shortcutInfos);
+}
+
+ErrCode BundleDataMgr::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+{
+    APP_LOGD("SetShortcutsEnabled begin");
+    std::string bundleName;
+    std::string shortcutId;
+    std::vector<ShortcutInfo> shortcutInfosInBundle;
+    bool isShortcutIdExist = false;
+    for (const auto& shortcutinfo : shortcutInfos) {
+        bundleName = shortcutinfo.bundleName;
+        shortcutId = shortcutinfo.id;
+        shortcutInfosInBundle.clear();
+        {
+            std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+            auto iter = bundleInfos_.find(bundleName);
+            if (iter != bundleInfos_.end()) {
+                GetShortcutInfosByInnerBundleInfo(iter->second, shortcutInfosInBundle);
+            } else {
+                APP_LOGE("%{public}s not exist", bundleName.c_str());
+                return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+            }
+        }
+        isShortcutIdExist = false;
+        for (const auto& shortcutInBundle : shortcutInfosInBundle) {
+            if (shortcutInBundle.id == shortcutId) {
+                isShortcutIdExist = true;
+                break;
+            }
+        }
+        if (!isShortcutIdExist) {
+            APP_LOGE("shortcut id %{public}s not exist", shortcutId.c_str());
+            return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+        }
+    }
+
+    if (!(shortcutEnabledStorage_->SaveStorageShortcutEnabledInfos(shortcutInfos, isEnabled))) {
+        APP_LOGE("SaveStorageShortcutEnabledInfos failed");
+        return ERR_APPEXECFWK_DB_INSERT_ERROR;
+    }
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyShortcutsEnabledChanged(shortcutInfos, isEnabled);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::DeleteShortcutEnabledInfo(const std::string &bundleName)
+{
+    APP_LOGD("DeleteShortcutEnabledInfo by remove App, bundleName:%{public}s", bundleName.c_str());
+    if (!shortcutEnabledStorage_->DeleteShortcutEnabledInfo(bundleName)) {
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,

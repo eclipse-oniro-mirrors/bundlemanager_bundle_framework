@@ -39,6 +39,10 @@ ohos_shared_library("ani_shortcut_manager") {
     "LOG_DOMAIN = 0xD001120",
   ]
 
+  if (bundle_framework_launcher) {
+    defines += [ "BUNDLE_FRAMEWORK_LAUNCHER" ]
+  }
+
   deps = [
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",

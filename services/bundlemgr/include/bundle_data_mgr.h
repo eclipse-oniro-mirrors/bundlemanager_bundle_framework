@@ -58,6 +58,7 @@
 #include "preinstall_data_storage_interface.h"
 #include "router_data_storage_interface.h"
 #include "shortcut_data_storage_interface.h"
+#include "shortcut_enabled_data_storage_rdb.h"
 #include "shortcut_visible_data_storage_rdb.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
@@ -1218,13 +1219,15 @@ public:
     ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex, int32_t userId,
         const std::vector<std::string> &ids);
     void UpdateShortcutInfoResId(const std::string &bundleName, const int32_t userId);
+    ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
+    ErrCode DeleteShortcutEnabledInfo(const std::string &bundleName);
     bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,
         const int32_t patchVersion);
     ErrCode GetAllCloneAppIndexesAndUidsByInnerBundleInfo(const int32_t userId, std::unordered_map<std::string,
         std::vector<std::pair<int32_t, int32_t>>> &cloneInfos) const;
     void FilterShortcutJson(nlohmann::json &jsonResult);
     ErrCode IsSystemApp(const std::string &bundleName, bool &isSystemApp);
-    void UpdateDesktopShortcutInfo(const std::string &bundleName);
+    void UpdateShortcutInfos(const std::string &bundleName);
     ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo);
     bool SetBundleUserInfoRemovable(const std::string bundleName, int32_t userId, bool removable);
@@ -1463,6 +1466,8 @@ private:
         const std::vector<ShortcutInfo> &shortcutInfos, std::vector<std::string> &ids) const;
     ErrCode CheckModuleNameAndAbilityName(const std::vector<ShortcutInfo>& shortcutInfos,
         const InnerBundleInfo& innerBundleInfo) const;
+    ErrCode GetTargetShortcutInfo(const std::string &bundleName, const std::string &shortcutId,
+        const std::vector<ShortcutInfo> &shortcutInfos, ShortcutInfo &targetShortcutInfo) const;
 
 private:
     bool initialUserFlag_ = false;
@@ -1487,6 +1492,7 @@ private:
     std::shared_ptr<UninstallDataMgrStorageRdb> uninstallDataMgr_;
     std::shared_ptr<FirstInstallDataMgrStorageRdb> firstInstallDataMgr_;
     std::shared_ptr<ShortcutVisibleDataStorageRdb> shortcutVisibleStorage_;
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorage_;
     // use vector because these functions using for IPC, the bundleName may duplicate
     std::vector<sptr<IBundleStatusCallback>> callbackList_;
     // common event callback

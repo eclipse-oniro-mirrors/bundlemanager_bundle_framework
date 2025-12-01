@@ -1093,7 +1093,7 @@ void BaseBundleInstaller::ProcessUpdateShortcut()
     if (!isAppExist_ || !InitDataMgr()) {
         return;
     }
-    dataMgr_->UpdateDesktopShortcutInfo(bundleName_);
+    dataMgr_->UpdateShortcutInfos(bundleName_);
 }
 
 ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const bool isOldSystemApp)
