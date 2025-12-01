@@ -89,7 +89,16 @@ void InstallExceptionMgr::HandleBundleExceptionInfo(
         case InstallRenameExceptionStatus::DELETE_OLD_PATH : {
             std::string oldPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
                 std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
-            ErrCode result = InstalldClient::GetInstance()->RemoveDir(oldPath);
+            std::string tempPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
+                std::string(ServiceConstants::BUNDLE_TEMP_CODE_DIR) + bundleName;
+            // rename first
+            ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldPath, tempPath);
+            if (result == ERR_OK) {
+                result = InstalldClient::GetInstance()->RemoveDir(tempPath);
+            } else {
+                APP_LOGE("rename temp dir failed, error is %{public}d, errno %{public}d", result, errno);
+                result = InstalldClient::GetInstance()->RemoveDir(oldPath);
+            }
             if (result == ERR_OK) {
                 (void)DeleteBundleExceptionInfo(bundleName);
             } else {
@@ -135,6 +144,12 @@ void InstallExceptionMgr::HandleAllBundleExceptionInfo()
                 ServiceConstants::PATH_SEPARATOR + codePath;
             std::string realCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
                 ServiceConstants::PATH_SEPARATOR + bundleName;
+            // realPath exist, then delete +old-
+            if (std::find(allCodePath.begin(), allCodePath.end(), bundleName) != allCodePath.end()) {
+                (void)InstalldClient::GetInstance()->RemoveDir(oldCodePath);
+                continue;
+            }
+            // realPath not exist, then rename +old-
             ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldCodePath, realCodePath);
             if (result != ERR_OK) {
                 APP_LOGW("rename +old- to real code path failed, error is %{public}d", result);
@@ -146,6 +161,13 @@ void InstallExceptionMgr::HandleAllBundleExceptionInfo()
             std::string newCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
                 ServiceConstants::PATH_SEPARATOR + codePath;
             (void)InstalldClient::GetInstance()->RemoveDir(newCodePath);
+            continue;
+        }
+        if (codePath.find(ServiceConstants::BUNDLE_TEMP_CODE_DIR) == 0) {
+            APP_LOGI("+temp- code path %{public}s", codePath.c_str());
+            std::string tempCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
+                ServiceConstants::PATH_SEPARATOR + codePath;
+            (void)InstalldClient::GetInstance()->RemoveDir(tempCodePath);
         }
     }
     APP_LOGI("handle exception end");
