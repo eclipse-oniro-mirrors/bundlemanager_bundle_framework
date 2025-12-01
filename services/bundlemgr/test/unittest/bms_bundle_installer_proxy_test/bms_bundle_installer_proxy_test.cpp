@@ -96,6 +96,88 @@ sptr<IBundleInstaller> BmsBundleInstallerProxyTest::GetInstallerProxy()
 }
 
 /**
+ * @tc.number: Install_0100
+ * @tc.name: test the Install
+ * @tc.desc: 1. statusReceiver is nullptr
+ *           2. test Install
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, Install_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string bundlePath = "bundlePath";
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.userId = 100;
+    sptr<IStatusReceiver> statusReceiver = nullptr;
+    auto res = bundleInstallerProxy.Install(bundlePath, installParam, statusReceiver);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: Install_0200
+ * @tc.name: test the Install
+ * @tc.desc: 1. write parcel failed
+ *           2. test Install
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, Install_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string bundlePath = "bundlePath";
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.userId = 100;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(statusReceiver, nullptr);
+    auto res = bundleInstallerProxy.Install(bundlePath, installParam, statusReceiver);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: Install_0300
+ * @tc.name: test the Install
+ * @tc.desc: 1. statusReceiver is nullptr
+ *           2. test Install
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, Install_0300, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string bundlePath = "bundlePath";
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.emplace_back(bundlePath);
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.userId = 100;
+    sptr<IStatusReceiver> statusReceiver = nullptr;
+    auto res = bundleInstallerProxy.Install(bundleFilePaths, installParam, statusReceiver);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: Install_0400
+ * @tc.name: test the Install
+ * @tc.desc: 1. write parcel failed
+ *           2. test Install
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, Install_0400, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    std::string bundlePath = "bundlePath";
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.emplace_back(bundlePath);
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.userId = 100;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(statusReceiver, nullptr);
+    auto res = bundleInstallerProxy.Install(bundleFilePaths, installParam, statusReceiver);
+    EXPECT_FALSE(res);
+}
+
+/**
  * @tc.number: Recover_0100
  * @tc.name: test the Recover
  * @tc.desc: 1. statusReceiver is nullptr
@@ -755,6 +837,24 @@ HWTEST_F(BmsBundleInstallerProxyTest, GetFileNameByFilePath_0100, Function | Med
     std::string fileName = "fileName";
     auto res = bundleInstallerProxy.GetFileNameByFilePath(filePath, fileName);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: SendInstallRequest_0100
+ * @tc.name: test the SendInstallRequest
+ * @tc.desc: 1. Remote() is nullptr
+ *           2. test SendInstallRequest
+ */
+HWTEST_F(BmsBundleInstallerProxyTest, SendInstallRequest_0100, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy bundleInstallerProxy(object);
+    BundleInstallerInterfaceCode code = BundleInstallerInterfaceCode::INSTALL;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    auto res = bundleInstallerProxy.SendInstallRequest(code, data, reply, option);
+    EXPECT_FALSE(res);
 }
 
 /**

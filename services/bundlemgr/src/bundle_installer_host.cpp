@@ -77,6 +77,12 @@ int BundleInstallerHost::OnRemoteRequest(
         return OBJECT_NULL;
     }
     switch (code) {
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL):
+            HandleInstallMessage(data);
+            break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS):
+            HandleInstallMultipleHapsMessage(data);
+            break;
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL):
             HandleUninstallMessage(data);
             break;
@@ -125,6 +131,35 @@ int BundleInstallerHost::OnRemoteRequest(
     return NO_ERROR;
 }
 
+void BundleInstallerHost::HandleInstallMessage(MessageParcel &data)
+{
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Install", HITRACE_FLAG_INCLUDE_ASYNC);
+    LOG_D(BMS_TAG_INSTALLER, "handle install message");
+    std::string bundlePath = Str16ToStr8(data.ReadString16());
+    std::unique_ptr<InstallParam> installParam(data.ReadParcelable<InstallParam>());
+    if (installParam == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "ReadParcelable<InstallParam> failed");
+        return;
+    }
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "read failed");
+        return;
+    }
+    sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    if (statusReceiver == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver is nullptr");
+        return;
+    }
+    installParam->withCopyHaps = true;
+    installParam->pgoParams.clear();
+    if (installParam->parameters.find(ServiceConstants::ENTERPRISE_MANIFEST) != installParam->parameters.end()) {
+        installParam->parameters.erase(ServiceConstants::ENTERPRISE_MANIFEST);
+    }
+    Install(bundlePath, *installParam, statusReceiver);
+    LOG_D(BMS_TAG_INSTALLER, "handle install message finished");
+}
+
 void BundleInstallerHost::HandleRecoverMessage(MessageParcel &data)
 {
     BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Recover", HITRACE_FLAG_INCLUDE_ASYNC);
@@ -149,6 +184,47 @@ void BundleInstallerHost::HandleRecoverMessage(MessageParcel &data)
     installParam->preinstallSourceFlag = ApplicationInfoFlag::FLAG_RECOVER_INSTALLED;
     Recover(bundleName, *installParam, statusReceiver);
     LOG_D(BMS_TAG_INSTALLER, "handle install message by bundleName finished");
+}
+
+void BundleInstallerHost::HandleInstallMultipleHapsMessage(MessageParcel &data)
+{
+    BUNDLE_MANAGER_HITRACE_CHAIN_NAME("Install", HITRACE_FLAG_INCLUDE_ASYNC);
+    LOG_D(BMS_TAG_INSTALLER, "handle install multiple haps message");
+    int32_t size = data.ReadInt32();
+    if (size > ServiceConstants::MAX_HAP_NUMBER) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle path size is greater than the max hap number 128");
+        return;
+    }
+    std::vector<std::string> pathVec;
+    for (int i = 0; i < size; ++i) {
+        pathVec.emplace_back(Str16ToStr8(data.ReadString16()));
+    }
+    if (size == 0 || pathVec.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "inputted bundlepath vector is empty");
+        return;
+    }
+    std::unique_ptr<InstallParam> installParam(data.ReadParcelable<InstallParam>());
+    if (installParam == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "ReadParcelable<InstallParam> failed");
+        return;
+    }
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "read failed");
+        return;
+    }
+    sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    if (statusReceiver == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "statusReceiver is nullptr");
+        return;
+    }
+    installParam->withCopyHaps = true;
+    installParam->pgoParams.clear();
+    if (installParam->parameters.find(ServiceConstants::ENTERPRISE_MANIFEST) != installParam->parameters.end()) {
+        installParam->parameters.erase(ServiceConstants::ENTERPRISE_MANIFEST);
+    }
+    Install(pathVec, *installParam, statusReceiver);
+    LOG_D(BMS_TAG_INSTALLER, "handle install multiple haps finished");
 }
 
 void BundleInstallerHost::HandleUninstallMessage(MessageParcel &data)

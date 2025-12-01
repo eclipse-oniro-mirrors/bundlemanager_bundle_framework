@@ -29,6 +29,17 @@ public:
     explicit BundleInstallerProxy(const sptr<IRemoteObject> &object);
     virtual ~BundleInstallerProxy() override;
     /**
+     * @brief Installs an application through the proxy object.
+     * @attention Notice that the bundleFilePath should be an absolute path.
+     * @param bundleFilePath Indicates the path for storing the ohos Ability Package (HAP) of the application
+     *                       to install or update.
+     * @param installParam Indicates the install parameters.
+     * @param statusReceiver Indicates the callback object that using for notifing the install result.
+     * @return Returns true if this function is successfully called; returns false otherwise.
+     */
+    virtual bool Install(const std::string &bundleFilePath, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver) override;
+    /**
      * @brief Installs an application by bundleName, the final result will be notified from the statusReceiver object.
      * @param bundleName Indicates the bundleName of the application to install.
      * @param installParam Indicates the install parameters.
@@ -36,6 +47,17 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     virtual bool Recover(const std::string &bundleName, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver) override;
+    /**
+     * @brief Installs multiple haps, the final result will be notified from the statusReceiver object.
+     * @attention Notice that the bundleFilePath should be an string vector of absolute paths.
+     * @param bundleFilePaths Indicates the paths for storing the ohos Ability Packages (HAP) of the application
+     *                       to install or update.
+     * @param installParam Indicates the install parameters.
+     * @param statusReceiver Indicates the callback object that using for notifing the install result.
+     * @return Returns true if this function is successfully called; returns false otherwise.
+     */
+    virtual bool Install(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver) override;
     /**
      * @brief Uninstalls an application through the proxy object.

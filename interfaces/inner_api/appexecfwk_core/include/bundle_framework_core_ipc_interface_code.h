@@ -285,9 +285,8 @@ enum class BundleEventCallbackInterfaceCode : uint8_t {
 
 /* SAID: 401-43 Interface No.43 subservice also provides the following interfaces */
 enum class BundleInstallerInterfaceCode : uint8_t {
-    // deprecated install interfaces
-    // INSTALL = 0,
-    // INSTALL_MULTIPLE_HAPS = 1,
+    INSTALL = 0,
+    INSTALL_MULTIPLE_HAPS = 1,
     UNINSTALL = 2,
     UNINSTALL_MODULE = 3,
     UNINSTALL_BY_UNINSTALL_PARAM = 4,
