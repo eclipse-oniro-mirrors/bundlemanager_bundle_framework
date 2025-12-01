@@ -413,6 +413,7 @@ napi_value GetAllShortcutInfoForSelf(napi_env env, napi_callback_info info)
     return promise;
 }
 
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
 static bool CheckShortcutInfo(napi_env env, const std::string &referenceBundleName, const int32_t referenceAppIndex,
     std::unordered_set<std::string> &shortcutIds, ShortcutInfo &shortcutInfo)
 {
@@ -539,9 +540,11 @@ void AddDynamicShortcutInfosComplete(napi_env env, napi_status status, void *dat
     CommonFunc::NapiReturnDeferred<AddDynamicShortcutInfosCallbackInfo>(
         env, asyncCallbackInfo, result, ARGS_POS_ONE);
 }
+#endif
 
 napi_value AddDynamicShortcutInfos(napi_env env, napi_callback_info info)
 {
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
     APP_LOGD("Napi begin AddDynamicShortcutInfos");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
@@ -579,8 +582,16 @@ napi_value AddDynamicShortcutInfos(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("Call AddDynamicShortcutInfos done");
     return promise;
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        ADD_DYNAMIC_SHORTCUT_INFOS);
+    napi_throw(env, error);
+    return nullptr;
+#endif
 }
 
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
 static ErrCode InnerDeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
     const int32_t userId, const std::vector<std::string> &ids)
 {
@@ -645,7 +656,7 @@ static bool ParseShortcutIds(napi_env env, std::vector<std::string> &shortcutIds
         if (id.empty() || !shortcutIdsSet.insert(id).second) {
             APP_LOGE("ShortcutId is illegal");
             napi_value businessError = BusinessError::CreateCommonError(
-                env, ERROR_SHORTCUT_ID_ILLEGAL_ERROR, ADD_DYNAMIC_SHORTCUT_INFOS, PERMISSION_DYNAMIC_SHORTCUT_INFO);
+                env, ERROR_SHORTCUT_ID_ILLEGAL_ERROR, DELETE_DYNAMIC_SHORTCUT_INFOS, PERMISSION_DYNAMIC_SHORTCUT_INFO);
             napi_throw(env, businessError);
             return false;
         }
@@ -691,9 +702,11 @@ static bool ParseDeleteDynamicParam(
 
     return true;
 }
+#endif
 
 napi_value DeleteDynamicShortcutInfos(napi_env env, napi_callback_info info)
 {
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
     APP_LOGD("Napi begin DeleteDynamicShortcutInfos");
 
     DeleteDynamicShortcutInfosCallbackInfo* asyncCallbackInfo =
@@ -710,12 +723,19 @@ napi_value DeleteDynamicShortcutInfos(napi_env env, napi_callback_info info)
     }
 
     auto promise = CommonFunc::AsyncCallNativeMethod<DeleteDynamicShortcutInfosCallbackInfo>(
-        env, asyncCallbackInfo, "DeleteDynamicShortcutInfos",
+        env, asyncCallbackInfo, DELETE_DYNAMIC_SHORTCUT_INFOS,
         DeleteDynamicShortcutInfosExec, DeleteDynamicShortcutInfosComplete);
 
     callbackPtr.release();
     APP_LOGD("Call DeleteDynamicShortcutInfos done");
     return promise;
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        DELETE_DYNAMIC_SHORTCUT_INFOS);
+    napi_throw(env, error);
+    return nullptr;
+#endif
 }
 } // AppExecFwk
 } // OHOS
