@@ -98,6 +98,7 @@ const char* EVENT_PARAM_WANT = "WANT";
 const char* EVENT_PARAM_UTD = "UTD";
 const char* EVENT_SHORTCUT_ID = "SHORTCUT_ID";
 const char* EVENT_OP_TYPE = "OP_TYPE";
+const char* EVENT_PARAM_IS_KEEPDATA = "IS_KEEPDATA";
 
 // API and SDK version
 const char* EVENT_PARAM_MIN_API_VERSION = "MIN_API_VERSION";
@@ -396,7 +397,8 @@ void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& e
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
-        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted);
+        EVENT_PARAM_IS_INTERCEPTED, eventInfo.isIntercepted,
+        EVENT_PARAM_IS_KEEPDATA, eventInfo.isKeepData);
 }
 
 void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& eventInfo)
@@ -529,7 +531,8 @@ void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
-        EVENT_PARAM_APP_INDEX, eventInfo.appIndex);
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_PARAM_IS_KEEPDATA, eventInfo.isKeepData);
 }
 
 void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)

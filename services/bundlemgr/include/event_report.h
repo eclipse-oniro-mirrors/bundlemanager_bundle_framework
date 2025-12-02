@@ -146,6 +146,9 @@ struct EventInfo {
     // abc compressed
     bool isAbcCompressed = false;
 
+    // is keepdata for unisntall
+    bool isKeepData = false;
+
     InstallScene preBundleScene = InstallScene::NORMAL;
 
     // only used in user event

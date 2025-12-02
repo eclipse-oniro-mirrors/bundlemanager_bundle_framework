@@ -30,6 +30,7 @@ BUNDLE_INSTALL_EXCEPTION:
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
+  IS_PATCHED: {type: BOOL, desc: is patched}
 
 BUNDLE_UNINSTALL_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle uninstall}
@@ -44,6 +45,7 @@ BUNDLE_UNINSTALL_EXCEPTION:
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
+  IS_KEEPDATA: {type: BOOL, desc: is keepdata}
 
 BUNDLE_UPDATE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle update}
@@ -57,6 +59,7 @@ BUNDLE_UPDATE_EXCEPTION:
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
+  IS_PATCHED: {type: BOOL, desc: is patched}
 
 PRE_BUNDLE_RECOVER_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when prebundle recover}
@@ -129,6 +132,7 @@ BUNDLE_INSTALL:
   COMPILE_SDK_VERSION: {type: STRING, arrsize: 99, desc: compileSdkVersion}
   UID: {type: INT32, desc: uid}
   IS_ABC_COMPRESSED: {type: BOOL, desc: isAbcCompressed}
+  IS_PATCHED: {type: BOOL, desc: is patched}
 
 BUNDLE_UNINSTALL:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle uninstall}
@@ -142,6 +146,7 @@ BUNDLE_UNINSTALL:
   CALLING_APP_ID: {type: STRING, desc: calling appId}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   APP_INDEX: {type: INT32, desc: app index}
+  IS_KEEPDATA: {type: BOOL, desc: is keepdata}
 
 BUNDLE_UPDATE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle update}
@@ -165,6 +170,7 @@ BUNDLE_UPDATE:
   COMPILE_SDK_VERSION: {type: STRING, arrsize: 99, desc: compileSdkVersion}
   UID: {type: INT32, desc: uid}
   IS_ABC_COMPRESSED: {type: BOOL, desc: isAbcCompressed}
+  IS_PATCHED: {type: BOOL, desc: is patched}
 
 PRE_BUNDLE_RECOVER:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: prebundle recover}

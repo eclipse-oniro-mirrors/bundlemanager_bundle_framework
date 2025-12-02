@@ -5739,6 +5739,7 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     sysEventInfo_.versionCode = versionCode_;
     sysEventInfo_.preBundleScene = preBundleScene;
     sysEventInfo_.isPatch = installParam.isPatch;
+    sysEventInfo_.isKeepData = installParam.isKeepData;
     GetCallingEventInfo(sysEventInfo_);
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo_);
 }
