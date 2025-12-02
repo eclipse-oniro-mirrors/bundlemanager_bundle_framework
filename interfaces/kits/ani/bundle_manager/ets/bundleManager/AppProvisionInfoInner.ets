@@ -28,7 +28,7 @@ export class AppProvisionInfoInner implements AppProvisionInfo {
   public readonly issuer: string = '';
   public readonly appIdentifier: string = '';
   public readonly organization: string = '';
-  public readonly bundleName: string = '';
+  public readonly bundleName?: string | undefined;
 
   constructor() { }
   constructor(versionCode: long,
@@ -43,7 +43,7 @@ export class AppProvisionInfoInner implements AppProvisionInfo {
     issuer: string,
     appIdentifier: string,
     organization: string,
-    bundleName: string) {
+    bundleName?: string) {
       this.versionCode = versionCode;
       this.versionName = versionName;
       this.uuid = uuid;
