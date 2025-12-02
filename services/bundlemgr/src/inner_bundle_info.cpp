@@ -17,7 +17,6 @@
 
 #include <regex>
 
-#include "account_helper.h"
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_constants.h"
 #include "app_control_manager.h"
@@ -3901,8 +3900,6 @@ bool InnerBundleInfo::IsBundleCrossAppSharedConfig() const
 
 bool InnerBundleInfo::IsBundleRemovable() const
 {
-    int32_t userId = AccountHelper::GetUserIdByCallerType();
-    std::string stringUserId = std::to_string(userId);
     if (IsPreInstallApp()) {
         APP_LOGE("PreInstallApp should not be cleaned");
         return false;
@@ -3913,15 +3910,16 @@ bool InnerBundleInfo::IsBundleRemovable() const
             return false;
         }
 
-        auto iter = innerModuleInfo.second.isRemovable.find(stringUserId);
-        if (iter != innerModuleInfo.second.isRemovable.end() && !iter->second) {
-            APP_LOGD("module %{public}s is not removable for user %{public}s",
-                innerModuleInfo.first.c_str(), stringUserId.c_str());
-            return false;
+        for (const auto &stateIter : innerModuleInfo.second.isRemovable) {
+            if (!stateIter.second) {
+                return false;
+            }
         }
 
-        if (IsRemovableSet(innerModuleInfo.second, userId)) {
-            return false;
+        for (const auto &stateIter : innerModuleInfo.second.isRemovableSet) {
+            if (!stateIter.empty()) {
+                return false;
+            }
         }
     }
     return true;
@@ -4034,7 +4032,7 @@ ErrCode InnerBundleInfo::IsModuleRemovable(
     auto item = modInfoItem->isRemovable.find(std::to_string(userId));
     if (item == modInfoItem->isRemovable.end()) {
         APP_LOGW("userId:%{public}d not moduleName:%{public}s", userId, moduleName.c_str());
-        isRemovable = false;
+        isRemovable = true;
         return ERR_OK;
     }
 
