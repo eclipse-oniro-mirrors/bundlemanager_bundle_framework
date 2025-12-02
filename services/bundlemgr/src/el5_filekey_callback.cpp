@@ -81,15 +81,6 @@ void El5FilekeyCallback::ProcessAppEl5Dir(const Security::AccessToken::AppKeyInf
         APP_LOGE("SetEncryptionPolicy failed for %{public}s", info.bundleName.c_str());
         return;
     }
-    // update the keyId to the bundleInfo
-    CreateDirParam param;
-    param.bundleName = info.bundleName;
-    param.userId = info.userId;
-    param.appIndex = appIndex;
-    if (!dataMgr->UpdateEl5KeyId(param, keyId)) {
-        APP_LOGE("save keyId failed");
-        return;
-    }
     APP_LOGI("OnRegenerateAppKey success for %{public}s", info.bundleName.c_str());
 }
 

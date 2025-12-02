@@ -44,8 +44,6 @@ struct InnerBundleUserInfo {
     int64_t firstInstallTime = 0;
     std::string bundleName;
 
-    // encryption key id
-    std::string keyId;
     std::vector<int32_t> gids;
 
     // dynamic icon

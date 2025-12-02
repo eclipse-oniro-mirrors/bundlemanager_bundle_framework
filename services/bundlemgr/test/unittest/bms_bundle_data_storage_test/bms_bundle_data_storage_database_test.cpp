@@ -5094,47 +5094,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10200, Function | Med
 }
 
 /**
- * @tc.number: InnerBundleInfo_10300
- * @tc.name: Test SetkeyId
- * @tc.desc: Test the SetkeyId of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10300, Function | MediumTest | Level1)
-{
-    InnerBundleInfo info;
-    info.SetkeyId(Constants::ALL_USERID, "");
-    EXPECT_EQ(info.innerBundleUserInfos_.size(), 0);
-}
-
-/**
- * @tc.number: InnerBundleInfo_10400
- * @tc.name: Test SetkeyId
- * @tc.desc: Test the SetkeyId of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10400, Function | MediumTest | Level1)
-{
-    InnerBundleInfo info;
-    info.SetkeyId(Constants::ALL_USERID, TEST_KEY);
-    EXPECT_EQ(info.innerBundleUserInfos_.size(), 0);
-}
-
-/**
- * @tc.number: InnerBundleInfo_10500
- * @tc.name: Test SetkeyId
- * @tc.desc: Test the SetkeyId of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_10500, Function | MediumTest | Level1)
-{
-    InnerBundleInfo info;
-    info.baseApplicationInfo_->bundleName = TEST_BUNDLE_NAME;
-    InnerBundleUserInfo innerBundleUserInfo;
-    std::string key = TEST_BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(Constants::ALL_USERID);
-    info.innerBundleUserInfos_.try_emplace(key, innerBundleUserInfo);
-    info.SetkeyId(Constants::ALL_USERID, TEST_KEY);
-    auto infoItem = info.innerBundleUserInfos_.find(key);
-    EXPECT_EQ(infoItem->second.keyId, TEST_KEY);
-}
-
-/**
  * @tc.number: InnerBundleInfo_10600
  * @tc.name: Test IsAbilityEnabled
  * @tc.desc: Test the IsAbilityEnabled of InnerBundleInfo
