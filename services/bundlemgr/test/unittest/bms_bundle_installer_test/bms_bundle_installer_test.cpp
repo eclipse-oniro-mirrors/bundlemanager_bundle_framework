@@ -13041,43 +13041,105 @@ HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_0100, Function | Sma
     BaseBundleInstaller installer;
     InstallParam installParam;
     ErrCode result = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    installer.CheckInstallAllowDowngrade(installParam, true, false, result);
+    InnerBundleInfo oldBundleInfo;
+    oldBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     result = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    installer.CheckInstallAllowDowngrade(installParam, false, false, result);
+    oldBundleInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
-    installer.CheckInstallAllowDowngrade(installParam, true, false, result);
+    oldBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
 
     result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
-    installer.CheckInstallAllowDowngrade(installParam, false, false, result);
+    oldBundleInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
 
     installer.isContainEntry_ = true;
     installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "false";
     result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
-    installer.CheckInstallAllowDowngrade(installParam, false, false, result);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
 
     installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
     result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
-    installer.CheckInstallAllowDowngrade(installParam, false, false, result);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
     EXPECT_EQ(result, ERR_OK);
 
     result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
-    installer.CheckInstallAllowDowngrade(installParam, false, true, result);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.isEntry = true;
+    oldBundleInfo.innerModuleInfos_[BUNDLE_NAME] = moduleInfo;
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
     EXPECT_EQ(result, ERR_OK);
 
     installer.isContainEntry_ = false;
     result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
-    installer.CheckInstallAllowDowngrade(installParam, false, true, result);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_NOT_COMPATIBLE);
 
     result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
-    installer.CheckInstallAllowDowngrade(installParam, false, false, result);
+    oldBundleInfo.innerModuleInfos_.clear();
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallAllowDowngrade_0200
+ * @tc.name: test CheckInstallAllowDowngrade
+ * @tc.desc: 1.Test the CheckInstallAllowDowngrade
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+    ErrCode result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    InnerBundleInfo oldBundleInfo;
+    oldBundleInfo.SetEntryInstallationFree(true);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallAllowDowngrade_0300
+ * @tc.name: test CheckInstallAllowDowngrade
+ * @tc.desc: 1.Test the CheckInstallAllowDowngrade
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallAllowDowngrade_0300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE] = "true";
+    ErrCode result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    InnerBundleInfo oldBundleInfo;
+    oldBundleInfo.SetEntryInstallationFree(false);
+    oldBundleInfo.SetAppProvisionType(Constants::APP_PROVISION_TYPE_DEBUG);
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.profileBlockLength = 100;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME);
+
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    oldBundleInfo.SetAppProvisionType(Constants::APP_PROVISION_TYPE_RELEASE);
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME);
+
+    result = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    oldBundleInfo.SetAppProvisionType(Constants::APP_PROVISION_TYPE_RELEASE);
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    installer.verifyRes_.SetProvisionInfo(provisionInfo);
+    installer.CheckInstallAllowDowngrade(installParam, oldBundleInfo, result);
     EXPECT_EQ(result, ERR_OK);
 }
 

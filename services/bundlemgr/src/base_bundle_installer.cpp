@@ -921,7 +921,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         CHECK_RESULT(result, "CheckInstallationFree failed %{public}d");
         // to guarantee that the hap version can be compatible.
         result = CheckVersionCompatibility(oldInfo);
-        CheckInstallAllowDowngrade(installParam, oldInfo.IsSystemApp(), oldInfo.HasEntry(), result);
+        CheckInstallAllowDowngrade(installParam, oldInfo, result);
         CHECK_RESULT(result, "The app has been installed and update lower version bundle %{public}d");
         // to check native file between oldInfo and newInfos.
         result = CheckNativeFileWithOldInfo(oldInfo, newInfos);
@@ -4937,20 +4937,35 @@ bool BaseBundleInstaller::InitDataMgr()
 }
 
 void BaseBundleInstaller::CheckInstallAllowDowngrade(
-    const InstallParam &installParam, bool isSystemApp, bool hasEntry, ErrCode &result)
+    const InstallParam &installParam, const InnerBundleInfo &oldBundleInfo, ErrCode &result)
 {
-    if ((result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) || isSystemApp) {
+    if ((result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) || oldBundleInfo.IsSystemApp()) {
         return;
     }
     auto item = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE);
     if ((item == installParam.parameters.end()) || (item->second != ServiceConstants::BMS_TRUE)) {
         return;
     }
-    if (hasEntry && !isContainEntry_) {
-        LOG_E(BMS_TAG_INSTALLER, "-n %{public}s -v %{public}d only has lower version feature",
-            bundleName_.c_str(), versionCode_);
-        result = ERR_APPEXECFWK_INSTALL_VERSION_NOT_COMPATIBLE;
-        return;
+    // check provision type
+    auto provisionInfo = verifyRes_.GetProvisionInfo();
+    // emulator support no signature
+    if (provisionInfo.profileBlockLength != 0) {
+        auto newProvisionType = (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) ?
+            Constants::APP_PROVISION_TYPE_DEBUG : Constants::APP_PROVISION_TYPE_RELEASE;
+        if (oldBundleInfo.GetAppProvisionType() != newProvisionType) {
+            LOG_E(BMS_TAG_INSTALLER, "%{public}s update from %{public}s to %{public}s denied", bundleName_.c_str(),
+                oldBundleInfo.GetAppProvisionType().c_str(), newProvisionType);
+            result = ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME;
+            return;
+        }
+    }
+    if (!oldBundleInfo.GetEntryInstallationFree()) {
+        if (oldBundleInfo.HasEntry() && !isContainEntry_) {
+            LOG_E(BMS_TAG_INSTALLER, "-n %{public}s -v %{public}d only has lower version feature",
+                bundleName_.c_str(), versionCode_);
+            result = ERR_APPEXECFWK_INSTALL_VERSION_NOT_COMPATIBLE;
+            return;
+        }
     }
     LOG_I(BMS_TAG_INSTALLER, "-n %{public}s -v %{public}d lower than installed", bundleName_.c_str(), versionCode_);
     isFeatureNeedUninstall_ = true;
