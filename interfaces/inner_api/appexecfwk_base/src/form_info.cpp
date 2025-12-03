@@ -86,6 +86,7 @@ const char* JSON_KEY_RESIZABLE = "resizable";
 const char* JSON_KEY_GROUP_ID = "groupId";
 const char* JSON_KEY_SUPPORT_DEVICE_TYPE = "supportDeviceTypes";
 const char* JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES = "supportDevicePerformanceClasses";
+const char* JSON_KEY_IS_TEMPLATE_FORM = "isTemplateForm";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -310,6 +311,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     sceneAnimationParams.abilityName = Str16ToStr8(parcel.ReadString16());
     sceneAnimationParams.disabledDesktopBehaviors = Str16ToStr8(parcel.ReadString16());
     resizable = parcel.ReadBool();
+    isTemplateForm = parcel.ReadBool();
     groupId = Str16ToStr8(parcel.ReadString16());
     return true;
 }
@@ -427,6 +429,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.abilityName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.disabledDesktopBehaviors));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, resizable);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isTemplateForm);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(groupId));
     return true;
 }
@@ -518,6 +521,7 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_FUN_INTERACTION_PARAMS, formInfo.funInteractionParams},
         {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams},
         {JSON_KEY_RESIZABLE, formInfo.resizable},
+        {JSON_KEY_IS_TEMPLATE_FORM, formInfo.isTemplateForm},
         {JSON_KEY_GROUP_ID, formInfo.groupId},
         {JSON_KEY_SUPPORT_DEVICE_TYPE, formInfo.supportDeviceTypes},
         {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses}
@@ -950,6 +954,12 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         jsonObjectEnd,
         JSON_KEY_RESIZABLE,
         formInfo.resizable,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_IS_TEMPLATE_FORM,
+        formInfo.isTemplateForm,
         false,
         parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
