@@ -4984,6 +4984,22 @@ HWTEST_F(BmsBundleParserTest, FormInfo_0600, Function | MediumTest | Level1)
 }
 
 /**
+ * @tc.number: FormInfo_0601
+ * @tc.name: Test to_json
+ * @tc.desc: test the interface of FormInfo
+ */
+HWTEST_F(BmsBundleParserTest, FormInfo_0601, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    FormInfo formInfo;
+    formInfo.name = "testName";
+    formInfo.isTemplateForm = true;
+    to_json(jsonObject, formInfo);
+    EXPECT_TRUE(jsonObject["isTemplateForm"]);
+    EXPECT_EQ(jsonObject["name"], "testName");
+}
+
+/**
  * @tc.number: FormInfo_0700
  * @tc.name: Test to_json
  * @tc.desc: test the interface of FormInfo

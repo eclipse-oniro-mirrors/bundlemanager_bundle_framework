@@ -86,6 +86,7 @@ const char* JSON_KEY_RESIZABLE = "resizable";
 const char* JSON_KEY_GROUP_ID = "groupId";
 const char* JSON_KEY_SUPPORT_DEVICE_TYPE = "supportDeviceTypes";
 const char* JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES = "supportDevicePerformanceClasses";
+const char* JSON_KEY_IS_TEMPLATE_FORM = "isTemplateForm";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -311,6 +312,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     sceneAnimationParams.disabledDesktopBehaviors = Str16ToStr8(parcel.ReadString16());
     resizable = parcel.ReadBool();
     groupId = Str16ToStr8(parcel.ReadString16());
+    isTemplateForm = parcel.ReadBool();
     return true;
 }
 
@@ -428,6 +430,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sceneAnimationParams.disabledDesktopBehaviors));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, resizable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(groupId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isTemplateForm);
     return true;
 }
 
@@ -520,7 +523,8 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_RESIZABLE, formInfo.resizable},
         {JSON_KEY_GROUP_ID, formInfo.groupId},
         {JSON_KEY_SUPPORT_DEVICE_TYPE, formInfo.supportDeviceTypes},
-        {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses}
+        {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses},
+        {JSON_KEY_IS_TEMPLATE_FORM, formInfo.isTemplateForm}
     };
 }
 
@@ -974,6 +978,12 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NUMBER);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_IS_TEMPLATE_FORM,
+        formInfo.isTemplateForm,
+        false,
+        parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formInfo jsonObject error : %{public}d", parseResult);
     }

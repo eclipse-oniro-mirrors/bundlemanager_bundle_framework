@@ -74,6 +74,7 @@ struct FormInfo : public Parcelable {
     FormFunInteractionParams funInteractionParams;
     FormSceneAnimationParams sceneAnimationParams;
     bool resizable = false;
+    bool isTemplateForm = false;
     std::string groupId;
 
     FormInfo() = default;
