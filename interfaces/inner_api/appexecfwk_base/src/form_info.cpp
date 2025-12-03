@@ -521,10 +521,10 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_FUN_INTERACTION_PARAMS, formInfo.funInteractionParams},
         {JSON_KEY_SCENE_ANIMATION_PARAMS, formInfo.sceneAnimationParams},
         {JSON_KEY_RESIZABLE, formInfo.resizable},
-        {JSON_KEY_IS_TEMPLATE_FORM, formInfo.isTemplateForm}
+        {JSON_KEY_IS_TEMPLATE_FORM, formInfo.isTemplateForm},
         {JSON_KEY_GROUP_ID, formInfo.groupId},
         {JSON_KEY_SUPPORT_DEVICE_TYPE, formInfo.supportDeviceTypes},
-        {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses},
+        {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses}
     };
 }
 
