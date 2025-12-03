@@ -32,6 +32,10 @@ ohos_shared_library("shortcutmanager") {
     "LOG_DOMAIN = 0xD001120",
   ]
 
+  if (bundle_framework_launcher) {
+    defines += [ "BUNDLE_FRAMEWORK_LAUNCHER" ]
+  }
+
   cflags = [
     "-Os",
     "-fstack-protector-strong",

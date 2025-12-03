@@ -159,6 +159,7 @@ static ani_object GetAllShortcutInfoForSelfNative(ani_env* env)
 
 static void AddDynamicShortcutInfosNative(ani_env* env, ani_object aniShortcutInfo, ani_int aniUserId)
 {
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
     APP_LOGD("ani AddDynamicShortcutInfosNative called");
     std::vector<ShortcutInfo> shortcutInfos;
     if (!CommonFunAni::ParseAniArray(env, aniShortcutInfo, shortcutInfos, CommonFunAni::ParseShortcutInfo)) {
@@ -180,11 +181,16 @@ static void AddDynamicShortcutInfosNative(ani_env* env, ani_object aniShortcutIn
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             ADD_DYNAMIC_SHORTCUT_INFOS, PERMISSION_DYNAMIC_SHORTCUT_INFO);
     }
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, ADD_DYNAMIC_SHORTCUT_INFOS, "");
+#endif
 }
 
 static void DeleteDynamicShortcutInfosNative(ani_env* env,
     ani_string aniBundleName, ani_int aniAppIndex, ani_int aniUserId, ani_object aniIds)
 {
+#ifdef BUNDLE_FRAMEWORK_LAUNCHER
     APP_LOGD("ani DeleteDynamicShortcutInfosNative called");
     std::string bundleName;
     if (!CommonFunAni::ParseString(env, aniBundleName, bundleName)) {
@@ -212,6 +218,10 @@ static void DeleteDynamicShortcutInfosNative(ani_env* env,
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             DELETE_DYNAMIC_SHORTCUT_INFOS, PERMISSION_DYNAMIC_SHORTCUT_INFO);
     }
+#else
+    APP_LOGI("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
+    BusinessErrorAni::ThrowCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, DELETE_DYNAMIC_SHORTCUT_INFOS, "");
+#endif
 }
 
 extern "C" {
