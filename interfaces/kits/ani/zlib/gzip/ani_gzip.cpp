@@ -711,15 +711,15 @@ ani_long GztellNative(ani_env* env, ani_object instance)
     }
 
 #if !defined(ZLIB_INTERNAL) && defined(Z_WANT64) && !defined(Z_LARGE64)
-    z_off64_t ret = gztell64(nativeGZFile);
+    int64_t ret = gztell64(nativeGZFile);
     if (ret < 0) {
         APP_LOGE("gztell64 failed %{public}lld", ret);
         AniZLibCommon::ThrowZLibNapiError(env, ENOSTR);
     }
 #else
-    z_off_t ret = gztell(nativeGZFile);
+    int32_t ret = gztell(nativeGZFile);
     if (ret < 0) {
-        APP_LOGE("gztell failed %{public}ld", ret);
+        APP_LOGE("gztell failed %{public}d", ret);
         AniZLibCommon::ThrowZLibNapiError(env, ENOSTR);
     }
 #endif
@@ -770,7 +770,7 @@ ani_long GzseekNative(ani_env* env, ani_object instance, ani_long aniOffset, ani
     CHECK_PARAM_NULL_THROW_RETURN(instance, EFAULT, -1);
     CHECK_PARAM_NULL_THROW_RETURN(aniWhence, EINVAL, -1);
 
-    int whence = 0;
+    int32_t whence = 0;
     if (!EnumUtils::EnumETSToNative(env, aniWhence, whence)) {
         APP_LOGE("parse aniWhence failed");
         AniZLibCommon::ThrowZLibNapiError(env, EINVAL);
@@ -783,15 +783,15 @@ ani_long GzseekNative(ani_env* env, ani_object instance, ani_long aniOffset, ani
     }
 
 #if !defined(ZLIB_INTERNAL) && defined(Z_WANT64) && !defined(Z_LARGE64)
-    z_off64_t ret = gzseek64(nativeGZFile, static_cast<z_off64_t>(aniOffset), whence);
+    int64_t ret = gzseek64(nativeGZFile, static_cast<int64_t>(aniOffset), whence);
     if (ret < 0) {
         APP_LOGE("gzseek64 failed %{public}lld", ret);
         AniZLibCommon::ThrowZLibNapiError(env, ENOSTR);
     }
 #else
-    z_off_t ret = gzseek(nativeGZFile, static_cast<z_off_t>(aniOffset), whence);
+    int32_t ret = gzseek(nativeGZFile, static_cast<long>(aniOffset), whence);
     if (ret < 0) {
-        APP_LOGE("gzseek failed %{public}ld", ret);
+        APP_LOGE("gzseek failed %{public}d", ret);
         AniZLibCommon::ThrowZLibNapiError(env, ENOSTR);
     }
 #endif
@@ -966,15 +966,15 @@ ani_long GzoffsetNative(ani_env* env, ani_object instance)
     }
 
 #if !defined(ZLIB_INTERNAL) && defined(Z_WANT64) && !defined(Z_LARGE64)
-    z_off64_t ret = gzoffset64(nativeGZFile);
+    int64_t ret = gzoffset64(nativeGZFile);
     if (ret < 0) {
         APP_LOGE("gzoffset64 failed %{public}lld", ret);
         AniZLibCommon::ThrowZLibNapiError(env, ENOSTR);
     }
 #else
-    z_off_t ret = gzoffset(nativeGZFile);
+    int32_t ret = gzoffset(nativeGZFile);
     if (ret < 0) {
-        APP_LOGE("gzoffset failed %{public}ld", ret);
+        APP_LOGE("gzoffset failed %{public}d", ret);
         AniZLibCommon::ThrowZLibNapiError(env, ENOSTR);
     }
 #endif
