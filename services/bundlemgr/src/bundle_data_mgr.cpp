@@ -124,10 +124,14 @@ const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::PKG_CONTEXT_PROFILE, PKG_CONTEXT_PROFILE_PATH },
     { ProfileType::FILE_ICON_PROFILE, FILE_ICON_PROFILE_PATH },
     { ProfileType::INSIGHT_INTENT_PROFILE, INSIGHT_INTENT_PROFILE_PATH },
-    { ProfileType::CLOUD_PROFILE, ServiceConstants::CLOUD_PROFILE_PATH},
-    { ProfileType::EASY_GO_PROFILE, EMPTY_STRING}
+    { ProfileType::CLOUD_PROFILE, ServiceConstants::CLOUD_PROFILE_PATH },
+    { ProfileType::EASY_GO_PROFILE, EMPTY_STRING },
+    { ProfileType::SHARE_FILES_PROFILE, EMPTY_STRING },
 };
-const std::vector<ProfileType> PROFILE_TYPES = {ProfileType::EASY_GO_PROFILE};
+const std::vector<ProfileType> PROFILE_TYPES = {
+    ProfileType::EASY_GO_PROFILE,
+    ProfileType::SHARE_FILES_PROFILE,
+};
 const std::string SCHEME_END = "://";
 const std::string LINK_FEATURE = "linkFeature";
 const std::string ATOMIC_SERVICE_DIR_PREFIX = "+auid-";
@@ -8692,6 +8696,10 @@ std::string BundleDataMgr::GetProfilePath(ProfileType profileType, const InnerMo
     switch (profileType) {
         case ProfileType::EASY_GO_PROFILE: {
             profileConfig = innerModuleInfo.easyGo;
+            break;
+        }
+        case ProfileType::SHARE_FILES_PROFILE: {
+            profileConfig = innerModuleInfo.shareFiles;
             break;
         }
         default: {

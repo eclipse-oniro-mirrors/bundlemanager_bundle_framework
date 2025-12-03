@@ -5244,6 +5244,44 @@ HWTEST_F(BmsBundleDataMgrTest, GetProfilePath_0002, Function | SmallTest | Level
 }
 
 /**
+ * @tc.number: GetProfilePath_0003
+ * @tc.name: test GetProfilePath
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfilePath
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfilePath_0003, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerModuleInfo innerModuleInfo;
+    std::string res;
+    innerModuleInfo.isEntry = true;
+    innerModuleInfo.shareFiles = "$profile:share_files";
+    res = dataMgr->GetProfilePath(ProfileType::SHARE_FILES_PROFILE, innerModuleInfo);
+    EXPECT_EQ(res, "resources/base/profile/share_files.json");
+
+    innerModuleInfo.shareFiles = "$profile:share_files2";
+    res = dataMgr->GetProfilePath(ProfileType::SHARE_FILES_PROFILE, innerModuleInfo);
+    EXPECT_EQ(res, "resources/base/profile/share_files2.json");
+
+    res = dataMgr->GetProfilePath(ProfileType::ADDITION_PROFILE, innerModuleInfo);
+    EXPECT_EQ(res, "");
+
+    innerModuleInfo.shareFiles = "";
+    res = dataMgr->GetProfilePath(ProfileType::SHARE_FILES_PROFILE, innerModuleInfo);
+    EXPECT_EQ(res, "");
+
+    innerModuleInfo.shareFiles = "not-profile-path";
+    res = dataMgr->GetProfilePath(ProfileType::SHARE_FILES_PROFILE, innerModuleInfo);
+    EXPECT_EQ(res, "");
+
+    innerModuleInfo.isEntry = false;
+    innerModuleInfo.shareFiles = "$profile:share_files";
+    res = dataMgr->GetProfilePath(ProfileType::SHARE_FILES_PROFILE, innerModuleInfo);
+    EXPECT_EQ(res, "");
+}
+
+/**
  * @tc.number: GetProfileDataList_0001
  * @tc.name: test GetProfilePath
  * @tc.desc: 1.system run normally
@@ -5359,6 +5397,127 @@ HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0005, Function | SmallTest | L
 }
 
 /**
+ * @tc.number: GetProfileDataList_0006
+ * @tc.name: test GetProfileDataList
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfileDataList
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0006, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_TEST1;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    innerModuleInfo.shareFiles = "$profile:share_files";
+    innerBundleInfo.innerModuleInfos_.emplace(MODULE_TEST, innerModuleInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    std::vector<BundleProfileData> profileDataList;
+    dataMgr->GetProfileDataList(ProfileType::SHARE_FILES_PROFILE, USERID, profileDataList);
+    EXPECT_EQ(profileDataList.size(), 1);
+    dataMgr->multiUserIdsSet_.erase(USERID);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetProfileDataList_0007
+ * @tc.name: test GetProfileDataList
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfileDataList
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0007, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_TEST1;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleUserInfo.enabled = false;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    innerModuleInfo.shareFiles = "$profile:share_files";
+    innerBundleInfo.innerModuleInfos_.emplace(MODULE_TEST, innerModuleInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    std::vector<BundleProfileData> profileDataList;
+    dataMgr->GetProfileDataList(ProfileType::SHARE_FILES_PROFILE, USERID, profileDataList);
+    EXPECT_EQ(profileDataList.size(), 0);
+    dataMgr->multiUserIdsSet_.erase(USERID);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetProfileDataList_0008
+ * @tc.name: test GetProfileDataList
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfileDataList
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0008, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_TEST1;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleUserInfo.enabled = false;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    innerModuleInfo.shareFiles = "$profile:share_files";
+    innerBundleInfo.innerModuleInfos_.emplace(MODULE_TEST, innerModuleInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    std::vector<BundleProfileData> profileDataList;
+    dataMgr->GetProfileDataList(ProfileType::SHARE_FILES_PROFILE, USERID, profileDataList);
+    EXPECT_EQ(profileDataList.size(), 0);
+    dataMgr->multiUserIdsSet_.erase(USERID);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetProfileDataList_0009
+ * @tc.name: test GetProfileDataList
+ * @tc.desc: 1.system run normally
+ *           2.test GetProfileDataList
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProfileDataList_0009, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_TEST1;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleUserInfo.enabled = false;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = false;
+    innerModuleInfo.shareFiles = "$profile:share_files";
+    innerBundleInfo.innerModuleInfos_.emplace(MODULE_TEST, innerModuleInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    std::vector<BundleProfileData> profileDataList;
+    dataMgr->GetProfileDataList(ProfileType::SHARE_FILES_PROFILE, USERID, profileDataList);
+    EXPECT_EQ(profileDataList.size(), 0);
+    dataMgr->multiUserIdsSet_.erase(USERID);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
  * @tc.number: GetAllJsonProfile_0001
  * @tc.name: test GetAllJsonProfile
  * @tc.desc: 1.system run normally
@@ -5376,6 +5535,27 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllJsonProfile_0001, Function | SmallTest | Le
         auto ret2 = dataMgr->GetAllJsonProfile(ProfileType::UNSPECIFIED_PROFILE, Constants::ALL_USERID, profileInfos);
         EXPECT_NE(ret2, ERR_OK);
     }
+}
+
+/**
+ * @tc.number: GetAllJsonProfile_0002
+ * @tc.name: test GetAllJsonProfile
+ * @tc.desc: 1.system run normally
+ *           2.test GetAllJsonProfile
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllJsonProfile_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    std::vector<JsonProfileInfo> profileInfos;
+    auto ret = dataMgr->GetAllJsonProfile(ProfileType::SHARE_FILES_PROFILE, -1, profileInfos);
+    EXPECT_NE(ret, ERR_OK);
+    ret = dataMgr->GetAllJsonProfile(ProfileType::UNSPECIFIED_PROFILE, 100, profileInfos);
+    EXPECT_NE(ret, ERR_OK);
+    ret = dataMgr->GetAllJsonProfile(ProfileType::SHARE_FILES_PROFILE, 100, profileInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    dataMgr->multiUserIdsSet_.erase(USERID);
 }
 
 /**

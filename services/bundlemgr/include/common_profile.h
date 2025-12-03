@@ -548,6 +548,7 @@ constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
 
 constexpr const char* MODULE_EASY_GO = "easyGo";
+constexpr const char* MODULE_SHARE_FILES = "shareFiles";
 
 // module router
 constexpr const char* MODULE_ROUTER_MAP = "routerMap";

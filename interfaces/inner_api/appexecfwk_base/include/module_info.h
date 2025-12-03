@@ -34,6 +34,7 @@ enum ProfileType : int8_t {
     INSIGHT_INTENT_PROFILE = 7,
     CLOUD_PROFILE = 8,
     EASY_GO_PROFILE = 9,
+    SHARE_FILES_PROFILE = 10,
 };
 
 enum AppDistributionTypeEnum : int8_t {

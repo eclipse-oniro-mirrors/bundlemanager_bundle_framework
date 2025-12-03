@@ -127,6 +127,7 @@ struct InnerModuleInfo {
     std::string isolationMode;
     std::string fileContextMenu;
     std::string easyGo;
+    std::string shareFiles;
     std::string routerMap;
     std::string packageName;
     std::string appStartup;
