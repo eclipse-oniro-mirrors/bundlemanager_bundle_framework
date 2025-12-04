@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -45,6 +45,10 @@ ohos_shared_library("shortcutmanager") {
     "-Os",
     "-fstack-protector-strong",
   ]
+
+  if (bundle_framework_launcher) {
+    defines += [ "BUNDLE_FRAMEWORK_LAUNCHER" ]
+  }
 
   sources = [
     "native_module.cpp",

@@ -6411,6 +6411,25 @@ ErrCode BundleMgrHostImpl::DeleteDynamicShortcutInfos(const std::string &bundleN
     return dataMgr->DeleteDynamicShortcutInfos(bundleName, appIndex, userId, ids);
 }
 
+ErrCode BundleMgrHostImpl::SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+{
+    APP_LOGD("SetShortcutsEnabled begin");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGER_SHORTCUT)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->SetShortcutsEnabled(shortcutInfos, isEnabled);
+}
+
 // Internal interface. The application compares the API version number saved in the package management.
 //No permission control is required
 bool BundleMgrHostImpl::GreatOrEqualTargetAPIVersion(const int32_t platformVersion, const int32_t minorVersion,

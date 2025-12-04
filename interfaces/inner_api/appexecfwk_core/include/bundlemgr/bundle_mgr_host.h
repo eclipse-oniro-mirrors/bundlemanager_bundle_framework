@@ -953,6 +953,7 @@ private:
     ErrCode HandleGetAllShortcutInfoForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleAddDynamicShortcutInfos(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleDeleteDynamicShortcutInfos(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleSetShortcutsEnabled(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginInfo(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetTestRunner(MessageParcel &data, MessageParcel &reply);
 

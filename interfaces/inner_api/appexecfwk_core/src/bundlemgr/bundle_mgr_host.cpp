@@ -752,6 +752,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::DELETE_DYNAMIC_SHORTCUT_INFOS):
             errCode = HandleDeleteDynamicShortcutInfos(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_SHORTCUTS_ENABLED):
+            errCode = HandleSetShortcutsEnabled(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -5106,6 +5109,25 @@ ErrCode BundleMgrHost::HandleDeleteDynamicShortcutInfos(MessageParcel &data, Mes
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     ErrCode ret = DeleteDynamicShortcutInfos(bundleName, appIndex, userId, ids);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+
+ErrCode BundleMgrHost::HandleSetShortcutsEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::vector<ShortcutInfo> shortcutInfos;
+    auto ret = GetVectorParcelInfoIntelligent(data, shortcutInfos, MAX_SHORTCUT_INFO_SIZE);
+    if (ret != ERR_OK) {
+        APP_LOGE("Read ParcelInfo failed");
+        return ret;
+    }
+    bool isEnabled = data.ReadBool();
+    ret = SetShortcutsEnabled(shortcutInfos, isEnabled);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

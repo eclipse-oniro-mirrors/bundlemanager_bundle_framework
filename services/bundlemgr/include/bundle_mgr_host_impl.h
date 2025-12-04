@@ -985,6 +985,8 @@ public:
     virtual ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const std::vector<std::string> &ids) override;
 
+    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled) override;
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif

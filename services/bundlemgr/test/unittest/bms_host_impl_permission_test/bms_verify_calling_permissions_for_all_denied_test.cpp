@@ -1070,6 +1070,22 @@ HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0061, TestS
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
+/**
+ * @tc.number: BundleMgrHostImpl_0062
+ * @tc.name: VerifyCallingPermissionsForAllDeniedTest
+ * @tc.desc: SetShortcutsEnabled VerifyCallingPermissionsForAll denied
+ */
+HWTEST_F(VerifyCallingPermissionsForAllDeniedTest, BundleMgrHostImpl_0062, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool isEnabled = false;
+    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 /**
  * @tc.number: VerifyManagerHostImpl_0001

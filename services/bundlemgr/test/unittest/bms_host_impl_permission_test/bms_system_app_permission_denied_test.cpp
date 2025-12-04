@@ -954,6 +954,22 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0053, TestSize.Leve
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
+/*
+ * @tc.number: BundleMgrHostImpl_0054
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: SetShortcutsEnabled SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0054, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool isEnabled = false;
+    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 /**
  * @tc.number: BundleResourceHostImpl_0001

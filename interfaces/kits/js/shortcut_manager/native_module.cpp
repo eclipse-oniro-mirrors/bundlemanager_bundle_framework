@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,6 +36,7 @@ static napi_value ShortcutManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllShortcutInfoForSelf", GetAllShortcutInfoForSelf),
         DECLARE_NAPI_FUNCTION("addDynamicShortcutInfos", AddDynamicShortcutInfos),
         DECLARE_NAPI_FUNCTION("deleteDynamicShortcutInfos", DeleteDynamicShortcutInfos),
+        DECLARE_NAPI_FUNCTION("setShortcutsEnabled", SetShortcutsEnabled),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
