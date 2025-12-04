@@ -106,7 +106,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "notificationSubscriber", ExtensionAbilityType::NOTIFICATION_SUBSCRIBER },
     { "crypto", ExtensionAbilityType::CRYPTO },
     { "awc/webpage", ExtensionAbilityType::AWC_WEBPAGE },
-    { "awc/newsfeed", ExtensionAbilityType::AWC_NEWSFEED }
+    { "awc/newsfeed", ExtensionAbilityType::AWC_NEWSFEED },
+    { "contentEmbed", ExtensionAbilityType::CONTENT_EMBED }
 };
 
 // the new extension type does not need to be added here
