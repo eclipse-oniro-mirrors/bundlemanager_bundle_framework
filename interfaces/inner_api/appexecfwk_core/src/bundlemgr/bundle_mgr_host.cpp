@@ -742,6 +742,7 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ASSET_GROUPS_INFOS_BY_UID):
             errCode = this->HandleGetAssetGroupsInfo(data, reply);
+            break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE):
             errCode = HandleBatchGetCompatibleDeviceType(data, reply);
             break;
