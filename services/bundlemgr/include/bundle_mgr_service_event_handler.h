@@ -722,6 +722,13 @@ private:
     ErrCode CleanSystemOptimizeBundleShaderCache(const std::string &bundleName,
         int32_t appIndex, int32_t userId);
     ErrCode CleanSystemOptimizeShaderCache();
+    bool IsRecoverListEmpty(const std::string &bundleName, std::vector<int32_t> &userIds);
+    void ProcessRecoverList(const std::string &bundleName, const std::string &filePath, bool removable,
+        Constants::AppType appType, const std::vector<int32_t> userIds,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void GetInstallAndRecoverListForAllUser(std::unordered_map<int32_t,
+        std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList);
+    bool IsForceInstallListEmpty(const std::string &bundleName);
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
@@ -743,6 +750,8 @@ private:
     std::map<std::string, std::set<std::string>> moduleUpdateAppService_;
     // key is bundleName, value is HmpBundlePathInfo
     std::map<std::string, HmpBundlePathInfo> hmpBundlePathInfos_;
+    std::unordered_map<int32_t,
+        std::pair<std::vector<std::string>, std::vector<std::string>>> userInstallAndRecoverMap_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

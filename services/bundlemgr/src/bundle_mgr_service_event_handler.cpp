@@ -2144,6 +2144,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         (void)newBundleDirMgr->AddAllUserId(dataMgr->GetAllUser());
     }
 
+    GetInstallAndRecoverListForAllUser(userInstallAndRecoverMap_);
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
     for (auto &scanPathIter : scanPathList) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "reboot scan bundle path: %{public}s ", scanPathIter.c_str());
@@ -2166,6 +2167,11 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 LOG_NOFUNC_I(BMS_TAG_DEFAULT, "ota skip new preload app: %{public}s", scanPathIter.c_str());
                 continue;
             }
+            std::vector<int32_t> emptyRecoverListUserIds;
+            if (!IsRecoverListEmpty(bundleName, emptyRecoverListUserIds)) {
+                ProcessRecoverList(bundleName, scanPathIter, removable, appType, emptyRecoverListUserIds, infos);
+                continue;
+            }
             LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA Install new -n %{public}s by path:%{public}s",
                 bundleName.c_str(), scanPathIter.c_str());
             std::vector<std::string> filePaths { scanPathIter };
@@ -2183,6 +2189,16 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA process -n %{public}s path:%{public}s",
             bundleName.c_str(), scanPathIter.c_str());
+        if (!IsForceInstallListEmpty(bundleName)) {
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "app(%{public}s) in force install list and need OTA install",
+                bundleName.c_str());
+            std::vector<std::string> filePaths { scanPathIter };
+            if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
+                LOG_E(BMS_TAG_DEFAULT, "OTA force Install bundle(%{public}s) error", bundleName.c_str());
+                SavePreInstallException(scanPathIter);
+            }
+            continue;
+        }
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
             bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
@@ -5445,6 +5461,100 @@ ErrCode BMSEventHandler::CleanSystemOptimizeShaderCache()
         }
     }
     return ERR_OK;
+}
+
+bool BMSEventHandler::IsRecoverListEmpty(const std::string &bundleName, std::vector<int32_t> &userIds)
+{
+    bool isEmpty = true;
+    for (const auto &[userId, installAndRecoverPair] : userInstallAndRecoverMap_) {
+        const auto &recoverList = installAndRecoverPair.second;
+        if (std::find(recoverList.begin(), recoverList.end(), bundleName) != recoverList.end()) {
+            isEmpty = false;
+        } else {
+            userIds.emplace_back(userId);
+        }
+    }
+    return isEmpty;
+}
+
+void BMSEventHandler::ProcessRecoverList(const std::string &bundleName, const std::string &filePath, bool removable,
+    Constants::AppType appType, const std::vector<int32_t> userIds,
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "ProcessRecoverList start -n %{public}s", bundleName.c_str());
+    // 1. install the bundle for empty recoverList user
+    std::vector<std::string> filePaths{filePath};
+    if (!OTAInstallSystemBundleTargetUser(filePaths, bundleName, appType, removable, userIds)) {
+        LOG_E(BMS_TAG_DEFAULT, "OTA install new bundle(%{public}s) error", bundleName.c_str());
+    }
+    // 2. save pre-Install bundle info
+    PreInstallBundleInfo preInstallBundleInfo;
+    bool findEntry = false;
+    for (const auto &item : infos) {
+        preInstallBundleInfo.AddBundlePath(item.first);
+        if (!findEntry) {
+            auto applicationInfo = item.second.GetBaseApplicationInfo();
+            item.second.AdaptMainLauncherResourceInfo(applicationInfo);
+            preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
+            preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+            preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+            preInstallBundleInfo.SetVersionCode(applicationInfo.versionCode);
+        }
+        auto innerModuleInfos = item.second.GetInnerModuleInfos();
+        if (!innerModuleInfos.empty() &&
+            innerModuleInfos.begin()->second.distro.moduleType == Profile::MODULE_TYPE_ENTRY) {
+            findEntry = true;
+        }
+    }
+    preInstallBundleInfo.SetBundleName(bundleName);
+    preInstallBundleInfo.SetAppType(appType);
+    preInstallBundleInfo.SetRemovable(removable);
+    preInstallBundleInfo.SetIsUninstalled(true);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    if (!dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        LOG_E(BMS_TAG_DEFAULT, "save preinstall info fail -n %{public}s", bundleName.c_str());
+    }
+}
+
+void BMSEventHandler::GetInstallAndRecoverListForAllUser(std::unordered_map<int32_t,
+    std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::vector<std::string> bundleList = dataMgr->GetAllBundleName();
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    auto userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        if (userId == Constants::DEFAULT_USERID) {
+            continue;
+        }
+        std::vector<std::string> forceInstallList;
+        std::vector<std::string> recoverList;
+        if (!bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, forceInstallList, recoverList)) {
+            LOG_E(BMS_TAG_DEFAULT, "-u %{public}d GetInstallAndRecoverList failed", userId);
+            continue;
+        }
+        installAndRecoverList.emplace(userId, std::make_pair(forceInstallList, recoverList));
+    }
+}
+
+bool BMSEventHandler::IsForceInstallListEmpty(const std::string &bundleName)
+{
+    bool isEmpty = true;
+    for (const auto &[userId, installAndRecoverPair] : userInstallAndRecoverMap_) {
+        const auto &forceInstallList = installAndRecoverPair.first;
+        if (std::find(forceInstallList.begin(), forceInstallList.end(), bundleName) != forceInstallList.end()) {
+            isEmpty = false;
+        }
+    }
+    return isEmpty;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

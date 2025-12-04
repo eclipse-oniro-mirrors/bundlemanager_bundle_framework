@@ -162,5 +162,21 @@ HWTEST_F(BundleMgrExtTest, OnGetAllBundleCacheFinished_0100, Function | SmallTes
     auto ret = bundleMgrHost.HandleGetAllBundleCacheStat(data, reply);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: GetInstallAndRecoverList_0100
+ * @tc.name: test the GetInstallAndRecoverList
+ * @tc.desc: 1. system running normally
+ *           2. test GetInstallAndRecoverList
+ */
+HWTEST_F(BundleMgrExtTest, GetInstallAndRecoverList_0100, Function | SmallTest | Level0)
+{
+    BundleMgrExtToTest bundleMgrExtToTest;
+    std::vector<std::string> installList;
+    std::vector<std::string> recoverList;
+    std::vector<std::string> bundleList;
+    auto ret = bundleMgrExtToTest.GetInstallAndRecoverList(100, bundleList, installList, recoverList);
+    EXPECT_FALSE(ret);
+}
 }
 }

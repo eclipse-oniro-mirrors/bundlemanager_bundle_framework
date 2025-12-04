@@ -794,5 +794,21 @@ ErrCode BmsExtensionDataMgr::GetLauncherAbilityResourceInfo(const BundleOptionIn
     APP_LOGD("call bundle mgr ext GetLauncherAbilityResourceInfo, return %{public}d", ret);
     return ret;
 }
+
+bool BmsExtensionDataMgr::GetInstallAndRecoverList(const int32_t userId, const std::vector<std::string> &bundleList,
+    std::vector<std::string> &installList, std::vector<std::string> &recoverList)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return false;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return false;
+    }
+    return bundleMgrExtPtr->GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
+}
 } // AppExecFwk
 } // OHOS

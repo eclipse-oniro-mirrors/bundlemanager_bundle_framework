@@ -2971,6 +2971,93 @@ HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstallForPatch_0100, Funct
     }
 }
 
+/**
+ * @tc.number: IsRecoverListEmpty_0100
+ * @tc.name: IsRecoverListEmpty
+ * @tc.desc: test IsRecoverListEmpty
+ */
+HWTEST_F(BmsEventHandlerTest, IsRecoverListEmpty_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::vector<int32_t> userIds;
+        bool ret = handler->IsRecoverListEmpty("", userIds);
+        EXPECT_TRUE(ret);
+
+        auto installAndRecoverPair1 =
+            std::make_pair(std::vector<std::string>(), std::vector<std::string>{BUNDLE_TEST_NAME});
+        handler->userInstallAndRecoverMap_[100] = installAndRecoverPair1;
+        auto installAndRecoverPair2 = std::make_pair(std::vector<std::string>(), std::vector<std::string>());
+        handler->userInstallAndRecoverMap_[101] = installAndRecoverPair2;
+
+        ret = handler->IsRecoverListEmpty(BUNDLE_TEST_NAME, userIds);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: IsForceInstallListEmpty_0100
+ * @tc.name: IsForceInstallListEmpty
+ * @tc.desc: test IsForceInstallListEmpty
+ */
+HWTEST_F(BmsEventHandlerTest, IsForceInstallListEmpty_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        bool ret = handler->IsForceInstallListEmpty("");
+        EXPECT_TRUE(ret);
+
+        auto installAndRecoverPair1 =
+            std::make_pair(std::vector<std::string>(), std::vector<std::string>{BUNDLE_TEST_NAME});
+        handler->userInstallAndRecoverMap_[100] = installAndRecoverPair1;
+        auto installAndRecoverPair2 =
+            std::make_pair(std::vector<std::string>{BUNDLE_TEST_NAME}, std::vector<std::string>());
+        handler->userInstallAndRecoverMap_[101] = installAndRecoverPair2;
+
+        ret = handler->IsForceInstallListEmpty(BUNDLE_TEST_NAME);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: ProcessRecoverList_0100
+ * @tc.name: ProcessRecoverList
+ * @tc.desc: test ProcessRecoverList
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessRecoverList_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::string bundleName = BUNDLE_TEST_NAME;
+        Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
+        std::vector<int32_t> userIds;
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        InnerBundleInfo info;
+        infos[bundleName] = info;
+        EXPECT_NO_THROW(handler->ProcessRecoverList(bundleName, "", false, appType, userIds, infos));
+    }
+}
+
+/**
+ * @tc.number: GetInstallAndRecoverListForAllUser_0100
+ * @tc.name: GetInstallAndRecoverListForAllUser
+ * @tc.desc: test GetInstallAndRecoverListForAllUser
+ */
+HWTEST_F(BmsEventHandlerTest, GetInstallAndRecoverListForAllUser_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        std::unordered_map<int32_t,
+            std::pair<std::vector<std::string>, std::vector<std::string>>> installAndRecoverList;
+        EXPECT_NO_THROW(handler->GetInstallAndRecoverListForAllUser(installAndRecoverList));
+    }
+}
+
+
 #ifdef WEBVIEW_ENABLE
 /**
  * @tc.number: NotifyFWKAfterBmsStart_0100
