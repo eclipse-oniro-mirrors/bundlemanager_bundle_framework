@@ -1648,7 +1648,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0013, Function | SmallTest | Lev
 */
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0014, Function | SmallTest | Level1)
 {
-    InnerBundleInfo innerBundleInfo;
+    const InnerBundleInfo* innerBundleInfo = nullptr;
     GetBundleDataMgr()->bundleInfos_.clear();
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoByUid(
         2, innerBundleInfo);
@@ -1697,7 +1697,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0016, Function | SmallTest | Lev
 */
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0017, Function | SmallTest | Level1)
 {
-    InnerBundleInfo info;
+    const InnerBundleInfo* info = nullptr;
     GetBundleDataMgr()->bundleInfos_.clear();
     bool testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlags(
         TEST_BUNDLE_NAME, 0, info, USERID);
@@ -1741,7 +1741,7 @@ HWTEST_F(BmsBundleManagerTest, GetInnerBundleInfoWithFlags2_0002, Function | Sma
 */
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0018, Function | SmallTest | Level1)
 {
-    InnerBundleInfo info;
+    const InnerBundleInfo* info = nullptr;
     GetBundleDataMgr()->bundleInfos_.clear();
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlagsV9(
         TEST_BUNDLE_NAME, 0, info, USERID);
@@ -1757,7 +1757,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0018, Function | SmallTest | Lev
 */
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0019, Function | SmallTest | Level1)
 {
-    InnerBundleInfo info;
+    const InnerBundleInfo* info = nullptr;
     GetBundleDataMgr()->bundleInfos_.clear();
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithBundleFlagsV9(
         TEST_BUNDLE_NAME, 0, info, USERID);

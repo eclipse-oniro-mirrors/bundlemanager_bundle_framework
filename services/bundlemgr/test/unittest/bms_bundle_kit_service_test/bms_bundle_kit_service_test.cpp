@@ -8406,7 +8406,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoWithFlagsV9_0100, Function | S
     AbilityInfo info;
     InnerBundleInfo innerBundleInfo;
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP);
-    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfoWithFlagsV9(option, flags, 100, innerBundleInfo, info);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfoWithFlagsV9(option, flags, 100, &innerBundleInfo, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
     APP_LOGI("QueryAbilityInfoWithFlagsV9_0100 finish");
 }
@@ -8423,9 +8423,26 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoWithFlagsV9_0200, Function | S
     AbilityInfo info;
     InnerBundleInfo innerBundleInfo;
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
-    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfoWithFlagsV9(option, flags, 100, innerBundleInfo, info);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfoWithFlagsV9(option, flags, 100, &innerBundleInfo, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_DISABLED);
     APP_LOGI("QueryAbilityInfoWithFlagsV9_0200 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfoWithFlagsV9_0300
+ * @tc.name: test exception branch
+ * @tc.desc: pass a null pointer to test an exception branch
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoWithFlagsV9_0300, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfoWithFlagsV9_0300");
+    std::optional<AbilityInfo> option;
+    AbilityInfo info;
+    const InnerBundleInfo* const innerBundleInfo = nullptr;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfoWithFlagsV9(option, flags, 100, innerBundleInfo, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    APP_LOGI("QueryAbilityInfoWithFlagsV9_0300 finish");
 }
 
 /**
@@ -8444,7 +8461,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0100, Function 
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurAbilityInfosV9_0100 finish");
 }
@@ -8465,7 +8482,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0200, Function 
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurAbilityInfosV9_0200 finish");
 }
@@ -8486,7 +8503,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0300, Function 
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurAbilityInfosV9_0300 finish");
 }
@@ -8507,7 +8524,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0400, Function 
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurAbilityInfosV9_0400 finish");
 }
@@ -8528,7 +8545,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurAbilityInfosV9_0500, Function 
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurAbilityInfosV9(want, flags, 0, abilityInfos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurAbilityInfosV9_0500 finish");
 }
@@ -8552,7 +8569,7 @@ HWTEST_F(BmsBundleKitServiceTest, ExplicitQueryExtensionInfoV9_0100, Function | 
     int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ExplicitQueryExtensionInfoV9(want, flags, 0, extensionInfo, appIndex);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ExplicitQueryExtensionInfoV9_0100 finish");
 }
@@ -8576,7 +8593,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurExtensionInfosV9_0100, Functio
     int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurExtensionInfosV9(want, flags, 0, infos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurExtensionInfosV9_0100 finish");
 }
@@ -8600,7 +8617,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryCurExtensionInfosV9_0200, Functio
     int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
     int32_t appIndex = -1;
     ErrCode ret = GetBundleDataMgr()->ImplicitQueryCurExtensionInfosV9(want, flags, 0, infos, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("ImplicitQueryCurExtensionInfosV9_0200 finish");
 }

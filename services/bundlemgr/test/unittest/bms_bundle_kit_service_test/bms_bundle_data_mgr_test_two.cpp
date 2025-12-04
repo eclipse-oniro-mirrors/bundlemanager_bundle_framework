@@ -2590,6 +2590,23 @@ HWTEST_F(BmsBundleDataMgrTest2, ExplicitQueryAbilityInfo_0001, Function | SmallT
 }
 
 /**
+ * @tc.number: ExplicitQueryAbilityInfo_0002
+ * @tc.name: test ExplicitQueryAbilityInfo
+ * @tc.desc: 1.test ExplicitQueryAbilityInfo
+*/
+HWTEST_F(BmsBundleDataMgrTest2, ExplicitQueryAbilityInfo_0002, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want.SetElementName(BUNDLE_TEST5, ABILITY_NAME_TEST);
+    int32_t flags = 0;
+    AbilityInfo abilityInfo;
+    int32_t appIndex = -1;
+    bool res = GetBundleDataMgr()->ExplicitQueryAbilityInfo(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, false);
+}
+
+/**
  * @tc.number: ExplicitQueryAbilityInfoV9_0300
  * @tc.name: test ExplicitQueryAbilityInfoV9
  * @tc.desc: 1.test ExplicitQueryAbilityInfoV9
@@ -2604,7 +2621,7 @@ HWTEST_F(BmsBundleDataMgrTest2, ExplicitQueryAbilityInfoV9_0300, Function | Smal
     want.SetElementName(BUNDLE_TEST5, ABILITY_NAME_TEST1);
     ErrCode testRet = GetBundleDataMgr()->ExplicitQueryAbilityInfoV9(
         want, GET_ABILITY_INFO_DEFAULT, USERID, abilityInfo, appIndex);
-    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
 
 /**

@@ -1398,7 +1398,7 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0019, Function | SmallTest | Lev
 */
 HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0020, Function | SmallTest | Level1)
 {
-    InnerBundleInfo info;
+    const InnerBundleInfo* info = nullptr;
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlagsV9(
         TEST_BUNDLE_NAME, 0, info, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
@@ -1537,17 +1537,30 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0027, Function | SmallTest | Lev
 {
     InnerBundleInfo innerBundleInfo;
     ErrCode testRet = GetBundleDataMgr()->CheckInnerBundleInfoWithFlags(
-        innerBundleInfo, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, USERID);
+        &innerBundleInfo, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, USERID);
     EXPECT_EQ(testRet, ERR_OK);
     testRet = GetBundleDataMgr()->CheckInnerBundleInfoWithFlags(
-        innerBundleInfo,
+        &innerBundleInfo,
             ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     testRet = GetBundleDataMgr()->CheckInnerBundleInfoWithFlags(
-        innerBundleInfo, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, USERID);
+        &innerBundleInfo, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_DISABLED);
+}
+
+/**
+ * @tc.number: TestMgrByUserId_0028
+ * @tc.name: test exception branch
+ * @tc.desc: pass a null pointer to test an exception branch
+*/
+HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0028, Function | SmallTest | Level1)
+{
+    const InnerBundleInfo* const innerBundleInfo = nullptr;
+    ErrCode testRet = GetBundleDataMgr()->CheckInnerBundleInfoWithFlags(
+        innerBundleInfo, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, USERID);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**
@@ -1619,7 +1632,7 @@ HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0002, Function | SmallTest
 */
 HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0004, Function | SmallTest | Level1)
 {
-    InnerBundleInfo info;
+    const InnerBundleInfo* info = nullptr;
     bool testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlags(
         TEST_BUNDLE_NAME, 0, info, USERID);
     EXPECT_EQ(testRet, false);
@@ -1633,7 +1646,7 @@ HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0004, Function | SmallTest
 */
 HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0005, Function | SmallTest | Level1)
 {
-    InnerBundleInfo info;
+    const InnerBundleInfo* info = nullptr;
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlagsV9(
         TEST_BUNDLE_NAME, 0, info, USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
@@ -1647,7 +1660,7 @@ HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0005, Function | SmallTest
 */
 HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0006, Function | SmallTest | Level1)
 {
-    InnerBundleInfo info;
+    const InnerBundleInfo* info = nullptr;
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithBundleFlagsV9(
         TEST_BUNDLE_NAME, 0, info, USERID);
     EXPECT_NE(testRet, ERR_OK);
@@ -2783,6 +2796,36 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleSpaceSize_0400, Function | MediumTest |
     int64_t size = 0;
     int64_t ret = dataMgr->GetBundleSpaceSize(BUNDLE_PREVIEW_NAME, USERID);
     EXPECT_EQ(ret, size);
+}
+
+/**
+ * @tc.number: CheckBundleAndAbilityDisabled_0100
+ * @tc.name: test exception branch
+ * @tc.desc: pass a null pointer to test an exception branch
+ */
+HWTEST_F(BmsBundleManagerTest2, CheckBundleAndAbilityDisabled_0100, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    const InnerBundleInfo* const info = nullptr;
+    ErrCode ret = dataMgr->CheckBundleAndAbilityDisabled(info,
+        ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: FindAbilityInfoInBundleInfo_0100
+ * @tc.name: test exception branch
+ * @tc.desc: pass a null pointer to test an exception branch
+ */
+HWTEST_F(BmsBundleManagerTest2, FindAbilityInfoInBundleInfo_0100, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    const InnerBundleInfo* const innerBundleInfo = nullptr;
+    std::string moduleName = "";
+    std::string abilityName = "";
+    AbilityInfo abilityInfo;
+    ErrCode ret = dataMgr->FindAbilityInfoInBundleInfo(innerBundleInfo, moduleName, abilityName,abilityInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 #endif
 

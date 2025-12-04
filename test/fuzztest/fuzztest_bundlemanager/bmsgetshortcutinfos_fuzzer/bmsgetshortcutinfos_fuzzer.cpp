@@ -41,7 +41,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     innerBundleInfo.innerModuleInfos_.try_emplace(moduleName, moduleInfo);
 
     std::vector<ShortcutInfo> shortcutInfos;
-    bundleDataMgr.GetShortcutInfosByInnerBundleInfo(innerBundleInfo, shortcutInfos);
+    bundleDataMgr.GetShortcutInfosByInnerBundleInfo(&innerBundleInfo, shortcutInfos);
     return true;
 }
 }

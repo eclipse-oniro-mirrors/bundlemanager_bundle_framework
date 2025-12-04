@@ -3740,7 +3740,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryAbilityInfos_0200, Function | Sma
     int32_t flags = 0;
     ErrCode testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfosV9(
         want, flags, DEFAULT_USERID, abilityInfos, appIndex);
-    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
 
 /**
@@ -3822,10 +3822,25 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoWithFlags_0100, Function | Sma
     InnerBundleInfo innerBundleInfo;
     AbilityInfo info;
     bool testRet = GetBundleDataMgr()->QueryAbilityInfoWithFlags(
-        option, GET_ABILITY_INFO_SYSTEMAPP_ONLY, DEFAULT_USERID, innerBundleInfo, info);
+        option, GET_ABILITY_INFO_SYSTEMAPP_ONLY, DEFAULT_USERID, &innerBundleInfo, info);
     EXPECT_EQ(testRet, false);
     testRet = GetBundleDataMgr()->QueryAbilityInfoWithFlags(
-        option, GET_ABILITY_INFO_WITH_PERMISSION, DEFAULT_USERID, innerBundleInfo, info);
+        option, GET_ABILITY_INFO_WITH_PERMISSION, DEFAULT_USERID, &innerBundleInfo, info);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: QueryAbilityInfoWithFlags_0200
+ * @tc.name: test exception branch
+ * @tc.desc: pass a null pointer to test an exception branch
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoWithFlags_0200, Function | SmallTest | Level1)
+{
+    std::optional<AbilityInfo> option;
+    const InnerBundleInfo* const innerBundleInfo = nullptr;
+    AbilityInfo info;
+    bool testRet = GetBundleDataMgr()->QueryAbilityInfoWithFlags(
+        option, GET_ABILITY_INFO_SYSTEMAPP_ONLY, DEFAULT_USERID, innerBundleInfo, info);
     EXPECT_EQ(testRet, false);
 }
 
