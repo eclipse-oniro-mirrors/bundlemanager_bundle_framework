@@ -125,7 +125,7 @@ const char* NEW_ARK_WEB_BUNDLE_NAME = "com.ohos.arkwebcore";
 constexpr const char* TYPE_PUBLIC = "public";
 constexpr const char* TYPE_PRIVATE = "private";
 constexpr const char* USER_DATA_DIR = "/data";
-constexpr int32_t MIN_FREE_INODE_NUM = 50000;
+constexpr double MIN_FREE_INODE_PERCENT = 0.01; // 1%
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -164,10 +164,13 @@ bool CheckSystemInodeSatisfied()
             USER_DATA_DIR, errno);
         return false;
     }
-    if (stat.f_ffree < MIN_FREE_INODE_NUM) {
+    uint32_t minFreeInodeNum = static_cast<uint32_t>(stat.f_files * MIN_FREE_INODE_PERCENT);
+    if (stat.f_ffree < minFreeInodeNum) {
         LOG_E(BMS_TAG_INSTALLER, "free inodes not satisfied");
         return false;
     }
+    LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}llu, free inodes: %{public}llu",
+        stat.f_files, stat.f_ffree);
     return true;
 }
 } // namespace
