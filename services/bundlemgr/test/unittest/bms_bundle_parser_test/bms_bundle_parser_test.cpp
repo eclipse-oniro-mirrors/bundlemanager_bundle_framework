@@ -32,6 +32,7 @@
 #include "json_constants.h"
 #include "module_profile.h"
 #include "form_info.h"
+#include "form_info_base.h"
 #include "extension_form_info.h"
 
 using namespace testing::ext;
