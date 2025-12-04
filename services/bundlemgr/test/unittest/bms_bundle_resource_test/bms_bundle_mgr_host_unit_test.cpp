@@ -3090,7 +3090,7 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1690, Function | SmallTest | 
 }
 
 /**
- * @tc.number: OnRemoteRequest_1690
+ * @tc.number: OnRemoteRequest_1700
  * @tc.name: test the OnRemoteRequest
  * @tc.desc: 1. system running normally
  */
@@ -3108,7 +3108,7 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1700, Function | SmallTest | 
 }
 
 /**
- * @tc.number: OnRemoteRequest_1700
+ * @tc.number: OnRemoteRequest_1710
  * @tc.name: test the OnRemoteRequest
  * @tc.desc: 1. system running normally
  */
@@ -3126,7 +3126,7 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1710, Function | SmallTest | 
 }
 
 /**
- * @tc.number: OnRemoteRequest_1690
+ * @tc.number: OnRemoteRequest_1720
  * @tc.name: test the OnRemoteRequest
  * @tc.desc: 1. system running normally
  */
@@ -3141,6 +3141,24 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1720, Function | SmallTest | 
     MessageOption option;
     ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: OnRemoteRequest_1730
+ * @tc.name: test the OnRemoteRequest
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_1730, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    uint32_t code = static_cast<uint32_t>(BundleMgrInterfaceCode::SET_SHORTCUTS_ENABLED);
+    MessageParcel data;
+    std::u16string descriptor = BundleMgrHost::GetDescriptor();
+    data.WriteInterfaceToken(descriptor);
+    MessageParcel reply;
+    MessageOption option;
+    ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(res, UNKNOWN_ERROR);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

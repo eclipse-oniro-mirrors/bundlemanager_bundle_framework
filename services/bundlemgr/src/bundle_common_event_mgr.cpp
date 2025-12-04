@@ -53,11 +53,13 @@ constexpr const char* USER_ID = "userId";
 constexpr const char* SHORTCUT_CHANGED = "usual.event.SHORTCUT_CHANGED";
 constexpr const char* SHORTCUT_ID = "shortcutId";
 constexpr const char* SHORTCUT_IDS = "shortcutIds";
+constexpr const char* BUNDLE_NAMES = "bundleNames";
 constexpr const char* SHORTCUT_OPERATION_TYPE = "operationType";
 constexpr const char* MANAGE_SHORTCUTS = "ohos.permission.MANAGE_SHORTCUTS";
 constexpr const char* IS_BUNDLE_EXIST = "isBundleExist";
 constexpr const char* CROSS_APP_SHARED_CONFIG = "crossAppSharedConfig";
 constexpr const char* IS_RECOVER = "isRecover";
+constexpr const char* IS_ENABLED = "isEnabled";
 constexpr const char* PACKAGE_UNINSTALLED_DATA_CLEARED = "usual.event.PACKAGE_UNINSTALLED_DATA_CLEARED";
 }
 
@@ -551,6 +553,31 @@ void BundleCommonEventMgr::NotifyUninstalledBundleCleared(const NotifyBundleEven
     std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
     publishInfo.SetSubscriberPermissions(permissionVec);
     publishInfo.SetSubscriberType(EventFwk::SubscriberType::SYSTEM_SUBSCRIBER_TYPE);
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
+        APP_LOGE("PublishCommonEvent failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+}
+
+void BundleCommonEventMgr::NotifyShortcutsEnabledChanged(const std::vector<ShortcutInfo> &shortcutInfos,
+    bool isEnabled)
+{
+    std::vector<std::string> bundleNames;
+    std::vector<std::string> ids;
+    for (auto &shortcutInfo : shortcutInfos) {
+        bundleNames.emplace_back(shortcutInfo.bundleName);
+        ids.emplace_back(shortcutInfo.id);
+    }
+    OHOS::AAFwk::Want want;
+    want.SetAction(SHORTCUT_CHANGED);
+    want.SetParam(BUNDLE_NAMES, bundleNames);
+    want.SetParam(SHORTCUT_IDS, ids);
+    want.SetParam(IS_ENABLED, isEnabled);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { MANAGE_SHORTCUTS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo)) {
         APP_LOGE("PublishCommonEvent failed");

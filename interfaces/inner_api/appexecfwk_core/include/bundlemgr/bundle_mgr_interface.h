@@ -1915,6 +1915,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     virtual ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo)
     {

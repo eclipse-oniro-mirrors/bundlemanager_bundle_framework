@@ -3873,4 +3873,19 @@ HWTEST_F(BmsBundleDataMgrTest3, HandleDeleteDynamicShortcutInfos_0002, Function 
     ErrCode res = bundleMgrHost.HandleDeleteDynamicShortcutInfos(data, reply);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: HandleHandleSetShortcutsEnabled_0001
+ * @tc.name: test HandleSetShortcutsEnabled
+ * @tc.desc: test HandleSetShortcutsEnabled
+ */
+HWTEST_F(BmsBundleDataMgrTest3, HandleHandleSetShortcutsEnabled_0001, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    data.WriteInt32(100);
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleSetShortcutsEnabled(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
 } // OHOS

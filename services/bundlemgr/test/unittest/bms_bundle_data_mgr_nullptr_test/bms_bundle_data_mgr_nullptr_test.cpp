@@ -1504,4 +1504,20 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, BundleMgrHostImpl_0003, Function | SmallTe
     auto ret = localBundleMgrHostImpl->GetPluginBundlePathForSelf(pluginBundleName, codePath);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
+
+/*
+ * @tc.number: SetShortcutsEnabled_0001
+ * @tc.name: BmsBundleDataMgrNullptrTest
+ * @tc.desc: test SetShortcutsEnabled
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, SetShortcutsEnabled_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool isEnabled = false;
+    auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
 } // OHOS

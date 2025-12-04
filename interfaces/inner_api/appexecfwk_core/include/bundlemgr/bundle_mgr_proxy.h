@@ -1304,6 +1304,8 @@ public:
     virtual ErrCode DeleteDynamicShortcutInfos(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId, const std::vector<std::string> &ids) override;
 
+    virtual ErrCode SetShortcutsEnabled(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled) override;
+
     virtual bool GreatOrEqualTargetAPIVersion(const int32_t platformVersion,
         const int32_t minorVersion, const int32_t patchVersion) override;
 

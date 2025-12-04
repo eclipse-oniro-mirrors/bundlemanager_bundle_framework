@@ -1566,5 +1566,58 @@ HWTEST_F(BmsBundleMgrProxyTest, DeleteDynamicShortcutInfosProxy_0001, Function |
     auto ret = bundleMgrProxy.DeleteDynamicShortcutInfos(bundleName, appIndex, userId, ids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: SetShortcutsEnabled_0001
+ * @tc.name: test the SetShortcutsEnabled
+ * @tc.desc: test SetShortcutsEnabled
+ */
+HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    ShortcutInfo shortcutInfo;
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.push_back(shortcutInfo);
+    bool isEnabled = false;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetShortcutsEnabled_0002
+ * @tc.name: test the SetShortcutsEnabled
+ * @tc.desc: test SetShortcutsEnabled
+ */
+HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0002, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.clear();
+    bool isEnabled = false;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetShortcutsEnabled_0003
+ * @tc.name: test the SetShortcutsEnabled
+ * @tc.desc: test SetShortcutsEnabled
+ */
+HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0003, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    ShortcutInfo shortcutInfo;
+    std::vector<ShortcutInfo> shortcutInfos;
+    shortcutInfos.reserve(MAX_SHORTCUT_INFOS);
+    for (int i = 0; i < MAX_SHORTCUT_INFOS; ++i) {
+        shortcutInfos.push_back(shortcutInfo);
+    }
+    bool isEnabled = false;
+    auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
 }
 }
