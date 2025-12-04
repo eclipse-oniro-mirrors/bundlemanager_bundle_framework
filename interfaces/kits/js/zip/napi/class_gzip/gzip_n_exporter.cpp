@@ -282,6 +282,7 @@ napi_value GZipNExporter::GZCloseW(napi_env env, napi_callback_info info)
         if (arg->errCode < 0) {
             return NapiBusinessError(arg->errCode, true);
         }
+        gzipEntity->gzs.release();
         return NapiBusinessError(ERRNO_NOERR);
     };
 
@@ -829,6 +830,7 @@ napi_value GZipNExporter::GZClose(napi_env env, napi_callback_info info)
         if (arg->errCode < 0) {
             return NapiBusinessError(arg->errCode, true);
         }
+        gzipEntity->gzs.release();
         return NapiBusinessError(ERRNO_NOERR);
     };
 
@@ -873,6 +875,7 @@ napi_value GZipNExporter::GZCloseR(napi_env env, napi_callback_info info)
         if (arg->errCode < 0) {
             return NapiBusinessError(arg->errCode, true);
         }
+        gzipEntity->gzs.release();
         return NapiBusinessError(ERRNO_NOERR);
     };
 
