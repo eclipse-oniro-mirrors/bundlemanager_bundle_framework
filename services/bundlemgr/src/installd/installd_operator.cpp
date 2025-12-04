@@ -1028,21 +1028,22 @@ bool InstalldOperator::CheckPathIsSame(const std::string &path, int32_t mode, co
         return false;
     }
     isPathExist = true;
-    if (((s.st_mode & MODE_BASE) == mode) && (static_cast<int32_t>(s.st_uid) == uid)
-        && (static_cast<int32_t>(s.st_gid) == gid)) {
-        LOG_D(BMS_TAG_INSTALLD, "path :%{public}s mode uid and gid are same, no need to create again", path.c_str());
+    if ((s.st_mode & MODE_BASE) != mode) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLD, "path:%{public}s mode not same, %{public}d vs %{public}d",
+            path.c_str(), static_cast<int32_t>(s.st_mode & MODE_BASE), mode);
+    }
+    if ((static_cast<int32_t>(s.st_uid) == uid) && (static_cast<int32_t>(s.st_gid) == gid)) {
+        LOG_D(BMS_TAG_INSTALLD, "path :%{public}s uid and gid are same, no need to create again", path.c_str());
         return true;
     }
-    LOG_NOFUNC_W(BMS_TAG_INSTALLD, "path:%{public}s exist, but mode uid or gid are not same, need to create again",
-        path.c_str());
+    LOG_NOFUNC_W(BMS_TAG_INSTALLD, "path:%{public}s uid or gid are not same, "
+        "uid:%{public}d vs %{public}d, gid:%{public}d vs %{public}d",
+        path.c_str(), static_cast<int32_t>(s.st_uid), uid, static_cast<int32_t>(s.st_gid), gid);
     return false;
 }
 
 bool InstalldOperator::IsPathNeedChown(const std::string &path, int32_t mode, bool isPathExist)
 {
-    if (isPathExist) {
-        return true;
-    }
     struct stat s;
     if (stat(path.c_str(), &s) != 0) {
         LOG_D(BMS_TAG_INSTALLD, "path :%{public}s is not exist, not need, errno:%{public}d", path.c_str(), errno);
