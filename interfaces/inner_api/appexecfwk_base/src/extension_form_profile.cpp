@@ -138,6 +138,12 @@ struct Window {
     bool autoDesignWidth = false;
 };
 
+struct Standby {
+    bool isSupported = true;
+    bool isAdapted = false;
+    bool isPrivacySensitive = false;
+};
+
 constexpr char CHAR_COLON = ':';
 
 struct Metadata {
@@ -191,6 +197,7 @@ struct ExtensionFormProfileInfo {
     FormSceneAnimationParams sceneAnimationParams;
     bool resizable = false;
     std::string groupId;
+    Standby standby;
 };
 
 struct ExtensionFormProfileInfoStruct {
@@ -280,6 +287,29 @@ void from_json(const nlohmann::json &jsonObject, Window &window)
         jsonObjectEnd,
         ExtensionFormProfileReader::WINDOW_AUTO_DESIGN_WIDTH,
         window.autoDesignWidth,
+        false,
+        g_parseResult);
+}
+
+void from_json(const nlohmann::json &jsonObject, Standby &standby)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::STANDBY_IS_SUPPORTED,
+        standby.isSupported,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::STANDBY_IS_ADAPTED,
+        standby.isAdapted,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::STANDBY_IS_PRIVACY_SENSITIVE,
+        standby.isPrivacySensitive,
         false,
         g_parseResult);
 }
@@ -507,6 +537,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         g_parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<Standby>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::STANDBY,
+        extensionFormProfileInfo.standby,
+        JsonType::OBJECT,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -739,6 +777,9 @@ void TransformToFormInfoExt(const ExtensionFormProfileInfo &form, ExtensionFormI
     info.sceneAnimationParams.abilityName = form.sceneAnimationParams.abilityName;
     info.resizable = form.resizable;
     info.groupId = form.groupId;
+    info.standby.isSupported = form.standby.isSupported;
+    info.standby.isAdapted = form.standby.isAdapted;
+    info.standby.isPrivacySensitive = form.standby.isPrivacySensitive;
 }
 
 bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)

@@ -5100,4 +5100,43 @@ HWTEST_F(BmsBundleParserTest, IsHapCompress_0100, Function | SmallTest | Level1)
     EXPECT_TRUE(result);
 }
 
+/**
+ * @tc.number: from_json_standby
+ * @tc.name: Test from_json standby
+ * @tc.desc: test the interface of Standby
+ */
+HWTEST_F(BmsBundleParserTest, from_json_standby, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = "testName";
+    jsonObject["standby"]["isSupported"] = true;
+    jsonObject["standby"]["isAdapted"] = false;
+    jsonObject["standby"]["isPrivacySensitive"] = false;
+    FormInfo formInfo;
+    from_json(jsonObject, formInfo);
+    EXPECT_EQ(formInfo.name, "testName");
+    EXPECT_TRUE(formInfo.standby.isSupported);
+    EXPECT_FALSE(formInfo.standby.isAdapted);
+    EXPECT_FALSE(formInfo.standby.isPrivacySensitive);
+}
+ 
+/**
+ * @tc.number: to_json_standby
+ * @tc.name: Test to_json standby
+ * @tc.desc: test the interface of Standby
+ */
+HWTEST_F(BmsBundleParserTest, to_json_standby, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    FormInfo formInfo;
+    formInfo.name = "testName";
+    formInfo.standby.isSupported = true;
+    formInfo.standby.isAdapted = false;
+    formInfo.standby.isPrivacySensitive = false;
+    to_json(jsonObject, formInfo);
+    EXPECT_EQ(jsonObject["name"], "testName");
+    EXPECT_TRUE(jsonObject["standby"]["isSupported"]);
+    EXPECT_FALSE(jsonObject["standby"]["isAdapted"]);
+    EXPECT_FALSE(jsonObject["standby"]["isPrivacySensitive"]);
+}
 } // OHOS

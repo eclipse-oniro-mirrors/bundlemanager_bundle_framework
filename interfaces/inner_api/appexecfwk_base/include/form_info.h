@@ -76,6 +76,7 @@ struct FormInfo : public Parcelable {
     bool resizable = false;
     bool isTemplateForm = false;
     std::string groupId;
+    FormStandby standby;
 
     FormInfo() = default;
     explicit FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo);
