@@ -60,6 +60,7 @@
 #include "system_ability_helper.h"
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
+#include "bundle_manager_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -337,6 +338,7 @@ const int FORMINFO_DESCRIPTIONID = 123;
 const int ABILITYINFOS_SIZE_1 = 1;
 const int ABILITYINFOS_SIZE_2 = 2;
 const int32_t USERID = 100;
+const int32_t ERROR_USERID = -1;
 const int32_t MULTI_USERID = 101;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t ICON_ID = 16777258;
@@ -5966,5 +5968,71 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllAppProvisionInfo_0400, Function | SmallTest
     EXPECT_TRUE(appProvisionInfos.empty());
     EXPECT_EQ(ret, ERR_OK);
     GetBundleDataMgr()->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0500
+ * @tc.name: test GetAllAppProvisionInfo
+ * @tc.desc: 1.Test the GetAllAppProvisionInfo by BundleMgrProxy success
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllAppProvisionInfo_0500, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    ASSERT_NE(systemAbilityManager, nullptr) << "Failed to get SystemAbilityManager";
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    ASSERT_NE(remoteObject, nullptr) << "Failed to get Bundle Manager Service";
+    std::shared_ptr<BundleMgrProxy> bundleMgrProxy = std::make_shared<BundleMgrProxy>(remoteObject);
+    int32_t userId = USERID;
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = bundleMgrProxy->GetAllAppProvisionInfo(userId, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0600
+ * @tc.name: test GetAllAppProvisionInfo
+ * @tc.desc: 1.Test the GetAllAppProvisionInfo by BundleMgrProxy  failed due to invalid userid
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllAppProvisionInfo_0600, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    ASSERT_NE(systemAbilityManager, nullptr) << "Failed to get SystemAbilityManager";
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    ASSERT_NE(remoteObject, nullptr) << "Failed to get Bundle Manager Service";
+    std::shared_ptr<BundleMgrProxy> bundleMgrProxy = std::make_shared<BundleMgrProxy>(remoteObject);
+    int32_t userId = ERROR_USERID;
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = bundleMgrProxy->GetAllAppProvisionInfo(userId, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: InnerGetAllAppProvisionInfo_0100
+ * @tc.name: test InnerGetAllAppProvisionInfo
+ * @tc.desc: 1.Test the InnerGetAllAppProvisionInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, InnerGetAllAppProvisionInfo_0100, Function | SmallTest | Level1)
+{
+    BundleManagerHelper bundleManagerHelper;
+    int32_t userId = USERID;
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = bundleManagerHelper.InnerGetAllAppProvisionInfo(userId, appProvisionInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerGetAllAppProvisionInfo_0200
+ * @tc.name: test InnerGetAllAppProvisionInfo
+ * @tc.desc: 1.Test the InnerGetAllAppProvisionInfo fail invalid userid
+ */
+HWTEST_F(BmsBundleDataMgrTest, InnerGetAllAppProvisionInfo_0200, Function | SmallTest | Level1)
+{
+    BundleManagerHelper bundleManagerHelper;
+    int32_t userId = ERROR_USERID;
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    ErrCode ret = bundleManagerHelper.InnerGetAllAppProvisionInfo(userId, appProvisionInfos);
+    EXPECT_EQ(ret, ERROR_INVALID_USER_ID);
 }
 } // OHOS

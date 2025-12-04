@@ -25,7 +25,10 @@ ohos_unittest("BmsBundleDataMgrTest") {
   }
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = []
+  include_dirs = [
+    "mock/include",
+    "${kits_path}/js/bundle_manager",
+  ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
@@ -68,6 +71,8 @@ ohos_unittest("BmsBundleDataMgrTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_kit/test:test",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${core_path}:appexecfwk_core",
+    "${kits_path}/js/bundle_manager:bundle_manager_common",
+    "${kits_path}/js/common:bundle_napi_common",
   ]
   deps += bundle_install_deps
 
@@ -89,6 +94,8 @@ ohos_unittest("BmsBundleDataMgrTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "jsoncpp:jsoncpp",
+    "libuv:uv",
+    "napi:ace_napi",
     "safwk:api_cache_manager",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
