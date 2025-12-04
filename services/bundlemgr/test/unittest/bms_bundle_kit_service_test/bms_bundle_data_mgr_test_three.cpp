@@ -1193,7 +1193,7 @@ HWTEST_F(BmsBundleDataMgrTest3, GetCloneBundleInfos_0001, Function | MediumTest 
     bundleInfo.applicationInfo.bundleName = BUNDLE_NAME_DEMO;
     std::vector<BundleInfo> bundleInfos;
     int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
-    GetBundleDataMgr()->GetCloneBundleInfos(innerBundleInfo, flags, USERID, bundleInfo, bundleInfos);
+    GetBundleDataMgr()->GetCloneBundleInfos(&innerBundleInfo, flags, USERID, bundleInfo, bundleInfos);
     EXPECT_TRUE(bundleInfos.empty());
 
     InnerBundleUserInfo userInfo;
@@ -1206,7 +1206,7 @@ HWTEST_F(BmsBundleDataMgrTest3, GetCloneBundleInfos_0001, Function | MediumTest 
     cloneInfo.appIndex = 1;
     cloneInfo.accessTokenId = 20000;
     innerBundleInfo.AddCloneBundle(cloneInfo);
-    GetBundleDataMgr()->GetCloneBundleInfos(innerBundleInfo, flags, USERID, bundleInfo, bundleInfos);
+    GetBundleDataMgr()->GetCloneBundleInfos(&innerBundleInfo, flags, USERID, bundleInfo, bundleInfos);
     EXPECT_FALSE(bundleInfos.empty());
 
     if (!bundleInfos.empty()) {
@@ -2835,8 +2835,23 @@ HWTEST_F(BmsBundleDataMgrTest3, BundleDataMgr_0400, Function | SmallTest | Level
 
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.bundleStatus_ = AppExecFwk::InnerBundleInfo::BundleStatus::DISABLED;
-    ErrCode ret = bundleDataMgr->CheckInnerBundleInfoWithFlagsV9(innerBundleInfo, 0, 100, 1);
+    ErrCode ret = bundleDataMgr->CheckInnerBundleInfoWithFlagsV9(&innerBundleInfo, 0, 100, 1);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_DISABLED);
+}
+
+/**
+ * @tc.number: BundleDataMgr_0500
+ * @tc.name: test exception branch
+ * @tc.desc: pass a null pointer to test an exception branch
+ */
+HWTEST_F(BmsBundleDataMgrTest3, BundleDataMgr_0500, Function | SmallTest | Level1)
+{
+    auto bundleDataMgr = GetBundleDataMgr();
+    ASSERT_NE(bundleDataMgr, nullptr);
+
+    const InnerBundleInfo* const innerBundleInfo = nullptr;
+    ErrCode ret = bundleDataMgr->CheckInnerBundleInfoWithFlagsV9(innerBundleInfo, 0, 100, 1);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**
@@ -3153,7 +3168,7 @@ HWTEST_F(BmsBundleDataMgrTest3, PostProcessAnyUser_0001, Function | SmallTest | 
     innerBundleInfo.AddInnerBundleUserInfo(userInfo1);
     innerBundleInfo.AddInnerBundleUserInfo(userInfo2);
 
-    bundleDataMgr->PostProcessAnyUserFlags(flags, userId, originUserId, bundleInfo, innerBundleInfo);
+    bundleDataMgr->PostProcessAnyUserFlags(flags, userId, originUserId, bundleInfo, &innerBundleInfo);
     uint32_t flagsRet = static_cast<uint32_t>(bundleInfo.applicationInfo.applicationFlags);
     bool r1 = (flagsRet & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED))
          == static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
@@ -3185,7 +3200,7 @@ HWTEST_F(BmsBundleDataMgrTest3, PostProcessAnyUser_0002, Function | SmallTest | 
 
     innerBundleInfo.AddInnerBundleUserInfo(userInfo1);
 
-    bundleDataMgr->PostProcessAnyUserFlags(flags, userId, originUserId, bundleInfo, innerBundleInfo);
+    bundleDataMgr->PostProcessAnyUserFlags(flags, userId, originUserId, bundleInfo, &innerBundleInfo);
     uint32_t flagsRet = static_cast<uint32_t>(bundleInfo.applicationInfo.applicationFlags);
     bool r1 = (flagsRet & static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED))
          == static_cast<uint32_t>(ApplicationInfoFlag::FLAG_INSTALLED);

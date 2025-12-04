@@ -1144,6 +1144,24 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryCurAbilityInfos_0100, Function | Sma
 }
 
 /**
+ * @tc.number: ImplicitQueryCurAbilityInfos_0200
+ * @tc.name: test ImplicitQueryCurAbilityInfos
+ * @tc.desc: 1.system run normally
+ *           2.check ImplicitQueryCurAbilityInfos failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryCurAbilityInfos_0200, Function | SmallTest | Level1)
+{
+    Want want;
+    std::vector<AbilityInfo> abilityInfo;
+    int32_t appIndex = -1;
+    GetBundleDataMgr()->sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    bool testRet = GetBundleDataMgr()->ImplicitQueryCurAbilityInfos(
+        want, GET_ABILITY_INFO_DEFAULT, Constants::INVALID_UID, abilityInfo, appIndex);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
  * @tc.number: ImplicitQueryCurAbilityInfos_0100
  * @tc.name: test ImplicitQueryCurAbilityInfosV9
  * @tc.desc: 1.system run normally
@@ -1170,7 +1188,7 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryCurAbilityInfosV9_0100, Function | S
         want, GET_ABILITY_INFO_DEFAULT, USERID, abilityInfo, appIndex);
     int32_t responseUserId = GetBundleDataMgr()->GetUserId(USERID);
     testRet = GetBundleDataMgr()->CheckInnerBundleInfoWithFlags(
-        innerBundleInfo, GET_ABILITY_INFO_DEFAULT, responseUserId);
+        &innerBundleInfo, GET_ABILITY_INFO_DEFAULT, responseUserId);
     EXPECT_NE(testRet, ERR_OK);
 }
 
@@ -2666,8 +2684,9 @@ HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoWithFlags_0100, Function | Smal
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    const InnerBundleInfo* innerPtr = &innerBundleInfo;
     bool res = GetBundleDataMgr()->GetInnerBundleInfoWithFlags(
-        BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, USERID);
+        BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerPtr, USERID);
     EXPECT_EQ(res, false);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
 }
@@ -2708,8 +2727,9 @@ HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoWithFlagsV9_0100, Function | Sm
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    const InnerBundleInfo* innerPtr = &innerBundleInfo;
     ErrCode res = GetBundleDataMgr()->GetInnerBundleInfoWithFlagsV9(
-        BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, USERID);
+        BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerPtr, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_DISABLED);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
 }
@@ -2729,8 +2749,9 @@ HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoWithBundleFlagsV9_0100, Functio
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    const InnerBundleInfo* innerPtr = &innerBundleInfo;
     ErrCode res = GetBundleDataMgr()->GetInnerBundleInfoWithBundleFlagsV9(
-        BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, USERID);
+        BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerPtr, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_DISABLED);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
 }
@@ -2748,8 +2769,9 @@ HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoWithBundleFlagsV9_0200, Functio
     applicationInfo.bundleName = BUNDLE_NAME_TEST;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    const InnerBundleInfo* innerPtr = &innerBundleInfo;
     ErrCode res = GetBundleDataMgr()->GetInnerBundleInfoWithBundleFlagsV9(
-        BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, ServiceConstants::NOT_EXIST_USERID);
+        BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerPtr, ServiceConstants::NOT_EXIST_USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
 
