@@ -1335,7 +1335,7 @@ public:
     /**
      * @brief Obtains all JSON profile info designated by profileType and userId.
      * It does not support querying JSON profile info for disabled applications.
-     * only support profileType: EASY_GO_PROFILE
+     * only support profileType: EASY_GO_PROFILE/SHARE_FILES_PROFILE
      * @param profileType Indicates the profile type.
      * @param userId Indicates the user ID.
      * @return Returns ERR_OK if successfully obtained; returns error code otherwise.
