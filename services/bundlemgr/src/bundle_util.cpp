@@ -896,7 +896,8 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
     }
     destination.append(ServiceConstants::PATH_SEPARATOR);
     destination.append(GetAppInstallPrefix(filePath, rename));
-    destination.append(std::to_string(GetCurrentTimeNs()));
+    static std::atomic<uint64_t> installCount = 0;
+    destination.append(std::to_string(GetCurrentTimeNs()) + std::string("_") + std::to_string(++installCount));
     destination = CreateTempDir(destination);
     auto pos = filePath.find(subStr);
     if (pos == std::string::npos) { // this circumstance could not be considered laterly
