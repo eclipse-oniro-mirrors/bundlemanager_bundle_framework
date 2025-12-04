@@ -21,6 +21,7 @@
 #include "bundle_errors.h"
 #include "business_error.h"
 #include "common_func.h"
+#include "napi_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
