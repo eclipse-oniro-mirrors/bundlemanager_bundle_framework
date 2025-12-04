@@ -8234,6 +8234,8 @@ void BaseBundleInstaller::RollbackCodePath(const std::string &bundleName, bool i
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "bundle %{public}s rename +old- to real code path failed, error is %{public}d",
             bundleName.c_str(), result);
+    } else {
+        (void)DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
     }
     // delete +new- code path
     std::string newAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
@@ -8243,7 +8245,6 @@ void BaseBundleInstaller::RollbackCodePath(const std::string &bundleName, bool i
         LOG_W(BMS_TAG_INSTALLER, "bundle %{public}s remove +new- code path failed, error is %{public}d",
             bundleName.c_str(), result);
     }
-    (void)DelayedSingleton<InstallExceptionMgr>::GetInstance()->DeleteBundleExceptionInfo(bundleName);
 }
 
 void BaseBundleInstaller::InnerProcessTargetSoPath(const InnerBundleInfo &info, const bool isBundleUpdate,
