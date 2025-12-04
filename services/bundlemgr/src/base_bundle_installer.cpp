@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include <sys/stat.h>
+#include <sys/statfs.h>
 #include <sstream>
 
 #include "account_helper.h"
@@ -123,6 +124,8 @@ const char* NEW_ARK_WEB_BUNDLE_NAME = "com.ohos.arkwebcore";
 // module.json: hnpPackages type only allows [public, private]
 constexpr const char* TYPE_PUBLIC = "public";
 constexpr const char* TYPE_PRIVATE = "private";
+constexpr const char* USER_DATA_DIR = "/data";
+constexpr int32_t MIN_FREE_INODE_NUM = 50000;
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -151,6 +154,21 @@ std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
     auto prefixPath = nativeLibraryPath.substr(0, position);
     auto suffixPath = nativeLibraryPath.substr(position);
     return prefixPath + ServiceConstants::TMP_SUFFIX + suffixPath;
+}
+
+bool CheckSystemInodeSatisfied()
+{
+    struct statfs stat;
+    if (statfs(USER_DATA_DIR, &stat) != 0) {
+        LOG_E(BMS_TAG_INSTALLER, "statfs failed for %{public}s, error %{public}d",
+            USER_DATA_DIR, errno);
+        return false;
+    }
+    if (stat.f_ffree < MIN_FREE_INODE_NUM) {
+        LOG_E(BMS_TAG_INSTALLER, "free inodes not satisfied");
+        return false;
+    }
+    return true;
 }
 } // namespace
 
@@ -1306,7 +1324,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-
+    if (!CheckSystemInodeSatisfied()) {
+        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+    }
     SharedBundleInstaller sharedBundleInstaller(installParam, appType);
     ErrCode result = sharedBundleInstaller.ParseFiles();
     CHECK_RESULT(result, "parse cross-app shared bundles failed %{public}d");
