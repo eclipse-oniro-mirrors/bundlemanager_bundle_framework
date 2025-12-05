@@ -28,12 +28,38 @@ namespace AniZLibGZip {
 namespace {
 constexpr const char* CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER = "@ohos.zlib.zlib.GzErrorOutputInfoInner";
 constexpr const char* FIELD_NAME_NATIVE_GZFILE = "nativeGZFile";
+constexpr const char* FUNCTION_TOSTRING = "toString";
+constexpr const char* MANGLING_TOSTRING = ":Lstd/core/String;";
 constexpr int INVALID_FD = -1;
 constexpr uint8_t MIN_ASCII = 0;
 constexpr uint8_t MAX_ASCII = 255;
 constexpr int ANI_DOUBLE_BYTE_MAX = 64;
+
+enum AniArgsType {
+    ANI_UNKNOWN = -1,
+    ANI_INT = 0,
+    ANI_BOOLEAN = 1,
+    ANI_NUMBER = 2,
+    ANI_STRING = 3,
+    ANI_BIGINT = 4,
+    ANI_OBJECT = 5,
+    ANI_UNDEFINED = 6,
+    ANI_NULL = 7,
+};
+const std::pair<const char*, AniArgsType> OBJECT_TYPE[] = {
+    {CommonFunAniNS::CLASSNAME_INT, AniArgsType::ANI_INT},
+    {CommonFunAniNS::CLASSNAME_BOOLEAN, AniArgsType::ANI_BOOLEAN},
+    {CommonFunAniNS::CLASSNAME_DOUBLE, AniArgsType::ANI_NUMBER},
+    {CommonFunAniNS::CLASSNAME_STRING, AniArgsType::ANI_STRING},
+    {CommonFunAniNS::CLASSNAME_BIGINT, AniArgsType::ANI_BIGINT},
+    {CommonFunAniNS::CLASSNAME_OBJECT, AniArgsType::ANI_OBJECT},
+};
 } // namespace
 using namespace arkts::ani_signature;
+using AniParam = struct {
+    AniArgsType type;
+    std::string val;
+};
 
 static bool TryGetNativeGZFile(ani_env* env, ani_object instance, gzFile& file, int throwsOnError)
 {
@@ -60,122 +86,125 @@ static bool TrySetNativeGZFile(ani_env* env, ani_object instance, gzFile nativeG
     return true;
 }
 
-static bool TryGetStringArg(ani_env* env, ani_array args, ani_size index, std::string& output)
+static AniArgsType AniArgGetType(ani_env *env, ani_object element)
 {
-    ani_ref ref = nullptr;
-    ani_status status = env->Array_Get(args, index, &ref);
-    if (status != ANI_OK) {
-        APP_LOGE("Array_Get_Ref failed %{public}d", status);
-        return false;
-    }
-
-    ani_boolean isNull = ANI_FALSE;
-    status = env->Reference_IsNull(ref, &isNull);
-    if (status != ANI_OK) {
-        APP_LOGE("Reference_IsNull failed %{public}d", status);
-        return false;
-    }
-    if (isNull == ANI_TRUE) {
-        output = "null";
-        return true;
-    }
-
     ani_boolean isUndefined = ANI_FALSE;
-    status = env->Reference_IsUndefined(ref, &isUndefined);
+    ani_status status = env->Reference_IsUndefined(static_cast<ani_ref>(element), &isUndefined);
     if (status != ANI_OK) {
         APP_LOGE("Reference_IsUndefined failed %{public}d", status);
-        return false;
+        return AniArgsType::ANI_UNKNOWN;
     }
     if (isUndefined == ANI_TRUE) {
-        output = "undefined";
-        return true;
+        return AniArgsType::ANI_UNDEFINED;
+    }
+    ani_boolean isNull = ANI_FALSE;
+    status = env->Reference_IsNull(static_cast<ani_ref>(element), &isNull);
+    if (status != ANI_OK) {
+        APP_LOGE("Reference_IsNull failed %{public}d", status);
+        return AniArgsType::ANI_UNKNOWN;
+    }
+    if (isNull == ANI_TRUE) {
+        return AniArgsType::ANI_NULL;
     }
 
-    ani_object arg = static_cast<ani_object>(ref);
-
-    Type type = Builder::BuildClass(CommonFunAniNS::CLASSNAME_STRING);
-    ani_class cls = CommonFunAni::CreateClassByName(env, type.Descriptor().c_str());
-    if (cls == nullptr) {
-        APP_LOGE("CreateClassByName failed ");
-        return false;
+    for (const auto &objType : OBJECT_TYPE) {
+        ani_class cls {};
+        if (ANI_OK != env->FindClass(objType.first, &cls)) {
+            continue;
+        }
+        ani_boolean isInstance = false;
+        if (ANI_OK != env->Object_InstanceOf(element, cls, &isInstance)) {
+            continue;
+        }
+        if (static_cast<bool>(isInstance)) {
+            return objType.second;
+        }
     }
-
-    bool result = false;
-    ani_boolean isString = ANI_FALSE;
-    status = env->Object_InstanceOf(arg, cls, &isString);
-    if (status == ANI_OK && isString == ANI_TRUE) {
-        result = CommonFunAni::ParseString(env, static_cast<ani_string>(arg), output);
-    }
-
-    if (!result) {
-        APP_LOGE("get string arg failed");
-    }
-    return result;
+    return AniArgsType::ANI_UNKNOWN;
 }
 
-static bool TryGetNumberArg(ani_env* env, ani_array args, ani_size index, std::string& output)
+static std::string AniArgToString(ani_env *env, ani_object arg)
 {
-    ani_ref ref = nullptr;
-    ani_status status = env->Array_Get(args, index, &ref);
+    ani_ref argStrRef {};
+    ani_status status = env->Object_CallMethodByName_Ref(arg, FUNCTION_TOSTRING, MANGLING_TOSTRING, &argStrRef);
     if (status != ANI_OK) {
-        APP_LOGE("Array_Get_Ref failed %{public}d", status);
-        return false;
+        APP_LOGE("Object_CallMethodByName_Ref failed %{public}d", status);
+        return "";
     }
-
-    ani_boolean isNull = ANI_FALSE;
-    status = env->Reference_IsNull(ref, &isNull);
+    ani_size strSize;
+    status = env->String_GetUTF8Size(static_cast<ani_string>(argStrRef), &strSize);
     if (status != ANI_OK) {
-        APP_LOGE("Reference_IsNull failed %{public}d", status);
-        return false;
+        APP_LOGE("String_GetUTF8Size failed %{public}d", status);
+        return "";
     }
-    if (isNull == ANI_TRUE) {
-        output = "null";
-        return true;
-    }
-
-    ani_boolean isUndefined = ANI_FALSE;
-    status = env->Reference_IsUndefined(ref, &isUndefined);
+    std::vector<char> buffer(strSize + 1);
+    char* utf8Buffer = buffer.data();
+    ani_size bytesWritten = 0;
+    status = env->String_GetUTF8(static_cast<ani_string>(argStrRef), utf8Buffer, strSize + 1, &bytesWritten);
     if (status != ANI_OK) {
-        APP_LOGE("Reference_IsUndefined failed %{public}d", status);
-        return false;
+        APP_LOGE("String_GetUTF8 failed %{public}d", status);
+        return "";
     }
-    if (isUndefined == ANI_TRUE) {
-        output = "undefined";
-        return true;
+    return std::string(utf8Buffer);
+}
+
+static void ParseAniValue(ani_env *env, ani_ref element, std::vector<AniParam>& params)
+{
+    AniParam res;
+    AniArgsType type = AniArgGetType(env, static_cast<ani_object>(element));
+    res.type = type;
+    if (type == AniArgsType::ANI_UNDEFINED) {
+        res.val = "undefined";
+    } else if (type == AniArgsType::ANI_NULL) {
+        res.val = "null";
+    } else if (type != AniArgsType::ANI_UNKNOWN) {
+        res.val = AniArgToString(env, static_cast<ani_object>(element));
+    } else {
+        APP_LOGW("Type mismatch");
     }
+    params.emplace_back(res);
+}
 
-    ani_object arg = static_cast<ani_object>(ref);
-
-    Type type = Builder::BuildClass(CommonFunAniNS::CLASSNAME_DOUBLE);
-    ani_class cls = CommonFunAni::CreateClassByName(env, type.Descriptor().c_str());
-    if (cls == nullptr) {
-        APP_LOGE("CreateClassByName failed ");
-        return false;
-    }
-
-    ani_boolean isDouble = ANI_FALSE;
-    status = env->Object_InstanceOf(arg, cls, &isDouble);
-    if (status == ANI_OK && isDouble == ANI_TRUE) {
-        ani_double numberArg = 0;
-        status = env->Object_CallMethodByName_Double(arg, CommonFunAniNS::PROPERTYNAME_TODOUBLE, nullptr, &numberArg);
-        if (status != ANI_OK) {
-            APP_LOGE("Object_CallMethodByName_Double failed %{public}d", status);
-            return false;
+static void GetFormattedStringInner(const std::string& format, const ani_size maxArgCount,
+    const std::vector<AniParam>& params, std::string& formattedString)
+{
+    ani_size curArgCount = 0;
+    for (size_t pos = 0; pos < format.size(); ++pos) {
+        if (curArgCount >= maxArgCount) {
+            break;
         }
-        output.resize(ANI_DOUBLE_BYTE_MAX);
-        auto r = std::to_chars(output.data(), output.data() + output.size(), numberArg, std::chars_format::general, 17);
-        if (r.ec != std::errc()) {
-            APP_LOGE("number to string failed");
-            return false;
+        if (format[pos] != '%') {
+            formattedString += format[pos];
+            continue;
         }
-        output.resize(r.ptr - output.data());
+        if (pos + 1 >= format.size()) {
+            break;
+        }
+        switch (format[pos + 1]) {
+            case 'd':
+            case 'i':
+                if (params[curArgCount].type == AniArgsType::ANI_NUMBER) {
+                    formattedString += params[curArgCount].val;
+                }
+                ++curArgCount;
+                ++pos;
+                break;
+            case 's':
+                if (params[curArgCount].type == AniArgsType::ANI_STRING) {
+                    formattedString += params[curArgCount].val;
+                }
+                ++curArgCount;
+                ++pos;
+                break;
+            case '%':
+                formattedString += format[pos];
+                ++pos;
+                break;
+            default:
+                formattedString += format[pos];
+                break;
+        }
     }
-
-    if (status != ANI_OK) {
-        APP_LOGE("get double arg failed %{public}d", status);
-        return false;
-    }
-    return true;
 }
 
 static bool GetFormattedString(ani_env* env, const std::string& format, ani_object args, std::string& formattedString)
@@ -192,44 +221,18 @@ static bool GetFormattedString(ani_env* env, const std::string& format, ani_obje
         return true;
     }
 
-    ani_size curArgCount = 0;
-    std::string arg;
-    for (size_t pos = 0; pos < format.size(); ++pos) {
-        if (curArgCount >= maxArgCount) {
-            break;
+    std::vector<AniParam> params;
+    for (ani_size i = 0; i < maxArgCount; ++i) {
+        ani_ref element;
+        status = env->Array_Get_Ref(static_cast<ani_array_ref>(args), i, &element);
+        if (status != ANI_OK) {
+            APP_LOGE("Array_Get_Ref failed %{public}d", status);
+            return false;
         }
-        if (format[pos] != '%') {
-            formattedString += format[pos];
-            continue;
-        }
-        if (pos + 1 >= format.size()) {
-            break;
-        }
-        switch (format[pos + 1]) {
-            case 'd':
-            case 'i':
-                if (TryGetNumberArg(env, reinterpret_cast<ani_array>(args), curArgCount, arg)) {
-                    formattedString += arg;
-                }
-                ++curArgCount;
-                ++pos;
-                break;
-            case 's':
-                if (TryGetStringArg(env, reinterpret_cast<ani_array>(args), curArgCount, arg)) {
-                    formattedString += arg;
-                }
-                ++curArgCount;
-                ++pos;
-                break;
-            case '%':
-                formattedString += format[pos];
-                ++pos;
-                break;
-            default:
-                formattedString += format[pos];
-                break;
-        }
+        ParseAniValue(env, element, params);
     }
+
+    GetFormattedStringInner(format, maxArgCount, params, formattedString);
 
     return true;
 }
