@@ -54,6 +54,7 @@
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "install_exception_mgr.h"
+#include "ipc/install_hnp_param.h"
 #include "new_bundle_data_dir_mgr.h"
 #include "on_demand_install_data_mgr.h"
 #include "parameter.h"
@@ -2593,11 +2594,24 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
 
 ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &info, int32_t userId, bool removeDir)
 {
-    if (info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
+    auto hnpPackages = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName()).value_or(std::vector<HnpPackage>{});
+    if (!hnpPackages.empty()) {
         LOG_I(BMS_TAG_INSTALLER, "hnp install: %{public}s, %{public}d", info.GetCurModuleName().c_str(), userId);
         std::string moduleHnpsPath = info.GetInnerModuleInfoHnpPath(info.GetCurModuleName());
-        ErrCode ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(std::to_string(userId), moduleHnpsPath,
-            modulePath_, info.GetCpuAbi(), info.GetBundleName());
+        InstallHnpParam installHnpParam;
+        installHnpParam.userId = std::to_string(userId);
+        installHnpParam.hnpRootPath = moduleHnpsPath;
+        installHnpParam.hapPath = modulePath_;
+        installHnpParam.cpuAbi = info.GetCpuAbi();
+        installHnpParam.packageName = info.GetBundleName();
+        installHnpParam.appIdentifier = appIdentifier_;
+        for (auto &hnpPackage : hnpPackages) {
+            if (hnpPackage.independentSign) {
+                installHnpParam.hnpPaths.emplace_back(hnpPackage.type + ServiceConstants::PATH_SEPARATOR
+                    + hnpPackage.package);
+            }
+        }
+        ErrCode ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(installHnpParam);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "installing the native package failed. error code: %{public}d", ret);
             return ret;

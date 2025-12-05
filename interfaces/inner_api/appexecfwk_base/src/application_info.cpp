@@ -88,6 +88,7 @@ const char* APPLICATION_MODULE_SOURCE_DIRS = "moduleSourceDirs";
 const char* APPLICATION_HNP_PACKAGES = "hnpPackages";
 const char* APPLICATION_HNP_PACKAGES_PACKAGE = "package";
 const char* APPLICATION_HNP_PACKAGES_TYPE = "type";
+const char* APPLICATION_HNP_PACKAGES_INDEPENDENT_SIGN = "independentSign";
 const char* APPLICATION_MODULE_INFOS = "moduleInfos";
 const char* APPLICATION_META_DATA_CONFIG_JSON = "metaData";
 const char* APPLICATION_META_DATA_MODULE_JSON = "metadata";
@@ -923,6 +924,7 @@ void to_json(nlohmann::json &jsonObject, const HnpPackage &hnpPackage)
     jsonObject = nlohmann::json {
         {APPLICATION_HNP_PACKAGES_PACKAGE, hnpPackage.package},
         {APPLICATION_HNP_PACKAGES_TYPE, hnpPackage.type},
+        {APPLICATION_HNP_PACKAGES_INDEPENDENT_SIGN, hnpPackage.independentSign},
     };
 }
 
@@ -941,6 +943,12 @@ void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage)
         APPLICATION_HNP_PACKAGES_TYPE,
         hnpPackage.type,
         true,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_HNP_PACKAGES_INDEPENDENT_SIGN,
+        hnpPackage.independentSign,
+        false,
         parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read Resource error %{public}d", parseResult);

@@ -1349,12 +1349,13 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7900, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8000, Function | SmallTest | Level0)
 {
-    std::string userId = "100";
-    std::string hnpRootPath = "/hnp/root/path";
-    std::string hapPath = "happath";
-    std::string cpuAbi = "cpuabi";
-    std::string packageName = "";
-    bool ret = InstalldOperator::ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    InstallHnpParam param;
+    param.userId = "100";
+    param.hnpRootPath = "/hnp/root/path";
+    param.hapPath = "happath";
+    param.cpuAbi = "cpuabi";
+    param.packageName = "";
+    bool ret = InstalldOperator::ProcessBundleInstallNative(param);
     EXPECT_FALSE(ret);
 }
 
@@ -1366,12 +1367,13 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8000, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8100, Function | SmallTest | Level0)
 {
-    std::string userId = "100";
-    std::string hnpRootPath = "/hnp/root/path";
-    std::string hapPath = "";
-    std::string cpuAbi = "cpuabi";
-    std::string packageName = "com.acts.example";
-    bool ret = InstalldOperator::ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    InstallHnpParam param;
+    param.userId = "100";
+    param.hnpRootPath = "/hnp/root/path";
+    param.hapPath = "";
+    param.cpuAbi = "cpuabi";
+    param.packageName = "com.acts.example";
+    bool ret = InstalldOperator::ProcessBundleInstallNative(param);
     EXPECT_FALSE(ret);
 }
 
@@ -1383,12 +1385,13 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8100, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8200, Function | SmallTest | Level0)
 {
-    std::string userId = "100";
-    std::string hnpRootPath = "/hnp/root/path";
-    std::string hapPath = "happath";
-    std::string cpuAbi = "";
-    std::string packageName = "com.acts.example";
-    bool ret = InstalldOperator::ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    InstallHnpParam param;
+    param.userId = "100";
+    param.hnpRootPath = "/hnp/root/path";
+    param.hapPath = "happath";
+    param.cpuAbi = "";
+    param.packageName = "com.acts.example";
+    bool ret = InstalldOperator::ProcessBundleInstallNative(param);
     EXPECT_FALSE(ret);
 }
 
@@ -2360,5 +2363,43 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_13900, Function | Sm
     EXPECT_EQ(ret, true);
     OHOS::ForceRemoveDirectory("/data/test/plugins_1");
     OHOS::ForceRemoveDirectory("/data/test/plugins_2");
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_14000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessBundleInstallNative of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14000, Function | SmallTest | Level0)
+{
+    InstallHnpParam param;
+    param.userId = "100";
+    param.hnpRootPath = "/hnp/root/path";
+    param.hapPath = "happath";
+    param.cpuAbi = "cpuabi";
+    param.packageName = "com.test.demo";
+    param.appIdentifier = "";
+    std::string hnpPath = "public/test.hnp";
+    param.hnpPaths.emplace_back(hnpPath);
+    bool ret = InstalldOperator::ProcessBundleInstallNative(param);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_14100
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessBundleInstallNative of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14100, Function | SmallTest | Level0)
+{
+    InstallHnpParam param;
+    param.userId = "100";
+    param.hnpRootPath = "/hnp/root/path";
+    param.hapPath = "happath";
+    param.cpuAbi = "cpuabi";
+    param.packageName = "com.test.demo";
+    param.appIdentifier = "123456";
+    bool ret = InstalldOperator::ProcessBundleInstallNative(param);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

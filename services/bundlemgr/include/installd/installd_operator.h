@@ -30,6 +30,7 @@
 #include "ipc/code_signature_param.h"
 #include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
+#include "ipc/install_hnp_param.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -112,12 +113,7 @@ public:
         const std::string &entryName,
         const std::string &targetPath,
         const ExtractFileType &extractFileType = ExtractFileType::SO);
-    static bool ProcessBundleInstallNative(
-        const std::string &userId,
-        const std::string &hnpRootPath,
-        const std::string &hapPath,
-        const std::string &cpuAbi,
-        const std::string &packageName);
+    static bool ProcessBundleInstallNative(const InstallHnpParam &installHnpParam);
     static bool ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName);
 
     static bool DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,

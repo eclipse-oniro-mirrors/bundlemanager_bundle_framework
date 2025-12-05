@@ -171,6 +171,7 @@ struct Metadata {
 struct HnpPackage {
     std::string package;
     std::string type;
+    bool independentSign = false;
 };
 
 struct Ability {
@@ -432,6 +433,12 @@ void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage)
         jsonObjectEnd,
         HNP_TYPE,
         hnpPackage.type,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        HNP_INDEPENDENT_SIGN,
+        hnpPackage.independentSign,
         false,
         g_parseResult);
 }
@@ -1798,6 +1805,7 @@ void GetHnpPackage(std::vector<HnpPackage> &hnpPackage, const std::vector<Profil
         HnpPackage tmpHnpPackage;
         tmpHnpPackage.package = item.package;
         tmpHnpPackage.type = item.type;
+        tmpHnpPackage.independentSign = item.independentSign;
         hnpPackage.emplace_back(tmpHnpPackage);
     }
 }

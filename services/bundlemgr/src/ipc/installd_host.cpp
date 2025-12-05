@@ -341,13 +341,13 @@ bool InstalldHost::HandleExtractHnpFiles(MessageParcel &data, MessageParcel &rep
 
 bool InstalldHost::HandleProcessBundleInstallNative(MessageParcel &data, MessageParcel &reply)
 {
-    std::string userId = Str16ToStr8(data.ReadString16());
-    std::string hnpRootPath = Str16ToStr8(data.ReadString16());
-    std::string hapPath = Str16ToStr8(data.ReadString16());
-    std::string cpuAbi = Str16ToStr8(data.ReadString16());
-    std::string packageName = Str16ToStr8(data.ReadString16());
+    std::unique_ptr<InstallHnpParam> info(data.ReadParcelable<InstallHnpParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
 
-    ErrCode result = ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    ErrCode result = ProcessBundleInstallNative(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

@@ -211,8 +211,7 @@ public:
 
     ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap, const ExtractParam &extractParam);
 
-    ErrCode ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-        const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName);
+    ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam);
 
     ErrCode ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName);
 

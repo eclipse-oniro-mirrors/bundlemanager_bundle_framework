@@ -46,8 +46,7 @@ ErrCode InstalldHostImpl::ExtractHnpFiles(const std::map<std::string, std::strin
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+ErrCode InstalldHostImpl::ProcessBundleInstallNative(const InstallHnpParam &installHnpParam)
 {
     return ERR_OK;
 }

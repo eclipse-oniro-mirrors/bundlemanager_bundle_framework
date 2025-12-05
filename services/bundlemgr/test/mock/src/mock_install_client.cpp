@@ -48,8 +48,7 @@ ErrCode InstalldClient::ExtractHnpFiles(const std::map<std::string, std::string>
     return 0;
 }
 
-ErrCode InstalldClient::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+ErrCode InstalldClient::ProcessBundleInstallNative(const InstallHnpParam &installHnpParam)
 {
     return 0;
 }
