@@ -7364,6 +7364,26 @@ HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0030, Function | SmallTes
 }
 
 /**
+ * @tc.number: SendBundleSystemEvent_0040
+ * @tc.name: test SendBundleSystemEvent
+ * @tc.desc: 1.SendBundleSystemEvent
+ */
+HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0040, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.isKeepData = true;
+    BaseBundleInstaller installer;
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::INSTALL, installParam, InstallScene::NORMAL, ERR_OK);
+    ASSERT_TRUE(installer.sysEventInfo_.isKeepData);
+
+    installParam.isKeepData = false;
+    installer.SendBundleSystemEvent(
+        "bundleName", BundleEventType::INSTALL, installParam, InstallScene::NORMAL, ERR_OK);
+    ASSERT_FALSE(installer.sysEventInfo_.isKeepData);
+}
+
+/**
  * @tc.number: CreateSharedBundleTempDir_0100
  * @tc.name: test CreateSharedBundleTempDir
  * @tc.desc: 1.test CreateSharedBundleTempDir of BundleUtil
