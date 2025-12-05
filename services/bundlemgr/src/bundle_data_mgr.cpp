@@ -3632,8 +3632,8 @@ bool BundleDataMgr::GetBundleInfosByMetaData(
     return find;
 }
 
-bool BundleDataMgr::GetBundleList(
-    std::vector<std::string> &bundleNames, int32_t userId) const
+bool BundleDataMgr::GetBundleList(std::vector<std::string> &bundleNames,
+    int32_t userId, int32_t flags) const
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
@@ -3651,7 +3651,7 @@ bool BundleDataMgr::GetBundleList(
         const InnerBundleInfo &innerBundleInfo = infoItem.second;
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         if (CheckInnerBundleInfoWithFlags(
-            innerBundleInfo, BundleFlag::GET_BUNDLE_DEFAULT, responseUserId) != ERR_OK) {
+            innerBundleInfo, flags, responseUserId) != ERR_OK) {
             continue;
         }
 
