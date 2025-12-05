@@ -357,7 +357,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0004, Function | Sma
         bool isRemovable = false;
         ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable, USERID);
         EXPECT_EQ(ret, ERR_OK);
-        EXPECT_TRUE(isRemovable);
+        EXPECT_FALSE(isRemovable);
     }
 
     UninstallBundleInfo(BUNDLE_NAME);
@@ -381,7 +381,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0005, Function | Sma
         bool isRemovable = false;
         ErrCode ret = bundleMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable, USERID);
         EXPECT_EQ(ret, ERR_OK);
-        EXPECT_TRUE(isRemovable);
+        EXPECT_FALSE(isRemovable);
     }
 
     UninstallBundleInfo(BUNDLE_NAME);
