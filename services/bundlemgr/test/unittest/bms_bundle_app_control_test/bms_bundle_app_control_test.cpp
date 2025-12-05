@@ -35,6 +35,7 @@
 #include "iservice_registry.h"
 #include "mock_status_receiver.h"
 #include "permission_define.h"
+#include "scope_guard.h"
 #include "system_ability_definition.h"
 
 using namespace testing::ext;
@@ -49,6 +50,7 @@ namespace OHOS {
 namespace {
 const std::string INSTALL_PATH = "/data/test/resource/bms/app_control/bmsThirdBundle1.hap";
 const std::string BUNDLE_NAME = "com.third.hiworld.example1";
+const std::string CLONE_CALLER_NAME = "com.third.hiworld.example1_1";
 const std::string CALLER_BUNDLE_NAME = "callerBundleName";
 const std::string TARGET_BUNDLE_NAME = "targetBundleName";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
@@ -2007,6 +2009,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6500, Function | Sma
     AppRunningControlRuleResult controlRuleResult;
     InnerBundleInfo info;
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
     appControlManager->appRunningControlRuleResult_.clear();
     ErrCode res = appControlManager->GetAppRunningControlRule(BUNDLE_NAME, USERID, controlRuleResult);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
@@ -2028,6 +2031,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6600, Function | Sma
     AppRunningControlRuleResult controlRuleResult;
     InnerBundleInfo info;
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
     std::string key = std::string("_") + std::to_string(USERID);
     AppRunningControlRuleResult value;
     value.controlMessage = "_MESSAGE";
@@ -2053,6 +2057,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6700, Function | Sma
     AppRunningControlRuleResult controlRuleResult;
     InnerBundleInfo info;
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, info);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
     std::string key = std::string("_") + std::to_string(USERID);
     AppRunningControlRuleResult value;
     value.controlMessage = "INVALID_MESSAGE";
@@ -2172,9 +2177,8 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7300, Function | Sma
     std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
     bundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
     dataMgr->multiUserIdsSet_.insert(USERID);
-    auto it = dataMgr->bundleInfos_.find(BUNDLE_NAME);
-    dataMgr->bundleInfos_.erase(it);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
     auto res = appControlManager->DeleteAllDisposedRuleByBundle(bundleInfo, Constants::MAIN_APP_INDEX, USERID);
     EXPECT_EQ(res, ERR_OK);
 }
@@ -2228,6 +2232,21 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7600, Function | Sma
     ASSERT_NE(impl, nullptr);
     auto appControlManager = impl->appControlManager_;
     ASSERT_NE(appControlManager, nullptr);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo bundleInfo;
+    ASSERT_NE(bundleInfo.baseApplicationInfo_, nullptr);
+    bundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleCloneInfo cloneInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos.emplace(BUNDLE_NAME, cloneInfo);
+    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    bundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
     std::vector<DisposedRule> disposedRules;
     auto res = appControlManager->GetAbilityRunningControlRule(BUNDLE_NAME, APP_INDEX, USERID, disposedRules);
     EXPECT_EQ(ERR_OK, res);
@@ -2244,6 +2263,21 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7700, Function | Sma
     ASSERT_NE(impl, nullptr);
     auto appControlManager = impl->appControlManager_;
     ASSERT_NE(appControlManager, nullptr);
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo bundleInfo;
+    ASSERT_NE(bundleInfo.baseApplicationInfo_, nullptr);
+    bundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleCloneInfo cloneInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos.emplace(BUNDLE_NAME, cloneInfo);
+    std::string bundleKey = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    bundleInfo.innerBundleUserInfos_.emplace(bundleKey, userInfo);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
     std::vector<DisposedRule> disposedRules;
     std::string key = std::string("_") + std::to_string(USERID) + std::string("_") + std::to_string(APP_INDEX);
     appControlManager->abilityRunningControlRuleCache_.emplace(key, disposedRules);
@@ -2264,6 +2298,21 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_7800, Function | Sma
     ASSERT_NE(rdb->rdbDataManager_, nullptr);
     rdb->rdbDataManager_->bmsRdbConfig_.tableName = "name";
     appControlManager.appControlManagerDb_ = rdb;
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo bundleInfo;
+    ASSERT_NE(bundleInfo.baseApplicationInfo_, nullptr);
+    bundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleCloneInfo cloneInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos.emplace(BUNDLE_NAME, cloneInfo);
+    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    bundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
     std::vector<DisposedRule> disposedRules;
     auto res = appControlManager.GetAbilityRunningControlRule(BUNDLE_NAME, APP_INDEX, USERID, disposedRules);
     EXPECT_EQ(res, ERR_APPEXECFWK_DB_RESULT_SET_EMPTY);
@@ -4048,6 +4097,20 @@ HWTEST_F(BmsBundleAppControlTest, CheckAppControlRuleIntercept_0600, Function | 
  */
 HWTEST_F(BmsBundleAppControlTest, CheckAppControlRuleIntercept_0700, Function | SmallTest | Level1)
 {
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo bundleInfo;
+    ASSERT_NE(bundleInfo.baseApplicationInfo_, nullptr);
+    bundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleCloneInfo cloneInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos.emplace(BUNDLE_NAME, cloneInfo);
+    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    bundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
     auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
     ASSERT_NE(appControlManager, nullptr);
     AppRunningControlRuleResult ruleParam;
@@ -4068,6 +4131,20 @@ HWTEST_F(BmsBundleAppControlTest, CheckAppControlRuleIntercept_0700, Function | 
  */
 HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0100, Function | SmallTest | Level1)
 {
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo bundleInfo;
+    ASSERT_NE(bundleInfo.baseApplicationInfo_, nullptr);
+    bundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleCloneInfo cloneInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos.emplace(BUNDLE_NAME, cloneInfo);
+    std::string bundleKey = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    bundleInfo.innerBundleUserInfos_.emplace(bundleKey, userInfo);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
     auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
     ASSERT_NE(appControlManager, nullptr);
     AppRunningControlRuleResult ruleParam;
@@ -4088,6 +4165,20 @@ HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0100, Function | Smal
  */
 HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0200, Function | SmallTest | Level1)
 {
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo bundleInfo;
+    ASSERT_NE(bundleInfo.baseApplicationInfo_, nullptr);
+    bundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleCloneInfo cloneInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos.emplace(BUNDLE_NAME, cloneInfo);
+    std::string bundleKey = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    bundleInfo.innerBundleUserInfos_.emplace(bundleKey, userInfo);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
     auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
     ASSERT_NE(appControlManager, nullptr);
     AppRunningControlRuleResult ruleParam;
@@ -4108,6 +4199,20 @@ HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0200, Function | Smal
  */
 HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0300, Function | SmallTest | Level1)
 {
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo bundleInfo;
+    ASSERT_NE(bundleInfo.baseApplicationInfo_, nullptr);
+    bundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    InnerBundleCloneInfo cloneInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos.emplace(BUNDLE_NAME, cloneInfo);
+    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
+    bundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
+
     auto appControlManager = DelayedSingleton<AppControlManager>::GetInstance();
     ASSERT_NE(appControlManager, nullptr);
     AppRunningControlRuleResult rule;
@@ -4595,6 +4700,7 @@ HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0400, Function | Smal
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseBundleInfo_->appId = APPID;
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
     AppRunningControlRuleResult rule;
     auto ret = appControlManager->GetAppRunningControlRule(BUNDLE_NAME, USERID, rule);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
@@ -4631,6 +4737,7 @@ HWTEST_F(BmsBundleAppControlTest, GetAppRunningControlRule_0500, Function | Smal
     innerBundleInfo.baseBundleInfo_->appId = APPID;
     innerBundleInfo.SetAppIdentifier("appIdentifier_test");
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
     AppRunningControlRuleResult rule;
 
     std::vector<AppRunningControlRule> controlRules;
@@ -4866,5 +4973,81 @@ HWTEST_F(BmsBundleAppControlTest, DeleteAllDisposedRulesForUser_0300, Function |
     ASSERT_NE(rdb, nullptr);
     auto ret = rdb->DeleteAllDisposedRulesForUser(USERID);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetCallerByUid_0100
+ * @tc.name: Test GetCallerByUid main app
+ * @tc.desc: 1.GetCallerByUid_0100 test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    ASSERT_NE(impl->dataMgr_, nullptr);
+
+    std::string callerName;
+    impl->GetCallerByUid(5523, callerName);
+    EXPECT_EQ(callerName, "5523");
+
+    impl->GetCallerByUid(3057, callerName);
+    EXPECT_EQ(callerName, "edm");
+
+    BundleUserInfo bundleUserInfo;
+    bundleUserInfo.userId = 100;
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo = bundleUserInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    impl->dataMgr_->GenerateUidAndGid(userInfo);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100);
+    innerBundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
+
+    impl->dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    ScopeGuard bundleInfoGuard([&] { impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME); });
+
+    impl->GetCallerByUid(userInfo.uid, callerName);
+    EXPECT_EQ(callerName, BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetCallerByUid_0200
+ * @tc.name: Test GetCallerByUid clone app
+ * @tc.desc: 1.GetCallerByUid_0200 test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0200, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    ASSERT_NE(impl->dataMgr_, nullptr);
+
+    BundleUserInfo bundleUserInfo;
+    bundleUserInfo.userId = 100;
+
+    std::string cloneBundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(BUNDLE_NAME, 1);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo = bundleUserInfo;
+    userInfo.bundleName = cloneBundleName;
+    impl->dataMgr_->GenerateUidAndGid(userInfo);
+
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.appIndex = 1;
+    cloneInfo.uid = userInfo.uid;
+    userInfo.cloneInfos["1"] = cloneInfo;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(100);
+    innerBundleInfo.innerBundleUserInfos_.emplace(key, userInfo);
+
+    impl->dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    ScopeGuard bundleInfoGuard([&] { impl->dataMgr_->bundleInfos_.erase(BUNDLE_NAME); });
+
+    std::string callerName;
+    impl->GetCallerByUid(userInfo.uid, callerName);
+    EXPECT_EQ(callerName, CLONE_CALLER_NAME);
 }
 } // OHOS
