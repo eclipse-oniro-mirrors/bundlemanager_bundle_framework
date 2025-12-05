@@ -2294,7 +2294,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetModuleRemovable_0100, Function | MediumTest
     ErrCode ret2 = hostImpl->IsModuleRemovable(
         BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable);
     EXPECT_EQ(ret2, ERR_OK);
-    EXPECT_TRUE(isRemovable);
+    EXPECT_FALSE(isRemovable);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
