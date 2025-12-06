@@ -6215,4 +6215,46 @@ HWTEST_F(BmsBundleDataMgrTest, InnerGetAllAppProvisionInfo_0200, Function | Smal
     ErrCode ret = bundleManagerHelper.InnerGetAllAppProvisionInfo(userId, appProvisionInfos);
     EXPECT_EQ(ret, ERROR_INVALID_USER_ID);
 }
+
+/**
+ * @tc.number: HandleDetermineCloneNumList_0100
+ * @tc.name: test HandleDetermineCloneNumList
+ * @tc.desc: 1.Test the HandleDetermineCloneNumList
+ */
+HWTEST_F(BmsBundleDataMgrTest, HandleDetermineCloneNumList_0100, Function | SmallTest | Level1)
+{
+    std::string testBundle3 = "com.test.bundle3";
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    innerBundleInfo.SetAppIdentifier("testAppIdentifier4");
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 100;
+    innerBundleInfo.innerBundleUserInfos_.emplace(testBundle3, innerBundleUserInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(testBundle3, innerBundleInfo);
+
+    std::string testBundle5 = "com.test.bundle5";
+    InnerBundleInfo innerBundleInfo5;
+    innerBundleInfo5.SetApplicationBundleType(BundleType::APP);
+    innerBundleInfo5.SetAppIdentifier("testAppIdentifier5");
+    MultiAppModeData multiAppMode;
+    multiAppMode.multiAppModeType = MultiAppModeType::MULTI_INSTANCE;
+    multiAppMode.maxCount = 1;
+    innerBundleInfo5.SetMultiAppMode(multiAppMode);
+    InnerBundleUserInfo innerBundleUserInfo5;
+    innerBundleUserInfo5.bundleUserInfo.userId = 100;
+    innerBundleInfo5.innerBundleUserInfos_.emplace(testBundle5, innerBundleUserInfo5);
+    GetBundleDataMgr()->bundleInfos_.emplace(testBundle5, innerBundleInfo5);
+
+    std::vector<std::tuple<std::string, std::string, uint32_t>> determineCloneNumList = {
+        {"", "testAppIdentifier1", 0},
+        {"com.test.bundle2", "testAppIdentifier2", 0},
+        {testBundle3, "testAppIdentifier3", 0},
+        {testBundle3, "testAppIdentifier4", 1},
+        {testBundle3, "testAppIdentifier4", 6},
+        {testBundle3, "testAppIdentifier4", 2},
+        {testBundle5, "testAppIdentifier5", 2}
+    }
+    ErrCode ret = GetBundleDataMgr()->HandleDetermineCloneNumList(determineCloneNumList);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
