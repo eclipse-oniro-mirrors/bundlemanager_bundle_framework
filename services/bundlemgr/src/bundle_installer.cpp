@@ -20,15 +20,21 @@
 
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "parameter.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* USER_DATA_DIR = "/data";
-constexpr double MIN_FREE_INODE_PERCENT = 0.01; // 1%
+constexpr double MIN_FREE_INODE_PERCENT = 0.005; // 0.5%
 
-bool CheckSystemInodeSatisfied()
+bool CheckSystemInodeSatisfied(const std::string &bundleName)
 {
+    std::string appGalleryName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
+    if (appGalleryName.empty() || appGalleryName != bundleName) {
+        return true;
+    }
     struct statfs stat;
     if (statfs(USER_DATA_DIR, &stat) != 0) {
         LOG_E(BMS_TAG_INSTALLER, "statfs failed for %{public}s, error %{public}d",
@@ -318,7 +324,7 @@ void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const I
     std::vector<ErrCode> errCode;
     auto userInstallParam = installParam;
     std::vector<int32_t> userIds;
-    if (!CheckSystemInodeSatisfied()) {
+    if (!CheckSystemInodeSatisfied(bundleName)) {
         APP_LOGE("System inode not satisfied for uninstall and recover");
         if (statusReceiver_ != nullptr) {
             statusReceiver_->OnFinished(ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT, "");

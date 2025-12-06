@@ -126,7 +126,7 @@ const char* NEW_ARK_WEB_BUNDLE_NAME = "com.ohos.arkwebcore";
 constexpr const char* TYPE_PUBLIC = "public";
 constexpr const char* TYPE_PRIVATE = "private";
 constexpr const char* USER_DATA_DIR = "/data";
-constexpr double MIN_FREE_INODE_PERCENT = 0.01; // 1%
+constexpr double MIN_FREE_INODE_PERCENT = 0.005; // 0.5%
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -157,8 +157,12 @@ std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
     return prefixPath + ServiceConstants::TMP_SUFFIX + suffixPath;
 }
 
-bool CheckSystemInodeSatisfied()
+bool CheckSystemInodeSatisfied(const std::string &bundleName)
 {
+    std::string appGalleryName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
+    if (appGalleryName.empty() || appGalleryName != bundleName) {
+        return true;
+    }
     struct statfs stat;
     if (statfs(USER_DATA_DIR, &stat) != 0) {
         LOG_E(BMS_TAG_INSTALLER, "statfs failed for %{public}s, error %{public}d",
@@ -1328,9 +1332,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    if (!CheckSystemInodeSatisfied()) {
-        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
-    }
+
     SharedBundleInstaller sharedBundleInstaller(installParam, appType);
     ErrCode result = sharedBundleInstaller.ParseFiles();
     CHECK_RESULT(result, "parse cross-app shared bundles failed %{public}d");
@@ -1389,6 +1391,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
 
+    if (!newInfos.empty() && !CheckSystemInodeSatisfied(newInfos.begin()->second.GetBundleName())) {
+        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+    }
     result = CheckArkTSMode(newInfos);
     CHECK_RESULT(result, "check arkTS mode failed %{public}d");
 
