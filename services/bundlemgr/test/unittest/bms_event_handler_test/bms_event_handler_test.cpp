@@ -3058,6 +3058,26 @@ HWTEST_F(BmsEventHandlerTest, GetInstallAndRecoverListForAllUser_0100, Function 
 }
 
 /**
+ * @tc.number: GetInstallAndRecoverListForAllUser_0200
+ * @tc.name: GetInstallAndRecoverListForAllUser
+ * @tc.desc: test GetInstallAndRecoverListForAllUser
+ */
+HWTEST_F(BmsEventHandlerTest, GetInstallAndRecoverListForAllUser_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    if (handler) {
+        dataMgr->AddUserId(-1);
+        std::unordered_map<int32_t,
+            std::pair<std::vector<std::string>, std::vector<std::string>>> installAndRecoverList;
+        EXPECT_NO_THROW(handler->GetInstallAndRecoverListForAllUser(installAndRecoverList));
+        dataMgr->RemoveUserId(-1);
+    }
+}
+
+/**
  * @tc.number: HandleDetermineCloneNumList_0100
  * @tc.name: HandleDetermineCloneNumList
  * @tc.desc: test HandleDetermineCloneNumList

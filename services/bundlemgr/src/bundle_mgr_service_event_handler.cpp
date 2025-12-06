@@ -5553,16 +5553,21 @@ void BMSEventHandler::GetInstallAndRecoverListForAllUser(std::unordered_map<int3
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
     }
-    std::vector<std::string> bundleList = dataMgr->GetAllBundleName();
     BmsExtensionDataMgr bmsExtensionDataMgr;
     auto userIds = dataMgr->GetAllUser();
     for (const auto &userId : userIds) {
         if (userId == Constants::DEFAULT_USERID) {
             continue;
         }
+        std::vector<std::string> bundleNames;
+        if (!dataMgr->GetBundleList(bundleNames, userId,
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))) {
+            LOG_E(BMS_TAG_DEFAULT, "-u %{public}d GetBundleList failed", userId);
+            continue;
+        }
         std::vector<std::string> forceInstallList;
         std::vector<std::string> recoverList;
-        if (!bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, forceInstallList, recoverList)) {
+        if (!bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleNames, forceInstallList, recoverList)) {
             LOG_E(BMS_TAG_DEFAULT, "-u %{public}d GetInstallAndRecoverList failed", userId);
             continue;
         }
