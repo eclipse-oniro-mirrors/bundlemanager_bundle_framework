@@ -2412,4 +2412,16 @@ HWTEST_F(BmsExtensionDataMgrTest, GetLauncherAbilityResourceInfo_0001, Function 
         optiont, static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfo);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 }
+
+/**
+ * @tc.number: GetDetermineCloneNumList_0001
+ * @tc.name: GetDetermineCloneNumList
+ * @tc.desc: GetDetermineCloneNumList
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetDetermineCloneNumList_0001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<std::tuple<std::string, std::string, uint32_t>> determineCloneNumList;
+    EXPECT_NO_THROW(bmsExtensionDataMgr.GetDetermineCloneNumList(determineCloneNumList));
+}
 } // OHOS

@@ -810,5 +810,21 @@ bool BmsExtensionDataMgr::GetInstallAndRecoverList(const int32_t userId, const s
     }
     return bundleMgrExtPtr->GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
 }
+
+ErrCode BmsExtensionDataMgr::GetDetermineCloneNumList(
+    std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList)
+{
+    if (Init() != ERR_OK) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    return bundleMgrExtPtr->GetDetermineCloneNumList(determineCloneNumList);
+}
 } // AppExecFwk
 } // OHOS

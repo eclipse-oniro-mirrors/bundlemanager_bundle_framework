@@ -216,6 +216,11 @@ public:
     {
         return false;
     }
+    virtual ErrCode GetDetermineCloneNumList(
+        std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
 };
 
 } // AppExecFwk

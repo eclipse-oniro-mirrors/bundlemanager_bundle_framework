@@ -412,6 +412,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         OnBundleRebootStart();
         HandlePreInstallException(false);
         HandleOTACodeEncryption();
+        HandleDetermineCloneNumList();
         SaveSystemFingerprint();
         (void)SaveBmsSystemTimeForShortcut();
         AOTHandler::GetInstance().HandleOTA();
@@ -2803,6 +2804,30 @@ void BMSEventHandler::HandleOTACodeEncryption()
     auto res = bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::OTA_CHECK_FINISHED);
     LOG_I(BMS_TAG_DEFAULT, "keyOperation result %{public}d", res);
     SaveCodeProtectFlag();
+}
+
+void BMSEventHandler::HandleDetermineCloneNumList()
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<std::tuple<std::string, std::string, uint32_t>> determineCloneNumList;
+    ErrCode result = bmsExtensionDataMgr.GetDetermineCloneNumList(determineCloneNumList);
+    if (result != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "GetDetermineCloneNumList result:%{public}d", result);
+        return;
+    }
+    if (determineCloneNumList.empty()) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "GetDetermineCloneNumList empty");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        return;
+    }
+    result = dataMgr->HandleDetermineCloneNumList(determineCloneNumList);
+    if (result != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandleDetermineCloneNumList result:%{public}d", result);
+    }
 }
 
 void BMSEventHandler::SaveCodeProtectFlag()
