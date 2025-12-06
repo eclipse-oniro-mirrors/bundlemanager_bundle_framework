@@ -136,6 +136,24 @@ void InstallExceptionMgr::HandleAllBundleExceptionInfo()
     for (const auto &codePath : allCodePath) {
         if (codePath.find(ServiceConstants::BUNDLE_OLD_CODE_DIR) == 0) {
             APP_LOGI("+old- code path %{public}s", codePath.c_str());
+            std::string bundleName = codePath.substr(std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR).size());
+            if (bundleName.empty() || (bundleExceptionInfos.find(bundleName) != bundleExceptionInfos.end())) {
+                continue;
+            }
+            std::string oldCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
+                ServiceConstants::PATH_SEPARATOR + codePath;
+            std::string realCodePath = std::string(Constants::BUNDLE_CODE_DIR) +
+                ServiceConstants::PATH_SEPARATOR + bundleName;
+            // realPath exist, then delete +old-
+            if (std::find(allCodePath.begin(), allCodePath.end(), bundleName) != allCodePath.end()) {
+                (void)InstalldClient::GetInstance()->RemoveDir(oldCodePath);
+                continue;
+            }
+            // realPath not exist, then rename +old-
+            ErrCode result = InstalldClient::GetInstance()->RenameModuleDir(oldCodePath, realCodePath);
+            if (result != ERR_OK) {
+                APP_LOGW("rename +old- to real code path failed, error is %{public}d", result);
+            }
             continue;
         }
         if (codePath.find(ServiceConstants::BUNDLE_NEW_CODE_DIR) == 0) {
