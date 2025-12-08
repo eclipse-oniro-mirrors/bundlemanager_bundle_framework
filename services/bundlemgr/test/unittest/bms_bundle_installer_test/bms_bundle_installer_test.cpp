@@ -4805,6 +4805,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5300, Function | SmallTest 
     ClearDataMgr();
     auto ret = installer.UninstallBundleByUninstallParam(uninstallParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(installer.versionCode_, Constants::ALL_VERSIONCODE);
     ResetDataMgr();
 }
 

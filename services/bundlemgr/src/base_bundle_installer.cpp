@@ -465,6 +465,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         uninstallParam.bundleName.c_str());
     const std::string &bundleName = uninstallParam.bundleName;
     int32_t versionCode = uninstallParam.versionCode;
+    versionCode_ = versionCode;
     if (bundleName.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle name or module name empty");
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
@@ -525,7 +526,6 @@ ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed", bundleName.c_str());
     }
-    versionCode_ = Constants::ALL_VERSIONCODE;
     userId_ = Constants::ALL_USERID;
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
     /* remove sign profile from code signature for cross-app hsp */
@@ -557,7 +557,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
         LOG_E(BMS_TAG_INSTALLER, "update install success failed");
         return ERR_APPEXECFWK_UPDATE_BUNDLE_INSTALL_STATUS_ERROR;
     }
-    versionCode_ = Constants::ALL_VERSIONCODE;
+    
     userId_ = Constants::ALL_USERID;
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
     return ERR_OK;
