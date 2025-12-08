@@ -4157,9 +4157,12 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
         return recoverablePreInstallBundleInfos;
     }
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = GetAllPreInstallBundleInfos();
+    std::string bundleName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
     for (auto preInstallBundleInfo: preInstallBundleInfos) {
         if (!preInstallBundleInfo.IsRemovable()) {
-            continue;
+            if (preInstallBundleInfo.GetBundleName() != bundleName) {
+                continue;
+            }
         }
         if (preInstallBundleInfo.HasForceUninstalledUser(userId)) {
             APP_LOGW("-n %{public}s is force unisntalled in -u %{public}d",
