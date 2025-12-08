@@ -3000,11 +3000,11 @@ ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInf
     InnerBundleInfo innerBundleInfo;
     if (GetInnerBundleInfoAndIndexByUid(uid, innerBundleInfo, appIndex) != ERR_OK) {
         if (sandboxAppHelper_ == nullptr) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoForSelf failed uid:%{public}d", uid);
+            LOG_D(BMS_TAG_QUERY, "GetBundleInfoForSelf failed uid:%{public}d", uid);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "GetBundleInfoForSelf failed uid:%{public}d", uid);
+            LOG_NOFUNC_W(BMS_TAG_QUERY, "sandbox GetBundleInfoForSelf failed uid:%{public}d", uid);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
@@ -9445,7 +9445,7 @@ int32_t BundleDataMgr::GetUidByBundleName(const std::string &bundleName, int32_t
     std::shared_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGW_NOFUNC("FetchInnerBundleInfo not found %{public}s", bundleName.c_str());
+        APP_LOGW_NOFUNC("GetUidByBundleName not found %{public}s", bundleName.c_str());
         return Constants::INVALID_UID;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
