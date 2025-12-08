@@ -324,7 +324,7 @@ void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const I
     std::vector<ErrCode> errCode;
     auto userInstallParam = installParam;
     std::vector<int32_t> userIds;
-    if (!CheckSystemInodeSatisfied(bundleName)) {
+    if (!installParam.isOTA && !CheckSystemInodeSatisfied(bundleName)) {
         APP_LOGE("System inode not satisfied for uninstall and recover");
         if (statusReceiver_ != nullptr) {
             statusReceiver_->OnFinished(ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT, "");

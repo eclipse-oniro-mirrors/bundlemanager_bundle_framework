@@ -1391,7 +1391,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
 
-    if (!newInfos.empty() && !CheckSystemInodeSatisfied(newInfos.begin()->second.GetBundleName())) {
+    if (!(installParam.isOTA || otaInstall_) && !newInfos.empty() &&
+        !CheckSystemInodeSatisfied(newInfos.begin()->second.GetBundleName())) {
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
     result = CheckArkTSMode(newInfos);
