@@ -11048,7 +11048,7 @@ HWTEST_F(ActsBmsKitSystemTest, BatchGetCompatibleDeviceType_0003, Function | Sma
     } else {
         std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
         ErrCode ret = bundleMgrProxy->BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
-        EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     }
 }
 
