@@ -6253,7 +6253,7 @@ HWTEST_F(BmsBundleDataMgrTest, HandleDetermineCloneNumList_0100, Function | Smal
         {testBundle3, "testAppIdentifier4", 6},
         {testBundle3, "testAppIdentifier4", 2},
         {testBundle5, "testAppIdentifier5", 2}
-    }
+    };
     ErrCode ret = GetBundleDataMgr()->HandleDetermineCloneNumList(determineCloneNumList);
     EXPECT_EQ(ret, ERR_OK);
 }
