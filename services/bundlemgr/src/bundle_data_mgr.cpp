@@ -9972,7 +9972,7 @@ ErrCode BundleDataMgr::HandleDetermineCloneNumList(
             continue;
         }
         if (infoItem->second.GetMultiAppMaxCount() >= static_cast<int32_t>(cloneNum)) {
-            APP_LOGW_NOFUNC("%{public}s maxCount is smaller no need to refresh", bundleName.c_str());
+            APP_LOGW_NOFUNC("%{public}s cloneNum is smaller no need to refresh", bundleName.c_str());
             continue;
         }
         MultiAppModeData multiAppMode;

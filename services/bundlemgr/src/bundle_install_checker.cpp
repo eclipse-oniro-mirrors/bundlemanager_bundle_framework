@@ -1897,26 +1897,28 @@ void BundleInstallChecker::SetCheckResultMsg(const std::string checkResultMsg)
 
 bool BundleInstallChecker::DetermineCloneApp(InnerBundleInfo &innerBundleInfo)
 {
-    ApplicationInfo applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
-    if (applicationInfo.multiAppMode.multiAppModeType != MultiAppModeType::APP_CLONE
-        || applicationInfo.multiAppMode.maxCount == 0) {
-        BmsExtensionDataMgr bmsExtensionDataMgr;
-        int32_t cloneNum = 0;
-        const std::string appIdentifier = innerBundleInfo.GetAppIdentifier();
-        if (!bmsExtensionDataMgr.DetermineCloneNum(applicationInfo.bundleName, appIdentifier, cloneNum)) {
-            LOG_W(BMS_TAG_INSTALLER, "DetermineCloneNum failed");
-            return false;
-        }
-        if (cloneNum == 0) {
-            LOG_W(BMS_TAG_INSTALLER, "DetermineCloneNum -c %{public}d", cloneNum);
-            return false;
-        }
-        LOG_I(BMS_TAG_INSTALLER, "install -n %{public}s -c %{public}d",
-            applicationInfo.bundleName.c_str(), cloneNum);
-        applicationInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
-        applicationInfo.multiAppMode.maxCount = cloneNum;
-        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    if (innerBundleInfo.GetMultiAppModeType() != MultiAppModeType::UNSPECIFIED &&
+        innerBundleInfo.GetMultiAppModeType() != MultiAppModeType::APP_CLONE) {
+        return false;
     }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int32_t cloneNum = 0;
+    if (!bmsExtensionDataMgr.DetermineCloneNum(
+        innerBundleInfo.GetBundleName(), innerBundleInfo.GetAppIdentifier(), cloneNum)) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "DetermineCloneNum failed");
+        return false;
+    }
+    if (innerBundleInfo.GetMultiAppMaxCount() >= static_cast<int32_t>(cloneNum)) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s cloneNum is smaller no need to refresh",
+            innerBundleInfo.GetBundleName().c_str());
+        return false;
+    }
+    MultiAppModeData multiAppMode;
+    multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    multiAppMode.maxCount = ((cloneNum > Constants::CLONE_APP_INDEX_MAX) ? Constants::CLONE_APP_INDEX_MAX : cloneNum);
+    innerBundleInfo.SetMultiAppMode(multiAppMode);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DetermineCloneNum -n %{public}s -c %{public}d",
+        innerBundleInfo.GetBundleName().c_str(), cloneNum);
     return true;
 }
 
