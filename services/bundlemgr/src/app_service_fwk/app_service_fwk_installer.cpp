@@ -45,10 +45,10 @@ std::string ObtainTempSoPath(
     tempSoPath = nativeLibPath;
     auto pos = tempSoPath.find(moduleName);
     if (pos == std::string::npos) {
-        tempSoPath = moduleName + AppExecFwk::ServiceConstants::TMP_SUFFIX
+        tempSoPath = moduleName + AppExecFwk::ServiceConstants::TMP_MODULE_SUFFIX
             + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempSoPath;
     } else {
-        std::string innerTempStr = moduleName + AppExecFwk::ServiceConstants::TMP_SUFFIX;
+        std::string innerTempStr = moduleName + AppExecFwk::ServiceConstants::TMP_MODULE_SUFFIX;
         tempSoPath.replace(pos, moduleName.length(), innerTempStr);
     }
     return tempSoPath + AppExecFwk::ServiceConstants::PATH_SEPARATOR;
@@ -795,7 +795,7 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
 
     // 2. remove so temp dir
     std::string deleteTempDir = versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR
-        + moduleName + AppExecFwk::ServiceConstants::TMP_SUFFIX;
+        + moduleName + AppExecFwk::ServiceConstants::TMP_MODULE_SUFFIX;
     result = InstalldClient::GetInstance()->RemoveDir(deleteTempDir);
     if (result != ERR_OK) {
         APP_LOGW("Remove temp dir %{public}s failed %{public}d",

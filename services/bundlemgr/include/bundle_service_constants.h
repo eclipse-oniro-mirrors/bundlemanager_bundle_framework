@@ -67,6 +67,7 @@ const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 constexpr const char* TMP_SUFFIX = "_tmp";
+constexpr const char* TMP_MODULE_SUFFIX = "_mtmp";
 constexpr const char* BUNDLE_APP_DATA_BASE_DIR = "/data/app/";
 constexpr const char* BASE = "/base/";
 constexpr const char* CLONE = "clone";

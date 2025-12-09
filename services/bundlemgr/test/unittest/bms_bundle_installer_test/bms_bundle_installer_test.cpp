@@ -7957,7 +7957,7 @@ HWTEST_F(BmsBundleInstallerTest, RemoveTempSoDir_0100, Function | SmallTest | Le
     std::string tempSoDir;
     installer.RemoveTempSoDir(tempSoDir);
 
-    tempSoDir += ServiceConstants::TMP_SUFFIX;
+    tempSoDir += ServiceConstants::TMP_MODULE_SUFFIX;
     installer.RemoveTempSoDir(tempSoDir);
 
     tempSoDir += ServiceConstants::PATH_SEPARATOR;
@@ -10257,7 +10257,7 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_9100, Function | MediumTest
 
     isBundleUpdate = false;
     path = installer.GetModulePath(info, isBundleUpdate, isModuleUpdate);
-    EXPECT_TRUE(path.find(ServiceConstants::TMP_SUFFIX) != std::string::npos);
+    EXPECT_TRUE(path.find(ServiceConstants::TMP_MODULE_SUFFIX) != std::string::npos);
 
     isModuleUpdate = false;
     path = installer.GetModulePath(info, isBundleUpdate, isModuleUpdate);
