@@ -4014,7 +4014,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0900, Function | SmallTest | Lev
     BundleInstallChecker installChecker;
     std::unordered_map<std::string, InnerBundleInfo> infos;
     infos.clear();
-    auto ret = installChecker.CheckDeviceType(infos);
+    auto ret = installChecker.CheckDeviceType(infos, ERR_OK);
     EXPECT_EQ(ret, ERR_OK);
 }
 

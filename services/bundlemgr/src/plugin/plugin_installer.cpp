@@ -198,9 +198,8 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
     CHECK_RESULT(result, "obtain hsp file path or signature file path failed due to %{public}d");
 
     // check syscap
-    result = bundleInstallChecker_->CheckSysCap(bundlePaths);
-    bool isSysCapValid = (result == ERR_OK);
-    if (!isSysCapValid) {
+    ErrCode checkSysCapRes = bundleInstallChecker_->CheckSysCap(bundlePaths);
+    if (checkSysCapRes != ERR_OK) {
         APP_LOGD("hap syscap check failed %{public}d", result);
     }
     // verify signature info for all haps
@@ -230,8 +229,8 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
     CHECK_RESULT(result, "check hsp install condition failed %{public}d");
 
     // check device type
-    if (!isSysCapValid) {
-        result = bundleInstallChecker_->CheckDeviceType(parsedBundles_);
+    if (checkSysCapRes != ERR_OK) {
+        result = bundleInstallChecker_->CheckDeviceType(parsedBundles_, checkSysCapRes);
         if (result != ERR_OK) {
             APP_LOGE("check device type failed %{public}d", result);
             return ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR;

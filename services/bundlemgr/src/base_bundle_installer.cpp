@@ -1363,9 +1363,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "copy file failed %{public}d");
 
     // check syscap
-    result = CheckSysCap(bundlePaths);
-    bool isSysCapValid = (result == ERR_OK);
-    if (!isSysCapValid) {
+    ErrCode checkSysCapRes = CheckSysCap(bundlePaths);
+    if (checkSysCapRes != ERR_OK) {
         APP_LOGI_NOFUNC("check syscap failed %{public}d", result);
     }
     UpdateInstallerState(InstallerState::INSTALL_SYSCAP_CHECKED);                  // ---- 10%
@@ -1433,7 +1432,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CheckPreBundle(newInfos, installParam, isRecover);
     result = CheckInstallPermission(installParam, hapVerifyResults);
     CHECK_RESULT(result, "check install permission failed %{public}d");
-    result = CheckInstallCondition(hapVerifyResults, newInfos, isSysCapValid);
+    result = CheckInstallCondition(hapVerifyResults, newInfos, checkSysCapRes);
     CHECK_RESULT(result, "check install condition failed %{public}d");
     // check the dependencies whether or not exists
     result = CheckDependency(newInfos, sharedBundleInstaller);
@@ -4774,11 +4773,11 @@ void BaseBundleInstaller::GetDataGroupIds(const std::vector<Security::Verify::Ha
 
 ErrCode BaseBundleInstaller::CheckInstallCondition(
     std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-    std::unordered_map<std::string, InnerBundleInfo> &infos, bool isSysCapValid)
+    std::unordered_map<std::string, InnerBundleInfo> &infos, ErrCode checkSysCapRes)
 {
     ErrCode ret;
-    if (!isSysCapValid) {
-        ret = bundleInstallChecker_->CheckDeviceType(infos);
+    if (checkSysCapRes != ERR_OK) {
+        ret = bundleInstallChecker_->CheckDeviceType(infos, checkSysCapRes);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "CheckDeviceType failed due to errorCode : %{public}d", ret);
             return ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR;

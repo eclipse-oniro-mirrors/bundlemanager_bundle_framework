@@ -103,7 +103,7 @@ HWTEST_F(BmsBundleInstallDeviceTypeTest, DeviceTypeTest_0100, Function | SmallTe
 
     // device type list is empty
     BundleInstallChecker checker;
-    auto ret = checker.CheckDeviceType(infos);
+    auto ret = checker.CheckDeviceType(infos, ERR_OK);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -124,7 +124,7 @@ HWTEST_F(BmsBundleInstallDeviceTypeTest, DeviceTypeTest_0200, Function | SmallTe
     g_testDeviceType = const_cast<char *>(DEVICE_TYPE_OF_PHONE.c_str());
     // device type list is default and current device is phone
     BundleInstallChecker checker;
-    auto ret = checker.CheckDeviceType(infos);
+    auto ret = checker.CheckDeviceType(infos, ERR_OK);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -145,7 +145,7 @@ HWTEST_F(BmsBundleInstallDeviceTypeTest, DeviceTypeTest_0300, Function | SmallTe
     g_testDeviceType = const_cast<char *>(DEVICE_TYPE_OF_PHONE.c_str());
     // device type list is phone and current device is phone
     BundleInstallChecker checker;
-    auto ret = checker.CheckDeviceType(infos);
+    auto ret = checker.CheckDeviceType(infos, ERR_OK);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -166,7 +166,7 @@ HWTEST_F(BmsBundleInstallDeviceTypeTest, DeviceTypeTest_0400, Function | SmallTe
     g_testDeviceType = const_cast<char *>(DEVICE_TYPE_OF_PHONE.c_str());
     // device type list is car and current device is phone
     BundleInstallChecker checker;
-    auto ret = checker.CheckDeviceType(infos);
+    auto ret = checker.CheckDeviceType(infos, ERR_OK);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED);
 }
 
@@ -187,7 +187,7 @@ HWTEST_F(BmsBundleInstallDeviceTypeTest, DeviceTypeTest_0500, Function | SmallTe
     g_testDeviceType = const_cast<char *>(DEVICE_TYPE_OF_DEFAULT.c_str());
     // device type list is default and current device is default
     BundleInstallChecker checker;
-    auto ret = checker.CheckDeviceType(infos);
+    auto ret = checker.CheckDeviceType(infos, ERR_OK);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -208,7 +208,7 @@ HWTEST_F(BmsBundleInstallDeviceTypeTest, DeviceTypeTest_0600, Function | SmallTe
     g_testDeviceType = const_cast<char *>(DEVICE_TYPE_OF_DEFAULT.c_str());
     // device type list is phone and current device is default
     BundleInstallChecker checker;
-    auto ret = checker.CheckDeviceType(infos);
+    auto ret = checker.CheckDeviceType(infos, ERR_OK);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -229,7 +229,7 @@ HWTEST_F(BmsBundleInstallDeviceTypeTest, DeviceTypeTest_0700, Function | SmallTe
     g_testDeviceType = const_cast<char *>(DEVICE_TYPE_OF_DEFAULT.c_str());
     // device type list is car and current device is default
     BundleInstallChecker checker;
-    auto ret = checker.CheckDeviceType(infos);
+    auto ret = checker.CheckDeviceType(infos, ERR_OK);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED);
 }
 

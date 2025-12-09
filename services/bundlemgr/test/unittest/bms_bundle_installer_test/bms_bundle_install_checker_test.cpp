@@ -476,7 +476,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckDeviceType_0100, Function | SmallTest
     InnerBundleInfo innerBundleInfo2;
     infos.insert(pair<string, InnerBundleInfo>("1", innerBundleInfo1));
     infos.insert(pair<string, InnerBundleInfo>("2", innerBundleInfo2));
-    auto ret = installChecker.CheckDeviceType(infos);
+    auto ret = installChecker.CheckDeviceType(infos, ERR_OK);
     EXPECT_EQ(ret, ERR_OK);
 }
 

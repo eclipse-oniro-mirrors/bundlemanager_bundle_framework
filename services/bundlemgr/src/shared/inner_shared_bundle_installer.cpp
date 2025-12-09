@@ -67,9 +67,8 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     CHECK_RESULT(result, "obtain hsp file path or signature file path failed due to %{public}d");
 
     // check syscap
-    result = bundleInstallChecker_->CheckSysCap(bundlePaths);
-    bool isSysCapValid = (result == ERR_OK);
-    if (!isSysCapValid) {
+    ErrCode checkSysCapRes = bundleInstallChecker_->CheckSysCap(bundlePaths);
+    if (checkSysCapRes != ERR_OK) {
         APP_LOGD("hap syscap check failed %{public}d", result);
     }
     // verify signature info for all haps
@@ -96,8 +95,8 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     sendStartSharedBundleInstallNotify(checkParam, parsedBundles_);
 
     // check device type
-    if (!isSysCapValid) {
-        result = bundleInstallChecker_->CheckDeviceType(parsedBundles_);
+    if (checkSysCapRes != ERR_OK) {
+        result = bundleInstallChecker_->CheckDeviceType(parsedBundles_, checkSysCapRes);
         if (result != ERR_OK) {
             APP_LOGE("check device type failed %{public}d", result);
             return ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR;
