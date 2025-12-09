@@ -178,7 +178,7 @@ static void AddDynamicShortcutInfosNative(ani_env* env, ani_object aniShortcutIn
     ErrCode ret = iBundleMgr->AddDynamicShortcutInfos(shortcutInfos, aniUserId);
     if (ret != ERR_OK) {
         APP_LOGE("AddDynamicShortcutInfos failed ret:%{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+        BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
             ADD_DYNAMIC_SHORTCUT_INFOS, PERMISSION_DYNAMIC_SHORTCUT_INFO);
     }
 #else
@@ -215,7 +215,7 @@ static void DeleteDynamicShortcutInfosNative(ani_env* env,
     ErrCode ret = iBundleMgr->DeleteDynamicShortcutInfos(bundleName, aniAppIndex, aniUserId, ids);
     if (ret != ERR_OK) {
         APP_LOGE("DeleteDynamicShortcutInfos failed ret:%{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+        BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
             DELETE_DYNAMIC_SHORTCUT_INFOS, PERMISSION_DYNAMIC_SHORTCUT_INFO);
     }
 #else
@@ -246,7 +246,7 @@ static void SetShortcutsEnabledNative(ani_env* env, ani_object aniShortcutInfo, 
     ErrCode ret = iBundleMgr->SetShortcutsEnabled(shortcutInfos, isEnabled);
     if (ret != ERR_OK) {
         APP_LOGE("SetShortcutsEnabled failed ret:%{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
+        BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
             SET_SHORTCUTS_ENABLED, Constants::PERMISSION_MANAGER_SHORTCUT);
     }
 #else

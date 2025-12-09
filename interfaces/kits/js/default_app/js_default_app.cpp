@@ -896,11 +896,8 @@ napi_value SetDefaultApplicationForAppClone(napi_env env, napi_callback_info inf
     ret = CommonFunc::ConvertErrCode(ret);
     if (ret != ERR_OK) {
         APP_LOGE("SetDefaultApplicationForAppClone failed: %{public}d", ret);
-        int32_t currentUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-        auto permission = (userId == currentUserId) ? Constants::PERMISSION_SET_DEFAULT_APPLICATION :
-            PERMISSION_SET_DEFAULT_APPLICATION_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS;
-        napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, SET_DEFAULT_APPLICATION_FOR_APP_CLONE, permission);
+        napi_value businessError = BusinessError::CreateNewCommonError(env, ret, SET_DEFAULT_APPLICATION_FOR_APP_CLONE,
+            PERMISSION_SET_DEFAULT_APPLICATION_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         napi_throw(env, businessError);
         return nRet;
     }

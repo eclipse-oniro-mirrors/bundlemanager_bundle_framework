@@ -4592,8 +4592,8 @@ void GetAllAppProvisionInfoComplete(napi_env env, napi_status status, void *data
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
         CommonFunc::ConvertAllAppProvisionInfo(env, asyncCallbackInfo->appProvisionInfos, result[ARGS_POS_ONE]);
     } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-        GET_ALL_APP_PROVISION_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
+        result[ARGS_POS_ZERO] = BusinessError::CreateNewCommonError(env, asyncCallbackInfo->err,
+            GET_ALL_APP_PROVISION_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
     }
     CommonFunc::NapiReturnDeferred<AllAppProvisionInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }

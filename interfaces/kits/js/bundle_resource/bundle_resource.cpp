@@ -389,7 +389,7 @@ void GetLauncherAbilityResourceInfoListComplete(napi_env env, napi_status status
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
         ConvertLauncherAbilityResourceInfos(env, asyncCallbackInfo->launcherAbilityResourceInfos, result[1]);
     } else {
-        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+        result[0] = BusinessError::CreateNewCommonError(env, asyncCallbackInfo->err,
             GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST, PERMISSION_GET_ALL_BUNDLE_RESOURCES);
     }
     CommonFunc::NapiReturnDeferred<AllLauncherAbilityResourceInfoCallback>(env, asyncCallbackInfo,

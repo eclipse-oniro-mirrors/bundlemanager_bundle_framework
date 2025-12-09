@@ -1126,7 +1126,7 @@ napi_value GetBundleInstallStatus(napi_env env, napi_callback_info info)
     ErrCode ret = BundleManagerHelper::InnerGetBundleInstallStatus(bundleName, status);
     if (ret != ERR_OK) {
         APP_LOGE("GetBundleInstallStatus failed ret=%{public}d", ret);
-        napi_value businessError = BusinessError::CreateCommonError(
+        napi_value businessError = BusinessError::CreateNewCommonError(
             env, ret, GET_BUNDLE_INSTALL_STATUS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
         return nullptr;
