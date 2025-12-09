@@ -2505,7 +2505,7 @@ HWTEST_F(BmsBundleDataMgrTest2, BundleUserMgrHostImpl_0500, Function | SmallTest
 HWTEST_F(BmsBundleDataMgrTest2, BundleExceptionHandler_0100, TestSize.Level1)
 {
     std::string moduleDir = Constants::BUNDLE_CODE_DIR + BUNDLE_TEST1 +
-        ServiceConstants::PATH_SEPARATOR + PACKAGE_NAME + ServiceConstants::TMP_MODULE_SUFFIX;
+        ServiceConstants::PATH_SEPARATOR + PACKAGE_NAME + ServiceConstants::TMP_SUFFIX;
     bool ret = BundleUtil::CreateDir(moduleDir);
     EXPECT_TRUE(ret);
 

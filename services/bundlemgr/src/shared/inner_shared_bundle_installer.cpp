@@ -731,7 +731,7 @@ ErrCode InnerSharedBundleInstaller::MoveSoToRealPath(const std::string &moduleNa
 
     // 2. remove so temp dir
     std::string deleteTempDir = versionDir + ServiceConstants::PATH_SEPARATOR + moduleName
-        + ServiceConstants::TMP_MODULE_SUFFIX;
+        + ServiceConstants::TMP_SUFFIX;
     result = InstalldClient::GetInstance()->RemoveDir(deleteTempDir);
     if (result != ERR_OK) {
         APP_LOGW("remove hsp temp so dir %{public}s failed, error is %{public}d", deleteTempDir.c_str(), result);
@@ -750,9 +750,9 @@ std::string InnerSharedBundleInstaller::ObtainTempSoPath(const std::string &modu
     tempSoPath = nativeLibPath;
     auto pos = tempSoPath.find(moduleName);
     if (pos == std::string::npos) {
-        tempSoPath = moduleName + ServiceConstants::TMP_MODULE_SUFFIX + ServiceConstants::PATH_SEPARATOR + tempSoPath;
+        tempSoPath = moduleName + ServiceConstants::TMP_SUFFIX + ServiceConstants::PATH_SEPARATOR + tempSoPath;
     } else {
-        std::string innerTempStr = moduleName + ServiceConstants::TMP_MODULE_SUFFIX;
+        std::string innerTempStr = moduleName + ServiceConstants::TMP_SUFFIX;
         tempSoPath.replace(pos, moduleName.length(), innerTempStr);
     }
     return tempSoPath + ServiceConstants::PATH_SEPARATOR;

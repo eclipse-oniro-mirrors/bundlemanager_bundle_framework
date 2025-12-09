@@ -140,7 +140,7 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
         DeleteBundleInfoFromStorage(info);
         isBundleValid = false;
     } else if (mark.status == InstallExceptionStatus::UPDATING_EXISTED_START) {
-        if (InstalldClient::GetInstance()->RemoveDir(moduleDir + ServiceConstants::TMP_MODULE_SUFFIX) == ERR_OK) {
+        if (InstalldClient::GetInstance()->RemoveDir(moduleDir + ServiceConstants::TMP_SUFFIX) == ERR_OK) {
             info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         }
     } else if (mark.status == InstallExceptionStatus::UPDATING_NEW_START &&
@@ -162,7 +162,7 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
             info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         }
     } else if (mark.status == InstallExceptionStatus::UPDATING_FINISH) {
-        if (InstalldClient::GetInstance()->RenameModuleDir(moduleDir + ServiceConstants::TMP_MODULE_SUFFIX, moduleDir) !=
+        if (InstalldClient::GetInstance()->RenameModuleDir(moduleDir + ServiceConstants::TMP_SUFFIX, moduleDir) !=
             ERR_OK) {
             APP_LOGI_NOFUNC("%{public}s rename module failed, may not exist", info.GetBundleName().c_str());
         }
