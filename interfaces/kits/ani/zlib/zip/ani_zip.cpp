@@ -1198,7 +1198,7 @@ ani_long InflateCodesUsedNative(ani_env* env, ani_object instance, ani_object an
         return -1;
     }
 
-    return static_cast<ani_long>(inflateCodesUsed(zStream));
+    return static_cast<ani_long>(static_cast<uint32_t>(inflateCodesUsed(zStream)));
 }
 
 ani_enum_item InflateBackInitNative(ani_env* env, ani_object instance,
