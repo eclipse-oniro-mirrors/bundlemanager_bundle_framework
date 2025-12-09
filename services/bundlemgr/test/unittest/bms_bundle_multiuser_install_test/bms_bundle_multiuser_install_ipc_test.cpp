@@ -280,7 +280,7 @@ HWTEST_F(BmsBundleMultiuserInstallIPCTest, RemoveDataDir_0100, Function | SmallT
     BundleMultiUserInstaller installer;
     std::string bundleName;
     auto res = installer.RemoveDataDir(bundleName, TEST_INSTALLER_UID);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
 }
 
 /**

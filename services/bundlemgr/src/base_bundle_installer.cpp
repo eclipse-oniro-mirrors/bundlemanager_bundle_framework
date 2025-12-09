@@ -976,7 +976,12 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             newInnerBundleUserInfo.bundleUserInfo.userId = userId_;
             newInnerBundleUserInfo.bundleName = bundleName_;
             oldInfo.AddInnerBundleUserInfo(newInnerBundleUserInfo);
-            ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
+            ScopeGuard userGuard([&] {
+                if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+                    Constants::INITIAL_APP_INDEX)) {
+                    RemoveBundleUserData(oldInfo, false);
+                }
+            });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)
@@ -1044,7 +1049,8 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     CreateExtensionDataDir(bundleInfo);
 
     ScopeGuard userGuard([&] {
-        if (!hasInstalledInUser_ || (!isAppExist_)) {
+        if ((!hasInstalledInUser_ || (!isAppExist_)) &&
+            !dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_, Constants::INITIAL_APP_INDEX)) {
             RemoveBundleUserData(oldInfo, false);
         }
     });
@@ -1576,7 +1582,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // create Screen Lock File Protection Dir
     CreateScreenLockProtectionDir(true);
-    ScopeGuard ScreenLockFileProtectionDirGuard([&] { DeleteScreenLockProtectionDir(bundleName_); });
+    ScopeGuard ScreenLockFileProtectionDirGuard([&] {
+        if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+            Constants::INITIAL_APP_INDEX)) {
+            DeleteScreenLockProtectionDir(bundleName_);
+        }
+    });
 
     // install cross-app hsp which has rollback operation in sharedBundleInstaller when some one failure occurs
     result = sharedBundleInstaller.Install(sysEventInfo_);
@@ -1713,13 +1724,17 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
                 PrepareBundleDirQuota(newInfos.begin()->second.GetBundleName(), uid, bundleDataDir, 0);
             }
         }
-        RemoveBundleAndDataDir(newInfos.begin()->second, false);
-        // delete accessTokenId
-        if (BundlePermissionMgr::DeleteAccessTokenId(newInfos.begin()->second.GetAccessTokenId(userId_)) !=
-            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+        if (!InitDataMgr()) {
+            return;
         }
-
+        if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_, Constants::INITIAL_APP_INDEX)) {
+            RemoveBundleAndDataDir(newInfos.begin()->second, false);
+            // delete accessTokenId
+            if (BundlePermissionMgr::DeleteAccessTokenId(newInfos.begin()->second.GetAccessTokenId(userId_)) !=
+                AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+                LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+            }
+        }
         // remove driver file
         std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
         for (const auto &info : newInfos) {
@@ -2472,7 +2487,12 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             curInnerBundleUserInfo.bundleUserInfo.userId = userId_;
             curInnerBundleUserInfo.bundleName = bundleName;
             oldInfo.AddInnerBundleUserInfo(curInnerBundleUserInfo);
-            ScopeGuard userGuard([&] { RemoveBundleUserData(oldInfo, false); });
+            ScopeGuard userGuard([&] {
+                if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+                    Constants::INITIAL_APP_INDEX)) {
+                    RemoveBundleUserData(oldInfo, false);
+                }
+            });
             Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
             Security::AccessToken::HapInfoCheckResult checkResult;
             if (!RecoverHapToken(bundleName_, userId_, accessTokenIdEx, oldInfo)) {
@@ -2722,7 +2742,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
         return result;
     }
 
-    ScopeGuard bundleGuard([&] { RemoveBundleAndDataDir(info, false); });
+    ScopeGuard bundleGuard([&] {
+        if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+            Constants::INITIAL_APP_INDEX)) {
+            RemoveBundleAndDataDir(info, false);
+        }
+    });
     std::string modulePath = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_;
     result = ExtractModule(info, modulePath);
     if (result != ERR_OK) {

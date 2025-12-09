@@ -286,6 +286,12 @@ void BundleMultiUserInstaller::CreateEl5Dir(InnerBundleInfo &info, const int32_t
 
 ErrCode BundleMultiUserInstaller::RemoveDataDir(const std::string bundleName, int32_t userId)
 {
+    if (GetDataMgr() != ERR_OK) {
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    if (dataMgr_ -> GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId, Constants::INITIAL_APP_INDEX)) {
+        return ERR_OK;
+    }
     std::string key = bundleName;
     ErrCode ret = InstalldClient::GetInstance()->RemoveBundleDataDir(key, userId);
     if (ret != ERR_OK) {
