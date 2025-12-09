@@ -31,6 +31,7 @@
 #include "common_json_converter.h"
 #include "free_install_params.h"
 #include "installd_client.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -2759,6 +2760,11 @@ void InnerBundleInfo::GetPreInstallApplicationFlags(ApplicationInfo &appInfo) co
     if (IsPreInstallApp()) {
         uint32_t applicationFlags = static_cast<uint32_t>(appInfo.applicationFlags);
         applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP);
+        if (GetBundleName() == OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "")) {
+            applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP_UPDATE);
+            appInfo.applicationFlags = static_cast<int32_t>(applicationFlags);
+            return;
+        }
         appInfo.applicationFlags = static_cast<int32_t>(applicationFlags);
         for (const auto &moduleEnt: innerModuleInfos_) {
             const auto &hapPath = moduleEnt.second.hapPath;

@@ -27,6 +27,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "migrate_data_user_auth_callback.h"
+#include "parameters.h"
 #include "scope_guard.h"
 
 using namespace testing::ext;
@@ -816,6 +817,30 @@ HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0005, Function | MediumTest | L
     ApplicationInfo appInfo;
     innerBundleInfo.GetPreInstallApplicationFlags(appInfo);
     EXPECT_GT(appInfo.applicationFlags, 0);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_0006
+ * @tc.name: test GetPreInstallApplicationFlags
+ * @tc.desc: 1.Test GetPreInstallApplicationFlags in the InnerBundleInfo
+*/
+HWTEST_F(BmsBundleDataGroupTest, InnerBundleInfo_0006, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseBundleInfo_->isPreInstallApp = true;
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    ApplicationInfo appInfo;
+    innerBundleInfo.GetPreInstallApplicationFlags(appInfo);
+    EXPECT_TRUE((static_cast<uint32_t>(appInfo.applicationFlags) &
+        static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP)) ==
+        static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP));
+
+    innerBundleInfo.baseApplicationInfo_->bundleName =
+        OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
+    innerBundleInfo.GetPreInstallApplicationFlags(appInfo);
+    EXPECT_TRUE((static_cast<uint32_t>(appInfo.applicationFlags) &
+        static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP_UPDATE)) ==
+        static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP_UPDATE));
 }
 
 /**
