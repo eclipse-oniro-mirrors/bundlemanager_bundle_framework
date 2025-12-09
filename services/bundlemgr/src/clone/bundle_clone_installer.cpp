@@ -271,7 +271,11 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     appId_ = info.GetAppId();
     appIdentifier_ = info.GetAppIdentifier();
 
-    ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex, true); });
+    ScopeGuard createCloneDataDirGuard([&] {
+        if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName, userId, appIndex)) {
+            RemoveCloneDataDir(bundleName, userId, appIndex, true);
+        }
+    });
     ErrCode result = CreateCloneDataDir(info, userId, uid, appIndex);
     if (result != ERR_OK) {
         APP_LOGE("InstallCloneApp create clone dir failed");
