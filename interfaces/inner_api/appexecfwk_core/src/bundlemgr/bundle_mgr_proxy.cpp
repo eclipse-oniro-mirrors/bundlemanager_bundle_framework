@@ -7048,7 +7048,7 @@ ErrCode BundleMgrProxy::BatchGetCompatibleDeviceType(
     }
     if (bundleNames.size() > MAX_BATCH_QUERY_BUNDLE_SIZE) {
         APP_LOGE("fail to BatchGetCompatibleDeviceType due to bundleName count is error");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
