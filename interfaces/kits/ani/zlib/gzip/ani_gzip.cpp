@@ -384,11 +384,14 @@ ani_enum_item GzcloseNative(ani_env* env, ani_object instance)
         return nullptr;
     }
 
-    int ret = gzclose(nativeGZFile);
+    int32_t ret = gzclose(nativeGZFile);
     if (ret < 0) {
         APP_LOGE("gzclose failed %{public}d", ret);
         AniZLibCommon::ThrowZLibNapiError(env, ret);
         return nullptr;
+    }
+    if (!TrySetNativeGZFile(env, instance, nullptr)) {
+        APP_LOGW("TrySetNativeGZFile failed");
     }
 
     return EnumUtils::EnumNativeToETS_Zlib_ReturnStatus(env, ret);
@@ -600,11 +603,14 @@ ani_enum_item GzclosewNative(ani_env* env, ani_object instance)
         return nullptr;
     }
 
-    int ret = gzclose_w(nativeGZFile);
+    int32_t ret = gzclose_w(nativeGZFile);
     if (ret < 0) {
         APP_LOGE("gzclose_w failed %{public}d", ret);
         AniZLibCommon::ThrowZLibNapiError(env, ret);
         return nullptr;
+    }
+    if (!TrySetNativeGZFile(env, instance, nullptr)) {
+        APP_LOGW("TrySetNativeGZFile failed");
     }
 
     return EnumUtils::EnumNativeToETS_Zlib_ReturnStatus(env, ret);
@@ -622,11 +628,14 @@ ani_enum_item GzcloserNative(ani_env* env, ani_object instance)
         return nullptr;
     }
 
-    int ret = gzclose_r(nativeGZFile);
+    int32_t ret = gzclose_r(nativeGZFile);
     if (ret < 0) {
         APP_LOGE("gzclose_r failed %{public}d", ret);
         AniZLibCommon::ThrowZLibNapiError(env, ret);
         return nullptr;
+    }
+    if (!TrySetNativeGZFile(env, instance, nullptr)) {
+        APP_LOGW("TrySetNativeGZFile failed");
     }
 
     return EnumUtils::EnumNativeToETS_Zlib_ReturnStatus(env, ret);
