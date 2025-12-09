@@ -127,7 +127,7 @@ HWTEST_F(BmsInstalldHostTest, HandleProcessBundleInstallNative_0100, Function | 
     MessageParcel data;
     MessageParcel reply;
     bool res = installdHost.HandleProcessBundleInstallNative(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**

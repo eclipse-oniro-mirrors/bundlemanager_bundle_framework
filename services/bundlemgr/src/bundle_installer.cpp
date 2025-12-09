@@ -16,12 +16,41 @@
 #include "bundle_installer.h"
 
 #include <cinttypes>
+#include <sys/statfs.h>
 
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "parameter.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* USER_DATA_DIR = "/data";
+constexpr double MIN_FREE_INODE_PERCENT = 0.005; // 0.5%
+
+bool CheckSystemInodeSatisfied(const std::string &bundleName)
+{
+    std::string appGalleryName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
+    if (appGalleryName.empty() || appGalleryName != bundleName) {
+        return true;
+    }
+    struct statfs stat;
+    if (statfs(USER_DATA_DIR, &stat) != 0) {
+        LOG_E(BMS_TAG_INSTALLER, "statfs failed for %{public}s, error %{public}d",
+            USER_DATA_DIR, errno);
+        return false;
+    }
+    uint32_t minFreeInodeNum = static_cast<uint32_t>(stat.f_files * MIN_FREE_INODE_PERCENT);
+    if (stat.f_ffree < minFreeInodeNum) {
+        LOG_E(BMS_TAG_INSTALLER, "free inodes not satisfied");
+        return false;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}llu, free inodes: %{public}llu",
+        stat.f_files, stat.f_ffree);
+    return true;
+}
+}
 BundleInstaller::BundleInstaller(const int64_t installerId, const sptr<IStatusReceiver> &statusReceiver)
     : installerId_(installerId), statusReceiver_(statusReceiver)
 {
@@ -295,6 +324,13 @@ void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const I
     std::vector<ErrCode> errCode;
     auto userInstallParam = installParam;
     std::vector<int32_t> userIds;
+    if (!installParam.isOTA && !CheckSystemInodeSatisfied(bundleName)) {
+        APP_LOGE("System inode not satisfied for uninstall and recover");
+        if (statusReceiver_ != nullptr) {
+            statusReceiver_->OnFinished(ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT, "");
+        }
+        return;
+    }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr != nullptr) {
         userIds = dataMgr->GetUserIds(bundleName);

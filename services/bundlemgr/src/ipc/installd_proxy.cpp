@@ -99,16 +99,14 @@ ErrCode InstalldProxy::ExtractHnpFiles(const std::map<std::string, std::string> 
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_HNP_FILES, data, reply, option);
 }
 
-ErrCode InstalldProxy::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+ErrCode InstalldProxy::ProcessBundleInstallNative(const InstallHnpParam &installHnpParam)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(userId));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hnpRootPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hapPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(packageName));
+    if (!data.WriteParcelable(&installHnpParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
 
     MessageParcel reply;
     MessageOption option;

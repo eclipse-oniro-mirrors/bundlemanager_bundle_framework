@@ -3632,8 +3632,8 @@ bool BundleDataMgr::GetBundleInfosByMetaData(
     return find;
 }
 
-bool BundleDataMgr::GetBundleList(
-    std::vector<std::string> &bundleNames, int32_t userId) const
+bool BundleDataMgr::GetBundleList(std::vector<std::string> &bundleNames,
+    int32_t userId, int32_t flags) const
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
@@ -3651,7 +3651,7 @@ bool BundleDataMgr::GetBundleList(
         const InnerBundleInfo &innerBundleInfo = infoItem.second;
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         if (CheckInnerBundleInfoWithFlags(
-            innerBundleInfo, BundleFlag::GET_BUNDLE_DEFAULT, responseUserId) != ERR_OK) {
+            innerBundleInfo, flags, responseUserId) != ERR_OK) {
             continue;
         }
 
@@ -9944,6 +9944,49 @@ void BundleDataMgr::HandleOTACodeEncryption()
         UpdateAppEncryptedStatus(bundleName, false, 0, true);
     }
     APP_LOGI("end");
+}
+
+ErrCode BundleDataMgr::HandleDetermineCloneNumList(
+    const std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList)
+{
+    APP_LOGI_NOFUNC("HandleDetermineCloneNumList begin");
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto& [bundleName, appIdentifier, cloneNum] : determineCloneNumList) {
+        if (bundleName.empty()) {
+            APP_LOGW_NOFUNC("determineClone bundleName empty");
+            continue;
+        }
+        auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            APP_LOGW_NOFUNC("%{public}s does not exist", bundleName.c_str());
+            continue;
+        }
+        if (infoItem->second.GetAppIdentifier() != appIdentifier) {
+            APP_LOGW_NOFUNC("%{public}s check appIdentidier failed", bundleName.c_str());
+            continue;
+        }
+        if (infoItem->second.GetMultiAppModeType() != MultiAppModeType::UNSPECIFIED &&
+            infoItem->second.GetMultiAppModeType() != MultiAppModeType::APP_CLONE) {
+            APP_LOGW_NOFUNC("%{public}s mutiAppMode is %{public}d",
+                bundleName.c_str(), static_cast<int32_t>(infoItem->second.GetMultiAppModeType()));
+            continue;
+        }
+        if (infoItem->second.GetMultiAppMaxCount() >= static_cast<int32_t>(cloneNum)) {
+            APP_LOGW_NOFUNC("%{public}s maxCount is smaller no need to refresh", bundleName.c_str());
+            continue;
+        }
+        MultiAppModeData multiAppMode;
+        multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+        multiAppMode.maxCount =
+            ((cloneNum > Constants::CLONE_APP_INDEX_MAX) ? Constants::CLONE_APP_INDEX_MAX : cloneNum);
+        infoItem->second.SetMultiAppMode(multiAppMode);
+        if (!dataStorage_->SaveStorageBundleInfo(infoItem->second)) {
+            APP_LOGW_NOFUNC("SaveStorageBundleInfo failed -n %{public}s", bundleName.c_str());
+        }
+        APP_LOGI_NOFUNC("DetermineClone %{public}s %{public}d", bundleName.c_str(), multiAppMode.maxCount);
+    }
+    APP_LOGI_NOFUNC("HandleDetermineCloneNumList end");
+    return ERR_OK;
 }
 
 void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const

@@ -455,10 +455,11 @@ public:
      * @brief Obtains all bundle names installed.
      * @param bundleNames Indicates the bundle Names.
      * @param userId Indicates the user ID.
+     * @param flags Indicates the flag to get bundle list.
      * @return Returns true if have bundle installed; returns false otherwise.
      */
-    bool GetBundleList(
-        std::vector<std::string> &bundleNames, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    bool GetBundleList(std::vector<std::string> &bundleNames,
+        int32_t userId = Constants::UNSPECIFIED_USERID, int32_t flags = BundleFlag::GET_BUNDLE_DEFAULT) const;
     /**
      * @brief Obtains debug bundle names installed.
      * @param bundleNames Indicates the debug bundle Names.
@@ -1159,6 +1160,8 @@ public:
     ErrCode GetContinueBundleNames(
         const std::string &continueBundleName, std::vector<std::string> &bundleNames, int32_t userId);
     void HandleOTACodeEncryption();
+    ErrCode HandleDetermineCloneNumList(
+        const std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList);
     bool HasAppOrAtomicServiceInUser(const std::string &bundleName, int32_t userId) const;
     bool GetAllAppAndAtomicServiceInUser(int32_t userId, std::vector<std::string> &bundleList) const;
 

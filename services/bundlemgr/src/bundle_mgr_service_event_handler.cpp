@@ -412,6 +412,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         OnBundleRebootStart();
         HandlePreInstallException(false);
         HandleOTACodeEncryption();
+        HandleDetermineCloneNumList();
         SaveSystemFingerprint();
         (void)SaveBmsSystemTimeForShortcut();
         AOTHandler::GetInstance().HandleOTA();
@@ -2803,6 +2804,30 @@ void BMSEventHandler::HandleOTACodeEncryption()
     auto res = bmsExtensionDataMgr.KeyOperation(infos, CodeOperation::OTA_CHECK_FINISHED);
     LOG_I(BMS_TAG_DEFAULT, "keyOperation result %{public}d", res);
     SaveCodeProtectFlag();
+}
+
+void BMSEventHandler::HandleDetermineCloneNumList()
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<std::tuple<std::string, std::string, uint32_t>> determineCloneNumList;
+    ErrCode result = bmsExtensionDataMgr.GetDetermineCloneNumList(determineCloneNumList);
+    if (result != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "GetDetermineCloneNumList result:%{public}d", result);
+        return;
+    }
+    if (determineCloneNumList.empty()) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "GetDetermineCloneNumList empty");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        return;
+    }
+    result = dataMgr->HandleDetermineCloneNumList(determineCloneNumList);
+    if (result != ERR_OK) {
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandleDetermineCloneNumList result:%{public}d", result);
+    }
 }
 
 void BMSEventHandler::SaveCodeProtectFlag()
@@ -5528,16 +5553,21 @@ void BMSEventHandler::GetInstallAndRecoverListForAllUser(std::unordered_map<int3
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
     }
-    std::vector<std::string> bundleList = dataMgr->GetAllBundleName();
     BmsExtensionDataMgr bmsExtensionDataMgr;
     auto userIds = dataMgr->GetAllUser();
     for (const auto &userId : userIds) {
         if (userId == Constants::DEFAULT_USERID) {
             continue;
         }
+        std::vector<std::string> bundleNames;
+        if (!dataMgr->GetBundleList(bundleNames, userId,
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))) {
+            LOG_E(BMS_TAG_DEFAULT, "-u %{public}d GetBundleList failed", userId);
+            continue;
+        }
         std::vector<std::string> forceInstallList;
         std::vector<std::string> recoverList;
-        if (!bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, forceInstallList, recoverList)) {
+        if (!bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleNames, forceInstallList, recoverList)) {
             LOG_E(BMS_TAG_DEFAULT, "-u %{public}d GetInstallAndRecoverList failed", userId);
             continue;
         }

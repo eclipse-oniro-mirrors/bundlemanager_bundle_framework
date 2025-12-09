@@ -983,12 +983,13 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5400, Function | Sma
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
 
-    std::string userId = "";
-    std::string hnpRootPath = "";
-    std::string hapPath = "";
-    std::string cpuAbi = "";
-    std::string packageName = "";
-    ErrCode ret = installdProxy->ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    InstallHnpParam param;
+    param.userId = "";
+    param.hnpRootPath = "";
+    param.hapPath = "";
+    param.cpuAbi = "";
+    param.packageName = "";
+    ErrCode ret = installdProxy->ProcessBundleInstallNative(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 

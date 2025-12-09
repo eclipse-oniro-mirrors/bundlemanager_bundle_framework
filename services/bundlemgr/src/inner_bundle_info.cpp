@@ -3983,6 +3983,13 @@ ErrCode InnerBundleInfo::IsModuleRemovable(
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
 
+    const BundleType bundleType = GetApplicationBundleType();
+    if (bundleType != BundleType::ATOMIC_SERVICE) {
+        isRemovable = false;
+        APP_LOGD("bundle type %{public}d is not ATOMIC_SERVICE", static_cast<int>(bundleType));
+        return ERR_OK;
+    }
+
     if (IsRemovableSet(modInfoItem.value(), userId)) {
         isRemovable = false;
         return ERR_OK;

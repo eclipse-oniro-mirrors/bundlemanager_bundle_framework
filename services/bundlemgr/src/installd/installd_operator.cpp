@@ -621,23 +621,35 @@ void InstalldOperator::ExtractTargetHnpFile(const BundleExtractor &extractor, co
     LOG_D(BMS_TAG_INSTALLD, "extract file success, path : %{public}s", path.c_str());
 }
 
-bool InstalldOperator::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+bool InstalldOperator::ProcessBundleInstallNative(const InstallHnpParam &param)
 {
-    struct HapInfo hapInfo;
-    if (strcpy_s(hapInfo.packageName, sizeof(hapInfo.packageName), packageName.c_str()) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName: %{public}s", packageName.c_str());
+    struct HapInfo hapInfo = {};
+    if (strcpy_s(hapInfo.packageName, sizeof(hapInfo.packageName), param.packageName.c_str()) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName: %{public}s", param.packageName.c_str());
         return false;
     }
-    if (strcpy_s(hapInfo.hapPath, sizeof(hapInfo.hapPath), hapPath.c_str()) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath: %{public}s", hapPath.c_str());
+    if (strcpy_s(hapInfo.hapPath, sizeof(hapInfo.hapPath), param.hapPath.c_str()) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath: %{public}s", param.hapPath.c_str());
         return false;
     }
-    if (strcpy_s(hapInfo.abi, sizeof(hapInfo.abi), cpuAbi.c_str()) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi: %{public}s", cpuAbi.c_str());
+    if (strcpy_s(hapInfo.abi, sizeof(hapInfo.abi), param.cpuAbi.c_str()) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi: %{public}s", param.cpuAbi.c_str());
         return false;
     }
-    int ret = NativeInstallHnp(userId.c_str(), hnpRootPath.c_str(), &hapInfo, 1);
+    if (strcpy_s(hapInfo.appIdentifier, sizeof(hapInfo.appIdentifier), param.appIdentifier.c_str()) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s appIdentifier: %{public}s", param.appIdentifier.c_str());
+        return false;
+    }
+    size_t count = param.hnpPaths.size();
+    std::vector<char*> independentSignHnps;
+    independentSignHnps.reserve(count);
+    for (size_t i = 0; i < count; i++) {
+        independentSignHnps.emplace_back(const_cast<char*>(param.hnpPaths[i].c_str()));
+    }
+    hapInfo.count = count;
+    hapInfo.independentSignHnpPaths = independentSignHnps.data();
+
+    int ret = NativeInstallHnp(param.userId.c_str(), param.hnpRootPath.c_str(), &hapInfo, 1);
     LOG_I(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "Native package installation failed with error code: %{public}d", ret);

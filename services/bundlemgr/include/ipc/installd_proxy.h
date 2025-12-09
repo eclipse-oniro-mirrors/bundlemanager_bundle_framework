@@ -62,8 +62,7 @@ public:
     virtual ErrCode ExtractHnpFiles(const std::map<std::string, std::string> &hnpPackageMap,
         const ExtractParam &extractParam) override;
 
-    virtual ErrCode ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-        const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName) override;
+    virtual ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam) override;
 
     virtual ErrCode ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName) override;
 

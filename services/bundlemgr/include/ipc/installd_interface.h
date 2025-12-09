@@ -31,6 +31,7 @@
 #include "ipc/encryption_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
+#include "ipc/install_hnp_param.h"
 #include "installd/installd_constants.h"
 
 namespace OHOS {
@@ -82,8 +83,7 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
-        const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+    virtual ErrCode ProcessBundleInstallNative(const InstallHnpParam &installHnpParam)
     {
         return ERR_OK;
     }

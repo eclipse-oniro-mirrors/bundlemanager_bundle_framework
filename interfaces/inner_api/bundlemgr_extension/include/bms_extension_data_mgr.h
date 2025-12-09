@@ -94,6 +94,8 @@ public:
         const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes);
     bool GetInstallAndRecoverList(const int32_t userId, const std::vector<std::string> &bundleList,
         std::vector<std::string> &installList, std::vector<std::string> &recoverList);
+    ErrCode GetDetermineCloneNumList(
+        std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList);
 private:
     bool OpenHandler();
     static void *handler_;

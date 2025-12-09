@@ -54,6 +54,7 @@
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "install_exception_mgr.h"
+#include "ipc/install_hnp_param.h"
 #include "new_bundle_data_dir_mgr.h"
 #include "on_demand_install_data_mgr.h"
 #include "parameter.h"
@@ -125,7 +126,7 @@ const char* NEW_ARK_WEB_BUNDLE_NAME = "com.ohos.arkwebcore";
 constexpr const char* TYPE_PUBLIC = "public";
 constexpr const char* TYPE_PRIVATE = "private";
 constexpr const char* USER_DATA_DIR = "/data";
-constexpr int32_t MIN_FREE_INODE_NUM = 50000;
+constexpr double MIN_FREE_INODE_PERCENT = 0.005; // 0.5%
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -156,18 +157,25 @@ std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
     return prefixPath + ServiceConstants::TMP_SUFFIX + suffixPath;
 }
 
-bool CheckSystemInodeSatisfied()
+bool CheckSystemInodeSatisfied(const std::string &bundleName)
 {
+    std::string appGalleryName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
+    if (appGalleryName.empty() || appGalleryName != bundleName) {
+        return true;
+    }
     struct statfs stat;
     if (statfs(USER_DATA_DIR, &stat) != 0) {
         LOG_E(BMS_TAG_INSTALLER, "statfs failed for %{public}s, error %{public}d",
             USER_DATA_DIR, errno);
         return false;
     }
-    if (stat.f_ffree < MIN_FREE_INODE_NUM) {
+    uint32_t minFreeInodeNum = static_cast<uint32_t>(stat.f_files * MIN_FREE_INODE_PERCENT);
+    if (stat.f_ffree < minFreeInodeNum) {
         LOG_E(BMS_TAG_INSTALLER, "free inodes not satisfied");
         return false;
     }
+    LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}llu, free inodes: %{public}llu",
+        stat.f_files, stat.f_ffree);
     return true;
 }
 } // namespace
@@ -1324,9 +1332,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    if (!CheckSystemInodeSatisfied()) {
-        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
-    }
+
     SharedBundleInstaller sharedBundleInstaller(installParam, appType);
     ErrCode result = sharedBundleInstaller.ParseFiles();
     CHECK_RESULT(result, "parse cross-app shared bundles failed %{public}d");
@@ -1385,6 +1391,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
 
+    if (!(installParam.isOTA || otaInstall_) && !newInfos.empty() &&
+        !CheckSystemInodeSatisfied(newInfos.begin()->second.GetBundleName())) {
+        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+    }
     result = CheckArkTSMode(newInfos);
     CHECK_RESULT(result, "check arkTS mode failed %{public}d");
 
@@ -2593,11 +2603,24 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
 
 ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &info, int32_t userId, bool removeDir)
 {
-    if (info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
+    auto hnpPackages = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName()).value_or(std::vector<HnpPackage>{});
+    if (!hnpPackages.empty()) {
         LOG_I(BMS_TAG_INSTALLER, "hnp install: %{public}s, %{public}d", info.GetCurModuleName().c_str(), userId);
         std::string moduleHnpsPath = info.GetInnerModuleInfoHnpPath(info.GetCurModuleName());
-        ErrCode ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(std::to_string(userId), moduleHnpsPath,
-            modulePath_, info.GetCpuAbi(), info.GetBundleName());
+        InstallHnpParam installHnpParam;
+        installHnpParam.userId = std::to_string(userId);
+        installHnpParam.hnpRootPath = moduleHnpsPath;
+        installHnpParam.hapPath = modulePath_;
+        installHnpParam.cpuAbi = info.GetCpuAbi();
+        installHnpParam.packageName = info.GetBundleName();
+        installHnpParam.appIdentifier = appIdentifier_;
+        for (auto &hnpPackage : hnpPackages) {
+            if (hnpPackage.independentSign) {
+                installHnpParam.hnpPaths.emplace_back(hnpPackage.type + ServiceConstants::PATH_SEPARATOR
+                    + hnpPackage.package);
+            }
+        }
+        ErrCode ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(installHnpParam);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "installing the native package failed. error code: %{public}d", ret);
             return ret;

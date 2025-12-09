@@ -1616,12 +1616,13 @@ HWTEST_F(BmsInstallDaemonTest, MigrateData_0003, Function | SmallTest | Level0)
 HWTEST_F(BmsInstallDaemonTest, ProcessBundleInstallNative_0100, Function | SmallTest | Level0)
 {
     InstalldHostImpl hostImpl;
-    std::string userId = "100";
-    std::string hnpRootPath = "/hnp/root";
-    std::string hapPath = "/hnp/root/path";
-    std::string cpuAbi = "cpuAbi";
-    std::string packageName = "com.acts.example";
-    ErrCode ret = hostImpl.ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    InstallHnpParam param;
+    param.userId = "100";
+    param.hnpRootPath = "/hnp/root";
+    param.hapPath = "/hnp/root/path";
+    param.cpuAbi = "cpuAbi";
+    param.packageName = "com.acts.example";
+    ErrCode ret = hostImpl.ProcessBundleInstallNative(param);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_INSTALL_FAILED);
 }
 
