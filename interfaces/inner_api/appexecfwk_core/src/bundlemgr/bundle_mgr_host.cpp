@@ -755,6 +755,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_SHORTCUTS_ENABLED):
             errCode = HandleSetShortcutsEnabled(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PLUGIN_EXTENSION_INFO):
+            errCode = HandleGetPluginExtensionInfo(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -5391,6 +5394,29 @@ ErrCode BundleMgrHost::HandleGetAssetGroupsInfo(MessageParcel &data, MessageParc
     if (ret == ERR_OK) {
         reply.SetDataCapacity(Constants::CAPACITY_SIZE);
         return WriteParcelInfoIntelligent<AssetGroupInfo>(assetGroupInfo, reply);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetPluginExtensionInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    std::string hostBundleName = data.ReadString();
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    ExtensionAbilityInfo extensionAbilityInfo;
+    auto ret = GetPluginExtensionInfo(hostBundleName, *want, userId, extensionAbilityInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&extensionAbilityInfo)) {
+        APP_LOGE("write extension infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

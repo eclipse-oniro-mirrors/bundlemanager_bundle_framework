@@ -43,14 +43,18 @@ struct PluginBundleInfo : public Parcelable {
     std::vector<PluginModuleInfo> pluginModuleInfos;
 
     std::unordered_map<std::string, AbilityInfo> abilityInfos;
+    std::unordered_map<std::string, ExtensionAbilityInfo> extensionInfos;
     ApplicationInfo appInfo;
 
     bool GetAbilityInfoByName(const std::string &abilityName, const std::string &moduleName, AbilityInfo &info);
     bool GetHapModuleInfo(const std::string &moduleName, HapModuleInfo &hapInfo);
+    bool GetExtensionInfoByName(const std::string &extensionName,
+        const std::string &moduleName, ExtensionAbilityInfo &info);
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static PluginBundleInfo *Unmarshalling(Parcel &parcel);
+    bool ReadExtensionInfos(Parcel &parcel);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

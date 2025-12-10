@@ -7069,5 +7069,30 @@ ErrCode BundleMgrProxy::BatchGetCompatibleDeviceType(
     return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE,
         data, compatibleDeviceTypes);
 }
+
+ErrCode BundleMgrProxy::GetPluginExtensionInfo(const std::string &hostBundleName,
+    const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetPluginExtensionInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(hostBundleName)) {
+        APP_LOGE("Write host bundle name fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        LOG_E(BMS_TAG_QUERY, "Write want fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<ExtensionAbilityInfo>(
+        BundleMgrInterfaceCode::GET_PLUGIN_EXTENSION_INFO, data, extensionInfo);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

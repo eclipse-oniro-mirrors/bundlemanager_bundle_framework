@@ -2114,4 +2114,19 @@ HWTEST_F(BmsBundlePermissionFalseTest, SetDefaultApplicationForAppClone_0001, Fu
         want);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0001
+ * @tc.name: test GetPluginExtensionInfo
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, GetPluginExtensionInfo_0001, Function | SmallTest | Level1)
+{
+    ExtensionAbilityInfo extensionInfo;
+    AAFwk::Want want;
+    std::string hostBundleName;
+    int32_t userId = 100;
+    ErrCode testRet = bundleMgrHostImpl_->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS

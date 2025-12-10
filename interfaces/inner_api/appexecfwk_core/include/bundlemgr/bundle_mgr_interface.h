@@ -1987,6 +1987,12 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
+        const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

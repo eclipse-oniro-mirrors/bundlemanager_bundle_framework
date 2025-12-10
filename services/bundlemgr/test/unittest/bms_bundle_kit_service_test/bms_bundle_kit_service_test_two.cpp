@@ -7402,4 +7402,24 @@ HWTEST_F(BmsBundleKitServiceTest, BundleInfoForException_0003, Function | SmallT
         delete info;
     }
 }
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0100
+ * @tc.name: test GetPluginExtensionInfo
+ * @tc.desc: 1. return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetPluginExtensionInfo_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    int32_t userId = 10;
+    ExtensionAbilityInfo extensionInfo;
+    auto ret = bundleMgrProxy->GetPluginExtensionInfo(BUNDLE_NAME_TEST, want, userId, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
 }
