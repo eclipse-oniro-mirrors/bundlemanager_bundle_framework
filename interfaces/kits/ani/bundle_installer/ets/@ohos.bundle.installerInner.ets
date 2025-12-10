@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -402,7 +402,7 @@ export class BundleInstallerInner implements installer.BundleInstaller {
       let option = options ?? defaultParam;
       if (option instanceof installer.DestroyAppCloneParam) {
         defaultParam = new DestroyAppCloneParamInner(option);
-      } else if (typeof option === "number") {
+      } else if (option instanceof int) {
         defaultParam.userId = option;
       }
       let p = new Promise<void>((resolve: (v: PromiseLike<void>) => void, reject: (error: BusinessError) => void):void => {
