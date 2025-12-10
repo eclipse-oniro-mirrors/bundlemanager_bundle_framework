@@ -42,6 +42,12 @@ struct FormWindow {
     int32_t designWidth = 720;
 };
 
+struct FormStandby {
+    bool isSupported = true;
+    bool isAdapted = false;
+    bool isPrivacySensitive = false;
+};
+
 struct FormFunInteractionParams {
     std::string abilityName;
     std::string targetBundleName;

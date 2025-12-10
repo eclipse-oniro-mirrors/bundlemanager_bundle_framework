@@ -87,6 +87,10 @@ const char* JSON_KEY_GROUP_ID = "groupId";
 const char* JSON_KEY_SUPPORT_DEVICE_TYPE = "supportDeviceTypes";
 const char* JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES = "supportDevicePerformanceClasses";
 const char* JSON_KEY_IS_TEMPLATE_FORM = "isTemplateForm";
+const char* JSON_KEY_STANDBY = "standby";
+const char* JSON_KEY_STANDBY_IS_SUPPORTED = "isSupported";
+const char* JSON_KEY_STANDBY_IS_ADAPTED = "isAdapted";
+const char* JSON_KEY_STANDBY_IS_PRIVACY_SENSITIVE = "isPrivacySensitive";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -172,6 +176,9 @@ void FormInfo::SetInfoByFormExt(const ExtensionFormInfo &formInfo)
     appFormVisibleNotify = formInfo.appFormVisibleNotify;
     resizable = formInfo.resizable;
     groupId = formInfo.groupId;
+    standby.isSupported = formInfo.standby.isSupported;
+    standby.isAdapted = formInfo.standby.isAdapted;
+    standby.isPrivacySensitive = formInfo.standby.isPrivacySensitive;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -313,6 +320,9 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     resizable = parcel.ReadBool();
     isTemplateForm = parcel.ReadBool();
     groupId = Str16ToStr8(parcel.ReadString16());
+    standby.isSupported = parcel.ReadBool();
+    standby.isAdapted = parcel.ReadBool();
+    standby.isPrivacySensitive = parcel.ReadBool();
     return true;
 }
 
@@ -431,6 +441,9 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, resizable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isTemplateForm);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(groupId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, standby.isSupported);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, standby.isAdapted);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, standby.isPrivacySensitive);
     return true;
 }
 
@@ -455,6 +468,13 @@ void to_json(nlohmann::json &jsonObject, const FormWindow &formWindow)
 {
     jsonObject[JSON_KEY_DESIGN_WIDTH] = formWindow.designWidth;
     jsonObject[JSON_KEY_AUTO_DESIGN_WIDTH] = formWindow.autoDesignWidth;
+}
+
+void to_json(nlohmann::json &jsonObject, const FormStandby &formStandby)
+{
+    jsonObject[JSON_KEY_STANDBY_IS_SUPPORTED] = formStandby.isSupported;
+    jsonObject[JSON_KEY_STANDBY_IS_ADAPTED] = formStandby.isAdapted;
+    jsonObject[JSON_KEY_STANDBY_IS_PRIVACY_SENSITIVE] = formStandby.isPrivacySensitive;
 }
 
 void to_json(nlohmann::json &jsonObject, const FormFunInteractionParams &funInteractionParams)
@@ -524,7 +544,8 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_IS_TEMPLATE_FORM, formInfo.isTemplateForm},
         {JSON_KEY_GROUP_ID, formInfo.groupId},
         {JSON_KEY_SUPPORT_DEVICE_TYPE, formInfo.supportDeviceTypes},
-        {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses}
+        {JSON_KEY_SUPPORT_DEVICE_PERFORMANCE_CLASSES, formInfo.supportDevicePerformanceClasses},
+        {JSON_KEY_STANDBY, formInfo.standby}
     };
 }
 
@@ -569,6 +590,33 @@ void from_json(const nlohmann::json &jsonObject, FormWindow &formWindow)
         parseResult);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formWindow jsonObject error : %{public}d", parseResult);
+    }
+}
+
+void from_json(const nlohmann::json &jsonObject, FormStandby &formStandby)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_STANDBY_IS_SUPPORTED,
+        formStandby.isSupported,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_STANDBY_IS_ADAPTED,
+        formStandby.isAdapted,
+        false,
+        parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_STANDBY_IS_PRIVACY_SENSITIVE,
+        formStandby.isPrivacySensitive,
+        false,
+        parseResult);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read formStandby jsonObject error : %{public}d", parseResult);
     }
 }
 
@@ -984,6 +1032,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NUMBER);
+    GetValueIfFindKey<FormStandby>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_STANDBY,
+        formInfo.standby,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read formInfo jsonObject error : %{public}d", parseResult);
     }

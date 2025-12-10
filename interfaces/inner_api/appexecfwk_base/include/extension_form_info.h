@@ -50,6 +50,7 @@ struct ExtensionFormInfo {
     FormWindow window;
     bool resizable = false;
     std::string groupId;
+    FormStandby standby;
 
     std::vector<int32_t> supportDimensions {};
     std::vector<int32_t> conditionUpdate {};
