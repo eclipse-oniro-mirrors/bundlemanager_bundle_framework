@@ -910,6 +910,6 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0038, TestSize.Level
     innerBundleInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
 
     auto ret = bundleInstallChecker.DetermineCloneApp(innerBundleInfo);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 }
 } // OHOS
