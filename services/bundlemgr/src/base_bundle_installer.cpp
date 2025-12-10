@@ -6556,17 +6556,19 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
         }
         FILE *hapFp = fopen(realInstallationPath.c_str(), "r");
         if (hapFp == nullptr) {
-            LOG_E(BMS_TAG_INSTALLER, "fopen %{public}s failed", realInstallationPath.c_str());
-            continue;
+            LOG_E(BMS_TAG_INSTALLER, "fopen %{public}s failed, errno: %{public}d", realInstallationPath.c_str(), errno);
+            return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
         }
         int32_t hapFd = fileno(hapFp);
         if (hapFd < 0) {
-            LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed", realInstallationPath.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed, errno: %{public}d", realInstallationPath.c_str(), errno);
             (void)fclose(hapFp);
-            continue;
+            return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
         }
         if (fsync(hapFd) != 0) {
-            LOG_E(BMS_TAG_INSTALLER, "fsync %{public}s failed", realInstallationPath.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "fsync %{public}s failed, errno: %{public}d", realInstallationPath.c_str(), errno);
+            (void)fclose(hapFp);
+            return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
         }
         (void)fclose(hapFp);
     }

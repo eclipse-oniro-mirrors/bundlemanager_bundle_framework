@@ -684,15 +684,20 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
     FILE *hspFp = fopen(tempHspPath.c_str(), "r");
     if (hspFp == nullptr) {
         APP_LOGE("fopen %{public}s failed", tempHspPath.c_str());
-    } else {
-        int32_t hspFd = fileno(hspFp);
-        if (hspFd < 0) {
-            APP_LOGE("open %{public}s failed", tempHspPath.c_str());
-        } else if (fsync(hspFd) != 0) {
-            APP_LOGE("fsync %{public}s failed", tempHspPath.c_str());
-        }
-        fclose(hspFp);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
     }
+    int32_t hspFd = fileno(hspFp);
+    if (hspFd < 0) {
+        APP_LOGE("open %{public}s failed", tempHspPath.c_str());
+        fclose(hspFp);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    if (fsync(hspFd) != 0) {
+        APP_LOGE("fsync %{public}s failed, errno: %{public}d", tempHspPath.c_str(), errno);
+        fclose(hspFp);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    (void)fclose(hspFp);
 
     // 3. move hsp to real installation dir
     APP_LOGD("move file from temp path %{public}s to real path %{public}s", tempHspPath.c_str(), realHspPath.c_str());

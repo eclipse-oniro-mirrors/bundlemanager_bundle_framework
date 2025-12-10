@@ -2528,6 +2528,10 @@ ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const 
         }
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
     }
+    if (!InstalldOperator::FsyncFile(targetPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "FsyncFile %{public}s failed errno:%{public}d", targetPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
     if (!OHOS::ChangeModeFile(targetPath, mode)) {
         LOG_E(BMS_TAG_INSTALLD, "change mode failed");

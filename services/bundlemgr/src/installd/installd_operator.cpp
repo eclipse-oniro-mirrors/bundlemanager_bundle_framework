@@ -724,29 +724,31 @@ bool InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     if (!OHOS::ChangeModeFile(path, mode)) {
         LOG_W(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
     }
-    FsyncFile(path);
-    return true;
+    return FsyncFile(path);
 }
 
-void InstalldOperator::FsyncFile(const std::string &path)
+bool InstalldOperator::FsyncFile(const std::string &path)
 {
     FILE *fileFp = fopen(path.c_str(), "r");
     if (fileFp == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed", path.c_str());
-        return;
+        return false;
     }
     int32_t fileFd = fileno(fileFp);
     if (fileFd < 0) {
         LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed %{public}d", path.c_str(), errno);
         (void)fclose(fileFp);
-        return;
+        return false;
     }
     if (fsync(fileFd) != 0) {
         if (fsync(fileFd) != 0) {
             LOG_E(BMS_TAG_INSTALLER, "retry fsync %{public}s failed %{public}d", path.c_str(), errno);
+            (void)fclose(fileFp);
+            return false;
         }
     }
     (void)fclose(fileFp);
+    return true;
 }
 
 bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
