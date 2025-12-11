@@ -4968,7 +4968,11 @@ ErrCode BundleMgrHostImpl::GetOdid(std::string &odid)
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetOdid(odid);
+    ErrCode ret = dataMgr->GetOdid(odid);
+    if (odid.empty()) {
+        APP_LOGI_NOFUNC("GetOdid empty");
+    }
+    return ret;
 }
 
 ErrCode BundleMgrHostImpl::GetAllPreinstalledApplicationInfos(
