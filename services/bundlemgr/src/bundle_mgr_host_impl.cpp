@@ -514,10 +514,8 @@ ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bu
     if (bundleInfos.size() == bundleNames.size()) {
         return ERR_OK;
     }
-    if (IsQueryBundleInfoExt(static_cast<uint32_t>(flags))) {
-        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-        bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true);
-    }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true);
     return bundleInfos.empty() ? ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST : ERR_OK;
 }
 
@@ -1126,7 +1124,7 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
     }
     bool res = dataMgr->QueryAbilityInfo(want, flags, userId, abilityInfo);
     if (!res) {
-        if (!IsAppLinking(flags) && IsQueryAbilityInfoExt(static_cast<uint32_t>(flags))) {
+        if (!IsAppLinking(flags)) {
             auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
             return (bmsExtensionClient->QueryAbilityInfo(want, flags, userId, abilityInfo) == ERR_OK);
         }
@@ -1191,7 +1189,7 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     }
     auto res = dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (!IsAppLinking(flags) && IsQueryAbilityInfoExt(static_cast<uint32_t>(flags)) &&
+    if (!IsAppLinking(flags) &&
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos, true) == ERR_OK) {
         LOG_D(BMS_TAG_QUERY, "query ability infos from bms extension successfully");
         return ERR_OK;
