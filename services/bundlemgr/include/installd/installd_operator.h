@@ -338,6 +338,7 @@ public:
      */
     static bool CopyDir(const std::string &sourceDir, const std::string &destinationDir);
 
+    static bool FsyncFile(const std::string &path);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
@@ -357,7 +358,6 @@ private:
     static EnforceMetadataProcessForApp enforceMetadataProcessForApp_;
     static bool OpenEncryptionHandle();
 #endif
-    static void FsyncFile(const std::string &path);
     static std::string GetSameLevelTmpPath(const std::string &path);
 
     struct OwnershipInfo {
