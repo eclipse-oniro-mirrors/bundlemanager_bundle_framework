@@ -1277,9 +1277,9 @@ public:
 
     virtual ErrCode GetPluginInfosForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos) override;
 
-    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
+    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
 
-    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
+    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
 
     virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir) override;

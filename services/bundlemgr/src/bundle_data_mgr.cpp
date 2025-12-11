@@ -11543,7 +11543,7 @@ ErrCode BundleDataMgr::GetPluginHapModuleInfo(const std::string &hostBundleName,
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback,
+ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback,
     const std::string callingBundleName)
 {
     if (pluginEventCallback == nullptr) {
@@ -11565,7 +11565,7 @@ ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallba
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback,
+ErrCode BundleDataMgr::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback,
     const std::string &callingBundleName)
 {
     if (pluginEventCallback == nullptr) {

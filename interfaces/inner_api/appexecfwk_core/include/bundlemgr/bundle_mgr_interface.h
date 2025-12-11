@@ -1878,12 +1878,12 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

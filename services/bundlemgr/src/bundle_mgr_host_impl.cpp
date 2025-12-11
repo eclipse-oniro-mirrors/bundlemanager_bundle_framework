@@ -6195,7 +6195,7 @@ ErrCode BundleMgrHostImpl::GetPluginHapModuleInfo(const std::string &hostBundleN
     return dataMgr->GetPluginHapModuleInfo(hostBundleName, pluginBundleName, pluginModuleName, userId, hapModuleInfo);
 }
 
-ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     APP_LOGD("begin");
     if (pluginEventCallback == nullptr) {
@@ -6219,7 +6219,7 @@ ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCa
     return dataMgr->RegisterPluginEventCallback(pluginEventCallback, callingBundleName);
 }
 
-ErrCode BundleMgrHostImpl::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+ErrCode BundleMgrHostImpl::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     APP_LOGD("begin");
     if (pluginEventCallback == nullptr) {

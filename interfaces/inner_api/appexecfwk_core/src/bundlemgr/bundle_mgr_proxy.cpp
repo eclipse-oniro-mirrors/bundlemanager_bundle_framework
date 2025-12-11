@@ -6426,7 +6426,7 @@ ErrCode BundleMgrProxy::GetAllBundleDirs(int32_t userId, std::vector<BundleDir> 
         BundleMgrInterfaceCode::GET_ALL_BUNDLE_DIRS, data, bundleDirs);
 }
 
-ErrCode BundleMgrProxy::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+ErrCode BundleMgrProxy::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin");
@@ -6454,7 +6454,7 @@ ErrCode BundleMgrProxy::RegisterPluginEventCallback(const sptr<IBundleEventCallb
     return reply.ReadInt32();
 }
 
-ErrCode BundleMgrProxy::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+ErrCode BundleMgrProxy::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("begin");
