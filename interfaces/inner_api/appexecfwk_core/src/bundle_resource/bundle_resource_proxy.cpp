@@ -28,7 +28,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
+constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
 const int32_t CLONE_APP_INDEX_MAX = 5;
 bool GetData(size_t size, const void *data, void *&buffer)
@@ -37,7 +37,7 @@ bool GetData(size_t size, const void *data, void *&buffer)
         APP_LOGE("failed due to null data");
         return false;
     }
-    if ((size == 0) || size > MAX_PARCEL_CAPACITY) {
+    if ((size == 0) || size > Constants::MAX_PARCEL_CAPACITY) {
         APP_LOGE("failed due to wrong size");
         return false;
     }
@@ -477,7 +477,7 @@ ErrCode BundleResourceProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void 
         APP_LOGE("ashDataPtr is nullptr");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY)) {
+    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY_OF_ASHMEM)) {
         APP_LOGE("failed due to wrong size");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

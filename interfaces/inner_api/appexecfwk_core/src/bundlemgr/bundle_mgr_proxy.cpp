@@ -52,7 +52,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int32_t MAX_SHORTCUT_INFO_SIZE = 100;
-constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
+constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_REWDATA_SIZE = 120 * 1024 * 1024; // max ipc size 120MB
 constexpr int64_t GET_BUNDLE_FOR_SELF_CACHE_TIME = 800; // 800ms
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
@@ -74,7 +74,7 @@ bool GetData(void *&buffer, size_t size, const void *data)
         APP_LOGE("GetData failed due to null data");
         return false;
     }
-    if (size == 0 || size > MAX_PARCEL_CAPACITY) {
+    if (size == 0 || size > Constants::MAX_PARCEL_CAPACITY) {
         APP_LOGE("GetData failed due to zero size");
         return false;
     }
@@ -2618,7 +2618,7 @@ ErrCode BundleMgrProxy::SetAbilityFileTypesForSelf(const std::string &moduleName
         return ret;
     }
     MessageParcel data;
-    (void)data.SetMaxCapacity(Constants::CAPACITY_SIZE);
+    (void)data.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_NOFUNC_E(BMS_TAG_QUERY, "SetAbilityFileTypesForSelf write InterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -6501,7 +6501,7 @@ ErrCode BundleMgrProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&dat
         APP_LOGE("ashDataPtr is nullptr");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY)) {
+    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY_OF_ASHMEM)) {
         APP_LOGE("failed due to wrong size");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
