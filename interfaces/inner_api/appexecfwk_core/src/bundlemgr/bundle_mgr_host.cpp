@@ -40,10 +40,8 @@ namespace {
 const int32_t MAX_LIMIT_SIZE = 100;
 const int8_t ASHMEM_LEN = 16;
 constexpr int32_t MAX_SHORTCUT_INFO_SIZE = 100;
-constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
 constexpr int32_t PREINSTALL_PARCEL_CAPACITY  = 400 * 1024; // 400K
-constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 const int16_t MAX_STATUS_VECTOR_NUM = 1000;
 constexpr int16_t MAX_BATCH_QUERY_ABILITY_SIZE = 1000;
@@ -58,7 +56,7 @@ bool GetData(void *&buffer, size_t size, const void *data)
         APP_LOGE("GetData failed due to null data");
         return false;
     }
-    if (size == 0 || size > MAX_PARCEL_CAPACITY) {
+    if (size == 0 || size > Constants::MAX_PARCEL_CAPACITY) {
         APP_LOGE("GetData failed due to zero size");
         return false;
     }
@@ -943,7 +941,7 @@ ErrCode BundleMgrHost::HandleGetDependentBundleInfo(MessageParcel &data, Message
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+    reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
     if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -961,7 +959,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlags(MessageParcel &data, Mess
     BundleInfo info;
     bool ret = GetBundleInfo(name, flags, info, userId);
     if (ret) {
-        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+        reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
         WRITE_PARCEL(reply.WriteInt32(ERR_OK));
         return WriteParcelInfoIntelligent(info, reply);
     }
@@ -987,7 +985,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9(MessageParcel &data, Me
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+        reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
         return WriteParcelInfoIntelligent<BundleInfo>(info, reply);
     }
     return ERR_OK;
@@ -1013,7 +1011,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfoForException(MessageParcel &data, Mess
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+        reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
         return WriteParcelInfoIntelligent<BundleInfoForException>(info, reply);
     }
     return ERR_OK;
@@ -1046,7 +1044,7 @@ ErrCode BundleMgrHost::HandleBatchGetBundleInfo(MessageParcel &data, MessageParc
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+        reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
         if (!WriteVectorToParcelIntelligent(bundleInfos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1113,7 +1111,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfos(MessageParcel &data, MessageParcel &
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
+        reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
         if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1137,7 +1135,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlags(MessageParcel &data, Mes
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
+        reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
         if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2134,7 +2132,7 @@ ErrCode BundleMgrHost::HandleDumpInfos(MessageParcel &data, MessageParcel &reply
     std::string result;
     APP_LOGI("dump info %{public}s", bundleName.c_str());
     bool ret = DumpInfos(flag, bundleName, userId, result);
-    (void)reply.SetMaxCapacity(MAX_PARCEL_CAPACITY);
+    (void)reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -3220,7 +3218,7 @@ template<typename T>
 bool BundleMgrHost::WriteVectorToParcelIntelligent(std::vector<T> &parcelableVector, MessageParcel &reply)
 {
     MessageParcel tempParcel;
-    (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
+    (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY_OF_ASHMEM);
     if (!tempParcel.WriteInt32(parcelableVector.size())) {
         APP_LOGE("write ParcelableVector failed");
         return false;
@@ -3242,7 +3240,6 @@ bool BundleMgrHost::WriteVectorToParcelIntelligent(std::vector<T> &parcelableVec
     }
 
     if (dataSize > MAX_IPC_REWDATA_SIZE) {
-        (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY_OF_ASHMEM);
         int32_t callingUid = IPCSkeleton::GetCallingUid();
         APP_LOGI("datasize is too large, use ashmem %{public}d", callingUid);
         return WriteParcelableIntoAshmem(tempParcel, reply);
@@ -4030,7 +4027,7 @@ ErrCode BundleMgrHost::HandleGetUninstalledBundleInfo(MessageParcel &data, Messa
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+    reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
     if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -4197,7 +4194,7 @@ template<typename T>
 ErrCode BundleMgrHost::WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const
 {
     Parcel tmpParcel;
-    (void)tmpParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
+    (void)tmpParcel.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
     if (!tmpParcel.WriteParcelable(&parcelInfo)) {
         APP_LOGE("write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -4219,7 +4216,7 @@ template<typename T>
 ErrCode BundleMgrHost::WriteParcelInfo(const T &parcelInfo, MessageParcel &reply) const
 {
     Parcel tmpParcel;
-    (void)tmpParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
+    (void)tmpParcel.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
     WRITE_PARCEL(tmpParcel.WriteParcelable(&parcelInfo));
     size_t dataSize = tmpParcel.GetDataSize();
 
@@ -4306,8 +4303,8 @@ ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &d
 
     constexpr int32_t VECTOR_SIZE_UNDER_DEFAULT_DATA = 500;
     if (vectorSize > VECTOR_SIZE_UNDER_DEFAULT_DATA &&
-        !reply.SetDataCapacity(PREINSTALL_PARCEL_CAPACITY)) {
-        APP_LOGE("SetDataCapacity failed");
+        !reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY)) {
+        APP_LOGE("SetMaxCapacity failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!reply.WriteInt32(ret)) {
@@ -4668,7 +4665,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosForContinuation(MessageParcel &data, 
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
+        reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
         if (!WriteVectorToParcelIntelligent(infos, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -4689,7 +4686,7 @@ ErrCode BundleMgrHost::HandleGetContinueBundleNames(MessageParcel &data, Message
         APP_LOGE("GetContinueBundleNames write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
+    reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
     if (ret == ERR_OK && !reply.WriteStringVector(bundleNames)) {
         APP_LOGE("Write bundleNames results failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -5188,7 +5185,7 @@ ErrCode BundleMgrHost::HandleGetTestRunner(MessageParcel &data, MessageParcel &r
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+        reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
         return WriteParcelInfoIntelligent<ModuleTestRunner>(testRunner, reply);
     }
     return ERR_OK;
@@ -5227,7 +5224,7 @@ ErrCode BundleMgrHost::HandleGetAllBundleNames(MessageParcel &data, MessageParce
         APP_LOGE("GetAllBundleNames write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
+    reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
     if (ret == ERR_OK && !reply.WriteStringVector(bundleNames)) {
         APP_LOGE("Write all bundleNames results failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -5389,7 +5386,7 @@ ErrCode BundleMgrHost::HandleGetAssetGroupsInfo(MessageParcel &data, MessageParc
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+        reply.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
         return WriteParcelInfoIntelligent<AssetGroupInfo>(assetGroupInfo, reply);
     }
     return ERR_OK;

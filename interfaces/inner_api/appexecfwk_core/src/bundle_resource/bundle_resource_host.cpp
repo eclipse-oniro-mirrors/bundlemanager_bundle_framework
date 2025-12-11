@@ -28,7 +28,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // max allow 1 GB resource size
+constexpr size_t MAX_PARCEL_CAPACITY_OF_ASHMEM = 1024 * 1024 * 1024; // max allow 1 GB resource size
 constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
 const std::string BUNDLE_RESOURCE_ASHMEM_NAME = "bundleResourceAshemeName";
 const int32_t MAX_PARCE_LABLE_LIST_SIZE = 1000;
@@ -297,7 +297,7 @@ template<typename T>
 ErrCode BundleResourceHost::WriteParcelInfo(const T &parcelInfo, MessageParcel &reply)
 {
     MessageParcel tmpParcel;
-    (void)tmpParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
+    (void)tmpParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY_OF_ASHMEM);
     if (!tmpParcel.WriteParcelable(&parcelInfo)) {
         APP_LOGE("write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -322,7 +322,7 @@ template<typename T>
 ErrCode BundleResourceHost::WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply)
 {
     MessageParcel tempParcel;
-    (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
+    (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY_OF_ASHMEM);
     if (!tempParcel.WriteInt32(parcelVector.size())) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

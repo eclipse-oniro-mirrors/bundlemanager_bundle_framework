@@ -158,7 +158,7 @@ constexpr const char* URI_SEPARATOR = "://";
 
 // ipc
 constexpr int32_t CAPACITY_SIZE = 1 * 1024 * 1000; // 1M
-constexpr int32_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
+constexpr int32_t MAX_PARCEL_CAPACITY = 128 * 1024 * 1024; // 128M
 
 // permission
 constexpr const char* LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHANGE";
