@@ -9643,6 +9643,49 @@ void BundleDataMgr::HandleOTACodeEncryption()
     APP_LOGI("end");
 }
 
+ErrCode BundleDataMgr::HandleDetermineCloneNumList(
+    const std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList)
+{
+    APP_LOGI_NOFUNC("HandleDetermineCloneNumList begin");
+    std::unique_lock<ffrt::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto& [bundleName, appIdentifier, cloneNum] : determineCloneNumList) {
+        if (bundleName.empty()) {
+            APP_LOGW_NOFUNC("determineClone bundleName empty");
+            continue;
+        }
+        auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            APP_LOGW_NOFUNC("%{public}s does not exist", bundleName.c_str());
+            continue;
+        }
+        if (infoItem->second.GetAppIdentifier() != appIdentifier) {
+            APP_LOGW_NOFUNC("%{public}s check appIdentidier failed", bundleName.c_str());
+            continue;
+        }
+        if (infoItem->second.GetMultiAppModeType() != MultiAppModeType::UNSPECIFIED &&
+            infoItem->second.GetMultiAppModeType() != MultiAppModeType::APP_CLONE) {
+            APP_LOGW_NOFUNC("%{public}s mutiAppMode is %{public}d",
+                bundleName.c_str(), static_cast<int32_t>(infoItem->second.GetMultiAppModeType()));
+            continue;
+        }
+        if (infoItem->second.GetMultiAppMaxCount() >= static_cast<int32_t>(cloneNum)) {
+            APP_LOGW_NOFUNC("%{public}s maxCount is smaller no need to refresh", bundleName.c_str());
+            continue;
+        }
+        MultiAppModeData multiAppMode;
+        multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+        multiAppMode.maxCount =
+            ((cloneNum > Constants::CLONE_APP_INDEX_MAX) ? Constants::CLONE_APP_INDEX_MAX : cloneNum);
+        infoItem->second.SetMultiAppMode(multiAppMode);
+        if (!dataStorage_->SaveStorageBundleInfo(infoItem->second)) {
+            APP_LOGW_NOFUNC("SaveStorageBundleInfo failed -n %{public}s", bundleName.c_str());
+        }
+        APP_LOGI_NOFUNC("DetermineClone %{public}s %{public}d", bundleName.c_str(), multiAppMode.maxCount);
+    }
+    APP_LOGI_NOFUNC("HandleDetermineCloneNumList end");
+    return ERR_OK;
+}
+
 void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
 {
     if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {

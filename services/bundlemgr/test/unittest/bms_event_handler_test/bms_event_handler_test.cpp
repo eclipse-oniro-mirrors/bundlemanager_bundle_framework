@@ -2956,4 +2956,18 @@ HWTEST_F(BmsEventHandlerTest, InnerMultiProcessBundleInstallForPatch_0100, Funct
         EXPECT_TRUE(ret);
     }
 }
+
+/**
+ * @tc.number: HandleDetermineCloneNumList_0100
+ * @tc.name: HandleDetermineCloneNumList
+ * @tc.desc: test HandleDetermineCloneNumList
+ */
+HWTEST_F(BmsEventHandlerTest, HandleDetermineCloneNumList_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        EXPECT_NO_THROW(handler->HandleDetermineCloneNumList());
+    }
+}
 } // OHOS

@@ -2278,4 +2278,16 @@ HWTEST_F(BmsExtensionDataMgrTest, BackupBundleData_002, Function | SmallTest | L
     auto res = bundleMgrExtTest.BackupBundleData(bundleName, userId, appIndex);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
 }
+
+/**
+ * @tc.number: GetDetermineCloneNumList_0001
+ * @tc.name: GetDetermineCloneNumList
+ * @tc.desc: GetDetermineCloneNumList
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetDetermineCloneNumList_0001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<std::tuple<std::string, std::string, uint32_t>> determineCloneNumList;
+    EXPECT_NO_THROW(bmsExtensionDataMgr.GetDetermineCloneNumList(determineCloneNumList));
+}
 } // OHOS

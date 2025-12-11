@@ -607,6 +607,7 @@ private:
     static void PatchSharedHspInstall(const std::string &path);
     static void PatchSystemBundleInstall(const std::string &path, bool isOta);
     void HandleOTACodeEncryption();
+    void HandleDetermineCloneNumList();
     void SaveCodeProtectFlag();
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
