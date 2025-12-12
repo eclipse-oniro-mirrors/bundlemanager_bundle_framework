@@ -1633,7 +1633,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     UpdateRouterInfo();
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
-    ProcessAOT(installParam.isOTA, newInfos);
     RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     UpdateAppInstallControlled(userId_);
     extensionDirGuard.Dismiss();
