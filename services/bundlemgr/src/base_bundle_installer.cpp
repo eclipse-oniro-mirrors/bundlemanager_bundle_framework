@@ -94,7 +94,7 @@ constexpr const char* BACKUP_BUNDLES = "/backup/bundles/";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
-constexpr const char* LIBS_TMP = "libs_tmp";
+constexpr const char* LIBS_TMP = "libs+tmp";
 constexpr const char* PRIVILEGE_ALLOW_HDC_INSTALL = "AllowHdcInstall";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
 constexpr const char* DEDUPLICATEHAR_NOTE =
@@ -127,6 +127,8 @@ constexpr const char* TYPE_PUBLIC = "public";
 constexpr const char* TYPE_PRIVATE = "private";
 constexpr const char* USER_DATA_DIR = "/data";
 constexpr double MIN_FREE_INODE_PERCENT = 0.005; // 0.5%
+constexpr const char* MODULE_NAME_IS_LIBS = "libs";
+constexpr const char* MODULE_DIR_IS_LIBS = "/libs";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -6354,6 +6356,10 @@ ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::stri
         if (info.second.IsOnlyCreateBundleUser()) {
             continue;
         }
+        if (info.second.GetCurModuleName() == MODULE_NAME_IS_LIBS) {
+            LOG_W(BMS_TAG_INSTALLER, "no rename libs module dir again");
+            continue;
+        }
         if ((ret = RenameModuleDir(info.second)) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "rename dir failed");
             break;
@@ -6614,7 +6620,11 @@ ErrCode BaseBundleInstaller::FinalProcessHapAndSoForBundleUpdate(
         // move so file from temp dir to real installation dir
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "-n %{public}s process so start", bundleName.c_str());
         std::string nativeLibraryPath = "";
+        bool hasModuleNameIsLibs = false;
         for (const auto &info : infos) {
+            if (info.second.GetCurModuleName() == MODULE_NAME_IS_LIBS) {
+                hasModuleNameIsLibs = true;
+            }
             if (info.second.GetNativeLibraryPath().empty() ||
                 info.second.IsLibIsolated(info.second.GetCurModuleName()) ||
                 !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
@@ -6626,6 +6636,17 @@ ErrCode BaseBundleInstaller::FinalProcessHapAndSoForBundleUpdate(
         }
         // delete old native library path
         DeleteOldNativeLibraryPath();
+        // if has libs modulename, must rename module dir before rename so dir
+        if (hasModuleNameIsLibs) {
+            std::string libsModuleDir = std::string(Constants::BUNDLE_CODE_DIR) +
+                ServiceConstants::PATH_SEPARATOR + bundleName + MODULE_DIR_IS_LIBS;
+            std::string renameDir = libsModuleDir + ServiceConstants::TMP_SUFFIX;
+            result = InstalldClient::GetInstance()->RenameModuleDir(renameDir, libsModuleDir);
+            if (result != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "rename libs module dir failed, error is %{public}d", result);
+                return result;
+            }
+        }
         if (!nativeLibraryPath.empty()) {
             std::string realSoDir = GetRealSoPath(bundleName, nativeLibraryPath, false);
             InstalldClient::GetInstance()->CreateBundleDir(realSoDir);
@@ -6652,7 +6673,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
     }
     std::string bundleName = infos.begin()->second.GetBundleName();
     if (needDeleteOldLibraryPath) {
-        // first delete libs_tmp dir, make sure is empty
+        // first delete libs+tmp dir, make sure is empty
         std::string tempSoDir;
         tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
             .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(LIBS_TMP);

@@ -8686,9 +8686,9 @@ HWTEST_F(BmsBundleInstallerTest, GetRealSoPath_0010, Function | SmallTest | Leve
 {
     BaseBundleInstaller installer;
     std::string path = installer.GetRealSoPath(BUNDLE_NAME, "libs/arms", true);
-    EXPECT_TRUE(path.find("libs_tmp") != std::string::npos);
+    EXPECT_TRUE(path.find("libs+tmp") != std::string::npos);
     path = installer.GetRealSoPath(BUNDLE_NAME, "libs/arms", false);
-    EXPECT_TRUE(path.find("libs_tmp") == std::string::npos);
+    EXPECT_TRUE(path.find("libs+tmp") == std::string::npos);
 }
 
 /**
@@ -8722,6 +8722,42 @@ HWTEST_F(BmsBundleInstallerTest, FinalProcessHapAndSoForBundleUpdate_0010, Funct
     innerBundleInfoWithSO.baseApplicationInfo_->bundleName = MODULE_NAME;
     innerBundleInfoWithSO.baseApplicationInfo_->nativeLibraryPath = "libs/arms";
     infos[MODULE_NAME] = innerBundleInfoWithSO;
+
+    ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, false, true);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: FinalProcessHapAndSoForBundleUpdate_0020
+ * @tc.name: test FinalProcessHapAndSoForBundleUpdate
+ * @tc.desc: 1.Test the FinalProcessHapAndSoForBundleUpdate
+*/
+HWTEST_F(BmsBundleInstallerTest, FinalProcessHapAndSoForBundleUpdate_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    auto ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, true, true);
+    EXPECT_EQ(ret, ERR_OK);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetCurrentModulePackage("libs");
+    innerBundleInfo.baseApplicationInfo_->nativeLibraryPath = "libs/arms";
+
+    InnerModuleInfo libsModule;
+    libsModule.compressNativeLibs = false;
+    libsModule.moduleName = "libs";
+    innerBundleInfo.innerModuleInfos_.insert(
+        std::pair<std::string, InnerModuleInfo>("libs", libsModule));
+    infos[BUNDLE_NAME] = innerBundleInfo;
+
+    ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, false, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+
+    std::string libsModuleDir = std::string(Constants::BUNDLE_CODE_DIR) +
+        ServiceConstants::PATH_SEPARATOR + BUNDLE_NAME + "/libs";
+    std::string renameDir = libsModuleDir + ServiceConstants::TMP_SUFFIX;
+    ret = MkdirIfNotExist(renameDir);
+    EXPECT_EQ(ret, ERR_OK);
 
     ret = installer.FinalProcessHapAndSoForBundleUpdate(infos, false, true);
     EXPECT_EQ(ret, ERR_OK);
