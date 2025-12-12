@@ -1205,9 +1205,9 @@ public:
         const int32_t userId, AbilityInfo &abilityInfo);
     ErrCode GetPluginHapModuleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo);
-    ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback,
+    ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback,
         const std::string callingBundleName);
-    ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback,
+    ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback,
         const std::string &callingBundleName);
     void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData, const std::string &bundleName);
     ErrCode GetDynamicIconInfo(const std::string &bundleName, std::vector<DynamicIconInfo> &dynamicIconInfos);
