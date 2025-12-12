@@ -2744,10 +2744,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     }
 
     ScopeGuard bundleGuard([&] {
-        if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
-            Constants::INITIAL_APP_INDEX)) {
-            RemoveBundleAndDataDir(info, false);
-        }
+        RemoveBundleAndDataDir(info, dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+            Constants::INITIAL_APP_INDEX));
     });
     std::string modulePath = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_;
     result = ExtractModule(info, modulePath);
