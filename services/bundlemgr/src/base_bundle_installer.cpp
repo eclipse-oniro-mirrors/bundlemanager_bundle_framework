@@ -2641,6 +2641,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &i
             }
         }
         ErrCode ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(installHnpParam);
+        isHnpInstalled_ = true;
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "installing the native package failed. error code: %{public}d", ret);
             return ret;
@@ -2650,7 +2651,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &i
                 LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", moduleHnpsPath.c_str());
             }
         }
-        isHnpInstalled_ = true;
     }
     return ERR_OK;
 }
