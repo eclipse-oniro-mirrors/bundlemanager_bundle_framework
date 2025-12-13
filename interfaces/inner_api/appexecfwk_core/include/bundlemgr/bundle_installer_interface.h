@@ -176,6 +176,21 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode InstallEnterpriseReSignatureCert(const std::string &certAlias, int32_t fd, int32_t userId)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode CreateEnterpriseCertStream(const std::string &certAlias, int32_t userId, int32_t& fd)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode EnableKeyForEnterpriseResign(const std::string &certAlias, int32_t userId, int32_t fd)
+    {
+        return ERR_OK;
+    }
 };
 
 #define PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                                 \

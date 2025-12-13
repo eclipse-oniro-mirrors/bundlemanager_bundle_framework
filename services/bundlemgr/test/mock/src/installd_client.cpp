@@ -467,6 +467,15 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
     return CallService(&IInstalld::RemoveSignProfile, bundleName);
 }
 
+ErrCode InstalldClient::EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+{
+    if (cert == nullptr || certLength <= 0) {
+        APP_LOGE("cert is empty or certLength is invalid: %{public}d", certLength);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::EnableKeyForEnterpriseResign, cert, certLength);
+}
+
 ErrCode InstalldClient::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
     if (encryptionParam.bundleName.empty() && encryptionParam.groupId.empty()) {

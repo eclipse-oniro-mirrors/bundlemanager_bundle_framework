@@ -931,6 +931,30 @@ ErrCode InstalldProxy::RemoveSignProfile(const std::string &bundleName)
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+{
+    if (certLength <= 0 || certLength > Constants::CAPACITY_SIZE || cert == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid params");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, certLength);
+    if (!data.WriteRawData(cert, certLength)) {
+        LOG_E(BMS_TAG_INSTALLD, "Failed to write raw data");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::ENABLE_KEY_FOR_ENTERPRISE_RESIGN, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
     MessageParcel data;

@@ -442,6 +442,11 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
     {
         return ERR_OK;

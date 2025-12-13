@@ -1291,6 +1291,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7300, Function | Sma
 }
 
 /**
+ * @tc.number: InstalldHostImplTest_7310
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling EnableKeyForEnterpriseResign of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7310, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    ErrCode res = hostImpl->EnableKeyForEnterpriseResign(nullptr, 0);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
  * @tc.number: InstalldHostImplTest_7400
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling GetExtensionSandboxTypeList of hostImpl

@@ -250,6 +250,7 @@ public:
     static std::unordered_map<std::string, std::string> ParseMapFromJson(const std::string &jsonStr);
     static std::vector<std::string> FileTypeNormalize(const std::string &fileType);
     static std::string Sha256File(const std::string& filePath);
+    static bool GetEnterpriseReSignatureCert(int32_t userId, std::set<std::string> &certificateAlias);
 private:
     static std::mutex g_mutex;
 };
