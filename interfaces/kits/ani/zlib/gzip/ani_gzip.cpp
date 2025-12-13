@@ -29,7 +29,7 @@ namespace {
 constexpr const char* CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER = "@ohos.zlib.zlib.GzErrorOutputInfoInner";
 constexpr const char* FIELD_NAME_NATIVE_GZFILE = "nativeGZFile";
 constexpr const char* FUNCTION_TOSTRING = "toString";
-constexpr const char* MANGLING_TOSTRING = ":Lstd/core/String;";
+constexpr const char* MANGLING_TOSTRING = ":C{std.core.String}";
 constexpr int INVALID_FD = -1;
 constexpr uint8_t MIN_ASCII = 0;
 constexpr uint8_t MAX_ASCII = 255;
