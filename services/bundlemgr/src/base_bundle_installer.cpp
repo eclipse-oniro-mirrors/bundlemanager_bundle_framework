@@ -8172,9 +8172,8 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     }
     // process plugin dir
     result = ProcessPluginFilesWhenUpdate(oldInfo, oldAppCodePath, realAppCodePath);
-    if (result != ERR_OK) {
-        APP_LOGE("copy plugin file to install path failed %{public}d", result);
-    }
+    CHECK_RESULT(result, "copy plugin file to install path failed %{public}d");
+
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBundleCodePath end -n %{public}s", bundleName.c_str());
     return ERR_OK;
 }
