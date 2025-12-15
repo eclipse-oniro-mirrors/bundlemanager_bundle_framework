@@ -212,11 +212,9 @@ static void AniSetDefaultApplicationForAppClone(ani_env *env,
     ErrCode ret = defaultAppProxy->SetDefaultApplicationForAppClone(aniUserId, aniAppIndex, type, want);
     if (ret != ERR_OK) {
         APP_LOGE("SetDefaultApplicationForAppClone failed ret: %{public}d", ret);
-        int32_t currentUserId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-        auto permission = (aniUserId == currentUserId) ? Constants::PERMISSION_SET_DEFAULT_APPLICATION :
-            PERMISSION_SET_DEFAULT_APPLICATION_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS;
-        BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
-            SET_DEFAULT_APPLICATION_FOR_APP_CLONE, permission);
+        BusinessErrorAni::ThrowCommonNewError(env, CommonFunc::ConvertErrCode(ret),
+            SET_DEFAULT_APPLICATION_FOR_APP_CLONE,
+            PERMISSION_SET_DEFAULT_APPLICATION_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
     }
 }
 

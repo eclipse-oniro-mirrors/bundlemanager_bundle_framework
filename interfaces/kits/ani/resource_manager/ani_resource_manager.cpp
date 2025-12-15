@@ -179,7 +179,7 @@ static ani_object AniGetLauncherAbilityResourceInfoList(ani_env* env, ani_object
         static_cast<uint32_t>(flags), launcherAbilityResourceInfos);
     if (ret != ERR_OK) {
         APP_LOGE("AniGetLauncherAbilityResourceInfoList failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, ret,
+        BusinessErrorAni::ThrowCommonNewError(env, ret,
             GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST, PERMISSION_GET_ALL_BUNDLE_RESOURCES);
         return nullptr;
     }

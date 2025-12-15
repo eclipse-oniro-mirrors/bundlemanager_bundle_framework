@@ -6931,6 +6931,43 @@ HWTEST_F(BmsDataMgrTest, UpdateShortcutInfos_0002, Function | MediumTest | Level
 }
 
 /**
+ * @tc.number: UpdateShortcutInfos_0003
+ * @tc.name: UpdateShortcutInfos
+ * @tc.desc: test UpdateShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, UpdateShortcutInfos_0003, Function | MediumTest | Level1)
+{
+    std::string bundleName = "com.ohos.hello";
+    std::string shortcutId = "id_test1";
+    bool isEnabled = false;
+    std::vector<ShortcutInfo> shortcutInfos;
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    shortcutInfos.push_back(shortcutInfo);
+    BundleDataMgr bundleDataMgr;
+    bundleDataMgr.UpdateShortcutInfos(bundleName);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsNewVersion(false);
+    bundleDataMgr.bundleIdMap_.emplace(1, bundleName);
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    std::shared_ptr<ShortcutEnabledDataStorageRdb> shortcutEnabledStorageRdb =
+        std::make_shared<ShortcutEnabledDataStorageRdb>();
+    ASSERT_NE(shortcutEnabledStorageRdb, nullptr);
+   
+    auto boolRet = shortcutEnabledStorageRdb->SaveStorageShortcutEnabledInfos(shortcutInfos, isEnabled);
+    EXPECT_EQ(boolRet, true);
+    auto ret = shortcutEnabledStorageRdb->GetShortcutEnabledStatus(bundleName, shortcutId, isEnabled);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(isEnabled, false);
+    bundleDataMgr.UpdateShortcutInfos(bundleName);
+    ret = shortcutEnabledStorageRdb->GetShortcutEnabledStatus(bundleName, shortcutId, isEnabled);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(isEnabled, true);
+    innerBundleInfo.InsertShortcutInfos(shortcutId, shortcutInfo);
+    bundleDataMgr.bundleInfos_[bundleName] = innerBundleInfo;
+    bundleDataMgr.UpdateShortcutInfos(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: GetPluginInfo_0001
  * @tc.name: GetPluginInfo
  * @tc.desc: test BundleDataMgr::GetPluginInfo

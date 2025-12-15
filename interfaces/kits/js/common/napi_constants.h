@@ -156,7 +156,7 @@ constexpr const char* CLEAN_BUNDLE_CACHE_FILES_FOR_SELF = "CleanBundleCacheFiles
 constexpr const char* GET_ALL_BUNDLE_CACHE_SIZE = "getAllBundleCacheSize";
 constexpr const char* CLEAN_ALL_BUNDLE_CACHE = "cleanAllBundleCache";
 constexpr const char* GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
-constexpr const char* GET_ALL_APP_PROVISION_INFO = "GetAllAppProvisionInfo";
+constexpr const char* GET_ALL_APP_PROVISION_INFO = "getAllAppProvisionInfo";
 constexpr const char* CAN_OPEN_LINK = "CanOpenLink";
 constexpr const char* GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
 constexpr const char* GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
@@ -188,7 +188,7 @@ constexpr const char* GET_DYNAMIC_ICON_INFO = "GetDynamicIconInfo";
 constexpr const char* GET_PLUGIN_BUNDLE_PATH_FOR_SELF = "GetPluginBundlePathForSelf";
 constexpr const char* RECOVER_BACKUP_BUNDLE_DATA = "RecoverBackupBundleData";
 constexpr const char* REMOVE_BACKUP_BUNDLE_DATA = "RemoveBackupBundleData";
-constexpr const char* GET_BUNDLE_INSTALL_STATUS = "GetBundleInstallStatus";
+constexpr const char* GET_BUNDLE_INSTALL_STATUS = "getBundleInstallStatus";
 
 inline const std::set<int32_t> SUPPORTED_PROFILE_LIST = { 1 };
 inline const std::set<int32_t> UNINSTALL_COMPONENT_TYPE_LIST = { 1, 2 };
@@ -226,7 +226,7 @@ constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
 constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO = "GetLauncherAbilityResourceInfo";
 constexpr const char* GET_ALL_BUNDLE_RESOURCE_INFO = "GetAllBundleResourceInfo";
 constexpr const char* GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = "GetAllLauncherAbilityResourceInfo";
-constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST = "GetLauncherAbilityResourceInfoList";
+constexpr const char* GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST = "getLauncherAbilityResourceInfoList";
 constexpr const char* GET_EXTENSION_ABILITY_RESOURCE_INFO = "GetExtensionAbilityResourceInfo";
 constexpr const char* GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO = "GetAllUninstalledBundleResourceInfo";
 
@@ -240,9 +240,9 @@ constexpr const char* SHORTCUT_ID = "shortcutId";
 constexpr const char* SHORTCUT_IDS = "ids";
 constexpr const char* INVALID_SHORTCUT_INFO_ERROR =
     "invalid ShortcutInfo: parameter type error, or appIndex is less than 0";
-constexpr const char* ADD_DYNAMIC_SHORTCUT_INFOS = "AddDynamicShortcutInfos";
-constexpr const char* DELETE_DYNAMIC_SHORTCUT_INFOS = "DeleteDynamicShortcutInfos";
-constexpr const char* SET_SHORTCUTS_ENABLED = "SetShortcutsEnabled";
+constexpr const char* ADD_DYNAMIC_SHORTCUT_INFOS = "addDynamicShortcutInfos";
+constexpr const char* DELETE_DYNAMIC_SHORTCUT_INFOS = "deleteDynamicShortcutInfos";
+constexpr const char* SET_SHORTCUTS_ENABLED = "setShortcutsEnabled";
 constexpr const char* SHORTCUT_INFO_LENGTH_ERROR = "shortcutInfo length invalid";
 constexpr const char* SHORTCUT_IDS_LENGTH_ERROR = "shortcut Ids length invalid";
 constexpr const char* BUNDLENAME_APPINDEX_NOT_UNIQUE =
@@ -333,7 +333,8 @@ constexpr const char* SET_DISPOSED_RULES = "SetDisposedRules";
 
 // default_app_manager
 constexpr const char* PERMISSION_SET_DEFAULT_APPLICATION_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
-    "ohos.permission.SET_DEFAULT_APPLICATION and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
+    "ohos.permission.SET_DEFAULT_APPLICATION or "
+    "(ohos.permission.SET_DEFAULT_APPLICATION and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
 const std::unordered_map<std::string, std::string> TYPE_MAPPING = {
     {"Web Browser", "BROWSER"},
     {"Image Gallery", "IMAGE"},
@@ -353,7 +354,7 @@ constexpr const char* SET_DEFAULT_APPLICATION = "SetDefaultApplication";
 constexpr const char* SET_DEFAULT_APPLICATION_SYNC = "SetDefaultApplicationSync";
 constexpr const char* RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
 constexpr const char* RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
-constexpr const char* SET_DEFAULT_APPLICATION_FOR_APP_CLONE = "SetDefaultApplicationForAppClone";
+constexpr const char* SET_DEFAULT_APPLICATION_FOR_APP_CLONE = "setDefaultApplicationForAppClone";
 constexpr const char* TYPE_CHECK = "type";
 constexpr const char* WANT_CHECK = "want";
 constexpr const char* ELEMENT_NAME = "ElementName";

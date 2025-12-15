@@ -535,7 +535,7 @@ void AddDynamicShortcutInfosComplete(napi_env env, napi_status status, void *dat
     if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
     } else {
-        result[0] = BusinessError::CreateCommonError(
+        result[0] = BusinessError::CreateNewCommonError(
             env, asyncCallbackInfo->err, ADD_DYNAMIC_SHORTCUT_INFOS, PERMISSION_DYNAMIC_SHORTCUT_INFO);
     }
     CommonFunc::NapiReturnDeferred<AddDynamicShortcutInfosCallbackInfo>(
@@ -628,7 +628,8 @@ void SetShortcutsEnabledComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
     } else {
-        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, SET_SHORTCUTS_ENABLED);
+        result[0] = BusinessError::CreateNewCommonError(env, asyncCallbackInfo->err, SET_SHORTCUTS_ENABLED,
+            Constants::PERMISSION_MANAGER_SHORTCUT);
     }
     CommonFunc::NapiReturnDeferred<SetShortcutsEnabledCallbackInfo>(
         env, asyncCallbackInfo, result, ARGS_POS_ONE);
@@ -659,7 +660,7 @@ napi_value SetShortcutsEnabled(napi_env env, napi_callback_info info)
             APP_LOGE("shortcutInfos invalid");
             return nullptr;
         }
-        if (!CommonFunc::ParseBool(env, args[ARGS_SIZE_ONE], asyncCallbackInfo->isEnabled)) {
+        if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], asyncCallbackInfo->isEnabled)) {
             APP_LOGE("Parse isEnabled is error");
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, "isEnabled", TYPE_BOOLEAN);
             return nullptr;
@@ -677,7 +678,7 @@ napi_value SetShortcutsEnabled(napi_env env, napi_callback_info info)
     return promise;
 #else
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported");
-    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "SetShortcutsEnabled");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, SET_SHORTCUTS_ENABLED);
     napi_throw(env, error);
     return nullptr;
 #endif
@@ -723,7 +724,7 @@ void DeleteDynamicShortcutInfosComplete(napi_env env, napi_status status, void *
     if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
     } else {
-        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, DELETE_DYNAMIC_SHORTCUT_INFOS,
+        result[0] = BusinessError::CreateNewCommonError(env, asyncCallbackInfo->err, DELETE_DYNAMIC_SHORTCUT_INFOS,
             PERMISSION_DYNAMIC_SHORTCUT_INFO);
     }
     CommonFunc::NapiReturnDeferred<DeleteDynamicShortcutInfosCallbackInfo>(
