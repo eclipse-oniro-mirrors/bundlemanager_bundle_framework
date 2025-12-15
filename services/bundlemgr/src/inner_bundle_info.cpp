@@ -1720,15 +1720,16 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.metadata = it->second.metadata;
     ApplicationInfo appInfo;
     GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
-                    ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
-                    appInfo, appIndex);
-    hapInfo.abilityInfos.reserve(hapInfo.abilityInfos.size() + baseAbilityInfos_.size());
+        ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
+        userId, appInfo, appIndex);
+    hapInfo.abilityInfos.reserve(baseAbilityInfos_.size());
     for (auto &ability : baseAbilityInfos_) {
         if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
             continue;
         }
         if ((ability.first.find(key) != std::string::npos) && (ability.second.moduleName == hapInfo.moduleName)) {
             AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(ability.second);
+            AppendDynamicSkillsToAbilityIfExist(abilityInfo);
             abilityInfo.applicationInfo = appInfo;
             hapInfo.abilityInfos.emplace_back(std::move(abilityInfo));
         }
@@ -1742,11 +1743,13 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         }
     }
     for (const auto &item : it->second.preloads) {
-        hapInfo.preloads.emplace_back(item);
+        PreloadItem preload(item);
+        hapInfo.preloads.emplace_back(std::move(preload));
     }
     hapInfo.resizeable = it->second.resizeable;
     for (const auto &item : it->second.proxyDatas) {
-        hapInfo.proxyDatas.emplace_back(item);
+        ProxyData proxyData(item);
+        hapInfo.proxyDatas.emplace_back(std::move(proxyData));
     }
     hapInfo.buildHash = it->second.buildHash;
     hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
@@ -2648,7 +2651,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
 
-    appInfo.moduleInfos.reserve(appInfo.moduleInfos.size() + innerModuleInfos_.size());
+    appInfo.moduleInfos.reserve(innerModuleInfos_.size());
     for (const auto &info : innerModuleInfos_) {
         bool deCompress = info.second.hapPath.empty();
         ModuleInfo moduleInfo;
@@ -2685,7 +2688,6 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
             appInfo.fingerprint.clear();
         }
     }
-    appInfo.moduleInfos.shrink_to_fit();
     if (!appInfo.permissions.empty()) {
         RemoveDuplicateName(appInfo.permissions);
     }
@@ -2988,7 +2990,7 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(
         bundleInfo.hapModuleInfos.clear();
         return;
     }
-    bundleInfo.hapModuleInfos.reserve(bundleInfo.hapModuleInfos.size() + innerModuleInfos_.size());
+    bundleInfo.hapModuleInfos.reserve(innerModuleInfos_.size());
     for (const auto &info : innerModuleInfos_) {
         auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId, appIndex);
         if (hapmoduleinfo) {
@@ -3025,7 +3027,7 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         return;
     }
     APP_LOGD("Get bundleInfo with abilities");
-    hapModuleInfo.abilityInfos.reserve(hapModuleInfo.abilityInfos.size() + baseAbilityInfos_.size());
+    hapModuleInfo.abilityInfos.reserve(baseAbilityInfos_.size());
     for (const auto &[key, innerAbilityInfo] : baseAbilityInfos_) {
         if ((innerAbilityInfo.moduleName != hapModuleInfo.moduleName) ||
             (innerAbilityInfo.name == ServiceConstants::APP_DETAIL_ABILITY)) {
@@ -3066,7 +3068,7 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(
         return;
     }
     APP_LOGD("Get bundleInfo with extensionAbilities");
-    hapModuleInfo.extensionInfos.reserve(hapModuleInfo.extensionInfos.size() + baseExtensionInfos_.size());
+    hapModuleInfo.extensionInfos.reserve(baseExtensionInfos_.size());
     for (const auto &extensionInfo : baseExtensionInfos_) {
         if (extensionInfo.second.moduleName != hapModuleInfo.moduleName || !extensionInfo.second.enabled) {
             continue;

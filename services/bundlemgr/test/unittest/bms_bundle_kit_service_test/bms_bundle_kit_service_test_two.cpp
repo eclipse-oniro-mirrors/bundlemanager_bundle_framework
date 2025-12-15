@@ -1983,7 +1983,7 @@ HWTEST_F(BmsBundleKitServiceTest, CanOpenLink_0100, Function | SmallTest | Level
     ASSERT_NE(hostImpl, nullptr);
     bool canOpen;
     ErrCode ret = hostImpl->CanOpenLink(BUNDLE_NAME_DEMO, canOpen);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -3822,25 +3822,10 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoWithFlags_0100, Function | Sma
     InnerBundleInfo innerBundleInfo;
     AbilityInfo info;
     bool testRet = GetBundleDataMgr()->QueryAbilityInfoWithFlags(
-        option, GET_ABILITY_INFO_SYSTEMAPP_ONLY, DEFAULT_USERID, &innerBundleInfo, info);
+        option, GET_ABILITY_INFO_SYSTEMAPP_ONLY, DEFAULT_USERID, innerBundleInfo, info);
     EXPECT_EQ(testRet, false);
     testRet = GetBundleDataMgr()->QueryAbilityInfoWithFlags(
-        option, GET_ABILITY_INFO_WITH_PERMISSION, DEFAULT_USERID, &innerBundleInfo, info);
-    EXPECT_EQ(testRet, false);
-}
-
-/**
- * @tc.number: QueryAbilityInfoWithFlags_0200
- * @tc.name: test exception branch
- * @tc.desc: pass a null pointer to test an exception branch
- */
-HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoWithFlags_0200, Function | SmallTest | Level1)
-{
-    std::optional<AbilityInfo> option;
-    const InnerBundleInfo* const innerBundleInfo = nullptr;
-    AbilityInfo info;
-    bool testRet = GetBundleDataMgr()->QueryAbilityInfoWithFlags(
-        option, GET_ABILITY_INFO_SYSTEMAPP_ONLY, DEFAULT_USERID, innerBundleInfo, info);
+        option, GET_ABILITY_INFO_WITH_PERMISSION, DEFAULT_USERID, innerBundleInfo, info);
     EXPECT_EQ(testRet, false);
 }
 

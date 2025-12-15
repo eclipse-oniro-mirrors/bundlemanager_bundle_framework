@@ -1188,7 +1188,7 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryCurAbilityInfosV9_0100, Function | S
         want, GET_ABILITY_INFO_DEFAULT, USERID, abilityInfo, appIndex);
     int32_t responseUserId = GetBundleDataMgr()->GetUserId(USERID);
     testRet = GetBundleDataMgr()->CheckInnerBundleInfoWithFlags(
-        &innerBundleInfo, GET_ABILITY_INFO_DEFAULT, responseUserId);
+        innerBundleInfo, GET_ABILITY_INFO_DEFAULT, responseUserId);
     EXPECT_NE(testRet, ERR_OK);
 }
 

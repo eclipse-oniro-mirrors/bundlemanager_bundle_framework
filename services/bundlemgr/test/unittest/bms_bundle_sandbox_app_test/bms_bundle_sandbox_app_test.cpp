@@ -2032,7 +2032,7 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0100, Function | SmallTest | Level
  * @tc.name: ConvertResourcePath
  * @tc.desc: 1.Test the interface of ConvertResourcePath
  */
-HWTEST_F(BmsSandboxAppTest, DeleteSandboxAppIndex_001, Function | SmallTest | Level1)
+HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0200, Function | SmallTest | Level1)
 {
     std::string bundleName = "";
     int32_t appIndex = 0;
@@ -2152,7 +2152,7 @@ HWTEST_F(BmsSandboxAppTest, GetBundleInfoForSelf_0100, Function | SmallTest | Le
     BundleInfo bundleInfo;
     bundleMgrService_->GetDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, info);
     ErrCode res = bundleMgrHostImpl_->GetBundleInfoForSelf(APP_INDEX_1, bundleInfo);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_UID);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
     setuid(0);

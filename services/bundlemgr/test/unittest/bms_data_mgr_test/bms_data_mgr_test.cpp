@@ -2516,14 +2516,14 @@ HWTEST_F(BmsDataMgrTest, GetAllExtensionInfos_0100, Function | SmallTest | Level
     InnerBundleInfo info;
     std::vector<ExtensionAbilityInfo> infos;
     int32_t appIndex = 0;
-    dataMgr->GetAllExtensionInfos(flags, userId, &info, infos, appIndex);
+    dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), true);
     InnerExtensionInfo innerExtensionInfo;
     info.InsertExtensionInfo("", innerExtensionInfo);
-    dataMgr->GetAllExtensionInfos(flags, userId, &info, infos, appIndex);
+    dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), false);
     flags = 1;
-    dataMgr->GetAllExtensionInfos(flags, userId, &info, infos, appIndex);
+    dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
     EXPECT_EQ(infos.empty(), false);
 }
 
@@ -2586,7 +2586,7 @@ HWTEST_F(BmsDataMgrTest, CanOpenLink_0100, Function | SmallTest | Level1)
     std::string link = "";
     bool canOpen = false;
     ErrCode ret = dataMgr->CanOpenLink(link, canOpen);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -2602,7 +2602,7 @@ HWTEST_F(BmsDataMgrTest, GetOdid_0100, Function | SmallTest | Level1)
     std::string developerId = "";
     dataMgr->GenerateOdid(developerId, odid);
     ErrCode ret = dataMgr->GetOdid(odid);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -3959,11 +3959,11 @@ HWTEST_F(BmsDataMgrTest, PostProcessAnyUserFlags_0001, Function | SmallTest | Le
     BundleInfo bundleInfo;
     bundleInfo.applicationInfo.applicationFlags = static_cast<int32_t>(ApplicationInfoFlag::FLAG_INSTALLED);
     InnerBundleInfo innerBundleInfo;
-    bundleDataMgr.PostProcessAnyUserFlags(flags, userId, originalUserId, bundleInfo, &innerBundleInfo);
+    bundleDataMgr.PostProcessAnyUserFlags(flags, userId, originalUserId, bundleInfo, innerBundleInfo);
 
     flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION) |
                     static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
-    bundleDataMgr.PostProcessAnyUserFlags(flags, userId, originalUserId, bundleInfo, &innerBundleInfo);
+    bundleDataMgr.PostProcessAnyUserFlags(flags, userId, originalUserId, bundleInfo, innerBundleInfo);
     EXPECT_FALSE(innerBundleInfo.HasInnerBundleUserInfo(originalUserId));
 }
 
@@ -7013,7 +7013,7 @@ HWTEST_F(BmsDataMgrTest, GetPluginBundlePathForSelf_0010, TestSize.Level1)
     std::string pluginBundleName = "test2";
     std::string codePath;
     auto ret = bundleDataMgr.GetPluginBundlePathForSelf(pluginBundleName, codePath);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -7629,7 +7629,7 @@ HWTEST_F(BmsDataMgrTest, CheckModuleNameAndAbilityName_0001, Function | MediumTe
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertInnerModuleInfo(bundleName, innerModuleInfo);
     innerBundleInfo.InsertAbilitiesInfo(hostAbility, innerAbilityInfo);
-    auto result = bundleDataMgr.CheckModuleNameAndAbilityName(shortcutInfos, &innerBundleInfo);
+    auto result = bundleDataMgr.CheckModuleNameAndAbilityName(shortcutInfos, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK);
 }
 
@@ -7653,7 +7653,7 @@ HWTEST_F(BmsDataMgrTest, CheckModuleNameAndAbilityName_0002, Function | MediumTe
 
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertInnerModuleInfo(bundleName, innerModuleInfo);
-    auto result = bundleDataMgr.CheckModuleNameAndAbilityName(shortcutInfos, &innerBundleInfo);
+    auto result = bundleDataMgr.CheckModuleNameAndAbilityName(shortcutInfos, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK);
 }
 
@@ -7685,7 +7685,7 @@ HWTEST_F(BmsDataMgrTest, CheckModuleNameAndAbilityName_0003, Function | MediumTe
     innerAbilityInfo.moduleName = invalidKey;
     innerBundleInfo.InsertAbilitiesInfo(hostAbility, innerAbilityInfo);
 
-    auto result = bundleDataMgr.CheckModuleNameAndAbilityName(shortcutInfos, &innerBundleInfo);
+    auto result = bundleDataMgr.CheckModuleNameAndAbilityName(shortcutInfos, innerBundleInfo);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 }
 

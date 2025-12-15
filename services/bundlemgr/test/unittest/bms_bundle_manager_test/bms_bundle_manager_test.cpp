@@ -1648,7 +1648,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0013, Function | SmallTest | Lev
 */
 HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0014, Function | SmallTest | Level1)
 {
-    const InnerBundleInfo* innerBundleInfo = nullptr;
+    InnerBundleInfo innerBundleInfo;
     GetBundleDataMgr()->bundleInfos_.clear();
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoByUid(
         2, innerBundleInfo);
