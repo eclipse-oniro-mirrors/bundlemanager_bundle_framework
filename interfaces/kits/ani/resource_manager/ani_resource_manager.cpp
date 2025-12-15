@@ -165,13 +165,11 @@ static ani_object AniGetLauncherAbilityResourceInfoList(ani_env* env, ani_object
         return nullptr;
     }
     if (optionsList.empty()) {
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, BUNDLE_OPTION, PARAM_BUNDLE_OPTIONS_EMPTY_ERROR);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLE_OPTIONS_EMPTY_ERROR);
         return nullptr;
     }
     if (optionsList.size() > MAX_ARRAYLIST_SIZE) {
-        BusinessErrorAni::ThrowCommonError(
-            env, ERROR_PARAM_CHECK_ERROR, BUNDLE_OPTION, PARAM_BUNDLE_OPTIONS_NUMBER_ERROR);
+        BusinessErrorAni::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLE_OPTIONS_NUMBER_ERROR);
         return nullptr;
     }
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;

@@ -665,7 +665,7 @@ bool CommonFunc::ParseBundleOption(napi_env env, napi_value value, BundleOptionI
     prop = nullptr;
     napi_get_named_property(env, value, APP_INDEX, &prop);
     if (!CommonFunc::ParseInt(env, prop, option.appIndex)) {
-        option.appIndex = -1;
+        option.appIndex = 0;
     }
 
     prop = nullptr;
