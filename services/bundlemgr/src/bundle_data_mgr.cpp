@@ -4518,6 +4518,8 @@ int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName, int32_t userId) const
 {
     int64_t spaceSize = 0;
+    int64_t bundleDataSize = 0;
+    int64_t localBundleDataSize = 0;
     if (userId != Constants::ALL_USERID) {
         std::vector<int64_t> bundleStats;
         if (!GetBundleStats(bundleName, userId, bundleStats) || bundleStats.empty()) {
@@ -4525,7 +4527,9 @@ int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName, int32_t
             return spaceSize;
         }
 
-        spaceSize = std::accumulate(bundleStats.begin(), bundleStats.end(), spaceSize);
+        bundleDataSize = bundleStats[0];
+        localBundleDataSize = bundleStats[1];
+        spaceSize = bundleDataSize + localBundleDataSize;
         return spaceSize;
     }
 
@@ -4536,12 +4540,12 @@ int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName, int32_t
             continue;
         }
 
-        auto startIter = bundleStats.begin();
-        auto endIter = bundleStats.end();
+        bundleDataSize = bundleStats[0];
+        localBundleDataSize = bundleStats[1];
         if (spaceSize == 0) {
-            spaceSize = std::accumulate(startIter, endIter, spaceSize);
+            spaceSize = bundleDataSize + localBundleDataSize;
         } else {
-            spaceSize = std::accumulate(++startIter, endIter, spaceSize);
+            spaceSize += localBundleDataSize;
         }
     }
 
