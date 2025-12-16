@@ -30,7 +30,7 @@ BUNDLE_INSTALL_EXCEPTION:
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
-  IS_PATCHED: {type: BOOL, desc: is patched}
+  IS_PATCH: {type: BOOL, desc: is patched}
 
 BUNDLE_UNINSTALL_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle uninstall}
@@ -59,7 +59,7 @@ BUNDLE_UPDATE_EXCEPTION:
   CALLING_UID: {type: INT32, desc: calling uid}
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   IS_INTERCEPTED: {type: BOOL, desc: is intercepted}
-  IS_PATCHED: {type: BOOL, desc: is patched}
+  IS_PATCH: {type: BOOL, desc: is patched}
 
 PRE_BUNDLE_RECOVER_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when prebundle recover}
@@ -132,7 +132,7 @@ BUNDLE_INSTALL:
   COMPILE_SDK_VERSION: {type: STRING, arrsize: 99, desc: compileSdkVersion}
   UID: {type: INT32, desc: uid}
   IS_ABC_COMPRESSED: {type: BOOL, desc: isAbcCompressed}
-  IS_PATCHED: {type: BOOL, desc: is patched}
+  IS_PATCH: {type: BOOL, desc: is patched}
 
 BUNDLE_UNINSTALL:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle uninstall}
@@ -170,7 +170,7 @@ BUNDLE_UPDATE:
   COMPILE_SDK_VERSION: {type: STRING, arrsize: 99, desc: compileSdkVersion}
   UID: {type: INT32, desc: uid}
   IS_ABC_COMPRESSED: {type: BOOL, desc: isAbcCompressed}
-  IS_PATCHED: {type: BOOL, desc: is patched}
+  IS_PATCH: {type: BOOL, desc: is patched}
 
 PRE_BUNDLE_RECOVER:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: prebundle recover}
