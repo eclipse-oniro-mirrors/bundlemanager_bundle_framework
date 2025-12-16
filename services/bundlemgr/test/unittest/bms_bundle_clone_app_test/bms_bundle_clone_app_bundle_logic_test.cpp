@@ -131,6 +131,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "process":"",
             "readPermission":"",
             "removeMissionAfterTerminate":false,
+            "allowSelfRedirect":true,
             "resourcePath":"/data/app/el1/bundle/public/com.example.myapplication/entry/resources.index",
             "srcEntrance":"./ets/MainAbility/MainAbility.ts",
             "srcLanguage":"js",

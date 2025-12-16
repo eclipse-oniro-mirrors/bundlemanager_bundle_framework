@@ -35,6 +35,7 @@ inline constexpr const char* JSON_KEY_DEVICE_TYPES = "deviceTypes";
 inline constexpr const char* JSON_KEY_DEVICE_CAPABILITIES = "deviceCapabilities";
 inline constexpr const char* JSON_KEY_IS_LAUNCHER_ABILITY = "isLauncherAbility";
 inline constexpr const char* JSON_KEY_REMOVE_MISSION_AFTER_TERMINATE = "removeMissionAfterTerminate";
+inline constexpr const char* JSON_KEY_ALLOW_SELF_REDIRECT = "allowSelfRedirect";
 inline constexpr const char* JSON_KEY_IS_NATIVE_ABILITY = "isNativeAbility";
 inline constexpr const char* JSON_KEY_SUPPORT_PIP_MODE = "supportPipMode";
 inline constexpr const char* JSON_KEY_TARGET_ABILITY = "targetAbility";
@@ -467,6 +468,12 @@ void AbilityFromJson(const nlohmann::json &jsonObject, T &abilityInfo)
         abilityInfo.removeMissionAfterTerminate,
         false,
         parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_ALLOW_SELF_REDIRECT,
+        abilityInfo.allowSelfRedirect,
+        false,
+        parseResult);
     GetValueIfFindKey<CompileMode>(jsonObject,
         jsonObjectEnd,
         Constants::COMPILE_MODE,
@@ -721,6 +728,7 @@ void AbilityToJson(nlohmann::json &jsonObject, const T &abilityInfo)
         {JSON_KEY_START_WINDOW_BACKGROUND, abilityInfo.startWindowBackground},
         {JSON_KEY_START_WINDOW_BACKGROUND_ID, abilityInfo.startWindowBackgroundId},
         {JSON_KEY_REMOVE_MISSION_AFTER_TERMINATE, abilityInfo.removeMissionAfterTerminate},
+        {JSON_KEY_ALLOW_SELF_REDIRECT, abilityInfo.allowSelfRedirect},
         {Constants::COMPILE_MODE, abilityInfo.compileMode},
         {JSON_KEY_SUPPORT_WINDOW_MODE, abilityInfo.windowModes},
         {JSON_KEY_MAX_WINDOW_WIDTH, abilityInfo.maxWindowWidth},
