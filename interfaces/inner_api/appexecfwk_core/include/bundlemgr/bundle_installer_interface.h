@@ -191,6 +191,16 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)
+    {
+        return ERR_OK;
+    }
 };
 
 #define PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                                 \

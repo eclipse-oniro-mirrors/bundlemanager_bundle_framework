@@ -537,6 +537,11 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t cartLength)
+    {
+        return ERR_OK;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

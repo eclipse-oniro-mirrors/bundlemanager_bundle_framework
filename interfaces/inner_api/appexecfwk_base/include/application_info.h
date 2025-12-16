@@ -108,6 +108,11 @@ enum class AppPreloadPhase : uint8_t {
     WINDOW_STAGE_CREATED = 3
 };
 
+enum class AppSignType : uint8_t {
+    DEFAULT = 0,
+    ENTERPRISE_RE_SIGN = 1
+};
+
 struct MultiAppModeData : public Parcelable {
     MultiAppModeType multiAppModeType = MultiAppModeType::UNSPECIFIED;
     int32_t maxCount = 0;
@@ -354,6 +359,7 @@ struct ApplicationInfo : public Parcelable {
     // quick fix info
     AppQuickFix appQuickFix;
     AppPreloadPhase appPreloadPhase = AppPreloadPhase::DEFAULT;
+    AppSignType appSignType = AppSignType::DEFAULT;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

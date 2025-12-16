@@ -957,4 +957,18 @@ HWTEST_F(BmsInstalldHostTest, HandleHashSoFile_0100, Function | SmallTest | Leve
     bool res = installdHost.HandleHashSoFile(data, reply);
     EXPECT_TRUE(res);
 }
+
+/**
+ * @tc.number: HandleRemoveKeyForEnterpriseResign_0100
+ * @tc.name: test HandleRemoveKeyForEnterpriseResign
+ * @tc.desc: 1.HandleRemoveKeyForEnterpriseResign test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleRemoveKeyForEnterpriseResign_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleRemoveKeyForEnterpriseResign(data, reply);
+    EXPECT_FALSE(res);
+}
 } // OHOS

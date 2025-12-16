@@ -295,6 +295,8 @@ public:
 
     ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir);
 
+    ErrCode RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t cartLength);
+
 private:
     sptr<IInstalld> GetInstalldProxy();
     bool LoadInstalldService();
