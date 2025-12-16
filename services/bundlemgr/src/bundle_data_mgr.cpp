@@ -5512,19 +5512,17 @@ ErrCode BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &
             return ERR_OK;
         }
     }
-
-    for (int32_t i = baseAppUid_; i < bundleIdMap_.rbegin()->first; ++i) {
-        if (bundleIdMap_.find(i) == bundleIdMap_.end()) {
-            APP_LOGD("the %{public}d app install bundleName:%{public}s", i, bundleName.c_str());
-            bundleId = i;
-            bundleIdMap_.emplace(bundleId, bundleName);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
-            return ERR_OK;
-        }
-    }
-
     if (bundleIdMap_.rbegin()->first == MAX_APP_UID) {
+        for (int32_t i = baseAppUid_; i < bundleIdMap_.rbegin()->first; ++i) {
+            if (bundleIdMap_.find(i) == bundleIdMap_.end()) {
+                APP_LOGD("the %{public}d app install bundleName:%{public}s", i, bundleName.c_str());
+                bundleId = i;
+                bundleIdMap_.emplace(bundleId, bundleName);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+                return ERR_OK;
+            }
+        }
         APP_LOGW("the bundleId exceeding the maximum value, bundleName:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER;
     }
