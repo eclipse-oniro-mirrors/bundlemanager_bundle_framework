@@ -82,6 +82,7 @@ namespace {
 constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
 constexpr int8_t DATA_GROUP_INDEX_START = 1;
 constexpr int8_t PROFILE_PREFIX_LENGTH = 9;
+constexpr int32_t MAX_PLUGIN_CALLBACK_SIZE = 256;
 constexpr uint16_t UUID_LENGTH_MAX = 512;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 // freeInstall action
@@ -11553,14 +11554,20 @@ ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallba
     std::lock_guard lock(pluginCallbackMutex_);
     if (pluginEventCallback->AsObject() != nullptr) {
         sptr<BundleEventCallbackDeathRecipient> deathRecipient =
-            new (std::nothrow) BundleEventCallbackDeathRecipient();
+            new (std::nothrow) BundleEventCallbackDeathRecipient(callingBundleName);
         if (deathRecipient == nullptr) {
             APP_LOGW("deathRecipient is null");
             return ERR_APPEXECFWK_NULL_PTR;
         }
         pluginEventCallback->AsObject()->AddDeathRecipient(deathRecipient);
     }
-    pluginCallbackMap_[callingBundleName].emplace_back(pluginEventCallback);
+
+    auto &callbackList = pluginCallbackMap_[callingBundleName];
+    if (callbackList.size() >= MAX_PLUGIN_CALLBACK_SIZE) {
+        APP_LOGE("plugin callback list size exceeds limit for %{public}s", callingBundleName.c_str());
+        return ERR_APPEXECFWK_PLUGIN_CALLBACK_LIST_FULL;
+    }
+    callbackList.emplace_back(pluginEventCallback);
     APP_LOGI("success");
     return ERR_OK;
 }

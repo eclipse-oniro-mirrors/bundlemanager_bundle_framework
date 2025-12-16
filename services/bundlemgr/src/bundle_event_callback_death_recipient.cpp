@@ -24,6 +24,12 @@ BundleEventCallbackDeathRecipient::BundleEventCallbackDeathRecipient()
     APP_LOGD("create BundleEventCallbackDeathRecipient");
 }
 
+BundleEventCallbackDeathRecipient::BundleEventCallbackDeathRecipient(const std::string &bundleName)
+    : bundleName_(bundleName)
+{
+    APP_LOGD("-n %{public}s create BundleEventCallbackDeathRecipient", bundleName_.c_str());
+}
+
 BundleEventCallbackDeathRecipient::~BundleEventCallbackDeathRecipient()
 {
     APP_LOGD("destroy BundleEventCallbackDeathRecipient");
@@ -40,6 +46,10 @@ void BundleEventCallbackDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    if (!bundleName_.empty()) {
+        dataMgr->UnregisterPluginEventCallback(callback, bundleName_);
         return;
     }
     dataMgr->UnregisterBundleEventCallback(callback);
