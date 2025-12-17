@@ -5748,6 +5748,8 @@ ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutIn
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ErrCode res = dataMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::ADD, userId, shortcutInfo.bundleName,
+        shortcutInfo.appIndex, shortcutInfo.id, IPCSkeleton::GetCallingUid(), res);
     if (res != ERR_OK) {
         APP_LOGE("AddDesktopShortcutInfo failed");
         return res;
@@ -5772,7 +5774,10 @@ ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcu
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     SetAtomicServiceRemovable(shortcutInfo, true, userId);
-    return dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    ErrCode res = dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, userId, shortcutInfo.bundleName,
+        shortcutInfo.appIndex, shortcutInfo.id, IPCSkeleton::GetCallingUid(), res);
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)

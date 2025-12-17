@@ -50,6 +50,7 @@ constexpr const char* DB_ERROR = "DB_ERROR";
 constexpr const char* DEFAULT_APP = "DEFAULT_APP";
 constexpr const char* QUERY_BUNDLE_INFO = "QUERY_BUNDLE_INFO";
 constexpr const char* BUNDLE_DYNAMIC_SHORTCUTINFO = "BUNDLE_DYNAMIC_SHORTCUTINFO";
+constexpr const char* DESKTOP_SHORTCUT = "DESKTOP_SHORTCUT";
 
 // event params
 const char* EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -341,6 +342,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::BUNDLE_DYNAMIC_SHORTCUTINFO,
             [](const EventInfo& eventInfo) {
                 InnerSendDynamicShortcutEvent(eventInfo);
+            } },
+        { BMSEventType::DESKTOP_SHORTCUT,
+            [](const EventInfo& eventInfo) {
+                InnerSendDesktopShortcutEvent(eventInfo);
             } },
     };
 
@@ -821,6 +826,20 @@ void InnerEventReport::InnerSendDynamicShortcutEvent(const EventInfo& eventInfo)
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_OP_TYPE, eventInfo.shortcutOperationType,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid);
+}
+
+void InnerEventReport::InnerSendDesktopShortcutEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        DESKTOP_SHORTCUT,
+        HiSysEventType::BEHAVIOR,
+        EVENT_OP_TYPE, eventInfo.shortcutOperationType,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_SHORTCUT_ID, eventInfo.shortcutIds,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -5593,8 +5593,13 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
         return result;
     }
 
-    if (!isKeepData && dataMgr_->DeleteDesktopShortcutInfo(bundleName, userId_, 0) != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "fail to delete shortcut info");
+    if (!isKeepData) {
+        result = dataMgr_->DeleteDesktopShortcutInfo(bundleName, userId_, 0);
+        if (result != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "fail to delete shortcut info");
+        }
+        EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, userId_, bundleName,
+            0, Constants::EMPTY_STRING, IPCSkeleton::GetCallingUid(), result);
     }
 
     return ERR_OK;
