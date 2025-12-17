@@ -6905,5 +6905,26 @@ ErrCode BundleMgrHostImpl::GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo 
     }
     return dataMgr->GetAssetGroupsInfo(uid, assetGroupInfo);
 }
+
+ErrCode BundleMgrHostImpl::GetPluginExtensionInfo(
+    const std::string &hostBundleName, const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo)
+{
+    if (!BundlePermissionMgr::IsBundleSelfCalling(hostBundleName)) {
+        if (!BundlePermissionMgr::IsSystemApp()) {
+            APP_LOGE("non-system app calling system api");
+            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        }
+        if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            APP_LOGE("Verify permission failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

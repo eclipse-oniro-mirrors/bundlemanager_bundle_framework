@@ -2392,6 +2392,8 @@ public:
         return isDelayAging_;
     }
     bool isAbilityNameExist(const std::string &moduleName, const std::string &abilityName) const;
+    bool GetPluginBundleInfoByName(
+        const int32_t userId, const std::string pluginBundleName, PluginBundleInfo &pluginBundleInfo) const;
 
 private:
     bool IsExistLauncherAbility() const;

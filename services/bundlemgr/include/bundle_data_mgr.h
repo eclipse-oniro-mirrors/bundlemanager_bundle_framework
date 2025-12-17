@@ -1246,6 +1246,8 @@ public:
         std::vector<BundleProfileData> &profileDataList) const;
     ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos) const;
+    ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
+        const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo);
 
 private:
     /**

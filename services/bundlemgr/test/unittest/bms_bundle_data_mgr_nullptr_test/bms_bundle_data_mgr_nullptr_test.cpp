@@ -1520,4 +1520,21 @@ HWTEST_F(BmsBundleDataMgrNullptrTest, SetShortcutsEnabled_0001, Function | Small
     auto ret = localBundleMgrHostImpl->SetShortcutsEnabled(shortcutInfos, isEnabled);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 }
+
+/**
+ * @tc.number: BundleMgrHostImpl_0004
+ * @tc.name: BundleMgrHostImpl_0004
+ * @tc.desc: test GetPluginExtensionInfo
+ */
+HWTEST_F(BmsBundleDataMgrNullptrTest, BundleMgrHostImpl_0004, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    std::string hostBundleName;
+    AAFwk::Want want;
+    int32_t userId = 0;
+    ExtensionAbilityInfo extensionInfo;
+    auto ret = localBundleMgrHostImpl->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+}
 } // OHOS

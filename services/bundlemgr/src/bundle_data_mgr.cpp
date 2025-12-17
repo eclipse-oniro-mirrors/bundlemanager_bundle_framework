@@ -12435,5 +12435,33 @@ ErrCode BundleDataMgr::GetAllJsonProfile(ProfileType profileType, int32_t userId
     }
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::GetPluginExtensionInfo(
+    const std::string &hostBundleName, const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo)
+{
+    std::string pluginBundleName = want.GetElement().GetBundleName();
+    std::string pluginAbilityName = want.GetElement().GetAbilityName();
+    std::string pluginModuleName = want.GetElement().GetModuleName();
+    APP_LOGD("bundleName:%{public}s start GetPluginAbilityInfo, plugin:%{public}s, abilityName:%{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str(), pluginAbilityName.c_str());
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(hostBundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", hostBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    PluginBundleInfo pluginInfo;
+    if (!item->second.GetPluginBundleInfoByName(userId, pluginBundleName, pluginInfo)) {
+        APP_LOGE("bundleName: %{public}s can not find plugin: %{public}s",
+            hostBundleName.c_str(), pluginBundleName.c_str());
+        return ERR_APPEXECFWK_PLUGIN_NOT_FOUND;
+    }
+    if (!pluginInfo.GetExtensionInfoByName(pluginAbilityName, pluginModuleName, extensionInfo)) {
+        APP_LOGE("plugin: %{public}s can not find ability: %{public}s module: %{public}s",
+            pluginBundleName.c_str(), pluginAbilityName.c_str(), pluginModuleName.c_str());
+        return ERR_APPEXECFWK_PLUGIN_ABILITY_NOT_FOUND;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

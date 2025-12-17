@@ -1241,6 +1241,8 @@ public:
      * @return Returns ERR_OK if the AssetGroupInfo is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &assetGroupInfo) override;
+    virtual ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
+        const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);
