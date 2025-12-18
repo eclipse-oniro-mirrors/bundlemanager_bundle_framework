@@ -6198,6 +6198,12 @@ ErrCode BundleMgrHostImpl::GetPluginHapModuleInfo(const std::string &hostBundleN
 ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     APP_LOGD("begin");
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_SUPPORT_PLUGIN)) {
+        APP_LOGD("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     if (pluginEventCallback == nullptr) {
         APP_LOGE("pluginEventCallback is null");
         return ERR_APPEXECFWK_NULL_PTR;
@@ -6207,7 +6213,6 @@ ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCa
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    auto uid = IPCSkeleton::GetCallingUid();
     std::string callingBundleName;
     if (uid == Constants::FOUNDATION_UID) {
         callingBundleName = std::string(Constants::FOUNDATION_PROCESS_NAME);
@@ -6222,6 +6227,12 @@ ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCa
 ErrCode BundleMgrHostImpl::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     APP_LOGD("begin");
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_SUPPORT_PLUGIN)) {
+        APP_LOGD("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     if (pluginEventCallback == nullptr) {
         APP_LOGE("pluginEventCallback is null");
         return ERR_APPEXECFWK_NULL_PTR;
@@ -6231,7 +6242,6 @@ ErrCode BundleMgrHostImpl::UnregisterPluginEventCallback(const sptr<IBundleEvent
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    auto uid = IPCSkeleton::GetCallingUid();
     std::string callingBundleName;
     if (uid == Constants::FOUNDATION_UID) {
         callingBundleName = std::string(Constants::FOUNDATION_PROCESS_NAME);

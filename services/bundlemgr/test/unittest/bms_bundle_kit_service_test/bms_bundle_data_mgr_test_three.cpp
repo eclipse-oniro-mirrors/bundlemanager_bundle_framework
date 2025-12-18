@@ -3384,11 +3384,11 @@ HWTEST_F(BmsBundleDataMgrTest3, RegisterPluginEventCallback_0001, Function | Med
     ErrCode ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 
-    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
-    ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback2);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-
     setuid(Constants::FOUNDATION_UID);
+    ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+
+    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
     ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback2);
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_OK);
@@ -3406,11 +3406,11 @@ HWTEST_F(BmsBundleDataMgrTest3, UnregisterPluginEventCallback_0001, Function | M
     ErrCode ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 
-    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
-    ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback2);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-
     setuid(Constants::FOUNDATION_UID);
+    ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+
+    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
     ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback2);
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_OK);

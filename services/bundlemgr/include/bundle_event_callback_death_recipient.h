@@ -23,8 +23,11 @@ namespace AppExecFwk {
 class BundleEventCallbackDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
     BundleEventCallbackDeathRecipient();
+    BundleEventCallbackDeathRecipient(const std::string &bundleName);
     ~BundleEventCallbackDeathRecipient();
     virtual void OnRemoteDied(const wptr<IRemoteObject> &object) override;
+private:
+    std::string bundleName_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
