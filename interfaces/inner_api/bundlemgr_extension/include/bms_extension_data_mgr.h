@@ -84,6 +84,8 @@ public:
     ErrCode GetBundleNamesForUidExt(const int32_t uid, std::vector<std::string> &bundleNames);
     ErrCode RegisterPreInstallWithCard();
     bool IsMCFlagSet();
+    ErrCode GetDetermineCloneNumList(
+        std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList);
 private:
     bool OpenHandler();
     static void *handler_;
