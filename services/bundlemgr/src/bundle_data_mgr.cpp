@@ -7689,18 +7689,19 @@ bool BundleDataMgr::GetElement(int32_t userId, const int32_t appIndex, const Ele
         return true;
     }
 
-    APP_LOGI("query ability from broker");
-    AbilityInfo brokerAbilityInfo;
-    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    ErrCode resultCode = bmsExtensionClient->QueryAbilityInfo(want, 0, userId, brokerAbilityInfo, true);
-    if (resultCode == ERR_OK) {
-        APP_LOGI("ElementName is brokerAbility");
-        element.bundleName = bundleName;
-        element.moduleName = moduleName;
-        element.abilityName = abilityName;
-        return true;
+    if (DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+        APP_LOGI("query ability from broker");
+        AbilityInfo brokerAbilityInfo;
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        ErrCode resultCode = bmsExtensionClient->QueryAbilityInfo(want, 0, userId, brokerAbilityInfo, true);
+        if (resultCode == ERR_OK) {
+            APP_LOGI("ElementName is brokerAbility");
+            element.bundleName = bundleName;
+            element.moduleName = moduleName;
+            element.abilityName = abilityName;
+            return true;
+        }
     }
-
     APP_LOGW("ElementName doesn't exist");
     return false;
 }
