@@ -146,6 +146,10 @@ public:
 
     virtual ErrCode EnableKeyForEnterpriseResign(const std::string &certAlias, int32_t userId, int32_t fd) override;
 
+    virtual ErrCode UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId) override;
+
+    virtual ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias) override;
+
 private:
     bool SendInstallRequest(BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply,
         MessageOption& option);

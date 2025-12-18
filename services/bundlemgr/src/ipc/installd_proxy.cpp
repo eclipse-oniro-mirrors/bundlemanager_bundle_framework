@@ -1275,5 +1275,25 @@ ErrCode InstalldProxy::CopyDir(const std::string &sourceDir, const std::string &
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::COPY_DIR, data, reply, option);
 }
+
+ErrCode InstalldProxy::RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, certLength);
+    if (!data.WriteRawData(cert, certLength)) {
+        LOG_E(BMS_TAG_INSTALLD, "Failed to write raw data");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::REMOVE_KEY_FOR_ENTERPRISE_RESIGN, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

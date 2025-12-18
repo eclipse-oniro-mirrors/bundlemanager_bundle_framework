@@ -135,6 +135,12 @@ int BundleInstallerHost::OnRemoteRequest(
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::ENABLE_KEY_FOR_ENTERPRISE_RESIGN):
             HandleEnableKeyForEnterpriseResign(data, reply);
             break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_ENTERPRISE_RE_SIGNATURE_CERT):
+            HandleUninstallEnterpriseReSignatureCert(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::GET_ENTERPRISE_RE_SIGNATURE_CERT):
+            HandleGetEnterpriseReSignatureCert(data, reply);
+            break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
@@ -1187,7 +1193,7 @@ ErrCode BundleInstallerHost::CreateEnterpriseCertStream(const std::string &certA
     }
     std::string certPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH +
         std::to_string(userId);
-    std::set<std::string> existingCerts;
+    std::vector<std::string> existingCerts;
     if (!BundleUtil::IsExistDir(certPath)) {
         auto ret = InstalldClient::GetInstance()->Mkdir(certPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH,
             Constants::FOUNDATION_UID, Constants::FOUNDATION_UID);
@@ -1200,7 +1206,7 @@ ErrCode BundleInstallerHost::CreateEnterpriseCertStream(const std::string &certA
         APP_LOGE("exceed max cert num %{public}zu", existingCerts.size());
         return ERR_APPEXECFWK_ENTERPRISE_CERT_EXCEED_MAX_NUM;
     }
-    if (existingCerts.find(certAlias) != existingCerts.end()) {
+    if (std::find(existingCerts.begin(), existingCerts.end(), certAlias) != existingCerts.end()) {
         APP_LOGE("cert already exists %{public}s", certAlias.c_str());
         return ERR_APPEXECFWK_ENTERPRISE_CERT_ALREADY_EXISTS;
     }
@@ -1359,6 +1365,74 @@ bool BundleInstallerHost::CheckInstallDowngradeParam(const InstallParam &install
     }
     LOG_E(BMS_TAG_INSTALLER, "no permission to install allow downgrade");
     return false;
+}
+
+ErrCode BundleInstallerHost::HandleUninstallEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_D(BMS_TAG_INSTALLER, "handle uninstall enterprise re sign cert");
+    std::string certificateAlias = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    
+    auto ret = UninstallEnterpriseReSignatureCert(certificateAlias, userId);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "write failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "handle uninstall enterprise re sign cert");
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerHost::UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY)) {
+        LOG_E(BMS_TAG_INSTALLER, "verify permission failed");
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    }
+    if (certificateAlias.empty() || userId < Constants::DEFAULT_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "param is invalid");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    if (!BundleUtil::UninstallEnterpriseReSignatureCert(certificateAlias, userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall sign cert failed");
+        return ERR_APPEXECFWK_UNINSTALL_ENTERPRISE_RE_SIGNATURE_CERT_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerHost::HandleGetEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_D(BMS_TAG_INSTALLER, "handle get re sign cert");
+    int32_t userId = data.ReadInt32();
+    
+    std::vector<std::string> certificateAlias;
+    auto ret = GetEnterpriseReSignatureCert(userId, certificateAlias);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "get re sign cert write failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteStringVector(certificateAlias)) {
+        APP_LOGE("Write certificateAlias failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "handle get re sign cert");
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerHost::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY)) {
+        LOG_E(BMS_TAG_INSTALLER, "verify permission failed");
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    }
+    if (userId < Constants::DEFAULT_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "userId is invalid");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    if (!BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias)) {
+        LOG_E(BMS_TAG_INSTALLER, "get re sign cert failed");
+        return ERR_APPEXECFWK_GET_ENTERPRISE_RE_SIGNATURE_CERT_ERROR;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

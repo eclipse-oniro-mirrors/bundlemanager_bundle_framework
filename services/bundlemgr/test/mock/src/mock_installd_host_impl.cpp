@@ -409,5 +409,10 @@ ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::strin
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

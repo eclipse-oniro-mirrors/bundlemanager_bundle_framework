@@ -290,6 +290,8 @@ public:
      */
     virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
 
+    virtual ErrCode RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t cartLength) override;
+
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

@@ -1093,5 +1093,78 @@ ErrCode BundleInstallerProxy::EnableKeyForEnterpriseResign(const std::string &ce
     LOG_D(BMS_TAG_INSTALLER, "end");
     return reply.ReadInt32();
 }
+
+ErrCode BundleInstallerProxy::UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId)
+{
+    LOG_I(BMS_TAG_INSTALLER, "uninstall enterprise re sign cert -c:%{public}s, -u:%{public}d",
+        certificateAlias.c_str(), userId);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (certificateAlias.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "certificateAlias is empty");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write descriptor");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(certificateAlias))) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write certificateAlias");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write userId");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+
+    auto ret = SendInstallRequestWithErrCode(BundleInstallerInterfaceCode::UNINSTALL_ENTERPRISE_RE_SIGNATURE_CERT,
+        data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall sign cert failed due to send request fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR;
+    }
+
+    return reply.ReadInt32();
+}
+
+ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)
+{
+    LOG_I(BMS_TAG_INSTALLER, "get re sign cert -u:%{public}d", userId);
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write descriptor");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write userId");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+
+    auto ret = SendInstallRequestWithErrCode(BundleInstallerInterfaceCode::GET_ENTERPRISE_RE_SIGNATURE_CERT,
+        data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "get sign cert failed due to send request fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR;
+    }
+    ErrCode result = reply.ReadInt32();
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "Reply err : %{public}d", result);
+        return result;
+    }
+    if (!reply.ReadStringVector(&certificateAlias)) {
+        LOG_E(BMS_TAG_INSTALLER, "fail to get sign cert from reply");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_PARCEL_ERROR;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "get sign cert size: %{public}zu", certificateAlias.size());
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

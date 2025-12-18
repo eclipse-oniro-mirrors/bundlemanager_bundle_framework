@@ -267,6 +267,8 @@ private:
     bool HandleResetBmsDBSecurity(MessageParcel &data, MessageParcel &reply);
 
     bool HandleCopyDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleRemoveKeyForEnterpriseResign(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -159,6 +159,10 @@ public:
     virtual ErrCode InstallExisted(const std::string &bundleName, int32_t userId) override;
     virtual ErrCode CreateEnterpriseCertStream(const std::string &certAlias, int32_t userId, int32_t& fd) override;
     virtual ErrCode EnableKeyForEnterpriseResign(const std::string &certAlias, int32_t userId, int32_t fd) override;
+
+    virtual ErrCode UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId) override;
+
+    virtual ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias) override;
 private:
     /**
      * @brief Handles the Install function called from a IBundleInstaller proxy object.
@@ -245,6 +249,8 @@ private:
     void HandleInstallExisted(MessageParcel &data, MessageParcel &reply);
     void HandleCreateEnterpriseCertStream(MessageParcel &data, MessageParcel &reply);
     void HandleEnableKeyForEnterpriseResign(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleUninstallEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply);
 private:
     InstallParam CheckInstallParam(const InstallParam &installParam);
     bool CheckInstallDowngradeParam(const InstallParam &installParam);
