@@ -201,6 +201,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_SIGN_PROFILE):
             result = this->HandRemoveSignProfile(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::ENABLE_KEY_FOR_ENTERPRISE_RESIGN):
+            result = this->HandleEnableKeyForEnterpriseResign(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_VECTOR):
             result = this->HandleCreateBundleDataDirWithVector(data, reply);
             break;
@@ -1002,6 +1005,29 @@ bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &rep
     std::string bundleName = Str16ToStr8(data.ReadString16());
 
     ErrCode result = RemoveSignProfile(bundleName);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleEnableKeyForEnterpriseResign(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t certLength = data.ReadInt32();
+    if (certLength <= 0 || certLength > Constants::MAX_PARCEL_CAPACITY) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    auto dataInfo = data.ReadRawData(certLength);
+    if (!dataInfo) {
+        LOG_E(BMS_TAG_INSTALLD, "readRawData failed");
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    const unsigned char *cert = reinterpret_cast<const unsigned char *>(dataInfo);
+    if (cert == nullptr) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    ErrCode result = EnableKeyForEnterpriseResign(cert, certLength);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

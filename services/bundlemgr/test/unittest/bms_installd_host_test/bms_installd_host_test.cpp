@@ -663,6 +663,20 @@ HWTEST_F(BmsInstalldHostTest, HandDeliverySignProfile_0100, Function | SmallTest
 }
 
 /**
+ * @tc.number: HandleEnableKeyForEnterpriseResign_0100
+ * @tc.name: test HandleEnableKeyForEnterpriseResign
+ * @tc.desc: 1.HandleEnableKeyForEnterpriseResign test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleEnableKeyForEnterpriseResign_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleEnableKeyForEnterpriseResign(data, reply);
+    EXPECT_FALSE(res);
+}
+
+/**
  * @tc.number: HandRemoveSignProfile_0100
  * @tc.name: test HandRemoveSignProfile
  * @tc.desc: 1.HandRemoveSignProfile test

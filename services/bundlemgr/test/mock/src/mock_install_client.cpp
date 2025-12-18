@@ -340,6 +340,11 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
     return ERR_OK;
 }
 
+ErrCode InstalldClient::EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldClient::SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId)
 {
     if (retIndex >= 0 && retIndex < static_cast<int32_t>(retList.size())) {

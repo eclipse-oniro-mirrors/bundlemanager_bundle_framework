@@ -15,6 +15,9 @@
 
 #include "bundle_installer_host.h"
 
+#include <sys/stat.h>
+#include <unistd.h>
+
 #ifdef ABILITY_RUNTIME_ENABLE
 #include "ability_manager_client.h"
 #endif
@@ -29,6 +32,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
 #include "bundle_permission_mgr.h"
+#include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "modal_system_ui_extension.h"
 #include "parameters.h"
@@ -124,6 +128,12 @@ int BundleInstallerHost::OnRemoteRequest(
             break;
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_PLUGIN_APP):
             HandleUninstallPlugin(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::CREATE_ENTERPRISE_CERT_STREAM):
+            HandleCreateEnterpriseCertStream(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::ENABLE_KEY_FOR_ENTERPRISE_RESIGN):
+            HandleEnableKeyForEnterpriseResign(data, reply);
             break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -1125,6 +1135,142 @@ void BundleInstallerHost::HandleInstallExisted(MessageParcel &data, MessageParce
         LOG_E(BMS_TAG_INSTALLER, "write failed");
     }
     LOG_D(BMS_TAG_INSTALLER, "handle installExisted message finished");
+}
+
+void BundleInstallerHost::HandleCreateEnterpriseCertStream(MessageParcel &data, MessageParcel &reply)
+{
+    std::string certAlias = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t fd = Constants::DEFAULT_STREAM_FD;
+    auto ret = CreateEnterpriseCertStream(certAlias, userId, fd);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "write failed");
+    }
+    if (ret == ERR_OK && !reply.WriteFileDescriptor(fd)) {
+        LOG_E(BMS_TAG_INSTALLER, "write fd failed");
+        close(fd);
+    }
+}
+
+void BundleInstallerHost::HandleEnableKeyForEnterpriseResign(MessageParcel &data, MessageParcel &reply)
+{
+    std::string certAlias = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t fd = data.ReadFileDescriptor();
+    auto ret = EnableKeyForEnterpriseResign(certAlias, userId, fd);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "write fd failed");
+    }
+}
+
+ErrCode BundleInstallerHost::CreateEnterpriseCertStream(const std::string &certAlias, int32_t userId, int32_t& fd)
+{
+    if (certAlias.empty() || userId < 0) {
+        APP_LOGE("param error certAlias: %{public}s, userId: %{public}d", certAlias.c_str(), userId);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY)) {
+        APP_LOGE("verify permission failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED;
+    }
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
+        APP_LOGE("not enterprise deivce");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_DEVICE_ERROR;
+    }
+    if (!BundleUtil::CheckFileType(certAlias, ServiceConstants::CER_SUFFIX)) {
+        APP_LOGE("file is not cer %{public}s", certAlias.c_str());
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    if (certAlias.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
+        APP_LOGE("illegal certAlias %{public}s", certAlias.c_str());
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    std::string certPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH +
+        std::to_string(userId);
+    std::set<std::string> existingCerts;
+    if (!BundleUtil::IsExistDir(certPath)) {
+        auto ret = InstalldClient::GetInstance()->Mkdir(certPath, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH,
+            Constants::FOUNDATION_UID, Constants::FOUNDATION_UID);
+        if (ret != ERR_OK) {
+            APP_LOGE("mkdir failed %{public}d %{public}d", ret, errno);
+            return ret;
+        }
+    } else if (BundleUtil::GetEnterpriseReSignatureCert(userId, existingCerts) && existingCerts.size() >=
+        ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
+        APP_LOGE("exceed max cert num %{public}zu", existingCerts.size());
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_EXCEED_MAX_NUM;
+    }
+    if (existingCerts.find(certAlias) != existingCerts.end()) {
+        APP_LOGE("cert already exists %{public}s", certAlias.c_str());
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_ALREADY_EXISTS;
+    }
+    std::string certFilePath = certPath + ServiceConstants::PATH_SEPARATOR + certAlias;
+    fd = BundleUtil::CreateFileDescriptor(certFilePath, 0);
+    if (fd < 0) {
+        APP_LOGE("create fd failed %{public}d %{public}d", fd, errno);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_CREATE_FD_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerHost::EnableKeyForEnterpriseResign(const std::string &certAlias, int32_t userId, int32_t fd)
+{
+    if (fd < 0) {
+        APP_LOGE("invalid fd %{public}d", fd);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY)) {
+        APP_LOGE("verify permission failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED;
+    }
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
+        APP_LOGE("not enterprise deivce");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_DEVICE_ERROR;
+    }
+    std::vector<unsigned char> certData;
+    ErrCode ret = ReadPemCertFromFd(fd, certData);
+    if (ret == ERR_OK) {
+        ret = InstalldClient::GetInstance()->EnableKeyForEnterpriseResign(certData.data(),
+            static_cast<int32_t>(certData.size()));
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("enable key failed %{public}d", ret);
+        BundleUtil::DeleteDir(std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH +
+            std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + certAlias);
+    }
+    return ret;
+}
+
+ErrCode BundleInstallerHost::ReadPemCertFromFd(int32_t fd, std::vector<unsigned char> &certData)
+{
+    if (fd < 0) {
+        APP_LOGE("Invalid fd: %{public}d", fd);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+
+    struct stat statBuf;
+    if (fstat(fd, &statBuf) < 0) {
+        APP_LOGE("Fstat failed, errno: %{public}d", errno);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    const off_t MAX_CERT_SIZE = 10 * 1024 * 1024; //10MB
+    if (statBuf.st_size < 0 || statBuf.st_size > MAX_CERT_SIZE) {
+        APP_LOGE("Invalid cert size: %{public}lld", static_cast<long long>(statBuf.st_size));
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    certData.resize(static_cast<size_t>(statBuf.st_size));
+
+    if (lseek(fd, 0, SEEK_SET) == -1) {
+        APP_LOGE("Lseek failed, errno: %{public}d", errno);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    ssize_t bytesRead = read(fd, certData.data(), static_cast<size_t>(statBuf.st_size));
+    if (bytesRead != static_cast<ssize_t>(statBuf.st_size)) {
+        APP_LOGE("read file failed, expected %{public}lld bytes, got %{public}lld",
+            static_cast<long long>(statBuf.st_size), static_cast<long long>(bytesRead));
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    return ERR_OK;
 }
 
 bool BundleInstallerHost::CheckUninstallDisposedRule(

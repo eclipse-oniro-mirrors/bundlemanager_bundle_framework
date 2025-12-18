@@ -961,5 +961,137 @@ ErrCode BundleInstallerProxy::InstallExisted(const std::string &bundleName, int3
 
     return reply.ReadInt32();
 }
+
+ErrCode BundleInstallerProxy::InstallEnterpriseReSignatureCert(const std::string &certAlias, int32_t fd, int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (fd < 0 || userId < 0 || certAlias.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "param error fd: %{public}d, userId: %{public}d, certAlias: %{public}s",
+            fd, userId, certAlias.c_str());
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+
+    int32_t outputFd = Constants::DEFAULT_STREAM_FD;
+    auto ret = CreateEnterpriseCertStream(certAlias, userId, outputFd);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (outputFd < 0) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid fd");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_CREATE_FD_ERROR;
+    }
+
+    ret = SendCertFile(fd, outputFd);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    ret = EnableKeyForEnterpriseResign(certAlias, userId, outputFd);
+    close(outputFd);
+    return ret;
+}
+
+ErrCode BundleInstallerProxy::CreateEnterpriseCertStream(const std::string &certAlias, int32_t userId, int32_t& fd)
+{
+    LOG_D(BMS_TAG_INSTALLER, "begin");
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageOption option(MessageOption::TF_SYNC);
+
+    fd = Constants::DEFAULT_STREAM_FD;
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "write interface token fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString(certAlias)) {
+        LOG_E(BMS_TAG_INSTALLER, "write certAlias fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "write userId fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendInstallRequest(BundleInstallerInterfaceCode::CREATE_ENTERPRISE_CERT_STREAM, data, reply, option)) {
+        LOG_E(BMS_TAG_INSTALLER, "fail to SendInstallRequest");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    int32_t retFd = reply.ReadFileDescriptor();
+    if (retFd < 0) {
+        LOG_E(BMS_TAG_INSTALLER, "ret fd error %{public}d", retFd);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_CREATE_FD_ERROR;
+    }
+
+    fd = dup(retFd);
+    close(retFd);
+    LOG_D(BMS_TAG_INSTALLER, "end");
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerProxy::SendCertFile(int32_t inputFd, int32_t outputFd)
+{
+    struct stat sourceStat;
+    if (fstat(inputFd, &sourceStat) == -1) {
+        LOG_E(BMS_TAG_INSTALLER, "fstat failed, errno : %{public}d", errno);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    if (sourceStat.st_size <= 0) {
+        LOG_E(BMS_TAG_INSTALLER, "invalid st_size");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+
+    size_t buffer = 524288; // 0.5M
+    size_t transferCount = 0;
+    ssize_t singleTransfer = 0;
+    while ((singleTransfer = sendfile(outputFd, inputFd, nullptr, buffer)) > 0) {
+        transferCount += static_cast<size_t>(singleTransfer);
+    }
+
+    if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
+        LOG_E(BMS_TAG_INSTALLER, "errno: %{public}d, send count: %{public}zu, file size: %{public}zu",
+            errno, transferCount, static_cast<size_t>(sourceStat.st_size));
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_FILE_ERROR;
+    }
+
+    fsync(outputFd);
+
+    LOG_D(BMS_TAG_INSTALLER, "write file stream to service terminal end");
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerProxy::EnableKeyForEnterpriseResign(const std::string &certAlias, int32_t userId, int32_t fd)
+{
+    LOG_D(BMS_TAG_INSTALLER, "begin");
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageOption option(MessageOption::TF_SYNC);
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "write interface token fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString(certAlias)) {
+        LOG_E(BMS_TAG_INSTALLER, "write certAlias fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "write userId fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteFileDescriptor(fd)) {
+        LOG_E(BMS_TAG_INSTALLER, "write fd fail");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendInstallRequest(BundleInstallerInterfaceCode::ENABLE_KEY_FOR_ENTERPRISE_RESIGN, data, reply, option)) {
+        LOG_E(BMS_TAG_INSTALLER, "fail to SendInstallRequest");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_SEND_REQUEST_ERROR;
+    }
+    LOG_D(BMS_TAG_INSTALLER, "end");
+    return reply.ReadInt32();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

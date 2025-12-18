@@ -2050,6 +2050,35 @@ ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    LOG_I(BMS_TAG_INSTALLD, "start");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (cert == nullptr || certLength <= 0) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "cert size is %{public}d", certLength);
+    Security::CodeSign::ByteBuffer byteBuffer;
+    byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(cert), certLength);
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnableKeyForEnterpriseResign(byteBuffer);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed due to error %{public}d", ret);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_ENABLE_KEY_ERROR;
+    }
+    LOG_I(BMS_TAG_INSTALLD, "end");
+#else
+    LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
+#endif
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::RemoveSignProfile(const std::string &bundleName)
 {
     LOG_D(BMS_TAG_INSTALLD, "start to remove sign profile");

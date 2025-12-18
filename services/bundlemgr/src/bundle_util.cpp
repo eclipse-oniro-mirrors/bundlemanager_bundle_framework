@@ -1058,6 +1058,32 @@ void BundleUtil::RestoreHaps(const std::string &sourcePath, const std::string &b
     }
 }
 
+bool BundleUtil::GetEnterpriseReSignatureCert(int32_t userId, std::set<std::string> &certificateAlias)
+{
+    std::string path = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH +
+        std::to_string(userId);
+    DIR *dir = opendir(path.c_str());
+    if (dir == nullptr) {
+        APP_LOGE("fail to opendir:%{public}s, errno:%{public}d", path.c_str(), errno);
+        return false;
+    }
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if (ptr->d_type == DT_REG) {
+            if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+                continue;
+            }
+            std::string fileName(ptr->d_name);
+            if (EndWith(fileName, ServiceConstants::CER_SUFFIX)) {
+                certificateAlias.insert(fileName);
+            }
+        }
+    }
+    closedir(dir);
+    APP_LOGI("re sign cert size:%{public}zu", certificateAlias.size());
+    return !certificateAlias.empty();
+}
+
 void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
 {
     for (const auto &tempDir : tempDirs) {

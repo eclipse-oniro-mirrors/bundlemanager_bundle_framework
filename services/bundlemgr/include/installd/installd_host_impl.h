@@ -249,6 +249,8 @@ public:
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
+    virtual ErrCode EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength) override;
+
     virtual ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId) override;
 
     virtual ErrCode DeleteEncryptionKeyId(const EncryptionParam &encryptionParam) override;

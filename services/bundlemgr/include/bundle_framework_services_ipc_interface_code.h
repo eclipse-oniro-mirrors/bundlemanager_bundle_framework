@@ -95,6 +95,7 @@ enum class InstalldInterfaceCode : uint32_t {
     COPY_DIR = 67,
     GET_SO_HASH = 68,
     GET_FILES_HASH = 69,
+    ENABLE_KEY_FOR_ENTERPRISE_RESIGN = 70,
 };
 
 } // namespace AppExecFwk
