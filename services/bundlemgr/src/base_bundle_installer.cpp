@@ -5010,6 +5010,10 @@ void BaseBundleInstaller::CheckInstallAllowDowngrade(
     if ((result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) || oldBundleInfo.IsSystemApp()) {
         return;
     }
+    if ((oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_NONE) &&
+        (oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY)) {
+        return;
+    }
     auto item = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE);
     if ((item == installParam.parameters.end()) || (item->second != ServiceConstants::BMS_TRUE)) {
         return;
