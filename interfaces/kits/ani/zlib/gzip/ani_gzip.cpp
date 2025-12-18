@@ -30,10 +30,16 @@ constexpr const char* CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER = "@ohos.zlib.zlib.Gz
 constexpr const char* FIELD_NAME_NATIVE_GZFILE = "nativeGZFile";
 constexpr const char* FUNCTION_TOSTRING = "toString";
 constexpr const char* MANGLING_TOSTRING = ":Lstd/core/String;";
-constexpr int INVALID_FD = -1;
 constexpr uint8_t MIN_ASCII = 0;
 constexpr uint8_t MAX_ASCII = 255;
-constexpr int ANI_DOUBLE_BYTE_MAX = 64;
+constexpr size_t INT64_BITS = 64;
+constexpr size_t INT32_BITS = 32;
+constexpr int32_t DOUBLE_EXPONENT_BIAS = 0x3FF;
+constexpr size_t DOUBLE_SIGNIFICAND_SIZE = 52;
+constexpr uint64_t DOUBLE_SIGN_MASK = 0x8000000000000000ULL;
+constexpr uint64_t DOUBLE_EXPONENT_MASK = 0x7FFULL << DOUBLE_SIGNIFICAND_SIZE;
+constexpr uint64_t DOUBLE_SIGNIFICAND_MASK = 0x000FFFFFFFFFFFFFULL;
+constexpr uint64_t DOUBLE_HIDDEN_BIT = 1ULL << DOUBLE_SIGNIFICAND_SIZE;
 
 enum AniArgsType {
     ANI_UNKNOWN = -1,
@@ -53,6 +59,11 @@ const std::pair<const char*, AniArgsType> OBJECT_TYPE[] = {
     {CommonFunAniNS::CLASSNAME_STRING, AniArgsType::ANI_STRING},
     {CommonFunAniNS::CLASSNAME_BIGINT, AniArgsType::ANI_BIGINT},
     {CommonFunAniNS::CLASSNAME_OBJECT, AniArgsType::ANI_OBJECT},
+};
+template <class S, class R>
+union Data {
+    S src;
+    R dst;
 };
 } // namespace
 using namespace arkts::ani_signature;
@@ -207,6 +218,30 @@ static void GetFormattedStringInner(const std::string& format, const ani_size ma
     }
 }
 
+static int32_t DoubleToInt32(double d)
+{
+    int32_t ret = 0;
+    static_assert(sizeof(double) == sizeof(uint64_t));
+    Data<double, uint64_t> data;
+    data.src = d;
+    uint64_t u64 = data.dst;
+    int32_t exp = static_cast<int32_t>((u64 & DOUBLE_EXPONENT_MASK) >> DOUBLE_SIGNIFICAND_SIZE) - DOUBLE_EXPONENT_BIAS;
+    if (exp < static_cast<int32_t>(INT32_BITS - 1)) {
+        ret = static_cast<int32_t>(d);
+    } else if (exp < static_cast<int32_t>(INT32_BITS + DOUBLE_SIGNIFICAND_SIZE)) {
+        uint64_t value = (((u64 & DOUBLE_SIGNIFICAND_MASK) | DOUBLE_HIDDEN_BIT)
+                         << (static_cast<uint32_t>(exp) - DOUBLE_SIGNIFICAND_SIZE + INT64_BITS - INT32_BITS))
+                         >> (INT64_BITS - INT32_BITS);
+        ret = static_cast<int32_t>(value);
+        if ((u64 & DOUBLE_SIGN_MASK) == DOUBLE_SIGN_MASK && ret != INT32_MIN) {
+            ret = -ret;
+        }
+    } else {
+        ret = 0;
+    }
+    return ret;
+}
+
 static bool GetFormattedString(ani_env* env, const std::string& format, ani_object args, std::string& formattedString)
 {
     ani_size maxArgCount = 0;
@@ -281,7 +316,8 @@ ani_int GzbufferNative(ani_env* env, ani_object instance, ani_long aniSize)
         return -1;
     }
 
-    int ret = gzbuffer(nativeGZFile, static_cast<uint32_t>(aniSize));
+    // Consistent with the Napi implementation.
+    int32_t ret = gzbuffer(nativeGZFile, static_cast<uint32_t>(DoubleToInt32(static_cast<double>(aniSize))));
     if (ret < 0) {
         APP_LOGE("gzbuffer failed %{public}d", ret);
         AniZLibCommon::ThrowZLibNapiError(env, ENOSTR);
