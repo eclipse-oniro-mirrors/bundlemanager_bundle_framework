@@ -2621,7 +2621,6 @@ bool ToInnerModuleInfo(
     innerModuleInfo.description = moduleJson.module.description;
     innerModuleInfo.descriptionId = moduleJson.module.descriptionId;
     GetMetadata(innerModuleInfo.metadata, moduleJson.module.metadata);
-    GetHnpPackage(innerModuleInfo.hnpPackages, moduleJson.module.hnpPackages);
     innerModuleInfo.distro.deliveryWithInstall = moduleJson.module.deliveryWithInstall;
     innerModuleInfo.distro.installationFree = moduleJson.module.installationFree;
     innerModuleInfo.distro.moduleName = moduleJson.module.name;
@@ -2630,6 +2629,10 @@ bool ToInnerModuleInfo(
         innerModuleInfo.distro.moduleType = moduleJson.module.type;
         if (moduleJson.module.type == Profile::MODULE_TYPE_ENTRY) {
             innerModuleInfo.isEntry = true;
+            GetHnpPackage(innerModuleInfo.hnpPackages, moduleJson.module.hnpPackages);
+        } else if (moduleJson.module.hnpPackages.size() > 0) {
+            APP_LOGW("Only entry module can have hnpPackages, ignore hnpPackages for module %{public}s",
+                moduleJson.module.name.c_str());
         }
     }
 
