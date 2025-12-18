@@ -436,6 +436,23 @@ ErrCode BundleResourceHostImpl::CheckExtensionAbilityValid(const std::string &bu
     return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
 }
 
+void BundleResourceHostImpl::FilterUninstallResource(const int32_t userId,
+    std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return;
+    }
+    for (auto iter = bundleResourceInfos.begin(); iter != bundleResourceInfos.end();) {
+        if (!dataMgr.GetUninstallBundleInfoWithUserAndAppIndex(iter->bundleName, userId, iter->appIndex)) {
+            iter = bundleResourceInfos.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+}
+
 ErrCode BundleResourceHostImpl::GetAllUninstallBundleResourceInfo(const int32_t userId, const uint32_t flags,
     std::vector<BundleResourceInfo> &bundleResourceInfos)
 {
@@ -458,6 +475,8 @@ ErrCode BundleResourceHostImpl::GetAllUninstallBundleResourceInfo(const int32_t 
         APP_LOGE("get all uninstall bundle resource failed, flags:%{public}u -u:%{public}d", flags, userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    FilterUninstallResource(userId, bundleResourceInfos);
+    
     if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
         APP_LOGD("need sort by label");

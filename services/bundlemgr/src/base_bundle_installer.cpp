@@ -1993,9 +1993,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("remove el1 shader cache dir failed for %{public}s", bundleName.c_str());
     }
 
-    if (installParam.isKeepData) {
-        BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
-    }
     if (isMultiUser) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
         if (oldInfo.IsPreInstallApp() && isForcedUninstall) {
@@ -2042,6 +2039,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
 
+    SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+    if (installParam.isKeepData) {
+        BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
+    }
+
     ErrCode ret = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "rm hnp failed");
@@ -2053,8 +2055,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "remove whole bundle failed");
         return result;
     }
-    SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
-
+    
     result = DeleteOldArkNativeFile(oldInfo);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "delete old arkNativeFile failed");
@@ -2298,15 +2299,15 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return result;
         }
         if (onlyInstallInUser) {
-            if (installParam.isKeepData) {
-                BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
-            }
             result = RemoveBundle(oldInfo, installParam.isKeepData);
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "remove bundle failed");
                 return result;
             }
             SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+            if (installParam.isKeepData) {
+                BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
+            }
             // remove profile from code signature
             RemoveProfileFromCodeSign(bundleName);
 
