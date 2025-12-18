@@ -453,6 +453,7 @@ constexpr const char* ABILITY_START_WINDOW_ICON_ID = "startWindowIconId";
 constexpr const char* ABILITY_START_WINDOW_BACKGROUND = "startWindowBackground";
 constexpr const char* ABILITY_START_WINDOW_BACKGROUND_ID = "startWindowBackgroundId";
 constexpr const char* ABILITY_REMOVE_MISSION_AFTER_TERMINATE = "removeMissionAfterTerminate";
+constexpr const char* ABILITY_ALLOW_SELF_REDIRECT = "allowSelfRedirect";
 constexpr const char* ABILITY_ORIENTATION = "orientation";
 constexpr const char* ABILITY_SUPPORT_WINDOW_MODE = "supportWindowMode";
 constexpr const char* ABILITY_MAX_WINDOW_RATIO = "maxWindowRatio";

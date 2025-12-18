@@ -205,6 +205,7 @@ struct AbilityInfo : public Parcelable {
     bool supportPipMode = false;
     bool formEnabled = false;
     bool removeMissionAfterTerminate = false;
+    bool allowSelfRedirect  = true;
     bool isModuleJson = false;
     bool isStageBasedModel = false;
     bool continuable = false;

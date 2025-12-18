@@ -178,6 +178,7 @@ struct Ability {
     bool visible = false;
     bool continuable = false;
     bool removeMissionAfterTerminate = false;
+    bool allowSelfRedirect = true;
     bool excludeFromMissions = false;
     bool recoverable = false;
     bool unclearableMission = false;
@@ -608,6 +609,12 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         jsonObjectEnd,
         ABILITY_REMOVE_MISSION_AFTER_TERMINATE,
         ability.removeMissionAfterTerminate,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetBoolValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        ABILITY_ALLOW_SELF_REDIRECT,
+        ability.allowSelfRedirect,
         false,
         g_parseResult);
     BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
@@ -2471,6 +2478,7 @@ bool ToAbilityInfo(
     abilityInfo.startWindow = ability.startWindow;
     abilityInfo.startWindowId = ability.startWindowId;
     abilityInfo.removeMissionAfterTerminate = ability.removeMissionAfterTerminate;
+    abilityInfo.allowSelfRedirect  = ability.allowSelfRedirect ;
     abilityInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
     size_t len = sizeof(Profile::DISPLAY_ORIENTATION_MAP_KEY) /
             sizeof(Profile::DISPLAY_ORIENTATION_MAP_KEY[0]);

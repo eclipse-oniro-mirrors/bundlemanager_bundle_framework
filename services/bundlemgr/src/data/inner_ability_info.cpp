@@ -27,6 +27,7 @@ AbilityInfo InnerAbilityInfo::ConvertToAbilityInfo(const InnerAbilityInfo &inner
     abilityInfo.supportPipMode = innerAbilityInfo.supportPipMode;
     abilityInfo.formEnabled = innerAbilityInfo.formEnabled;
     abilityInfo.removeMissionAfterTerminate = innerAbilityInfo.removeMissionAfterTerminate;
+    abilityInfo.allowSelfRedirect = innerAbilityInfo.allowSelfRedirect;
     abilityInfo.isModuleJson = innerAbilityInfo.isModuleJson;
     abilityInfo.isStageBasedModel = innerAbilityInfo.isStageBasedModel;
     abilityInfo.continuable = innerAbilityInfo.continuable;
