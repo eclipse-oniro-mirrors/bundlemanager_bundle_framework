@@ -7084,7 +7084,7 @@ ErrCode BundleMgrProxy::GetPluginExtensionInfo(const std::string &hostBundleName
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&want)) {
-        LOG_E(BMS_TAG_QUERY, "Write want fail");
+        APP_LOGE("Write want fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {

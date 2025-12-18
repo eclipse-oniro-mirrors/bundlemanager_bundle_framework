@@ -3550,4 +3550,41 @@ HWTEST_F(BmsBundleManagerTest, GetCloneBundleInfoExt_0001, Function | MediumTest
     EXPECT_NE(ret, ERR_OK);
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0100
+ * @tc.name: test GetPluginExtensionInfo
+ * @tc.desc: get dataMgr success, bundle not found
+ */
+HWTEST_F(BmsBundleManagerTest, GetPluginExtensionInfo_0100, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string hostBundleName = "test";;
+    AAFwk::Want want;
+    int32_t userId = 0;
+    ExtensionAbilityInfo extensionInfo;
+    ErrCode ret = hostImpl->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0200
+ * @tc.name: test GetPluginExtensionInfo
+ * @tc.desc: test is not bundle self calling
+ */
+HWTEST_F(BmsBundleManagerTest, GetPluginExtensionInfo_0200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto dataMgr = hostImpl->GetDataMgrFromService();
+    EXPECT_NE(dataMgr, nullptr);
+    setuid(Constants::FOUNDATION_UID);
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    int32_t userId = dataMgr->GetUserIdByUid(callingUid);
+    std::string hostBundleName = "test";;
+    AAFwk::Want want;
+    ExtensionAbilityInfo extensionInfo;
+    ErrCode ret = hostImpl->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    setuid(Constants::ROOT_UID);
+}
 } // OHOS
