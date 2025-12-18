@@ -1728,8 +1728,10 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         if (!InitDataMgr()) {
             return;
         }
-        if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_, Constants::INITIAL_APP_INDEX)) {
-            RemoveBundleAndDataDir(newInfos.begin()->second, false);
+        bool isKeepData = dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+            Constants::INITIAL_APP_INDEX);
+        RemoveBundleAndDataDir(newInfos.begin()->second, isKeepData);
+        if (!isKeepData) {
             // delete accessTokenId
             if (BundlePermissionMgr::DeleteAccessTokenId(newInfos.begin()->second.GetAccessTokenId(userId_)) !=
                 AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -2051,6 +2053,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "remove whole bundle failed");
         return result;
     }
+    SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
 
     result = DeleteOldArkNativeFile(oldInfo);
     if (result != ERR_OK) {
@@ -2110,7 +2113,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
-    SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
     UninstallDebugAppSandbox(bundleName, uid, oldInfo);
     if (!PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName)) {
         LOG_E(BMS_TAG_INSTALLER, "DeleteInnerPatchInfo failed, bundleName: %{public}s", bundleName.c_str());
@@ -2304,6 +2306,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 LOG_E(BMS_TAG_INSTALLER, "remove bundle failed");
                 return result;
             }
+            SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
             // remove profile from code signature
             RemoveProfileFromCodeSign(bundleName);
 
@@ -2332,7 +2335,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 MarkPreInstallState(bundleName, true);
             }
             DeleteRouterInfo(oldInfo);
-            SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
             UninstallDebugAppSandbox(bundleName, uid, oldInfo);
             BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
             return ERR_OK;
