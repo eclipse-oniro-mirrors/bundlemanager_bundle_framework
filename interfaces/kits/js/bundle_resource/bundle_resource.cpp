@@ -463,13 +463,11 @@ napi_value GetLauncherAbilityResourceInfoList(napi_env env, napi_callback_info i
                     return nullptr;
             }
             if (asyncCallbackInfo->optionsList.empty()) {
-                BusinessError::ThrowParameterTypeError(
-                    env, ERROR_PARAM_CHECK_ERROR, BUNDLE_OPTION, PARAM_BUNDLE_OPTIONS_EMPTY_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLE_OPTIONS_EMPTY_ERROR);
                 return nullptr;
             }
             if (asyncCallbackInfo->optionsList.size() > MAX_ARRAY_NUM) {
-                BusinessError::ThrowParameterTypeError(
-                    env, ERROR_PARAM_CHECK_ERROR, BUNDLE_OPTION, PARAM_BUNDLE_OPTIONS_NUMBER_ERROR);
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_BUNDLE_OPTIONS_NUMBER_ERROR);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {

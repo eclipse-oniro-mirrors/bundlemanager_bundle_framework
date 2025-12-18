@@ -138,9 +138,9 @@ constexpr const char* PARAM_MODULENAME_EMPTY_ERROR =
 constexpr const char* PARAM_ABILITYNAME_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter abilityName is empty";
 constexpr const char* PARAM_BUNDLE_OPTIONS_EMPTY_ERROR =
-    "Parameter error. parameter array is empty";
+    "BusinessError 401: Parameter error. parameter array is empty";
 constexpr const char* PARAM_BUNDLE_OPTIONS_NUMBER_ERROR =
-    "Parameter error. array size exceeds maximum allowed limit of 1000 elements";
+    "BusinessError 401: Parameter error. array size exceeds maximum allowed limit of 1000 elements";
 constexpr const char* GET_SIGNATURE_INFO_PERMISSIONS = "ohos.permission.GET_SIGNATURE_INFO";
 constexpr const char* PARAM_DEVELOPER_ID_EMPTY_ERROR =
     "BusinessError 401: Parameter error. parameter developerId is empty";
