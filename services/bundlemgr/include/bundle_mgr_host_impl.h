@@ -1317,6 +1317,9 @@ private:
     bool IsQueryBundleInfoExt(const uint32_t flags) const;
     bool IsQueryAbilityInfoExt(const uint32_t flags) const;
 
+    bool IsQueryBundleInfoExtWithoutBroker(const uint32_t flags) const;
+    bool IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const;
+
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };
 }  // namespace AppExecFwk
