@@ -3682,15 +3682,17 @@ void BMSEventHandler::HandlePreInstallBundleNamesException(
         }
 
         const auto &preInstallBundleInfo = iter->second;
+        if (preInstallBundleInfo.IsUninstalled()) {
+            preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+            continue;
+        }
         if (!OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
             Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable())) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName(%{public}s) error",
                 bundleNameIter.c_str());
+            continue;
         }
-
-        if (needDeleteRecord) {
-            preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
-        }
+        preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
     }
 }
 
