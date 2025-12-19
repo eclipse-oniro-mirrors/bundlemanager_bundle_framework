@@ -6464,4 +6464,70 @@ HWTEST_F(BmsBundleDataMgrTest, GetPluginBundleInfoByName_0200, Function | SmallT
     bool result = innerBundleInfo.GetPluginBundleInfoByName(USERID, "", resultInfo);
     EXPECT_FALSE(result);
 }
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0700
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: test GetPluginExtensionInfo with invalid userId
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginExtensionInfo_0700, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    ExtensionAbilityInfo extensionInfo;
+    Want want;
+    want.SetElementName(BUNDLE_TEST2, BUNDLE_TEST2, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    std::vector<int32_t> invalidUserIds = { -1, 0, INT32_MAX};
+    ExtensionAbilityInfo extInfo;
+    for (auto userId : invalidUserIds) {
+        auto ret = dataMgr->GetPluginExtensionInfo(BUNDLE_TEST1, want, userId, extInfo);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
+    }
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0800
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: test GetPluginExtensionInfo with empty parameters
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginExtensionInfo_0800, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    ExtensionAbilityInfo extensionInfo;
+    Want want;
+    want.SetElementName("", "", "", "");
+    auto ret = dataMgr->GetPluginExtensionInfo(BUNDLE_TEST1, want, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: HandleGetPluginExtensionInfo_0100
+ * @tc.name: HandleGetPluginExtensionInfo
+ * @tc.desc: test HandleGetPluginExtensionInfo(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, HandleGetPluginExtensionInfo_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = localBundleMgrHost->HandleGetPluginExtensionInfo(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+
+    Want want;
+    want.SetElementName(BUNDLE_TEST2, BUNDLE_TEST2, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    data.WriteString(BUNDLE_TEST2);
+    data.WriteParcelable(&want);
+    ret = localBundleMgrHost->HandleGetPluginExtensionInfo(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
