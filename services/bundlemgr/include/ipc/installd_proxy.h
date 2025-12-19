@@ -245,6 +245,8 @@ public:
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
+    virtual ErrCode EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength) override;
+
     virtual ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId) override;
 
     virtual ErrCode DeleteEncryptionKeyId(const EncryptionParam &encryptionParam) override;
@@ -287,6 +289,8 @@ public:
      * @return Returns ERR_OK if copy directory successfully; returns error code otherwise.
      */
     virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
+
+    virtual ErrCode RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t cartLength) override;
 
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

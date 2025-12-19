@@ -1659,6 +1659,26 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveSignProfile_0200, Te
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_EnableKeyForEnterpriseResign_0100
+ * @tc.name: EnableKeyForEnterpriseResign
+ * @tc.desc: call EnableKeyForEnterpriseResign.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_EnableKeyForEnterpriseResign_0100, TestSize.Level1)
+{
+    ASSERT_NE(installClient_, nullptr);
+
+    unsigned char *cert = new unsigned char[10];
+    int32_t certLen = 10;
+    ErrCode result = installClient_->EnableKeyForEnterpriseResign(cert, certLen);
+    EXPECT_NE(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    result = installClient_->EnableKeyForEnterpriseResign(cert, 0);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    delete[] cert;
+    result = installClient_->EnableKeyForEnterpriseResign(nullptr, certLen);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
  * @tc.number: BmsInstalldDeathRecipientTest_OnRemoteDied_0100
  * @tc.name: OnRemoteDied
  * @tc.desc: call OnRemoteDied.

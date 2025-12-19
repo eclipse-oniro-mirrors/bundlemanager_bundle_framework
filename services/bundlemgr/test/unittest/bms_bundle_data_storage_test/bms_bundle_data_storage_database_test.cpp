@@ -116,6 +116,7 @@ const bool ABILITY_ENABLED = true;
 const bool ABILITY_SUPPORT_PIP_MODE = true;
 const bool ABILITY_FORM_ENABLED = true;
 const bool ABILITY_REMOVE_MISSION_AFTER_TERMINATE = true;
+const bool ABILITY_ALLOW_SELF_REDIRECT = true;
 const bool ABILITY_IS_MODULE_JSON = true;
 const bool ABILITY_IS_STAGE_BASED_MODEL = true;
 const bool ABILITY_CONTINUABLE = true;
@@ -448,6 +449,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "process":"",
             "readPermission":"",
             "removeMissionAfterTerminate":false,
+            "allowSelfRedirect":true,
             "resourcePath":"/data/app/el1/bundle/public/com.example.myapplication/entry/resources.index",
             "srcEntrance":"./ets/MainAbility/MainAbility.ts",
             "srcLanguage":"js",
@@ -1010,6 +1012,7 @@ protected:
                     "iconPath": "$media:icon",
                     "isLauncherAbility": true,
                     "removeMissionAfterTerminate":false,
+                    "allowSelfRedirect":true,
                     "excludeFromMissions":false,
                     "recoverable":false,
                     "isModuleJson": false,
@@ -1090,6 +1093,7 @@ protected:
                     "iconPath": "$media: icon",
                     "isLauncherAbility": false,
                     "removeMissionAfterTerminate":false,
+                    "allowSelfRedirect":true,
                     "excludeFromMissions":false,
                     "recoverable": false,
                     "isModuleJson": false,
@@ -1160,6 +1164,7 @@ protected:
                     "iconPath": "$media: icon",
                     "isLauncherAbility": false,
                     "removeMissionAfterTerminate":false,
+                    "allowSelfRedirect":true,
                     "excludeFromMissions":false,
                     "recoverable": false,
                     "isModuleJson": false,
@@ -2061,6 +2066,7 @@ T MakeAbilityInfo()
     info.startWindowBackground = ABILITY_START_WINDOW_BACKGROUND;
     info.startWindowBackgroundId = ABILITY_START_WINDOW_BACKGROUND_ID;
     info.removeMissionAfterTerminate = ABILITY_REMOVE_MISSION_AFTER_TERMINATE;
+    info.allowSelfRedirect = ABILITY_ALLOW_SELF_REDIRECT;
     info.compileMode = ABILITY_COMPILE_MODE;
     info.windowModes = ABILITY_WINDOW_MODES;
     info.maxWindowWidth = ABILITY_MAX_WINDOW_WIDTH;

@@ -1349,7 +1349,7 @@ static ani_object GetAllAppProvisionInfoNative(ani_env* env, ani_int aniUserId)
     ErrCode ret = BundleManagerHelper::InnerGetAllAppProvisionInfo(aniUserId, appProvisionInfos);
     if (ret != ERR_OK) {
         APP_LOGE("InnerGetAllAppProvisionInfo failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, ret, GET_ALL_APP_PROVISION_INFO,
+        BusinessErrorAni::ThrowCommonNewError(env, ret, GET_ALL_APP_PROVISION_INFO,
             Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         return nullptr;
     }
@@ -2092,7 +2092,7 @@ static ani_enum_item GetBundleInstallStatusNative(ani_env* env, ani_string aniBu
     ErrCode ret = BundleManagerHelper::InnerGetBundleInstallStatus(bundleName, status);
     if (ret != ERR_OK) {
         APP_LOGE("InnerGetBundleInstallStatus failed ret: %{public}d", ret);
-        BusinessErrorAni::ThrowCommonError(env, ret, GET_BUNDLE_INSTALL_STATUS,
+        BusinessErrorAni::ThrowCommonNewError(env, ret, GET_BUNDLE_INSTALL_STATUS,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }

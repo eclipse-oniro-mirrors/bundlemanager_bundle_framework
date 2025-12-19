@@ -1213,8 +1213,8 @@ public:
         const int32_t userId, AbilityInfo &abilityInfo) override;
     virtual ErrCode GetPluginHapModuleInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const std::string &pluginModuleName, const int32_t userId, HapModuleInfo &hapModuleInfo) override;
-    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
-    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
+    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
+    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
     virtual ErrCode GetAllShortcutInfoForSelf(std::vector<ShortcutInfo> &shortcutInfos) override;
     virtual ErrCode GetPluginInfo(const std::string &hostBundleName, const std::string &pluginBundleName,
         const int32_t userId, PluginBundleInfo &pluginBundleInfo) override;
@@ -1241,6 +1241,8 @@ public:
      * @return Returns ERR_OK if the AssetGroupInfo is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo &assetGroupInfo) override;
+    virtual ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
+        const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo) override;
 
 private:
     bool GetLabelByBundleName(const std::string &bundleName, int32_t userId, std::string &label);
@@ -1314,6 +1316,9 @@ private:
     bool CheckAcrossUserPermission(const int32_t userId);
     bool IsQueryBundleInfoExt(const uint32_t flags) const;
     bool IsQueryAbilityInfoExt(const uint32_t flags) const;
+
+    bool IsQueryBundleInfoExtWithoutBroker(const uint32_t flags) const;
+    bool IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const;
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };

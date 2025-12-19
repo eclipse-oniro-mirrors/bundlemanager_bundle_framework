@@ -66,7 +66,6 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/preferences",
     "/haps"
 };
-constexpr const char* MEDIALIBRARYDATA = "com.ohos.medialibrary.medialibrarydata";
 constexpr const char* CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
 constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/bundles/";
@@ -629,16 +628,9 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
         std::string databaseDir = databaseParentDir + createDirParam.bundleName;
-        int32_t gid = createDirParam.uid;
-        if (createDirParam.bundleName == MEDIALIBRARYDATA) {
-            mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH)
-                                        : (S_IRWXU | S_IRWXG | S_ISGID);
-            gid = ServiceConstants::DATABASE_DIR_GID;
-        } else {
-            mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
-        }
+        mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
         if (!InstalldOperator::MkOwnerDir(
-            databaseDir, mode, createDirParam.uid, gid)) {
+            databaseDir, mode, createDirParam.uid, createDirParam.uid)) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
@@ -650,7 +642,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             return ret;
         }
         // create database extension dir
-        if (CreateExtensionDir(createDirParam, databaseParentDir, mode, gid) != ERR_OK) {
+        if (CreateExtensionDir(createDirParam, databaseParentDir, mode, createDirParam.uid) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
         }
         AclSetExtensionDirs(createDirParam.debug, databaseParentDir, createDirParam.extensionDirs, false, true);
@@ -792,15 +784,8 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
     // create database bundleName dir: /data/app/${elx}/${userId}/database/${bundleName}
     std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
     std::string databaseDir = databaseParentDir + createDirParam.bundleName;
-    int32_t gid = createDirParam.gid;
-    if (createDirParam.bundleName == MEDIALIBRARYDATA) {
-        mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH)
-                                        : (S_IRWXU | S_IRWXG | S_ISGID);
-        gid = ServiceConstants::DATABASE_DIR_GID;
-    } else {
-        mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
-    }
-    if (!InstalldOperator::MkOwnerDir(databaseDir, mode, createDirParam.uid, gid)) {
+    mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
+    if (!InstalldOperator::MkOwnerDir(databaseDir, mode, createDirParam.uid, createDirParam.gid)) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
@@ -813,7 +798,7 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
     }
 
     // create database extension dir: /data/app/${elx}/${userId}/database/${extensionDir}
-    if (CreateExtensionDir(createDirParam, databaseParentDir, mode, gid) != ERR_OK) {
+    if (CreateExtensionDir(createDirParam, databaseParentDir, mode, createDirParam.gid) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
     }
     AclSetExtensionDirs(createDirParam.debug, databaseParentDir, createDirParam.extensionDirs, false, true);
@@ -2050,6 +2035,35 @@ ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    LOG_I(BMS_TAG_INSTALLD, "start");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (cert == nullptr || certLength <= 0) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "cert size is %{public}d", certLength);
+    Security::CodeSign::ByteBuffer byteBuffer;
+    byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(cert), certLength);
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnableKeyForEnterpriseResign(byteBuffer);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed due to error %{public}d", ret);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_ENABLE_KEY_ERROR;
+    }
+    LOG_I(BMS_TAG_INSTALLD, "end");
+#else
+    LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
+#endif
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::RemoveSignProfile(const std::string &bundleName)
 {
     LOG_D(BMS_TAG_INSTALLD, "start to remove sign profile");
@@ -2256,16 +2270,9 @@ ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDir
                 LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
             }
         }
-        int32_t gid = createDirParam.gid;
-        if (createDirParam.bundleName == MEDIALIBRARYDATA) {
-            mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_ISGID | S_IROTH | S_IXOTH)
-                                        : (S_IRWXU | S_IRWXG | S_ISGID);
-            gid = ServiceConstants::DATABASE_DIR_GID;
-        } else {
-            mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
-        }
+        mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) : (S_IRWXU | S_IRWXG);
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
-        if (CreateExtensionDir(createDirParam, databaseParentDir, mode, gid) != ERR_OK) {
+        if (CreateExtensionDir(createDirParam, databaseParentDir, mode, createDirParam.gid) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
@@ -2838,6 +2845,35 @@ ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::strin
         LOG_E(BMS_TAG_INSTALLD, "CopyDir failed");
         return ERR_APPEXECFWK_INSTALLD_COPY_DIR_FAILED;
     }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    LOG_I(BMS_TAG_INSTALLD, "start");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (cert == nullptr || certLength <= 0) {
+        LOG_E(BMS_TAG_INSTALLD, "invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    LOG_D(BMS_TAG_INSTALLD, "cert size is %{public}d", certLength);
+    Security::CodeSign::ByteBuffer byteBuffer;
+    byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(cert), certLength);
+    ErrCode ret = Security::CodeSign::CodeSignUtils::RemoveKeyForEnterpriseResign(byteBuffer);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed due to error %{public}d", ret);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_REMOVE_KEY_ERROR;
+    }
+    LOG_I(BMS_TAG_INSTALLD, "end");
+#else
+    LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
+#endif
     return ERR_OK;
 }
 }  // namespace AppExecFwk

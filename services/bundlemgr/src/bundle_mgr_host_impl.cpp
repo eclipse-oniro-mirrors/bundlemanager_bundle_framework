@@ -514,8 +514,10 @@ ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bu
     if (bundleInfos.size() == bundleNames.size()) {
         return ERR_OK;
     }
-    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true);
+    if (IsQueryBundleInfoExtWithoutBroker(static_cast<uint32_t>(flags))) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true);
+    }
     return bundleInfos.empty() ? ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST : ERR_OK;
 }
 
@@ -1124,7 +1126,7 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
     }
     bool res = dataMgr->QueryAbilityInfo(want, flags, userId, abilityInfo);
     if (!res) {
-        if (!IsAppLinking(flags)) {
+        if (!IsAppLinking(flags) && IsQueryAbilityInfoExtWithoutBroker(static_cast<uint32_t>(flags))) {
             auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
             return (bmsExtensionClient->QueryAbilityInfo(want, flags, userId, abilityInfo) == ERR_OK);
         }
@@ -1189,7 +1191,7 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     }
     auto res = dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (!IsAppLinking(flags) &&
+    if (!IsAppLinking(flags) && IsQueryAbilityInfoExtWithoutBroker(static_cast<uint32_t>(flags)) &&
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos, true) == ERR_OK) {
         LOG_D(BMS_TAG_QUERY, "query ability infos from bms extension successfully");
         return ERR_OK;
@@ -6195,9 +6197,15 @@ ErrCode BundleMgrHostImpl::GetPluginHapModuleInfo(const std::string &hostBundleN
     return dataMgr->GetPluginHapModuleInfo(hostBundleName, pluginBundleName, pluginModuleName, userId, hapModuleInfo);
 }
 
-ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     APP_LOGD("begin");
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_SUPPORT_PLUGIN)) {
+        APP_LOGD("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     if (pluginEventCallback == nullptr) {
         APP_LOGE("pluginEventCallback is null");
         return ERR_APPEXECFWK_NULL_PTR;
@@ -6207,7 +6215,6 @@ ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCa
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    auto uid = IPCSkeleton::GetCallingUid();
     std::string callingBundleName;
     if (uid == Constants::FOUNDATION_UID) {
         callingBundleName = std::string(Constants::FOUNDATION_PROCESS_NAME);
@@ -6219,9 +6226,15 @@ ErrCode BundleMgrHostImpl::RegisterPluginEventCallback(const sptr<IBundleEventCa
     return dataMgr->RegisterPluginEventCallback(pluginEventCallback, callingBundleName);
 }
 
-ErrCode BundleMgrHostImpl::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
+ErrCode BundleMgrHostImpl::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
 {
     APP_LOGD("begin");
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_SUPPORT_PLUGIN)) {
+        APP_LOGD("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     if (pluginEventCallback == nullptr) {
         APP_LOGE("pluginEventCallback is null");
         return ERR_APPEXECFWK_NULL_PTR;
@@ -6231,7 +6244,6 @@ ErrCode BundleMgrHostImpl::UnregisterPluginEventCallback(const sptr<IBundleEvent
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_NULL_PTR;
     }
-    auto uid = IPCSkeleton::GetCallingUid();
     std::string callingBundleName;
     if (uid == Constants::FOUNDATION_UID) {
         callingBundleName = std::string(Constants::FOUNDATION_PROCESS_NAME);
@@ -6843,6 +6855,26 @@ bool BundleMgrHostImpl::IsQueryAbilityInfoExt(const uint32_t flags) const
     }
     return true;
 }
+bool BundleMgrHostImpl::IsQueryBundleInfoExtWithoutBroker(const uint32_t flags) const
+{
+    if ((flags &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT)) ==
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT)) {
+        APP_LOGI("no need to query bundle info from bms extension");
+        return false;
+    }
+    return true;
+}
+bool BundleMgrHostImpl::IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const
+{
+    if ((flags &
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT)) ==
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_EXCLUDE_EXT)) {
+        APP_LOGI("no need to query ability info from bms extension");
+        return false;
+    }
+    return true;
+}
 
 ErrCode BundleMgrHostImpl::GetBundleInstallStatus(const std::string &bundleName, const int32_t userId,
     BundleInstallStatus &bundleInstallStatus)
@@ -6904,6 +6936,27 @@ ErrCode BundleMgrHostImpl::GetAssetGroupsInfo(const int32_t uid, AssetGroupInfo 
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->GetAssetGroupsInfo(uid, assetGroupInfo);
+}
+
+ErrCode BundleMgrHostImpl::GetPluginExtensionInfo(
+    const std::string &hostBundleName, const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo)
+{
+    if (!BundlePermissionMgr::IsBundleSelfCalling(hostBundleName)) {
+        if (!BundlePermissionMgr::IsSystemApp()) {
+            APP_LOGE("non-system app calling system api");
+            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        }
+        if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            APP_LOGE("Verify permission failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    return dataMgr->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

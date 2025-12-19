@@ -3384,11 +3384,11 @@ HWTEST_F(BmsBundleDataMgrTest3, RegisterPluginEventCallback_0001, Function | Med
     ErrCode ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 
-    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
-    ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback2);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-
     setuid(Constants::FOUNDATION_UID);
+    ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+
+    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
     ret = bundleMgrHostImpl_->RegisterPluginEventCallback(pluginEventCallback2);
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_OK);
@@ -3406,11 +3406,11 @@ HWTEST_F(BmsBundleDataMgrTest3, UnregisterPluginEventCallback_0001, Function | M
     ErrCode ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
 
-    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
-    ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback2);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-
     setuid(Constants::FOUNDATION_UID);
+    ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
+
+    sptr<IBundleEventCallbackTest> pluginEventCallback2 = new (std::nothrow) IBundleEventCallbackTest();
     ret = bundleMgrHostImpl_->UnregisterPluginEventCallback(pluginEventCallback2);
     setuid(Constants::ROOT_UID);
     EXPECT_EQ(ret, ERR_OK);
@@ -3948,5 +3948,45 @@ HWTEST_F(BmsBundleDataMgrTest3, HandleHandleSetShortcutsEnabled_0001, Function |
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleSetShortcutsEnabled(data, reply);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GenerateBundleId_0100
+ * @tc.name: GenerateBundleId
+ * @tc.desc: test GenerateBundleId
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GenerateBundleId_0100, Function | MediumTest | Level1)
+{
+    ResetDataMgr();
+    auto bundleDataMgr = GetBundleDataMgr();
+    EXPECT_NE(bundleDataMgr, nullptr);
+
+    int32_t bundleId = 0;
+    std::string bundleName = BUNDLE_TEST1;
+    int32_t uid = bundleDataMgr->baseAppUid_;
+    // bundleIdMap is empty
+    auto ret = bundleDataMgr->GenerateBundleId(bundleName, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // bundle exist
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST1, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleId, uid);
+
+    // bundle not exist
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST2, bundleId);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleId, uid + 1);
+
+    bundleDataMgr->bundleIdMap_.emplace(MAX_APP_UID, BUNDLE_TEST3);
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST4, bundleId);
+    EXPECT_EQ(bundleId, uid + 2);
+
+    for (int i = uid + 3; i <= MAX_APP_UID; ++i) {
+        std::string tempBundleName = std::string("bundleName_") + std::to_string(i);
+        bundleDataMgr->bundleIdMap_.emplace(i, tempBundleName);
+    }
+    ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST5, bundleId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER);
 }
 } // OHOS

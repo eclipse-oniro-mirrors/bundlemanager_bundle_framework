@@ -537,6 +537,15 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
     return CallService(&IInstalld::RemoveSignProfile, bundleName);
 }
 
+ErrCode InstalldClient::EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+{
+    if (cert == nullptr || certLength <= 0) {
+        APP_LOGE("cert is empty or certLength is invalid: %{public}d", certLength);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::EnableKeyForEnterpriseResign, cert, certLength);
+}
+
 void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -698,6 +707,15 @@ ErrCode InstalldClient::ResetBmsDBSecurity()
 ErrCode InstalldClient::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
 {
     return CallService(&IInstalld::CopyDir, sourceDir, destinationDir);
+}
+
+ErrCode InstalldClient::RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+{
+    if (cert == nullptr || certLength <= 0) {
+        APP_LOGE("cert is empty or certLength is invalid: %{public}d", certLength);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::RemoveKeyForEnterpriseResign, cert, certLength);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

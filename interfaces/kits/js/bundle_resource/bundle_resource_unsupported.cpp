@@ -20,6 +20,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
 #include "business_error.h"
+#include "napi_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -63,7 +64,25 @@ napi_value GetLauncherAbilityResourceInfoList(napi_env env, napi_callback_info i
 {
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "getLauncherAbilityResourceInfoList");
+        GET_LAUNCHER_ABILITY_RESOURCE_INFO_LIST);
+    napi_throw(env, error);
+    return nullptr;
+}
+
+napi_value GetExtensionAbilityResourceInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "getExtensionAbilityResourceInfo");
+    napi_throw(env, error);
+    return nullptr;
+}
+
+napi_value GetAllUninstallBundleResourceInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "getAllUninstallBundleResourceInfo");
     napi_throw(env, error);
     return nullptr;
 }

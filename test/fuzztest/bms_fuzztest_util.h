@@ -215,6 +215,7 @@ void GenerateAbilityInfo(FuzzedDataProvider& fdp, T &abilityInfo)
     abilityInfo.supportPipMode = fdp.ConsumeBool();
     abilityInfo.formEnabled = fdp.ConsumeBool();
     abilityInfo.removeMissionAfterTerminate = fdp.ConsumeBool();
+    abilityInfo.allowSelfRedirect  = fdp.ConsumeBool();
     abilityInfo.isModuleJson = fdp.ConsumeBool();
     abilityInfo.isStageBasedModel = fdp.ConsumeBool();
     abilityInfo.continuable = fdp.ConsumeBool();

@@ -243,6 +243,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     DELETE_DYNAMIC_SHORTCUT_INFOS = 217,
     GET_ASSET_GROUPS_INFOS_BY_UID = 218,
     SET_SHORTCUTS_ENABLED = 219,
+    GET_PLUGIN_EXTENSION_INFO = 220,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -302,6 +303,10 @@ enum class BundleInstallerInterfaceCode : uint8_t {
     INSTALL_EXISTED = 13,
     INSTALL_PLUGIN_APP = 14,
     UNINSTALL_PLUGIN_APP = 15,
+    CREATE_ENTERPRISE_CERT_STREAM = 16,
+    ENABLE_KEY_FOR_ENTERPRISE_RESIGN = 17,
+    UNINSTALL_ENTERPRISE_RE_SIGNATURE_CERT = 18,
+    GET_ENTERPRISE_RE_SIGNATURE_CERT = 19,
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */

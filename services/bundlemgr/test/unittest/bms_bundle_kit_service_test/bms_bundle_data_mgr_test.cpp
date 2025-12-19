@@ -6257,4 +6257,277 @@ HWTEST_F(BmsBundleDataMgrTest, HandleDetermineCloneNumList_0100, Function | Smal
     ErrCode ret = GetBundleDataMgr()->HandleDetermineCloneNumList(determineCloneNumList);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0100
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: test bundle not exist
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginExtensionInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetElementName("", BUNDLE_NAME_TEST, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    ExtensionAbilityInfo extensionInfo;
+    auto ret = dataMgr->GetPluginExtensionInfo("testBundle", want, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0200
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: test plugin not exist
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginExtensionInfo_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleType = BundleType::APP_PLUGIN;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    ExtensionAbilityInfo extensionInfo;
+    Want want;
+    want.SetElementName("", BUNDLE_NAME_TEST, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    auto ret = dataMgr->GetPluginExtensionInfo(BUNDLE_TEST1, want, 111, extensionInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0300
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: test GetPluginExtensionInfo with wrong plugin name
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginExtensionInfo_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleType = BundleType::APP_PLUGIN;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    PluginBundleInfo pluginBundleInfo;
+    pluginBundleInfo.pluginBundleName = "pluginBundleName";
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerBundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    innerBundleInfo.AddPluginBundleInfo(pluginBundleInfo, USERID);
+    EXPECT_EQ(innerBundleInfo.pluginBundleInfos_.size(), 1);
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    ExtensionAbilityInfo extensionInfo;
+    Want want;
+    want.SetElementName("", BUNDLE_NAME_TEST, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    auto ret = dataMgr->GetPluginExtensionInfo(BUNDLE_TEST1, want, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0400
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: test GetPluginExtensionInfo with wrong extension name
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginExtensionInfo_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleType = BundleType::APP_PLUGIN;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    PluginBundleInfo pluginBundleInfo;
+    ExtensionAbilityInfo extension;
+    extension.name = "extension";
+    extension.moduleName = MODULE_NAME_TEST;
+    pluginBundleInfo.pluginBundleName = BUNDLE_TEST1;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerBundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    innerBundleInfo.AddPluginBundleInfo(pluginBundleInfo, USERID);
+    EXPECT_EQ(innerBundleInfo.pluginBundleInfos_.size(), 1);
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    ExtensionAbilityInfo extensionInfo;
+    Want want;
+    want.SetElementName(BUNDLE_TEST1, BUNDLE_TEST1, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    auto ret = dataMgr->GetPluginExtensionInfo(BUNDLE_TEST1, want, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_ABILITY_NOT_FOUND);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0500
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: test GetPluginExtensionInfo with wrong module name
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginExtensionInfo_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleType = BundleType::APP_PLUGIN;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    PluginBundleInfo pluginBundleInfo;
+    ExtensionAbilityInfo extension;
+    extension.name = ABILITY_NAME_TEST;
+    extension.moduleName = "moduleName";
+    pluginBundleInfo.pluginBundleName = BUNDLE_TEST1;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerBundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    innerBundleInfo.AddPluginBundleInfo(pluginBundleInfo, USERID);
+    EXPECT_EQ(innerBundleInfo.pluginBundleInfos_.size(), 1);
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    ExtensionAbilityInfo extensionInfo;
+    Want want;
+    want.SetElementName(BUNDLE_TEST1, BUNDLE_TEST1, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    auto ret = dataMgr->GetPluginExtensionInfo(BUNDLE_TEST1, want, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_ABILITY_NOT_FOUND);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0600
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: test GetPluginExtensionInfo run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginExtensionInfo_0600, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleType = BundleType::APP_PLUGIN;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    PluginBundleInfo pluginBundleInfo;
+    ExtensionAbilityInfo extension;
+    extension.name = ABILITY_NAME_TEST;
+    extension.moduleName = MODULE_NAME_TEST;
+    pluginBundleInfo.pluginBundleName = BUNDLE_TEST1;
+    pluginBundleInfo.extensionInfos.emplace(ABILITY_NAME_TEST, extension);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerBundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    innerBundleInfo.AddPluginBundleInfo(pluginBundleInfo, USERID);
+    EXPECT_EQ(innerBundleInfo.pluginBundleInfos_.size(), 1);
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    ExtensionAbilityInfo extensionInfo;
+    Want want;
+    want.SetElementName(BUNDLE_TEST1, BUNDLE_TEST1, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    auto ret = dataMgr->GetPluginExtensionInfo(BUNDLE_TEST1, want, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(extensionInfo.name, ABILITY_NAME_TEST);
+
+    pluginBundleInfo.GetExtensionInfoByName(ABILITY_NAME_TEST, "", extensionInfo);
+    EXPECT_EQ(extensionInfo.name, ABILITY_NAME_TEST);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetPluginBundleInfoByName_0100
+ * @tc.name: GetPluginBundleInfoByName
+ * @tc.desc: test GetPluginBundleInfoByName with false name
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginBundleInfoByName_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.installedPluginSet.insert(BUNDLE_TEST1);
+    innerBundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    PluginBundleInfo resultInfo;
+    bool result = innerBundleInfo.GetPluginBundleInfoByName(USERID, BUNDLE_TEST1, resultInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: GetPluginBundleInfoByName_0200
+ * @tc.name: GetPluginBundleInfoByName
+ * @tc.desc: test GetPluginBundleInfoByName with empty name
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginBundleInfoByName_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.installedPluginSet.insert(BUNDLE_TEST1);
+    innerBundleInfo.innerBundleUserInfos_["_100"] = userInfo;
+    PluginBundleInfo resultInfo;
+    bool result = innerBundleInfo.GetPluginBundleInfoByName(USERID, "", resultInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0700
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: test GetPluginExtensionInfo with invalid userId
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginExtensionInfo_0700, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    ExtensionAbilityInfo extensionInfo;
+    Want want;
+    want.SetElementName(BUNDLE_TEST2, BUNDLE_TEST2, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    std::vector<int32_t> invalidUserIds = { -1, 0, INT32_MAX};
+    ExtensionAbilityInfo extInfo;
+    for (auto userId : invalidUserIds) {
+        auto ret = dataMgr->GetPluginExtensionInfo(BUNDLE_TEST1, want, userId, extInfo);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
+    }
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0800
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: test GetPluginExtensionInfo with empty parameters
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPluginExtensionInfo_0800, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    ExtensionAbilityInfo extensionInfo;
+    Want want;
+    want.SetElementName("", "", "", "");
+    auto ret = dataMgr->GetPluginExtensionInfo(BUNDLE_TEST1, want, USERID, extensionInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PLUGIN_NOT_FOUND);
+    dataMgr->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: HandleGetPluginExtensionInfo_0100
+ * @tc.name: HandleGetPluginExtensionInfo
+ * @tc.desc: test HandleGetPluginExtensionInfo(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, HandleGetPluginExtensionInfo_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = localBundleMgrHost->HandleGetPluginExtensionInfo(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+
+    Want want;
+    want.SetElementName(BUNDLE_TEST2, BUNDLE_TEST2, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    data.WriteString(BUNDLE_TEST2);
+    data.WriteParcelable(&want);
+    ret = localBundleMgrHost->HandleGetPluginExtensionInfo(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

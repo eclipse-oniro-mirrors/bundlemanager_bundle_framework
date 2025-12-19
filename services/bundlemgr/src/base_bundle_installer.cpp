@@ -94,7 +94,7 @@ constexpr const char* BACKUP_BUNDLES = "/backup/bundles/";
 const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
-constexpr const char* LIBS_TMP = "libs_tmp";
+constexpr const char* LIBS_TMP = "libs+tmp";
 constexpr const char* PRIVILEGE_ALLOW_HDC_INSTALL = "AllowHdcInstall";
 constexpr const char* KEY_STORAGE_SIZE = "storageSize";
 constexpr const char* DEDUPLICATEHAR_NOTE =
@@ -127,6 +127,8 @@ constexpr const char* TYPE_PUBLIC = "public";
 constexpr const char* TYPE_PRIVATE = "private";
 constexpr const char* USER_DATA_DIR = "/data";
 constexpr double MIN_FREE_INODE_PERCENT = 0.005; // 0.5%
+constexpr const char* MODULE_NAME_IS_LIBS = "libs";
+constexpr const char* MODULE_DIR_IS_LIBS = "/libs";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -1631,7 +1633,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     UpdateRouterInfo();
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
-    ProcessAOT(installParam.isOTA, newInfos);
     RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     UpdateAppInstallControlled(userId_);
     extensionDirGuard.Dismiss();
@@ -1727,8 +1728,10 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         if (!InitDataMgr()) {
             return;
         }
-        if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_, Constants::INITIAL_APP_INDEX)) {
-            RemoveBundleAndDataDir(newInfos.begin()->second, false);
+        bool isKeepData = dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+            Constants::INITIAL_APP_INDEX);
+        RemoveBundleAndDataDir(newInfos.begin()->second, isKeepData);
+        if (!isKeepData) {
             // delete accessTokenId
             if (BundlePermissionMgr::DeleteAccessTokenId(newInfos.begin()->second.GetAccessTokenId(userId_)) !=
                 AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -2050,6 +2053,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "remove whole bundle failed");
         return result;
     }
+    SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
 
     result = DeleteOldArkNativeFile(oldInfo);
     if (result != ERR_OK) {
@@ -2109,7 +2113,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
-    SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
     UninstallDebugAppSandbox(bundleName, uid, oldInfo);
     if (!PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName)) {
         LOG_E(BMS_TAG_INSTALLER, "DeleteInnerPatchInfo failed, bundleName: %{public}s", bundleName.c_str());
@@ -2303,6 +2306,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 LOG_E(BMS_TAG_INSTALLER, "remove bundle failed");
                 return result;
             }
+            SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
             // remove profile from code signature
             RemoveProfileFromCodeSign(bundleName);
 
@@ -2331,7 +2335,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 MarkPreInstallState(bundleName, true);
             }
             DeleteRouterInfo(oldInfo);
-            SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
             UninstallDebugAppSandbox(bundleName, uid, oldInfo);
             BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, false);
             return ERR_OK;
@@ -2640,6 +2643,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &i
             }
         }
         ErrCode ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(installHnpParam);
+        isHnpInstalled_ = true;
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "installing the native package failed. error code: %{public}d", ret);
             return ret;
@@ -2649,7 +2653,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(const InnerBundleInfo &i
                 LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", moduleHnpsPath.c_str());
             }
         }
-        isHnpInstalled_ = true;
     }
     return ERR_OK;
 }
@@ -2743,10 +2746,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     }
 
     ScopeGuard bundleGuard([&] {
-        if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
-            Constants::INITIAL_APP_INDEX)) {
-            RemoveBundleAndDataDir(info, false);
-        }
+        RemoveBundleAndDataDir(info, dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+            Constants::INITIAL_APP_INDEX));
     });
     std::string modulePath = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_;
     result = ExtractModule(info, modulePath);
@@ -5009,6 +5010,10 @@ void BaseBundleInstaller::CheckInstallAllowDowngrade(
     if ((result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) || oldBundleInfo.IsSystemApp()) {
         return;
     }
+    if ((oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_NONE) &&
+        (oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY)) {
+        return;
+    }
     auto item = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE);
     if ((item == installParam.parameters.end()) || (item->second != ServiceConstants::BMS_TRUE)) {
         return;
@@ -6354,6 +6359,10 @@ ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::stri
         if (info.second.IsOnlyCreateBundleUser()) {
             continue;
         }
+        if (info.second.GetCurModuleName() == MODULE_NAME_IS_LIBS) {
+            LOG_W(BMS_TAG_INSTALLER, "no rename libs module dir again");
+            continue;
+        }
         if ((ret = RenameModuleDir(info.second)) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "rename dir failed");
             break;
@@ -6614,7 +6623,11 @@ ErrCode BaseBundleInstaller::FinalProcessHapAndSoForBundleUpdate(
         // move so file from temp dir to real installation dir
         LOG_NOFUNC_I(BMS_TAG_INSTALLER, "-n %{public}s process so start", bundleName.c_str());
         std::string nativeLibraryPath = "";
+        bool hasModuleNameIsLibs = false;
         for (const auto &info : infos) {
+            if (info.second.GetCurModuleName() == MODULE_NAME_IS_LIBS) {
+                hasModuleNameIsLibs = true;
+            }
             if (info.second.GetNativeLibraryPath().empty() ||
                 info.second.IsLibIsolated(info.second.GetCurModuleName()) ||
                 !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
@@ -6626,6 +6639,17 @@ ErrCode BaseBundleInstaller::FinalProcessHapAndSoForBundleUpdate(
         }
         // delete old native library path
         DeleteOldNativeLibraryPath();
+        // if has libs modulename, must rename module dir before rename so dir
+        if (hasModuleNameIsLibs) {
+            std::string libsModuleDir = std::string(Constants::BUNDLE_CODE_DIR) +
+                ServiceConstants::PATH_SEPARATOR + bundleName + MODULE_DIR_IS_LIBS;
+            std::string renameDir = libsModuleDir + ServiceConstants::TMP_SUFFIX;
+            result = InstalldClient::GetInstance()->RenameModuleDir(renameDir, libsModuleDir);
+            if (result != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "rename libs module dir failed, error is %{public}d", result);
+                return result;
+            }
+        }
         if (!nativeLibraryPath.empty()) {
             std::string realSoDir = GetRealSoPath(bundleName, nativeLibraryPath, false);
             InstalldClient::GetInstance()->CreateBundleDir(realSoDir);
@@ -6652,7 +6676,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
     }
     std::string bundleName = infos.begin()->second.GetBundleName();
     if (needDeleteOldLibraryPath) {
-        // first delete libs_tmp dir, make sure is empty
+        // first delete libs+tmp dir, make sure is empty
         std::string tempSoDir;
         tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
             .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(LIBS_TMP);
@@ -8174,9 +8198,8 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     }
     // process plugin dir
     result = ProcessPluginFilesWhenUpdate(oldInfo, oldAppCodePath, realAppCodePath);
-    if (result != ERR_OK) {
-        APP_LOGE("copy plugin file to install path failed %{public}d", result);
-    }
+    CHECK_RESULT(result, "copy plugin file to install path failed %{public}d");
+
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "ProcessBundleCodePath end -n %{public}s", bundleName.c_str());
     return ERR_OK;
 }

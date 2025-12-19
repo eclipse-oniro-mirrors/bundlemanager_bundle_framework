@@ -5470,6 +5470,10 @@ bool InnerBundleInfo::ConvertPluginBundleInfo(const std::string &bundleName,
     for (const auto &item : baseAbilityInfos_) {
         pluginBundleInfo.abilityInfos.try_emplace(item.first, InnerAbilityInfo::ConvertToAbilityInfo(item.second));
     }
+    for (const auto &item : baseExtensionInfos_) {
+        pluginBundleInfo.extensionInfos.try_emplace(
+            item.first, InnerExtensionInfo::ConvertToExtensionInfo(item.second));
+    }
     pluginBundleInfo.appInfo = *baseApplicationInfo_;
     pluginBundleInfo.appInfo.arkTSMode = GetApplicationArkTSMode();
     for (const auto &info : innerModuleInfos_) {
@@ -5831,6 +5835,25 @@ bool InnerBundleInfo::isAbilityNameExist(const std::string &moduleName, const st
     }
     APP_LOGE("bundleName: %{public}s not find moduleName:%{public}s, abilityName:%{public}s",
         GetBundleName().c_str(), moduleName.c_str(), abilityName.c_str());
+    return false;
+}
+
+bool InnerBundleInfo::GetPluginBundleInfoByName(const int32_t userId, const std::string pluginBundleName,
+    PluginBundleInfo &pluginBundleInfo) const
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        APP_LOGD("can not find userId %{public}d when GetPluginBundleInfoByName", userId);
+        return false;
+    }
+    auto item = innerBundleUserInfo.installedPluginSet.find(pluginBundleName);
+    if (item != innerBundleUserInfo.installedPluginSet.end()) {
+        auto it = pluginBundleInfos_.find(pluginBundleName);
+        if (it != pluginBundleInfos_.end()) {
+            pluginBundleInfo = it->second;
+            return true;
+        }
+    }
     return false;
 }
 }  // namespace AppExecFwk

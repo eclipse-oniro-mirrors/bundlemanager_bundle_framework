@@ -1277,9 +1277,9 @@ public:
 
     virtual ErrCode GetPluginInfosForSelf(std::vector<PluginBundleInfo> &pluginBundleInfos) override;
 
-    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
+    virtual ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
 
-    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback) override;
+    virtual ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback) override;
 
     virtual ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex,
         std::string &dataDir) override;
@@ -1343,6 +1343,8 @@ public:
     virtual ErrCode GetAllJsonProfile(ProfileType profileType, int32_t userId,
         std::vector<JsonProfileInfo> &profileInfos) override;
 
+    virtual ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
+        const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

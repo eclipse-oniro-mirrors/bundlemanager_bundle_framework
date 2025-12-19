@@ -25,6 +25,7 @@
 #include "bundle_hitrace_chain.h"
 #include "bundle_mgr_service.h"
 #include "bundle_resource_helper.h"
+#include "bundle_util.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -467,6 +468,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
         (void)newBundleDirMgr->DeleteUserId(userId);
     }
     HandleNotifyBundleEventsAsync();
+    (void)BundleUtil::DeleteReSignatureCertForRemoveUser(userId);
     APP_LOGI("RemoveUser end userId: (%{public}d)", userId);
     return ERR_OK;
 }

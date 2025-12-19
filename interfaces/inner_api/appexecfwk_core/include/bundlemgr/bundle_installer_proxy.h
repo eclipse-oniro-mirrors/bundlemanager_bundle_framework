@@ -140,6 +140,16 @@ public:
 
     virtual ErrCode InstallExisted(const std::string &bundleName, int32_t userId) override;
 
+    virtual ErrCode InstallEnterpriseReSignatureCert(const std::string &certAlias, int32_t fd, int32_t userId) override;
+
+    virtual ErrCode CreateEnterpriseCertStream(const std::string &certAlias, int32_t userId, int32_t& fd) override;
+
+    virtual ErrCode EnableKeyForEnterpriseResign(const std::string &certAlias, int32_t userId, int32_t fd) override;
+
+    virtual ErrCode UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId) override;
+
+    virtual ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias) override;
+
 private:
     bool SendInstallRequest(BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply,
         MessageOption& option);
@@ -169,6 +179,8 @@ private:
         const InstallParam &installParam);
 
     ErrCode GetFileNameByFilePath(const std::string &filePath, std::string &fileName);
+
+    ErrCode SendCertFile(int32_t inputFd, int32_t outputFd);
 
     ErrCode SendInstallRequestWithErrCode(BundleInstallerInterfaceCode code, MessageParcel& data,
         MessageParcel& reply, MessageOption& option);

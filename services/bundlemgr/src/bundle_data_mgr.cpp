@@ -82,6 +82,7 @@ namespace {
 constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
 constexpr int8_t DATA_GROUP_INDEX_START = 1;
 constexpr int8_t PROFILE_PREFIX_LENGTH = 9;
+constexpr int32_t MAX_PLUGIN_CALLBACK_SIZE = 256;
 constexpr uint16_t UUID_LENGTH_MAX = 512;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 // freeInstall action
@@ -111,7 +112,6 @@ constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* RESOURCE_STRING_PREFIX = "$string:";
-constexpr const char* MEDIALIBRARYDATA = "com.ohos.medialibrary.medialibrarydata";
 constexpr const char* EMPTY_STRING = "";
 constexpr const char* SHORTCUT_OPERATION_CREATE = "ADD";
 constexpr const char* SHORTCUT_OPERATION_DELETE = "DEL";
@@ -4518,6 +4518,8 @@ int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName, int32_t userId) const
 {
     int64_t spaceSize = 0;
+    int64_t bundleDataSize = 0;
+    int64_t localBundleDataSize = 0;
     if (userId != Constants::ALL_USERID) {
         std::vector<int64_t> bundleStats;
         if (!GetBundleStats(bundleName, userId, bundleStats) || bundleStats.empty()) {
@@ -4525,7 +4527,9 @@ int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName, int32_t
             return spaceSize;
         }
 
-        spaceSize = std::accumulate(bundleStats.begin(), bundleStats.end(), spaceSize);
+        bundleDataSize = bundleStats[0];
+        localBundleDataSize = bundleStats[1];
+        spaceSize = bundleDataSize + localBundleDataSize;
         return spaceSize;
     }
 
@@ -4536,12 +4540,12 @@ int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName, int32_t
             continue;
         }
 
-        auto startIter = bundleStats.begin();
-        auto endIter = bundleStats.end();
+        bundleDataSize = bundleStats[0];
+        localBundleDataSize = bundleStats[1];
         if (spaceSize == 0) {
-            spaceSize = std::accumulate(startIter, endIter, spaceSize);
+            spaceSize = bundleDataSize + localBundleDataSize;
         } else {
-            spaceSize = std::accumulate(++startIter, endIter, spaceSize);
+            spaceSize += localBundleDataSize;
         }
     }
 
@@ -5512,19 +5516,17 @@ ErrCode BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &
             return ERR_OK;
         }
     }
-
-    for (int32_t i = baseAppUid_; i < bundleIdMap_.rbegin()->first; ++i) {
-        if (bundleIdMap_.find(i) == bundleIdMap_.end()) {
-            APP_LOGD("the %{public}d app install bundleName:%{public}s", i, bundleName.c_str());
-            bundleId = i;
-            bundleIdMap_.emplace(bundleId, bundleName);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
-            return ERR_OK;
-        }
-    }
-
     if (bundleIdMap_.rbegin()->first == MAX_APP_UID) {
+        for (int32_t i = baseAppUid_; i < bundleIdMap_.rbegin()->first; ++i) {
+            if (bundleIdMap_.find(i) == bundleIdMap_.end()) {
+                APP_LOGD("the %{public}d app install bundleName:%{public}s", i, bundleName.c_str());
+                bundleId = i;
+                bundleIdMap_.emplace(bundleId, bundleName);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
+                return ERR_OK;
+            }
+        }
         APP_LOGW("the bundleId exceeding the maximum value, bundleName:%{public}s", bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER;
     }
@@ -9776,16 +9778,10 @@ void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
     dirs.emplace_back(parentDir + ServiceConstants::DATABASE + bundleNameDir);
     for (const std::string &dir : dirs) {
         uint32_t mode = S_IRWXU;
-        int32_t gid = el5Param.uid;
         if (dir.find(ServiceConstants::DATABASE) != std::string::npos) {
-            if (el5Param.bundleName == MEDIALIBRARYDATA) {
-                mode = S_IRWXU | S_IRWXG | S_ISGID;
-                gid = ServiceConstants::DATABASE_DIR_GID;
-            } else {
-                mode = S_IRWXU | S_IRWXG;
-            }
+            mode = S_IRWXU | S_IRWXG;
         }
-        if (InstalldClient::GetInstance()->Mkdir(dir, mode, el5Param.uid, gid) != ERR_OK) {
+        if (InstalldClient::GetInstance()->Mkdir(dir, mode, el5Param.uid, el5Param.uid) != ERR_OK) {
             LOG_NOFUNC_W(BMS_TAG_INSTALLER, "create el5 dir %{public}s failed", dir.c_str());
         }
         ErrCode result = InstalldClient::GetInstance()->SetDirApl(
@@ -11543,7 +11539,7 @@ ErrCode BundleDataMgr::GetPluginHapModuleInfo(const std::string &hostBundleName,
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback,
+ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback,
     const std::string callingBundleName)
 {
     if (pluginEventCallback == nullptr) {
@@ -11553,19 +11549,25 @@ ErrCode BundleDataMgr::RegisterPluginEventCallback(const sptr<IBundleEventCallba
     std::lock_guard lock(pluginCallbackMutex_);
     if (pluginEventCallback->AsObject() != nullptr) {
         sptr<BundleEventCallbackDeathRecipient> deathRecipient =
-            new (std::nothrow) BundleEventCallbackDeathRecipient();
+            new (std::nothrow) BundleEventCallbackDeathRecipient(callingBundleName);
         if (deathRecipient == nullptr) {
             APP_LOGW("deathRecipient is null");
             return ERR_APPEXECFWK_NULL_PTR;
         }
         pluginEventCallback->AsObject()->AddDeathRecipient(deathRecipient);
     }
-    pluginCallbackMap_[callingBundleName].emplace_back(pluginEventCallback);
+
+    auto &callbackList = pluginCallbackMap_[callingBundleName];
+    if (callbackList.size() >= MAX_PLUGIN_CALLBACK_SIZE) {
+        APP_LOGE("plugin callback list size exceeds limit for %{public}s", callingBundleName.c_str());
+        return ERR_APPEXECFWK_PLUGIN_CALLBACK_LIST_FULL;
+    }
+    callbackList.emplace_back(pluginEventCallback);
     APP_LOGI("success");
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback,
+ErrCode BundleDataMgr::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback,
     const std::string &callingBundleName)
 {
     if (pluginEventCallback == nullptr) {
@@ -12434,6 +12436,34 @@ ErrCode BundleDataMgr::GetAllJsonProfile(ProfileType profileType, int32_t userId
         profileInfo.moduleName = data.moduleName;
         profileInfo.profile = std::move(profile);
         profileInfos.emplace_back(std::move(profileInfo));
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetPluginExtensionInfo(
+    const std::string &hostBundleName, const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo)
+{
+    std::string pluginBundleName = want.GetElement().GetBundleName();
+    std::string pluginAbilityName = want.GetElement().GetAbilityName();
+    std::string pluginModuleName = want.GetElement().GetModuleName();
+    APP_LOGD("bundleName:%{public}s start GetPluginAbilityInfo, plugin:%{public}s, abilityName:%{public}s",
+        hostBundleName.c_str(), pluginBundleName.c_str(), pluginAbilityName.c_str());
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(hostBundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", hostBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    PluginBundleInfo pluginInfo;
+    if (!item->second.GetPluginBundleInfoByName(userId, pluginBundleName, pluginInfo)) {
+        APP_LOGE("bundleName: %{public}s can not find plugin: %{public}s",
+            hostBundleName.c_str(), pluginBundleName.c_str());
+        return ERR_APPEXECFWK_PLUGIN_NOT_FOUND;
+    }
+    if (!pluginInfo.GetExtensionInfoByName(pluginAbilityName, pluginModuleName, extensionInfo)) {
+        APP_LOGE("plugin: %{public}s can not find ability: %{public}s module: %{public}s",
+            pluginBundleName.c_str(), pluginAbilityName.c_str(), pluginModuleName.c_str());
+        return ERR_APPEXECFWK_PLUGIN_ABILITY_NOT_FOUND;
     }
     return ERR_OK;
 }

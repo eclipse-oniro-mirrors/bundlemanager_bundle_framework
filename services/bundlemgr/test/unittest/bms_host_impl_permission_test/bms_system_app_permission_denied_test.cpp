@@ -1140,4 +1140,22 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleResourceHostImpl_0010, TestSize
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 #endif
+
+/**
+ * @tc.number: GetPluginExtensionInfo_0001
+ * @tc.name: GetPluginExtensionInfo
+ * @tc.desc: GetPluginExtensionInfo SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, GetPluginExtensionInfo_0001, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+
+    std::string hostBundleName = "com.example.host"; // Example host bundle name
+    Want want;
+    int32_t userId = 0; // Example user ID
+    ExtensionAbilityInfo extensionInfo;
+    auto ret = localBundleMgrHostImpl->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
 }  // namespace OHOS

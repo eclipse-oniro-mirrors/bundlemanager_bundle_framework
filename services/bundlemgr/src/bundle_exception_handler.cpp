@@ -19,6 +19,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+    const std::vector<std::string> KEEP_DATA = {};
+}
 BundleExceptionHandler::BundleExceptionHandler(const std::shared_ptr<IBundleDataStorage> &dataStorage)
     : dataStorage_(dataStorage)
 {
@@ -90,6 +93,13 @@ bool BundleExceptionHandler::RemoveBundleAndDataDir(const std::string &bundleDir
     if (result != ERR_OK) {
         APP_LOGE("fail to remove bundle dir %{public}s, error is %{public}d", bundleDir.c_str(), result);
         return false;
+    }
+
+    for (const auto &bundle : KEEP_DATA) {
+        if (bundleDir.find(bundle) != std::string::npos) {
+            APP_LOGW("%{public}s need keep data", bundle.c_str());
+            return true;
+        }
     }
 
     if (bundleOrModuleDir.find(ServiceConstants::HAPS) != std::string::npos) {

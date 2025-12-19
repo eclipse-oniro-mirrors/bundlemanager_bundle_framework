@@ -247,6 +247,26 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
 
 };
 }
+
+class AutoHandleScope {
+public:
+    explicit AutoHandleScope(napi_env env) : env_(env), scope_(nullptr)
+    {
+        if (env_ != nullptr) {
+            napi_open_handle_scope(env_, &scope_);
+        }
+    }
+    ~AutoHandleScope()
+    {
+        if (env_ != nullptr && scope_ != nullptr) {
+            napi_close_handle_scope(env_, scope_);
+        }
+    }
+private:
+    napi_env env_;
+    napi_handle_scope scope_;
+};
+
 using Want = OHOS::AAFwk::Want;
 
 sptr<IBundleMgr> CommonFunc::bundleMgr_ = nullptr;
@@ -578,6 +598,7 @@ napi_value CommonFunc::ParseStringArray(napi_env env, std::vector<std::string> &
 
 void CommonFunc::ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &want)
 {
+    AutoHandleScope scopeGuard(env);
     ElementName elementName = want.GetElement();
     napi_value nbundleName;
     NAPI_CALL_RETURN_VOID(
@@ -665,7 +686,7 @@ bool CommonFunc::ParseBundleOption(napi_env env, napi_value value, BundleOptionI
     prop = nullptr;
     napi_get_named_property(env, value, APP_INDEX, &prop);
     if (!CommonFunc::ParseInt(env, prop, option.appIndex)) {
-        option.appIndex = -1;
+        option.appIndex = 0;
     }
 
     prop = nullptr;
@@ -757,6 +778,7 @@ bool CommonFunc::ParseElementName(napi_env env, napi_value args, ElementName &el
 void CommonFunc::ConvertElementName(napi_env env, napi_value elementInfo,
     const OHOS::AppExecFwk::ElementName &elementName)
 {
+    AutoHandleScope scopeGuard(env);
     // wrap deviceId
     napi_value deviceId;
     NAPI_CALL_RETURN_VOID(
@@ -956,6 +978,7 @@ bool CommonFunc::ParseWantWithoutVerification(napi_env env, napi_value args, Wan
 
 void CommonFunc::ConvertWindowSize(napi_env env, const AbilityInfo &abilityInfo, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nMaxWindowRatio;
     NAPI_CALL_RETURN_VOID(env, napi_create_double(env, abilityInfo.maxWindowRatio, &nMaxWindowRatio));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "maxWindowRatio", nMaxWindowRatio));
@@ -983,6 +1006,7 @@ void CommonFunc::ConvertWindowSize(napi_env env, const AbilityInfo &abilityInfo,
 
 void CommonFunc::ConvertMetadata(napi_env env, const Metadata &metadata, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nValueId;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, metadata.valueId, &nValueId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "valueId", nValueId));
@@ -1002,6 +1026,7 @@ void CommonFunc::ConvertMetadata(napi_env env, const Metadata &metadata, napi_va
 
 void CommonFunc::ConvertAbilityInfos(napi_env env, const std::vector<AbilityInfo> &abilityInfos, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     for (size_t index = 0; index < abilityInfos.size(); ++index) {
         napi_value objAbilityInfo = nullptr;
         napi_create_object(env, &objAbilityInfo);
@@ -1012,6 +1037,7 @@ void CommonFunc::ConvertAbilityInfos(napi_env env, const std::vector<AbilityInfo
 
 void CommonFunc::ConvertAbilitySkillUri(napi_env env, const SkillUri &skillUri, napi_value value, bool isExtension)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nScheme;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillUri.scheme.c_str(), NAPI_AUTO_LENGTH, &nScheme));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "scheme", nScheme));
@@ -1060,6 +1086,7 @@ void CommonFunc::ConvertAbilitySkillUri(napi_env env, const SkillUri &skillUri, 
 
 void CommonFunc::ConvertAbilitySkill(napi_env env, const Skill &skill, napi_value value, bool isExtension)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nActions;
     size_t size = skill.actions.size();
     NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nActions));
@@ -1103,6 +1130,7 @@ void CommonFunc::ConvertAbilitySkill(napi_env env, const Skill &skill, napi_valu
 
 void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo, napi_value objAbilityInfo)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, abilityInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
@@ -1268,6 +1296,7 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
 void CommonFunc::ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbilityInfo> &extensionInfos,
     napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     for (size_t index = 0; index < extensionInfos.size(); ++index) {
         napi_value objExtensionInfo = nullptr;
         napi_create_object(env, &objExtensionInfo);
@@ -1278,6 +1307,7 @@ void CommonFunc::ConvertExtensionInfos(napi_env env, const std::vector<Extension
 
 void CommonFunc::ConvertStringArrays(napi_env env, const std::vector<std::string> &strs, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     for (size_t index = 0; index < strs.size(); ++index) {
         napi_value nStr;
         NAPI_CALL_RETURN_VOID(
@@ -1288,6 +1318,7 @@ void CommonFunc::ConvertStringArrays(napi_env env, const std::vector<std::string
 
 void CommonFunc::ConvertValidity(napi_env env, const Validity &validity, napi_value objValidity)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value notBefore;
     NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, validity.notBefore, &notBefore));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objValidity, "notBefore", notBefore));
@@ -1300,6 +1331,7 @@ void CommonFunc::ConvertValidity(napi_env env, const Validity &validity, napi_va
 void CommonFunc::SetStringProperty(napi_env env, napi_value obj,
     const std::string& value, const char* propName)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value napiValue;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, value.c_str(), NAPI_AUTO_LENGTH, &napiValue));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, obj, propName, napiValue));
@@ -1308,6 +1340,7 @@ void CommonFunc::SetStringProperty(napi_env env, napi_value obj,
 void CommonFunc::SetUint32Property(napi_env env, napi_value obj,
     uint32_t value, const char* propName)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value napiValue;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, value, &napiValue));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, obj, propName, napiValue));
@@ -1316,6 +1349,7 @@ void CommonFunc::SetUint32Property(napi_env env, napi_value obj,
 void CommonFunc::ConvertAppProvisionInfo(
     napi_env env, const AppProvisionInfo &appProvisionInfo, napi_value objAppProvisionInfo)
 {
+    AutoHandleScope scopeGuard(env);
     SetUint32Property(env, objAppProvisionInfo, appProvisionInfo.versionCode, "versionCode");
 
     SetStringProperty(env, objAppProvisionInfo, appProvisionInfo.versionName, "versionName");
@@ -1349,6 +1383,7 @@ void CommonFunc::ConvertAppProvisionInfo(
 void CommonFunc::ConvertAllAppProvisionInfo(napi_env env,
     const std::vector<AppProvisionInfo> &appProvisionInfos, napi_value objAppProvisionInfo)
 {
+    AutoHandleScope scopeGuard(env);
     if (appProvisionInfos.empty()) {
         APP_LOGD("appProvisionInfos is empty");
         return;
@@ -1366,6 +1401,7 @@ void CommonFunc::ConvertAllAppProvisionInfo(napi_env env,
 void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo,
     napi_value objExtensionInfo)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, extensionInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
@@ -1476,6 +1512,7 @@ void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &
 
 void CommonFunc::ConvertResource(napi_env env, const Resource &resource, napi_value objResource)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, resource.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
@@ -1493,6 +1530,7 @@ void CommonFunc::ConvertResource(napi_env env, const Resource &resource, napi_va
 
 void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const ApplicationInfo &appInfo)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, NAME, nName));
@@ -1684,6 +1722,7 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
 
 void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nPermissionName;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, permissionDef.permissionName.c_str(), NAPI_AUTO_LENGTH, &nPermissionName));
@@ -1705,6 +1744,7 @@ void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const Per
 void CommonFunc::ConvertRequestPermissionUsedScene(napi_env env,
     const RequestPermissionUsedScene &requestPermissionUsedScene, napi_value result)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nAbilities;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nAbilities));
     for (size_t index = 0; index < requestPermissionUsedScene.abilities.size(); index++) {
@@ -1724,6 +1764,7 @@ void CommonFunc::ConvertRequestPermissionUsedScene(napi_env env,
 
 void CommonFunc::ConvertRequestPermission(napi_env env, const RequestPermission &requestPermission, napi_value result)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nPermissionName;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, requestPermission.name.c_str(), NAPI_AUTO_LENGTH, &nPermissionName));
@@ -1751,6 +1792,7 @@ void CommonFunc::ConvertRequestPermission(napi_env env, const RequestPermission 
 
 void CommonFunc::ConvertPreloadItem(napi_env env, const PreloadItem &preloadItem, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nModuleName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env,
         preloadItem.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
@@ -1759,6 +1801,7 @@ void CommonFunc::ConvertPreloadItem(napi_env env, const PreloadItem &preloadItem
 
 void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInfo, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nAppId;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, signatureInfo.appId.c_str(), NAPI_AUTO_LENGTH, &nAppId));
@@ -1782,6 +1825,7 @@ void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatu
 
 void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, NAME, nName));
@@ -1939,6 +1983,7 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
 
 void CommonFunc::ConvertRouterItem(napi_env env, const RouterItem &routerItem, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
         env, routerItem.name.c_str(), NAPI_AUTO_LENGTH, &nName));
@@ -1968,6 +2013,7 @@ void CommonFunc::ConvertRouterItem(napi_env env, const RouterItem &routerItem, n
 void CommonFunc::ConvertRouterDataInfos(napi_env env,
     const std::map<std::string, std::string> &data, napi_value objInfos)
 {
+    AutoHandleScope scopeGuard(env);
     size_t index = 0;
     for (const auto &item : data) {
         napi_value objInfo = nullptr;
@@ -1989,6 +2035,7 @@ void CommonFunc::ConvertRouterDataInfos(napi_env env,
 
 void CommonFunc::ConvertDependency(napi_env env, const Dependency &dependency, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
         env, dependency.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
@@ -2006,6 +2053,7 @@ void CommonFunc::ConvertDependency(napi_env env, const Dependency &dependency, n
 
 void CommonFunc::ConvertPluginBundleInfo(napi_env env, const PluginBundleInfo &pluginBundleInfo, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nIconId;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, pluginBundleInfo.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "iconId", nIconId));
@@ -2052,6 +2100,7 @@ void CommonFunc::ConvertPluginBundleInfo(napi_env env, const PluginBundleInfo &p
 
 void CommonFunc::ConvertPluginModuleInfo(napi_env env, const PluginModuleInfo &pluginModuleInfo, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nDescriptionId;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, pluginModuleInfo.descriptionId, &nDescriptionId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "descriptionId", nDescriptionId));
@@ -2069,6 +2118,7 @@ void CommonFunc::ConvertPluginModuleInfo(napi_env env, const PluginModuleInfo &p
 
 void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, bundleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, NAME, nName));
@@ -2178,6 +2228,7 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
 void CommonFunc::ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
     int32_t userId, int32_t appIndex, napi_value bundleChangeInfo)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, bundleChangeInfo, "bundleName", nBundleName));
@@ -2194,6 +2245,7 @@ void CommonFunc::ConvertBundleChangeInfo(napi_env env, const std::string &bundle
 void CommonFunc::ConvertLauncherAbilityInfo(napi_env env,
     const LauncherAbilityInfo &launcherAbility, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     // wrap labelId
     napi_value labelId;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, launcherAbility.labelId, &labelId));
@@ -2230,6 +2282,7 @@ void CommonFunc::ConvertLauncherAbilityInfo(napi_env env,
 void CommonFunc::ConvertLauncherAbilityInfos(napi_env env,
     const std::vector<LauncherAbilityInfo> &launcherAbilities, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     if (launcherAbilities.empty()) {
         return;
     }
@@ -2246,6 +2299,7 @@ void CommonFunc::ConvertLauncherAbilityInfos(napi_env env,
 void CommonFunc::ConvertShortcutIntent(napi_env env,
     const OHOS::AppExecFwk::ShortcutIntent &shortcutIntent, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nTargetBundle;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, shortcutIntent.targetBundle.c_str(), NAPI_AUTO_LENGTH, &nTargetBundle));
@@ -2270,6 +2324,7 @@ void CommonFunc::ConvertShortcutIntent(napi_env env,
 void CommonFunc::ConvertParameters(napi_env env,
     const std::map<std::string, std::string> &data, napi_value objInfos)
 {
+    AutoHandleScope scopeGuard(env);
     size_t index = 0;
     for (const auto &item : data) {
         napi_value objInfo = nullptr;
@@ -2291,6 +2346,7 @@ void CommonFunc::ConvertParameters(napi_env env,
 
 void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutInfo, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     // wrap id
     napi_value shortId;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, shortcutInfo.id.c_str(), NAPI_AUTO_LENGTH, &shortId));
@@ -2353,6 +2409,7 @@ void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutI
 
 void CommonFunc::ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     if (shortcutInfos.empty()) {
         return;
     }
@@ -2369,6 +2426,7 @@ void CommonFunc::ConvertShortCutInfos(napi_env env, const std::vector<ShortcutIn
 void CommonFunc::ConvertOverlayModuleInfo(napi_env env, const OverlayModuleInfo &info,
     napi_value objOverlayModuleInfo)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, info.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
@@ -2404,6 +2462,7 @@ void CommonFunc::ConvertOverlayModuleInfo(napi_env env, const OverlayModuleInfo 
 void CommonFunc::ConvertOverlayModuleInfos(napi_env env, const std::vector<OverlayModuleInfo> &Infos,
     napi_value objInfos)
 {
+    AutoHandleScope scopeGuard(env);
     for (size_t index = 0; index < Infos.size(); ++index) {
         napi_value objInfo = nullptr;
         napi_create_object(env, &objInfo);
@@ -2415,6 +2474,7 @@ void CommonFunc::ConvertOverlayModuleInfos(napi_env env, const std::vector<Overl
 void CommonFunc::ConvertModuleMetaInfos(napi_env env,
     const std::map<std::string, std::vector<Metadata>> &metadata, napi_value objInfos)
 {
+    AutoHandleScope scopeGuard(env);
     size_t index = 0;
     for (const auto &item : metadata) {
         napi_value objInfo = nullptr;
@@ -2455,6 +2515,7 @@ std::string CommonFunc::ObtainCallingBundleName()
 
 void CommonFunc::ConvertSharedModuleInfo(napi_env env, napi_value value, const SharedModuleInfo &moduleInfo)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
         env, moduleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
@@ -2481,6 +2542,7 @@ void CommonFunc::ConvertSharedModuleInfo(napi_env env, napi_value value, const S
 
 void CommonFunc::ConvertSharedBundleInfo(napi_env env, napi_value value, const SharedBundleInfo &bundleInfo)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
         env, bundleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
@@ -2506,6 +2568,7 @@ void CommonFunc::ConvertSharedBundleInfo(napi_env env, napi_value value, const S
 void CommonFunc::ConvertAllSharedBundleInfo(napi_env env, napi_value value,
     const std::vector<SharedBundleInfo> &sharedBundles)
 {
+    AutoHandleScope scopeGuard(env);
     if (sharedBundles.empty()) {
         APP_LOGD("sharedBundles is empty");
         return;
@@ -2523,6 +2586,7 @@ void CommonFunc::ConvertAllSharedBundleInfo(napi_env env, napi_value value,
 void CommonFunc::ConvertRecoverableApplicationInfo(
     napi_env env, napi_value value, const RecoverableApplicationInfo &recoverableApplication)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
         env, recoverableApplication.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
@@ -2564,6 +2628,7 @@ void CommonFunc::ConvertRecoverableApplicationInfo(
 void CommonFunc::ConvertRecoverableApplicationInfos(napi_env env, napi_value value,
     const std::vector<RecoverableApplicationInfo> &recoverableApplications)
 {
+    AutoHandleScope scopeGuard(env);
     if (recoverableApplications.empty()) {
         APP_LOGD("recoverableApplications is empty");
         return;
@@ -2809,6 +2874,7 @@ bool CommonFunc::ParseParameterItem(napi_env env, napi_value param, std::string 
 
 void CommonFunc::ConvertDynamicIconInfo(napi_env env, const DynamicIconInfo &dynamicIconInfo, napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, dynamicIconInfo.bundleName.c_str(),
         NAPI_AUTO_LENGTH, &nBundleName));
@@ -2831,6 +2897,7 @@ void CommonFunc::ConvertDynamicIconInfo(napi_env env, const DynamicIconInfo &dyn
 void CommonFunc::ConvertDynamicIconInfos(napi_env env, const std::vector<DynamicIconInfo> &dynamicIconInfos,
     napi_value value)
 {
+    AutoHandleScope scopeGuard(env);
     for (size_t index = 0; index < dynamicIconInfos.size(); ++index) {
         napi_value objInfo = nullptr;
         napi_create_object(env, &objInfo);
@@ -2842,6 +2909,7 @@ void CommonFunc::ConvertDynamicIconInfos(napi_env env, const std::vector<Dynamic
 void CommonFunc::ConvertAppCloneIdentity(
     napi_env env, const std::string &bundleName, int32_t appIndex, napi_value nAppCloneIdentity)
 {
+    AutoHandleScope scopeGuard(env);
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nAppCloneIdentity, BUNDLE_NAME, nBundleName));
