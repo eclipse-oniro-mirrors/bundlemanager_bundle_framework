@@ -313,7 +313,7 @@ ErrCode InstalldHostImpl::RemoveSignProfile(const std::string &bundleName)
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+ErrCode InstalldHostImpl::AddCertAndEnableKey(const std::string &certPath, const std::string &certContent)
 {
     return ERR_OK;
 }

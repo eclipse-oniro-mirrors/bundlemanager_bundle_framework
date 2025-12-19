@@ -1659,22 +1659,21 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveSignProfile_0200, Te
 }
 
 /**
- * @tc.number: BmsInstalldClientTest_EnableKeyForEnterpriseResign_0100
- * @tc.name: EnableKeyForEnterpriseResign
- * @tc.desc: call EnableKeyForEnterpriseResign.
+ * @tc.number: BmsInstalldClientTest_AddCertAndEnableKey_0100
+ * @tc.name: AddCertAndEnableKey
+ * @tc.desc: call AddCertAndEnableKey.
  */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_EnableKeyForEnterpriseResign_0100, TestSize.Level1)
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_AddCertAndEnableKey_0100, TestSize.Level1)
 {
     ASSERT_NE(installClient_, nullptr);
 
-    unsigned char *cert = new unsigned char[10];
-    int32_t certLen = 10;
-    ErrCode result = installClient_->EnableKeyForEnterpriseResign(cert, certLen);
+    std::string certPath = "cert/path";
+    std::string certContent = "cert.content";
+    ErrCode result = installClient_->AddCertAndEnableKey(certPath, certContent);
     EXPECT_NE(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    result = installClient_->EnableKeyForEnterpriseResign(cert, 0);
+    result = installClient_->AddCertAndEnableKey(certPath, "");
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    delete[] cert;
-    result = installClient_->EnableKeyForEnterpriseResign(nullptr, certLen);
+    result = installClient_->AddCertAndEnableKey("", certContent);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

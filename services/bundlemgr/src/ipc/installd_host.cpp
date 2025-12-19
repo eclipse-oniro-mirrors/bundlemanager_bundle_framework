@@ -201,8 +201,8 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_SIGN_PROFILE):
             result = this->HandRemoveSignProfile(data, reply);
             break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::ENABLE_KEY_FOR_ENTERPRISE_RESIGN):
-            result = this->HandleEnableKeyForEnterpriseResign(data, reply);
+        case static_cast<uint32_t>(InstalldInterfaceCode::ADD_CERT_AND_ENABLE_KEY):
+            result = this->HandleAddCertAndEnableKey(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_VECTOR):
             result = this->HandleCreateBundleDataDirWithVector(data, reply);
@@ -1012,25 +1012,26 @@ bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &rep
     return true;
 }
 
-bool InstalldHost::HandleEnableKeyForEnterpriseResign(MessageParcel &data, MessageParcel &reply)
+bool InstalldHost::HandleAddCertAndEnableKey(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t certLength = data.ReadInt32();
-    if (certLength <= 0 || certLength > Constants::MAX_PARCEL_CAPACITY) {
+    std::string certPath = Str16ToStr8(data.ReadString16());
+    size_t dataSize = data.ReadUint32();
+    if (dataSize == 0) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
-    auto dataInfo = data.ReadRawData(certLength);
-    if (!dataInfo) {
-        LOG_E(BMS_TAG_INSTALLD, "readRawData failed");
+    const char *content = reinterpret_cast<const char *>(data.ReadRawData(dataSize));
+    if (!content) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
-    const unsigned char *cert = reinterpret_cast<const unsigned char *>(dataInfo);
-    if (cert == nullptr) {
+    std::string certContent = content;
+    if (certPath.empty() || certContent.empty() || certPath.size() > Constants::BMS_MAX_PATH_LENGTH ||
+        certContent.size() > Constants::CAPACITY_SIZE) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
-    ErrCode result = EnableKeyForEnterpriseResign(cert, certLength);
+    ErrCode result = AddCertAndEnableKey(certPath, certContent);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
