@@ -148,7 +148,7 @@ const int32_t THRESHOLD_VAL_LEN = 20;
 #endif // QUOTA_PARAM_SET_ENABLE
 const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 #endif // STORAGE_SERVICE_ENABLE
-const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 200;
+const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 1024;
 
 void MoveTempPath(const std::vector<std::string> &fromPaths,
     const std::string &bundleName, std::vector<std::string> &toPaths)
