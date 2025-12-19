@@ -98,6 +98,8 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
         result == ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID ||
         result == ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED) &&
         DeleteUninstalledCloneData(bundleName, userId, appIndex)) {
+        SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, userId, appIndex,
+            false, false, InstallScene::NORMAL, ERR_OK);
         return ERR_OK;
     }
     
@@ -603,6 +605,7 @@ void BundleCloneInstaller::SendBundleSystemEvent(const std::string &bundleName, 
     sysEventInfo.callingUid = IPCSkeleton::GetCallingUid();
     sysEventInfo.versionCode = versionCode_;
     sysEventInfo.preBundleScene = preBundleScene;
+    sysEventInfo.isKeepData = isKeepData_;
     GetCallingEventInfo(sysEventInfo);
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
 }
