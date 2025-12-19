@@ -13291,12 +13291,14 @@ HWTEST_F(BmsBundleInstallerTest, ProcessPluginFilesWhenUpdate_0010, Function | M
 HWTEST_F(BmsBundleInstallerTest, GetHapFlags_0100, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    unsigned int ret = impl.GetHapFlags(true, true, true, 1);
+    unsigned int ret = impl.GetHapFlags(true, true, true, 1, false);
     EXPECT_EQ(ret, 131);
-    ret = impl.GetHapFlags(false, false, false, 2);
+    ret = impl.GetHapFlags(false, false, false, 2, false);
     EXPECT_EQ(ret, 0);
-    ret = impl.GetHapFlags(false, false, true, 2);
+    ret = impl.GetHapFlags(false, false, true, 2, false);
     EXPECT_EQ(ret, 256);
+    ret = impl.GetHapFlags(false, false, false, 2, true);
+    EXPECT_EQ(ret, 512);
 }
 
 /**

@@ -286,6 +286,10 @@ constexpr const char* DATA_PRELOAD_APP = "/data/preload/app/";
 constexpr const char* UPDATE_PERMISSIONS_FLAG = "updatePermissionsFlag";
 constexpr const char* UPDATE_PERMISSIONS_FLAG_UPDATED = "updated";
 
+//update selinux apl for extension dirs
+constexpr const char* UPDATE_EXTENSION_DIRS_SELINUX_APL_FLAG = "updateExtensionDirsSelinuxAplFlag";
+constexpr const char* UPDATE_EXTENSION_DIRS_SELINUX_APL_FLAG_UPDATED = "updated";
+
 const std::set<std::string> OTA_NEW_INSTALL_BUNDLE_NAME_LIST = {};
 
 constexpr const char* SO_PATH_PREFIX = "/data/app/el1/bundle/public/";

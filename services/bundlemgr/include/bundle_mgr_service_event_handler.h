@@ -711,6 +711,9 @@ private:
     void ProcessUpdatePermissions();
     bool IsPermissionsUpdated();
     bool SaveUpdatePermissionsFlag();
+    bool IsExtensionDirsSelinuxAplUpdated();
+    bool SaveUpdateExtensionDirsSelinuxAplFlag();
+    void ProcessUpdateExtensionDirsApl();
     bool CleanAllBundleEl1ArkStartupCacheLocal();
     bool ProcessCheckSystemOptimizeDir();
 #ifdef WEBVIEW_ENABLE
@@ -730,6 +733,7 @@ private:
     void GetInstallAndRecoverListForAllUser(std::unordered_map<int32_t,
         std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList);
     bool IsForceInstallListEmpty(const std::string &bundleName);
+
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
