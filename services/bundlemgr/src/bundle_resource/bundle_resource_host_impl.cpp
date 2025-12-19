@@ -445,7 +445,7 @@ void BundleResourceHostImpl::FilterUninstallResource(const int32_t userId,
         return;
     }
     for (auto iter = bundleResourceInfos.begin(); iter != bundleResourceInfos.end();) {
-        if (!dataMgr.GetUninstallBundleInfoWithUserAndAppIndex(iter->bundleName, userId, iter->appIndex)) {
+        if (!dataMgr->GetUninstallBundleInfoWithUserAndAppIndex(iter->bundleName, userId, iter->appIndex)) {
             iter = bundleResourceInfos.erase(iter);
         } else {
             ++iter;

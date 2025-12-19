@@ -2011,6 +2011,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return res;
         }
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+        if (installParam.isKeepData) {
+            BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
+        }
         UninstallDebugAppSandbox(bundleName, uid, oldInfo);
         if (dataMgr_->DeleteShortcutVisibleInfo(bundleName, userId_, 0) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER,
