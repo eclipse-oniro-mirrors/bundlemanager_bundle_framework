@@ -2229,14 +2229,20 @@ void ANIClearCacheListener::DoClearCache()
     ani_env* env = nullptr;
     ani_option interopEnabled { "--interop=disable", nullptr };
     ani_options aniArgs { 1, &interopEnabled };
+    bool needDetach = false;
     if (g_vm == nullptr) {
         APP_LOGE("g_vm is empty");
         return;
     }
-    ani_status status = g_vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+    ani_status status = g_vm->GetEnv(ANI_VERSION_1, &env);
     if (status != ANI_OK) {
-        APP_LOGE("AttachCurrentThread fail %{public}d", status);
-        return;
+        APP_LOGW("GetEnv fail %{public}d", status);
+        status = g_vm->AttachCurrentThread(&aniArgs, ANI_VERSION_1, &env);
+        if (status != ANI_OK) {
+            APP_LOGE("AttachCurrentThread fail %{public}d", status);
+            return;
+        }
+        needDetach = true;
     }
     if (env == nullptr) {
         APP_LOGE("env is empty");
@@ -2245,7 +2251,9 @@ void ANIClearCacheListener::DoClearCache()
             env->GlobalReference_Delete(item.second);
         }
     }
-    g_vm->DetachCurrentThread();
+    if (needDetach) {
+        g_vm->DetachCurrentThread();
+    }
     g_aniCache.clear();
 }
 
