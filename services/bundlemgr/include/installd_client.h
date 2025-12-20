@@ -251,7 +251,7 @@ public:
 
     ErrCode RemoveSignProfile(const std::string &bundleName);
 
-    ErrCode EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength);
+    ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent);
 
     ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId);
 

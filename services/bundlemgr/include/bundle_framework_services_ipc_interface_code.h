@@ -95,7 +95,7 @@ enum class InstalldInterfaceCode : uint32_t {
     COPY_DIR = 67,
     GET_SO_HASH = 68,
     GET_FILES_HASH = 69,
-    ENABLE_KEY_FOR_ENTERPRISE_RESIGN = 70,
+    ADD_CERT_AND_ENABLE_KEY = 70,
     REMOVE_KEY_FOR_ENTERPRISE_RESIGN = 71,
 };
 

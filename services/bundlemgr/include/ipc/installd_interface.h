@@ -442,7 +442,7 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+    virtual ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent)
     {
         return ERR_OK;
     }

@@ -1748,22 +1748,22 @@ HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_0100, Function | SmallTest | 
 }
 
 /**
- * @tc.number: EnableKeyForEnterpriseResign_0100
+ * @tc.number: AddCertAndEnableKey_0100
  * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. test EnableKeyForEnterpriseResign
+ * @tc.desc: 1. test AddCertAndEnableKey
 */
-HWTEST_F(BmsInstallDaemonTest, EnableKeyForEnterpriseResign_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonTest, AddCertAndEnableKey_0100, Function | SmallTest | Level0)
 {
     InstalldHostImpl hostImpl;
-    unsigned char *cert = new unsigned char[10];
-    int32_t certLength = 10;
-    ErrCode ret = hostImpl.EnableKeyForEnterpriseResign(cert, certLength);
+    std::string certPath = "certPath";
+    std::string certContent = "certContent";
+    ErrCode ret = hostImpl.AddCertAndEnableKey(certPath, certContent);
     EXPECT_NE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = hostImpl.EnableKeyForEnterpriseResign(nullptr, certLength);
+    ret = hostImpl.AddCertAndEnableKey(certPath, "");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
-    ret = hostImpl.EnableKeyForEnterpriseResign(cert, 0);
+    ret = hostImpl.AddCertAndEnableKey("", certContent);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

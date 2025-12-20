@@ -2875,6 +2875,64 @@ ErrCode InstalldOperator::HashSoFile(const std::string& soPath,
     return ERR_OK;
 }
 
+bool InstalldOperator::WriteCertToFile(const std::string &certFilePath, const std::string &certContent)
+{
+    if (certFilePath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "certFilePath is empty");
+        return false;
+    }
+
+    std::string tmpPath = certFilePath + ".tmp";
+    int fd = open(tmpPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+    if (fd < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "open tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
+        return false;
+    }
+
+    const char *buf = certContent.data();
+    size_t toWrite = certContent.size();
+    size_t written = 0;
+    while (written < toWrite) {
+        ssize_t writeSize = write(fd, buf + written, toWrite - written);
+        if (writeSize < 0) {
+            if (errno == EINTR) continue;
+            LOG_E(BMS_TAG_INSTALLD, "write tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
+            close(fd);
+            unlink(tmpPath.c_str());
+            return false;
+        }
+        written += static_cast<size_t>(writeSize);
+    }
+
+    if (fsync(fd) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "fsync failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
+        close(fd);
+        unlink(tmpPath.c_str());
+        return false;
+    }
+
+    if (close(fd) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "close failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
+        unlink(tmpPath.c_str());
+        return false;
+    }
+
+    if (chown(tmpPath.c_str(), Constants::FOUNDATION_UID, Constants::FOUNDATION_UID) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "chown tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
+        unlink(tmpPath.c_str());
+        return false;
+    }
+
+    if (rename(tmpPath.c_str(), certFilePath.c_str()) != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "rename tmp cert file to final failed %{public}s -> %{public}s errno:%{public}d",
+            tmpPath.c_str(), certFilePath.c_str(), errno);
+        unlink(tmpPath.c_str());
+        return false;
+    }
+
+    return true;
+}
+
 bool InstalldOperator::RestoreconPath(const std::string &path)
 {
     int ret = RestoreconRecurse(path.c_str());
