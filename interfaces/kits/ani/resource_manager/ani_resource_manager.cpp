@@ -121,6 +121,34 @@ static ani_object AniGetAllBundleResourceInfo(ani_env* env, ani_int aniResFlag)
     return bundleResourceInfosObject;
 }
 
+static ani_object AniGetAllUninstalledBundleResourceInfo(ani_env* env, ani_int aniResFlag)
+{
+    APP_LOGD("ani GetAllUninstalledBundleResourceInfo called");
+
+    int32_t flags = static_cast<int32_t>(aniResFlag);
+    if (flags <= 0) {
+        flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    }
+
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    int32_t ret = ResourceHelper::InnerGetAllUninstallBundleResourceInfo(
+        static_cast<uint32_t>(flags), bundleResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllUninstalledBundleResourceInfo failed ret: %{public}d", ret);
+        BusinessErrorAni::ThrowCommonError(
+            env, ret, GET_ALL_UNINSTALL_BUNDLE_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+        return nullptr;
+    }
+
+    ani_object bundleResourceInfosObject = CommonFunAni::ConvertAniArray(
+        env, bundleResourceInfos, AniResourceManagerCommon::ConvertBundleResourceInfo);
+    if (bundleResourceInfosObject == nullptr) {
+        APP_LOGE("nullptr bundleResourceInfosObject");
+    }
+
+    return bundleResourceInfosObject;
+}
+
 static ani_object AniGetAllLauncherAbilityResourceInfo(ani_env* env, ani_int aniResFlag)
 {
     APP_LOGD("ani GetAllLauncherAbilityResourceInfo called");
@@ -264,7 +292,9 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm* vm, uint32_t* result)
         ani_native_function { "getLauncherAbilityResourceInfoListNative", nullptr,
             reinterpret_cast<void*>(AniGetLauncherAbilityResourceInfoList) },
         ani_native_function { "getExtensionAbilityResourceInfoNative", nullptr,
-            reinterpret_cast<void*>(GetExtensionAbilityResourceInfoNative) }
+            reinterpret_cast<void*>(GetExtensionAbilityResourceInfoNative) },
+        ani_native_function { "getAllUninstalledBundleResourceInfoNative", nullptr,
+            reinterpret_cast<void*>(AniGetAllUninstalledBundleResourceInfo) },
     };
 
     status = env->Namespace_BindNativeFunctions(kitNs, methods.data(), methods.size());

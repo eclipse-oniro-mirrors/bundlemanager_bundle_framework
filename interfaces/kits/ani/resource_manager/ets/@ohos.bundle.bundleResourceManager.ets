@@ -45,6 +45,7 @@ export default namespace bundleResourceManager {
   native function getAllLauncherAbilityResourceInfoNative(resourceFlags: int): Array<LauncherAbilityResourceInfo>;
   native function getLauncherAbilityResourceInfoListNative(optionsList: Array<BundleOptions>, resourceFlags: int): Array<LauncherAbilityResourceInfo>;
   native function getExtensionAbilityResourceInfoNative(bundleName: string, extensionAbilityType: bundleManager.ExtensionAbilityType, resourceFlags: int, appIndex: int): Array<LauncherAbilityResourceInfo>;
+  native function getAllUninstalledBundleResourceInfoNative(resourceFlags: int): Array<BundleResourceInfo>;
 
   function getBundleResourceInfo(bundleName: string, resourceFlags?: int, appIndex?: int): BundleResourceInfo
   {
@@ -82,6 +83,22 @@ export default namespace bundleResourceManager {
     let p = new Promise<Array<BundleResourceInfo>>((resolve: (arrBundleResourceInfo: Array<BundleResourceInfo>) => void, reject: (error: BusinessError) => void) => {
       let cb = (): (Array<BundleResourceInfo>) => {
         return getAllBundleResourceInfoNative(resourceFlags);
+      };
+      let p1 = taskpool.execute(cb);
+      p1.then((e: Any) => {
+        let resultArray: Array<BundleResourceInfo> = e as Array<BundleResourceInfo>;
+        resolve(resultArray);
+      }, (err: Error): void => {
+        reject(err as BusinessError);
+      });
+    });
+    return p;
+  }
+
+  function getAllUninstalledBundleResourceInfo(resourceFlags: int): Promise<Array<BundleResourceInfo>> {
+    let p = new Promise<Array<BundleResourceInfo>>((resolve: (arrBundleResourceInfo: Array<BundleResourceInfo>) => void, reject: (error: BusinessError) => void) => {
+      let cb = (): (Array<BundleResourceInfo>) => {
+        return getAllUninstalledBundleResourceInfoNative(resourceFlags);
       };
       let p1 = taskpool.execute(cb);
       p1.then((e: Any) => {
