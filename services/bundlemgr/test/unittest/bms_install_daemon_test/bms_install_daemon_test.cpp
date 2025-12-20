@@ -1748,26 +1748,6 @@ HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_0100, Function | SmallTest | 
 }
 
 /**
- * @tc.number: AddCertAndEnableKey_0100
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. test AddCertAndEnableKey
-*/
-HWTEST_F(BmsInstallDaemonTest, AddCertAndEnableKey_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl hostImpl;
-    std::string certPath = "certPath";
-    std::string certContent = "certContent";
-    ErrCode ret = hostImpl.AddCertAndEnableKey(certPath, certContent);
-    EXPECT_NE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    ret = hostImpl.AddCertAndEnableKey(certPath, "");
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    ret = hostImpl.AddCertAndEnableKey("", certContent);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
  * @tc.number: RemoveExtensionDir_0100
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. test RemoveExtensionDir

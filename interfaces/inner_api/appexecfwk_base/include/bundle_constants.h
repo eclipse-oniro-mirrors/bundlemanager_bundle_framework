@@ -186,6 +186,9 @@ constexpr const char* RELEASE_TYPE_VALUE = "2";
 // crowdtesting
 constexpr int8_t INVALID_CROWDTEST_DEADLINE = -1;
 constexpr int8_t INHERIT_CROWDTEST_DEADLINE = -2;
+// app sign type
+constexpr const char* APP_SIGN_TYPE_NONE = "none";
+constexpr const char* APP_SIGN_TYPE_ENTERPRISE_RE_SIGN = "enterpriseReSign";
 
 // overlay installation
 constexpr const char* OVERLAY_STATE = "overlayState";

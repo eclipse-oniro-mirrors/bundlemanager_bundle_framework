@@ -1377,7 +1377,8 @@ protected:
                 "isForceRotate": false,
                 "hasPlugin": false,
                 "startMode":1,
-                "appPreloadPhase":0
+                "appPreloadPhase":0,
+                "appSignType": "none"
             },
             "baseBundleInfo": {
                 "abilityInfos": [
