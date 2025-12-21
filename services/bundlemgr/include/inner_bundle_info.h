@@ -2193,6 +2193,11 @@ public:
         baseApplicationInfo_->installSource = installSource;
     }
 
+    void SetAppSignType(const std::string &appSignType)
+    {
+        baseApplicationInfo_->appSignType = appSignType;
+    }
+
     bool IsInstalledForAllUser() const
     {
         return baseApplicationInfo_->installedForAllUser;

@@ -1016,7 +1016,7 @@ bool InstalldHost::HandleAddCertAndEnableKey(MessageParcel &data, MessageParcel 
 {
     std::string certPath = Str16ToStr8(data.ReadString16());
     size_t dataSize = data.ReadUint32();
-    if (dataSize == 0) {
+    if (dataSize == 0 || dataSize > Constants::CAPACITY_SIZE) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }

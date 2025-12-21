@@ -1219,7 +1219,7 @@ void BundleInstallerHost::HandleAddEnterpriseResignCert(MessageParcel &data, Mes
     LOG_D(BMS_TAG_INSTALLER, "start");
     std::string certAlias = Str16ToStr8(data.ReadString16());
     size_t dataSize = data.ReadUint32();
-    if (dataSize == 0) {
+    if (dataSize == 0 || dataSize > Constants::CAPACITY_SIZE) {
         reply.WriteInt32(ERR_APPEXECFWK_PARCEL_ERROR);
         return;
     }
