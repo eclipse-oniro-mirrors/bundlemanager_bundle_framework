@@ -276,8 +276,8 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::COPY_DIR):
             result = HandleCopyDir(data, reply);
             break;
-        case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_KEY_FOR_ENTERPRISE_RESIGN):
-            result = HandleRemoveKeyForEnterpriseResign(data, reply);
+        case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_CERT_AND_REMOVE_KEY):
+            result = HandleDeleteCertAndRemoveKey(data, reply);
             break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
@@ -1290,25 +1290,28 @@ bool InstalldHost::HandleCopyDir(MessageParcel &data, MessageParcel &reply)
     return true;
 }
 
-bool InstalldHost::HandleRemoveKeyForEnterpriseResign(MessageParcel &data, MessageParcel &reply)
+bool InstalldHost::HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t certLength = data.ReadInt32();
-    if (certLength <= 0 || certLength > Constants::MAX_PARCEL_CAPACITY) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+    int32_t pathSize = data.ReadInt32();
+    if (pathSize == 0 || pathSize > ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
+        APP_LOGE("pathSize is error");
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
         return false;
     }
-    auto dataInfo = data.ReadRawData(certLength);
-    if (!dataInfo) {
-        LOG_E(BMS_TAG_INSTALLD, "readRawData failed");
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
-        return false;
+    std::vector<std::string> certPaths;
+    certPaths.reserve(pathSize);
+    CONTAINER_SECURITY_VERIFY(data, pathSize, &certPaths);
+    for (int32_t i = 0; i < pathSize; i++) {
+        std::string path = Str16ToStr8(data.ReadString16());
+        if (path.empty() || path.size() > Constants::BMS_MAX_PATH_LENGTH) {
+            APP_LOGE("path is empty or size is too large");
+            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+            return false;
+        }
+        certPaths.emplace_back(std::move(path));
     }
-    const unsigned char *cert = reinterpret_cast<const unsigned char *>(dataInfo);
-    if (cert == nullptr) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
-        return false;
-    }
-    ErrCode result = RemoveKeyForEnterpriseResign(cert, certLength);
+
+    ErrCode result = DeleteCertAndRemoveKey(certPaths);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

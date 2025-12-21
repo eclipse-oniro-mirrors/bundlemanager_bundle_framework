@@ -468,7 +468,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
         (void)newBundleDirMgr->DeleteUserId(userId);
     }
     HandleNotifyBundleEventsAsync();
-    (void)BundleUtil::DeleteReSignatureCertForRemoveUser(userId);
+    (void)DeleteReSignCert(userId);
     APP_LOGI("RemoveUser end userId: (%{public}d)", userId);
     return ERR_OK;
 }
@@ -737,6 +737,16 @@ ErrCode BundleUserMgrHostImpl::RemoveSystemOptimizeDir(int32_t userId)
     APP_LOGI("remove system optimize directory %{public}s when remove user: %{public}d",
         el1ArkStartupCachePath.c_str(), userId);
     return InstalldClient::GetInstance()->RemoveDir(el1ArkStartupCachePath);
+}
+
+bool BundleUserMgrHostImpl::DeleteReSignCert(int32_t userId)
+{
+    auto installer = GetBundleInstaller();
+    if (installer == nullptr) {
+        APP_LOGE("installer is nullptr");
+        return false;
+    }
+    return (installer->DeleteReSignCert(userId) == ERR_OK);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

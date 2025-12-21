@@ -250,10 +250,7 @@ public:
     static std::unordered_map<std::string, std::string> ParseMapFromJson(const std::string &jsonStr);
     static std::vector<std::string> FileTypeNormalize(const std::string &fileType);
     static std::string Sha256File(const std::string& filePath);
-    static bool UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId);
-    static bool GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias);
-    static bool RemoveKeyForEnterpriseResign(const std::string &path);
-    static bool DeleteReSignatureCertForRemoveUser(int32_t userId);
+    static ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias);
 private:
     static std::mutex g_mutex;
 };

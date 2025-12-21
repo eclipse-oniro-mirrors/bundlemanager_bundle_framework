@@ -410,7 +410,7 @@ ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::strin
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+ErrCode InstalldHostImpl::DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
 {
     return ERR_OK;
 }

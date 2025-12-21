@@ -440,7 +440,7 @@ ErrCode InstalldClient::CopyDir(const std::string &sourceDir, const std::string 
     return ERR_OK;
 }
 
-ErrCode InstalldClient::RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+ErrCode InstalldClient::DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
 {
     return ERR_OK;
 }
