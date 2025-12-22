@@ -19,6 +19,7 @@
 #include <unordered_map>
 
 #include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "interfaces/hap_verify.h"
 
 namespace OHOS {
@@ -28,7 +29,8 @@ extern const std::unordered_map<Security::Verify::AppDistType, std::string> APP_
 
 class BundleVerifyMgr {
 public:
-    static ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
+    static ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,
+        const int32_t userId = Constants::INVALID_USERID);
     static void EnableDebug();
     static void DisableDebug();
     static ErrCode ParseHapProfile(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,

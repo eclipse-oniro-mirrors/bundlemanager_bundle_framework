@@ -249,7 +249,7 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
 
 ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     const std::vector<std::string> &bundlePaths,
-    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile)
+    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile, const int32_t userId)
 {
     LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo");
     if (bundlePaths.empty()) {
@@ -260,9 +260,14 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         Security::Verify::HapVerifyResult hapVerifyResult;
         ErrCode verifyRes = ERR_OK;
         if (readFile) {
-            verifyRes = Security::Verify::HapVerify(bundlePath, hapVerifyResult, true);
+            std::string localCertDir = std::string(ServiceConstants::HAP_COPY_PATH) +
+                ServiceConstants::ENTERPRISE_CERT_PATH + std::to_string(userId);
+            if (userId < Constants::START_USERID || !BundleUtil::IsExistDir(localCertDir)) {
+                localCertDir.clear();
+            }
+            verifyRes = Security::Verify::HapVerify(bundlePath, hapVerifyResult, true, localCertDir);
         } else {
-            verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
+            verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult, userId);
         }
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
@@ -490,6 +495,9 @@ ErrCode BundleInstallChecker::ParseHapFiles(
                 LOG_E(BMS_TAG_INSTALLER, "install failed due to insufficient disk memory");
                 return result;
             }
+        }
+        if (provisionInfo.isEnterpriseResigned) {
+            newInfo.SetAppSignType(Constants::APP_SIGN_TYPE_ENTERPRISE_RE_SIGN);
         }
         infos.emplace(bundlePaths[i], newInfo);
     }

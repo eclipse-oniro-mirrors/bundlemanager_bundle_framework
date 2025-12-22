@@ -4414,7 +4414,7 @@ ErrCode BaseBundleInstaller::CheckMultipleHapsSignInfo(
     std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    return bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes);
+    return bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes, false, userId_);
 }
 
 ErrCode BaseBundleInstaller::CheckShellInstall(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
