@@ -2784,29 +2784,24 @@ HWTEST_F(BmsEventHandlerTest, SaveUpdatePermissionsFlag_0100, Function | SmallTe
 }
 
 /**
- * @tc.number: SaveUpdateExtensionDirsSelinuxAplFlag_0100
- * @tc.name: SaveUpdateExtensionDirsSelinuxAplFlag
- * @tc.desc: test SaveUpdateExtensionDirsSelinuxAplFlag
+ * @tc.number: ProcessUpdateExtensionDirsApl_0100
+ * @tc.name: ProcessUpdateExtensionDirsApl
+ * @tc.desc: test ProcessUpdateExtensionDirsApl
  */
-HWTEST_F(BmsEventHandlerTest, SaveUpdateExtensionDirsSelinuxAplFlag_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsEventHandlerTest, ProcessUpdateExtensionDirsApl_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     EXPECT_NE(handler, nullptr);
     if (handler) {
         DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = nullptr;
-        bool ret = handler->SaveUpdateExtensionDirsSelinuxAplFlag();
-        EXPECT_FALSE(ret);
+        handler->ProcessUpdateExtensionDirsApl();
         auto bmsParam = std::make_shared<BmsParam>();
         EXPECT_NE(bmsParam, nullptr);
         if (bmsParam) {
-            std::string value;
-            ret = bmsParam->GetBmsParam(ServiceConstants::UPDATE_EXTENSION_DIRS_SELINUX_APL_FLAG, value);
-            EXPECT_TRUE(ret);
             DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = std::make_shared<BmsParam>();
-            ret = handler->SaveUpdateExtensionDirsSelinuxAplFlag();
-            EXPECT_TRUE(ret);
-            ret = bmsParam->GetBmsParam(ServiceConstants::UPDATE_EXTENSION_DIRS_SELINUX_APL_FLAG, value);
-            EXPECT_TRUE(ret);
+            handler->ProcessUpdateExtensionDirsApl();
+            DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+            handler->ProcessUpdateExtensionDirsApl();
         }
     }
 }

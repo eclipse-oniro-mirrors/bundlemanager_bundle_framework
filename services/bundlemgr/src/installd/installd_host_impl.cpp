@@ -1448,6 +1448,32 @@ unsigned int InstalldHostImpl::GetHapFlags(const bool isPreInstallApp, const boo
     return hapFlags;
 }
 
+ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir)
+{
+    unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp,
+        createDirParam.debug, createDirParam.isDlpSandbox, createDirParam.dlpType, isExtensionDir);
+    ErrCode res = ERR_OK;
+    for (auto &dir : createDirParam.extensionDirs) {
+        LOG_W(BMS_TAG_INSTALLD, "update extension dir for: bundle(%{public}s)", createDirParam.bundleName.c_str());
+        for (const auto &el : ServiceConstants::BUNDLE_EL) {
+            std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId);
+            std::string elBaseExtensionDir = bundleDataDir + ServiceConstants::BASE + dir;
+            auto ret = SetDirApl(elBaseExtensionDir, createDirParam.bundleName,
+                createDirParam.apl, hapFlags, createDirParam.uid);
+            if (ret != ERR_OK) {
+                res = ret;
+            }
+            std::string elDatabaseExtensionDir = bundleDataDir + ServiceConstants::DATABASE + dir;
+            ret = SetDirApl(elDatabaseExtensionDir, createDirParam.bundleName,
+                createDirParam.apl, hapFlags, createDirParam.uid);
+            if (ret != ERR_OK) {
+                res = ret;
+            }
+        }
+    }
+    return res;
+}
+
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
     bool isPreInstallApp, bool debug, int32_t uid)
 {
@@ -1467,6 +1493,7 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
         LOG_E(BMS_TAG_INSTALLD, "Calling the function SetDirApl with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+
     HapFileInfo hapFileInfo;
     hapFileInfo.pathNameOrig.push_back(dir);
     hapFileInfo.apl = apl;

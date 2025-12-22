@@ -1457,4 +1457,32 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8200, Function | Sma
     ErrCode res = installdProxy->HashFiles(files, filesHash);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
+
+/**
+ * @tc.number: InstalldHostImplTest_8300
+ * @tc.name: test SetDirsApl of InstallHostImpl
+ * @tc.desc: 1. calling SetDirsApl of hostImpl
+ * @tc.require:
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8300, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> dirs;
+    dirs.emplace_back(TEST_STRING);
+
+    CreateDirParam createDirParam;
+    createDirParam.extensionDirs = dirs;
+    createDirParam.bundleName = TEST_STRING;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
+    createDirParam.debug = false;
+    createDirParam.uid = 0;
+    auto ret = hostImpl->SetDirsApl(createDirParam, true);
+#ifdef WITH_SELINUX
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+#else
+    EXPECT_EQ(ret, ERR_OK);
+#endif
+}
 } // OHOS

@@ -157,6 +157,8 @@ public:
     ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         bool isPreInstallApp, bool debug, int32_t uid);
 
+    ErrCode SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir);
+
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.

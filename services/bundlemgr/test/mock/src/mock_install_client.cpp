@@ -177,6 +177,16 @@ ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bun
     return 0;
 }
 
+ErrCode InstalldClient::SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir)
+{
+    if (createDirParam.bundleName.empty() || createDirParam.userId < 0
+        || createDirParam.uid < 0 || createDirParam.extensionDirs.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return 0;
+}
 ErrCode InstalldClient::SetArkStartupCacheApl(const std::string &dir)
 {
     return 0;

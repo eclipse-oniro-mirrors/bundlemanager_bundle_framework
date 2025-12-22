@@ -396,8 +396,8 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
     UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON);
     UpdateOtaFlag(OTAFlag::PROCESS_ROUTER_MAP);
+    UpdateOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL);
     (void)SaveUpdatePermissionsFlag();
-    (void)SaveUpdateExtensionDirsSelinuxAplFlag();
     PerfProfile::GetInstance().Dump();
 }
 
@@ -436,7 +436,7 @@ void BMSEventHandler::BundleRebootStartEvent()
 
     // need check /data/service/el1/public/bms/bundle_manager_service/app_temp
     ProcessAppTmpPath();
-
+    ProcessUpdateExtensionDirsApl();
     needNotifyBundleScanStatus_ = true;
 }
 
@@ -1307,7 +1307,6 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootAppServiceUninstall();
     //refresh application permissions
     ProcessUpdatePermissions();
-    ProcessUpdateExtensionDirsApl();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
     ProcessBundleResourceInfo();
@@ -5588,84 +5587,36 @@ bool BMSEventHandler::IsForceInstallListEmpty(const std::string &bundleName)
     return isEmpty;
 }
 
-bool BMSEventHandler::IsExtensionDirsSelinuxAplUpdated()
-{
-    auto bmsParam = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
-    if (bmsParam == nullptr) {
-        LOG_W(BMS_TAG_DEFAULT, "bmsParam is nullptr");
-        return false;
-    }
-    std::string value;
-    if (bmsParam->GetBmsParam(ServiceConstants::UPDATE_EXTENSION_DIRS_SELINUX_APL_FLAG, value)) {
-        LOG_I(BMS_TAG_DEFAULT, "already update permissions");
-        return true;
-    }
-    return false;
-}
-
-bool BMSEventHandler::SaveUpdateExtensionDirsSelinuxAplFlag()
-{
-    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
-    if (bmsPara == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "bmsPara is nullptr");
-        return false;
-    }
-    if (!bmsPara->SaveBmsParam(ServiceConstants::UPDATE_EXTENSION_DIRS_SELINUX_APL_FLAG,
-        std::string{ ServiceConstants::UPDATE_EXTENSION_DIRS_SELINUX_APL_FLAG_UPDATED })) {
-        LOG_E(BMS_TAG_DEFAULT, "save updateExtensionDirsSelinuxAplFlag failed");
-        return false;
-    }
-    return true;
-}
-
 void BMSEventHandler::ProcessUpdateExtensionDirsApl()
 {
-    LOG_I(BMS_TAG_DEFAULT, "update selinux apl for extension dirs begin");
-    if (IsExtensionDirsSelinuxAplUpdated()) {
-        LOG_I(BMS_TAG_DEFAULT, "extension dirs selinux apl already updated");
+    LOG_I(BMS_TAG_DEFAULT, "begin");
+    bool updateFlag = false;
+    CheckOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL, updateFlag);
+    if (updateFlag) {
+        LOG_I(BMS_TAG_DEFAULT, "Not need to update extension dirs due to has updated");
         return;
     }
+    LOG_I(BMS_TAG_DEFAULT, "Need to update extension dirs selinux apl");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
     }
     bool updateExtensionDirsSelinuxAplFlag = true;
-    std::set<int32_t> userIds = dataMgr->GetAllUser();
-    std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
-    for (auto &infoPair : infos) {
-        auto &info = infoPair.second;
-        std::string bundleName = infoPair.first;
-        for (const auto &userId : userIds) {
-            int32_t uid = info.GetUid(userId);
-            InnerBundleUserInfo newInnerBundleUserInfo;
-            if (!info.GetInnerBundleUserInfo(userId, newInnerBundleUserInfo)) {
-                LOG_W(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed", bundleName.c_str(), userId);
-                continue;
-            }
-
-            CreateDirParam createDirParam;
-            createDirParam.bundleName = bundleName;
-            createDirParam.userId = userId;
-            createDirParam.uid = newInnerBundleUserInfo.uid;
-            createDirParam.gid = newInnerBundleUserInfo.uid;
-            createDirParam.apl = info.GetAppPrivilegeLevel();
-            createDirParam.isPreInstallApp = info.IsPreInstallApp();
-            createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType ==
-                Constants::APP_PROVISION_TYPE_DEBUG;
-            std::vector<std::string> extensionDirs = info.GetAllExtensionDirs();
-            createDirParam.extensionDirs.assign(extensionDirs.begin(), extensionDirs.end());
-            auto result = InstalldClient::GetInstance()->CreateExtensionDataDir(createDirParam);
-            if (result != ERR_OK) {
-                LOG_W(BMS_TAG_INSTALLER, "fail for bundle(%{public}s), error:%{public}d", bundleName.c_str(), result);
-                updateExtensionDirsSelinuxAplFlag = false;
-            }
+    std::vector<CreateDirParam> allExtensionDirsToUpdateSelinuxApl = dataMgr->GetAllExtensionDirsToUpdateSelinuxApl();
+    for (auto &extensionDirsToUpdate : allExtensionDirsToUpdateSelinuxApl) {
+        std::string bundleName = extensionDirsToUpdate.bundleName;
+        auto result = InstalldClient::GetInstance()->SetDirsApl(extensionDirsToUpdate, true);
+        if (result != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "fail for bundle(%{public}s), error:%{public}d", bundleName.c_str(), result);
+            updateExtensionDirsSelinuxAplFlag = false;
         }
     }
+    
     if (updateExtensionDirsSelinuxAplFlag) {
-        (void)SaveUpdateExtensionDirsSelinuxAplFlag();
+        UpdateOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL);
     }
-    LOG_I(BMS_TAG_DEFAULT, "update permissions end");
+    LOG_I(BMS_TAG_DEFAULT, "update selinux apl for extension dirs end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

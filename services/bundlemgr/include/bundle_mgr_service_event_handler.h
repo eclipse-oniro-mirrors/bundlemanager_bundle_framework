@@ -62,6 +62,7 @@ enum OTAFlag : uint32_t {
     CHECK_SYSTEM_OPTIMIZE_SHADER_CAHCE_DIR = 0x00080000,
     UPDATE_MODULE_JSON = 0x00100000,
     PROCESS_ROUTER_MAP = 0x00200000,
+    UPDATE_EXTENSION_DIRS_SELINUX_APL = 0x00400000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -711,8 +712,6 @@ private:
     void ProcessUpdatePermissions();
     bool IsPermissionsUpdated();
     bool SaveUpdatePermissionsFlag();
-    bool IsExtensionDirsSelinuxAplUpdated();
-    bool SaveUpdateExtensionDirsSelinuxAplFlag();
     void ProcessUpdateExtensionDirsApl();
     bool CleanAllBundleEl1ArkStartupCacheLocal();
     bool ProcessCheckSystemOptimizeDir();
@@ -733,7 +732,6 @@ private:
     void GetInstallAndRecoverListForAllUser(std::unordered_map<int32_t,
         std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList);
     bool IsForceInstallListEmpty(const std::string &bundleName);
-
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;

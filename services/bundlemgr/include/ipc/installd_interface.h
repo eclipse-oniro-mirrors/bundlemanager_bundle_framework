@@ -255,6 +255,11 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir)
+    {
+        return ERR_OK;
+    }
+
         /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.

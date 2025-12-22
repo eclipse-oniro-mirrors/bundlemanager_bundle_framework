@@ -172,6 +172,8 @@ public:
     virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         bool isPreInstallApp, bool debug, int32_t uid) override;
 
+    virtual ErrCode SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir) override;
+
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.

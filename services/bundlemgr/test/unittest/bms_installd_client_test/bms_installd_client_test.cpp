@@ -694,6 +694,59 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirApl_0400, TestSize.L
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_SetDirsApl_0100
+ * @tc.name: SetDirsApl
+ * @tc.desc: Test whether SetDirsApl is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirsApl_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirsApl_0100 start";
+    std::vector<std::string> dirs;
+
+    CreateDirParam createDirParam;
+    createDirParam.extensionDirs = dirs;
+    createDirParam.bundleName = BUNDLE_NAME;
+    createDirParam.apl = APL;
+    createDirParam.isPreInstallApp = false;
+    createDirParam.debug = false;
+    createDirParam.uid = UID;
+    ErrCode result = installClient_->SetDirsApl(createDirParam, true);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    std::string dir = DIR;
+    dirs.emplace_back(dir);
+    CreateDirParam createDirParam2;
+    createDirParam2.extensionDirs = dirs;
+    createDirParam2.bundleName = EMPTY_STRING;
+    createDirParam2.apl = APL;
+    createDirParam2.isPreInstallApp = true;
+    createDirParam2.debug = false;
+    createDirParam2.uid = UID;
+    result = installClient_->SetDirsApl(createDirParam2, false);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    CreateDirParam createDirParam3;
+    createDirParam3.extensionDirs = dirs;
+    createDirParam3.bundleName = BUNDLE_NAME;
+    createDirParam3.apl = EMPTY_STRING;
+    createDirParam3.isPreInstallApp = false;
+    createDirParam3.debug = true;
+    createDirParam3.uid = UID;
+    result = installClient_->SetDirsApl(createDirParam3, true);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    CreateDirParam createDirParam4;
+    createDirParam4.extensionDirs = dirs;
+    createDirParam4.bundleName = BUNDLE_NAME;
+    createDirParam4.apl = APL;
+    createDirParam4.isPreInstallApp = true;
+    createDirParam4.debug = false;
+    createDirParam4.uid = UID;
+    result = installClient_->SetDirsApl(createDirParam4, false);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirsApl_0100 end";
+}
+
+/**
  * @tc.number: BmsInstalldClientTest_GetBundleCachePath_0100
  * @tc.name: GetBundleCachePath
  * @tc.desc: Test whether GetBundleCachePath is called normally.(dir is empty)

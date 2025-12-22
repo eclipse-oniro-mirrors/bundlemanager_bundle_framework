@@ -274,6 +274,9 @@ public:
     void GetExistedEntries(const std::string &filename,
         std::set<std::string> &existingEntries,
         std::vector<std::string> &allLines) const;
+    CreateDirParam PrepareCreateDirParam(const std::vector<std::string> &dirs,
+        const std::string &bundleName, const std::string &apl,
+        bool isPreInstallApp, bool debug, int32_t uid);
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
@@ -726,6 +729,21 @@ ErrCode BmsBundleInstallerTest::MkdirIfNotExist(const std::string &dir) const
         return ERR_OK;
     }
     return InstalldClient::GetInstance()->CreateBundleDir(dir);
+}
+
+CreateDirParam BmsBundleInstallerTest::PrepareCreateDirParam(
+    const std::vector<std::string> &dirs,
+    const std::string &bundleName, const std::string &apl,
+    bool isPreInstallApp, bool debug, int32_t uid)
+{
+    CreateDirParam createDirParam;
+    createDirParam.extensionDirs = dirs;
+    createDirParam.bundleName = bundleName;
+    createDirParam.apl = apl;
+    createDirParam.isPreInstallApp = isPreInstallApp;
+    createDirParam.debug = debug;
+    createDirParam.uid = uid;
+    return createDirParam;
 }
 
 /**
@@ -6010,6 +6028,36 @@ HWTEST_F(BmsBundleInstallerTest, SetDirApl_0100, Function | SmallTest | Level0)
 
     ret = impl.SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "", isPreInstallApp, debug, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
+}
+
+/**
+ * @tc.number: SetDirsApl_0100
+ * @tc.name: test SetDirsApl
+ * @tc.desc: 1.Test the SetDirsApl
+*/
+HWTEST_F(BmsBundleInstallerTest, SetDirsApl_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<std::string> dirs;
+    bool isPreInstallApp = false;
+    bool debug = false;
+ 
+    CreateDirParam para1 =  PrepareCreateDirParam(dirs, BUNDLE_NAME, "", isPreInstallApp, debug, 0);
+    auto ret = impl.SetDirsApl(para1, true);
+    EXPECT_EQ(ret, ERR_OK);
+ 
+    CreateDirParam para2 =  PrepareCreateDirParam(dirs, "", "", isPreInstallApp, debug, 0);
+    ret = impl.SetDirsApl(para2, true);
+    EXPECT_EQ(ret, ERR_OK);
+ 
+    dirs.emplace_back(BUNDLE_DATA_DIR);
+    CreateDirParam para3 =  PrepareCreateDirParam(dirs, "", "", isPreInstallApp, debug, 0);
+    ret = impl.SetDirsApl(para3, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+ 
+    CreateDirParam para4 =  PrepareCreateDirParam(dirs, BUNDLE_NAME, "test.string", isPreInstallApp, debug, -1);
+    ret = impl.SetDirsApl(para4, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
