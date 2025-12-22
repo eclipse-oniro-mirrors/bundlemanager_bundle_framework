@@ -77,6 +77,16 @@ const nlohmann::json MODULE_JSON = R"(
                 "visible": true
             }
         ],
+        "hnpPackages": [
+            {
+                "package": "testPublic.hnp",
+                "type": "public"
+            },
+            {
+                "package": "testPrivate.hnp",
+                "type": "private"
+            }
+        ],
         "name": "entry",
         "installationFree": false,
         "mainElement": "MainAbility",
@@ -138,6 +148,70 @@ const nlohmann::json MODULE_JSON2 = R"(
         "pages": "$profile:main_pages",
         "srcEntrance": "./ets/Application/AbilityStage.ts",
         "type": "entry",
+        "virtualMachine": "ark0.0.0.3"
+    }
+})"_json;
+
+const nlohmann::json MODULE_JSON_FEATURE = R"(
+{
+    "app": {
+        "bundleName": "com.example.backuptest",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777220,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 9,
+        "targetAPIVersion": 9,
+        "vendor": "example",
+        "versionCode": 1000000,
+        "versionName": "1.0.0"
+    },
+    "module": {
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777219,
+        "abilitySrcEntryDelegator": "abilitySrcEntryDelegator",
+        "abilityStageSrcEntryDelegator": "abilityStageSrcEntryDelegator",
+        "deviceTypes": [
+            "default"
+        ],
+        "requiredDeviceFeatures": {
+            "phone": [
+                "large_screen"
+            ]
+        },
+        "abilities": [
+            {
+                "description": "$string:MainAbility_desc",
+                "descriptionId": 16777217,
+                "icon": "$media:icon",
+                "iconId": 16777221,
+                "label": "$string:MainAbility_label",
+                "labelId": 16777218,
+                "name": "MainAbility",
+                "launchType": "unknowlaunchType",
+                "orientation": "unknoworientation",
+                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "visible": true
+            }
+        ],
+        "hnpPackages": [
+            {
+                "package": "testPublic.hnp",
+                "type": "public"
+            },
+            {
+                "package": "testPrivate.hnp",
+                "type": "private"
+            }
+        ],
+        "name": "featureModule",
+        "installationFree": false,
+        "mainElement": "MainAbility",
+        "pages": "$profile:main_pages",
+        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "type": "feature",
         "virtualMachine": "ark0.0.0.3"
     }
 })"_json;
@@ -507,5 +581,53 @@ HWTEST_F(BmsBundleSrcEntryDelegatorTest, IsBundleCrossAppSharedConfig_0200, Func
     bundleInfo3.InsertInnerModuleInfo("module4", module4);
     newInfos["bundleInfo3"] = bundleInfo3;
     EXPECT_TRUE(installer.IsBundleCrossAppSharedConfig(newInfos));
+}
+
+/**
+ * @tc.number: GetHnpPackageTest_0100
+ * @tc.name: test GetHnpPackageTest_0100
+ * @tc.desc: GetHnpPackageTest_0100
+ */
+HWTEST_F(BmsBundleSrcEntryDelegatorTest, GetHnpPackageTest_0100, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    auto innerModuleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName("entry");
+    EXPECT_NE(innerModuleInfo, std::nullopt);
+    EXPECT_GT(innerModuleInfo->hnpPackages.size(), 0);
+}
+
+/**
+ * @tc.number: GetHnpPackageTest_0200
+ * @tc.name: test GetHnpPackageTest_0200
+ * @tc.desc: GetHnpPackageTest_0200
+ */
+HWTEST_F(BmsBundleSrcEntryDelegatorTest, GetHnpPackageTest_0200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_FEATURE;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+
+    auto innerModuleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName("featureModule");
+    EXPECT_NE(innerModuleInfo, std::nullopt);
+    EXPECT_EQ(innerModuleInfo->hnpPackages.size(), 0);
 }
 } // OHOS
