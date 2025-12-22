@@ -32,6 +32,7 @@ public:
     virtual ~CleanCacheCallbackHostTest() = default;
     void OnCleanCacheFinished(bool succeeded)
     {
+        succeeded = true;
         return;
     }
 };
