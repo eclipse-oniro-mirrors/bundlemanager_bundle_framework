@@ -283,6 +283,11 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
 
+    if (!CheckEnterpriseResign(hapVerifyRes[0].GetProvisionInfo(), userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "enterprise resign check failed");
+        return ERR_APPEXECFWK_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED;
+    }
+
     if (!CheckProvisionInfoIsValid(hapVerifyRes)) {
 #ifndef X86_EMULATOR_MODE
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
@@ -297,6 +302,28 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     }
     LOG_D(BMS_TAG_INSTALLER, "finish check multiple haps signInfo");
     return ERR_OK;
+}
+
+bool BundleInstallChecker::CheckEnterpriseResign(
+    const Security::Verify::ProvisionInfo &provisionInfo, const int32_t userId)
+{
+    if (provisionInfo.distributionType != Security::Verify::AppDistType::ENTERPRISE &&
+        provisionInfo.distributionType != Security::Verify::AppDistType::ENTERPRISE_NORMAL &&
+        provisionInfo.distributionType != Security::Verify::AppDistType::ENTERPRISE_MDM) {
+        return true;
+    }
+    if (provisionInfo.isEnterpriseResigned) {
+        return true;
+    }
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
+        return true;
+    }
+    std::vector<std::string> certificateAlias;
+    if (BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias) && !certificateAlias.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "enterprise resign cert exist but hap not resigned");
+        return false;
+    }
+    return true;
 }
 
 bool BundleInstallChecker::CheckProvisionInfoIsValid(
