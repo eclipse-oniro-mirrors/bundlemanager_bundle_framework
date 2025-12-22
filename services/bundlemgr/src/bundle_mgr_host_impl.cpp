@@ -514,7 +514,7 @@ ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bu
     if (bundleInfos.size() == bundleNames.size()) {
         return ERR_OK;
     }
-    if (IsQueryBundleInfoExtWithoutBroker(static_cast<uint32_t>(flags))) {
+    if (IsQueryBundleInfoExt(static_cast<uint32_t>(flags))) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true);
     }
@@ -6855,16 +6855,7 @@ bool BundleMgrHostImpl::IsQueryAbilityInfoExt(const uint32_t flags) const
     }
     return true;
 }
-bool BundleMgrHostImpl::IsQueryBundleInfoExtWithoutBroker(const uint32_t flags) const
-{
-    if ((flags &
-        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT)) ==
-        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT)) {
-        APP_LOGI("no need to query bundle info from bms extension");
-        return false;
-    }
-    return true;
-}
+
 bool BundleMgrHostImpl::IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const
 {
     if ((flags &
