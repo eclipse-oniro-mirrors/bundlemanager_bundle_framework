@@ -442,7 +442,7 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+    virtual ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent)
     {
         return ERR_OK;
     }
@@ -534,6 +534,11 @@ public:
     }
 
     virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t cartLength)
     {
         return ERR_OK;
     }

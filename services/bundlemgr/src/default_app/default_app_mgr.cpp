@@ -810,6 +810,10 @@ bool DefaultAppMgr::GetBrokerBundleInfo(const Element& element, BundleInfo& bund
         LOG_W(BMS_TAG_DEFAULT, "invalid param, get broker bundleInfo failed");
         return false;
     }
+    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+        LOG_W(BMS_TAG_DEFAULT, "broker not started, get broker bundleInfo failed");
+        return false;
+    }
     Want want;
     ElementName elementName("", element.bundleName, element.abilityName, element.moduleName);
     want.SetElement(elementName);

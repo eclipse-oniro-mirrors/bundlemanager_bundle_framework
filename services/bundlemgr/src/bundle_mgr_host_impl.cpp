@@ -514,7 +514,7 @@ ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bu
     if (bundleInfos.size() == bundleNames.size()) {
         return ERR_OK;
     }
-    if (IsQueryBundleInfoExtWithoutBroker(static_cast<uint32_t>(flags))) {
+    if (IsQueryBundleInfoExt(static_cast<uint32_t>(flags))) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true);
     }
@@ -5750,6 +5750,8 @@ ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutIn
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ErrCode res = dataMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::ADD, userId, shortcutInfo.bundleName,
+        shortcutInfo.appIndex, shortcutInfo.id, IPCSkeleton::GetCallingUid(), res);
     if (res != ERR_OK) {
         APP_LOGE("AddDesktopShortcutInfo failed");
         return res;
@@ -5774,7 +5776,10 @@ ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcu
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     SetAtomicServiceRemovable(shortcutInfo, true, userId);
-    return dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    ErrCode res = dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, userId, shortcutInfo.bundleName,
+        shortcutInfo.appIndex, shortcutInfo.id, IPCSkeleton::GetCallingUid(), res);
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
@@ -6855,16 +6860,7 @@ bool BundleMgrHostImpl::IsQueryAbilityInfoExt(const uint32_t flags) const
     }
     return true;
 }
-bool BundleMgrHostImpl::IsQueryBundleInfoExtWithoutBroker(const uint32_t flags) const
-{
-    if ((flags &
-        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT)) ==
-        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_EXT)) {
-        APP_LOGI("no need to query bundle info from bms extension");
-        return false;
-    }
-    return true;
-}
+
 bool BundleMgrHostImpl::IsQueryAbilityInfoExtWithoutBroker(const uint32_t flags) const
 {
     if ((flags &

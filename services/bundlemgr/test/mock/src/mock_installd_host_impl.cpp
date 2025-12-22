@@ -313,7 +313,7 @@ ErrCode InstalldHostImpl::RemoveSignProfile(const std::string &bundleName)
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+ErrCode InstalldHostImpl::AddCertAndEnableKey(const std::string &certPath, const std::string &certContent)
 {
     return ERR_OK;
 }
@@ -406,6 +406,11 @@ ErrCode InstalldHostImpl::ResetBmsDBSecurity()
 }
 
 ErrCode InstalldHostImpl::CopyDir(const std::string &sourceDir, const std::string &destinationDir)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
 {
     return ERR_OK;
 }

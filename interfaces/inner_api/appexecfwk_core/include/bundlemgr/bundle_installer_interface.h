@@ -182,12 +182,18 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode CreateEnterpriseCertStream(const std::string &certAlias, int32_t userId, int32_t& fd)
+    virtual ErrCode AddEnterpriseResignCert(
+        const std::string &certAlias, const std::string &certContent, int32_t userId)
     {
         return ERR_OK;
     }
 
-    virtual ErrCode EnableKeyForEnterpriseResign(const std::string &certAlias, int32_t userId, int32_t fd)
+    virtual ErrCode UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)
     {
         return ERR_OK;
     }

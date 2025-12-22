@@ -112,7 +112,6 @@ constexpr const char* META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 constexpr const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* RESOURCE_STRING_PREFIX = "$string:";
-constexpr const char* MEDIALIBRARYDATA = "com.ohos.medialibrary.medialibrarydata";
 constexpr const char* EMPTY_STRING = "";
 constexpr const char* SHORTCUT_OPERATION_CREATE = "ADD";
 constexpr const char* SHORTCUT_OPERATION_DELETE = "DEL";
@@ -4914,7 +4913,9 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
         appServiceHspBundleName_.erase(bundleName);
     }
     if (!isKeepData) {
-        DeleteDesktopShortcutInfo(bundleName);
+        ErrCode deleteDesktopRes = DeleteDesktopShortcutInfo(bundleName);
+        EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, Constants::ALL_USERID, bundleName,
+            0, Constants::EMPTY_STRING, IPCSkeleton::GetCallingUid(), deleteDesktopRes);
     }
 }
 
@@ -7689,18 +7690,19 @@ bool BundleDataMgr::GetElement(int32_t userId, const int32_t appIndex, const Ele
         return true;
     }
 
-    APP_LOGI("query ability from broker");
-    AbilityInfo brokerAbilityInfo;
-    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    ErrCode resultCode = bmsExtensionClient->QueryAbilityInfo(want, 0, userId, brokerAbilityInfo, true);
-    if (resultCode == ERR_OK) {
-        APP_LOGI("ElementName is brokerAbility");
-        element.bundleName = bundleName;
-        element.moduleName = moduleName;
-        element.abilityName = abilityName;
-        return true;
+    if (DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+        APP_LOGI("query ability from broker");
+        AbilityInfo brokerAbilityInfo;
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        ErrCode resultCode = bmsExtensionClient->QueryAbilityInfo(want, 0, userId, brokerAbilityInfo, true);
+        if (resultCode == ERR_OK) {
+            APP_LOGI("ElementName is brokerAbility");
+            element.bundleName = bundleName;
+            element.moduleName = moduleName;
+            element.abilityName = abilityName;
+            return true;
+        }
     }
-
     APP_LOGW("ElementName doesn't exist");
     return false;
 }
@@ -9779,16 +9781,10 @@ void BundleDataMgr::InnerCreateEl5Dir(const CreateDirParam &el5Param)
     dirs.emplace_back(parentDir + ServiceConstants::DATABASE + bundleNameDir);
     for (const std::string &dir : dirs) {
         uint32_t mode = S_IRWXU;
-        int32_t gid = el5Param.uid;
         if (dir.find(ServiceConstants::DATABASE) != std::string::npos) {
-            if (el5Param.bundleName == MEDIALIBRARYDATA) {
-                mode = S_IRWXU | S_IRWXG | S_ISGID;
-                gid = ServiceConstants::DATABASE_DIR_GID;
-            } else {
-                mode = S_IRWXU | S_IRWXG;
-            }
+            mode = S_IRWXU | S_IRWXG;
         }
-        if (InstalldClient::GetInstance()->Mkdir(dir, mode, el5Param.uid, gid) != ERR_OK) {
+        if (InstalldClient::GetInstance()->Mkdir(dir, mode, el5Param.uid, el5Param.uid) != ERR_OK) {
             LOG_NOFUNC_W(BMS_TAG_INSTALLER, "create el5 dir %{public}s failed", dir.c_str());
         }
         ErrCode result = InstalldClient::GetInstance()->SetDirApl(
@@ -10277,7 +10273,9 @@ ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const in
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     innerBundleInfo.SetBundleStatus(nowBundleStatus);
-    DeleteDesktopShortcutInfo(bundleName, userId, appIndex);
+    ErrCode deleteDesktopRes = DeleteDesktopShortcutInfo(bundleName, userId, appIndex);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, userId, bundleName,
+        appIndex, Constants::EMPTY_STRING, IPCSkeleton::GetCallingUid(), deleteDesktopRes);
     if (DeleteShortcutVisibleInfo(bundleName, userId, appIndex) != ERR_OK) {
         APP_LOGE("DeleteShortcutVisibleInfo failed, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
             bundleName.c_str(), userId, appIndex);

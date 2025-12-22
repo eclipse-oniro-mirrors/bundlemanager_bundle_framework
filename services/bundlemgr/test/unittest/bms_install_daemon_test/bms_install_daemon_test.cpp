@@ -1748,26 +1748,6 @@ HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_0100, Function | SmallTest | 
 }
 
 /**
- * @tc.number: EnableKeyForEnterpriseResign_0100
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. test EnableKeyForEnterpriseResign
-*/
-HWTEST_F(BmsInstallDaemonTest, EnableKeyForEnterpriseResign_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl hostImpl;
-    unsigned char *cert = new unsigned char[10];
-    int32_t certLength = 10;
-    ErrCode ret = hostImpl.EnableKeyForEnterpriseResign(cert, certLength);
-    EXPECT_NE(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    ret = hostImpl.EnableKeyForEnterpriseResign(nullptr, certLength);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    ret = hostImpl.EnableKeyForEnterpriseResign(cert, 0);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
  * @tc.number: RemoveExtensionDir_0100
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. test RemoveExtensionDir

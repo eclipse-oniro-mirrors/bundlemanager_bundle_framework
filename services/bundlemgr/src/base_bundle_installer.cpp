@@ -108,7 +108,7 @@ constexpr int32_t THRESHOLD_VAL_LEN = 20;
 #endif // QUOTA_PARAM_SET_ENABLE
 constexpr int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 #endif // STORAGE_SERVICE_ENABLE
-constexpr int16_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 200;
+constexpr int16_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 1024;
 constexpr int8_t SINGLE_HSP_VERSION = 1;
 constexpr int8_t USER_MODE = 0;
 constexpr const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
@@ -5010,6 +5010,10 @@ void BaseBundleInstaller::CheckInstallAllowDowngrade(
     if ((result != ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE) || oldBundleInfo.IsSystemApp()) {
         return;
     }
+    if ((oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_NONE) &&
+        (oldBundleInfo.GetAppDistributionType() != Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY)) {
+        return;
+    }
     auto item = installParam.parameters.find(ServiceConstants::BMS_PARA_INSTALL_ALLOW_DOWNGRADE);
     if ((item == installParam.parameters.end()) || (item->second != ServiceConstants::BMS_TRUE)) {
         return;
@@ -5595,8 +5599,13 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
         return result;
     }
 
-    if (!isKeepData && dataMgr_->DeleteDesktopShortcutInfo(bundleName, userId_, 0) != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "fail to delete shortcut info");
+    if (!isKeepData) {
+        result = dataMgr_->DeleteDesktopShortcutInfo(bundleName, userId_, 0);
+        if (result != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "fail to delete shortcut info");
+        }
+        EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, userId_, bundleName,
+            0, Constants::EMPTY_STRING, IPCSkeleton::GetCallingUid(), result);
     }
 
     return ERR_OK;

@@ -50,6 +50,8 @@ constexpr int8_t ALL_VERSIONCODE = -1;
 constexpr int8_t INVALID_UDID = -1;
 constexpr int8_t DEFAULT_INSTALLERID = -1;
 constexpr int8_t DEFAULT_APP_INDEX = 0;
+constexpr int16_t MAX_FILE_NAME_LENGTH = 256;
+constexpr int16_t BMS_MAX_PATH_LENGTH = 4096;
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;
@@ -184,6 +186,9 @@ constexpr const char* RELEASE_TYPE_VALUE = "2";
 // crowdtesting
 constexpr int8_t INVALID_CROWDTEST_DEADLINE = -1;
 constexpr int8_t INHERIT_CROWDTEST_DEADLINE = -2;
+// app sign type
+constexpr const char* APP_SIGN_TYPE_NONE = "none";
+constexpr const char* APP_SIGN_TYPE_ENTERPRISE_RE_SIGN = "enterpriseReSign";
 
 // overlay installation
 constexpr const char* OVERLAY_STATE = "overlayState";

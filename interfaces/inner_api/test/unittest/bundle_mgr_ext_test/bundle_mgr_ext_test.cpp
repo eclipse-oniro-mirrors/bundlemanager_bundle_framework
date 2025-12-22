@@ -178,5 +178,18 @@ HWTEST_F(BundleMgrExtTest, GetInstallAndRecoverList_0100, Function | SmallTest |
     auto ret = bundleMgrExtToTest.GetInstallAndRecoverList(100, bundleList, installList, recoverList);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: GetDetermineCloneNumList_0100
+ * @tc.name: test the GetDetermineCloneNumList
+ * @tc.desc: 1. system running normally
+ *           2. test GetDetermineCloneNumList
+ */
+HWTEST_F(BundleMgrExtTest, GetDetermineCloneNumList_0100, Function | SmallTest | Level0)
+{
+    BundleMgrExtToTest bundleMgrExtToTest;
+    std::vector<std::tuple<std::string, std::string, uint32_t>> determineCloneNumList;
+    EXPECT_NO_THROW(bundleMgrExtToTest.GetDetermineCloneNumList(determineCloneNumList));
+}
 }
 }

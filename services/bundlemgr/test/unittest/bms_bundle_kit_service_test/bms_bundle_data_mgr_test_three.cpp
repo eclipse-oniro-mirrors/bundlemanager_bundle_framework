@@ -43,7 +43,9 @@
 #include "bundle_exception_handler.h"
 #include "clean_cache_callback_proxy.h"
 #include "directory_ex.h"
+#include "event_report.h"
 #include "hidump_helper.h"
+#include "inner_event_report.h"
 #include "install_param.h"
 #include "extension_ability_info.h"
 #include "installd/installd_service.h"
@@ -2523,6 +2525,31 @@ HWTEST_F(BmsBundleDataMgrTest3, BundleMgrHostHandleDeleteDesktopShortcutInfo_000
     auto ret = localBundleMgrHost->HandleDeleteDesktopShortcutInfo(data, reply);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
+
+/**
+ * @tc.number: DesktopShortcutEvent_001
+ * @tc.name: DesktopShortcutEvent_001
+ * @tc.desc: test DesktopShortcutEvent_001
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DesktopShortcutEvent_001, Function | MediumTest | Level1)
+{
+    EXPECT_NO_THROW(EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, 100,
+        "com.test.bundle", 0, "test_shortcut_id", 5523, 0));
+    EXPECT_NO_THROW(EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::ADD, 100,
+        "com.test.bundle", 0, "test_shortcut_id", 5523, 0));
+}
+
+/**
+ * @tc.number: DesktopShortcutEvent_001
+ * @tc.name: DesktopShortcutEvent_001
+ * @tc.desc: test DesktopShortcutEvent_001
+ */
+HWTEST_F(BmsBundleDataMgrTest3, DesktopShortcutEvent_002, Function | MediumTest | Level1)
+{
+    EventInfo eventInfo;
+    EXPECT_NO_THROW(InnerEventReport::InnerSendDesktopShortcutEvent(eventInfo));
+}
+
 
 /**
  * @tc.number: BundleMgrHostHandleGetAllDesktopShortcutInfo_0001

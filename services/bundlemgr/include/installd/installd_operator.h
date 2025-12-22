@@ -326,6 +326,8 @@ public:
         std::vector<std::string> &soName,
         std::vector<std::string> &soHash);
 
+    static bool WriteCertToFile(const std::string &certFilePath, const std::string &certContent);
+
     static bool IsFileNameValid(const std::string &fileName);
 
     static bool ResetBmsDBSecurity();

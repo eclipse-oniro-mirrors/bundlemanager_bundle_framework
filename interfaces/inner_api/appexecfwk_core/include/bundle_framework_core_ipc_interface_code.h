@@ -303,8 +303,9 @@ enum class BundleInstallerInterfaceCode : uint8_t {
     INSTALL_EXISTED = 13,
     INSTALL_PLUGIN_APP = 14,
     UNINSTALL_PLUGIN_APP = 15,
-    CREATE_ENTERPRISE_CERT_STREAM = 16,
-    ENABLE_KEY_FOR_ENTERPRISE_RESIGN = 17,
+    ADD_ENTERPRISE_RESIGN_CERT = 16,
+    UNINSTALL_ENTERPRISE_RE_SIGNATURE_CERT = 18,
+    GET_ENTERPRISE_RE_SIGNATURE_CERT = 19,
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */

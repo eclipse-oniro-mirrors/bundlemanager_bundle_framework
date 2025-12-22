@@ -249,7 +249,7 @@ public:
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
-    virtual ErrCode EnableKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength) override;
+    virtual ErrCode AddCertAndEnableKey(const std::string &certPath, const std::string &certContent) override;
 
     virtual ErrCode SetEncryptionPolicy(const EncryptionParam &encryptionParam, std::string &keyId) override;
 
@@ -284,6 +284,8 @@ public:
     virtual ErrCode HashFiles(const std::vector<std::string> &files, std::vector<std::string> &filesHash) override;
 
     virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
+
+    virtual ErrCode RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t cartLength) override;
 
 private:
     static std::string GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid);
