@@ -4913,7 +4913,9 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
         appServiceHspBundleName_.erase(bundleName);
     }
     if (!isKeepData) {
-        DeleteDesktopShortcutInfo(bundleName);
+        ErrCode deleteDesktopRes = DeleteDesktopShortcutInfo(bundleName);
+        EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, Constants::ALL_USERID, bundleName,
+            0, Constants::EMPTY_STRING, IPCSkeleton::GetCallingUid(), deleteDesktopRes);
     }
 }
 
@@ -10271,7 +10273,9 @@ ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const in
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     innerBundleInfo.SetBundleStatus(nowBundleStatus);
-    DeleteDesktopShortcutInfo(bundleName, userId, appIndex);
+    ErrCode deleteDesktopRes = DeleteDesktopShortcutInfo(bundleName, userId, appIndex);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, userId, bundleName,
+        appIndex, Constants::EMPTY_STRING, IPCSkeleton::GetCallingUid(), deleteDesktopRes);
     if (DeleteShortcutVisibleInfo(bundleName, userId, appIndex) != ERR_OK) {
         APP_LOGE("DeleteShortcutVisibleInfo failed, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
             bundleName.c_str(), userId, appIndex);

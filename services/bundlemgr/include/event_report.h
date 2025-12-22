@@ -24,6 +24,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace DesktopShortcutOperation {
+    constexpr const char* ADD = "ADD";
+    constexpr const char* DELETE = "DEL";
+}
 enum class BMSEventType : uint8_t {
     UNKNOW = 0,
     /***********FAULT EVENT**************/
@@ -56,6 +60,7 @@ enum class BMSEventType : uint8_t {
     DEFAULT_APP,
     QUERY_BUNDLE_INFO,
     BUNDLE_DYNAMIC_SHORTCUTINFO,
+    DESKTOP_SHORTCUT,
 };
 
 enum class BundleEventType : uint8_t {
@@ -442,6 +447,20 @@ public:
      */
     static void SendDynamicShortcutEvent(const std::string &bundleName, int32_t userId,
         const std::vector<std::string> &shortcutIds, const std::string &operationType, int32_t callingUid);
+    
+    /**
+     * @brief Send info when add or delete desktop shortcuts.
+     * @param operationType Operation types include Add and Delete.
+     * @param userId Indicates the shortcutIds.
+     * @param bundleName Indicates the bundleName.
+     * @param appIndex Indicates the app index for clone app.
+     * @param shortcutId Indicates the shortcut id.
+     * @param callingUid Indicates method caller uid.
+     * @param result Indicates method result.
+     */
+    static void SendDesktopShortcutEvent(const std::string &operationType, int32_t userId,
+        const std::string &bundleName, int32_t appIndex, const std::string &shortcutId, int32_t callingUid,
+        int32_t result);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
