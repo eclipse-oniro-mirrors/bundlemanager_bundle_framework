@@ -29,7 +29,8 @@ namespace {
 constexpr const char* CLASSNAME_GZ_ERROR_OUTPUT_INFO_INNER = "@ohos.zlib.zlib.GzErrorOutputInfoInner";
 constexpr const char* FIELD_NAME_NATIVE_GZFILE = "nativeGZFile";
 constexpr const char* FUNCTION_TOSTRING = "toString";
-constexpr const char* MANGLING_TOSTRING = ":Lstd/core/String;";
+constexpr const char* MANGLING_TOSTRING = ":C{std.core.String}";
+constexpr int INVALID_FD = -1;
 constexpr uint8_t MIN_ASCII = 0;
 constexpr uint8_t MAX_ASCII = 255;
 constexpr size_t INT64_BITS = 64;
@@ -259,9 +260,9 @@ static bool GetFormattedString(ani_env* env, const std::string& format, ani_obje
     std::vector<AniParam> params;
     for (ani_size i = 0; i < maxArgCount; ++i) {
         ani_ref element;
-        status = env->Array_Get_Ref(static_cast<ani_array_ref>(args), i, &element);
+        status = env->Array_Get(static_cast<ani_array>(args), i, &element);
         if (status != ANI_OK) {
-            APP_LOGE("Array_Get_Ref failed %{public}d", status);
+            APP_LOGE("Array_Get failed %{public}d", status);
             return false;
         }
         ParseAniValue(env, element, params);
