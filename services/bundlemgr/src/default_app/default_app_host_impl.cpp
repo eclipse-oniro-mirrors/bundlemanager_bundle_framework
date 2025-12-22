@@ -48,9 +48,27 @@ ErrCode DefaultAppHostImpl::SetDefaultApplicationForAppClone(const int32_t userI
         LOG_E(BMS_TAG_DEFAULT, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (appIndex <= Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (!dataMgr->HasUserId(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "userId not exist");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (appIndex > Constants::CLONE_APP_INDEX_MAX || appIndex <= Constants::MAIN_APP_INDEX) {
         LOG_E(BMS_TAG_DEFAULT, "Invalid appIndex:%{public}d", appIndex);
         return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    std::string bundleName = want.GetElement().GetBundleName();
+    if (!bundleName.empty()) {
+        std::vector<int32_t> appIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
+        bool isAppIndexFound = std::find(appIndexes.cbegin(), appIndexes.cend(), appIndex) != appIndexes.cend();
+        if (!isAppIndexFound) {
+            LOG_E(BMS_TAG_DEFAULT, "Invalid appIndex:%{public}d", appIndex);
+            return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+        }
     }
     return InnerSetDefaultApplication(userId, appIndex, type, want);
 }

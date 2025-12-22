@@ -36,7 +36,7 @@ constexpr int8_t INITIAL_USER_ID = -1;
 constexpr int8_t TYPE_PART_COUNT = 2;
 constexpr int8_t INDEX_ZERO = 0;
 constexpr int8_t INDEX_ONE = 1;
-constexpr uint16_t TYPE_MAX_SIZE = 200;
+constexpr uint16_t TYPE_MAX_SIZE = 512;
 constexpr const char* SPLIT = "/";
 constexpr const char* SCHEME_SIGN = "://";
 constexpr const char* EMAIL_ACTION = "ohos.want.action.sendToData";
@@ -154,17 +154,10 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
 ErrCode DefaultAppMgr::IsDefaultApplicationInternal(
     int32_t userId, const std::string& normalizedType, bool& isDefaultApp) const
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    Element element;
-    bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, normalizedType, element);
-    if (!ret) {
-        LOG_I(BMS_TAG_DEFAULT, "GetDefaultApplicationInfo failed");
-        isDefaultApp = false;
-        return ERR_OK;
-    }
-    ret = IsElementValid(userId, normalizedType, element);
-    if (!ret) {
-        LOG_W(BMS_TAG_DEFAULT, "invalid element");
+    BundleInfo bundleInfo;
+    ErrCode result = GetDefaultApplicationInternal(userId, normalizedType, bundleInfo);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "GetDefaultApplicationInfo failed");
         isDefaultApp = false;
         return ERR_OK;
     }
@@ -177,14 +170,14 @@ ErrCode DefaultAppMgr::IsDefaultApplicationInternal(
     }
     std::string callingBundleName;
     int32_t appIndex = 0;
-    ErrCode result = dataMgr->GetBundleNameAndIndexForUid(IPCSkeleton::GetCallingUid(), callingBundleName, appIndex);
+    result = dataMgr->GetBundleNameAndIndexForUid(IPCSkeleton::GetCallingUid(), callingBundleName, appIndex);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "GetBundleNameForUid failed");
         isDefaultApp = false;
         return ERR_OK;
     }
     LOG_I(BMS_TAG_DEFAULT, "callingBundleName:%{public}s", callingBundleName.c_str());
-    isDefaultApp = (element.bundleName == callingBundleName) && (element.appIndex == appIndex);
+    isDefaultApp = (bundleInfo.name == callingBundleName) && (bundleInfo.appIndex == appIndex);
     return ERR_OK;
 }
 
