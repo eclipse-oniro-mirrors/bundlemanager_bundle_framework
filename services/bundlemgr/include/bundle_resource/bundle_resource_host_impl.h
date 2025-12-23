@@ -53,6 +53,7 @@ public:
 
     virtual ErrCode GetLauncherAbilityResourceInfoList(const std::vector<BundleOptionInfo>& optionsList,
         const uint32_t flags, std::vector<LauncherAbilityResourceInfo>& launcherAbilityResourceInfo) override;
+    void FilterUninstallResource(const int32_t userId, std::vector<BundleResourceInfo> &bundleResourceInfos);
 private:
     ErrCode CheckBundleNameValid(const std::string &bundleName, int32_t appIndex);
     ErrCode CheckExtensionAbilityValid(const std::string &bundleName, const ExtensionAbilityType extensionAbilityType,

@@ -6564,4 +6564,22 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0260, Function | SmallTest
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfo);
     EXPECT_NE(ret, ERR_OK);
 }
+
+
+/**
+ * @tc.number: FilterUninstallResource_0001
+ * Function: FilterUninstallResource
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test FilterUninstallResource
+ */
+HWTEST_F(BmsBundleResourceTest, FilterUninstallResource_0001, Function | SmallTest | Level0)
+{
+    std::vector<BundleResourceInfo> resourceList;
+    BundleResourceInfo res;
+    resourceList.emplace_back(res);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    bundleResourceHostImpl->FilterUninstallResource(100, resourceList);
+    EXPECT_EQ(true, resourceList.empty());
+}
 } // OHOS
