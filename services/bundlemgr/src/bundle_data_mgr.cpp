@@ -4711,7 +4711,7 @@ bool BundleDataMgr::GetBundlesForUid(const int uid, std::vector<std::string> &bu
         APP_LOGW("uid: %{public}d invalid!", uid);
         return false;
     }
-    bundleNames.emplace_back(innerBundleInfo->GetBundleName());
+    bundleNames.emplace_back(bundleName);
     return true;
 }
 
