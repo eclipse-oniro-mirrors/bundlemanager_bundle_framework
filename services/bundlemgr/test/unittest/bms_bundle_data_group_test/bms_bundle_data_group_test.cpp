@@ -2153,4 +2153,50 @@ HWTEST_F(BmsBundleDataGroupTest, SetHybridSpawn_0003, Function | MediumTest | Le
     EXPECT_EQ(info.GetApplicationArkTSMode(), Constants::ARKTS_MODE_STATIC);
     dataMgr->bundleInfos_.erase("test");
 }
+
+/**
+ * @tc.number: SetHybridSpawn_0004
+ * @tc.name: test SetHybridSpawn
+ * @tc.desc: 1.Test SetHybridSpawn
+*/
+HWTEST_F(BmsBundleDataGroupTest, SetHybridSpawn_0004, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = "test";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test";
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    info.innerModuleInfos_.try_emplace("entry", innerModuleInfo);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.emplace("test", info);
+    system::SetParameter(ServiceConstants::HYBRID_SPAWN_UNIFIED, "true");
+    installer.SetHybridSpawn();
+    EXPECT_EQ(info.GetApplicationArkTSMode(), Constants::ARKTS_MODE_STATIC);
+    dataMgr->bundleInfos_.erase("test");
+}
+
+/**
+ * @tc.number: SetHybridSpawn_0005
+ * @tc.name: test SetHybridSpawn
+ * @tc.desc: 1.Test SetHybridSpawn
+*/
+HWTEST_F(BmsBundleDataGroupTest, SetHybridSpawn_0005, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = "test";
+    InnerBundleInfo info;
+    info.baseApplicationInfo_->bundleName = "test";
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleArkTSMode = Constants::ARKTS_MODE_STATIC;
+    info.innerModuleInfos_.try_emplace("entry", innerModuleInfo);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.emplace("test", info);
+    system::SetParameter(ServiceConstants::HYBRID_SPAWN_UNIFIED, "false");
+    installer.SetHybridSpawn();
+    EXPECT_EQ(info.GetApplicationArkTSMode(), Constants::ARKTS_MODE_STATIC);
+    dataMgr->bundleInfos_.erase("test");
+}
 } // OHOS

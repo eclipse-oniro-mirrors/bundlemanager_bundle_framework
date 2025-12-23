@@ -206,6 +206,7 @@ constexpr const char* BMS_DATA_PRELOAD = "persist.bms.data.preload";
 constexpr const char* IS_SUPPORT_PLUGIN = "const.bms.support_plugin";
 constexpr const char* IS_DRIVER_FOR_ALL_USERS = "const.bms.driverForAllUsers";
 constexpr const char* HYBRID_SPAWN_ENABLE = "persist.appspawn.hybridspawn.enable";
+constexpr const char* HYBRID_SPAWN_UNIFIED = "persist.appspawn.hybridspawn.unified";
 constexpr const char* IS_APP_CLONE_DISABLE = "persist.edm.app_clone_disable";
 constexpr const char* ENTERPRISE_SPACE_ENABLE = "persist.space_mgr_service.enterprise_space_enable";
 constexpr const char* ENTERPRISE_SPACE_USER_ID_LIST = "persist.space_mgr_service.enterprise_workspace_userid_list";

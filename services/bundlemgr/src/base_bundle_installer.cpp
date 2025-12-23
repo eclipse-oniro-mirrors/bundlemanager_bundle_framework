@@ -8442,6 +8442,10 @@ void BaseBundleInstaller::SetHybridSpawn()
     }
     std::string arkTSMode = info.GetApplicationArkTSMode();
     if (arkTSMode == Constants::ARKTS_MODE_STATIC || arkTSMode == Constants::ARKTS_MODE_HYBRID) {
+        if (OHOS::system::GetBoolParameter(ServiceConstants::HYBRID_SPAWN_UNIFIED, false)) {
+            LOG_D(BMS_TAG_INSTALLER, "persist.appspawn.hybridspawn.unified is true");
+            return;
+        }
         LOG_I(BMS_TAG_INSTALLER, "set persist.appspawn.hybridspawn.enable true");
         OHOS::system::SetParameter(ServiceConstants::HYBRID_SPAWN_ENABLE, BMS_TRUE);
     }
