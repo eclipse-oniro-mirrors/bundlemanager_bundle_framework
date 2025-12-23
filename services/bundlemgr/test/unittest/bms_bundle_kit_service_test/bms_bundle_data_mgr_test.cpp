@@ -6281,6 +6281,39 @@ HWTEST_F(BmsBundleDataMgrTest, HandleDetermineCloneNumList_0100, Function | Smal
 }
 
 /**
+ * @tc.number: GetInnerBundleInfoNoLock_0100
+ * @tc.name: GetInnerBundleInfoNoLock
+ * @tc.desc: test GetInnerBundleInfoNoLock with nonexistent name
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoNoLock_0100, Function | SmallTest | Level1)
+{
+    std::string bundleName = "testBundleName";
+    int32_t uid = USERID;
+    int32_t appIndex = 0;
+    const InnerBundleInfo* innerPtr = nullptr;
+    ErrCode result = GetBundleDataMgr()->GetInnerBundleInfoNoLock(bundleName, uid, appIndex, innerPtr);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
+ * @tc.number: GetInnerBundleInfoNoLock_0200
+ * @tc.name: GetInnerBundleInfoNoLock
+ * @tc.desc: test GetInnerBundleInfoNoLock with error uid
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoNoLock_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    std::string bundleName = "testBundleName";
+    int32_t uid = Constants::ALL_USERID;
+    int32_t appIndex = 0;
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleinfos_.emplace(bundleName, innerBundleInfo);
+    const InnerBundleInfo* innerPtr = &innerBundleInfo;
+    ErrCode result = dataMgr->GetInnerBundleInfoNoLock(bundleName, uid, appIndex, innerPtr);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
  * @tc.number: GetPluginExtensionInfo_0100
  * @tc.name: GetPluginExtensionInfo
  * @tc.desc: test bundle not exist
