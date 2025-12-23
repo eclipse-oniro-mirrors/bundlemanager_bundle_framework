@@ -510,7 +510,7 @@ HWTEST_F(BmsBundleManagerTest3, GetBundleInfoForSelf_0100, Function | SmallTest 
     int32_t flags = 0;
     BundleInfo info;
     ErrCode ret = hostImpl->GetBundleInfoForSelf(flags, info);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -1975,7 +1975,7 @@ HWTEST_F(BmsBundleManagerTest3, BundleMgrHostImpl_3900, Function | MediumTest | 
     EXPECT_NE(hostImpl, nullptr);
     std::string odid = "odid";
     ErrCode retCode = hostImpl->GetOdid(odid);
-    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**

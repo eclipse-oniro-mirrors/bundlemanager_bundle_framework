@@ -878,15 +878,15 @@ public:
      * @return Returns true if get inner bundle info is successfully obtained; returns false otherwise.
      */
     bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
-        InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
+        const InnerBundleInfo *&info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
         int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     bool GetInnerBundleInfoWithBundleFlagsAndLock(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, int32_t flags,
-        InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
+        const InnerBundleInfo *&info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     ErrCode GetInnerBundleInfoWithBundleFlagsV9(const std::string &bundleName, int32_t flags,
-        InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
+        const InnerBundleInfo *&info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     std::shared_ptr<BundleSandboxAppHelper> GetSandboxAppHelper() const;
     ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo);
 
@@ -1310,6 +1310,8 @@ private:
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     ErrCode ImplicitQueryExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
+    ErrCode GetInnerBundleInfoNoLock(const std::string bundleName, const int32_t uid, const int32_t appIndex,
+        const InnerBundleInfo *&innerBundleInfo) const;
     void GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId, const InnerBundleInfo &info,
         std::vector<ExtensionAbilityInfo> &einfos, int32_t appIndex = 0) const;
     void GetMatchExtensionInfosV9(const Want &want, int32_t flags, int32_t userId, const InnerBundleInfo &info,
@@ -1369,7 +1371,7 @@ private:
     void ModifyApplicationInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo,
         ApplicationInfo &applicationInfo) const;
     void ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo, BundleInfo &bundleInfo) const;
-    void GetCloneBundleInfos(const InnerBundleInfo& info, int32_t flags, int32_t userId,
+    void GetCloneBundleInfos(const InnerBundleInfo &info, int32_t flags, int32_t userId,
         BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const;
     void GetBundleNameAndIndexByName(const std::string &keyName, std::string &bundleName, int32_t &appIndex) const;
     void GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos,
@@ -1469,7 +1471,7 @@ private:
     ErrCode CheckShortcutIdsUnique(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         const std::vector<ShortcutInfo> &shortcutInfos, std::vector<std::string> &ids) const;
     ErrCode CheckModuleNameAndAbilityName(const std::vector<ShortcutInfo>& shortcutInfos,
-        const InnerBundleInfo& innerBundleInfo) const;
+        const InnerBundleInfo &innerBundleInfo) const;
     ErrCode GetTargetShortcutInfo(const std::string &bundleName, const std::string &shortcutId,
         const std::vector<ShortcutInfo> &shortcutInfos, ShortcutInfo &targetShortcutInfo) const;
 

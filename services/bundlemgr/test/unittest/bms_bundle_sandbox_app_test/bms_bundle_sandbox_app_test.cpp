@@ -2152,7 +2152,7 @@ HWTEST_F(BmsSandboxAppTest, GetBundleInfoForSelf_0100, Function | SmallTest | Le
     BundleInfo bundleInfo;
     bundleMgrService_->GetDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, info);
     ErrCode res = bundleMgrHostImpl_->GetBundleInfoForSelf(APP_INDEX_1, bundleInfo);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_UID);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
     setuid(0);
