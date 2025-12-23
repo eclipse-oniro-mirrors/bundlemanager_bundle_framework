@@ -1298,6 +1298,10 @@ bool BundleUtil::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::s
         std::to_string(userId);
     DIR *dir = opendir(path.c_str());
     if (dir == nullptr) {
+        if (errno == ENOENT) {
+            APP_LOGI("dir not exist");
+            return true;
+        }
         APP_LOGE("fail to opendir:%{public}s, errno:%{public}d", path.c_str(), errno);
         return false;
     }
@@ -1315,7 +1319,7 @@ bool BundleUtil::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::s
     }
     closedir(dir);
     APP_LOGI("re sign cert size:%{public}zu", certificateAlias.size());
-    return !certificateAlias.empty();
+    return true;
 }
 
 bool BundleUtil::RemoveKeyForEnterpriseResign(const std::string &path)
