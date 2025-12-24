@@ -6310,7 +6310,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoNoLock_0200, Function | SmallTe
     dataMgr->bundleInfos_.emplace(bundleName, innerBundleInfo);
     const InnerBundleInfo* innerPtr = &innerBundleInfo;
     ErrCode result = dataMgr->GetInnerBundleInfoNoLock(bundleName, uid, appIndex, innerPtr);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
