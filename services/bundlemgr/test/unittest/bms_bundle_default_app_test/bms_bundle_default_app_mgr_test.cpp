@@ -1400,6 +1400,11 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, GetBundleInfoByUtd_0001, Function | SmallTe
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
 }
 
+/**
+ * @tc.number: SetDefaultApplication_0010
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1.SetDefaultApplicationForAppClone
+ */
 HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0010, Function | SmallTest | Level1)
 {
     DefaultAppHostImpl impl;
@@ -1411,6 +1416,11 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0010, Func
     EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
 
+/**
+ * @tc.number: SetDefaultApplication_0020
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1.SetDefaultApplicationForAppClone
+ */
 HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0020, Function | SmallTest | Level1)
 {
     DefaultAppHostImpl impl;
@@ -1418,6 +1428,58 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0020, Func
     ElementName elementName("", "", "", "");
     want.SetElement(elementName);
     int32_t appIndex = 0;
+    auto res = impl.SetDefaultApplicationForAppClone(USER_ID, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0030
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1.SetDefaultApplicationForAppClone
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0030, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", "", "", "");
+    want.SetElement(elementName);
+    int32_t appIndex = 1;
+    auto res = impl.SetDefaultApplicationForAppClone(USER_ID+20, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0040
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1.SetDefaultApplicationForAppClone
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0040, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    ClearDataMgr();
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, "", MODULE_NAME);
+    want.SetElement(elementName);
+    int32_t appIndex = 1;
+    auto res = impl.SetDefaultApplicationForAppClone(USER_ID, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0050
+ * @tc.name: test SetDefaultApplicationForAppClone
+ * @tc.desc: 1.SetDefaultApplicationForAppClone
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0050, Function | SmallTest | Level1)
+{
+    auto dataMgr = OHOS::BmsBundleDefaultAppMgrTest::bundleMgrService_->GetDataMgr();
+    dataMgr->AddUserId(USER_ID);
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, "", MODULE_NAME);
+    want.SetElement(elementName);
+    int32_t appIndex = 2;
     auto res = impl.SetDefaultApplicationForAppClone(USER_ID, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
     EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
