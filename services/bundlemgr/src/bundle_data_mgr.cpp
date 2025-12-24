@@ -12778,6 +12778,13 @@ ErrCode BundleDataMgr::GetPluginExtensionInfo(
             pluginBundleName.c_str(), pluginAbilityName.c_str(), pluginModuleName.c_str());
         return ERR_APPEXECFWK_PLUGIN_ABILITY_NOT_FOUND;
     }
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!item->second.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        APP_LOGE("can not find bundleUserInfo in userId: %{public}d, bundleName:%{public}s",
+            userId, hostBundleName.c_str());
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+    extensionInfo.applicationInfo.uid = innerBundleUserInfo.uid;
     return ERR_OK;
 }
 }  // namespace AppExecFwk
