@@ -4873,6 +4873,8 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_9000, Function | Smal
     BundleInfo bundleInfo;
     auto ret = info.GetBundleInfo(GET_BUNDLE_WITH_REQUESTED_PERMISSION, bundleInfo, Constants::ALL_USERID);
     EXPECT_TRUE(ret);
+    ret = info.GetBundleInfo(GET_BUNDLE_WITH_REQUESTED_PERMISSION_NO_DETAILED, bundleInfo, Constants::ALL_USERID);
+    EXPECT_TRUE(ret);
 }
 
 /**
