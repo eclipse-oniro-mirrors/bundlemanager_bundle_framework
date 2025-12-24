@@ -2115,6 +2115,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const InnerBundleInfo &newInfo)
         baseApplicationInfo_->assetAccessGroups = applicationInfo.assetAccessGroups;
         baseApplicationInfo_->appPreloadPhase = applicationInfo.appPreloadPhase;
     }
+    baseApplicationInfo_->appSignType = applicationInfo.appSignType;
 }
 
 void InnerBundleInfo::UpdatePartialInnerBundleInfo(const InnerBundleInfo &info)

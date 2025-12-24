@@ -319,7 +319,7 @@ bool BundleInstallChecker::CheckEnterpriseResign(
         return true;
     }
     std::vector<std::string> certificateAlias;
-    if (BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias) && !certificateAlias.empty()) {
+    if ((BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias) == ERR_OK) && !certificateAlias.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "enterprise resign cert exist but hap not resigned");
         return false;
     }
