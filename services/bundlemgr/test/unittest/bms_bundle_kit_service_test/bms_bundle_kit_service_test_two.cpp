@@ -3811,6 +3811,33 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryExtensionInfos_0100, Function | S
 }
 
 /**
+ * @tc.number: FindMatchedAbilityForLink_0100
+ * @tc.name: test FindMatchedAbilityForLink
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, FindMatchedAbilityForLink_0100, Function | SmallTest | Level1)
+{
+    std::string link;
+    bool found = false;
+    ErrCode testRet = GetBundleDataMgr()->FindMatchedAbilityForLink(link, 0, DEFAULT_USERID, found);
+    EXPECT_NE(testRet, ERR_OK);
+}
+
+/**
+ * @tc.number: IsMatchedAbilityExist_0100
+ * @tc.name: test IsMatchedAbilityExist
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsMatchedAbilityExist_0100, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    InnerBundleInfo info;
+    std::vector<std::string> paramMimeTypes;
+    bool testRet = GetBundleDataMgr()->IsMatchedAbilityExist(want, info, DEFAULT_USERID, paramMimeTypes);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
  * @tc.number: QueryAbilityInfoWithFlags_0100
  * @tc.name: test can get the ability infos
  * @tc.desc: 1.system run normally
