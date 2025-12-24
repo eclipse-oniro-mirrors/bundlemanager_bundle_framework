@@ -276,13 +276,13 @@ void from_json(const nlohmann::json &jsonObject, PluginBundleInfo &pluginBundleI
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetMapValueIfFindKey<std::unordered_map<std::string, ExtensionAbilityInfo>>(jsonObject,
+    GetValueIfFindKey<std::unordered_map<std::string, ExtensionAbilityInfo>>(jsonObject,
         jsonObjectEnd,
         PLUGIN_BUNDLE_INFO_EXTENSION_INFOS,
         pluginBundleInfo.extensionInfos,
+        JsonType::OBJECT,
         false,
         parseResult,
-        JsonType::OBJECT,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read pluginBundleInfo error : %{public}d", parseResult);
