@@ -1766,7 +1766,6 @@ HWTEST_F(BmsEventHandlerTest, HandlePreInstallBundleNamesException_0100, Functio
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     PreInstallBundleInfo info;
-    info.SetIsUninstalled(true);
     handler->loadExistData_.emplace(MODULE_UPDATE_PATH, info);
     auto preInstallExceptionMgr = std::make_shared<PreInstallExceptionMgr>();
     ASSERT_NE(preInstallExceptionMgr, nullptr);
@@ -1792,7 +1791,7 @@ HWTEST_F(BmsEventHandlerTest, HandlePreInstallBundleNamesException_0200, Functio
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     PreInstallBundleInfo info;
-    info.SetIsUninstalled(false);
+    info.SetRemovable(false);
     handler->loadExistData_.emplace(MODULE_UPDATE_PATH, info);
     auto preInstallExceptionMgr = std::make_shared<PreInstallExceptionMgr>();
     ASSERT_NE(preInstallExceptionMgr, nullptr);

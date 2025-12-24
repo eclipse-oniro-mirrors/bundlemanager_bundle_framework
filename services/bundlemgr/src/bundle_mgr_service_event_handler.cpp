@@ -3610,6 +3610,11 @@ void BMSEventHandler::HandlePreInstallAppPathsException(std::shared_ptr<PreInsta
         bool removable = IsPreInstallRemovable(pathIter);
         if (!OTAInstallSystemBundle(filePaths, Constants::AppType::SYSTEM_APP, removable)) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException path(%{public}s) error", pathIter.c_str());
+            // If the bundle cannot be removed and the path is not empty, need try again
+            if (!removable && !OHOS::IsEmptyFolder(pathIter)) {
+                LOG_NOFUNC_W(BMS_TAG_DEFAULT, "%{public}s removable is false and not empty", pathIter.c_str());
+                continue;
+            }
         }
 
         if (needDeleteRecord) {
@@ -3682,17 +3687,17 @@ void BMSEventHandler::HandlePreInstallBundleNamesException(
         }
 
         const auto &preInstallBundleInfo = iter->second;
-        if (preInstallBundleInfo.IsUninstalled()) {
-            preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
-            continue;
-        }
         if (!OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
             Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable())) {
             LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName(%{public}s) error",
                 bundleNameIter.c_str());
-            continue;
+            if (!preInstallBundleInfo.IsRemovable()) {
+                continue;
+            }
         }
-        preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+        if (needDeleteRecord) {
+            preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+        }
     }
 }
 
