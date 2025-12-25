@@ -249,13 +249,14 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
 
 ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     const std::vector<std::string> &bundlePaths,
-    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile, const int32_t userId)
+    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile, int32_t userId)
 {
     LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo");
     if (bundlePaths.empty()) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLER, "check sign failed paths empty");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
+    userId = userId < Constants::DEFAULT_USERID ? AccountHelper::GetUserIdByCallerType() : userId;
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
         ErrCode verifyRes = ERR_OK;
