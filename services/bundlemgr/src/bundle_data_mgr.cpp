@@ -4271,10 +4271,10 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
         return recoverablePreInstallBundleInfos;
     }
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = GetAllPreInstallBundleInfos();
-    std::string bundleName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
     for (auto preInstallBundleInfo: preInstallBundleInfos) {
         if (!preInstallBundleInfo.IsRemovable()) {
-            if (preInstallBundleInfo.GetBundleName() != bundleName) {
+            if ((preInstallBundleInfo.GetBundleType() != BundleType::APP) &&
+                (preInstallBundleInfo.GetBundleType() != BundleType::ATOMIC_SERVICE)) {
                 continue;
             }
         }
