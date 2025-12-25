@@ -883,7 +883,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         preInstallBundleInfo.SetBundleName(bundleName_);
         dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo);
         preInstallBundleInfo.SetAppType(newInfos.begin()->second.GetAppType());
-        preInstallBundleInfo.SetVersionCode(newInfos.begin()->second.GetVersionCode());
+        preInstallBundleInfo.SetVersionCode(bundleInstallChecker_->GetVersionCode(newInfos));
         preInstallBundleInfo.SetIsUninstalled(false);
         preInstallBundleInfo.DeleteForceUnisntalledUser(userId_);
         for (const auto &item : newInfos) {
@@ -1647,7 +1647,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateDynamicSkills();
     VerifyDomain();
     PatchDataMgr::GetInstance().ProcessPatchInfo(bundleName_, inBundlePaths,
-        newInfos.begin()->second.GetVersionCode(), AppPatchType::INTERNAL, installParam.isPatch);
+        versionCode_, AppPatchType::INTERNAL, installParam.isPatch);
     UpdateHasCloudkitConfig();
     // check mark install finish
     result = MarkInstallFinish();
@@ -4886,7 +4886,7 @@ ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::str
     }
 
     bundleName_ = (infos.begin()->second).GetBundleName();
-    versionCode_ = (infos.begin()->second).GetVersionCode();
+    versionCode_ = bundleInstallChecker_->GetVersionCode(infos);
     return ERR_OK;
 }
 
@@ -6479,7 +6479,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         param.bundleId = uid - userId_ * Constants::BASE_USER_RANGE;
         param.isCompressNativeLibrary = info.second.IsCompressNativeLibs(info.second.GetCurModuleName());
         param.appIdentifier = info.second.GetAppIdentifier();
-        param.versionCode = info.second.GetVersionCode();
+        param.versionCode = versionCode_;
         if (info.second.GetModuleTypeByPackage(modulePackage_) == Profile::MODULE_TYPE_SHARED) {
             param.installBundleType = InstallBundleType::INTER_APP_HSP;
         }
@@ -6529,7 +6529,7 @@ bool BaseBundleInstaller::IsBundleEncrypted(const std::unordered_map<std::string
     }
     // infos does not contain encrypted module
     // if upgrade, no need to check old bundle
-    if (infos.empty() || infos.begin()->second.GetVersionCode() != oldInfo.GetVersionCode()) {
+    if (infos.empty() || versionCode_ != oldInfo.GetVersionCode()) {
         return false;
     }
     // if not upgrade and old bundle is not encrypted, the new bundle is alse not encrypted

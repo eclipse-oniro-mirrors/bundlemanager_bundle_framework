@@ -86,6 +86,8 @@ public:
         std::unordered_map<std::string, InnerBundleInfo> &infos,
         std::map<std::string, std::string> hashParams);
 
+    uint32_t GetVersionCode(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+
     /**
      * @brief To check the version code and bundleName in all haps.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.

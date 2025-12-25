@@ -912,4 +912,105 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0038, TestSize.Level
     auto ret = bundleInstallChecker.DetermineCloneApp(innerBundleInfo);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0039
+ * @tc.name: test the CheckAppLabelInfo.
+ * @tc.desc: test the CheckAppLabelInfo.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0039, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    innerBundleInfo1.baseApplicationInfo_->bundleName = "test1";
+    innerBundleInfo1.baseBundleInfo_->versionCode = 2;
+    innerBundleInfo1.baseBundleInfo_->releaseType = "debug";
+    innerBundleInfo1.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo1.SetIsPreInstallApp(false);
+    InnerModuleInfo innerModuleInfo1;
+    innerModuleInfo1.moduleName = "entry";
+    Distro dist1;
+    dist1.moduleType = "entry";
+    innerModuleInfo1.distro = dist1;
+    innerModuleInfo1.isEntry = true;
+    innerBundleInfo1.innerModuleInfos_.try_emplace(innerModuleInfo1.moduleName, innerModuleInfo1);
+
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo2.SetIsPreInstallApp(true);
+    innerBundleInfo2.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo2.baseApplicationInfo_->bundleName = "test1";
+    innerBundleInfo2.baseBundleInfo_->versionCode = 3;
+    innerBundleInfo2.baseBundleInfo_->releaseType = "debug";
+    InnerModuleInfo innerModuleInfo2;
+    innerModuleInfo2.moduleName = "lib";
+    Distro dist2;
+    dist2.moduleType = "shared";
+    innerModuleInfo2.distro = dist2;
+    innerBundleInfo2.innerModuleInfos_.try_emplace(innerModuleInfo2.moduleName, innerModuleInfo2);
+
+    infos["test1"] = innerBundleInfo1;
+    infos["test2"] = innerBundleInfo2;
+
+    auto ret = bundleInstallChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME);
+}
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0040
+ * @tc.name: test the CheckAppLabelInfo.
+ * @tc.desc: test the CheckAppLabelInfo.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0040, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    innerBundleInfo1.baseApplicationInfo_->bundleName = "test1";
+    innerBundleInfo1.baseBundleInfo_->versionCode = 3;
+    innerBundleInfo1.baseBundleInfo_->releaseType = "debug";
+    innerBundleInfo1.baseApplicationInfo_->singleton = true;
+    innerBundleInfo1.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+    innerBundleInfo1.SetIsPreInstallApp(true);
+    InnerModuleInfo innerModuleInfo1;
+    innerModuleInfo1.moduleName = "entry";
+    innerModuleInfo1.isEntry = true;
+    Distro dist1;
+    dist1.moduleType = "entry";
+    innerModuleInfo1.distro = dist1;
+    innerBundleInfo1.innerModuleInfos_.try_emplace(innerModuleInfo1.moduleName, innerModuleInfo1);
+
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo2.SetIsPreInstallApp(true);
+    innerBundleInfo2.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo2.baseApplicationInfo_->bundleName = "test1";
+    innerBundleInfo2.baseApplicationInfo_->singleton = false;
+    innerBundleInfo2.baseBundleInfo_->versionCode = 2;
+    innerBundleInfo2.baseBundleInfo_->releaseType = "debug";
+    InnerModuleInfo innerModuleInfo2;
+    innerModuleInfo2.moduleName = "lib";
+    Distro dist2;
+    dist2.moduleType = "shared";
+    innerModuleInfo2.distro = dist2;
+    innerBundleInfo2.innerModuleInfos_.try_emplace(innerModuleInfo2.moduleName, innerModuleInfo2);
+
+    infos["test1"] = innerBundleInfo1;
+    infos["test2"] = innerBundleInfo2;
+
+    auto ret = bundleInstallChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SINGLETON_NOT_SAME);
+}
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0041
+ * @tc.name: test the GetVersionCode.
+ * @tc.desc: test the GetVersionCode.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0041, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    uint32_t ret = bundleInstallChecker.GetVersionCode(infos);
+    EXPECT_EQ(ret, 0);
+}
 } // OHOS

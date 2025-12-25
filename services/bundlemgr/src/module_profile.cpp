@@ -2760,7 +2760,7 @@ bool ToInnerBundleInfo(
         APP_LOGE("To innerModuleInfo failed");
         return false;
     }
-
+    innerModuleInfo.versionCode = applicationInfo.versionCode;
     innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
     innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
     innerModuleInfo.tsanEnabled = applicationInfo.tsanEnabled;

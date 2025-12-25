@@ -1678,6 +1678,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     hapInfo.isLibIsolated = it->second.isLibIsolated;
     hapInfo.nativeLibraryPath = it->second.nativeLibraryPath;
     hapInfo.cpuAbi = it->second.cpuAbi;
+    hapInfo.versionCode = it->second.versionCode == 0 ? baseBundleInfo_->versionCode : it->second.versionCode;
 
     hapInfo.bundleName = baseApplicationInfo_->bundleName;
     hapInfo.mainElementName = it->second.mainAbility;
