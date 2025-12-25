@@ -924,7 +924,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_HAS_INTENT, hapModuleInfo.hasIntent},
         {HAP_MODULE_INFO_DEDUPLICATE_HAR, hapModuleInfo.deduplicateHar},
         {Constants::MODULE_ARKTS_MODE, hapModuleInfo.moduleArkTSMode},
-        {Constants::ARKTS_MODE, hapModuleInfo.arkTSMode}
+        {Constants::ARKTS_MODE, hapModuleInfo.arkTSMode},
+        {HAP_MODULE_INFO_VERSION_CODE, hapModuleInfo.versionCode},
     };
 }
 
@@ -1416,6 +1417,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         hapModuleInfo.deduplicateHar,
         false,
         parseResult);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_VERSION_CODE,
+        hapModuleInfo.versionCode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGW("HapModuleInfo from_json error : %{public}d", parseResult);
     }

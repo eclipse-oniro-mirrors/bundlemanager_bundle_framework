@@ -2145,6 +2145,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         (void)newBundleDirMgr->AddAllUserId(dataMgr->GetAllUser());
     }
 
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
+        std::make_unique<BundleInstallChecker>();
     GetInstallAndRecoverListForAllUser(userInstallAndRecoverMap_);
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
     for (auto &scanPathIter : scanPathList) {
@@ -2159,7 +2161,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         }
 
         auto bundleName = infos.begin()->second.GetBundleName();
-        auto hapVersionCode = infos.begin()->second.GetVersionCode();
+        auto hapVersionCode = bundleInstallChecker->GetVersionCode(infos);
         AddParseInfosToMap(bundleName, infos);
         auto mapIter = loadExistData_.find(bundleName);
         if (mapIter == loadExistData_.end()) {
@@ -4445,6 +4447,8 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
     }
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
+        std::make_unique<BundleInstallChecker>();
     std::unordered_map<std::string, std::vector<std::string>> needInstallMap;
     for (auto &scanPathIter : bundleDirs) {
         std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -4453,7 +4457,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
             continue;
         }
         auto bundleName = infos.begin()->second.GetBundleName();
-        auto hapVersionCode = infos.begin()->second.GetVersionCode();
+        auto hapVersionCode = bundleInstallChecker->GetVersionCode(infos);
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
             bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE),
@@ -5237,10 +5241,12 @@ bool BMSEventHandler::ParseOnDemandHapFiles(const std::string &hapFilePath,
 void BMSEventHandler::ConvertToOnDemandInstallBundleInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos,
     PreInstallBundleInfo &preInstallBundleInfo)
 {
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
+        std::make_unique<BundleInstallChecker>();
     const InnerBundleInfo &innerBundleInfo = infos.begin()->second;
     preInstallBundleInfo.SetBundleName(innerBundleInfo.GetBundleName());
     preInstallBundleInfo.SetAppType(innerBundleInfo.GetAppType());
-    preInstallBundleInfo.SetVersionCode(innerBundleInfo.GetVersionCode());
+    preInstallBundleInfo.SetVersionCode(bundleInstallChecker->GetVersionCode(infos));
     for (const auto &item : infos) {
         preInstallBundleInfo.AddBundlePath(item.first);
     }

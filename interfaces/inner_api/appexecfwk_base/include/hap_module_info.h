@@ -128,6 +128,7 @@ struct HapModuleInfo : public Parcelable {
     uint32_t descriptionId = 0;
     uint32_t iconId = 0;
     uint32_t labelId = 0;
+    uint32_t versionCode = 0;
     int32_t upgradeFlag = 0;
     int supportedModes = 0;
     ModuleColorMode colorMode = ModuleColorMode::AUTO;

@@ -705,7 +705,7 @@ bool BundleInstallChecker::VaildEnterpriseInstallPermissionForShare(const Instal
 ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     LOG_D(BMS_TAG_INSTALLER, "CheckDependency");
-
+    auto hapVersionCode = GetVersionCode(infos);
     for (const auto &info : infos) {
         if (info.second.GetInnerModuleInfos().empty()) {
             LOG_D(BMS_TAG_INSTALLER, "GetInnerModuleInfos is empty");
@@ -727,7 +727,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
             }
             LOG_W(BMS_TAG_INSTALLER, "The depend module:%{public}s is not exist in installing package",
                 dependency.moduleName.c_str());
-            if (!FindModuleInInstalledPackage(dependency.moduleName, bundleName, info.second.GetVersionCode())) {
+            if (!FindModuleInInstalledPackage(dependency.moduleName, bundleName, hapVersionCode)) {
                 LOG_E(BMS_TAG_INSTALLER, "The depend :%{public}s is not exist", dependency.moduleName.c_str());
                 SetCheckResultMsg(
                     moduleInfo.moduleName + "'s dependent module: " + dependency.moduleName + " does not exist");
@@ -1067,13 +1067,27 @@ std::tuple<bool, std::string, std::string> BundleInstallChecker::GetValidRelease
         (infos.begin()->second).GetReleaseType());
 }
 
+uint32_t BundleInstallChecker::GetVersionCode(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (infos.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "infos is empty");
+        return 0;
+    }
+    for (const auto &info : infos) {
+        if (info.second.HasEntry()) {
+            return info.second.GetVersionCode();
+        }
+    }
+    return (infos.begin()->second).GetVersionCode();
+}
+
 ErrCode BundleInstallChecker::CheckAppLabelInfo(
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     LOG_D(BMS_TAG_INSTALLER, "Check APP label");
     ErrCode ret = ERR_OK;
     std::string bundleName = (infos.begin()->second).GetBundleName();
-    uint32_t versionCode = (infos.begin()->second).GetVersionCode();
+    uint32_t versionCode = GetVersionCode(infos);
     auto [isHsp, moduleName, releaseType] = GetValidReleaseType(infos);
     bool singleton = (infos.begin()->second).IsSingleton();
     Constants::AppType appType = (infos.begin()->second).GetAppType();
@@ -1086,6 +1100,14 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     bool hasEntry = (infos.begin()->second).HasEntry();
     bool isSameDebugType = true;
     bool entryDebug = hasEntry ? debug : false;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    bool isPreInstallApp = false;
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+    } else {
+        PreInstallBundleInfo preInstallBundleInfo;
+        isPreInstallApp = dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    }
 
     for (const auto &info : infos) {
         // check bundleName
@@ -1095,9 +1117,17 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         }
         // check version
         if (bundleType != BundleType::SHARED) {
-            if (versionCode != info.second.GetVersionCode()) {
-                LOG_E(BMS_TAG_INSTALLER, "versionCode not same");
-                return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
+            if (isPreInstallApp ? isPreInstallApp : info.second.IsPreInstallApp() &&
+                info.second.GetAppType() == Constants::AppType::SYSTEM_APP && info.second.IsHsp()) {
+                if (versionCode < info.second.GetVersionCode()) {
+                    LOG_E(BMS_TAG_INSTALLER, "hsp version higer than entry!");
+                    return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
+                }
+            } else {
+                if (versionCode != info.second.GetVersionCode()) {
+                    LOG_E(BMS_TAG_INSTALLER, "versionCode not same");
+                    return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
+                }
             }
         }
         // check release type
