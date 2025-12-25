@@ -5460,7 +5460,10 @@ ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutIn
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+    ErrCode res = dataMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::ADD, userId, shortcutInfo.bundleName,
+        shortcutInfo.appIndex, shortcutInfo.id, IPCSkeleton::GetCallingUid(), res);
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
@@ -5478,7 +5481,10 @@ ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcu
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    ErrCode res = dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, userId, shortcutInfo.bundleName,
+        shortcutInfo.appIndex, shortcutInfo.id, IPCSkeleton::GetCallingUid(), res);
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)

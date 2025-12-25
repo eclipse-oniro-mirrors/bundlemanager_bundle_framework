@@ -319,3 +319,13 @@ DEFAULT_APP:
   WANT: {type: STRING, desc: want}
   UTD: {type: STRING, desc: utd}
 
+DESKTOP_SHORTCUT:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: desktop shortcut}
+  OP_TYPE: {type: STRING, desc: desktop shortcut operation type}
+  USERID: {type: INT32, desc: userId of the bundle}
+  BUNDLE_NAME: {type: STRING, desc: bundle name}
+  APP_INDEX: {type: INT32, desc: app index}
+  SHORTCUT_ID: {type: STRING, desc: desktop shortcut id}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  ERROR_CODE: {type: INT32, desc: error code}
+

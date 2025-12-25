@@ -3004,7 +3004,7 @@ ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInf
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "sandbox GetBundleInfoForSelf failed uid:%{public}d", uid);
+            LOG_D(BMS_TAG_QUERY, "sandbox GetBundleInfoForSelf failed uid:%{public}d", uid);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
@@ -4651,7 +4651,9 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     if (appServiceHspBundleName_.find(bundleName) != appServiceHspBundleName_.end()) {
         appServiceHspBundleName_.erase(bundleName);
     }
-    DeleteDesktopShortcutInfo(bundleName);
+    ErrCode deleteDesktopRes = DeleteDesktopShortcutInfo(bundleName);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, Constants::ALL_USERID, bundleName,
+        0, Constants::EMPTY_STRING, IPCSkeleton::GetCallingUid(), deleteDesktopRes);
 }
 
 bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
@@ -9970,7 +9972,9 @@ ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const in
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     innerBundleInfo.SetBundleStatus(nowBundleStatus);
-    DeleteDesktopShortcutInfo(bundleName, userId, appIndex);
+    ErrCode deleteDesktopRes = DeleteDesktopShortcutInfo(bundleName, userId, appIndex);
+    EventReport::SendDesktopShortcutEvent(DesktopShortcutOperation::DELETE, userId, bundleName,
+        appIndex, Constants::EMPTY_STRING, IPCSkeleton::GetCallingUid(), deleteDesktopRes);
     if (DeleteShortcutVisibleInfo(bundleName, userId, appIndex) != ERR_OK) {
         APP_LOGE("DeleteShortcutVisibleInfo failed, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
             bundleName.c_str(), userId, appIndex);
