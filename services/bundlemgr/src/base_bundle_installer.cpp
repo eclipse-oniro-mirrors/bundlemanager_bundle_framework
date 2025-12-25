@@ -400,6 +400,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         result == ERR_APPEXECFWK_USER_NOT_INSTALL_HAP) &&
         DeleteUninstallBundleInfoFromDb(bundleName)) {
         LOG_I(BMS_TAG_INSTALLER, "del uninstalled bundle %{public}s dir and info", bundleName.c_str());
+        SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, installParam,
+            sysEventInfo_.preBundleScene, ERR_OK);
         return ERR_OK;
     }
 
