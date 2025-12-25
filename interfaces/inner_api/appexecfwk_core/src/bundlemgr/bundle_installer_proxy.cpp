@@ -1049,15 +1049,16 @@ ErrCode BundleInstallerProxy::InstallExisted(const std::string &bundleName, int3
 
 ErrCode BundleInstallerProxy::UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId)
 {
-    LOG_I(BMS_TAG_INSTALLER, "uninstall enterprise re sign cert -c:%{public}s, -u:%{public}d",
+    LOG_I(BMS_TAG_INSTALLER, "delete enterprise re sign cert -c:%{public}s, -u:%{public}d",
         certificateAlias.c_str(), userId);
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
 
-    if (certificateAlias.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "certificateAlias is empty");
+    if (certificateAlias.empty() || certificateAlias.size() > Constants::MAX_FILE_NAME_LENGTH
+        || userId < Constants::START_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "param error -c:%{public}s -u:%{public}d", certificateAlias.c_str(), userId);
         return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
     }
 
@@ -1074,7 +1075,7 @@ ErrCode BundleInstallerProxy::UninstallEnterpriseReSignatureCert(const std::stri
         return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
     }
 
-    auto ret = SendInstallRequestWithErrCode(BundleInstallerInterfaceCode::UNINSTALL_ENTERPRISE_RE_SIGNATURE_CERT,
+    auto ret = SendInstallRequestWithErrCode(BundleInstallerInterfaceCode::DELETE_ENTERPRISE_RE_SIGNATURE_CERT,
         data, reply, option);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall sign cert failed due to send request fail");
@@ -1091,6 +1092,11 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCert(int32_t userId, std::
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
+
+    if (userId < Constants::START_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "param error -u:%{public}d", userId);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_INSTALLER, "failed to write descriptor");
@@ -1116,7 +1122,7 @@ ErrCode BundleInstallerProxy::GetEnterpriseReSignatureCert(int32_t userId, std::
         LOG_E(BMS_TAG_INSTALLER, "fail to get sign cert from reply");
         return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_PARCEL_ERROR;
     }
-    LOG_D(BMS_TAG_INSTALLER, "get sign cert size: %{public}zu", certificateAlias.size());
+    LOG_I(BMS_TAG_INSTALLER, "get sign cert size: %{public}zu", certificateAlias.size());
     return ERR_OK;
 }
 }  // namespace AppExecFwk

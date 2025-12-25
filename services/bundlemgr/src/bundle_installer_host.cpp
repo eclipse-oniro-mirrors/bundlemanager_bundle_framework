@@ -32,6 +32,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_multiuser_installer.h"
 #include "bundle_permission_mgr.h"
+#include "directory_ex.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "modal_system_ui_extension.h"
@@ -132,8 +133,8 @@ int BundleInstallerHost::OnRemoteRequest(
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::ADD_ENTERPRISE_RESIGN_CERT):
             HandleAddEnterpriseResignCert(data, reply);
             break;
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_ENTERPRISE_RE_SIGNATURE_CERT):
-            HandleUninstallEnterpriseReSignatureCert(data, reply);
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::DELETE_ENTERPRISE_RE_SIGNATURE_CERT):
+            HandleDeleteEnterpriseReSignatureCert(data, reply);
             break;
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::GET_ENTERPRISE_RE_SIGNATURE_CERT):
             HandleGetEnterpriseReSignatureCert(data, reply);
@@ -1252,7 +1253,7 @@ ErrCode BundleInstallerHost::AddEnterpriseResignCert(
         return ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED;
     }
     if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
-        APP_LOGE("not enterprise deivce");
+        APP_LOGE("not enterprise device");
         return ERR_APPEXECFWK_ENTERPRISE_CERT_DEVICE_ERROR;
     }
     if (!BundleUtil::CheckFileType(certAlias, ServiceConstants::CER_SUFFIX)) {
@@ -1279,7 +1280,7 @@ ErrCode BundleInstallerHost::AddEnterpriseResignCert(
 ErrCode BundleInstallerHost::InnerAddEnterpriseResignCert(
     const std::string &certAlias, const std::string &certContent, int32_t userId)
 {
-    std::lock_guard<std::mutex> lock(enterpriseCertMutex_);
+    std::unique_lock<std::shared_mutex> lock(enterpriseCertMutex_);
     std::string certPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH +
         std::to_string(userId);
     std::vector<std::string> existingCerts;
@@ -1290,7 +1291,7 @@ ErrCode BundleInstallerHost::InnerAddEnterpriseResignCert(
             APP_LOGE("mkdir failed %{public}d %{public}d", ret, errno);
             return ret;
         }
-    } else if (!BundleUtil::GetEnterpriseReSignatureCert(userId, existingCerts)) {
+    } else if (BundleUtil::GetEnterpriseReSignatureCert(userId, existingCerts) != ERR_OK) {
         APP_LOGE("get existing certs failed");
         return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_CERT_FAILED;
     } else if (existingCerts.size() >= ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
@@ -1325,35 +1326,67 @@ bool BundleInstallerHost::CheckInstallDowngradeParam(const InstallParam &install
     return false;
 }
 
-ErrCode BundleInstallerHost::HandleUninstallEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply)
+ErrCode BundleInstallerHost::HandleDeleteEnterpriseReSignatureCert(MessageParcel &data, MessageParcel &reply)
 {
-    LOG_D(BMS_TAG_INSTALLER, "handle uninstall enterprise re sign cert");
+    LOG_D(BMS_TAG_INSTALLER, "handle delete enterprise re sign cert");
     std::string certificateAlias = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
-    
-    auto ret = UninstallEnterpriseReSignatureCert(certificateAlias, userId);
+
+    auto ret = DeleteEnterpriseReSignatureCert(certificateAlias, userId);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_INSTALLER, "write failed");
         return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
     }
-    LOG_D(BMS_TAG_INSTALLER, "handle uninstall enterprise re sign cert");
+    LOG_D(BMS_TAG_INSTALLER, "handle delete enterprise re sign cert");
     return ERR_OK;
 }
 
-ErrCode BundleInstallerHost::UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId)
+ErrCode BundleInstallerHost::DeleteEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY)) {
         LOG_E(BMS_TAG_INSTALLER, "verify permission failed");
-        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED;
     }
-    if (certificateAlias.empty() || userId < Constants::DEFAULT_USERID) {
+    if (certificateAlias.empty() || certificateAlias.size() > Constants::MAX_FILE_NAME_LENGTH
+        || userId < Constants::START_USERID) {
         LOG_E(BMS_TAG_INSTALLER, "param is invalid");
         return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
     }
-    if (!BundleUtil::UninstallEnterpriseReSignatureCert(certificateAlias, userId)) {
-        LOG_E(BMS_TAG_INSTALLER, "uninstall sign cert failed");
-        return ERR_APPEXECFWK_UNINSTALL_ENTERPRISE_RE_SIGNATURE_CERT_ERROR;
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null dataMgr");
+        return ERR_APPEXECFWK_NULL_PTR;
     }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    if (userIds.find(userId) == userIds.end()) {
+        LOG_E(BMS_TAG_INSTALLER, "userId %{public}d not exist", userId);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    if (!BundleUtil::CheckFileType(certificateAlias, ServiceConstants::CER_SUFFIX)) {
+        LOG_E(BMS_TAG_INSTALLER, "file is not cer %{public}s", certificateAlias.c_str());
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    if (certificateAlias.find(ServiceConstants::PATH_SEPARATOR) != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLER, "illegal certAlias %{public}s", certificateAlias.c_str());
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    std::string path = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH +
+        std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + certificateAlias;
+    if (path.size() > Constants::BMS_MAX_PATH_LENGTH) {
+        LOG_E(BMS_TAG_INSTALLER, "path is invalid");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    std::unique_lock<std::shared_mutex> lock(enterpriseCertMutex_);
+    if (!BundleUtil::IsExistFile(path)) {
+        LOG_E(BMS_TAG_INSTALLER, "path is not exist");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_NOT_EXIST;
+    }
+    auto ret = InstalldClient::GetInstance()->DeleteCertAndRemoveKey({path});
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall sign cert failed");
+        return ret;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "delete resign cert success %{public}s %{public}d", certificateAlias.c_str(), userId);
     return ERR_OK;
 }
 
@@ -1369,7 +1402,7 @@ ErrCode BundleInstallerHost::HandleGetEnterpriseReSignatureCert(MessageParcel &d
         return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
     }
     if (ret == ERR_OK && !reply.WriteStringVector(certificateAlias)) {
-        APP_LOGE("Write certificateAlias failed");
+        LOG_E(BMS_TAG_INSTALLER, "Write certificateAlias failed");
         return ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_PARCEL_ERROR;
     }
     LOG_D(BMS_TAG_INSTALLER, "handle get re sign cert");
@@ -1380,15 +1413,67 @@ ErrCode BundleInstallerHost::GetEnterpriseReSignatureCert(int32_t userId, std::v
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_MANAGE_EDM_POLICY)) {
         LOG_E(BMS_TAG_INSTALLER, "verify permission failed");
-        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED;
     }
-    if (userId < Constants::DEFAULT_USERID) {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
+        APP_LOGE("not enterprise device");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_DEVICE_ERROR;
+    }
+    if (userId < Constants::START_USERID) {
         LOG_E(BMS_TAG_INSTALLER, "userId is invalid");
         return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
     }
-    if (!BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias)) {
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "null dataMgr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    if (userIds.find(userId) == userIds.end()) {
+        LOG_E(BMS_TAG_INSTALLER, "userId %{public}d not exist", userId);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    std::shared_lock<std::shared_mutex> lock(enterpriseCertMutex_);
+    if (BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "get re sign cert failed");
-        return ERR_APPEXECFWK_GET_ENTERPRISE_RE_SIGNATURE_CERT_ERROR;
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_GET_CERT_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerHost::DeleteReSignCert(int32_t userId)
+{
+    if (userId < Constants::START_USERID) {
+        LOG_E(BMS_TAG_INSTALLER, "param error -u:%{public}d", userId);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsCallingUidValid(Constants::ACCOUNT_UID)) {
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED;
+    }
+    std::unique_lock<std::shared_mutex> lock(enterpriseCertMutex_);
+    std::string baseDir = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH +
+        std::to_string(userId);
+    if (!BundleUtil::IsExistDir(baseDir)) {
+        LOG_W(BMS_TAG_INSTALLER, "baseDir not exist");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_BASE_DIR_NOT_EXIST;
+    }
+    std::vector<std::string> certificateAlias;
+    if (BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias) != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "get re sign cert failed");
+    }
+    if (!certificateAlias.empty()) {
+        std::vector<std::string> certPaths;
+        for (const std::string &cert : certificateAlias) {
+            std::string path = baseDir + ServiceConstants::PATH_SEPARATOR + cert;
+            certPaths.emplace_back(path);
+        }
+        if (InstalldClient::GetInstance()->DeleteCertAndRemoveKey(certPaths) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "DeleteCertAndRemoveKey failed userId:%{public}d", userId);
+        }
+    }
+    if (InstalldClient::GetInstance()->RemoveDir(baseDir)) {
+        LOG_W(BMS_TAG_INSTALLER, "remove basedir failed errno:%{public}d", errno);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_DELETE_CERT_ERROR;
     }
     return ERR_OK;
 }

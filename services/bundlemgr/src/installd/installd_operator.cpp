@@ -31,6 +31,7 @@
 #include <fcntl.h>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <map>
 #include <regex>
 #include <sstream>
@@ -3009,6 +3010,90 @@ bool InstalldOperator::CopyDir(const std::string &sourceDir, const std::string &
         }
     }
     closedir(directory);
+    return true;
+}
+
+ErrCode InstalldOperator::DeleteCertAndRemoveKey(const std::string &path)
+{
+    if (path.empty() || path.size() > Constants::BMS_MAX_PATH_LENGTH) {
+        LOG_E(BMS_TAG_INSTALLD, "path is empty or size is too large");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    std::vector<unsigned char> certData;
+    if (!ReadCert(path, certData)) {
+        LOG_E(BMS_TAG_INSTALLD, "read cert failed");
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED;
+    }
+    std::string tempPath = path + ServiceConstants::DELETE_CERT_PREFIX;
+    if (!RenameFile(path, tempPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "rename to tempPath failed, errno: %{public}d", errno);
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_RENAME_CERT_FAILED;
+    }
+#if defined(CODE_SIGNATURE_ENABLE)
+    Security::CodeSign::ByteBuffer byteBuffer;
+    byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(certData.data()), static_cast<int32_t>(certData.size()));
+    ErrCode ret = Security::CodeSign::CodeSignUtils::RemoveKeyForEnterpriseResign(byteBuffer);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed due to error %{public}d", ret);
+        if (!RenameFile(tempPath, path)) {
+            LOG_E(BMS_TAG_INSTALLD, "rename failed, errno: %{public}d", errno);
+        }
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_REMOVE_KEY_ERROR;
+    }
+    LOG_I(BMS_TAG_INSTALLD, "end");
+#else
+    LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
+#endif
+    if (!DeleteDir(tempPath)) {
+        LOG_E(BMS_TAG_INSTALLD, "del cert failed, errno: %{public}d", errno);
+    }
+    return ERR_OK;
+}
+
+bool InstalldOperator::ReadCert(const std::string &path, std::vector<unsigned char> &certData)
+{
+#if defined(CODE_SIGNATURE_ENABLE)
+    FILE *file = fopen(path.c_str(), "r");
+    if (file == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "open file failed path:%{public}s errno: %{public}d", path.c_str(), errno);
+        return false;
+    }
+    int32_t fd = fileno(file);
+    if (fd < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "get fd failed");
+        fclose(file);
+        return false;
+    }
+
+    struct stat statBuf;
+    if (fstat(fd, &statBuf) < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Fstat failed, errno: %{public}d", errno);
+        fclose(file);
+        return false;
+    }
+    if (statBuf.st_size <= 0 || statBuf.st_size > static_cast<off_t>(Constants::CAPACITY_SIZE)) {
+        LOG_E(BMS_TAG_INSTALLER, "cert size too large: %{public}lld", static_cast<long long>(statBuf.st_size));
+        fclose(file);
+        return false;
+    }
+
+    certData.resize(statBuf.st_size);
+    if (lseek(fd, 0, SEEK_SET) == -1) {
+        LOG_E(BMS_TAG_INSTALLD, "Lseek failed, errno: %{public}d", errno);
+        fclose(file);
+        return false;
+    }
+    ssize_t bytesRead = read(fd, certData.data(), static_cast<size_t>(statBuf.st_size));
+    if (bytesRead != static_cast<ssize_t>(statBuf.st_size)) {
+        LOG_E(BMS_TAG_INSTALLD, "read file failed, expected %{public}lld bytes, got %{public}lld",
+            static_cast<long long>(statBuf.st_size), static_cast<long long>(bytesRead));
+        fclose(file);
+        return false;
+    }
+    fclose(file);
+#else
+    LOG_W(BMS_TAG_INSTALLD, "code signature feature is not supported");
+#endif
     return true;
 }
 }  // namespace AppExecFwk

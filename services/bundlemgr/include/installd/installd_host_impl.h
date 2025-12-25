@@ -285,7 +285,7 @@ public:
 
     virtual ErrCode CopyDir(const std::string &sourceDir, const std::string &destinationDir) override;
 
-    virtual ErrCode RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t cartLength) override;
+    virtual ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths) override;
 
 private:
     static std::string GetGroupDirPath(const std::string &el, int32_t userId, const std::string &uuid);

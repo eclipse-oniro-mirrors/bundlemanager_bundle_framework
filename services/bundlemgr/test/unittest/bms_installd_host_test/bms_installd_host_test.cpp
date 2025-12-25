@@ -959,16 +959,16 @@ HWTEST_F(BmsInstalldHostTest, HandleHashSoFile_0100, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: HandleRemoveKeyForEnterpriseResign_0100
- * @tc.name: test HandleRemoveKeyForEnterpriseResign
- * @tc.desc: 1.HandleRemoveKeyForEnterpriseResign test
+ * @tc.number: HandleDeleteCertAndRemoveKey_0100
+ * @tc.name: test HandleDeleteCertAndRemoveKey
+ * @tc.desc: 1.HandleDeleteCertAndRemoveKey test
  */
-HWTEST_F(BmsInstalldHostTest, HandleRemoveKeyForEnterpriseResign_0100, Function | SmallTest | Level1)
+HWTEST_F(BmsInstalldHostTest, HandleDeleteCertAndRemoveKey_0100, Function | SmallTest | Level1)
 {
     InstalldHost installdHost;
     MessageParcel data;
     MessageParcel reply;
-    bool res = installdHost.HandleRemoveKeyForEnterpriseResign(data, reply);
+    bool res = installdHost.HandleDeleteCertAndRemoveKey(data, reply);
     EXPECT_FALSE(res);
 }
 } // OHOS

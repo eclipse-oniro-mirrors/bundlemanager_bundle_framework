@@ -64,6 +64,7 @@ constexpr int32_t MAX_APP_UID = 65535;
 constexpr int32_t STORAGE_MANAGER_UID = 1090;
 constexpr int32_t EDC_UID = 7200;
 constexpr int32_t CODE_SIGN_UID = 3074;
+constexpr int32_t ACCOUNT_UID = 3058;
 
 /*
 all of cache path for bundle:

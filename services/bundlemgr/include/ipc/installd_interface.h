@@ -24,6 +24,7 @@
 
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
+#include "bundle_service_constants.h"
 #include "bundle_storage_stats.h"
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
@@ -538,7 +539,7 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t cartLength)
+    virtual ErrCode DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
     {
         return ERR_OK;
     }
