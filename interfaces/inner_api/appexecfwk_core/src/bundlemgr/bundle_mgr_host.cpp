@@ -1805,16 +1805,11 @@ ErrCode BundleMgrHost::HandleGetHapModuleInfo(MessageParcel &data, MessageParcel
 
     HapModuleInfo info;
     bool ret = GetHapModuleInfo(*abilityInfo, info);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
     if (ret) {
-        if (!reply.WriteParcelable(&info)) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
+        WRITE_PARCEL(reply.WriteInt32(ERR_OK));
+        return WriteParcelInfoIntelligent<HapModuleInfo>(info, reply);
     }
+    WRITE_PARCEL(reply.WriteInt32(ERR_APPEXECFWK_PARCEL_ERROR));
     return ERR_OK;
 }
 
@@ -1830,16 +1825,11 @@ ErrCode BundleMgrHost::HandleGetHapModuleInfoWithUserId(MessageParcel &data, Mes
     int32_t userId = data.ReadInt32();
     HapModuleInfo info;
     bool ret = GetHapModuleInfo(*abilityInfo, userId, info);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
     if (ret) {
-        if (!reply.WriteParcelable(&info)) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
+        WRITE_PARCEL(reply.WriteInt32(ERR_OK));
+        return WriteParcelInfoIntelligent<HapModuleInfo>(info, reply);
     }
+    WRITE_PARCEL(reply.WriteInt32(ERR_APPEXECFWK_PARCEL_ERROR));
     return ERR_OK;
 }
 
