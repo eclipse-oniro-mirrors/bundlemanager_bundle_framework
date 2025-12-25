@@ -341,6 +341,8 @@ public:
     static bool CopyDir(const std::string &sourceDir, const std::string &destinationDir);
 
     static bool FsyncFile(const std::string &path);
+
+    static ErrCode DeleteCertAndRemoveKey(const std::string &path);
 private:
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);
@@ -379,6 +381,7 @@ private:
     static int32_t ForceCreateDirectory(const std::string &path, const OwnershipInfo &info);
     static int32_t MigrateDataCreateAhead(
         const std::string &sourcePaths, std::string &destinationPath, const OwnershipInfo &info);
+    static bool ReadCert(const std::string &path, std::vector<unsigned char> &certData);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

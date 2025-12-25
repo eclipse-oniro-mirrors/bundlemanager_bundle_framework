@@ -82,6 +82,8 @@ private:
 
     ErrCode RemoveSystemOptimizeDir(int32_t userId);
 
+    bool DeleteReSignCert(int32_t userId);
+
     std::mutex bundleUserMgrMutex_;
 
     std::mutex bundleEventMutex_;

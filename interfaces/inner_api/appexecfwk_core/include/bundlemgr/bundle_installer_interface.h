@@ -193,7 +193,17 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode DeleteEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode DeleteReSignCert(int32_t userId)
     {
         return ERR_OK;
     }

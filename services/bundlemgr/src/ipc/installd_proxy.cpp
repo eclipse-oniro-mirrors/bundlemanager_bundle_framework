@@ -1293,19 +1293,27 @@ ErrCode InstalldProxy::CopyDir(const std::string &sourceDir, const std::string &
     return TransactInstalldCmd(InstalldInterfaceCode::COPY_DIR, data, reply, option);
 }
 
-ErrCode InstalldProxy::RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+ErrCode InstalldProxy::DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
 {
-    MessageParcel data;
-    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, Int32, certLength);
-    if (!data.WriteRawData(cert, certLength)) {
-        LOG_E(BMS_TAG_INSTALLD, "Failed to write raw data");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (certPaths.empty() || certPaths.size() > ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
+        LOG_E(BMS_TAG_INSTALLD, "certPaths is empty or exceed max cert num:%{public}zu", certPaths.size());
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(certPaths.size()));
+    for (const std::string &path : certPaths) {
+        if (path.empty() || path.size() > Constants::BMS_MAX_PATH_LENGTH) {
+            LOG_E(BMS_TAG_INSTALLD, "path is empty or size is too large");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(path));
+    }
+    
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    auto ret = TransactInstalldCmd(InstalldInterfaceCode::REMOVE_KEY_FOR_ENTERPRISE_RESIGN, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::DELETE_CERT_AND_REMOVE_KEY, data, reply, option);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;

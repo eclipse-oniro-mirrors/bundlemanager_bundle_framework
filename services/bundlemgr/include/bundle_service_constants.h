@@ -301,6 +301,9 @@ constexpr const char* BMS_PARA_INSTALL_ALLOW_DOWNGRADE = "ohos.bms.param.install
 //plugin file path
 constexpr const char* PLUGIN_FILE_PATH = "+plugins";
 
+// enterprise re sign cert
+constexpr const char* DELETE_CERT_PREFIX = ".deleteCer";
+
 // no report for expected errcode
 const std::set<int32_t> EXPECTED_ERROR = {
     ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST,

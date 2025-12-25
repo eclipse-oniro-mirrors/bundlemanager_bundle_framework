@@ -642,13 +642,13 @@ ErrCode InstalldClient::CopyDir(const std::string &sourceDir, const std::string 
     return CallService(&IInstalld::CopyDir, sourceDir, destinationDir);
 }
 
-ErrCode InstalldClient::RemoveKeyForEnterpriseResign(const unsigned char *cert, int32_t certLength)
+ErrCode InstalldClient::DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
 {
-    if (cert == nullptr || certLength <= 0) {
-        APP_LOGE("cert is empty or certLength is invalid: %{public}d", certLength);
+    if (certPaths.empty() || certPaths.size() > ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
+        APP_LOGE("certPaths is empty or exceed max cert num:%{public}zu", certPaths.size());
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::RemoveKeyForEnterpriseResign, cert, certLength);
+    return CallService(&IInstalld::DeleteCertAndRemoveKey, certPaths);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

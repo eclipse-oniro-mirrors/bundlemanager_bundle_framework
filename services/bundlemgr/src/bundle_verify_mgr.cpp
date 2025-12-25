@@ -17,6 +17,8 @@
 
 #include "app_log_wrapper.h"
 #include "bms_extension_data_mgr.h"
+#include "bundle_service_constants.h"
+#include "bundle_util.h"
 
 using namespace OHOS::Security::Verify;
 
@@ -43,7 +45,8 @@ const int32_t HAP_VERIFY_ERR_MAP_KEY[] = {
     HapVerifyResultCode::FILE_SIZE_TOO_LARGE, HapVerifyResultCode::GET_PUBLICKEY_FAIL,
     HapVerifyResultCode::GET_SIGNATURE_FAIL, HapVerifyResultCode::NO_PROFILE_BLOCK_FAIL,
     HapVerifyResultCode::VERIFY_SIGNATURE_FAIL, HapVerifyResultCode::VERIFY_SOURCE_INIT_FAIL,
-    HapVerifyResultCode::DEVICE_UNAUTHORIZED
+    HapVerifyResultCode::DEVICE_UNAUTHORIZED, HapVerifyResultCode::CERTIFICATE_EXPIRED,
+    HapVerifyResultCode::VERIFY_ENTERPRISE_RESIGN_FAIL
 };
 const ErrCode HAP_VERIFY_ERR_MAP_VALUE[] = {
     ERR_OK, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH,
@@ -55,16 +58,23 @@ const ErrCode HAP_VERIFY_ERR_MAP_VALUE[] = {
     ERR_APPEXECFWK_INSTALL_FAILED_BAD_BUNDLE_SIGNATURE, ERR_APPEXECFWK_INSTALL_FAILED_NO_PROFILE_BLOCK_FAIL,
     ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE,
     ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_SOURCE_INIT_FAIL,
-    ERR_APPEXECFWK_INSTALL_FAILED_DEVICE_UNAUTHORIZED
+    ERR_APPEXECFWK_INSTALL_FAILED_DEVICE_UNAUTHORIZED,
+    ERR_APPEXECFWK_INSTALL_FAILED_CERTIFICATE_EXPIRED,
+    ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_ENTERPRISE_RESIGN_FAIL,
 };
 } // namespace
 
-ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult &hapVerifyResult)
+ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult &hapVerifyResult, const int32_t userId)
 {
+    std::string localCertDir = std::string(ServiceConstants::HAP_COPY_PATH) +
+        ServiceConstants::ENTERPRISE_CERT_PATH + std::to_string(userId);
+    if (userId < Constants::START_USERID || !BundleUtil::IsExistDir(localCertDir)) {
+        localCertDir.clear();
+    }
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    ErrCode res = bmsExtensionDataMgr.HapVerify(filePath, hapVerifyResult);
+    ErrCode res = bmsExtensionDataMgr.HapVerify(filePath, hapVerifyResult, localCertDir);
     if (res == ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED) {
-        auto ret = Security::Verify::HapVerify(filePath, hapVerifyResult);
+        auto ret = Security::Verify::HapVerify(filePath, hapVerifyResult, false, localCertDir);
         APP_LOGI("HapVerify result %{public}d", ret);
         size_t len = sizeof(HAP_VERIFY_ERR_MAP_KEY) / sizeof(HAP_VERIFY_ERR_MAP_KEY[0]);
         for (size_t i = 0; i < len; i++) {

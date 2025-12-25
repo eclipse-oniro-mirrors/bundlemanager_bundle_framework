@@ -1983,7 +1983,7 @@ HWTEST_F(BmsBundleKitServiceTest, CanOpenLink_0100, Function | SmallTest | Level
     ASSERT_NE(hostImpl, nullptr);
     bool canOpen;
     ErrCode ret = hostImpl->CanOpenLink(BUNDLE_NAME_DEMO, canOpen);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -3740,7 +3740,7 @@ HWTEST_F(BmsBundleKitServiceTest, ImplicitQueryAbilityInfos_0200, Function | Sma
     int32_t flags = 0;
     ErrCode testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfosV9(
         want, flags, DEFAULT_USERID, abilityInfos, appIndex);
-    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
 
 /**

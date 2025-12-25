@@ -16,17 +16,13 @@
 #include "bundle_util.h"
 
 #include <cinttypes>
-#include <cstdio>
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
-#include <iostream>
 #include <random>
 #include <sstream>
 #include <sys/sendfile.h>
 #include <sys/statfs.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include <vector>
 
 #include "bundle_service_constants.h"
@@ -1265,41 +1261,18 @@ std::vector<std::string> BundleUtil::FileTypeNormalize(const std::string &fileTy
 #endif
 }
 
-bool BundleUtil::UninstallEnterpriseReSignatureCert(const std::string &certificateAlias, int32_t userId)
-{
-    if (!CheckFileType(certificateAlias, ServiceConstants::CER_SUFFIX)) {
-        APP_LOGE("file is not cer %{public}s", certificateAlias.c_str());
-        return false;
-    }
-    if (certificateAlias.find(ServiceConstants::FILE_SEPARATOR_CHAR) != std::string::npos) {
-        APP_LOGE("illegal certAlias %{public}s", certificateAlias.c_str());
-        return false;
-    }
-    std::string path = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH +
-        std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + certificateAlias;
-    if (!IsExistFile(path)) {
-        APP_LOGE("path is not exist");
-        return false;
-    }
-    if (!RemoveKeyForEnterpriseResign(path)) {
-        APP_LOGE("remove key failed");
-        return false;
-    }
-    if (!OHOS::RemoveFile(path)) {
-        APP_LOGE("remove cer failed, errno:%{public}d", errno);
-        return false;
-    }
-    return true;
-}
-
-bool BundleUtil::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)
+ErrCode BundleUtil::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias)
 {
     std::string path = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH +
         std::to_string(userId);
     DIR *dir = opendir(path.c_str());
     if (dir == nullptr) {
+        if (errno == ENOENT) {
+            APP_LOGI("dir not exist");
+            return ERR_OK;
+        }
         APP_LOGE("fail to opendir:%{public}s, errno:%{public}d", path.c_str(), errno);
-        return false;
+        return ERR_APPEXECFWK_ENTERPRISE_CERT_OPEN_DIR_FAILED;
     }
     struct dirent *ptr = nullptr;
     while ((ptr = readdir(dir)) != nullptr) {
@@ -1315,70 +1288,7 @@ bool BundleUtil::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::s
     }
     closedir(dir);
     APP_LOGI("re sign cert size:%{public}zu", certificateAlias.size());
-    return !certificateAlias.empty();
-}
-
-bool BundleUtil::RemoveKeyForEnterpriseResign(const std::string &path)
-{
-    FILE *file = fopen(path.c_str(), "r");
-    if (file == nullptr) {
-        APP_LOGE("open file failed path:%{public}s errno: %{public}d", path.c_str(), errno);
-        return false;
-    }
-    int32_t fd = fileno(file);
-    if (fd < 0) {
-        APP_LOGE("get fd failed");
-        fclose(file);
-        return false;
-    }
-
-    struct stat statBuf;
-    if (fstat(fd, &statBuf) < 0) {
-        APP_LOGE("Fstat failed, errno: %{public}d", errno);
-        fclose(file);
-        return false;
-    }
-
-    std::vector<unsigned char> certData;
-    certData.resize(statBuf.st_size);
-
-    if (lseek(fd, 0, SEEK_SET) == -1) {
-        APP_LOGE("Lseek failed, errno: %{public}d", errno);
-        fclose(file);
-        return false;
-    }
-    ssize_t bytesRead = read(fd, certData.data(), static_cast<size_t>(statBuf.st_size));
-    if (bytesRead != static_cast<ssize_t>(statBuf.st_size)) {
-        APP_LOGE("read file failed, expected %{public}lld bytes, got %{public}lld",
-            static_cast<long long>(statBuf.st_size), static_cast<long long>(bytesRead));
-        fclose(file);
-        return false;
-    }
-    auto ret = InstalldClient::GetInstance()->RemoveKeyForEnterpriseResign(certData.data(),
-        static_cast<int32_t>(certData.size()));
-    if (ret != ERR_OK) {
-        APP_LOGE("remove key failed err:%{public}d", ret);
-        fclose(file);
-        return false;
-    }
-    fclose(file);
-    return true;
-}
-
-bool BundleUtil::DeleteReSignatureCertForRemoveUser(int32_t userId)
-{
-    APP_LOGI("delete resign cert for remove userId:%{public}d start", userId);
-    std::string path = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::ENTERPRISE_CERT_PATH +
-        std::to_string(userId);
-    if (!IsExistDir(path)) {
-        APP_LOGE("dir not exist");
-        return false;
-    }
-    if (!OHOS::ForceRemoveDirectoryBMS(path)) {
-        APP_LOGE("delete resign cert for remove user failed, errno:%{public}d", errno);
-        return false;
-    }
-    return true;
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -249,7 +249,7 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
 
 ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     const std::vector<std::string> &bundlePaths,
-    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile)
+    std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes, bool readFile, const int32_t userId)
 {
     LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo");
     if (bundlePaths.empty()) {
@@ -260,9 +260,14 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         Security::Verify::HapVerifyResult hapVerifyResult;
         ErrCode verifyRes = ERR_OK;
         if (readFile) {
-            verifyRes = Security::Verify::HapVerify(bundlePath, hapVerifyResult, true);
+            std::string localCertDir = std::string(ServiceConstants::HAP_COPY_PATH) +
+                ServiceConstants::ENTERPRISE_CERT_PATH + std::to_string(userId);
+            if (userId < Constants::START_USERID || !BundleUtil::IsExistDir(localCertDir)) {
+                localCertDir.clear();
+            }
+            verifyRes = Security::Verify::HapVerify(bundlePath, hapVerifyResult, true, localCertDir);
         } else {
-            verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
+            verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult, userId);
         }
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
@@ -276,6 +281,11 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     if (hapVerifyRes.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "no sign info in the all haps");
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+    }
+
+    if (!CheckEnterpriseResign(hapVerifyRes[0].GetProvisionInfo(), userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "enterprise resign check failed");
+        return ERR_APPEXECFWK_INSTALL_FAILED_APP_SOURCE_NOT_TRUESTED;
     }
 
     if (!CheckProvisionInfoIsValid(hapVerifyRes)) {
@@ -292,6 +302,28 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     }
     LOG_D(BMS_TAG_INSTALLER, "finish check multiple haps signInfo");
     return ERR_OK;
+}
+
+bool BundleInstallChecker::CheckEnterpriseResign(
+    const Security::Verify::ProvisionInfo &provisionInfo, const int32_t userId)
+{
+    if (provisionInfo.distributionType != Security::Verify::AppDistType::ENTERPRISE &&
+        provisionInfo.distributionType != Security::Verify::AppDistType::ENTERPRISE_NORMAL &&
+        provisionInfo.distributionType != Security::Verify::AppDistType::ENTERPRISE_MDM) {
+        return true;
+    }
+    if (provisionInfo.isEnterpriseResigned) {
+        return true;
+    }
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false)) {
+        return true;
+    }
+    std::vector<std::string> certificateAlias;
+    if (BundleUtil::GetEnterpriseReSignatureCert(userId, certificateAlias) && !certificateAlias.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "enterprise resign cert exist but hap not resigned");
+        return false;
+    }
+    return true;
 }
 
 bool BundleInstallChecker::CheckProvisionInfoIsValid(
@@ -490,6 +522,9 @@ ErrCode BundleInstallChecker::ParseHapFiles(
                 LOG_E(BMS_TAG_INSTALLER, "install failed due to insufficient disk memory");
                 return result;
             }
+        }
+        if (provisionInfo.isEnterpriseResigned) {
+            newInfo.SetAppSignType(Constants::APP_SIGN_TYPE_ENTERPRISE_RE_SIGN);
         }
         infos.emplace(bundlePaths[i], newInfo);
     }

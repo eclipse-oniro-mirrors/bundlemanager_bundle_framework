@@ -276,7 +276,7 @@ private:
 
     bool HandleCopyDir(MessageParcel &data, MessageParcel &reply);
 
-    bool HandleRemoveKeyForEnterpriseResign(MessageParcel &data, MessageParcel &reply);
+    bool HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParcel &reply);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

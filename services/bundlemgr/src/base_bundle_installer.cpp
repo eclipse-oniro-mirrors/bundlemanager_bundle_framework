@@ -400,6 +400,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
         result == ERR_APPEXECFWK_USER_NOT_INSTALL_HAP) &&
         DeleteUninstallBundleInfoFromDb(bundleName)) {
         LOG_I(BMS_TAG_INSTALLER, "del uninstalled bundle %{public}s dir and info", bundleName.c_str());
+        SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, installParam,
+            sysEventInfo_.preBundleScene, ERR_OK);
         return ERR_OK;
     }
 
@@ -1993,9 +1995,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("remove el1 shader cache dir failed for %{public}s", bundleName.c_str());
     }
 
-    if (installParam.isKeepData) {
-        BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
-    }
     if (isMultiUser) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
         if (oldInfo.IsPreInstallApp() && isForcedUninstall) {
@@ -2014,6 +2013,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return res;
         }
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+        if (installParam.isKeepData) {
+            BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
+        }
         UninstallDebugAppSandbox(bundleName, uid, oldInfo);
         if (dataMgr_->DeleteShortcutVisibleInfo(bundleName, userId_, 0) != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER,
@@ -2042,6 +2044,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UPDATE_BUNDLE_ERROR;
     }
 
+    SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+    if (installParam.isKeepData) {
+        BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
+    }
+
     ErrCode ret = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "rm hnp failed");
@@ -2053,8 +2060,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "remove whole bundle failed");
         return result;
     }
-    SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
-
+    
     result = DeleteOldArkNativeFile(oldInfo);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "delete old arkNativeFile failed");
@@ -2298,15 +2304,15 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return result;
         }
         if (onlyInstallInUser) {
-            if (installParam.isKeepData) {
-                BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
-            }
             result = RemoveBundle(oldInfo, installParam.isKeepData);
             if (result != ERR_OK) {
                 LOG_E(BMS_TAG_INSTALLER, "remove bundle failed");
                 return result;
             }
             SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
+            if (installParam.isKeepData) {
+                BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
+            }
             // remove profile from code signature
             RemoveProfileFromCodeSign(bundleName);
 
@@ -4414,7 +4420,7 @@ ErrCode BaseBundleInstaller::CheckMultipleHapsSignInfo(
     std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    return bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes);
+    return bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyRes, false, userId_);
 }
 
 ErrCode BaseBundleInstaller::CheckShellInstall(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)

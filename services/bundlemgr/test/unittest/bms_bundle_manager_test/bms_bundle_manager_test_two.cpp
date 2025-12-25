@@ -1398,7 +1398,7 @@ HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0019, Function | SmallTest | Lev
 */
 HWTEST_F(BmsBundleManagerTest2, TestMgrByUserId_0020, Function | SmallTest | Level1)
 {
-    InnerBundleInfo info;
+    const InnerBundleInfo* info = nullptr;
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlagsV9(
         TEST_BUNDLE_NAME, 0, info, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
@@ -1619,7 +1619,7 @@ HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0002, Function | SmallTest
 */
 HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0004, Function | SmallTest | Level1)
 {
-    InnerBundleInfo info;
+    const InnerBundleInfo* info = nullptr;
     bool testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlags(
         TEST_BUNDLE_NAME, 0, info, USERID);
     EXPECT_EQ(testRet, false);
@@ -1633,7 +1633,7 @@ HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0004, Function | SmallTest
 */
 HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0005, Function | SmallTest | Level1)
 {
-    InnerBundleInfo info;
+    const InnerBundleInfo* info = nullptr;
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithFlagsV9(
         TEST_BUNDLE_NAME, 0, info, USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
@@ -1647,7 +1647,7 @@ HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0005, Function | SmallTest
 */
 HWTEST_F(BmsBundleManagerTest2, GetMgrFalseByNoBundle_0006, Function | SmallTest | Level1)
 {
-    InnerBundleInfo info;
+    const InnerBundleInfo* info = nullptr;
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoWithBundleFlagsV9(
         TEST_BUNDLE_NAME, 0, info, USERID);
     EXPECT_NE(testRet, ERR_OK);
@@ -2784,6 +2784,7 @@ HWTEST_F(BmsBundleManagerTest2, GetBundleSpaceSize_0400, Function | MediumTest |
     int64_t ret = dataMgr->GetBundleSpaceSize(BUNDLE_PREVIEW_NAME, USERID);
     EXPECT_EQ(ret, size);
 }
+
 #endif
 
 } // OHOS

@@ -2586,7 +2586,7 @@ HWTEST_F(BmsDataMgrTest, CanOpenLink_0100, Function | SmallTest | Level1)
     std::string link = "";
     bool canOpen = false;
     ErrCode ret = dataMgr->CanOpenLink(link, canOpen);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -2602,7 +2602,7 @@ HWTEST_F(BmsDataMgrTest, GetOdid_0100, Function | SmallTest | Level1)
     std::string developerId = "";
     dataMgr->GenerateOdid(developerId, odid);
     ErrCode ret = dataMgr->GetOdid(odid);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**
@@ -2822,8 +2822,9 @@ HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithFlags_0100, Function | SmallTest 
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
     dataMgr->multiUserIdsSet_.insert(userId);
     dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    const InnerBundleInfo* innerPtr = &innerBundleInfo;
     ErrCode res =
-        dataMgr->GetInnerBundleInfoWithFlagsV9(BUNDLE_NAME, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, userId);
+        dataMgr->GetInnerBundleInfoWithFlagsV9(BUNDLE_NAME, GET_ABILITY_INFO_DEFAULT, innerPtr, userId);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -7049,7 +7050,7 @@ HWTEST_F(BmsDataMgrTest, GetPluginBundlePathForSelf_0010, TestSize.Level1)
     std::string pluginBundleName = "test2";
     std::string codePath;
     auto ret = bundleDataMgr.GetPluginBundlePathForSelf(pluginBundleName, codePath);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
 }
 
 /**

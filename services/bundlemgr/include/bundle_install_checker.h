@@ -73,7 +73,8 @@ public:
      */
     ErrCode CheckMultipleHapsSignInfo(
         const std::vector<std::string> &bundlePaths,
-        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, bool readFile = false);
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+        bool readFile = false, const int32_t userId = Constants::INVALID_USERID);
 
     /**
      * @brief To check the hap hash param.
@@ -273,6 +274,7 @@ private:
 
     bool CheckProxyPermissionLevel(const std::string &permissionName) const;
     bool MatchOldSignatures(const std::string &bundleName, const std::vector<std::string> &appSignatures);
+    bool CheckEnterpriseResign(const Security::Verify::ProvisionInfo &provisionInfo, const int32_t userId);
     bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     std::tuple<bool, std::string, std::string> GetValidReleaseType(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);

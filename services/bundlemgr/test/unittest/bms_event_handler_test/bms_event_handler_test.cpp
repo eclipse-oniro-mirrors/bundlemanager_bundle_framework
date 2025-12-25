@@ -1766,6 +1766,7 @@ HWTEST_F(BmsEventHandlerTest, HandlePreInstallBundleNamesException_0100, Functio
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     PreInstallBundleInfo info;
+    info.SetIsUninstalled(true);
     handler->loadExistData_.emplace(MODULE_UPDATE_PATH, info);
     auto preInstallExceptionMgr = std::make_shared<PreInstallExceptionMgr>();
     ASSERT_NE(preInstallExceptionMgr, nullptr);
@@ -1779,6 +1780,33 @@ HWTEST_F(BmsEventHandlerTest, HandlePreInstallBundleNamesException_0100, Functio
     handler->HandlePreInstallBundleNamesException(preInstallExceptionMgr, exceptionBundleNames);
     EXPECT_TRUE(preInstallExceptionMgr->exceptionBundleNames_.find(MODULE_UPDATE_PATH) ==
                 preInstallExceptionMgr->exceptionBundleNames_.end());
+}
+
+/**
+ * @tc.number: HandlePreInstallBundleNamesException_0200
+ * @tc.name: HandlePreInstallBundleNamesException
+ * @tc.desc: test HandlePreInstallBundleNamesException
+ */
+HWTEST_F(BmsEventHandlerTest, HandlePreInstallBundleNamesException_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    PreInstallBundleInfo info;
+    info.SetIsUninstalled(false);
+    handler->loadExistData_.emplace(MODULE_UPDATE_PATH, info);
+    auto preInstallExceptionMgr = std::make_shared<PreInstallExceptionMgr>();
+    ASSERT_NE(preInstallExceptionMgr, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->preInstallExceptionMgr_ = preInstallExceptionMgr;
+    auto bmsParam = std::make_shared<BmsParam>();
+    ASSERT_NE(bmsParam, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = bmsParam;
+    preInstallExceptionMgr->exceptionBundleNames_.insert(MODULE_UPDATE_PATH);
+    std::set<std::string> exceptionBundleNames;
+    exceptionBundleNames.emplace(MODULE_UPDATE_PATH);
+    handler->HandlePreInstallBundleNamesException(preInstallExceptionMgr, exceptionBundleNames);
+    EXPECT_FALSE(preInstallExceptionMgr->exceptionBundleNames_.find(MODULE_UPDATE_PATH) ==
+                preInstallExceptionMgr->exceptionBundleNames_.end());
+    preInstallExceptionMgr->exceptionBundleNames_.erase(MODULE_UPDATE_PATH);
 }
 
 /**

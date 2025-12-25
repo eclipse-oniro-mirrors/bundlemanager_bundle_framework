@@ -2548,7 +2548,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_8400, Function | SmallTest
     ElementName elementName("", BUNDLE_NAME, ABILITY_PPT, MODULE_NAME);
     want.SetElement(elementName);
     ErrCode result = defaultAppProxy->SetDefaultApplicationForAppClone(USER_ID, 1, DEFAULT_APP_PPT, want);
-    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH);
+    EXPECT_EQ(result, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
 }
 
 /**

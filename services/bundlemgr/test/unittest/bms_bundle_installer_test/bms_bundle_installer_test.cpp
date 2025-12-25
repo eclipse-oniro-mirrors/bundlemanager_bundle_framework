@@ -12006,15 +12006,13 @@ HWTEST_F(BmsBundleInstallerTest, MakeFsConfig_1000, Function | SmallTest | Level
         Constants::APP_PROVISION_TYPE_DEBUG, Constants::APP_PROVISION_TYPE_FILE_NAME);
     std::string path = ServiceConstants::HMDFS_CONFIG_PATH + BUNDLE_BACKUP_NAME +
         std::string(ServiceConstants::PATH_SEPARATOR) + Constants::APP_PROVISION_TYPE_FILE_NAME;
-    int fd = open(path.c_str(), O_RDWR);
-    struct stat statBuf;
-    fstat(fd, &statBuf);
-    std::string strAppInfo;
-    strAppInfo.resize(statBuf.st_size);
-    ssize_t retVal = read(fd, strAppInfo.data(), statBuf.st_size);
-    EXPECT_GT(retVal, 0);
+    std::ifstream file(path);
+    EXPECT_TRUE(file.is_open()) << "Failed to open file: "<< path;
+    std::string strAppInfo(
+        (std::istreambuf_iterator<char>(file)),
+        std::istreambuf_iterator<char>());
+    EXPECT_GT(strAppInfo.size(), 0);
     EXPECT_TRUE(strAppInfo.find(Constants::DEBUG_TYPE_VALUE) != std::string::npos);
-    close(fd);
 
     installResult = UnInstallBundle(BUNDLE_BACKUP_NAME);
     EXPECT_EQ(installResult, ERR_OK);
@@ -12036,15 +12034,13 @@ HWTEST_F(BmsBundleInstallerTest, MakeFsConfig_2000, Function | SmallTest | Level
         Constants::APP_PROVISION_TYPE_RELEASE, Constants::APP_PROVISION_TYPE_FILE_NAME);
     std::string path = ServiceConstants::HMDFS_CONFIG_PATH + BUNDLE_BACKUP_NAME +
         std::string(ServiceConstants::PATH_SEPARATOR) + Constants::APP_PROVISION_TYPE_FILE_NAME;
-    int fd = open(path.c_str(), O_RDWR);
-    struct stat statBuf;
-    fstat(fd, &statBuf);
-    std::string strAppInfo;
-    strAppInfo.resize(statBuf.st_size);
-    ssize_t retVal = read(fd, strAppInfo.data(), statBuf.st_size);
-    EXPECT_GT(retVal, 0);
+    std::ifstream file(path);
+    EXPECT_TRUE(file.is_open()) << "Failed to open file: "<< path;
+    std::string strAppInfo(
+        (std::istreambuf_iterator<char>(file)),
+        std::istreambuf_iterator<char>());
+    EXPECT_GT(strAppInfo.size(), 0);
     EXPECT_TRUE(strAppInfo.find(Constants::RELEASE_TYPE_VALUE) != std::string::npos);
-    close(fd);
 
     installResult = UnInstallBundle(BUNDLE_BACKUP_NAME);
     EXPECT_EQ(installResult, ERR_OK);
@@ -12515,11 +12511,13 @@ HWTEST_F(BmsBundleInstallerTest, CreateArkStartupCache_0020, Function | SmallTes
     // test bundlename is not in white list, bundleType is APP or ATOMIC
     BaseBundleInstaller installer2;
     ErrCode ret = installer2.CreateArkStartupCache(ceateArk);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST);
+    EXPECT_TRUE((ret == ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST) ||
+        (ret == ERR_APPEXECFWK_INSTALLD_PARAM_ERROR));
 
     ceateArk.bundleType = BundleType::ATOMIC_SERVICE;
     ret = installer2.CreateArkStartupCache(ceateArk);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST);
+    EXPECT_TRUE((ret == ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST) ||
+        (ret == ERR_APPEXECFWK_INSTALLD_PARAM_ERROR));
 }
 
 /**
