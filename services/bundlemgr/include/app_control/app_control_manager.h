@@ -105,8 +105,8 @@ public:
     ErrCode SetUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
         const UninstallDisposedRule& rule, int32_t appIndex, int32_t userId);
 
-    ErrCode GetUninstallDisposedRule(const std::string &appIdentifier, int32_t appIndex,
-        int32_t userId, UninstallDisposedRule& rule);
+    ErrCode GetUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
+        int32_t appIndex, int32_t userId, UninstallDisposedRule& rule);
 
     ErrCode DeleteUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
         int32_t appIndex, int32_t userId);
