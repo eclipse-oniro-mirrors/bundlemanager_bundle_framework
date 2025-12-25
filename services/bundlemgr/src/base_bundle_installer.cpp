@@ -1587,7 +1587,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // create Screen Lock File Protection Dir
     CreateScreenLockProtectionDir(true);
     ScopeGuard ScreenLockFileProtectionDirGuard([&] {
-        if (!dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
+        if (!isAppExist_ && !dataMgr_->GetUninstallBundleInfoWithUserAndAppIndex(bundleName_, userId_,
             Constants::INITIAL_APP_INDEX)) {
             DeleteScreenLockProtectionDir(bundleName_);
         }
@@ -1629,7 +1629,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         tempInfo_.SetTempBundleInfo(cacheInfo);
     }
 #endif
-    DeleteUninstallBundleInfo(bundleName_);
     UpdateEncryptedStatus(oldInfo);
     GetInstallEventInfo(cacheInfo, sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
@@ -1656,6 +1655,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
     }
     CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
+    DeleteUninstallBundleInfo(bundleName_);
     codePathGuard.Dismiss();
     ProcessOldCodePath(bundleName_, isFeatureNeedUninstall_);
     // create data group dir
