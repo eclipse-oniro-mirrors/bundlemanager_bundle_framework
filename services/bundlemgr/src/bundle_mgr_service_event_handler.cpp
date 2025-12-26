@@ -396,6 +396,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_EXTENSION_ABILITY);
     UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON);
     UpdateOtaFlag(OTAFlag::PROCESS_ROUTER_MAP);
+    UpdateOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL);
     (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }
@@ -435,7 +436,7 @@ void BMSEventHandler::BundleRebootStartEvent()
 
     // need check /data/service/el1/public/bms/bundle_manager_service/app_temp
     ProcessAppTmpPath();
-
+    ProcessUpdateExtensionDirsApl();
     needNotifyBundleScanStatus_ = true;
 }
 
@@ -5592,6 +5593,38 @@ bool BMSEventHandler::IsForceInstallListEmpty(const std::string &bundleName)
         }
     }
     return isEmpty;
+}
+
+void BMSEventHandler::ProcessUpdateExtensionDirsApl()
+{
+    LOG_I(BMS_TAG_DEFAULT, "begin");
+    bool updateFlag = false;
+    CheckOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL, updateFlag);
+    if (updateFlag) {
+        LOG_I(BMS_TAG_DEFAULT, "Not need to update extension dirs due to has updated");
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Need to update extension dirs selinux apl");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    bool updateExtensionDirsSelinuxAplFlag = true;
+    std::vector<CreateDirParam> allExtensionDirsToUpdateSelinuxApl = dataMgr->GetAllExtensionDirsToUpdateSelinuxApl();
+    for (auto &extensionDirsToUpdate : allExtensionDirsToUpdateSelinuxApl) {
+        std::string bundleName = extensionDirsToUpdate.bundleName;
+        auto result = InstalldClient::GetInstance()->SetDirsApl(extensionDirsToUpdate, true);
+        if (result != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "fail for bundle(%{public}s), error:%{public}d", bundleName.c_str(), result);
+            updateExtensionDirsSelinuxAplFlag = false;
+        }
+    }
+    
+    if (updateExtensionDirsSelinuxAplFlag) {
+        UpdateOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL);
+    }
+    LOG_I(BMS_TAG_DEFAULT, "update selinux apl for extension dirs end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

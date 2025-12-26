@@ -47,6 +47,9 @@
 #ifndef SELINUX_HAP_DEBUGGABLE
 #define SELINUX_HAP_DEBUGGABLE 2
 #endif
+#ifndef SELINUX_HAP_INPUT_ISOLATE_FULL
+#define SELINUX_HAP_INPUT_ISOLATE_FULL 512
+#endif
 #endif // WITH_SELINUX
 #include "hitrace_meter.h"
 #include "installd/installd_operator.h"
@@ -434,7 +437,7 @@ ErrCode InstalldHostImpl::CreateSharefilesDataDirEl2(const CreateDirParam &creat
         }
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
-        createDirParam.isDlpSandbox, createDirParam.dlpType);
+        createDirParam.isDlpSandbox, createDirParam.dlpType, false);
     res = SetDirApl(bundleShareFilesDataDir, bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (res != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLD, "SetDirApl failed: %{public}s, errno: %{public}d",
@@ -548,7 +551,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
-        createDirParam.isDlpSandbox, createDirParam.dlpType);
+        createDirParam.isDlpSandbox, createDirParam.dlpType, false);
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         if ((createDirParam.createDirFlag == CreateDirFlag::CREATE_DIR_UNLOCKED) &&
             (el == ServiceConstants::BUNDLE_EL[0])) {
@@ -756,7 +759,7 @@ ErrCode InstalldHostImpl::CreateCommonDataDir(const CreateDirParam &createDirPar
         return ERR_OK;
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
-        createDirParam.isDlpSandbox, createDirParam.dlpType);
+        createDirParam.isDlpSandbox, createDirParam.dlpType, false);
     std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::BASE;
     int mode = createDirParam.debug ? (S_IRWXU | S_IRWXG | S_IRWXO) : S_IRWXU;
 
@@ -860,7 +863,7 @@ ErrCode InstalldHostImpl::CreateEl2DataDir(const CreateDirParam &createDirParam)
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
         DirType::DIR_EL2);
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
-        createDirParam.isDlpSandbox, createDirParam.dlpType);
+        createDirParam.isDlpSandbox, createDirParam.dlpType, false);
     ErrCode ret = SetDirApl(
         bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags, createDirParam.uid);
     if (ret != ERR_OK) {
@@ -892,9 +895,9 @@ ErrCode InstalldHostImpl::CreateExtensionDir(const CreateDirParam &createDirPara
         return ERR_OK;
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
-        createDirParam.isDlpSandbox, createDirParam.dlpType);
-    LOG_I(BMS_TAG_INSTALLD, "CreateExtensionDir parent dir %{public}s for bundle %{public}s",
-        parentDir.c_str(), createDirParam.bundleName.c_str());
+        createDirParam.isDlpSandbox, createDirParam.dlpType, true);
+    LOG_I(BMS_TAG_INSTALLD, "CreateExtensionDir parent dir %{public}s for bundle %{public}s, hapFlags:%{public}d",
+        parentDir.c_str(), createDirParam.bundleName.c_str(), hapFlags);
     for (const auto &item : createDirParam.extensionDirs) {
         std::string extensionDir = parentDir + item;
         LOG_I(BMS_TAG_INSTALLD, "begin to create extension dir %{public}s", extensionDir.c_str());
@@ -1427,7 +1430,7 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
 }
 
 unsigned int InstalldHostImpl::GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox,
-    const int32_t dlpType)
+    const int32_t dlpType, const bool isExtensionDir)
 {
     unsigned int hapFlags = 0;
 #ifdef WITH_SELINUX
@@ -1440,14 +1443,41 @@ unsigned int InstalldHostImpl::GetHapFlags(const bool isPreInstallApp, const boo
             hapFlags |= SELINUX_HAP_DLP_READ_ONLY;
         }
     }
+    hapFlags |= isExtensionDir ? SELINUX_HAP_INPUT_ISOLATE_FULL : 0;
 #endif
     return hapFlags;
+}
+
+ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir)
+{
+    unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp,
+        createDirParam.debug, createDirParam.isDlpSandbox, createDirParam.dlpType, isExtensionDir);
+    ErrCode res = ERR_OK;
+    for (auto &dir : createDirParam.extensionDirs) {
+        LOG_W(BMS_TAG_INSTALLD, "update extension dir for: bundle(%{public}s)", createDirParam.bundleName.c_str());
+        for (const auto &el : ServiceConstants::BUNDLE_EL) {
+            std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId);
+            std::string elBaseExtensionDir = bundleDataDir + ServiceConstants::BASE + dir;
+            auto ret = SetDirApl(elBaseExtensionDir, createDirParam.bundleName,
+                createDirParam.apl, hapFlags, createDirParam.uid);
+            if (ret != ERR_OK) {
+                res = ret;
+            }
+            std::string elDatabaseExtensionDir = bundleDataDir + ServiceConstants::DATABASE + dir;
+            ret = SetDirApl(elDatabaseExtensionDir, createDirParam.bundleName,
+                createDirParam.apl, hapFlags, createDirParam.uid);
+            if (ret != ERR_OK) {
+                res = ret;
+            }
+        }
+    }
+    return res;
 }
 
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
     bool isPreInstallApp, bool debug, int32_t uid)
 {
-    unsigned int hapFlags = GetHapFlags(isPreInstallApp, debug, false, 0);
+    unsigned int hapFlags = GetHapFlags(isPreInstallApp, debug, false, 0, false);
     return SetDirApl(dir, bundleName, apl, hapFlags, uid);
 }
 
@@ -1463,6 +1493,7 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
         LOG_E(BMS_TAG_INSTALLD, "Calling the function SetDirApl with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+
     HapFileInfo hapFileInfo;
     hapFileInfo.pathNameOrig.push_back(dir);
     hapFileInfo.apl = apl;

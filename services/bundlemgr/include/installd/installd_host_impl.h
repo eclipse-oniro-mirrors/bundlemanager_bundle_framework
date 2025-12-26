@@ -170,6 +170,8 @@ public:
     virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         bool isPreInstallApp, bool debug, int32_t uid) override;
 
+    virtual ErrCode SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir) override;
+
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.
@@ -307,7 +309,7 @@ private:
     ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         unsigned int hapFlags, int32_t uid);
     unsigned int GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox,
-        const int32_t dlpType);
+        const int32_t dlpType, const bool isExtensionDir);
     ErrCode InnerRemoveAtomicServiceBundleDataDir(
         const std::string &bundleName, const int32_t userId, const bool async);
     ErrCode InnerRemoveBundleDataDir(const std::string &bundleName, const int32_t userId, const bool async);

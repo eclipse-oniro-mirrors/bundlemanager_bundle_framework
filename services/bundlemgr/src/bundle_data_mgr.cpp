@@ -12787,5 +12787,39 @@ ErrCode BundleDataMgr::GetPluginExtensionInfo(
     extensionInfo.applicationInfo.uid = innerBundleUserInfo.uid;
     return ERR_OK;
 }
+
+std::vector<CreateDirParam> BundleDataMgr::GetAllExtensionDirsToUpdateSelinuxApl()
+{
+    std::vector<CreateDirParam> allExtensionDirsToUpdateSelinuxApl;
+    std::set<int32_t> userIds = GetAllUser();
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (auto &infoPair : bundleInfos_) {
+        auto &info = infoPair.second;
+        std::string bundleName = infoPair.first;
+        std::vector<std::string> extensionDirs = info.GetAllExtensionDirs();
+        if (extensionDirs.empty()) {
+            continue;
+        }
+        for (const auto &userId : userIds) {
+            int32_t uid = info.GetUid(userId);
+            if (uid == Constants::INVALID_UID) {
+                continue;
+            }
+            CreateDirParam createDirParam;
+            createDirParam.bundleName = bundleName;
+            createDirParam.userId = userId;
+            createDirParam.uid = uid;
+            createDirParam.gid = uid;
+            createDirParam.apl = info.GetAppPrivilegeLevel();
+            createDirParam.isPreInstallApp = info.IsPreInstallApp();
+            createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType ==
+                Constants::APP_PROVISION_TYPE_DEBUG;
+            createDirParam.extensionDirs.assign(extensionDirs.begin(), extensionDirs.end());
+            allExtensionDirsToUpdateSelinuxApl.emplace_back(createDirParam);
+        }
+    }
+
+    return allExtensionDirsToUpdateSelinuxApl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

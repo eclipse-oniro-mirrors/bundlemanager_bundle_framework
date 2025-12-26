@@ -149,6 +149,11 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::SetArkStartupCacheApl(const std::string &dir)
 {
     return ERR_OK;

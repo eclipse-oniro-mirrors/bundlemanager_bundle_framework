@@ -93,6 +93,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::SET_DIR_APL):
             result = this->HandleSetDirApl(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::SET_DIRS_APL):
+            result = this->HandleSetDirsApl(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_DIR):
             result = this->HandleRemoveDir(data, reply);
             break;
@@ -677,6 +680,21 @@ bool InstalldHost::HandleSetDirApl(MessageParcel &data, MessageParcel &reply)
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
+
+bool InstalldHost::HandleSetDirsApl(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+
+    bool isExtensionDir = data.ReadBool();
+    ErrCode result = SetDirsApl(*info, isExtensionDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 
 bool InstalldHost::HandleSetArkStartupCacheApl(MessageParcel &data, MessageParcel &reply)
 {

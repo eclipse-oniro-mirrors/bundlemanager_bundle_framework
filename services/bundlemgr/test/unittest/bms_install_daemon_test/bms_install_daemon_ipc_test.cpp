@@ -1443,4 +1443,49 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7600, Function | SmallTest |
     auto ret = proxy->HashFiles(files, filesHash);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_7700
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling SetDirsApl of proxy
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7700, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+    std::vector<std::string> dirs;
+    dirs.emplace_back(TEST_STRING);
+    CreateDirParam createDirParam;
+    createDirParam.extensionDirs = dirs;
+    createDirParam.bundleName = TEST_STRING;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
+    createDirParam.debug = false;
+    createDirParam.uid = UID;
+    auto ret = proxy->SetDirsApl(createDirParam, true);
+    EXPECT_EQ(ret, ERR_OK);
+}
+ 
+/**
+ * @tc.number: InstalldProxyTest_7800
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling SetDirsApl of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_7800, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> proxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(proxy, nullptr);
+    std::vector<std::string> dirs;
+    dirs.emplace_back(TEST_STRING);
+    CreateDirParam createDirParam;
+    createDirParam.extensionDirs = dirs;
+    createDirParam.bundleName = TEST_STRING;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
+    createDirParam.debug = false;
+    createDirParam.uid = UID;
+    auto ret = proxy->SetDirsApl(createDirParam, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
 } // OHOS

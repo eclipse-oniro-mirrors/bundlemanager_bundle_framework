@@ -2812,6 +2812,29 @@ HWTEST_F(BmsEventHandlerTest, SaveUpdatePermissionsFlag_0100, Function | SmallTe
 }
 
 /**
+ * @tc.number: ProcessUpdateExtensionDirsApl_0100
+ * @tc.name: ProcessUpdateExtensionDirsApl
+ * @tc.desc: test ProcessUpdateExtensionDirsApl
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessUpdateExtensionDirsApl_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = nullptr;
+        handler->ProcessUpdateExtensionDirsApl();
+        auto bmsParam = std::make_shared<BmsParam>();
+        EXPECT_NE(bmsParam, nullptr);
+        if (bmsParam) {
+            DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = std::make_shared<BmsParam>();
+            handler->ProcessUpdateExtensionDirsApl();
+            DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+            handler->ProcessUpdateExtensionDirsApl();
+        }
+    }
+}
+
+/**
  * @tc.number: CheckSystemOptimizeShaderCache_0100
  * @tc.name: CheckSystemOptimizeShaderCache
  * @tc.desc: test CheckSystemOptimizeShaderCache

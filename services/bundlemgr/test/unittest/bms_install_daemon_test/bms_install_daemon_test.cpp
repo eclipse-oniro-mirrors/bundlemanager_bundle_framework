@@ -854,6 +854,52 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0900, Function | SmallTest | Level
 }
 
 /**
+ * @tc.number: InstalldClient_1000
+ * @tc.name: Test SetDirsApl, Param is empty
+ * @tc.desc: 1.Test the SetDirsApl of InstalldClient
+*/
+HWTEST_F(BmsInstallDaemonTest, InstalldClient_1000, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    if (!service->IsServiceReady()) {
+        service->Start();
+    }
+    std::vector<std::string> dirs;
+    std::string TEST_STRING = "test.string";
+    CreateDirParam createDirParam;
+    createDirParam.extensionDirs = dirs;
+    createDirParam.bundleName = BUNDLE_NAME;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
+    createDirParam.debug = false;
+    createDirParam.uid = UID;
+    ErrCode ret = InstalldClient::GetInstance()->SetDirsApl(createDirParam, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+ 
+    dirs.emplace_back(TEST_STRING);
+    CreateDirParam createDirParam2;
+    createDirParam2.extensionDirs = dirs;
+    createDirParam2.bundleName = "";
+    createDirParam2.apl = TEST_STRING;
+    createDirParam2.isPreInstallApp = false;
+    createDirParam2.debug = false;
+    createDirParam2.uid = UID;
+    ret = InstalldClient::GetInstance()->SetDirsApl(createDirParam2, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+ 
+    CreateDirParam createDirParam3;
+    createDirParam3.extensionDirs = dirs;
+    createDirParam3.bundleName = BUNDLE_NAME;
+    createDirParam3.apl = "";
+    createDirParam3.isPreInstallApp = true;
+    createDirParam3.debug = true;
+    createDirParam3.uid = UID;
+    ret = InstalldClient::GetInstance()->SetDirsApl(createDirParam3, true);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+
+/**
  * @tc.number: ExtractBundleFile_0100
  * @tc.name: test the ExtractBundleFile function of installd service with flag system bundle
  * @tc.desc: 1. the bundle file is available and the target dir exists

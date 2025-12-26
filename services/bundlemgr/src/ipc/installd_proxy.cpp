@@ -472,6 +472,21 @@ ErrCode InstalldProxy::SetDirApl(const std::string &dir, const std::string &bund
     return TransactInstalldCmd(InstalldInterfaceCode::SET_DIR_APL, data, reply, option);
 }
 
+ErrCode InstalldProxy::SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&createDirParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    INSTALLD_PARCEL_WRITE(data, Bool, isExtensionDir);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::SET_DIRS_APL, data, reply, option);
+}
+
 ErrCode InstalldProxy::SetArkStartupCacheApl(const std::string &dir)
 {
     MessageParcel data;

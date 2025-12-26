@@ -97,6 +97,7 @@ enum class InstalldInterfaceCode : uint32_t {
     GET_FILES_HASH = 69,
     ADD_CERT_AND_ENABLE_KEY = 70,
     DELETE_CERT_AND_REMOVE_KEY = 71,
+    SET_DIRS_APL = 72,
 };
 
 } // namespace AppExecFwk

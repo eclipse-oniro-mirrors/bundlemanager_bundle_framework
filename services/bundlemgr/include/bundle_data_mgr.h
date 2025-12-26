@@ -1248,7 +1248,7 @@ public:
         std::vector<JsonProfileInfo> &profileInfos) const;
     ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
         const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo);
-
+    std::vector<CreateDirParam> GetAllExtensionDirsToUpdateSelinuxApl();
 private:
     /**
      * @brief Init transferStates.
