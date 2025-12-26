@@ -3993,6 +3993,66 @@ HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0400, Functio
 }
 
 /**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0500
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test GetRecoverablePreInstallBundleInfos
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInfo;
+    preInfo.SetRemovable(false);
+    preInfo.SetBundleName(BUNDLE_DESCRIPTION);
+    preInfo.SetBundleType(BundleType::APP);
+    dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
+    EXPECT_TRUE(CheckPreInstallBundleInfo(res, BUNDLE_DESCRIPTION));
+    dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0600
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test GetRecoverablePreInstallBundleInfos
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0600, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInfo;
+    preInfo.SetRemovable(false);
+    preInfo.SetBundleName(BUNDLE_DESCRIPTION);
+    preInfo.SetBundleType(BundleType::ATOMIC_SERVICE);
+    dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
+    EXPECT_TRUE(CheckPreInstallBundleInfo(res, BUNDLE_DESCRIPTION));
+    dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0700
+ * @tc.name: test GetRecoverablePreInstallBundleInfos
+ * @tc.desc: 1.test GetRecoverablePreInstallBundleInfos
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverablePreInstallBundleInfos_0700, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    PreInstallBundleInfo preInfo;
+    preInfo.SetRemovable(false);
+    preInfo.SetBundleName(BUNDLE_DESCRIPTION);
+    preInfo.SetBundleType(BundleType::SHARED);
+    dataMgr->preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInfo);
+    std::vector<PreInstallBundleInfo> res = dataMgr->GetRecoverablePreInstallBundleInfos(TEST_U100);
+    EXPECT_FALSE(CheckPreInstallBundleInfo(res, BUNDLE_DESCRIPTION));
+    dataMgr->preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInfo);
+}
+
+/**
  * @tc.number: SetBit_0001
  * @tc.name: SetBit_0001
  * @tc.desc: test SetBit_0001
