@@ -107,7 +107,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "crypto", ExtensionAbilityType::CRYPTO },
     { "awc/webpage", ExtensionAbilityType::AWC_WEBPAGE },
     { "awc/newsfeed", ExtensionAbilityType::AWC_NEWSFEED },
-    { "contentEmbed", ExtensionAbilityType::CONTENT_EMBED }
+    { "contentEmbed", ExtensionAbilityType::CONTENT_EMBED },
+    { "partnerAgent", ExtensionAbilityType::PARTNER_AGENT }
 };
 
 // the new extension type does not need to be added here
@@ -120,7 +121,7 @@ const std::set<std::string> NOT_NEED_CREATE_SANBOX_MODE = {
     "sysDialog/power", "sysPicker/share", "hms/account", "ads", "sysDialog/meetimeCall",
     "sysDialog/meetimeContact", "sysDialog/meetimeMessage", "sysDialog/print", "sysPicker/meetimeContact",
     "sysPicker/meetimeCallLog", "sysPicker/photoPicker", "sysPicker/camera", "sysPicker/navigation",
-    "sysPicker/appSelector", "sys/commonUI", "vpn", "autoFill/smart", "liveViewLockScreen"
+    "sysPicker/appSelector", "sys/commonUI", "vpn", "autoFill/smart", "liveViewLockScreen","partnerAgent"
 };
 
 const std::unordered_map<std::string, ExtensionProcessMode> EXTENSION_PROCESS_MODE_MAP = {

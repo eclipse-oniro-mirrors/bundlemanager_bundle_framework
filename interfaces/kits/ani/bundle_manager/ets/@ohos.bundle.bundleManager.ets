@@ -131,6 +131,7 @@ namespace bundleManager {
     FAULT_LOG = 33,
     NOTIFICATION_SUBSCRIBER = 34,
     CRYPTO = 35,
+    PARTNER_AGENT = 36,
     UNSPECIFIED = 255
   }
 
