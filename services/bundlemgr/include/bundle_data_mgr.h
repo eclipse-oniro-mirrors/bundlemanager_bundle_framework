@@ -1474,6 +1474,17 @@ private:
         const InnerBundleInfo &innerBundleInfo) const;
     ErrCode GetTargetShortcutInfo(const std::string &bundleName, const std::string &shortcutId,
         const std::vector<ShortcutInfo> &shortcutInfos, ShortcutInfo &targetShortcutInfo) const;
+    std::string GetRelationPath() const;
+    void LoadSaUidMap(std::map<std::string, std::set<int32_t>> &saUidMap) const;
+    std::set<int32_t> GetBindingSAUidsByBundleName(const std::string &bundleName,
+        const std::map<std::string, std::set<int32_t>> &saUidMap) const;
+    void CalculatePreInstalledBundleSize(const std::string &bundleName, const int32_t appIndex,
+        std::vector<int64_t> &bundleStats) const;
+    ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+        std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
+        std::vector<BundleStorageStats> &bundleStats) const;
+    void GetAllInstallBundleUids(const int32_t userId, const int32_t requestUserId, int32_t &responseUserId,
+        std::vector<int32_t> &uids, std::vector<std::string> &bundleNames) const;
 
 private:
     bool initialUserFlag_ = false;

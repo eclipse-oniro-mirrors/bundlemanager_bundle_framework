@@ -217,7 +217,9 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0900, Function | Sma
     ASSERT_NE(hostImpl, nullptr);
 
     std::vector<int64_t> vec;
-    auto ret = hostImpl->GetBundleStats(TEST_STRING, 0, vec, 0);
+    std::unordered_set<int32_t> uids;
+    uids.emplace(0);
+    auto ret = hostImpl->GetBundleStats(TEST_STRING, 0, vec, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -678,7 +680,9 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3600, Function | Sma
     ASSERT_NE(hostImpl, nullptr);
 
     std::vector<int64_t> vec;
-    auto ret = hostImpl->GetBundleStats("", 0, vec, 0);
+    std::unordered_set<int32_t> uids;
+    uids.emplace(0);
+    auto ret = hostImpl->GetBundleStats("", 0, vec, uids);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -1363,7 +1367,9 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7700, Function | Sma
 
     const std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
     std::vector<BundleStorageStats> bundleStats;
-    const std::unordered_map<std::string, int32_t> uidMap = {{"com.example.bundlekit.test", 10000}};
+    std::unordered_set<int32_t> uids;
+    uids.emplace(10000);
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap = {{"com.example.bundlekit.test", uids}};
     auto ret = hostImpl->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }

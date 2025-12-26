@@ -243,8 +243,10 @@ bool BmsInstallDaemonTest::GetBundleStats(const std::string &bundleName, const i
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
+    std::unordered_set<int32_t> uids;
+    uids.emplace(uid);
     if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats,
-        uid, appIndex, statFlag, moduleNames) == ERR_OK) {
+        uids, appIndex, statFlag, moduleNames) == ERR_OK) {
         return true;
     }
     return false;

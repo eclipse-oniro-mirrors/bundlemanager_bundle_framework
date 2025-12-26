@@ -298,7 +298,9 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_0900, Function | SmallTest |
     EXPECT_NE(proxy, nullptr);
 
     std::vector<int64_t> vec;
-    auto ret = proxy->GetBundleStats(TEST_STRING, 0, vec, 0);
+    std::unordered_set<int32_t> uids;
+    uids.emplace(0);
+    auto ret = proxy->GetBundleStats(TEST_STRING, 0, vec, uids);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1266,7 +1268,9 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6600, Function | SmallTest |
     ASSERT_NE(proxy, nullptr);
 
     std::vector<int64_t> vec;
-    auto ret = proxy->GetBundleStats(TEST_STRING, 0, vec, 0);
+    std::unordered_set<int32_t> uids;
+    uids.emplace(0);
+    auto ret = proxy->GetBundleStats(TEST_STRING, 0, vec, uids);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 

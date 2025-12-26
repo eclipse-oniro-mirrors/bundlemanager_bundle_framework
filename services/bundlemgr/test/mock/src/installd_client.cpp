@@ -179,7 +179,7 @@ ErrCode InstalldClient::CleanBundleDataDirByName(
 }
 
 ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int32_t userId,
-    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
+    std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids, const int32_t appIndex,
     const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     if (bundleName.empty()) {
@@ -187,11 +187,12 @@ ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int3
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::GetBundleStats, bundleName, userId, bundleStats,
-        uid, appIndex, statFlag, moduleNameList);
+        uids, appIndex, statFlag, moduleNameList);
 }
 
 ErrCode InstalldClient::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
-    const std::unordered_map<std::string, int32_t> &uidMap, std::vector<BundleStorageStats> &bundleStats)
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
+    std::vector<BundleStorageStats> &bundleStats)
 {
     if (bundleNames.empty() || uidMap.empty()) {
         APP_LOGE("bundleNames or uidMap is empty");
