@@ -74,7 +74,7 @@ public:
     ErrCode CheckMultipleHapsSignInfo(
         const std::vector<std::string> &bundlePaths,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-        bool readFile = false, const int32_t userId = Constants::INVALID_USERID);
+        bool readFile = false, int32_t userId = Constants::INVALID_USERID);
 
     /**
      * @brief To check the hap hash param.
