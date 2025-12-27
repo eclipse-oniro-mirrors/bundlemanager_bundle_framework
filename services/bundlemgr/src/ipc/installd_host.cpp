@@ -585,7 +585,12 @@ bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &repl
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
-    int32_t uid = data.ReadInt32();
+    std::unordered_set<int32_t> uids;
+    int32_t uidSize = data.ReadInt32();
+    for (int32_t i = 0; i < uidSize; ++i) {
+        int32_t uid = data.ReadInt32();
+        uids.emplace(uid);
+    }
     int32_t appIndex = data.ReadInt32();
     uint32_t statFlag = data.ReadUint32();
     std::vector<std::string> moduleNameList;
@@ -593,7 +598,7 @@ bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &repl
         return false;
     }
     std::vector<int64_t> bundleStats;
-    ErrCode result = GetBundleStats(bundleName, userId, bundleStats, uid, appIndex, statFlag, moduleNameList);
+    ErrCode result = GetBundleStats(bundleName, userId, bundleStats, uids, appIndex, statFlag, moduleNameList);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetBundleStats write failed");
@@ -617,7 +622,7 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
         bundleNames.emplace_back(bundleName);
     }
     int32_t userId = data.ReadInt32();
-    std::unordered_map<std::string, int32_t> uidMap;
+    std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap;
     int32_t uidMapSize = data.ReadInt32();
     if (uidMapSize < 0 || uidMapSize > MAX_BATCH_QUERY_BUNDLE_SIZE) {
         LOG_E(BMS_TAG_INSTALLD, "param invalid");
@@ -625,8 +630,13 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
     }
     for (int32_t i = 0; i < uidMapSize; ++i) {
         std::string bundleName = Str16ToStr8(data.ReadString16());
-        int32_t uids = data.ReadInt32();
-        uidMap.emplace(bundleName, uids);
+        int32_t uidSize = data.ReadInt32();
+        std::unordered_set<int32_t> uidSet;
+        for (int32_t j = 0; j < uidSize; ++j) {
+            int32_t uid = data.ReadInt32();
+            uidSet.emplace(uid);
+        }
+        uidMap.emplace(bundleName, uidSet);
     }
     std::vector<BundleStorageStats> bundleStats;
     ErrCode result = BatchGetBundleStats(bundleNames, userId, uidMap, bundleStats);

@@ -1317,12 +1317,12 @@ int64_t InstalldHostImpl::GetAppCacheSize(const std::string &bundleName,
 }
 
 ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const int32_t userId,
-    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
+    std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids, const int32_t appIndex,
     const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     LOG_D(BMS_TAG_INSTALLD,
-        "bundleName = %{public}s, userId = %{public}d, uid = %{public}d, appIndex = %{public}d",
-        bundleName.c_str(), userId, uid, appIndex);
+        "bundleName = %{public}s, userId = %{public}d, uids size = %{public}zu, appIndex = %{public}d",
+        bundleName.c_str(), userId, uids.size(), appIndex);
     LOG_D(BMS_TAG_INSTALLD,
         "statFlag = %{public}d", statFlag);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
@@ -1344,7 +1344,11 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     }
     if ((statFlag & OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) !=
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE) {
-        bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
+        if (!uids.empty()) {
+            for (const auto &uid : uids) {
+                bundleDataSize += InstalldOperator::GetDiskUsageFromQuota(uid);
+            }
+        }
     }
     if ((statFlag & OHOS::AppExecFwk::Constants::GET_BUNDLE_WITHOUT_CACHE_SIZE) !=
         OHOS::AppExecFwk::Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_CACHE_SIZE) {
@@ -1360,7 +1364,7 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
 }
 
 ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
-    const std::unordered_map<std::string, int32_t> &uidMap,
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
     std::vector<BundleStorageStats> &bundleStats)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
@@ -1385,9 +1389,11 @@ ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bu
         int64_t appDataSize = 0;
         int64_t bundleDataSize = 0;
         appDataSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
-        auto uid = uidMap.find(name);
-        if (uid != uidMap.end()) {
-            bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid->second);
+        auto uids = uidMap.find(name);
+        if (uids != uidMap.end()) {
+            for (const auto &uid : uids->second) {
+                bundleDataSize += InstalldOperator::GetDiskUsageFromQuota(uid);
+            }
         }
         // index 0 : bundle data size
         stats.bundleStats[APP_DATA_SIZE_INDEX] = appDataSize;

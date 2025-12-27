@@ -39,6 +39,9 @@
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_status_callback_death_recipient.h"
+#ifdef CONFIG_POLOCY_ENABLE
+#include "config_policy_utils.h"
+#endif
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
@@ -115,6 +118,10 @@ constexpr const char* RESOURCE_STRING_PREFIX = "$string:";
 constexpr const char* EMPTY_STRING = "";
 constexpr const char* SHORTCUT_OPERATION_CREATE = "ADD";
 constexpr const char* SHORTCUT_OPERATION_DELETE = "DEL";
+constexpr const char* EXTEND_DATASIZE_PATH_SUFFIX = "/etc/hap_extend_datasize_ralations.json";
+constexpr const char* HAP_EXTEND_DATASIZE_RELATIONS = "hap.extend.datasize.ralations";
+constexpr const char* BUNDLE_NAME_KEY = "bundle_name";
+constexpr const char* SA_UID = "sa_uid";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -4402,6 +4409,90 @@ void BundleDataMgr::GetBundleCacheInfos(const int32_t userId, std::vector<std::t
     return;
 }
 
+std::string BundleDataMgr::GetRelationPath() const
+{
+#ifdef CONFIG_POLOCY_ENABLE
+    char buf[MAX_PATH_LEN] = { 0 };
+    char *relationPath = GetOneCfgFile(EXTEND_DATASIZE_PATH_SUFFIX, buf, MAX_PATH_LEN);
+    if (relationPath == nullptr || relationPath[0] == '\0') {
+        LOG_E(BMS_TAG_INSTALLD, "GetOneCfgFile failed");
+        return "";
+    }
+    if (strlen(relationPath) >= MAX_PATH_LEN) {
+        LOG_E(BMS_TAG_INSTALLD, "relationPath length exceeds");
+        return "";
+    }
+    return relationPath;
+#endif
+    return "";
+}
+
+void BundleDataMgr::LoadSaUidMap(std::map<std::string, std::set<int32_t>> &saUidMap) const
+{
+    std::string relationPath = GetRelationPath();
+    if (relationPath.empty()) {
+        APP_LOGE("relationPath is empty.");
+        return;
+    }
+    if (relationPath.length() >= PATH_MAX) {
+        APP_LOGE("relationPath length(%{public}u) longer than max length(%{public}d)",
+            static_cast<unsigned int>(relationPath.length()), PATH_MAX);
+        return;
+    }
+    std::string realPath;
+    realPath.reserve(PATH_MAX);
+    realPath.resize(PATH_MAX);
+    if (realpath(relationPath.c_str(), &(realPath[0])) == nullptr) {
+        APP_LOGE("transform real path: %{private}s  error: %{public}d", relationPath.c_str(), errno);
+        return;
+    }
+    nlohmann::json object;
+    if (!BundleParser::ReadFileIntoJson(relationPath, object)) {
+        APP_LOGE("Parse file %{private}s failed", relationPath.c_str());
+        return;
+    }
+
+    if (!object.contains(HAP_EXTEND_DATASIZE_RELATIONS) || !object.at(HAP_EXTEND_DATASIZE_RELATIONS).is_array()) {
+        APP_LOGE("Hap extend dataSize relations not existed");
+        return;
+    }
+
+    for (auto &relation : object.at(HAP_EXTEND_DATASIZE_RELATIONS).items()) {
+        const nlohmann::json &jsonObject = relation.value();
+        if (!jsonObject.contains(BUNDLE_NAME_KEY) || !jsonObject.at(BUNDLE_NAME_KEY).is_string()) {
+            continue;
+        }
+        std::string bundleName = jsonObject.at(BUNDLE_NAME_KEY).get<std::string>();
+        if (bundleName.empty() || !jsonObject.contains(SA_UID) || !jsonObject.at(SA_UID).is_array()) {
+            continue;
+        }
+        std::set<int32_t> saUidList;
+        for (auto &saUid : jsonObject.at(SA_UID).items()) {
+            if (!saUid.value().is_number()) {
+                continue;
+            }
+            saUidList.emplace(saUid.value().get<int32_t>());
+        }
+        saUidMap[bundleName] = saUidList;
+    }
+}
+
+std::set<int32_t> BundleDataMgr::GetBindingSAUidsByBundleName(const std::string &bundleName,
+    const std::map<std::string, std::set<int32_t>> &saUidMap) const
+{
+    std::set<int32_t> saUids;
+    if (saUidMap.empty()) {
+        APP_LOGE("saUid map is empty");
+        return saUids;
+    }
+    auto relation = saUidMap.find(bundleName);
+    if (relation == saUidMap.end()) {
+        APP_LOGE("Bundle %{public}s not found in saUidMap", bundleName.c_str());
+        return saUids;
+    }
+    return relation->second;
+}
+
 bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex, const uint32_t statFlag) const
 {
@@ -4432,33 +4523,65 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
             bundleName.c_str(), appIndex);
         }
     }
+    std::unordered_set<int32_t> uids;
+    uids.emplace(uid);
+    auto activeUserId = AccountHelper::GetUserIdByCallerType();
+    if (appIndex == Constants::MAIN_APP_INDEX && activeUserId == responseUserId) {
+        std::map<std::string, std::set<int32_t>> saUidMap;
+        LoadSaUidMap(saUidMap);
+        auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
+        uids.insert(saUids.begin(), saUids.end());
+    }
     ErrCode ret = InstalldClient::GetInstance()->GetBundleStats(
-        bundleName, responseUserId, bundleStats, uid, appIndex, statFlag, moduleNameList);
+        bundleName, responseUserId, bundleStats, uids, appIndex, statFlag, moduleNameList);
     if (ret != ERR_OK) {
         APP_LOGW("%{public}s getStats failed", bundleName.c_str());
         return false;
     }
-    {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        const auto infoItem = bundleInfos_.find(bundleName);
-        if (infoItem != bundleInfos_.end()) {
-            if (appIndex == 0 && infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
-                for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
-                    if (innerModuleInfo.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
-                        continue;
-                    }
-                    bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
-                }
+    CalculatePreInstalledBundleSize(bundleName, appIndex, bundleStats);
+    return true;
+}
+
+void BundleDataMgr::CalculatePreInstalledBundleSize(const std::string& bundleName, const int32_t appIndex,
+    std::vector<int64_t> &bundleStats) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem != bundleInfos_.end() && appIndex == 0 && infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+        for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+            if (innerModuleInfo.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
+                continue;
+            }
+            bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
+        }
+    }
+}
+
+ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
+    std::vector<BundleStorageStats> &bundleStats) const
+{
+    auto activeUserId = AccountHelper::GetUserIdByCallerType();
+    if (activeUserId != userId) {
+        return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, userId, uidMap, bundleStats);
+    }
+    std::map<std::string, std::set<int32_t>> saUidMap;
+    LoadSaUidMap(saUidMap);
+    if (!bundleNames.empty()) {
+        for (const auto &bundleName : bundleNames) {
+            auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
+            if (!saUids.empty()) {
+                uidMap[bundleName].insert(saUids.begin(), saUids.end());
             }
         }
     }
-    return true;
+    return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, userId, uidMap, bundleStats);
 }
 
 ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
     std::vector<BundleStorageStats> &bundleStats) const
 {
-    std::unordered_map<std::string, int32_t> uidMap;
+    std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap;
     std::vector<std::string> bundleNameList = bundleNames;
     std::vector<BundleStorageStats> bundleStatsList;
     if (!HasUserId(userId)) {
@@ -4481,17 +4604,16 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
                     stats.errCode = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
                     bundleStatsList.push_back(stats);
                 } else {
-                    uidMap.emplace(*bundleName, uninstallBundleInfo.GetUid(userId));
+                    uidMap[*bundleName].insert(uninstallBundleInfo.GetUid(userId));
                     ++bundleName;
                 }
                 continue;
             }
-            uidMap.emplace(*bundleName, userInfo.uid);
+            uidMap[*bundleName].insert(userInfo.uid);
             ++bundleName;
         }
     }
-    ErrCode ret = InstalldClient::GetInstance()->BatchGetBundleStats(
-        bundleNameList, userId, uidMap, bundleStats);
+    ErrCode ret = BatchGetBundleStats(bundleNameList, userId, uidMap, bundleStats);
     if (ret != ERR_OK) {
         APP_LOGE("getStats failed");
         return ret;
@@ -4575,38 +4697,60 @@ bool BundleDataMgr::GetAllUnisntallBundleUids(const int32_t requestUserId,
     return true;
 }
 
+void BundleDataMgr::GetAllInstallBundleUids(const int32_t userId, const int32_t requestUserId, int32_t &responseUserId,
+    std::vector<int32_t> &uids, std::vector<std::string> &bundleNames) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    responseUserId = userId;
+    auto activeUserId = AccountHelper::GetUserIdByCallerType();
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        std::string bundleName = info.GetBundleName();
+        responseUserId = info.GetResponseUserId(requestUserId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            APP_LOGD("bundle %{public}s is not installed in user %{public}d or 0", bundleName.c_str(), userId);
+            continue;
+        }
+        BundleType type = info.GetApplicationBundleType();
+        if (type != BundleType::ATOMIC_SERVICE && type != BundleType::APP) {
+            APP_LOGD("BundleType is invalid: %{public}d, bundname: %{public}s", type, bundleName.c_str());
+            continue;
+        }
+        std::vector<int32_t> allAppIndexes = {0};
+        if (type == BundleType::APP) {
+            std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, responseUserId);
+            allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
+        }
+        for (int32_t appIndex: allAppIndexes) {
+            int32_t uid = info.GetUid(responseUserId, appIndex);
+            uids.emplace_back(uid);
+        }
+        if (responseUserId == activeUserId) {
+            bundleNames.emplace_back(bundleName);
+        }
+    }
+}
+
 bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const
 {
     std::vector<int32_t> uids;
-    int32_t responseUserId = userId;
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         APP_LOGE("invalid userid :%{public}d", userId);
         return false;
     }
-    {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        for (const auto &item : bundleInfos_) {
-            const InnerBundleInfo &info = item.second;
-            std::string bundleName = info.GetBundleName();
-            responseUserId = info.GetResponseUserId(requestUserId);
-            if (responseUserId == Constants::INVALID_USERID) {
-                APP_LOGD("bundle %{public}s is not installed in user %{public}d or 0", bundleName.c_str(), userId);
-                continue;
-            }
-            BundleType type = info.GetApplicationBundleType();
-            if (type != BundleType::ATOMIC_SERVICE && type != BundleType::APP) {
-                APP_LOGD("BundleType is invalid: %{public}d, bundname: %{public}s", type, bundleName.c_str());
-                continue;
-            }
-            std::vector<int32_t> allAppIndexes = {0};
-            if (type == BundleType::APP) {
-                std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesByInnerBundleInfo(info, responseUserId);
-                allAppIndexes.insert(allAppIndexes.end(), cloneAppIndexes.begin(), cloneAppIndexes.end());
-            }
-            for (int32_t appIndex: allAppIndexes) {
-                int32_t uid = info.GetUid(responseUserId, appIndex);
-                uids.emplace_back(uid);
+    int32_t responseUserId = -1;
+    std::vector<std::string> bundleNames;
+    GetAllInstallBundleUids(userId, requestUserId, responseUserId, uids, bundleNames);
+    std::map<std::string, std::set<int32_t>> saUidMap;
+    LoadSaUidMap(saUidMap);
+    if (!bundleNames.empty()) {
+        for (const auto &bundleName : bundleNames) {
+            auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
+            if (!saUids.empty()) {
+                std::unordered_set<int32_t> tempSet(uids.begin(), uids.end());
+                tempSet.insert(saUids.begin(), saUids.end());
+                uids.assign(tempSet.begin(), tempSet.end());
             }
         }
     }

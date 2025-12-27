@@ -358,14 +358,18 @@ ErrCode InstalldProxy::CleanBundleDirs(const std::vector<std::string> &dirs, boo
 }
 
 ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32_t userId,
-    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex,
+    std::vector<int64_t> &bundleStats, const std::unordered_set<int32_t> &uids, const int32_t appIndex,
     const uint32_t statFlag, const std::vector<std::string> &moduleNameList)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     INSTALLD_PARCEL_WRITE(data, Int32, userId);
-    INSTALLD_PARCEL_WRITE(data, Int32, uid);
+    int32_t uidSize = static_cast<int32_t>(uids.size());
+    INSTALLD_PARCEL_WRITE(data, Int32, uidSize);
+    for (const auto &uid : uids) {
+        INSTALLD_PARCEL_WRITE(data, Int32, uid);
+    }
     INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
     INSTALLD_PARCEL_WRITE(data, Uint32, statFlag);
     if (!data.WriteInt32(moduleNameList.size())) {
@@ -393,7 +397,8 @@ ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32
 }
 
 ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
-    const std::unordered_map<std::string, int32_t> &uidMap, std::vector<BundleStorageStats> &bundleStats)
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
+    std::vector<BundleStorageStats> &bundleStats)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -407,7 +412,11 @@ ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundl
     INSTALLD_PARCEL_WRITE(data, Int32, uidMapSize);
     for (const auto &[bundleName, uids] : uidMap) {
         INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
-        data.WriteInt32(uids);
+        int32_t uidSize = static_cast<int32_t>(uids.size());
+        INSTALLD_PARCEL_WRITE(data, Int32, uidSize);
+        for (const auto &uid : uids) {
+            INSTALLD_PARCEL_WRITE(data, Int32, uid);
+        }
     }
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);

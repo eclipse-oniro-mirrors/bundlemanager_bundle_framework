@@ -125,14 +125,15 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
 
 ErrCode InstalldHostImpl::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats,
-    const int32_t uid, const int32_t appIndex, const uint32_t statFlag,
+    const std::unordered_set<int32_t> &uids, const int32_t appIndex, const uint32_t statFlag,
     const std::vector<std::string> &moduleNameList)
 {
     return ERR_OK;
 }
 
 ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
-    const std::unordered_map<std::string, int32_t> &uidMap, std::vector<BundleStorageStats> &bundleStats)
+    const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
+    std::vector<BundleStorageStats> &bundleStats)
 {
     return ERR_OK;
 }
