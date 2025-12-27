@@ -79,7 +79,7 @@ const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
 const std::string TYPE_001 = "type001";
 const std::string TYPE_002 = "VIDEO";
 const std::string TEST_BUNDLE_NAME = "bundleName";
-const std::string OVER_MAX_SIZE(300, 'x');
+const std::string OVER_MAX_SIZE(4097, 'x');
 const std::string ABILITY_NAME = "com.example.l3jsdemo.entry.EntryAbility";
 const std::string EMPTY_STRING = "";
 const std::string MENU_VALUE = "value";
