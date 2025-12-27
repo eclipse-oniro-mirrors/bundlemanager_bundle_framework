@@ -1209,7 +1209,8 @@ public:
         const std::string callingBundleName);
     ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback,
         const std::string &callingBundleName);
-    void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData, const std::string &bundleName);
+    void NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData,
+        const std::string &bundleName, bool isHsp = false);
     ErrCode GetDynamicIconInfo(const std::string &bundleName, std::vector<DynamicIconInfo> &dynamicIconInfos);
     void ProcessDynamicIconForOta();
     ErrCode GetAllDynamicIconInfo(const int32_t userId, std::vector<DynamicIconInfo> &dynamicIconInfos);

@@ -891,6 +891,7 @@ private:
 #endif
     ErrCode ProcessPluginFilesWhenUpdate(const InnerBundleInfo &oldInfo,
         const std::string &oldPath, const std::string &newPath);
+    void NotifyBundleCallback(const NotifyType &type, int32_t uid);
 
     bool isAppExist_ = false;
     bool isContainEntry_ = false;

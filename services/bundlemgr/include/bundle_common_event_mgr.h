@@ -94,7 +94,8 @@ public:
         const std::string &bundleName, bool isEnableDynamicIcon, int32_t userId, int32_t appIndex);
     void NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type);
     void NotifyDefaultAppChanged(const int32_t userId, std::vector<std::string> &utdIdVec);
-    void NotifyPluginEvents(const NotifyBundleEvents &event, const std::shared_ptr<BundleDataMgr> &dataMgr);
+    void NotifyPluginEvents(const NotifyBundleEvents &event,
+        const std::shared_ptr<BundleDataMgr> &dataMgr, bool isHsp = false);
     void NotifyShortcutVisibleChanged(
         const std::string &bundlename, const std::string &id, int32_t userId, int32_t appIndex, bool visible);
     void NotifyDynamicShortcutChanged(const std::string &bundlename,

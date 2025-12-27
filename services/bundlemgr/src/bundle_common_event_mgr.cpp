@@ -436,7 +436,7 @@ void BundleCommonEventMgr::NotifyDefaultAppChanged(const int32_t userId, std::ve
 }
 
 void BundleCommonEventMgr::NotifyPluginEvents(const NotifyBundleEvents &event,
-    const std::shared_ptr<BundleDataMgr> &dataMgr)
+    const std::shared_ptr<BundleDataMgr> &dataMgr, bool isHsp)
 {
     OHOS::AAFwk::Want want;
     std::string eventData = GetCommonEventData(event.type);
@@ -453,7 +453,7 @@ void BundleCommonEventMgr::NotifyPluginEvents(const NotifyBundleEvents &event,
         LOG_I(BMS_TAG_DEFAULT, "pluginEventBack begin");
         std::string hostBundleName;
         dataMgr->GetBundleNameForUid(event.uid, hostBundleName);
-        dataMgr->NotifyPluginEventCallback(commonData, hostBundleName);
+        dataMgr->NotifyPluginEventCallback(commonData, hostBundleName, isHsp);
         LOG_I(BMS_TAG_DEFAULT, "pluginEventBack end");
     }
 }
