@@ -12034,19 +12034,21 @@ ErrCode BundleDataMgr::UnregisterPluginEventCallback(const sptr<IBundleEventCall
 }
 
 void BundleDataMgr::NotifyPluginEventCallback(const EventFwk::CommonEventData &eventData,
-    const std::string &bundleName)
+    const std::string &bundleName, bool isHsp)
 {
     APP_LOGI("begin");
     std::lock_guard lock(pluginCallbackMutex_);
-    auto iter = pluginCallbackMap_.find(std::string(Constants::FOUNDATION_PROCESS_NAME));
-    if (iter != pluginCallbackMap_.end()) {
-        for (const auto &callback : iter->second) {
-            callback->OnReceiveEvent(eventData);
+    if (!isHsp) {
+        auto iter = pluginCallbackMap_.find(std::string(Constants::FOUNDATION_PROCESS_NAME));
+        if (iter != pluginCallbackMap_.end()) {
+            for (const auto &callback : iter->second) {
+                callback->OnReceiveEvent(eventData);
+            }
         }
     }
-    iter = pluginCallbackMap_.find(bundleName);
-    if (iter != pluginCallbackMap_.end()) {
-        for (const auto &callback : iter->second) {
+    auto bundleIter = pluginCallbackMap_.find(bundleName);
+    if (bundleIter != pluginCallbackMap_.end()) {
+        for (const auto &callback : bundleIter->second) {
             callback->OnReceiveEvent(eventData);
         }
     }

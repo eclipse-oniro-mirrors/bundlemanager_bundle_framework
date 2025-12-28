@@ -13499,6 +13499,19 @@ HWTEST_F(BmsBundleInstallerTest, HashSoFile_0010, Function | SmallTest | Level0)
     ret = installdHostImpl.HashSoFile(soPath, catchSoNum, catchSoMaxSize, soName, soHash);
     EXPECT_EQ(ret, ERR_APPEXECFWK_NO_SO_EXISTED);
 }
+
+/**
+ * @tc.number: NotifyBundleCallback
+ * @tc.name: test NotifyBundleCallback
+ * @tc.desc: 1.Test NotifyBundleCallback the BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, NotifyBundleCallback_0010, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    NotifyType type = NotifyType::INSTALL;
+    int32_t uid = 1;
+    EXPECT_NO_THROW(installer.NotifyBundleCallback(type, uid));
+}
  
 /**
  * @tc.number: HashFiles_0010

@@ -281,6 +281,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
     }
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
     DeleteInstallingBundleName(installParam);
+    NotifyBundleCallback(isAppExist_ ? NotifyType::UPDATE : NotifyType::INSTALL, uid);
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallBundle finished -n %{public}s -u %{public}d",
         bundleName_.c_str(), installParam.userId);
     return result;
@@ -438,6 +439,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             NotifyBundleStatus(installRes);
         }
     }
+    NotifyBundleCallback(NotifyType::UNINSTALL_BUNDLE, uid);
     SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, installParam, sysEventInfo_.preBundleScene, result);
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
     LOG_D(BMS_TAG_INSTALLER, "finish to process %{public}s bundle uninstall", bundleName.c_str());
@@ -8561,6 +8563,19 @@ bool BaseBundleInstaller::DeleteInstallingBundleName(const InstallParam &install
         dataMgr_->DeleteInstallingBundleName(iter->second, installParam.userId);
     }
     return true;
+}
+
+void BaseBundleInstaller::NotifyBundleCallback(const NotifyType &type, int32_t uid)
+{
+    NotifyBundleEvents event = {
+        .type = type,
+        .uid = uid,
+        .bundleType = static_cast<int32_t>(BundleType::APP),
+        .bundleName = bundleName_,
+        .modulePackage = moduleName_,
+    };
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyPluginEvents(event, dataMgr_, true);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
