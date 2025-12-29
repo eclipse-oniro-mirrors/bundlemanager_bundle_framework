@@ -4232,6 +4232,20 @@ HWTEST_F(BmsDataMgrTest, GetAllBundleStats_0001, TestSize.Level1)
     dataMgr->AddInnerBundleInfo(bundleName, info);
     ret = dataMgr->GetAllBundleStats(userId, bundleStats);
     EXPECT_EQ(ret, false);
+
+    userId = Constants::START_USERID;
+    dataMgr->bundleInfos_.clear();
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->multiUserIdsSet_.insert(userId);
+    ret = dataMgr->GetAllBundleStats(userId, bundleStats);
+    dataMgr->multiUserIdsSet_.clear();
+    dataMgr->bundleInfos_.clear();
+    EXPECT_EQ(ret, false);
 }
 
 /**

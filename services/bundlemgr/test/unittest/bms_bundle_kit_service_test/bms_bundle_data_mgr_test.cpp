@@ -182,6 +182,8 @@ const std::string BUNDLE_NAME_FOR_TEST_U1ENABLE = "com.example.u1Enable_test";
 const int32_t TEST_U100 = 100;
 const int32_t TEST_U200 = 200;
 const int32_t TEST_U1 = 1;
+const int32_t TEST_SIZE_ONE = 1;
+const int32_t TEST_VALUE_ZERO = 0;
 const nlohmann::json APP_LIST0 = R"(
 {
     "app_list": [
@@ -4399,6 +4401,46 @@ HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0600, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: BatchGetBundleStats_0700
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: 1.Test the BatchGetBundleStats by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleStats_0700, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    std::vector<std::string> bundleNames = { BUNDLE_NAME_TEST };
+    std::vector<BundleStorageStats> bundleStats;
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    dataMgr->multiUserIdsSet_.insert(ERROR_USERID);
+    dataMgr->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = dataMgr->BatchGetBundleStats(bundleNames, ERROR_USERID, bundleStats);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    dataMgr->multiUserIdsSet_.erase(USERID);
+    dataMgr->multiUserIdsSet_.erase(ERROR_USERID);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetBindingSAUidsByBundleName_0100
+ * @tc.name: test GetBindingSAUidsByBundleName
+ * @tc.desc: 1.Test the GetBindingSAUidsByBundleName by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBindingSAUidsByBundleName_0100, Function | SmallTest | Level1)
+{
+    std::map<std::string, std::set<int32_t>> saUidMap;
+    auto res = GetBundleDataMgr()->GetBindingSAUidsByBundleName(BUNDLE_NAME_TEST, saUidMap);
+    EXPECT_TRUE(res.empty());
+
+    std::set<int32_t> saUidList;
+    saUidList.emplace(TEST_VALUE_ZERO);
+    saUidMap[BUNDLE_NAME_TEST] = saUidList;
+    res = GetBundleDataMgr()->GetBindingSAUidsByBundleName(BUNDLE_NAME_TEST, saUidMap);
+    EXPECT_EQ(res.size(), TEST_SIZE_ONE);
+}
+
+/**
  * @tc.number: BundleMgrHostHandleBatchGetBundleStats_0100
  * @tc.name: BundleMgrHostHandleBatchGetBundleStats_0100
  * @tc.desc: test BundleMgrHostHandleBatchGetBundleStats(MessageParcel &data, MessageParcel &reply)
@@ -6644,5 +6686,212 @@ HWTEST_F(BmsBundleDataMgrTest, HandleGetPluginExtensionInfo_0100, Function | Sma
     data.WriteParcelable(&want);
     ret = localBundleMgrHost->HandleGetPluginExtensionInfo(data, reply);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CalculatePreInstalledBundleSize_0100
+ * @tc.name: test CalculatePreInstalledBundleSize
+ * @tc.desc: 1.Test the CalculatePreInstalledBundleSize by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, CalculatePreInstalledBundleSize_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    int32_t appIndex = 1;
+    std::vector<int64_t> bundleStats;
+    dataMgr->bundleInfos_.clear();
+    dataMgr->CalculatePreInstalledBundleSize(BUNDLE_NAME_TEST, appIndex, bundleStats);
+    EXPECT_TRUE(bundleStats.empty());
+
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    dataMgr->CalculatePreInstalledBundleSize(BUNDLE_NAME_TEST, appIndex, bundleStats);
+    EXPECT_TRUE(bundleStats.empty());
+
+    appIndex = 0;
+    dataMgr->bundleInfos_.clear();
+    innerBundleInfo.SetIsPreInstallApp(false);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    dataMgr->CalculatePreInstalledBundleSize(BUNDLE_NAME_TEST, appIndex, bundleStats);
+    EXPECT_TRUE(bundleStats.empty());
+
+    dataMgr->bundleInfos_.clear();
+    innerBundleInfo.SetIsPreInstallApp(true);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    dataMgr->CalculatePreInstalledBundleSize(BUNDLE_NAME_TEST, appIndex, bundleStats);
+    EXPECT_TRUE(bundleStats.empty());
+
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CalculatePreInstalledBundleSize_0200
+ * @tc.name: test CalculatePreInstalledBundleSize
+ * @tc.desc: 1.Test the CalculatePreInstalledBundleSize by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, CalculatePreInstalledBundleSize_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    int32_t appIndex = 0;
+    std::vector<int64_t> bundleStats;
+    bundleStats.emplace_back(TEST_VALUE_ZERO);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.hapPath = Constants::BUNDLE_CODE_DIR;
+    std::string modulePackage = MODULE_TEST;
+    innerBundleInfo.InsertInnerModuleInfo(modulePackage, innerModuleInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    dataMgr->CalculatePreInstalledBundleSize(BUNDLE_NAME_TEST, appIndex, bundleStats);
+    EXPECT_FALSE(bundleStats.empty());
+    EXPECT_EQ(bundleStats[0], TEST_VALUE_ZERO);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: CalculatePreInstalledBundleSize_0300
+ * @tc.name: test CalculatePreInstalledBundleSize
+ * @tc.desc: 1.Test the CalculatePreInstalledBundleSize by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, CalculatePreInstalledBundleSize_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    int32_t appIndex = 0;
+    std::vector<int64_t> bundleStats;
+    bundleStats.emplace_back(TEST_VALUE_ZERO);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    InnerModuleInfo innerModuleInfo;
+    std::string modulePackage = MODULE_TEST;
+    innerBundleInfo.InsertInnerModuleInfo(modulePackage, innerModuleInfo);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    dataMgr->CalculatePreInstalledBundleSize(BUNDLE_NAME_TEST, appIndex, bundleStats);
+    EXPECT_FALSE(bundleStats.empty());
+    EXPECT_EQ(bundleStats[0], TEST_VALUE_ZERO);
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllInstallBundleUids_0100
+ * @tc.name: test GetAllInstallBundleUids
+ * @tc.desc: 1.Test the GetAllInstallBundleUids by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    std::vector<int32_t> uids;
+    std::vector<std::string> bundleNames;
+    int32_t responseUserId = USERID;
+    dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
+    EXPECT_TRUE(bundleNames.empty());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllInstallBundleUids_0200
+ * @tc.name: test GetAllInstallBundleUids
+ * @tc.desc: 1.Test the GetAllInstallBundleUids by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    std::vector<int32_t> uids;
+    std::vector<std::string> bundleNames;
+    int32_t responseUserId = USERID;
+    dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
+    EXPECT_FALSE(bundleNames.empty());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllInstallBundleUids_0300
+ * @tc.name: test GetAllInstallBundleUids
+ * @tc.desc: 1.Test the GetAllInstallBundleUids by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    std::vector<int32_t> uids;
+    std::vector<std::string> bundleNames;
+    int32_t responseUserId = USERID;
+    dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
+    EXPECT_FALSE(bundleNames.empty());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllInstallBundleUids_0400
+ * @tc.name: test GetAllInstallBundleUids
+ * @tc.desc: 1.Test the GetAllInstallBundleUids by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    std::vector<int32_t> uids;
+    std::vector<std::string> bundleNames;
+    int32_t responseUserId = USERID;
+    dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
+    EXPECT_FALSE(bundleNames.empty());
+    dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: GetAllInstallBundleUids_0500
+ * @tc.name: test GetAllInstallBundleUids
+ * @tc.desc: 1.Test the GetAllInstallBundleUids by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = ERROR_USERID;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
+    std::vector<int32_t> uids;
+    std::vector<std::string> bundleNames;
+    int32_t responseUserId = USERID;
+    dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
+    EXPECT_TRUE(bundleNames.empty());
+    dataMgr->bundleInfos_.clear();
 }
 } // OHOS
