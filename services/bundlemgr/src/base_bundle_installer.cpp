@@ -6350,9 +6350,11 @@ ErrCode BaseBundleInstaller::ParseHapPaths(const InstallParam &installParam,
         FileStat fileStat;
         ErrCode res = InstalldClient::GetInstance()->GetFileStat(bundleNameDir, fileStat);
         int32_t sharedMode = S_IRWXU | S_IRWXG | S_ISGID;
-        if (res == ERR_OK && (static_cast<uint32_t>(fileStat.mode) & ServiceConstants::MODE_BASE) != sharedMode) {
+        if (res == ERR_OK && ((static_cast<uint32_t>(fileStat.mode) & ServiceConstants::MODE_BASE) != sharedMode
+            || fileStat.gid != ServiceConstants::APP_INSTALL_GID)) {
             LOG_W(BMS_TAG_INSTALLER, "shared dir mode is not correct %{public}d for %{public}s",
                 fileStat.mode, bundleNameDir.c_str());
+            fileStat.gid = ServiceConstants::APP_INSTALL_GID;
             fileStat.mode = sharedMode;
             InstalldClient::GetInstance()->ChangeFileStat(bundleNameDir, fileStat);
             fileStat.mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
