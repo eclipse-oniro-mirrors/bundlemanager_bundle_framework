@@ -5579,6 +5579,10 @@ ErrCode BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const st
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     InnerBundleInfo newInfo = infoItem->second;
+    if (!newInfo.HasInnerBundleUserInfo(userId)) {
+        APP_LOGW("%{public}d can not find bundle %{public}s", userId, bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
     return newInfo.IsModuleRemovable(moduleName, userId, isRemovable);
 }
 

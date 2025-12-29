@@ -102,6 +102,7 @@ const std::string PROCESS_TEST = "test.process";
 const std::string DEVICE_ID = "PHONE-001";
 const int APPLICATION_INFO_FLAGS = 1;
 const int DEFAULT_USER_ID_TEST = 100;
+const int NOT_EXSIT_USER_ID_TEST = 139;
 const int NEW_USER_ID_TEST = 200;
 const std::string LABEL = "hello";
 const std::string DESCRIPTION = "mainEntry";
@@ -1822,6 +1823,10 @@ HWTEST_F(BmsBundleKitServiceTest, CheckModuleRemovable_0200, Function | SmallTes
         DEFAULT_USER_ID_TEST);
     EXPECT_EQ(testRet1, ERR_OK);
     EXPECT_FALSE(isRemovable);
+
+    auto testRet2 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable,
+        NOT_EXSIT_USER_ID_TEST);
+    EXPECT_EQ(testRet2, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
