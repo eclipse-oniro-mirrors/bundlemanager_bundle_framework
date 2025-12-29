@@ -1053,6 +1053,17 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
     CreateExtensionDataDir(bundleInfo);
+    // update selinux apl for old extension dirs
+    std::vector<std::string> updateSelinuxAplExtensionDirs = oldInfo.GetAllExtensionDirs();
+    std::unordered_set<std::string> toRemove(removeExtensionDirs_.begin(), removeExtensionDirs_.end());
+    updateSelinuxAplExtensionDirs.erase(
+        std::remove_if(updateSelinuxAplExtensionDirs.begin(), updateSelinuxAplExtensionDirs.end(),
+            [&toRemove](std::string x) {
+                return toRemove.find(x) != toRemove.end();
+            }),
+        updateSelinuxAplExtensionDirs.end()
+    );
+    UpdateExtensionDirsApl(updateSelinuxAplExtensionDirs, oldInfo);
 
     ScopeGuard userGuard([&] {
         if ((!hasInstalledInUser_ || (!isAppExist_)) &&
@@ -4618,6 +4629,46 @@ void BaseBundleInstaller::CreateExtensionDataDir(InnerBundleInfo &info) const
         LOG_E(BMS_TAG_INSTALLER, "fail to create bundle extension data dir, error is %{public}d", result);
     }
 }
+
+bool BaseBundleInstaller::UpdateExtensionDirsApl(const std::vector<std::string> &updateExtensionDirs,
+    const InnerBundleInfo &info) const
+{
+    if (updateExtensionDirs.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s):no extensiondirs need to update selinux apl",
+            info.GetBundleName().c_str());
+        return false;
+    }
+    if (dataMgr_ == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
+        return false;
+    }
+    bool res = true;
+    std::set<int32_t> currentUserIds = dataMgr_->GetAllUser();
+    for (int32_t user : currentUserIds) {
+        InnerBundleUserInfo newInnerBundleUserInfo;
+        if (!info.GetInnerBundleUserInfo(user, newInnerBundleUserInfo)) {
+            continue;
+        }
+
+        CreateDirParam createDirParam;
+        createDirParam.bundleName = info.GetBundleName();
+        createDirParam.userId = user;
+        createDirParam.uid = newInnerBundleUserInfo.uid;
+        createDirParam.gid = newInnerBundleUserInfo.uid;
+        createDirParam.apl = info.GetAppPrivilegeLevel();
+        createDirParam.isPreInstallApp = info.IsPreInstallApp();
+        createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+        createDirParam.extensionDirs.assign(updateExtensionDirs.begin(), updateExtensionDirs.end());
+        auto result = InstalldClient::GetInstance()->SetDirsApl(createDirParam, true);
+        if (result != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLER, "fail for bundle(%{public}s) in user(%{public}d), error:%{public}d",
+                info.GetBundleName().c_str(), user, result);
+            res = false;
+        }
+    }
+    return res;
+}
+
 
 void BaseBundleInstaller::GenerateNewUserDataGroupInfos(InnerBundleInfo &info) const
 {

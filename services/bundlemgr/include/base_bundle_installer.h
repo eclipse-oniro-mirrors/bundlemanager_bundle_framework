@@ -786,6 +786,8 @@ private:
     void GetRemoveExtensionDirs(
         std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
     void CreateExtensionDataDir(InnerBundleInfo &info) const;
+    bool UpdateExtensionDirsApl(const std::vector<std::string> &updateExtensionDirs,
+        const InnerBundleInfo &info) const;
     void RemoveCreatedExtensionDirsForException() const;
     void RemoveOldExtensionDirs() const;
     ErrCode InnerProcessUpdateHapToken(const bool isOldSystemApp);
