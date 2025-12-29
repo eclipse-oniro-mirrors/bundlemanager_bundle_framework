@@ -1085,6 +1085,10 @@ public:
      */
     ErrCode CanOpenLink(
         const std::string &link, bool &canOpen) const;
+    ErrCode FindMatchedAbilityForLink(
+        const std::string &link, int32_t flags, int32_t userId, bool &found) const;
+    bool IsMatchedAbilityExist(const Want &want, const InnerBundleInfo &info,
+        int32_t userId, const std::vector<std::string> &paramMimeTypes) const;
     /**
     * @brief Obtains all bundle names of a specified user.
     * @param flags Indicates the flags to control the bundle list.

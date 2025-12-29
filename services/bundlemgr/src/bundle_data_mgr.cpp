@@ -1366,6 +1366,80 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosV9(
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::FindMatchedAbilityForLink(
+    const std::string &link, int32_t flags, int32_t userId, bool &found) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        LOG_E(BMS_TAG_QUERY, "invalid userId");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (link.empty()) {
+        LOG_E(BMS_TAG_QUERY, "param invalid");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGW("bundleInfos_ is empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    Want want;
+    want.SetUri(link);
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
+
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &innerBundleInfo = item.second;
+        if (CheckBundleAndAbilityDisabled(innerBundleInfo, flags, userId) != ERR_OK) {
+            continue;
+        }
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+        if (IsMatchedAbilityExist(want, innerBundleInfo, responseUserId, mimeTypes)) {
+            found = true;
+            return ERR_OK;
+        }
+    }
+
+    found = false;
+    return ERR_OK;
+}
+
+bool BundleDataMgr::IsMatchedAbilityExist(const Want &want, const InnerBundleInfo &info,
+    int32_t userId, const std::vector<std::string> &paramMimeTypes) const
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    const std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
+    for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
+        AbilityInfo abilityInfo = InnerAbilityInfo::ConvertToAbilityInfo(abilityInfoPair.second);
+        if (abilityInfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
+            continue;
+        }
+        if (!info.IsAbilityEnabled(abilityInfo, GetUserId(userId), 0)) {
+            LOG_W(BMS_TAG_QUERY, "Ability %{public}s is disabled", abilityInfo.name.c_str());
+            continue;
+        }        
+        auto skillsPair = skillInfos.find(abilityInfoPair.first);
+        if (skillsPair == skillInfos.end()) {
+            continue;
+        }
+        bool isPrivateType = MatchPrivateType(
+            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes, paramMimeTypes);
+        if (isPrivateType) {
+            return true;
+        }
+        for (size_t skillIndex = 0; skillIndex < skillsPair->second.size(); ++skillIndex) {
+            const Skill &skill = skillsPair->second[skillIndex];
+            size_t matchUriIndex = 0;
+            if (skill.Match(want, matchUriIndex)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void BundleDataMgr::ImplicitQueryCloneAbilityInfosV9(
     const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const
 {
@@ -10242,18 +10316,12 @@ ErrCode BundleDataMgr::CanOpenLink(
         }
     }
 
-    Want want;
-    want.SetUri(link);
-    std::vector<AbilityInfo> abilityInfos;
-    // implicit query
-    ret = ImplicitQueryAbilityInfosV9(
-        want, static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), GetUserIdByUid(uid), abilityInfos);
+    ret = FindMatchedAbilityForLink(
+        link, static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), GetUserIdByUid(uid), canOpen);   
     if (ret != ERR_OK) {
-        APP_LOGD("implicit queryAbilityInfosV9 error");
+        APP_LOGD("FindMatchedAbilityForLink error");
         return ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES;
     }
-
-    canOpen = !abilityInfos.empty();
     APP_LOGI_NOFUNC("link:%{public}s canOpen:%{public}d", link.c_str(), canOpen);
     return ERR_OK;
 }
