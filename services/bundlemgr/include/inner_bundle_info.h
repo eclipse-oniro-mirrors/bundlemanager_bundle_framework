@@ -973,6 +973,15 @@ public:
         return Constants::EMPTY_STRING;
     }
 
+    const std::vector<std::string> GetAllHapPaths() const
+    {
+        std::vector<std::string> hapPaths;
+        for (const auto &moduleInfo : innerModuleInfos_) {
+            hapPaths.push_back(moduleInfo.second.hapPath);
+        }
+        return hapPaths;
+    }
+
     const std::string GetModuleName(const std::string &modulePackage) const
     {
         if (innerModuleInfos_.find(modulePackage) != innerModuleInfos_.end()) {
@@ -2196,6 +2205,11 @@ public:
     void SetAppSignType(const std::string &appSignType)
     {
         baseApplicationInfo_->appSignType = appSignType;
+    }
+
+    std::string GetAppSignType() const
+    {
+        return baseApplicationInfo_->appSignType;
     }
 
     bool IsInstalledForAllUser() const

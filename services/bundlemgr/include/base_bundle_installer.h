@@ -414,6 +414,8 @@ private:
 
     ErrCode CheckU1Enable(const InnerBundleInfo &info, const int32_t userId);
 
+    ErrCode CheckEnterpriseResign(const InnerBundleInfo &oldInfo);
+
 #ifdef X86_EMULATOR_MODE
     ErrCode CheckShellInstallForEmulator(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 #endif
