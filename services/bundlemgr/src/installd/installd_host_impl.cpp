@@ -2569,6 +2569,9 @@ ErrCode InstalldHostImpl::MoveHapToCodeDir(const std::string &originPath, const 
         if (errno == EXDEV) {
             return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_CROSS_DEV;
         }
+        if (errno == ENOENT) {
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
     }
     if (!InstalldOperator::FsyncFile(targetPath)) {
