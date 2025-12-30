@@ -1449,6 +1449,22 @@ HWTEST_F(BmsBundleMgrProxyTest, GetAllJsonProfile_0001, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: GetAllAppProvisionInfo_0001
+ * @tc.name: test the GetAllAppProvisionInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllAppProvisionInfo
+ */
+HWTEST_F(BmsBundleMgrProxyTest, GetAllAppProvisionInfo_0001, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    int32_t userId = 100;
+    auto ret = bundleMgrProxy.GetAllAppProvisionInfo(userId, appProvisionInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: RecoverBackupBundleData_0001
  * @tc.name: test the RecoverBackupBundleData
  * @tc.desc: 1. system running normally

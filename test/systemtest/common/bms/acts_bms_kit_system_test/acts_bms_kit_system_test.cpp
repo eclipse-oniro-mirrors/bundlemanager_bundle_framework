@@ -10002,6 +10002,53 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllJsonProfile_0003, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: GetAllAppProvisionInfo_0001
+ * @tc.name: test GetAllAppProvisionInfo interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetAllAppProvisionInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllAppProvisionInfo_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllAppProvisionInfo_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    auto queryResult = bundleMgrProxy->GetAllAppProvisionInfo(USERID, appProvisionInfos);
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetAllAppProvisionInfo_0001" << std::endl;
+}
+
+/**
+ * @tc.number: GetAllAppProvisionInfo_0002
+ * @tc.name: test GetAllAppProvisionInfo interface
+ * @tc.desc: call GetAllAppProvisionInfo with invalid userId
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllAppProvisionInfo_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START GetAllAppProvisionInfo_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<AppProvisionInfo> appProvisionInfos;
+    auto queryResult = bundleMgrProxy->GetAllAppProvisionInfo(200, appProvisionInfos);
+    EXPECT_EQ(queryResult, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    std::cout << "END GetAllAppProvisionInfo_0002" << std::endl;
+}
+
+/**
  * @tc.number: GetAllPluginInfo_0001
  * @tc.name: test GetAllPluginInfo interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
