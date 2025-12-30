@@ -4826,7 +4826,7 @@ ErrCode BundleMgrHostImpl::CreateBundleDataDir(int32_t userId)
 
 ErrCode BundleMgrHostImpl::CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl)
 {
-    if (!BundlePermissionMgr::IsCallingUidValid(Constants::ROOT_UID)) {
+    if (!BundlePermissionMgr::IsCallingUidValid(Constants::STORAGE_MANAGER_UID)) {
         APP_LOGE("IsCallingUidValid failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }

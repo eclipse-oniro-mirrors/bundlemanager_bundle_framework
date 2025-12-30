@@ -6299,7 +6299,7 @@ HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirWithEl_0200, Function | Sma
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
     ErrCode ret = bundleMgrProxy->CreateBundleDataDirWithEl(DEFAULT_USER_ID_TEST, DataDirEl::EL4);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
 /**

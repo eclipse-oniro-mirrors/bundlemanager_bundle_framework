@@ -71,7 +71,7 @@ HWTEST_F(BundleMgrClientImplTest, Bundle_Mgr_Client_Impl_Test_0100, Function | S
     int32_t userId = 0;
     DataDirEl dirEl = DataDirEl::EL5;
     auto ret = bundleMgrClientImpl->CreateBundleDataDirWithEl(userId, dirEl);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
 /**
