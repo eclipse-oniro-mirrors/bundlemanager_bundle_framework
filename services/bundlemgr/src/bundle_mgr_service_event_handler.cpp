@@ -40,6 +40,7 @@
 #include "dlp_permission_kit.h"
 #endif
 #include "hmp_bundle_installer.h"
+#include "idle_condition_mgr/idle_condition_event_subscribe.h"
 #include "inner_patch_info.h"
 #include "installd_client.h"
 #include "install_exception_mgr.h"
@@ -339,6 +340,7 @@ void BMSEventHandler::AfterBmsStart()
 #ifdef WEBVIEW_ENABLE
     NotifyFWKAfterBmsStart();
 #endif
+    RegisterRelabelEvent();
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
 }
 
@@ -4135,6 +4137,26 @@ void BMSEventHandler::ListeningUserUnlocked() const
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
         LOG_W(BMS_TAG_DEFAULT, "BMSEventHandler subscribe common event %{public}s failed",
             EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED.c_str());
+    }
+}
+
+void BMSEventHandler::RegisterRelabelEvent()
+{
+    LOG_I(BMS_TAG_DEFAULT, "register relabel event start");
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_LOCKED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_STOPPING);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
+
+    auto subscriberPtr = std::make_shared<IdleConditionEventSubscriber>(subscribeInfo);
+    if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
+        LOG_W(BMS_TAG_DEFAULT, "subscribe relabel event failed");
     }
 }
 
