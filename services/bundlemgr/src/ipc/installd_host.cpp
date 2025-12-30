@@ -96,6 +96,12 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::SET_DIRS_APL):
             result = this->HandleSetDirsApl(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::SET_FILE_CON_FORCE):
+            result = HandleSetFileConForce(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::STOP_SET_FILE_CON):
+            result = HandleStopSetFileCon(data, reply);
+            break;
         case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_DIR):
             result = this->HandleRemoveDir(data, reply);
             break;
@@ -705,6 +711,40 @@ bool InstalldHost::HandleSetDirsApl(MessageParcel &data, MessageParcel &reply)
     return true;
 }
 
+bool InstalldHost::HandleSetFileConForce(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t pathSize = data.ReadUint32();
+    if (pathSize == 0 || pathSize > MAX_VEC_SIZE) {
+        APP_LOGE("path count is error");
+        return false;
+    }
+    std::vector<std::string> paths;
+    for (uint32_t i = 0; i < pathSize; ++i) {
+        std::string path = Str16ToStr8(data.ReadString16());
+        paths.emplace_back(path);
+    }
+    std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+    ErrCode result = SetFileConForce(paths, *info);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleStopSetFileCon(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return false;
+    }
+    int32_t reason = data.ReadInt32();
+    ErrCode result = StopSetFileCon(*info, reason);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
 
 bool InstalldHost::HandleSetArkStartupCacheApl(MessageParcel &data, MessageParcel &reply)
 {

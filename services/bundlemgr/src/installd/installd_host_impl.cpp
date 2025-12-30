@@ -1454,6 +1454,68 @@ unsigned int InstalldHostImpl::GetHapFlags(const bool isPreInstallApp, const boo
     return hapFlags;
 }
 
+ErrCode InstalldHostImpl::SetFileConForce(const std::vector<std::string> &paths, const CreateDirParam &createDirParam)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+#ifdef WITH_SELINUX
+    if (paths.empty() || createDirParam.bundleName.empty() || createDirParam.apl.empty() ||
+        createDirParam.uid <= Constants::INVALID_UID) {
+        LOG_E(BMS_TAG_INSTALLD, "param error size:%{public}zu, bundleName:%{public}s, apl:%{public}s, uid:%{public}d",
+            paths.size(), createDirParam.bundleName.c_str(), createDirParam.apl.c_str(), createDirParam.uid);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp,
+        createDirParam.debug, createDirParam.isDlpSandbox, createDirParam.dlpType, createDirParam.isExtensionDir);
+    HapFileInfo hapFileInfo;
+    hapFileInfo.pathNameOrig = paths;
+    hapFileInfo.apl = createDirParam.apl;
+    hapFileInfo.packageName = createDirParam.bundleName;
+    hapFileInfo.flags = SELINUX_HAP_RESTORECON_RECURSE;
+    hapFileInfo.hapFlags = hapFlags;
+    hapFileInfo.uid = static_cast<uint32_t>(createDirParam.uid);
+    ResultInfo resultInfo;
+    int ret = HapFileRestoreContext::GetInstance().SetFileConForce(hapFileInfo, resultInfo);
+    if (ret != 0) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "HapFileRestorecon failed, bundleName: %{public}s, errcode:%{public}d",
+            createDirParam.bundleName.c_str(), ret);
+        return ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED;
+    }
+#endif
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "permission denied");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+#ifdef WITH_SELINUX
+    if (createDirParam.bundleName.empty() || createDirParam.uid <= Constants::INVALID_UID) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function StopSetFileCon with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp,
+        createDirParam.debug, createDirParam.isDlpSandbox, createDirParam.dlpType, createDirParam.isExtensionDir);
+    HapFileInfo hapFileInfo;
+    hapFileInfo.apl = createDirParam.apl;
+    hapFileInfo.packageName = createDirParam.bundleName;
+    hapFileInfo.flags = SELINUX_HAP_RESTORECON_RECURSE;
+    hapFileInfo.hapFlags = hapFlags;
+    hapFileInfo.uid = static_cast<uint32_t>(createDirParam.uid);
+    int ret = HapFileRestoreContext::GetInstance().StopSetFileCon(hapFileInfo, static_cast<StopReason>(reason));
+    if (ret != 0) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "StopSetFileCon failed, bundleName: %{public}s, errcode:%{public}d",
+            createDirParam.bundleName.c_str(), ret);
+        return ERR_APPEXECFWK_INSTALLD_STOP_SET_SELINUX_LABEL_FAILED;
+    }
+#endif
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir)
 {
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp,

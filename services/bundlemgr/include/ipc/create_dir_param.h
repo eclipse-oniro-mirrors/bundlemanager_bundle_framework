@@ -35,6 +35,7 @@ struct CreateDirParam : public Parcelable {
     bool isPreInstallApp = false;
     bool debug = false;
     bool isDlpSandbox = false;
+    bool isExtensionDir = false;
     CreateDirFlag createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
     DataDirEl dataDirEl = DataDirEl::NONE;
     int32_t userId = -1;
