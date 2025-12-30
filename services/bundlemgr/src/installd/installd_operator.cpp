@@ -825,7 +825,8 @@ bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &
     realOldPath.reserve(PATH_MAX);
     realOldPath.resize(PATH_MAX - 1);
     if (realpath(oldPath.c_str(), &(realOldPath[0])) == nullptr) {
-        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "realOldPath:%{public}s errno:%{public}d", realOldPath.c_str(), errno);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "realpath for %{public}s failed, errno:%{public}d",
+            oldPath.c_str(), errno);
         return false;
     }
 

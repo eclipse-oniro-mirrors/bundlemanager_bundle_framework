@@ -8176,7 +8176,15 @@ ErrCode BaseBundleInstaller::ProcessBundleCodePath(
     std::string oldAppCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         std::string(ServiceConstants::BUNDLE_OLD_CODE_DIR) + bundleName;
     auto result = InstalldClient::GetInstance()->RenameModuleDir(realAppCodePath, oldAppCodePath);
-    CHECK_RESULT(result, "rename real to +old- code path failed, error is %{public}d");
+    if (result != ERR_OK) {
+        if (!BundleUtil::IsExistDir(realAppCodePath) && errno == ENOENT) {
+            APP_LOGW("realAppCodePath(%{public}s) is not exist, continue", realAppCodePath.c_str());
+        } else {
+            APP_LOGE("rename real to +old- code path failed, error is %{public}d", result);
+            return result;
+        }
+    }
+    
     InstallExceptionInfo exceptionInfo;
     exceptionInfo.status = InstallRenameExceptionStatus::RENAME_RELA_TO_OLD_PATH;
     exceptionInfo.versionCode = oldInfo.GetVersionCode();
