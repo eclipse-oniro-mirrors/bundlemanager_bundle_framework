@@ -1765,7 +1765,8 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleI
         return false;
     }
 
-    if (!GetParcelableInfo<HapModuleInfo>(BundleMgrInterfaceCode::GET_HAP_MODULE_INFO, data, hapModuleInfo)) {
+    if (GetParcelInfoIntelligent<HapModuleInfo>(
+        BundleMgrInterfaceCode::GET_HAP_MODULE_INFO, data, hapModuleInfo)!= ERR_OK) {
         APP_LOGE("fail to GetHapModuleInfo from server");
         return false;
     }
@@ -1795,9 +1796,9 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t us
         return false;
     }
 
-    if (!GetParcelableInfo<HapModuleInfo>(
-        BundleMgrInterfaceCode::GET_HAP_MODULE_INFO_WITH_USERID, data, hapModuleInfo)) {
-        APP_LOGE_NOFUNC("fail to GetHapModuleInfo from server");
+    if (GetParcelInfoIntelligent<HapModuleInfo>(
+        BundleMgrInterfaceCode::GET_HAP_MODULE_INFO_WITH_USERID, data, hapModuleInfo)!= ERR_OK) {
+        APP_LOGE("fail to GetHapModuleInfo from server");
         return false;
     }
     return true;
