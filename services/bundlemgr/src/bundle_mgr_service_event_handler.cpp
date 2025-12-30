@@ -2150,6 +2150,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         std::make_unique<BundleInstallChecker>();
     GetInstallAndRecoverListForAllUser(userInstallAndRecoverMap_);
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
+    std::unordered_set<std::string> overlayBundles;
     for (auto &scanPathIter : scanPathList) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "reboot scan bundle path: %{public}s ", scanPathIter.c_str());
         bool removable = IsPreInstallRemovable(scanPathIter);
@@ -2324,6 +2325,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             (void)BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, removable);
             continue;
         }
+        if (infos.begin()->second.GetOverlayType() == OverlayType::OVERLAY_EXTERNAL_BUNDLE) {
+            overlayBundles.insert(bundleName);
+        }
         auto iter = needInstallMap.find(bundleName);
         if (iter == needInstallMap.end()) {
             std::vector<std::string> filePaths = {scanPathIter};
@@ -2332,8 +2336,21 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             iter->second.first.emplace_back(scanPathIter);
         }
     }
-    if (!InnerMultiProcessBundleInstall(needInstallMap, appType)) {
-        LOG_E(BMS_TAG_DEFAULT, "multi install failed");
+    std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMapFirst;
+    std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMapOverlay;
+    for (auto &item : needInstallMap) {
+        auto iter = overlayBundles.find(item.first);
+        if (iter != overlayBundles.end()) {
+            needInstallMapOverlay[item.first] = item.second;
+        } else {
+            needInstallMapFirst[item.first] = item.second;
+        }
+    }
+    if (!InnerMultiProcessBundleInstall(needInstallMapFirst, appType)) {
+        LOG_E(BMS_TAG_DEFAULT, "multi needInstallMapFirst failed");
+    }
+    if (!InnerMultiProcessBundleInstall(needInstallMapOverlay, appType)) {
+        LOG_E(BMS_TAG_DEFAULT, "multi needInstallMapOverlay failed");
     }
     UpdatePreinstallDB(needInstallMap);
     // process bundle theme and dynamic resource
@@ -4456,6 +4473,7 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
         std::make_unique<BundleInstallChecker>();
     std::unordered_map<std::string, std::vector<std::string>> needInstallMap;
+    std::unordered_map<std::string, std::vector<std::string>> needInstallOverlayMap;
     for (auto &scanPathIter : bundleDirs) {
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
@@ -4477,10 +4495,17 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
                 bundleName.c_str());
             continue;
         }
-        needInstallMap[bundleName].emplace_back(scanPathIter);
+        if (infos.begin()->second.GetOverlayType() == OverlayType::OVERLAY_EXTERNAL_BUNDLE) {
+            needInstallOverlayMap[bundleName].emplace_back(scanPathIter);
+        } else {
+            needInstallMap[bundleName].emplace_back(scanPathIter);
+        }
     }
     if (!InnerMultiProcessBundleInstallForPatch(needInstallMap, isOta)) {
-        LOG_E(BMS_TAG_DEFAULT, "multi patch bundle install failed");
+        LOG_E(BMS_TAG_DEFAULT, "multi patch needInstallMap install failed");
+    }
+    if (!InnerMultiProcessBundleInstallForPatch(needInstallOverlayMap, isOta)) {
+        LOG_E(BMS_TAG_DEFAULT, "multi patch needInstallOverlayMap install failed");
     }
     LOG_I(BMS_TAG_DEFAULT, "end");
 }
