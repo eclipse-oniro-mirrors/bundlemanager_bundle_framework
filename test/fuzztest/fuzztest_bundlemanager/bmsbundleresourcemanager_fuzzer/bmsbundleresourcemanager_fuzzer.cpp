@@ -131,6 +131,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     LauncherAbilityResourceInfo launcherAbilityResourceInfo2;
     launcherAbilityResourceInfo2.appIndex = fdp.ConsumeIntegral<int32_t>();
     manager->IsLauncherAbility(launcherAbilityResourceInfo, abilityInfos);
+    manager->GetSingleLauncherAbilityResourceInfo(bundleName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherInfos, appIndex);
     return true;
 }
 }

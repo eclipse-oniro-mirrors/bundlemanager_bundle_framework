@@ -163,6 +163,7 @@ group("bundlemanagerfuzztest") {
     "bmsshortcutvisibledatastoragerdb_fuzzer:BMSShortcutVisibleDataStorageRdbFuzzTest",
     "bmssendcallback_fuzzer:BMSSendCallbackFuzzTest",
     "bmsshortcutdatastoragerdb_fuzzer:BMSShortCutDataStorageRdbFuzzTest",
+    "bmsshortcutenableddatastoragerdb_fuzzer:BMSShortcutEnabledDataStorageRdbFuzzTest",
     "bmsuninstalldatamgr_fuzzer:BMSUninstallDataMgrFuzzTest",
     "bmsstatusreceiverhost_fuzzer:BMSStatusReceiverHostFuzzTest",
     "bmsverifymanagerclient_fuzzer:BMSVerifyManagerClientFuzzTest",

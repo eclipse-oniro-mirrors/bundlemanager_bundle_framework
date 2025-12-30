@@ -45,6 +45,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     defaultAppHost.HandleGetDefaultApplication(datas, reply);
     defaultAppHost.HandleSetDefaultApplication(datas, reply);
     defaultAppHost.HandleResetDefaultApplication(datas, reply);
+    defaultAppHost.HandleSetDefaultApplicationForAppClone(datas, reply);
     return true;
 }
 }
