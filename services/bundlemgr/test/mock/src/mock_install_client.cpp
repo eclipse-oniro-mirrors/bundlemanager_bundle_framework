@@ -120,7 +120,8 @@ ErrCode InstalldClient::GetDiskUsage(const std::string &dir, int64_t &statSize, 
     return 0;
 }
 
-ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
+ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
+    int64_t timeoutMs)
 {
     return 0;
 }

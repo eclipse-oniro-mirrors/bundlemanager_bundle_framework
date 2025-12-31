@@ -288,7 +288,8 @@ ErrCode InstalldProxy::GetDiskUsage(const std::string &dir, int64_t &statSize, b
     return ret;
 }
 
-ErrCode InstalldProxy::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
+ErrCode InstalldProxy::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
+    int64_t timeoutMs)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -307,6 +308,7 @@ ErrCode InstalldProxy::GetDiskUsageFromPath(const std::vector<std::string> &path
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
+    INSTALLD_PARCEL_WRITE(data, Int64, timeoutMs);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC, WAIT_TIME);

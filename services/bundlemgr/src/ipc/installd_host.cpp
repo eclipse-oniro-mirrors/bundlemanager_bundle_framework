@@ -538,8 +538,9 @@ bool InstalldHost::HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel
         READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, data, path);
         cachePaths.emplace_back(path);
     }
+    int64_t timeoutMs = data.ReadInt64();
     int64_t statSize = 0;
-    ErrCode result = GetDiskUsageFromPath(cachePaths, statSize);
+    ErrCode result = GetDiskUsageFromPath(cachePaths, statSize, timeoutMs);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64(statSize)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsageFromPath write failed");

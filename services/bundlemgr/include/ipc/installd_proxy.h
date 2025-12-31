@@ -123,7 +123,8 @@ public:
      * @param statSize Indicates size of path.
      * @return Returns true if successfully; returns false otherwise.
      */
-    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize) override;
+    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
+        int64_t timeoutMs = -1) override;
     /**
      * @brief Clean all files in a bundle data directory through a proxy object.
      * @param bundleDir Indicates the data directory path that to be cleaned.

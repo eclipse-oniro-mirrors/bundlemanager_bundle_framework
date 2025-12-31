@@ -118,10 +118,12 @@ public:
     /**
      * @brief Get disk usage for dir.
      * @param path Indicates the directory vector.
-     * * @param statSize Indicates size of path.
+     * @param statSize Indicates size of path.
+     * @param timeoutMs Indicates the timeout time.
      * @return Returns true if successfully; returns false otherwise.
      */
-    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize) override;
+    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
+        int64_t timeoutMs = -1) override;
     /**
      * @brief Clean all files in a bundle data directory.
      * @param bundleDir Indicates the data directory path that to be cleaned.

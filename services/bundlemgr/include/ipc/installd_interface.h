@@ -185,7 +185,8 @@ public:
      * @param statSize Indicates size of path.
      * @return Returns true if successfully; returns false otherwise.
      */
-    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
+    virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
+        int64_t timeoutMs = -1)
     {
         return ERR_OK;
     }

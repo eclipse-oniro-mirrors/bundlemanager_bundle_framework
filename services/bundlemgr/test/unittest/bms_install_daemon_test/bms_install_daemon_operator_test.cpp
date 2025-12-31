@@ -673,7 +673,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3500, Function | Sma
     std::vector<std::string> path;
     path.push_back(OVER_MAX_PATH_SIZE);
     auto ret = InstalldOperator::GetDiskUsageFromPath(path);
-    EXPECT_FALSE(ret);
+    EXPECT_EQ(ret, 0);
 }
 
 /**
@@ -688,7 +688,22 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3600, Function | Sma
     std::vector<std::string> path;
     path.push_back("");
     auto ret = InstalldOperator::GetDiskUsageFromPath(path);
-    EXPECT_FALSE(ret);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_3610
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetDiskUsageFromPath of InstalldOperator
+ *           2. path is invalid
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3610, Function | SmallTest | Level0)
+{
+    std::vector<std::string> path;
+    path.push_back("/data/app/el2/100/base/test");
+    auto ret = InstalldOperator::GetDiskUsageFromPath(path, 1);
+    EXPECT_EQ(ret, 0);
 }
 
 /**
