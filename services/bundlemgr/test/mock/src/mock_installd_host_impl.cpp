@@ -144,6 +144,16 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const int32_t userId,
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::SetFileConForce(const std::vector<std::string> &paths, const CreateDirParam &createDirParam)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
     bool isPreInstallApp, bool debug, int32_t uid)
 {

@@ -31,6 +31,7 @@
 #endif
 #include "directory_ex.h"
 #include "hitrace_meter.h"
+#include "inner_bundle_clone_common.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "mime_type_mgr.h"
@@ -1289,6 +1290,25 @@ ErrCode BundleUtil::GetEnterpriseReSignatureCert(int32_t userId, std::vector<std
     closedir(dir);
     APP_LOGI("re sign cert size:%{public}zu", certificateAlias.size());
     return ERR_OK;
+}
+
+std::vector<std::string> BundleUtil::GetPathsToSetContext(const std::string &bundleName,
+    int32_t userId, int32_t appIndex)
+{
+    std::vector<std::string> paths;
+    std::string dataDirName = bundleName;
+    if (appIndex == 0) {
+        paths.emplace_back(std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName);
+    } else {
+        dataDirName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
+    for (const auto &el : ServiceConstants::FULL_BUNDLE_EL) {
+        paths.emplace_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + dataDirName);
+        paths.emplace_back(std::string(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR) + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::DATABASE + dataDirName);
+    }
+    return paths;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

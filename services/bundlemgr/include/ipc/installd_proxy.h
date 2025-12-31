@@ -174,6 +174,11 @@ public:
 
     virtual ErrCode SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir) override;
 
+    virtual ErrCode SetFileConForce(const std::vector<std::string> &paths,
+        const CreateDirParam &createDirParam) override;
+
+    virtual ErrCode StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason) override;
+
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.

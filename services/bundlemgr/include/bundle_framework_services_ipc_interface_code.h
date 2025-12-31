@@ -98,6 +98,8 @@ enum class InstalldInterfaceCode : uint32_t {
     ADD_CERT_AND_ENABLE_KEY = 70,
     DELETE_CERT_AND_REMOVE_KEY = 71,
     SET_DIRS_APL = 72,
+    SET_FILE_CON_FORCE = 73,
+    STOP_SET_FILE_CON = 74,
 };
 
 } // namespace AppExecFwk

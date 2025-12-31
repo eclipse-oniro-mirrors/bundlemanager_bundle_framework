@@ -496,6 +496,39 @@ ErrCode InstalldProxy::SetDirsApl(const CreateDirParam &createDirParam, bool isE
     return TransactInstalldCmd(InstalldInterfaceCode::SET_DIRS_APL, data, reply, option);
 }
 
+ErrCode InstalldProxy::SetFileConForce(const std::vector<std::string> &paths, const CreateDirParam &createDirParam)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Uint32, paths.size());
+    for (const std::string &path : paths) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(path));
+    }
+    if (!data.WriteParcelable(&createDirParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::SET_FILE_CON_FORCE, data, reply, option);
+}
+
+ErrCode InstalldProxy::StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&createDirParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    INSTALLD_PARCEL_WRITE(data, Int32, reason);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    return TransactInstalldCmd(InstalldInterfaceCode::STOP_SET_FILE_CON, data, reply, option);
+}
+
 ErrCode InstalldProxy::SetArkStartupCacheApl(const std::string &dir)
 {
     MessageParcel data;

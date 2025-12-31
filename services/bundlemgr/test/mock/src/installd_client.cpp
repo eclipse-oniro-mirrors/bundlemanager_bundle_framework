@@ -234,6 +234,21 @@ ErrCode InstalldClient::SetDirsApl(const CreateDirParam &createDirParam, bool is
     return CallService(&IInstalld::SetDirsApl, createDirParam, isExtensionDir);
 }
 
+ErrCode InstalldClient::SetFileConForce(const std::vector<std::string> &paths, const CreateDirParam &createDirParam)
+{
+    if (paths.empty()) {
+        APP_LOGE("paths are empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::SetFileConForce, paths, createDirParam);
+}
+
+ErrCode InstalldClient::StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason)
+{
+    return CallService(&IInstalld::StopSetFileCon, createDirParam, reason);
+}
+
 ErrCode InstalldClient::SetArkStartupCacheApl(const std::string &dir)
 {
     if (dir.empty()) {

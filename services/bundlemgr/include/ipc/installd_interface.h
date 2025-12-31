@@ -262,7 +262,17 @@ public:
         return ERR_OK;
     }
 
-        /**
+    virtual ErrCode SetFileConForce(const std::vector<std::string> &paths, const CreateDirParam &createDirParam)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason)
+    {
+        return ERR_OK;
+    }
+
+    /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.
      * @return Returns ERR_OK if set apl successfully; returns error code otherwise.

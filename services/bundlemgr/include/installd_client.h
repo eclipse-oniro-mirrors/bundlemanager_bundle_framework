@@ -159,6 +159,10 @@ public:
 
     ErrCode SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir);
 
+    ErrCode SetFileConForce(const std::vector<std::string> &paths, const CreateDirParam &createDirParam);
+
+    ErrCode StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason);
+
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.

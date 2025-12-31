@@ -172,6 +172,10 @@ private:
      */
     bool HandleSetDirsApl(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleSetFileConForce(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleStopSetFileCon(MessageParcel &data, MessageParcel &reply);
+
     /**
      * @brief Handles the set dir apl function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.

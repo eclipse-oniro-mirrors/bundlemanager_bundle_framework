@@ -251,6 +251,8 @@ public:
     static std::vector<std::string> FileTypeNormalize(const std::string &fileType);
     static std::string Sha256File(const std::string& filePath);
     static ErrCode GetEnterpriseReSignatureCert(int32_t userId, std::vector<std::string> &certificateAlias);
+    static std::vector<std::string> GetPathsToSetContext(const std::string &bundleName,
+        int32_t userId, int32_t appIndex);
 private:
     static std::mutex g_mutex;
 };
