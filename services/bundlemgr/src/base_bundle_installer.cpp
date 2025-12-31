@@ -1990,7 +1990,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!installParam.isRemoveUser &&
         !SaveFirstInstallBundleInfo(bundleName, userId_, oldInfo.IsPreInstallApp(), curInnerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "save first install bundle info failed");
-        return ERR_APPEXECFWK_SAVE_FIRST_INSTALL_BUNDLE_ERROR;
     }
 
     if (DeleteEl1ShaderAndArkStartupCache(oldInfo, bundleName, userId_) != ERR_OK) {
@@ -2008,10 +2007,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         ErrCode ret = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "rm hnp failed");
-            return ret;
         }
         auto res = RemoveBundleUserData(oldInfo, installParam.isKeepData, !installParam.isRemoveUser);
         if (res != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "remove bundle user data failed");
             return res;
         }
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
@@ -2051,41 +2050,37 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
     }
 
-    ErrCode ret = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "rm hnp failed");
-        return ret;
-    }
-
     ErrCode result = RemoveBundle(oldInfo, installParam.isKeepData, !installParam.isRemoveUser);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove whole bundle failed");
         return result;
     }
-    
+
+    result = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
+    if (result != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "rm hnp failed");
+    }
+
     result = DeleteOldArkNativeFile(oldInfo);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "delete old arkNativeFile failed");
-        return result;
     }
 
     result = DeleteArkProfile(bundleName, userId_);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to removeArkProfile, error is %{public}d", result);
-        return result;
     }
 
     result = DeleteShaderCache(bundleName);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to DeleteShaderCache, error is %{public}d", result);
-        return result;
     }
 
     DeleteUseLessSharefilesForDefaultUser(bundleName, userId_);
 
-    if ((result = CleanAsanDirectory(oldInfo)) != ERR_OK) {
+    result = CleanAsanDirectory(oldInfo);
+    if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove asan log path, error is %{public}d", result);
-        return result;
     }
 
     enableGuard.Dismiss();
@@ -2617,7 +2612,6 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     ErrCode result = RemoveBundleAndDataDir(info, isKeepData, async);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove bundle dir failed");
-        return result;
     }
 
     accessTokenId_ = info.GetAccessTokenId(userId_);
@@ -5560,6 +5554,13 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
+    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
+    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
+        LOG_E(BMS_TAG_INSTALLER, "update bundle user info to db failed %{public}s when remove user",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_RMV_USERINFO_ERROR;
+    }
+
     // delete accessTokenId
     accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
     if (!isKeepData) {
@@ -5580,31 +5581,21 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
         }
     }
 
-    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
-    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
-        LOG_E(BMS_TAG_INSTALLER, "update bundle user info to db failed %{public}s when remove user",
-            bundleName.c_str());
-        return ERR_APPEXECFWK_RMV_USERINFO_ERROR;
-    }
-
     ErrCode result = ERR_OK;
     if (!isKeepData) {
         result = RemoveBundleDataDir(innerBundleInfo, false, async);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "remove user data directory failed");
-            return result;
         }
     }
 
     result = DeleteArkProfile(bundleName, userId_);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to removeArkProfile, error is %{public}d", result);
-        return result;
     }
 
     if ((result = CleanAsanDirectory(innerBundleInfo)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove asan log path, error is %{public}d", result);
-        return result;
     }
 
     if (!isKeepData) {
