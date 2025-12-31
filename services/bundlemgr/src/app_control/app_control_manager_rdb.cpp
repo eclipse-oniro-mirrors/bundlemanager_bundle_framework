@@ -948,7 +948,7 @@ ErrCode AppControlManagerRdb::DeleteUninstallDisposedRule(const std::string &cal
     return ERR_OK;
 }
 
-ErrCode AppControlManagerRdb::GetUninstallDisposedRule(const std::string &appIdentifier,
+ErrCode AppControlManagerRdb::GetUninstallDisposedRule(const std::string &callerName, const std::string &appIdentifier,
     int32_t appIndex, int32_t userId, UninstallDisposedRule &rule)
 {
     LOG_D(BMS_TAG_DEFAULT, "begin");
@@ -959,6 +959,9 @@ ErrCode AppControlManagerRdb::GetUninstallDisposedRule(const std::string &appIde
     absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
     absRdbPredicates.OrderByAsc(PRIORITY);
     absRdbPredicates.OrderByAsc(TIME_STAMP);
+    if (!callerName.empty()) {
+        absRdbPredicates.EqualTo(CALLING_NAME, callerName);
+    }
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "null absSharedResultSet");
