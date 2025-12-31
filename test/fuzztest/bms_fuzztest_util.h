@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "bundle_info.h"
+#include "bundle_option.h"
 #include "bundle_user_info.h"
 #include "form_info.h"
 #include "install_param.h"
@@ -710,6 +711,15 @@ void GenerateHapModuleInfo(FuzzedDataProvider& fdp, HapModuleInfo &hapModuleInfo
     hapModuleInfo.reqCapabilities = GenerateStringArray(fdp);
     hapModuleInfo.deviceTypes = GenerateStringArray(fdp);
     GenerateDeviceFeatureMap(fdp, hapModuleInfo.requiredDeviceFeatures);
+}
+
+void GenerateBundleOptionInfo(FuzzedDataProvider& fdp, BundleOptionInfo &bundleOptionInfo)
+{
+    bundleOptionInfo.bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    bundleOptionInfo.moduleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    bundleOptionInfo.abilityName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    bundleOptionInfo.userId = fdp.ConsumeIntegral<int32_t>();
+    bundleOptionInfo.appIndex = fdp.ConsumeIntegral<int32_t>();
 }
 }  // namespace BMSFuzzTestUtil
 }  // namespace AppExecFwk

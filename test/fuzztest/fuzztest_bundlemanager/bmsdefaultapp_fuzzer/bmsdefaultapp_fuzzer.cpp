@@ -32,6 +32,8 @@ using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 const int32_t TEST_USERID_100 = 100;
 const int32_t INVALID_USERID = -1;
 const int32_t START_USERID = 0;
+const int32_t INVALID_APPINDEX = -1;
+const int32_t TEST_APPINDEX_1 = 1;
 namespace OHOS {
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
@@ -275,6 +277,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 
     // test GetCallerName
     defaultAppHostImpl.GetCallerName();
+
+    // test SetDefaultApplicationForAppClone
+    defaultAppHostImpl.SetDefaultApplicationForAppClone(INVALID_USERID, TEST_APPINDEX_1, type, want2);
+    defaultAppHostImpl.SetDefaultApplicationForAppClone(TEST_USERID_100, INVALID_APPINDEX, type, want2);
+    defaultAppHostImpl.SetDefaultApplicationForAppClone(TEST_USERID_100, TEST_APPINDEX_1, type, want2);
 
     return true;
 }

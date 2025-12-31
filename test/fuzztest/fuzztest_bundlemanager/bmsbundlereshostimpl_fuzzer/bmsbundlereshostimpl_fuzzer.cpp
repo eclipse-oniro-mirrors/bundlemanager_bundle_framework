@@ -52,6 +52,13 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     uint32_t flags = 0;
     bundleResourceHostImpl->CheckExtensionAbilityValid(bundleName, ExtensionAbilityType::INPUTMETHOD, flags, 0);
     bundleResourceHostImpl->CheckExtensionAbilityValid(bundleName, ExtensionAbilityType::INPUTMETHOD, flags, 1);
+    
+    std::vector<BundleOptionInfo> optionsList;
+    BundleOptionInfo bundleOptionInfo;
+    GenerateBundleOptionInfo(fdp, bundleOptionInfo);
+    bundleOptionInfo.appIndex = 0;
+    optionsList.push_back(bundleOptionInfo);
+    bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optionsList, flags, launcherInfos);
     return true;
 }
 }

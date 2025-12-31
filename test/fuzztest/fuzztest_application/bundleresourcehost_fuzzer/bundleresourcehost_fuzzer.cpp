@@ -27,7 +27,7 @@ constexpr size_t U32_AT_SIZE = 4;
 constexpr size_t DCAMERA_SHIFT_24 = 24;
 constexpr size_t DCAMERA_SHIFT_16 = 16;
 constexpr size_t DCAMERA_SHIFT_8 = 8;
-constexpr uint32_t CODE_MAX = 6;
+constexpr uint32_t CODE_MAX = 9;
 
 uint32_t GetU32Data(const char* ptr)
 {
