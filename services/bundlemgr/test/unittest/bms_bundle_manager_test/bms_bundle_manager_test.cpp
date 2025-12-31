@@ -503,12 +503,14 @@ HWTEST_F(BmsBundleManagerTest, QueryExtensionAbilityInfosV9_0100, Function | Sma
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
+    ErrCode result = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, 0, true, CALLER_NAME_UT, USERID);
+    EXPECT_EQ(result, ERR_OK);
     AAFwk::Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
     want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
     std::vector<ExtensionAbilityInfo> infos;
-    ErrCode result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
+    result = dataMgr->QueryExtensionAbilityInfosV9(want, 0, USERID, infos);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(infos.size(), NUMBER_ONE);
     if (infos.size() > 0) {
