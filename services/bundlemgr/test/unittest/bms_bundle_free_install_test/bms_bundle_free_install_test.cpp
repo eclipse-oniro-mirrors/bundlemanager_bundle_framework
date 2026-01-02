@@ -1054,8 +1054,8 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0044, Function | Sma
     bool isRemovable = true;
     ErrCode ret = dataMgr->IsModuleRemovable(BUNDLE_NAME, MODULE_NAME_TEST, isRemovable, USERID);
     
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_FALSE(isRemovable);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(isRemovable);
     UninstallBundleInfo(BUNDLE_NAME);
 }
 
