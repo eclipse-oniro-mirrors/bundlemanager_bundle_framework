@@ -11745,7 +11745,7 @@ HWTEST_F(BmsBundleInstallerTest, PluginInstaller_0064, Function | MediumTest | L
     installer.parsedBundles_.emplace("bundleName", info);
     InnerBundleInfo hostBundleInfo;
     auto ret = installer.ProcessPluginInstall(hostBundleInfo);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
 }
 
 /**
