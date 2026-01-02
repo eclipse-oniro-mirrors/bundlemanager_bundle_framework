@@ -13,14 +13,23 @@
  * limitations under the License.
  */
 
+#include <chrono>
 #include <thread>
 
 #include "app_log_wrapper.h"
+#include "battery_srv_client.h"
+#include "ffrt.h"
 #include "idle_condition_mgr/idle_condition_mgr.h"
+#include "parameter.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr const char* BMS_PARAM_RELABEL_BATTERY_CAPACITY = "ohos.bms.param.relabelBatteryCapacity";
+constexpr const char* BMS_PARAM_RELABEL_WAIT_TIME = "ohos.bms.param.relabelWaitTimeMinutes";
+constexpr int32_t RELABEL_WAIT_TIME_SECONDS = 5 * 60; // 5 minutes
+constexpr int32_t RELABEL_MIN_BATTERY_CAPACITY = 20;
 }
 
 IdleConditionMgr::IdleConditionMgr() = default;
@@ -33,7 +42,7 @@ void IdleConditionMgr::OnScreenLocked()
 {
     APP_LOGI("OnScreenLocked called");
     {
-        std::lock_guard<std::mutex> lock(stateMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         screenLocked_ = true;
     }
     TryStartRelabel();
@@ -43,7 +52,7 @@ void IdleConditionMgr::OnScreenUnlocked()
 {
     APP_LOGI("OnScreenUnlocked called");
     {
-        std::lock_guard<std::mutex> lock(stateMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         screenLocked_ = false;
     }
     InterruptRelabel();
@@ -53,7 +62,7 @@ void IdleConditionMgr::OnUserUnlocked()
 {
     APP_LOGI("OnUserUnlocked called");
     {
-        std::lock_guard<std::mutex> lock(stateMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         userUnlocked_ = true;
     }
     TryStartRelabel();
@@ -63,7 +72,7 @@ void IdleConditionMgr::OnUserStopping()
 {
     APP_LOGI("OnUserStopping called");
     {
-        std::lock_guard<std::mutex> lock(stateMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         userUnlocked_ = false;
     }
     InterruptRelabel();
@@ -72,49 +81,109 @@ void IdleConditionMgr::OnUserStopping()
 void IdleConditionMgr::OnPowerConnected()
 {
     APP_LOGI("OnPowerConnected called");
-    {
-        std::lock_guard<std::mutex> lock(stateMutex_);
-        powerConnected_ = true;
+    if (powerConnectedThreadActive_) {
+        return;
     }
-    TryStartRelabel();
+    powerConnectedThreadActive_ = true;
+    std::weak_ptr<IdleConditionMgr> weakPtr = shared_from_this();
+    auto task = [weakPtr]() {
+        auto startTime = std::chrono::steady_clock::now();
+        int32_t delayTime = OHOS::system::GetIntParameter<int32_t>(
+            BMS_PARAM_RELABEL_WAIT_TIME, RELABEL_WAIT_TIME_SECONDS);
+        auto endTime = startTime + std::chrono::seconds(delayTime);
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr == nullptr) {
+            APP_LOGE("stop power connect task");
+            return;
+        }
+        while (std::chrono::steady_clock::now() < endTime) {
+            if (!sharedPtr->powerConnectedThreadActive_) {
+                APP_LOGI("power connected thread is not active");
+                return;
+            }
+            ffrt::this_task::sleep_for(std::chrono::seconds(1));
+        }
+        {
+            std::lock_guard<std::mutex> lock(sharedPtr->mutex_);
+            sharedPtr->powerConnected_ = true;
+        }
+        sharedPtr->TryStartRelabel();
+        sharedPtr->powerConnectedThreadActive_ = false;
+        APP_LOGI("power connected task done");
+    };
+    ffrt::submit(task);
 }
 
 void IdleConditionMgr::OnPowerDisconnected()
 {
     APP_LOGI("OnPowerDisconnected called");
     {
-        std::lock_guard<std::mutex> lock(stateMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         powerConnected_ = false;
     }
+    powerConnectedThreadActive_ = false;
     InterruptRelabel();
 }
 
-bool IdleConditionMgr::CheckRefreshConditions()
+void IdleConditionMgr::OnBatteryChanged()
 {
-    std::lock_guard<std::mutex> lock(stateMutex_);
-    return userUnlocked_ && screenLocked_ && powerConnected_;
+    APP_LOGI("OnBatteryChanged called");
+    int32_t currentBatteryCap = OHOS::PowerMgr::BatterySrvClient::GetInstance().GetCapacity();
+    int32_t relabelBatteryCapacity = OHOS::system::GetIntParameter<int32_t>(
+        BMS_PARAM_RELABEL_BATTERY_CAPACITY, RELABEL_MIN_BATTERY_CAPACITY);
+    if (currentBatteryCap < relabelBatteryCapacity) {
+        APP_LOGD("battery capacity %{public}d less than %{public}d, interrupt relabel",
+            currentBatteryCap, relabelBatteryCapacity);
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            batterySatisfied_ = false;
+        }
+        InterruptRelabel();
+    } else {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            batterySatisfied_ = true;
+        }
+        TryStartRelabel();
+    }
+}
+
+bool IdleConditionMgr::CheckRelabelConditions()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_) {
+        if (isRelabeling_) {
+            APP_LOGI("Already relabeling, no need to process");
+            return false;
+        }
+        isRelabeling_ = true;
+        return true;
+    }
+    return false;
 }
 
 void IdleConditionMgr::TryStartRelabel()
 {
-    if (!CheckRefreshConditions()) {
+    if (!CheckRelabelConditions()) {
         APP_LOGI("Refresh conditions not met, no need to process");
         return;
     }
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (isRelabeling_) {
-            APP_LOGI("Already relabeling, no need to process");
+    std::weak_ptr<IdleConditionMgr> weakPtr = shared_from_this();
+    auto task = [weakPtr] {
+        APP_LOGI("Relabel task started");
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr == nullptr) {
+            APP_LOGD("stop relabel task");
             return;
         }
-        isRelabeling_ = true;
-    }
-    auto task = [this] {
-        APP_LOGI("Relabel task started");
+        if (!sharedPtr->CheckRelabelConditions()) {
+            APP_LOGI("Refresh conditions not met");
+            return;
+        }
         // relabel logic here
 
-        std::lock_guard<std::mutex> lock(mutex_);
-        isRelabeling_ = false;
+        std::lock_guard<std::mutex> lock(sharedPtr->mutex_);
+        sharedPtr->isRelabeling_ = false;
         APP_LOGI("Relabel task finished");
     };
     std::thread(task).detach();

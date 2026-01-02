@@ -67,6 +67,7 @@ ohos_fuzztest("BMSBundleResourceThemeProcessFuzzTest") {
     "appspawn:appspawn_client",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
