@@ -10704,7 +10704,8 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     for (auto &filteredAbilityInfo : filteredAbilityInfos) {
         for (auto &abilityInfo : abilityInfos) {
             if (filteredAbilityInfo.bundleName == abilityInfo.bundleName &&
-                filteredAbilityInfo.name == abilityInfo.name) {
+                filteredAbilityInfo.name == abilityInfo.name &&
+                filteredAbilityInfo.appIndex == abilityInfo.appIndex) {
                 abilityInfo.linkType = LinkType::APP_LINK;
                 break;
             }
