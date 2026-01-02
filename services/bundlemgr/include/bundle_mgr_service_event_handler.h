@@ -732,6 +732,7 @@ private:
     void GetInstallAndRecoverListForAllUser(std::unordered_map<int32_t,
         std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList);
     bool IsForceInstallListEmpty(const std::string &bundleName);
+    void RegisterRelabelEvent();
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;

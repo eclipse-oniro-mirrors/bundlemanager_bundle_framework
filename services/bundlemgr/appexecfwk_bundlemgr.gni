@@ -243,6 +243,8 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/bundlemgr_ext/bundle_mgr_ext_host_impl.cpp",
   "${services_path}/bundlemgr/src/install_exception_mgr.cpp",
   "${services_path}/bundlemgr/src/install_exception_mgr_rdb.cpp",
+  "${services_path}/bundlemgr/src/idle_condition_mgr/idle_condition_mgr.cpp",
+  "${services_path}/bundlemgr/src/idle_condition_mgr/idle_condition_event_subscribe.cpp",
   "${services_path}/bundlemgr/src/on_demand_install/on_demand_install_data_mgr.cpp",
   "${services_path}/bundlemgr/src/on_demand_install/on_demand_install_data_storage_rdb.cpp",
 ]
