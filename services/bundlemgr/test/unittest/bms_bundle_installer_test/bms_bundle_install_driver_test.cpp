@@ -89,6 +89,7 @@ const std::string DEVICE_TYPE_OF_DEFAULT = "default";
 const std::string TEMP_PREFIX = "temp_";
 const std::string EMPTY_STRING = "";
 const int32_t USERID = 100;
+const int32_t ADD_NEW_USERID = 200;
 const int32_t WAIT_TIME = 2; // init mocked bms
 const std::vector<std::string> BUNDLE_DATA_DIR_PAGENAME = {
     "cache",
@@ -2085,5 +2086,98 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7600, Function | SmallTest | 
     std::string str2;
     driverExtHander->RedirectDriverInstallExtPath(str2);
     EXPECT_EQ(str2, str1);
+}
+
+/**
+ * @tc.number: InstallDriverTest_7700
+ * @tc.name: test the ProcessBundleUninstall
+ * @tc.desc: 1.IS_DRIVER_FOR_ALL_USERS is true
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7700, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, "true");
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = ADD_NEW_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    dataMgr->AddInnerBundleUserInfo(BUNDLE_NAME, innerBundleUserInfo);
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.userId = USERID;
+    int32_t uid = USERID;
+    auto res = installer.ProcessBundleUninstall(BUNDLE_NAME, installParam, uid);
+    EXPECT_EQ(res, ERR_OK);
+
+    dataMgr->RemoveInnerBundleUserInfo(BUNDLE_NAME, ADD_NEW_USERID);
+    OHOS::system::RemoveParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS);
+}
+
+/**
+ * @tc.number: InstallDriverTest_7800
+ * @tc.name: test the ProcessBundleUninstall
+ * @tc.desc: 1.IS_DRIVER_FOR_ALL_USERS is false
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7800, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, "false");
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = ADD_NEW_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    dataMgr->AddInnerBundleUserInfo(BUNDLE_NAME, innerBundleUserInfo);
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.userId = USERID;
+    int32_t uid = USERID;
+    auto res = installer.ProcessBundleUninstall(BUNDLE_NAME, installParam, uid);
+    EXPECT_EQ(res, ERR_OK);
+
+    dataMgr->RemoveInnerBundleUserInfo(BUNDLE_NAME, ADD_NEW_USERID);
+    OHOS::system::RemoveParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS);
+}
+
+/**
+ * @tc.number: InstallDriverTest_7900
+ * @tc.name: test the ProcessBundleUninstall
+ * @tc.desc: 1.IS_DRIVER_FOR_ALL_USERS is false
+ *           2.ENTERPRISE_SPACE_ENABLE is true
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7900, Function | SmallTest | Level0)
+{
+    OHOS::system::SetParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, "false");
+    OHOS::system::SetParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, "true");
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = ADD_NEW_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    dataMgr->AddInnerBundleUserInfo(BUNDLE_NAME, innerBundleUserInfo);
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.userId = USERID;
+    int32_t uid = USERID;
+    auto res = installer.ProcessBundleUninstall(BUNDLE_NAME, installParam, uid);
+    EXPECT_EQ(res, ERR_OK);
+
+    dataMgr->RemoveInnerBundleUserInfo(BUNDLE_NAME, ADD_NEW_USERID);
+    OHOS::system::RemoveParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS);
+    OHOS::system::RemoveParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE);
 }
 } // OHOS
