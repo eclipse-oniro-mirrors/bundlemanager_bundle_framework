@@ -6689,6 +6689,72 @@ HWTEST_F(BmsBundleDataMgrTest, HandleGetPluginExtensionInfo_0100, Function | Sma
 }
 
 /**
+ * @tc.number: GetCreateDirParamByBundleOption_0010
+ * @tc.name: test GetCreateDirParamByBundleOption
+ * @tc.desc: 1.Test the GetCreateDirParamByBundleOption by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetCreateDirParamByBundleOption_0010, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    BundleOptionInfo optionInfo;
+    optionInfo.bundleName = MODULE_NAME_TEST1;
+    optionInfo.userId = TEST_U100;
+    CreateDirParam createDirParam;
+    ErrCode ret = dataMgr->GetCreateDirParamByBundleOption(optionInfo, createDirParam);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_[MODULE_NAME_TEST1] = innerBundleInfo;
+    ret = dataMgr->GetCreateDirParamByBundleOption(optionInfo, createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = MODULE_NAME_TEST1;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.uid = TEST_UID;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->bundleInfos_[MODULE_NAME_TEST1] = innerBundleInfo;
+    optionInfo.appIndex = 1;
+    ret = dataMgr->GetCreateDirParamByBundleOption(optionInfo, createDirParam);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST);
+    optionInfo.appIndex = 0;
+    ret = dataMgr->GetCreateDirParamByBundleOption(optionInfo, createDirParam);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(createDirParam.uid, TEST_UID);
+}
+
+/**
+ * @tc.number: GetCreateDirParamByBundleOption_0020
+ * @tc.name: test GetCreateDirParamByBundleOption
+ * @tc.desc: 1.Test the GetCreateDirParamByBundleOption by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetCreateDirParamByBundleOption_0020, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    BundleOptionInfo optionInfo;
+    optionInfo.bundleName = MODULE_NAME_TEST1;
+    optionInfo.userId = TEST_U100;
+    optionInfo.appIndex = 1;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = MODULE_NAME_TEST1;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    innerBundleCloneInfo.appIndex = 1;
+    innerBundleCloneInfo.uid = TEST_UID;
+    innerBundleUserInfo.cloneInfos["1"] = innerBundleCloneInfo;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->bundleInfos_[MODULE_NAME_TEST1] = innerBundleInfo;
+    CreateDirParam createDirParam;
+    ErrCode ret = dataMgr->GetCreateDirParamByBundleOption(optionInfo, createDirParam);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(createDirParam.uid, TEST_UID);
+}
+
+/**
  * @tc.number: CalculatePreInstalledBundleSize_0100
  * @tc.name: test CalculatePreInstalledBundleSize
  * @tc.desc: 1.Test the CalculatePreInstalledBundleSize by BundleDataMgr

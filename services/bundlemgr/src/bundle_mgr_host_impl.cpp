@@ -56,7 +56,6 @@
 #include "user_auth_client_impl.h"
 #endif
 #include "xcollie_helper.h"
-#include "bms_update_selinux_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -2339,7 +2338,6 @@ bool BundleMgrHostImpl::DumpInfos(
     bool ret = false;
     switch (flag) {
         case DumpFlag::DUMP_BUNDLE_LIST: {
-            DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->StartUpdateSelinuxLabel(100);
             ret = DumpAllBundleInfoNames(userId, result);
             break;
         }
@@ -2348,7 +2346,6 @@ bool BundleMgrHostImpl::DumpInfos(
             break;
         }
         case DumpFlag::DUMP_BUNDLE_INFO: {
-            DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->StopUpdateSelinuxLabel(0);
             ret = DumpBundleInfo(bundleName, userId, result);
             break;
         }

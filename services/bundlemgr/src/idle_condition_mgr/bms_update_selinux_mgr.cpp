@@ -58,10 +58,6 @@ ErrCode BmsUpdateSelinuxMgr::StartUpdateSelinuxLabel(const int32_t userId)
 {
     APP_LOGI("start update selinux label -u %{public}d", userId);
     needStop_.store(false);
-    if (idleManagerRdb_ == nullptr) {
-        APP_LOGE("rdb nullptr -u %{public}d", userId);
-        return ERR_APPEXECFWK_NULL_PTR;
-    }
     std::vector<BundleOptionInfo> bundleOptionInfos;
     ErrCode ret = idleManagerRdb_->GetAllBundle(userId, bundleOptionInfos);
     if (ret != ERR_OK) {
@@ -88,7 +84,12 @@ ErrCode BmsUpdateSelinuxMgr::StartUpdateSelinuxLabel(const int32_t userId)
                 bundleOption.userId, bundleOption.appIndex);
             continue;
         }
-        createDirParam_ = dirParam;
+        {
+            std::lock_guard<std::mutex> lock(createDirParamMutex_);
+            createDirParam_ = dirParam;
+        }
+        APP_LOGI("start -n %{public}s -u %{public}d -i %{public}d", bundleOption.bundleName.c_str(),
+            bundleOption.userId, bundleOption.appIndex);
         auto ret = InstalldClient::GetInstance()->SetFileConForce(GetBundleDataPath(bundleOption.bundleName,
             bundleOption.userId, bundleOption.appIndex, dirParam.isContainsEl5Dir), dirParam);
         if (ret != ERR_OK) {
@@ -113,6 +114,7 @@ ErrCode BmsUpdateSelinuxMgr::StopUpdateSelinuxLabel(const int32_t reason)
         return ERR_OK;
     }
     needStop_.store(true);
+    std::lock_guard<std::mutex> lock(createDirParamMutex_);
     auto ret = InstalldClient::GetInstance()->StopSetFileCon(createDirParam_, reason);
     if (ret != ERR_OK) {
         APP_LOGE("stop update selinux label -r %{public}d failed err:%{public}d", reason, ret);

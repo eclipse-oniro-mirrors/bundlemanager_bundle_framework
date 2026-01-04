@@ -18,7 +18,6 @@
 #include <atomic>
 #include <mutex>
 #include <vector>
-#include <shared_mutex>
 
 #include "ipc/create_dir_param.h"
 #include "idle_manager_rdb.h"
@@ -37,6 +36,7 @@ private:
     std::vector<std::string> GetBundleDataPath(const std::string &bundleName,
         const int32_t userId, const int32_t appIndex, const bool isContainsEl5Dir);
     std::atomic<bool> needStop_{false};
+    std::mutex createDirParamMutex_;
     CreateDirParam createDirParam_;
     std::shared_ptr<IdleManagerRdb> idleManagerRdb_;
 };
