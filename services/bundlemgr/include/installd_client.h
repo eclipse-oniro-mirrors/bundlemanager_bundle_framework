@@ -21,6 +21,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <string>
+#include <thread>
 
 #include "nocopyable.h"
 #include "singleton.h"
@@ -311,6 +312,7 @@ private:
     ErrCode CallService(F func, Args&&... args)
     {
         int32_t maxRetryTimes = 2;
+        int32_t retryInterval = 50;
         ErrCode errCode = ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
         for (int32_t retryTimes = 0; retryTimes < maxRetryTimes; retryTimes++) {
             auto proxy = GetInstalldProxy();
@@ -322,6 +324,7 @@ private:
             if (errCode == ERR_APPEXECFWK_INSTALLD_SERVICE_DIED) {
                 APP_LOGE("CallService failed, retry times: %{public}d", retryTimes + 1);
                 ResetInstalldProxy();
+                std::this_thread::sleep_for(std::chrono::milliseconds(retryInterval));
             } else {
                 return errCode;
             }
