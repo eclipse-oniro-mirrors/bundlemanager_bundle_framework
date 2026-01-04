@@ -39,6 +39,7 @@
 #endif
 #include "bundle_data_storage_interface.h"
 #include "bundle_event_callback_interface.h"
+#include "bundle_option.h"
 #include "bundle_promise.h"
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_state_storage.h"
@@ -1254,6 +1255,7 @@ public:
     ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
         const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo);
     std::vector<CreateDirParam> GetAllExtensionDirsToUpdateSelinuxApl();
+    ErrCode GetCreateDirParamByBundleOption(const BundleOptionInfo &optionInfo, CreateDirParam &dirParam) const;
 private:
     /**
      * @brief Init transferStates.
