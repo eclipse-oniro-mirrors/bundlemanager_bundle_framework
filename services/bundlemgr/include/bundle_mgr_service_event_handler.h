@@ -63,6 +63,7 @@ enum OTAFlag : uint32_t {
     UPDATE_MODULE_JSON = 0x00100000,
     PROCESS_ROUTER_MAP = 0x00200000,
     UPDATE_EXTENSION_DIRS_SELINUX_APL = 0x00400000,
+    ADD_IDLE_INFO = 0x00800000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -733,6 +734,7 @@ private:
         std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList);
     bool IsForceInstallListEmpty(const std::string &bundleName);
     void RegisterRelabelEvent();
+    bool ProcessIdleInfo();
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;

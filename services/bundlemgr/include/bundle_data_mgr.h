@@ -1256,6 +1256,7 @@ public:
         const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo);
     std::vector<CreateDirParam> GetAllExtensionDirsToUpdateSelinuxApl();
     ErrCode GetCreateDirParamByBundleOption(const BundleOptionInfo &optionInfo, CreateDirParam &dirParam) const;
+    bool ProcessIdleInfo() const;
 private:
     /**
      * @brief Init transferStates.

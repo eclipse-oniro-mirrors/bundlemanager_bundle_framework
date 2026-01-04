@@ -144,5 +144,14 @@ std::vector<std::string> BmsUpdateSelinuxMgr::GetBundleDataPath(const std::strin
     }
     return bundlePaths;
 }
+
+ErrCode BmsUpdateSelinuxMgr::AddBundles(const std::vector<BundleOptionInfo> &bundleOptionInfos)
+{
+    if (bundleOptionInfos.empty()) {
+        APP_LOGE("bundleOptionInfos is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    return idleManagerRdb_->AddBundles(bundleOptionInfos);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

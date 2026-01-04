@@ -19,6 +19,7 @@
 #include <mutex>
 #include <vector>
 
+#include "bundle_option.h"
 #include "ipc/create_dir_param.h"
 #include "idle_manager_rdb.h"
 #include "singleton.h"
@@ -31,6 +32,7 @@ public:
     ~BmsUpdateSelinuxMgr();
     ErrCode StartUpdateSelinuxLabel(const int32_t userId);
     ErrCode StopUpdateSelinuxLabel(const int32_t reason);
+    ErrCode AddBundles(const std::vector<BundleOptionInfo> &bundleOptionInfos);
 
 private:
     std::vector<std::string> GetBundleDataPath(const std::string &bundleName,
