@@ -2804,8 +2804,8 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
     GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
         bundleInfo.applicationInfo, appIndex);
     for (const auto &info : innerModuleInfos_) {
-        if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_REQUESTED_PERMISSION)
-            == GET_BUNDLE_WITH_REQUESTED_PERMISSION) {
+        if ((static_cast<uint32_t>(flags) &
+            (GET_BUNDLE_WITH_REQUESTED_PERMISSION | GET_BUNDLE_WITH_REQUESTED_PERMISSION_NO_DETAILED)) != 0) {
             for (const auto &item : info.second.requestPermissions) {
                 bundleInfo.reqPermissions.push_back(item.name);
             }

@@ -245,7 +245,7 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
     }
     std::vector<BundleInfo> bundleInfos;
     if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
-        BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION, bundleInfos, userId)) {
+        BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION_NO_DETAILED, bundleInfos, userId)) {
         APP_LOGE("UpdateAppDataDirSelinuxLabel GetAllBundleInfos failed");
         return;
     }

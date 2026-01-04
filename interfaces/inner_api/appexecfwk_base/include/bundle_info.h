@@ -49,6 +49,8 @@ enum BundleFlag {
     GET_BUNDLE_WITH_SKILL = 0x00000800,
     // the flag only for C++ interface passing
     GET_BUNDLE_INFO_EXCLUDE_EXT = 0x00020000,
+    // get bundle info include request permissions with no detailed info
+    GET_BUNDLE_WITH_REQUESTED_PERMISSION_NO_DETAILED = 0x80000000,
 };
 
 enum class GetBundleInfoFlag {
