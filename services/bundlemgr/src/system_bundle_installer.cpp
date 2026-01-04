@@ -132,7 +132,9 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
         if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
             APP_LOGE("install system bundle %{public}s fail err %{public}d", bundleName.c_str(), errCode);
             result = errCode;
-            BmsKeyEventMgr::ProcessMainBundleInstallFailed(bundleName, result);
+            if (!installParam.isPatch) {
+                BmsKeyEventMgr::ProcessMainBundleInstallFailed(bundleName, result);
+            }
         }
         ResetInstallProperties();
     }
