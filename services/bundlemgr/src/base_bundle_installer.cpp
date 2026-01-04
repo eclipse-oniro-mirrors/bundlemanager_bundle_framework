@@ -1336,6 +1336,20 @@ ErrCode BaseBundleInstaller::CheckU1Enable(const InnerBundleInfo &info,
     return ERR_OK;
 }
 
+ErrCode BaseBundleInstaller::CheckEnterpriseResign(const InnerBundleInfo &oldInfo)
+{
+    if (oldInfo.GetAppSignType() != Constants::APP_SIGN_TYPE_ENTERPRISE_RE_SIGN) {
+        return ERR_OK;
+    }
+    const std::vector<std::string> hapPaths = oldInfo.GetAllHapPaths();
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    if (bundleInstallChecker_->CheckMultipleHapsSignInfo(hapPaths, hapVerifyRes, true, userId_) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLER, "Check multiple haps sign info failed");
+        return ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_ENTERPRISE_RESIGN_FAIL;
+    }
+    return ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string> &inBundlePaths,
     const InstallParam &installParam, const Constants::AppType appType, int32_t &uid, bool isRecover)
 {
@@ -2493,6 +2507,9 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
             ret = CheckU1Enable(oldInfo, userId_);
             CHECK_RESULT(ret, "CheckU1Enable failed %{public}d");
+
+            ret = CheckEnterpriseResign(oldInfo);
+            CHECK_RESULT(ret, "Check enterprise resign failed %{public}d");
 
             InnerBundleUserInfo curInnerBundleUserInfo;
             curInnerBundleUserInfo.bundleUserInfo.userId = userId_;
