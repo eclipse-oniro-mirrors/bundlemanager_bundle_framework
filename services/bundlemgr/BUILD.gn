@@ -34,6 +34,7 @@ config("bundlemgr_common_config") {
     "include/driver",
     "include/extend_resource",
     "include/first_install_data_mgr",
+    "include/idle_condition_mgr",
     "include/uninstall_data_mgr",
     "include/overlay",
     "include/quick_fix",
