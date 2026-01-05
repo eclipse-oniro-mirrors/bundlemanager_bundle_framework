@@ -2885,7 +2885,7 @@ bool InstalldOperator::WriteCertToFile(const std::string &certFilePath, const st
     }
 
     std::string tmpPath = certFilePath + ".tmp";
-    int fd = open(tmpPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
+    int fd = open(tmpPath.c_str(), O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (fd < 0) {
         LOG_E(BMS_TAG_INSTALLD, "open tmp cert file failed %{public}s errno:%{public}d", tmpPath.c_str(), errno);
         return false;
