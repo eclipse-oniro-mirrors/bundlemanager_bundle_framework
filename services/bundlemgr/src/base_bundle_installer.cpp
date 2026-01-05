@@ -2039,6 +2039,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 bundleName.c_str(), userId_);
         }
         BundleResourceHelper::DeleteBundleResourceInfo(bundleName, userId_, true);
+        bool isDriverForAllUser = OHOS::system::GetBoolParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS, true);
+        bool isEntSpaceEnable = OHOS::system::GetBoolParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE, false);
+        if (!isDriverForAllUser && isEntSpaceEnable) {
+            // remove drive so file for single user
+            std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+            driverInstaller->RemoveDriverSoFile(oldInfo, "", false);
+        }
         return ERR_OK;
     }
     dataMgr_->DisableBundle(bundleName);
