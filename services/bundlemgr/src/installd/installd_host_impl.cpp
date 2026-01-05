@@ -1518,6 +1518,10 @@ ErrCode InstalldHostImpl::StopSetFileCon(const CreateDirParam &createDirParam, i
 
 ErrCode InstalldHostImpl::SetDirsApl(const CreateDirParam &createDirParam, bool isExtensionDir)
 {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp,
         createDirParam.debug, createDirParam.isDlpSandbox, createDirParam.dlpType, isExtensionDir);
     ErrCode res = ERR_OK;

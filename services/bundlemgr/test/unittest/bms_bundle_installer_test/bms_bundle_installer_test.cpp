@@ -173,6 +173,7 @@ const std::string BUNDLE_CODE_PATH_DIR_REAL_EXT_FILE =
 const std::string MODULE_NAME_EXT = "moduleName";
 const std::string BUNDLE_NAME_FOR_TEST = "com.example.example_test";
 const std::string BUNDLE_NAME_FOR_TEST_U1ENABLE = "com.example.u1Enable_test";
+const std::string BUNDLE_NAME_FOR_TEST_EXTENSION_DIR = "com.example.extension";
 const std::string PLUGIN_CODE_PATH_DIR_NEW = "/data/test/plugin_new";
 const std::string PLUGIN_CODE_PATH_DIR_OLD = "/data/test/plugin_old";
 const int32_t TEST_U100 = 100;
@@ -13512,7 +13513,47 @@ HWTEST_F(BmsBundleInstallerTest, NotifyBundleCallback_0010, Function | MediumTes
     int32_t uid = 1;
     EXPECT_NO_THROW(installer.NotifyBundleCallback(type, uid));
 }
- 
+
+/**
+ * @tc.number: CreateBundleDataDirWithEl_0100
+ * @tc.name: test UpdateExtensionDirsApl
+ * @tc.desc: 1.Test the UpdateExtensionDirsApl
+*/
+HWTEST_F(BmsBundleInstallerTest, UpdateExtensionDirsApl_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::vector<std::string> updateExtensionDirs;
+    InnerBundleInfo info;
+
+    // test updateExtensionDirs empty
+    auto res = installer.UpdateExtensionDirsApl(updateExtensionDirs, info);
+    EXPECT_EQ(res, false);
+
+    // test dataMgr_ is nullptr
+    updateExtensionDirs.emplace_back("test");
+    res = installer.UpdateExtensionDirsApl(updateExtensionDirs, info);
+    EXPECT_EQ(res, false);
+
+    // test no user
+    installer.dataMgr_ = GetBundleDataMgr();
+    res = installer.UpdateExtensionDirsApl(updateExtensionDirs, info);
+    EXPECT_EQ(res, true);
+
+
+    info.baseApplicationInfo_->bundleName = BUNDLE_NAME_FOR_TEST_EXTENSION_DIR;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = Constants::START_USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_FOR_TEST_EXTENSION_DIR;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    installer.dataMgr_->bundleInfos_.emplace(BUNDLE_NAME_FOR_TEST_EXTENSION_DIR, info);
+
+    updateExtensionDirs.emplace_back("extension1");
+    installer.dataMgr_->AddUserId(Constants::DEFAULT_USERID);
+    installer.dataMgr_->AddUserId(Constants::START_USERID);
+    res = installer.UpdateExtensionDirsApl(updateExtensionDirs, info);
+    EXPECT_EQ(res, false);
+}
+
 /**
  * @tc.number: HashFiles_0010
  * @tc.name: test HashFiles
