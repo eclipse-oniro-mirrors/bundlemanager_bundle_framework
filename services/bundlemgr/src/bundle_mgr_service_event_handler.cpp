@@ -2351,8 +2351,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     if (!InnerMultiProcessBundleInstall(needInstallMapFirst, appType)) {
         LOG_E(BMS_TAG_DEFAULT, "multi needInstallMapFirst failed");
     }
-    if (!InnerMultiProcessBundleInstall(needInstallMapOverlay, appType)) {
-        LOG_E(BMS_TAG_DEFAULT, "multi needInstallMapOverlay failed");
+    for (auto iter = needInstallMapOverlay.begin(); iter != needInstallMapOverlay.end(); ++iter) {
+        (void)BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
+            BMSEventHandler::ObtainRealPath(iter->second.first), iter->first, appType, iter->second.second);
     }
     UpdatePreinstallDB(needInstallMap);
     // process bundle theme and dynamic resource
@@ -2416,6 +2417,21 @@ bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName, uint3
     return false;
 }
 
+std::vector<std::string> BMSEventHandler::ObtainRealPath(const std::vector<std::string> &paths)
+{
+    std::vector<std::string> filePaths = paths;
+    if (filePaths.size() > 1) {
+        // If the bundle exists in different directories, the real hap file path needs to be obtained
+        std::vector<std::string> realHapPaths;
+        for (const auto &path : filePaths) {
+            std::vector<std::string> hapFilePathVec = {path};
+            (void)BundleUtil::CheckFilePath(hapFilePathVec, realHapPaths);
+        }
+        filePaths = realHapPaths.empty() ? filePaths : realHapPaths;
+    }
+    return filePaths;
+}
+
 bool BMSEventHandler::InnerMultiProcessBundleInstall(
     const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap,
     Constants::AppType appType)
@@ -2444,17 +2460,8 @@ bool BMSEventHandler::InnerMultiProcessBundleInstall(
     for (auto iter = needInstallMap.begin(); iter != needInstallMap.end(); ++iter) {
         std::string bundleName = iter->first;
         std::pair pair = iter->second;
-        auto task = [bundleName, pair, taskTotalNum, appType, &taskEndNum, &bundlePromise]() {
-            std::vector<std::string> filePaths = pair.first;
-            if (filePaths.size() > 1) {
-                // If the bundle exists in different directories, the real hap file path needs to be obtained
-                std::vector<std::string> realHapPaths;
-                for (const auto &path : filePaths) {
-                    std::vector<std::string> hapFilePathVec = {path};
-                    (void)BundleUtil::CheckFilePath(hapFilePathVec, realHapPaths);
-                }
-                filePaths = realHapPaths.empty() ? filePaths : realHapPaths;
-            }
+        std::vector<std::string> filePaths = BMSEventHandler::ObtainRealPath(pair.first);
+        auto task = [bundleName, pair, filePaths, taskTotalNum, appType, &taskEndNum, &bundlePromise]() {
             (void)BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, pair.second);
             taskEndNum++;
             if (bundlePromise && taskEndNum >= taskTotalNum) {
@@ -4527,8 +4534,9 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
     if (!InnerMultiProcessBundleInstallForPatch(needInstallMap, isOta)) {
         LOG_E(BMS_TAG_DEFAULT, "multi patch needInstallMap install failed");
     }
-    if (!InnerMultiProcessBundleInstallForPatch(needInstallOverlayMap, isOta)) {
-        LOG_E(BMS_TAG_DEFAULT, "multi patch needInstallOverlayMap install failed");
+    for (auto iter = needInstallOverlayMap.begin(); iter != needInstallOverlayMap.end(); ++iter) {
+        (void)BMSEventHandler::InstallSystemBundleNeedCheckUserForPatch(
+            BMSEventHandler::ObtainRealPath(iter->second), iter->first, isOta);
     }
     LOG_I(BMS_TAG_DEFAULT, "end");
 }
@@ -4585,19 +4593,8 @@ bool BMSEventHandler::InnerMultiProcessBundleInstallForPatch(
     for (auto iter = needInstallMap.begin(); iter != needInstallMap.end(); ++iter) {
         std::string bundleName = iter->first;
         std::vector<std::string> filePaths = iter->second;
-        auto task = [bundleName, filePaths, taskTotalNum, &taskEndNum, &bundlePromise, isOta]() {
-            std::vector<std::string> realHapPaths = filePaths;
-            if (realHapPaths.size() > 1) {
-                // If the bundle exists in different directories, the real hap file path needs to be obtained
-                std::vector<std::string> hapPaths;
-                for (const auto &path : realHapPaths) {
-                    std::vector<std::string> hapFilePathVec = {path};
-                    (void)BundleUtil::CheckFilePath(hapFilePathVec, hapPaths);
-                }
-                if (!hapPaths.empty()) {
-                    realHapPaths = hapPaths;
-                }
-            }
+        std::vector<std::string> realHapPaths = BMSEventHandler::ObtainRealPath(iter->second);
+        auto task = [bundleName, realHapPaths, taskTotalNum, &taskEndNum, &bundlePromise, isOta]() {
             (void)BMSEventHandler::InstallSystemBundleNeedCheckUserForPatch(realHapPaths, bundleName, isOta);
             taskEndNum++;
             if (bundlePromise && taskEndNum >= taskTotalNum) {

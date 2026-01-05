@@ -732,6 +732,7 @@ private:
     void GetInstallAndRecoverListForAllUser(std::unordered_map<int32_t,
         std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList);
     bool IsForceInstallListEmpty(const std::string &bundleName);
+    static std::vector<std::string> ObtainRealPath(const std::vector<std::string> &paths);
     void RegisterRelabelEvent();
 
     // Used to mark Whether trigger OTA check
