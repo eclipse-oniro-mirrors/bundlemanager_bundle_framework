@@ -4600,7 +4600,7 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
     std::unordered_set<int32_t> uids;
     uids.emplace(uid);
     auto activeUserId = AccountHelper::GetUserIdByCallerType();
-    if (appIndex == Constants::MAIN_APP_INDEX && activeUserId == responseUserId) {
+    if (appIndex == Constants::MAIN_APP_INDEX && activeUserId == userId) {
         std::map<std::string, std::set<int32_t>> saUidMap;
         LoadSaUidMap(saUidMap);
         auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
@@ -4777,6 +4777,7 @@ void BundleDataMgr::GetAllInstallBundleUids(const int32_t userId, const int32_t 
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     responseUserId = userId;
     auto activeUserId = AccountHelper::GetUserIdByCallerType();
+    bool isActiveUserId = (activeUserId == userId);
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         std::string bundleName = info.GetBundleName();
@@ -4799,7 +4800,7 @@ void BundleDataMgr::GetAllInstallBundleUids(const int32_t userId, const int32_t 
             int32_t uid = info.GetUid(responseUserId, appIndex);
             uids.emplace_back(uid);
         }
-        if (responseUserId == activeUserId) {
+        if (isActiveUserId) {
             bundleNames.emplace_back(bundleName);
         }
     }
@@ -4816,9 +4817,9 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
     int32_t responseUserId = -1;
     std::vector<std::string> bundleNames;
     GetAllInstallBundleUids(userId, requestUserId, responseUserId, uids, bundleNames);
-    std::map<std::string, std::set<int32_t>> saUidMap;
-    LoadSaUidMap(saUidMap);
     if (!bundleNames.empty()) {
+        std::map<std::string, std::set<int32_t>> saUidMap;
+        LoadSaUidMap(saUidMap);
         for (const auto &bundleName : bundleNames) {
             auto saUids = GetBindingSAUidsByBundleName(bundleName, saUidMap);
             if (!saUids.empty()) {
