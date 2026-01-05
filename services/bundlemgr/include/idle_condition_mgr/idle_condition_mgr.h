@@ -22,7 +22,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class IdleConditionMgr : public DelayedSingleton<IdleConditionMgr> {
+class IdleConditionMgr : public DelayedSingleton<IdleConditionMgr>,
+    public std::enable_shared_from_this<IdleConditionMgr> {
 public:
     IdleConditionMgr();
     ~IdleConditionMgr();
@@ -33,11 +34,12 @@ public:
     void OnScreenUnlocked();
     void OnPowerDisconnected();
     void OnUserStopping();
+    void OnBatteryChanged();
     void TryStartRelabel();
     void InterruptRelabel();
 
 private:
-    bool CheckRefreshConditions();
+    bool CheckRelabelConditions();
 
 private:
     std::mutex mutex_;
@@ -46,8 +48,10 @@ private:
     std::atomic<bool> userUnlocked_{false};
     std::atomic<bool> screenLocked_{false};
     std::atomic<bool> powerConnected_{false};
+    std::atomic<bool> batterySatisfied_{false};
     
     std::atomic<bool> isRelabeling_{false};
+    std::atomic<bool> powerConnectedThreadActive_{false};
 };
 } // namespace AppExecFwk
 } // namespace OHOS

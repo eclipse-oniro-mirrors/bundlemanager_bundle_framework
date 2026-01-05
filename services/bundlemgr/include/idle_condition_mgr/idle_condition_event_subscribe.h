@@ -26,6 +26,8 @@ public:
     explicit IdleConditionEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
     virtual ~IdleConditionEventSubscriber();
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
+private:
+    bool CheckInodeForCommericalDevice();
 };
 } // namespace AppExecFwk
 } // namespace OHOS
