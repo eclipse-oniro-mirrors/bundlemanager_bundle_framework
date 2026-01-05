@@ -734,7 +734,6 @@ private:
         std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList);
     bool IsForceInstallListEmpty(const std::string &bundleName);
     void RegisterRelabelEvent();
-    void RegisterMemoryClient();
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
@@ -758,11 +757,6 @@ private:
     std::map<std::string, HmpBundlePathInfo> hmpBundlePathInfos_;
     std::unordered_map<int32_t,
         std::pair<std::vector<std::string>, std::vector<std::string>>> userInstallAndRecoverMap_;
-    bool isParsed_ = false;
-    bool isIdleConditionListenerConnected_ = false;
-    bool isIdleConditionListenerRemoteDied_ = false;
-    std::recursive_mutex recMutex_;
-    std::shared_ptr<IdleConditionListener> idleConditionListener_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

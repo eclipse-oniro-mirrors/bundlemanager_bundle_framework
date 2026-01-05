@@ -43,6 +43,7 @@ public:
 
 private:
     bool CheckRelabelConditions();
+    bool IsBufferSufficient();
 
 private:
     std::mutex mutex_;
@@ -56,6 +57,7 @@ private:
     
     std::atomic<bool> isRelabeling_{false};
     std::atomic<bool> powerConnectedThreadActive_{false};
+    std::shared_ptr<IdleConditionListener> idleConditionListener_;
 };
 } // namespace AppExecFwk
 } // namespace OHOS
