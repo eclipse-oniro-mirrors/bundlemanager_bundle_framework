@@ -1964,13 +1964,13 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0300, Function | SmallTest
 
 /**
  * @tc.number: CreateInstallTempDir_0400
- * @tc.name: test CheckFileName, the name max size is 256
+ * @tc.name: test CheckFileName, the name max size is 4096
  * @tc.desc: 1.test CheckFileName of BundleUtil
  */
 HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0400, Function | SmallTest | Level0)
 {
     BundleUtil bundleUtil;
-    std::string maxFileName = std::string(256, 'a');
+    std::string maxFileName = std::string(4096, 'a');
     ErrCode res = bundleUtil.CheckFileName(maxFileName);
     EXPECT_EQ(res, ERR_OK);
     maxFileName.append(".txt");

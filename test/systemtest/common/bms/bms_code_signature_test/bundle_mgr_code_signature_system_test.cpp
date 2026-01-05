@@ -60,7 +60,7 @@ const std::string INVALID_THIRD_PATH = "/data/test/test_code_signature/";
 const std::string BUNDLE_NAME_WITHOUT_LIBS = "com.example.codeSignature1";
 const std::string BUNDLE_NAME_WITH_LIBS = "com.example.codeSignature2";
 const int32_t TIMEOUT = 10; // 10s
-constexpr int PATH_MAX_SIZE = 256;
+constexpr int PATH_MAX_SIZE = 4096;
 } // namespace
 
 class StatusReceiverImpl : public StatusReceiverHost {
