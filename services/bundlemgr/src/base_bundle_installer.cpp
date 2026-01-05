@@ -5629,13 +5629,6 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
-    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
-    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
-        LOG_E(BMS_TAG_INSTALLER, "update bundle user info to db failed %{public}s when remove user",
-            bundleName.c_str());
-        return ERR_APPEXECFWK_RMV_USERINFO_ERROR;
-    }
-
     // delete accessTokenId
     accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
     if (!isKeepData) {
@@ -5654,6 +5647,13 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(
                 innerBundleInfo.GetBundleName();
             PrepareBundleDirQuota(innerBundleInfo.GetBundleName(), uid, bundleDataDir, 0);
         }
+    }
+
+    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
+    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
+        LOG_E(BMS_TAG_INSTALLER, "update bundle user info to db failed %{public}s when remove user",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_RMV_USERINFO_ERROR;
     }
 
     ErrCode result = ERR_OK;
