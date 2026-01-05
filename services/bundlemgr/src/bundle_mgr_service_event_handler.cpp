@@ -45,6 +45,7 @@
 #include "installd_client.h"
 #include "install_exception_mgr.h"
 #include "module_json_updater.h"
+#include "mem_mgr_client.h"
 #include "new_bundle_data_dir_mgr.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -4177,6 +4178,7 @@ void BMSEventHandler::RegisterRelabelEvent()
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_STOPPING);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_CHANGED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
 
@@ -4184,6 +4186,23 @@ void BMSEventHandler::RegisterRelabelEvent()
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
         LOG_W(BMS_TAG_DEFAULT, "subscribe relabel event failed");
     }
+    RegisterMemoryClient();
+}
+
+void BMSEventHandler::RegisterMemoryClient()
+{
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
+    if (isParsed_) {
+        if (idleConditionListener_ != nullptr && isIdleConditionListenerRemoteDied_) {
+            LOG_I(BMS_TAG_DEFAULT, "MemMgrClient died, SubscribeIdleListener again");
+            Memory::MemMgrClient::GetInstance().SubscribeAppState(*idleConditionListener_);
+        }
+        return;
+    }
+    idleConditionListener_ = std::make_shared<IdleConditionListener>();
+    Memory::MemMgrClient::GetInstance().SubscribeAppState(*idleConditionListener_);
+    isParsed_ = true;
+    LOG_I(BMS_TAG_DEFAULT, "Memory Client registered");
 }
 
 void BMSEventHandler::RemoveUnreservedSandbox() const

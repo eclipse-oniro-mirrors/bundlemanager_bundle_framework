@@ -19,6 +19,7 @@
 #include <mutex>
 
 #include "singleton.h"
+#include "idle_condition_listener.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -34,6 +35,8 @@ public:
     void OnScreenUnlocked();
     void OnPowerDisconnected();
     void OnUserStopping();
+    void OnBatteryChangedByTemperature(int32_t batteryTemperature);
+    void HandleOnTrim(Memory::SystemMemoryLevel level);
     void OnBatteryChanged();
     void TryStartRelabel();
     void InterruptRelabel();
@@ -48,6 +51,7 @@ private:
     std::atomic<bool> userUnlocked_{false};
     std::atomic<bool> screenLocked_{false};
     std::atomic<bool> powerConnected_{false};
+    std::atomic<bool> batteryTemperatureHealthy_{false};
     std::atomic<bool> batterySatisfied_{false};
     
     std::atomic<bool> isRelabeling_{false};

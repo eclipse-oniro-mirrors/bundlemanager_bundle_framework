@@ -32,6 +32,8 @@ constexpr int32_t RELABEL_WAIT_TIME_SECONDS = 5 * 60; // 5 minutes
 constexpr int32_t RELABEL_MIN_BATTERY_CAPACITY = 20;
 }
 
+constexpr int32_t BATTERY_TEMPERATURE = 370;
+
 IdleConditionMgr::IdleConditionMgr() = default;
 
 IdleConditionMgr::~IdleConditionMgr()
@@ -125,6 +127,41 @@ void IdleConditionMgr::OnPowerDisconnected()
     InterruptRelabel();
 }
 
+void IdleConditionMgr::OnBatteryChangedByTemperature(int32_t batteryTemperature)
+{
+    APP_LOGI("OnBatteryChangedByTemperature called, level=%{public}d", batteryTemperature);
+    if (batteryTemperature < BATTERY_TEMPERATURE) {
+        {
+            std::lock_guard<std::mutex> lock(stateMutex_);
+            batteryTemperatureHealthy_ = true;
+        }
+        TryStartRelabel();
+    } else {
+        {
+            std::lock_guard<std::mutex> lock(stateMutex_);
+            batteryTemperatureHealthy_ = false;
+        }
+        InterruptRelabel();
+    }
+}
+ 
+void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
+{
+    APP_LOGI("HandleOnTrim called, level=%{public}d", level);
+    switch (level) {
+        case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:  // remain 700MB trigger
+            InterruptRelabel();
+            break;
+ 
+        case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL: // remain 600MB trigger
+            InterruptRelabel();
+            break;
+ 
+        default:
+            break;
+    }
+}
+
 void IdleConditionMgr::OnBatteryChanged()
 {
     APP_LOGI("OnBatteryChanged called");
@@ -151,7 +188,7 @@ void IdleConditionMgr::OnBatteryChanged()
 bool IdleConditionMgr::CheckRelabelConditions()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_) {
+    if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_ && batteryTemperatureHealthy_) {
         if (isRelabeling_) {
             APP_LOGI("Already relabeling, no need to process");
             return false;

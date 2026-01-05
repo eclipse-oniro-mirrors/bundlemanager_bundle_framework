@@ -27,6 +27,7 @@
 #include "common_event_manager.h"
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
+#include "idle_condition_mgr/idle_condition_listener.h"
 #include "pre_install_bundle_info.h"
 #include "pre_install_exception_mgr.h"
 #include "pre_scan_info.h"
@@ -733,6 +734,7 @@ private:
         std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList);
     bool IsForceInstallListEmpty(const std::string &bundleName);
     void RegisterRelabelEvent();
+    void RegisterMemoryClient();
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;
@@ -756,6 +758,11 @@ private:
     std::map<std::string, HmpBundlePathInfo> hmpBundlePathInfos_;
     std::unordered_map<int32_t,
         std::pair<std::vector<std::string>, std::vector<std::string>>> userInstallAndRecoverMap_;
+    bool isParsed_ = false;
+    bool isIdleConditionListenerConnected_ = false;
+    bool isIdleConditionListenerRemoteDied_ = false;
+    std::recursive_mutex recMutex_;
+    std::shared_ptr<IdleConditionListener> idleConditionListener_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
