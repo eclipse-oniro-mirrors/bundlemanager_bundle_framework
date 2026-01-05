@@ -43,6 +43,7 @@ bool CreateDirParam::ReadFromParcel(Parcel &parcel)
     dataDirEl = static_cast<DataDirEl>(parcel.ReadUint8());
     dlpType = parcel.ReadInt32();
     isExtensionDir = parcel.ReadBool();
+    isContainsEl5Dir = parcel.ReadBool();
     return true;
 }
 
@@ -66,6 +67,7 @@ bool CreateDirParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, static_cast<uint8_t>(dataDirEl));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dlpType);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isExtensionDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isContainsEl5Dir);
     return true;
 }
 

@@ -13040,5 +13040,42 @@ std::vector<CreateDirParam> BundleDataMgr::GetAllExtensionDirsToUpdateSelinuxApl
 
     return allExtensionDirsToUpdateSelinuxApl;
 }
+
+ErrCode BundleDataMgr::GetCreateDirParamByBundleOption(
+    const BundleOptionInfo &optionInfo, CreateDirParam &createDirParam) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(optionInfo.bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("%{public}s not exist", optionInfo.bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!item->second.GetInnerBundleUserInfo(optionInfo.userId, innerBundleUserInfo)) {
+        APP_LOGE("can not find bundleUserInfo in -u %{public}d -n %{public}s",
+            optionInfo.userId, optionInfo.bundleName.c_str());
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+    if (optionInfo.appIndex == 0) {
+        createDirParam.uid = innerBundleUserInfo.uid;
+    } else {
+        auto cloneInfo = innerBundleUserInfo.cloneInfos.find(InnerBundleUserInfo::AppIndexToKey(optionInfo.appIndex));
+        if (cloneInfo == innerBundleUserInfo.cloneInfos.end()) {
+            APP_LOGE("can not find in -u %{public}d -i %{public}d -n%{public}s",
+                optionInfo.userId, optionInfo.appIndex, optionInfo.bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_APPINDEX_NOT_EXIST;
+        }
+        createDirParam.uid = cloneInfo->second.uid;
+    }
+    createDirParam.bundleName = item->second.GetBundleName();
+    createDirParam.apl = item->second.GetAppPrivilegeLevel();
+    createDirParam.isPreInstallApp = item->second.IsPreInstallApp();
+    createDirParam.debug = item->second.GetBaseApplicationInfo().appProvisionType ==
+        Constants::APP_PROVISION_TYPE_DEBUG;
+    createDirParam.userId = optionInfo.userId;
+    createDirParam.appIndex = optionInfo.appIndex;
+    createDirParam.isContainsEl5Dir = item->second.NeedCreateEl5Dir();
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
