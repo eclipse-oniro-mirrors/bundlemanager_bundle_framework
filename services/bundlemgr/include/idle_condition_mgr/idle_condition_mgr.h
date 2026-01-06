@@ -44,6 +44,7 @@ public:
 private:
     bool CheckRelabelConditions();
     bool IsBufferSufficient();
+    bool SetIsRelabeling();
 
 private:
     std::mutex mutex_;
