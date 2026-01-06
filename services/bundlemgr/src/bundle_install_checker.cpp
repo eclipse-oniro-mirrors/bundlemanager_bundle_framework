@@ -1074,12 +1074,14 @@ uint32_t BundleInstallChecker::GetVersionCode(const std::unordered_map<std::stri
         LOG_E(BMS_TAG_INSTALLER, "infos is empty");
         return 0;
     }
+    uint32_t version = (infos.begin()->second).GetVersionCode();
     for (const auto &info : infos) {
         if (info.second.HasEntry()) {
             return info.second.GetVersionCode();
         }
+        version = version > info.second.GetVersionCode() ? version : info.second.GetVersionCode();
     }
-    return (infos.begin()->second).GetVersionCode();
+    return version;
 }
 
 ErrCode BundleInstallChecker::CheckAppLabelInfo(
@@ -1118,7 +1120,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         }
         // check version
         if (bundleType != BundleType::SHARED) {
-            if (isPreInstallApp ? isPreInstallApp : info.second.IsPreInstallApp() &&
+            if ((isPreInstallApp ? isPreInstallApp : info.second.IsPreInstallApp()) &&
                 info.second.GetAppType() == Constants::AppType::SYSTEM_APP && info.second.IsHsp()) {
                 if (versionCode < info.second.GetVersionCode()) {
                     LOG_E(BMS_TAG_INSTALLER, "hsp version higer than entry!");

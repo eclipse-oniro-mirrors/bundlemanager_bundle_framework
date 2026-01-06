@@ -135,6 +135,8 @@ public:
 
     static void SavePreInstallException(const std::string &bundleDir);
 
+    static void SavePreInstallExceptionBundleName(const std::string &bundleName);
+
     static void ProcessSystemBundleInstall(
         const PreScanInfo &preScanInfo,
         Constants::AppType appType,
