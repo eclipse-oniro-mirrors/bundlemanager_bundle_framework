@@ -50,6 +50,7 @@ constexpr const char* APP_CONTROL_RULE = "APP_CONTROL_RULE";
 constexpr const char* DB_ERROR = "DB_ERROR";
 constexpr const char* DEFAULT_APP = "DEFAULT_APP";
 constexpr const char* QUERY_BUNDLE_INFO = "QUERY_BUNDLE_INFO";
+constexpr const char* DESKTOP_SHORTCUT = "DESKTOP_SHORTCUT";
 
 // event params
 const char* EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -97,6 +98,8 @@ const char* REMAIN_PARTITION_SIZE_KEY = "REMAIN_PARTITION_SIZE";
 const char* USER_DATA_SIZE = "USER_DATA_SIZE";
 const char* EVENT_PARAM_WANT = "WANT";
 const char* EVENT_PARAM_UTD = "UTD";
+const char* EVENT_SHORTCUT_ID = "SHORTCUT_ID";
+const char* EVENT_OP_TYPE = "OP_TYPE";
 // API and SDK version
 const char* EVENT_PARAM_MIN_API_VERSION = "MIN_API_VERSION";
 const char* EVENT_PARAM_TARGET_API_VERSION = "TARGET_API_VERSION";
@@ -334,6 +337,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::QUERY_BUNDLE_INFO,
             [](const EventInfo& eventInfo) {
                 InnerSendQueryBundleInfoEvent(eventInfo);
+            } },
+        { BMSEventType::DESKTOP_SHORTCUT,
+            [](const EventInfo& eventInfo) {
+                InnerSendDesktopShortcutEvent(eventInfo);
             } },
     };
 
@@ -798,6 +805,20 @@ void InnerEventReport::InnerSendQueryBundleInfoEvent(const EventInfo& eventInfo)
         EVENT_PARAM_CALLING_UID_LIST, eventInfo.callingUidList,
         EVENT_PARAM_CALLING_BUNDLE_NAME_LIST, eventInfo.callingBundleNameList,
         EVENT_PARAM_CALLING_APP_ID_LIST, eventInfo.callingAppIdList,
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
+}
+
+void InnerEventReport::InnerSendDesktopShortcutEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        DESKTOP_SHORTCUT,
+        HiSysEventType::BEHAVIOR,
+        EVENT_OP_TYPE, eventInfo.shortcutOperationType,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
+        EVENT_SHORTCUT_ID, eventInfo.shortcutIds,
+        EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode);
 }
 }  // namespace AppExecFwk

@@ -261,6 +261,21 @@ void EventReport::SendDefaultAppEvent(DefaultAppActionType actionType, int32_t u
     EventReport::SendSystemEvent(BMSEventType::DEFAULT_APP, eventInfo);
 }
 
+void EventReport::SendDesktopShortcutEvent(const std::string &operationType, int32_t userId,
+    const std::string &bundleName, int32_t appIndex, const std::string &shortcutId, int32_t callingUid, int32_t result)
+{
+    EventInfo eventInfo;
+    eventInfo.shortcutOperationType = operationType;
+    eventInfo.userId = userId;
+    eventInfo.bundleName = bundleName;
+    eventInfo.appIndex = appIndex;
+    eventInfo.shortcutIds = shortcutId;
+    eventInfo.callingUid = callingUid;
+    eventInfo.errCode = result;
+    
+    EventReport::SendSystemEvent(BMSEventType::DESKTOP_SHORTCUT, eventInfo);
+}
+
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
 {
 #ifdef HISYSEVENT_ENABLE
