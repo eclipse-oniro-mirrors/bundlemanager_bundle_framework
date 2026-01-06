@@ -131,7 +131,7 @@ public:
         const int32_t appIndex = 0, const uint32_t statFlag = 0,
         const std::vector<std::string> &moduleNameList = {});
 
-    ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames,
         const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
         std::vector<BundleStorageStats> &bundleStats);
 

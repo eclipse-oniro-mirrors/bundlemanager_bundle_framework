@@ -220,7 +220,7 @@ ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int3
         uids, appIndex, statFlag, moduleNameList);
 }
 
-ErrCode InstalldClient::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+ErrCode InstalldClient::BatchGetBundleStats(const std::vector<std::string> &bundleNames,
     const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
     std::vector<BundleStorageStats> &bundleStats)
 {
@@ -228,7 +228,7 @@ ErrCode InstalldClient::BatchGetBundleStats(const std::vector<std::string> &bund
         APP_LOGE("bundleNames or uidMap is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::BatchGetBundleStats, bundleNames, userId, uidMap, bundleStats);
+    return CallService(&IInstalld::BatchGetBundleStats, bundleNames, uidMap, bundleStats);
 }
 
 ErrCode InstalldClient::GetAllBundleStats(const int32_t userId,

@@ -230,7 +230,7 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    virtual ErrCode BatchGetBundleStats(const std::vector<std::string> &bundleNames,
         const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
         std::vector<BundleStorageStats> &bundleStats)
     {

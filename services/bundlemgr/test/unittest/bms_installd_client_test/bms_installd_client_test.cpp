@@ -1955,7 +1955,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_BatchGetBundleStats_0100, 
     std::unordered_set<int32_t> uids;
     uids.emplace(10000);
     const std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap = {{"com.example.bundlekit.test", uids}};
-    auto ret = installClient_->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    auto ret = installClient_->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
@@ -1971,7 +1971,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_BatchGetBundleStats_0200, 
     std::unordered_set<int32_t> uids;
     uids.emplace(10000);
     const std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap = {{"com.example.bundlekit.test", uids}};
-    auto ret = installClient_->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    auto ret = installClient_->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
@@ -1985,7 +1985,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_BatchGetBundleStats_0300, 
     const std::vector<std::string> bundleNames = {"com.example.bundlekit.test"};
     std::vector<BundleStorageStats> bundleStats;
     const std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap = {};
-    auto ret = installClient_->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    auto ret = installClient_->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
