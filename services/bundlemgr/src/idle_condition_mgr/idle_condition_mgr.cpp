@@ -265,7 +265,7 @@ void IdleConditionMgr::TryStartRelabel()
     if (!SetIsRelabeling()) {
         APP_LOGI("Set isRelabeling failed");
         return;
-    } 
+    }
     std::weak_ptr<IdleConditionMgr> weakPtr = shared_from_this();
     auto task = [weakPtr] {
         APP_LOGI("Relabel task started");
