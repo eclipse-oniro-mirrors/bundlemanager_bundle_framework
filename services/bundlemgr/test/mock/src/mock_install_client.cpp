@@ -455,5 +455,15 @@ ErrCode InstalldClient::DeleteCertAndRemoveKey(const std::vector<std::string> &c
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::SetFileConForce(const std::vector<std::string> &paths, const CreateDirParam &createDirParam)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason)
+{
+    return 0;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

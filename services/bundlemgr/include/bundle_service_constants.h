@@ -351,6 +351,13 @@ const std::set<int32_t> EXPECTED_ERROR = {
     ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_APP_OR_ATOMIC,
     ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST,
 };
+
+enum StopReason {
+    NONE,
+    BUSY,
+    UPDATE,
+    DELETE,
+};
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS
