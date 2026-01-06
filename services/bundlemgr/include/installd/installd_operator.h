@@ -213,9 +213,10 @@ public:
     /**
      * @brief Get disk usage from path.
      * @param path Indicates the current path.
+     * @param timeoutMs Indicates the timeout time.
      * @return Returns disk size.
      */
-    static int64_t GetDiskUsageFromPath(const std::vector<std::string> &path);
+    static int64_t GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t timeoutMs = -1);
 
     static bool InitialiseQuotaMounts();
 

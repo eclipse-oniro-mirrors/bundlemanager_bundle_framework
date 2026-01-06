@@ -97,7 +97,8 @@ ErrCode InstalldHostImpl::GetDiskUsage(const std::string &dir, int64_t &statSize
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
+ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
+    int64_t timeoutMs)
 {
     return ERR_OK;
 }

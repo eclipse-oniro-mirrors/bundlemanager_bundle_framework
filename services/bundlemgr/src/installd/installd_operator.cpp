@@ -1158,13 +1158,24 @@ void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, st
     closedir(dir);
 }
 
-int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &path)
+int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t timeoutMs)
 {
+    auto startTime = std::chrono::steady_clock::now();
     int64_t fileSize = 0;
     for (auto &st : path) {
-        int64_t pathSize = GetDiskUsage(st);
-        LOG_D(BMS_TAG_INSTALLD, "stat size:%{public}" PRId64, pathSize);
-        fileSize += pathSize;
+        // check timeout
+        if (timeoutMs > 0) {
+            auto currentTime = std::chrono::steady_clock::now();
+            auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - startTime);
+            auto elapsedMs = std::abs(elapsedTime.count());
+            if (elapsedMs >= timeoutMs) {
+                LOG_W(BMS_TAG_INSTALLD, "timeout, return fileSize:%{public}" PRId64, fileSize);
+                return fileSize;
+            }
+        }
+        fileSize += GetDiskUsage(st);
+        LOG_D(BMS_TAG_INSTALLD, "GetBundleStats get cache size:%{public}" PRId64 " from: %{public}s ",
+            fileSize, st.c_str());
     }
     return fileSize;
 }
