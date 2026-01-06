@@ -235,16 +235,21 @@ void IdleConditionMgr::OnBatteryChanged()
 
 bool IdleConditionMgr::CheckRelabelConditions()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_ && batteryTemperatureHealthy_) {
-        if (isRelabeling_) {
-            APP_LOGI("Already relabeling, no need to process");
-            return false;
-        }
-        isRelabeling_ = true;
         return true;
     }
     return false;
+}
+
+bool IdleConditionMgr::SetIsRelabeling()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (isRelabeling_) {
+        APP_LOGI("Already relabeling, no need to process");
+        return false;
+    }
+    isRelabeling_ = true;
+    return true;
 }
 
 void IdleConditionMgr::TryStartRelabel()
@@ -257,6 +262,10 @@ void IdleConditionMgr::TryStartRelabel()
         APP_LOGI("Buffer not sufficient, no need to process");
         return;
     }
+    if (!SetIsRelabeling()) {
+        APP_LOGI("Set isRelabeling failed");
+        return;
+    } 
     std::weak_ptr<IdleConditionMgr> weakPtr = shared_from_this();
     auto task = [weakPtr] {
         APP_LOGI("Relabel task started");
@@ -267,6 +276,10 @@ void IdleConditionMgr::TryStartRelabel()
         }
         if (!sharedPtr->CheckRelabelConditions()) {
             APP_LOGI("Refresh conditions not met");
+            return;
+        }
+        if (!sharedPtr->IsBufferSufficient()) {
+            APP_LOGI("Buffer not sufficient, no need to process");
             return;
         }
         // relabel logic here
