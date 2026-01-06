@@ -16,6 +16,7 @@
 #include "idle_manager_rdb.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "bundle_service_constants.h"
 #include "hitrace_meter.h"
 #include "scope_guard.h"
@@ -57,10 +58,6 @@ IdleManagerRdb::~IdleManagerRdb()
 ErrCode IdleManagerRdb::AddBundles(const std::vector<BundleOptionInfo> &bundleOptionInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    if (rdbDataManager_ == nullptr) {
-        APP_LOGE("rdbDataManager is null");
-        return ERR_APPEXECFWK_NULL_PTR;
-    }
     std::vector<NativeRdb::ValuesBucket> valuesBuckets;
     for (const auto &bundleOptionInfo : bundleOptionInfos) {
         NativeRdb::ValuesBucket valuesBucket;
@@ -86,10 +83,6 @@ ErrCode IdleManagerRdb::AddBundles(const std::vector<BundleOptionInfo> &bundleOp
 ErrCode IdleManagerRdb::AddBundle(const BundleOptionInfo &bundleOptionInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    if (rdbDataManager_ == nullptr) {
-        APP_LOGE("rdbDataManager is null");
-        return ERR_APPEXECFWK_NULL_PTR;
-    }
     if (bundleOptionInfo.bundleName.empty()) {
         APP_LOGE("AddBundle failed, bundleName is empty");
         return ERR_APPEXECFWK_DB_PARAM_ERROR;
@@ -111,10 +104,6 @@ ErrCode IdleManagerRdb::AddBundle(const BundleOptionInfo &bundleOptionInfo)
 ErrCode IdleManagerRdb::DeleteBundle(const BundleOptionInfo &bundleOptionInfo)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    if (rdbDataManager_ == nullptr) {
-        APP_LOGE("rdbDataManager is null");
-        return ERR_APPEXECFWK_NULL_PTR;
-    }
     if (bundleOptionInfo.bundleName.empty()) {
         APP_LOGE("DeleteBundle failed, bundleName is empty");
         return ERR_APPEXECFWK_DB_PARAM_ERROR;
@@ -135,19 +124,19 @@ ErrCode IdleManagerRdb::DeleteBundle(const BundleOptionInfo &bundleOptionInfo)
 ErrCode IdleManagerRdb::GetAllBundle(int32_t userId, std::vector<BundleOptionInfo> &bundleOptionInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    if (rdbDataManager_ == nullptr) {
-        APP_LOGE("rdbDataManager is null");
-        return ERR_APPEXECFWK_NULL_PTR;
-    }
     NativeRdb::AbsRdbPredicates absRdbPredicates(IDLE_RDB_TABLE_NAME);
+    absRdbPredicates.BeginWrap();
     absRdbPredicates.EqualTo(USER_ID, userId);
+    absRdbPredicates.Or();
+    absRdbPredicates.EqualTo(USER_ID, Constants::DEFAULT_USERID);
+    absRdbPredicates.EndWrap();
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("GetAllBundle failed");
         return ERR_APPEXECFWK_DB_RESULT_SET_EMPTY;
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
-    int32_t count;
+    int32_t count = 0;
     auto ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
         APP_LOGE("GetRowCount failed, -u:%{public}d, ret: %{public}d", userId, ret);

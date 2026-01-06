@@ -399,6 +399,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON);
     UpdateOtaFlag(OTAFlag::PROCESS_ROUTER_MAP);
     UpdateOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL);
+    UpdateOtaFlag(OTAFlag::ADD_IDLE_INFO);
     (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }
@@ -1334,6 +1335,9 @@ void BMSEventHandler::ProcessRebootBundle()
     CleanAllBundleEl1ShaderCacheLocal();
     CleanSystemOptimizeShaderCache();
     CleanAllBundleEl1ArkStartupCacheLocal();
+    if (OHOS::system::GetParameter(ServiceConstants::RELABLE_PARAM, "") == ServiceConstants::BMS_TRUE) {
+        (void)ProcessIdleInfo();
+    }
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
@@ -5675,6 +5679,29 @@ void BMSEventHandler::ProcessUpdateExtensionDirsApl()
         UpdateOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL);
     }
     LOG_I(BMS_TAG_DEFAULT, "update selinux apl for extension dirs end");
+}
+
+bool BMSEventHandler::ProcessIdleInfo()
+{
+    LOG_I(BMS_TAG_DEFAULT, "begin");
+    bool flag = false;
+    CheckOtaFlag(OTAFlag::ADD_IDLE_INFO, flag);
+    if (flag) {
+        LOG_I(BMS_TAG_DEFAULT, "Not need to add idle info");
+        return true;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Need to add idle info");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+    if (!dataMgr->ProcessIdleInfo()) {
+        LOG_E(BMS_TAG_DEFAULT, "process idle info failed");
+        return false;
+    }
+    UpdateOtaFlag(OTAFlag::ADD_IDLE_INFO);
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
