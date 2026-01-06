@@ -2156,6 +2156,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         std::make_unique<BundleInstallChecker>();
     GetInstallAndRecoverListForAllUser(userInstallAndRecoverMap_);
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
+    std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallSysMap;
     std::unordered_set<std::string> overlayBundles;
     for (auto &scanPathIter : scanPathList) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "reboot scan bundle path: %{public}s ", scanPathIter.c_str());
@@ -2186,14 +2187,12 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA Install new -n %{public}s by path:%{public}s",
                 bundleName.c_str(), scanPathIter.c_str());
             std::vector<std::string> filePaths { scanPathIter };
-            if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
-                LOG_E(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) error", bundleName.c_str());
-                SavePreInstallException(scanPathIter);
+            auto iter = needInstallSysMap.find(bundleName);
+            if (iter == needInstallSysMap.end()) {
+                std::vector<std::string> filePaths = {scanPathIter};
+                needInstallSysMap[bundleName] = std::make_pair(filePaths, removable);
             } else {
-                if (newBundleDirMgr != nullptr) {
-                    (void)newBundleDirMgr->AddNewBundleDirInfo(bundleName,
-                        static_cast<uint32_t>(CreateBundleDirType::CREATE_ALL_DIR));
-                }
+                iter->second.first.emplace_back(scanPathIter);
             }
             continue;
         }
@@ -2340,6 +2339,17 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             needInstallMap[bundleName] = std::make_pair(filePaths, removable);
         } else {
             iter->second.first.emplace_back(scanPathIter);
+        }
+    }
+    for (auto &item : needInstallSysMap) {
+        if (!OTAInstallSystemBundle(BMSEventHandler::ObtainRealPath(item.second.first), appType, item.second.second)) {
+            LOG_E(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) error", item.first.c_str());
+            SavePreInstallExceptionBundleName(item.first);
+        } else {
+            if (newBundleDirMgr != nullptr) {
+                (void)newBundleDirMgr->AddNewBundleDirInfo(item.first,
+                    static_cast<uint32_t>(CreateBundleDirType::CREATE_ALL_DIR));
+            }
         }
     }
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMapFirst;
@@ -3524,6 +3534,18 @@ void BMSEventHandler::SavePreInstallException(const std::string &bundleDir)
     }
 
     preInstallExceptionMgr->SavePreInstallExceptionPath(bundleDir);
+}
+
+void BMSEventHandler::SavePreInstallExceptionBundleName(const std::string &bundleName)
+{
+    auto preInstallExceptionMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
+        return;
+    }
+
+    preInstallExceptionMgr->SavePreInstallExceptionBundleName(bundleName);
 }
 
 void BMSEventHandler::SavePreInstallExceptionAppService(const std::string &bundleDir)
