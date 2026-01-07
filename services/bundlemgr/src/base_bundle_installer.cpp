@@ -1578,8 +1578,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #endif
     // copy hap to app_tmp path
     (void)AddAppGalleryHapToTempPath(installParam.isPreInstallApp, newInfos);
-    // delete app_tmp
-    ScopeGuard deleteAppGalleryHapFromTempPathRuleGuard([&] { (void)DeleteAppGalleryHapFromTempPath(); });
 
     // Roolback is unavailable below this line
     // copy hap or hsp to real install dir
@@ -1682,6 +1680,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
     }
     CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
+    // delete app_tmp
+    (void)DeleteAppGalleryHapFromTempPath();
     DeleteUninstallBundleInfo(bundleName_);
     codePathGuard.Dismiss();
     ProcessOldCodePath(bundleName_, isFeatureNeedUninstall_);
