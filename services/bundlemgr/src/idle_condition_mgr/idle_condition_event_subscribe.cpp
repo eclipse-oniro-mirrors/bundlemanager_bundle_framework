@@ -67,8 +67,7 @@ void IdleConditionEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDat
         idleMgr->OnUserStopping();
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_CHANGED) {
         int32_t batteryTemperature = data.GetWant().GetIntParam(COMMON_EVENT_KEY_TEMPERATURE, 0);
-        idleMgr->OnBatteryChangedByTemperature(batteryTemperature);
-        idleMgr->OnBatteryChanged();
+        idleMgr->OnBatteryChanged(batteryTemperature);
     }
 }
 

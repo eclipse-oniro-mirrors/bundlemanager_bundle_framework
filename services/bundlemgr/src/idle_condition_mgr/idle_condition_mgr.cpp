@@ -37,7 +37,7 @@ constexpr const char* MEMORY_INFO_PATH = "/dev/memcg/memory.zswapd_presure_show"
 constexpr const char* MEMORY_BUFFER_KEY = "buffer_size";
 constexpr int32_t RELABEL_WAIT_TIME_SECONDS = 5 * 60; // 5 minutes
 constexpr int32_t RELABEL_MIN_BATTERY_CAPACITY = 20;
-constexpr int32_t BATTERY_TEMPERATURE = 370;
+constexpr int32_t RELABEL_MAX_BATTERY_TEMP = 370;
 constexpr int32_t RELABEL_MIN_BUFFER_SIZE = 700;
 }
 
@@ -143,24 +143,6 @@ void IdleConditionMgr::OnPowerDisconnected()
     powerConnectedThreadActive_ = false;
     InterruptRelabel();
 }
-
-void IdleConditionMgr::OnBatteryChangedByTemperature(int32_t batteryTemperature)
-{
-    APP_LOGI("OnBatteryChangedByTemperature called, level=%{public}d", batteryTemperature);
-    if (batteryTemperature < BATTERY_TEMPERATURE) {
-        {
-            std::lock_guard<std::mutex> lock(stateMutex_);
-            batteryTemperatureHealthy_ = true;
-        }
-        TryStartRelabel();
-    } else {
-        {
-            std::lock_guard<std::mutex> lock(stateMutex_);
-            batteryTemperatureHealthy_ = false;
-        }
-        InterruptRelabel();
-    }
-}
  
 void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
 {
@@ -212,15 +194,16 @@ bool IdleConditionMgr::IsBufferSufficient()
     return currentBufferSizeMb > RELABEL_MIN_BUFFER_SIZE;
 }
 
-void IdleConditionMgr::OnBatteryChanged()
+void IdleConditionMgr::OnBatteryChanged(int32_t batteryTemperature)
 {
     APP_LOGI("OnBatteryChanged called");
     int32_t currentBatteryCap = OHOS::PowerMgr::BatterySrvClient::GetInstance().GetCapacity();
     int32_t relabelBatteryCapacity = OHOS::system::GetIntParameter<int32_t>(
         BMS_PARAM_RELABEL_BATTERY_CAPACITY, RELABEL_MIN_BATTERY_CAPACITY);
-    if (currentBatteryCap < relabelBatteryCapacity) {
-        APP_LOGD("battery capacity %{public}d less than %{public}d, interrupt relabel",
-            currentBatteryCap, relabelBatteryCapacity);
+    if (currentBatteryCap < relabelBatteryCapacity || batteryTemperature >= RELABEL_MAX_BATTERY_TEMP ) {
+        APP_LOGD("battery capacity %{public}d less than %{public}d or temperature %{public}d "
+                 "greater than %{public}d, interrupt relabel",
+            currentBatteryCap, relabelBatteryCapacity, batteryTemperature, RELABEL_MAX_BATTERY_TEMP);
         {
             std::lock_guard<std::mutex> lock(mutex_);
             batterySatisfied_ = false;
@@ -237,7 +220,7 @@ void IdleConditionMgr::OnBatteryChanged()
 
 bool IdleConditionMgr::CheckRelabelConditions()
 {
-    if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_ && batteryTemperatureHealthy_) {
+    if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_) {
         return true;
     }
     return false;
@@ -276,11 +259,7 @@ void IdleConditionMgr::TryStartRelabel()
             APP_LOGD("stop relabel task");
             return;
         }
-        if (bmsUpdateSelinuxMgr == nullptr) {
-            APP_LOGE("bms update selinux mgr is null");
-            return;
-        }
-        if (!CheckRelabelConditions()) {
+        if (!sharedPtr->CheckRelabelConditions()) {
             APP_LOGI("Refresh conditions not met, no need to process");
             return;
         }
@@ -290,6 +269,10 @@ void IdleConditionMgr::TryStartRelabel()
         }
         int32_t userId = AccountHelper::GetCurrentActiveUserId();
         auto bmsUpdateSelinuxMgr = DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance();
+        if (bmsUpdateSelinuxMgr == nullptr) {
+            APP_LOGE("bms update selinux mgr is null");
+            return;
+        }
         bmsUpdateSelinuxMgr->StartUpdateSelinuxLabel(userId);
 
         std::lock_guard<std::mutex> lock(sharedPtr->mutex_);
