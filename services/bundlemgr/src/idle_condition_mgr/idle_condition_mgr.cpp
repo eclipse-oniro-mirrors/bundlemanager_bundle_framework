@@ -14,8 +14,8 @@
  */
 
 #include <chrono>
-#include <thread>
 #include <sstream>
+#include <thread>
 
 #include "account_helper.h"
 #include "app_log_wrapper.h"
@@ -51,10 +51,8 @@ IdleConditionMgr::IdleConditionMgr()
 
 IdleConditionMgr::~IdleConditionMgr()
 {
-    if (idleConditionListener_ != nullptr) {
-        Memory::MemMgrClient::GetInstance().UnsubscribeAppState(*idleConditionListener_);
-        APP_LOGI("IdleConditionMgr destroyed");
-    }
+    Memory::MemMgrClient::GetInstance().UnsubscribeAppState(*idleConditionListener_);
+    APP_LOGI("IdleConditionMgr destroyed");
 }
 
 void IdleConditionMgr::OnScreenLocked()
@@ -149,15 +147,17 @@ void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
     APP_LOGI("HandleOnTrim called, level=%{public}d", level);
     switch (level) {
         case Memory::SystemMemoryLevel::UNKNOWN:
+            // fall through
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_PURGEABLE:
+            // fall through
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
             TryStartRelabel();
             break;
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:
+            // fall through
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
             InterruptRelabel();
             break;
- 
         default:
             break;
     }
@@ -182,13 +182,8 @@ bool IdleConditionMgr::IsBufferSufficient()
     bufferStream >> statTag >> bufferSize;
     
     int32_t currentBufferSizeMb = -1;
-    try {
-        currentBufferSizeMb = std::stoi(bufferSize);
-    } catch (const std::invalid_argument& e) {
-        APP_LOGE("Failed to convert buffer size to int: %s", e.what());
-        return false;
-    } catch (const std::out_of_range& e) {
-        APP_LOGE("Buffer size out of range: %s", e.what());
+    if (!OHOS::StrToInt(bufferSize, currentBufferSizeMb)) {
+        APP_LOGE("Failed to convert buffer size to int: %s", bufferSize.c_str());
         return false;
     }
     return currentBufferSizeMb > RELABEL_MIN_BUFFER_SIZE;
@@ -200,7 +195,7 @@ void IdleConditionMgr::OnBatteryChanged(int32_t batteryTemperature)
     int32_t currentBatteryCap = OHOS::PowerMgr::BatterySrvClient::GetInstance().GetCapacity();
     int32_t relabelBatteryCapacity = OHOS::system::GetIntParameter<int32_t>(
         BMS_PARAM_RELABEL_BATTERY_CAPACITY, RELABEL_MIN_BATTERY_CAPACITY);
-    if (currentBatteryCap < relabelBatteryCapacity || batteryTemperature >= RELABEL_MAX_BATTERY_TEMP ) {
+    if (currentBatteryCap < relabelBatteryCapacity || batteryTemperature >= RELABEL_MAX_BATTERY_TEMP) {
         APP_LOGD("battery capacity %{public}d less than %{public}d or temperature %{public}d "
                  "greater than %{public}d, interrupt relabel",
             currentBatteryCap, relabelBatteryCapacity, batteryTemperature, RELABEL_MAX_BATTERY_TEMP);
@@ -220,6 +215,7 @@ void IdleConditionMgr::OnBatteryChanged(int32_t batteryTemperature)
 
 bool IdleConditionMgr::CheckRelabelConditions()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_) {
         return true;
     }
