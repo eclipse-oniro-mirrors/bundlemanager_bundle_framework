@@ -147,14 +147,14 @@ void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
     APP_LOGI("HandleOnTrim called, level=%{public}d", level);
     switch (level) {
         case Memory::SystemMemoryLevel::UNKNOWN:
-            // fall through
+            [[fallthrough]];
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_PURGEABLE:
-            // fall through
+            [[fallthrough]];
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
             TryStartRelabel();
             break;
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:
-            // fall through
+            [[fallthrough]];
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
             InterruptRelabel();
             break;
