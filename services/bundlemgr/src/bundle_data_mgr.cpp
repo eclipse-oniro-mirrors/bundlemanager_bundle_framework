@@ -37,7 +37,6 @@
 #include "bundle_event_callback_death_recipient.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_client.h"
-#include "bundle_option.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_status_callback_death_recipient.h"
@@ -13102,7 +13101,7 @@ bool BundleDataMgr::ProcessIdleInfo() const
         }
         auto &userInfos = info.GetInnerBundleUserInfos();
         if (userInfos.empty()) {
-            APP_LOGD("%{public}s userInfo is empty, ignore", bundleName.c_str());
+            APP_LOGW("%{public}s userInfo is empty, ignore", bundleName.c_str());
             continue;
         }
         for (const auto &userInfo : userInfos) {
@@ -13123,8 +13122,51 @@ bool BundleDataMgr::ProcessIdleInfo() const
             }
         }
     }
+    (void)ProcessUninstallBundle(bundleOptionInfos);
     if (DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->AddBundles(bundleOptionInfos) != ERR_OK) {
         return false;
+    }
+    return true;
+}
+
+bool BundleDataMgr::ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundleOptionInfos) const
+{
+    std::map<std::string, UninstallBundleInfo> uninstallBundleInfos;
+    if (!GetAllUninstallBundleInfo(uninstallBundleInfos)) {
+        APP_LOGE("get all uninstall bundle info failed");
+        return false;
+    }
+    for (const auto &item : uninstallBundleInfos) {
+        const auto &userInfos = item.second.userInfos;
+        if (userInfos.empty()) {
+            APP_LOGW("%{public}s userInfo is empty, ignore", item.first.c_str());
+            continue;
+        }
+        for (const auto &userInfo : userInfos) {
+            BundleOptionInfo bundleOptionInfo;
+            bundleOptionInfo.bundleName = item.first;
+            std::string key = userInfo.first;
+            auto pos = key.find(ServiceConstants::UNDER_LINE);
+            if (pos == std::string::npos) {
+                if (!OHOS::StrToInt(key, bundleOptionInfo.userId)) {
+                    APP_LOGW("parse userId failed -n:%{public}s -u:%{public}s", item.first.c_str(), key.c_str());
+                    continue;
+                }
+                bundleOptionInfos.emplace_back(bundleOptionInfo);
+            } else {
+                std::string userId = key.substr(0, pos);
+                std::string appIndex = key.substr(pos + 1);
+                if (!OHOS::StrToInt(userId, bundleOptionInfo.userId)) {
+                    APP_LOGW("parse userId failed -n:%{public}s -u:%{public}s", item.first.c_str(), userId.c_str());
+                    continue;
+                }
+                if (!OHOS::StrToInt(appIndex, bundleOptionInfo.appIndex)) {
+                    APP_LOGW("parse appIndex failed -n:%{public}s -i:%{public}s", item.first.c_str(), appIndex.c_str());
+                    continue;
+                }
+                bundleOptionInfos.emplace_back(bundleOptionInfo);
+            }
+        }
     }
     return true;
 }

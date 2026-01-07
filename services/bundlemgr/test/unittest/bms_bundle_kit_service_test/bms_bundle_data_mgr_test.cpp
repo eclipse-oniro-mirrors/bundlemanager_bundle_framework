@@ -342,6 +342,7 @@ const int ABILITYINFOS_SIZE_2 = 2;
 const int32_t USERID = 100;
 const int32_t ERROR_USERID = -1;
 const int32_t MULTI_USERID = 101;
+const int32_t TEST_USERID = 1001;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
@@ -6959,5 +6960,45 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0500, Function | SmallTes
     dataMgr->GetAllInstallBundleUids(USERID, Constants::ANY_USERID, responseUserId, uids, bundleNames);
     EXPECT_TRUE(bundleNames.empty());
     dataMgr->bundleInfos_.clear();
+}
+
+/**
+ * @tc.number: ProcessUninstallBundle_1000
+ * @tc.name: test ProcessUninstallBundle
+ * @tc.desc: 1.Test the ProcessUninstallBundle by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, ProcessUninstallBundle_1000, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<BundleOptionInfo> bundleOptionInfos;
+    bool result = dataMgr->ProcessUninstallBundle(bundleOptionInfos);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: ProcessUninstallBundle_2000
+ * @tc.name: test ProcessUninstallBundle
+ * @tc.desc: 1.Test the ProcessUninstallBundle by BundleDataMgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, ProcessUninstallBundle_2000, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "com.example.ProcessUninstallBundle_2000";
+    dataMgr->multiUserIdsSet_.insert(TEST_USERID);
+    UninstallDataUserInfo uninstallDataUserInfo;
+    uninstallDataUserInfo.uid = 20020033;
+    UninstallBundleInfo uninstallBundleInfo;
+    uninstallBundleInfo.bundleType = BundleType::APP;
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(TEST_USERID), uninstallDataUserInfo));
+    auto ret = dataMgr->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
+    ASSERT_TRUE(ret);
+    std::vector<BundleOptionInfo> bundleOptionInfos;
+    bool result = dataMgr->ProcessUninstallBundle(bundleOptionInfos);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(bundleOptionInfos.size(), 1);
+    dataMgr->DeleteUninstallBundleInfo(bundleName, TEST_USERID);
+    dataMgr->multiUserIdsSet_.erase(TEST_USERID);
 }
 } // OHOS
