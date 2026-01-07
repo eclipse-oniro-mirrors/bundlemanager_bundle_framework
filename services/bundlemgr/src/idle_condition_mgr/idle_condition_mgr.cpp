@@ -159,6 +159,9 @@ bool IdleConditionMgr::CheckRelabelConditions()
         isRelabeling_ = true;
         return true;
     }
+    APP_LOGI("userUnlocked_ %{public}d, screenLocked_ %{public}d, \
+        powerConnected_ %{public}d, batterySatisfied_ %{public}d",
+        userUnlocked_.load(), screenLocked_.load(), powerConnected_.load(), batterySatisfied_.load());
     return false;
 }
 
