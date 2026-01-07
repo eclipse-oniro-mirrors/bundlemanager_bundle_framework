@@ -137,6 +137,7 @@ group("bundlemanagerfuzztest") {
     "bmsinstalldloadcallback_fuzzer:BMSInstalldLoadCallbackFuzzTest",
     "bmsinstalldpermissionmgr_fuzzer:BMSInstalldPermissionMgrFuzzTest",
     "bmsinstalldservice_fuzzer:BMSInstalldServiceFuzzTest",
+    "bmsinstalldserviceparallelization_fuzzer:BMSInstalldServiceParallezationFuzzTest",
     "bmsinstallparam_fuzzer:BMSInstallParamFuzzTest",
     "bmsinstallpluginparam_fuzzer:BMSInstallPluginParamFuzzTest",
     "bmsisexistfirstinstallbundleinfo_fuzzer:BMSIsExistFirstInstallBundleInfoFuzzTest",
