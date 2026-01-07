@@ -223,6 +223,10 @@ bool IdleConditionMgr::CheckRelabelConditions()
     if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_) {
         return true;
     }
+    APP_LOGD("userUnlocked_=%{public}s, screenLocked_=%{public}s, powerConnected_=%{public}s, "
+             "batterySatisfied_=%{public}s",
+             userUnlocked_ ? "true" : "false", screenLocked_ ? "true" : "false",
+             powerConnected_ ? "true" : "false", batterySatisfied_ ? "true" : "false");
     return false;
 }
 
