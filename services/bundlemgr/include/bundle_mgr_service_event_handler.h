@@ -64,6 +64,7 @@ enum OTAFlag : uint32_t {
     UPDATE_MODULE_JSON = 0x00100000,
     PROCESS_ROUTER_MAP = 0x00200000,
     UPDATE_EXTENSION_DIRS_SELINUX_APL = 0x00400000,
+    ADD_IDLE_INFO = 0x00800000,
 };
 
 enum class ScanResultCode : uint8_t {
@@ -134,6 +135,8 @@ public:
     static void ProcessRebootQuickFixUnInstallAndRecover(const std::string &path);
 
     static void SavePreInstallException(const std::string &bundleDir);
+
+    static void SavePreInstallExceptionBundleName(const std::string &bundleName);
 
     static void ProcessSystemBundleInstall(
         const PreScanInfo &preScanInfo,
@@ -733,7 +736,9 @@ private:
     void GetInstallAndRecoverListForAllUser(std::unordered_map<int32_t,
         std::pair<std::vector<std::string>, std::vector<std::string>>> &installAndRecoverList);
     bool IsForceInstallListEmpty(const std::string &bundleName);
+    static std::vector<std::string> ObtainRealPath(const std::vector<std::string> &paths);
     void RegisterRelabelEvent();
+    bool ProcessIdleInfo();
 
     // Used to mark Whether trigger OTA check
     bool needRebootOta_ = false;

@@ -120,7 +120,8 @@ ErrCode InstalldClient::GetDiskUsage(const std::string &dir, int64_t &statSize, 
     return 0;
 }
 
-ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
+ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
+    int64_t timeoutMs)
 {
     return 0;
 }
@@ -454,6 +455,16 @@ ErrCode InstalldClient::CopyDir(const std::string &sourceDir, const std::string 
 ErrCode InstalldClient::DeleteCertAndRemoveKey(const std::vector<std::string> &certPaths)
 {
     return ERR_OK;
+}
+
+ErrCode InstalldClient::SetFileConForce(const std::vector<std::string> &paths, const CreateDirParam &createDirParam)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::StopSetFileCon(const CreateDirParam &createDirParam, int32_t reason)
+{
+    return 0;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

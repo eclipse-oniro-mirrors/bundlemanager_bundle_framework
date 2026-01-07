@@ -17,8 +17,10 @@
 #include <thread>
 #include <sstream>
 
+#include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "battery_srv_client.h"
+#include "bms_update_selinux_mgr.h"
 #include "ffrt.h"
 #include "file_ex.h"
 #include "idle_condition_mgr/idle_condition_mgr.h"
@@ -274,15 +276,21 @@ void IdleConditionMgr::TryStartRelabel()
             APP_LOGD("stop relabel task");
             return;
         }
-        if (!sharedPtr->CheckRelabelConditions()) {
-            APP_LOGI("Refresh conditions not met");
+        if (bmsUpdateSelinuxMgr == nullptr) {
+            APP_LOGE("bms update selinux mgr is null");
+            return;
+        }
+        if (!CheckRelabelConditions()) {
+            APP_LOGI("Refresh conditions not met, no need to process");
             return;
         }
         if (!sharedPtr->IsBufferSufficient()) {
             APP_LOGI("Buffer not sufficient, no need to process");
             return;
         }
-        // relabel logic here
+        int32_t userId = AccountHelper::GetCurrentActiveUserId();
+        auto bmsUpdateSelinuxMgr = DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance();
+        bmsUpdateSelinuxMgr->StartUpdateSelinuxLabel(userId);
 
         std::lock_guard<std::mutex> lock(sharedPtr->mutex_);
         sharedPtr->isRelabeling_ = false;
@@ -302,6 +310,15 @@ void IdleConditionMgr::InterruptRelabel()
         isRelabeling_  = false;
     }
     // Interrupt logic here
+    auto bmsUpdateSelinuxMgr = DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance();
+    if (bmsUpdateSelinuxMgr == nullptr) {
+        APP_LOGE("bms update selinux mgr is null");
+        return;
+    }
+    if (bmsUpdateSelinuxMgr->StopUpdateSelinuxLabel(ServiceConstants::StopReason::BUSY) != ERR_OK) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        isRelabeling_ = true;
+    }
     APP_LOGI("Relabeling interrupted");
 }
 } // namespace AppExecFwk

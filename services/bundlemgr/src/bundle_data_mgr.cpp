@@ -29,6 +29,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_client.h"
+#include "bms_update_selinux_mgr.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
@@ -36,6 +37,7 @@
 #include "bundle_event_callback_death_recipient.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_client.h"
+#include "bundle_option.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_status_callback_death_recipient.h"
@@ -13076,6 +13078,55 @@ ErrCode BundleDataMgr::GetCreateDirParamByBundleOption(
     createDirParam.appIndex = optionInfo.appIndex;
     createDirParam.isContainsEl5Dir = item->second.NeedCreateEl5Dir();
     return ERR_OK;
+}
+
+bool BundleDataMgr::ProcessIdleInfo() const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGW("bundleInfos_ data is empty");
+        return false;
+    }
+
+    std::vector<BundleOptionInfo> bundleOptionInfos;
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        std::string bundleName = info.GetBundleName();
+        if (info.GetApplicationBundleType() != BundleType::APP) {
+            APP_LOGD("%{public}s is not app, ignore", bundleName.c_str());
+            continue;
+        }
+        if (info.GetAppPrivilegeLevel() != ServiceConstants::APL_NORMAL) {
+            APP_LOGD("%{public}s is not normal app, ignore", bundleName.c_str());
+            continue;
+        }
+        auto &userInfos = info.GetInnerBundleUserInfos();
+        if (userInfos.empty()) {
+            APP_LOGD("%{public}s userInfo is empty, ignore", bundleName.c_str());
+            continue;
+        }
+        for (const auto &userInfo : userInfos) {
+            BundleOptionInfo bundleOptionInfo;
+            bundleOptionInfo.bundleName = bundleName;
+            bundleOptionInfo.userId = userInfo.second.bundleUserInfo.userId;
+            bundleOptionInfos.emplace_back(bundleOptionInfo);
+            auto cloneInfos = userInfo.second.cloneInfos;
+            if (cloneInfos.empty()) {
+                continue;
+            }
+            for (const auto &cloneInfo : cloneInfos) {
+                BundleOptionInfo bundleCloneInfo;
+                bundleCloneInfo.bundleName = bundleName;
+                bundleCloneInfo.userId = cloneInfo.second.userId;
+                bundleCloneInfo.appIndex = cloneInfo.second.appIndex;
+                bundleOptionInfos.emplace_back(bundleCloneInfo);
+            }
+        }
+    }
+    if (DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->AddBundles(bundleOptionInfos) != ERR_OK) {
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

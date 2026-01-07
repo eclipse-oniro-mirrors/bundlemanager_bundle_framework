@@ -400,6 +400,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::UPDATE_MODULE_JSON);
     UpdateOtaFlag(OTAFlag::PROCESS_ROUTER_MAP);
     UpdateOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL);
+    UpdateOtaFlag(OTAFlag::ADD_IDLE_INFO);
     (void)SaveUpdatePermissionsFlag();
     PerfProfile::GetInstance().Dump();
 }
@@ -1335,6 +1336,9 @@ void BMSEventHandler::ProcessRebootBundle()
     CleanAllBundleEl1ShaderCacheLocal();
     CleanSystemOptimizeShaderCache();
     CleanAllBundleEl1ArkStartupCacheLocal();
+    if (OHOS::system::GetParameter(ServiceConstants::RELABLE_PARAM, "") == ServiceConstants::BMS_TRUE) {
+        (void)ProcessIdleInfo();
+    }
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
@@ -2153,6 +2157,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         std::make_unique<BundleInstallChecker>();
     GetInstallAndRecoverListForAllUser(userInstallAndRecoverMap_);
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMap;
+    std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallSysMap;
     std::unordered_set<std::string> overlayBundles;
     for (auto &scanPathIter : scanPathList) {
         LOG_NOFUNC_I(BMS_TAG_DEFAULT, "reboot scan bundle path: %{public}s ", scanPathIter.c_str());
@@ -2183,14 +2188,12 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA Install new -n %{public}s by path:%{public}s",
                 bundleName.c_str(), scanPathIter.c_str());
             std::vector<std::string> filePaths { scanPathIter };
-            if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
-                LOG_E(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) error", bundleName.c_str());
-                SavePreInstallException(scanPathIter);
+            auto iter = needInstallSysMap.find(bundleName);
+            if (iter == needInstallSysMap.end()) {
+                std::vector<std::string> filePaths = {scanPathIter};
+                needInstallSysMap[bundleName] = std::make_pair(filePaths, removable);
             } else {
-                if (newBundleDirMgr != nullptr) {
-                    (void)newBundleDirMgr->AddNewBundleDirInfo(bundleName,
-                        static_cast<uint32_t>(CreateBundleDirType::CREATE_ALL_DIR));
-                }
+                iter->second.first.emplace_back(scanPathIter);
             }
             continue;
         }
@@ -2339,6 +2342,17 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             iter->second.first.emplace_back(scanPathIter);
         }
     }
+    for (auto &item : needInstallSysMap) {
+        if (!OTAInstallSystemBundle(BMSEventHandler::ObtainRealPath(item.second.first), appType, item.second.second)) {
+            LOG_E(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) error", item.first.c_str());
+            SavePreInstallExceptionBundleName(item.first);
+        } else {
+            if (newBundleDirMgr != nullptr) {
+                (void)newBundleDirMgr->AddNewBundleDirInfo(item.first,
+                    static_cast<uint32_t>(CreateBundleDirType::CREATE_ALL_DIR));
+            }
+        }
+    }
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMapFirst;
     std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> needInstallMapOverlay;
     for (auto &item : needInstallMap) {
@@ -2352,8 +2366,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     if (!InnerMultiProcessBundleInstall(needInstallMapFirst, appType)) {
         LOG_E(BMS_TAG_DEFAULT, "multi needInstallMapFirst failed");
     }
-    if (!InnerMultiProcessBundleInstall(needInstallMapOverlay, appType)) {
-        LOG_E(BMS_TAG_DEFAULT, "multi needInstallMapOverlay failed");
+    for (auto iter = needInstallMapOverlay.begin(); iter != needInstallMapOverlay.end(); ++iter) {
+        (void)BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
+            BMSEventHandler::ObtainRealPath(iter->second.first), iter->first, appType, iter->second.second);
     }
     UpdatePreinstallDB(needInstallMap);
     // process bundle theme and dynamic resource
@@ -2417,6 +2432,21 @@ bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName, uint3
     return false;
 }
 
+std::vector<std::string> BMSEventHandler::ObtainRealPath(const std::vector<std::string> &paths)
+{
+    std::vector<std::string> filePaths = paths;
+    if (filePaths.size() > 1) {
+        // If the bundle exists in different directories, the real hap file path needs to be obtained
+        std::vector<std::string> realHapPaths;
+        for (const auto &path : filePaths) {
+            std::vector<std::string> hapFilePathVec = {path};
+            (void)BundleUtil::CheckFilePath(hapFilePathVec, realHapPaths);
+        }
+        filePaths = realHapPaths.empty() ? filePaths : realHapPaths;
+    }
+    return filePaths;
+}
+
 bool BMSEventHandler::InnerMultiProcessBundleInstall(
     const std::unordered_map<std::string, std::pair<std::vector<std::string>, bool>> &needInstallMap,
     Constants::AppType appType)
@@ -2445,17 +2475,8 @@ bool BMSEventHandler::InnerMultiProcessBundleInstall(
     for (auto iter = needInstallMap.begin(); iter != needInstallMap.end(); ++iter) {
         std::string bundleName = iter->first;
         std::pair pair = iter->second;
-        auto task = [bundleName, pair, taskTotalNum, appType, &taskEndNum, &bundlePromise]() {
-            std::vector<std::string> filePaths = pair.first;
-            if (filePaths.size() > 1) {
-                // If the bundle exists in different directories, the real hap file path needs to be obtained
-                std::vector<std::string> realHapPaths;
-                for (const auto &path : filePaths) {
-                    std::vector<std::string> hapFilePathVec = {path};
-                    (void)BundleUtil::CheckFilePath(hapFilePathVec, realHapPaths);
-                }
-                filePaths = realHapPaths.empty() ? filePaths : realHapPaths;
-            }
+        std::vector<std::string> filePaths = BMSEventHandler::ObtainRealPath(pair.first);
+        auto task = [bundleName, pair, filePaths, taskTotalNum, appType, &taskEndNum, &bundlePromise]() {
             (void)BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, pair.second);
             taskEndNum++;
             if (bundlePromise && taskEndNum >= taskTotalNum) {
@@ -3516,6 +3537,18 @@ void BMSEventHandler::SavePreInstallException(const std::string &bundleDir)
     preInstallExceptionMgr->SavePreInstallExceptionPath(bundleDir);
 }
 
+void BMSEventHandler::SavePreInstallExceptionBundleName(const std::string &bundleName)
+{
+    auto preInstallExceptionMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "preInstallExceptionMgr is nullptr");
+        return;
+    }
+
+    preInstallExceptionMgr->SavePreInstallExceptionBundleName(bundleName);
+}
+
 void BMSEventHandler::SavePreInstallExceptionAppService(const std::string &bundleDir)
 {
     auto preInstallExceptionMgr =
@@ -4528,8 +4561,9 @@ void BMSEventHandler::PatchSystemBundleInstall(const std::string &path, bool isO
     if (!InnerMultiProcessBundleInstallForPatch(needInstallMap, isOta)) {
         LOG_E(BMS_TAG_DEFAULT, "multi patch needInstallMap install failed");
     }
-    if (!InnerMultiProcessBundleInstallForPatch(needInstallOverlayMap, isOta)) {
-        LOG_E(BMS_TAG_DEFAULT, "multi patch needInstallOverlayMap install failed");
+    for (auto iter = needInstallOverlayMap.begin(); iter != needInstallOverlayMap.end(); ++iter) {
+        (void)BMSEventHandler::InstallSystemBundleNeedCheckUserForPatch(
+            BMSEventHandler::ObtainRealPath(iter->second), iter->first, isOta);
     }
     LOG_I(BMS_TAG_DEFAULT, "end");
 }
@@ -4586,19 +4620,8 @@ bool BMSEventHandler::InnerMultiProcessBundleInstallForPatch(
     for (auto iter = needInstallMap.begin(); iter != needInstallMap.end(); ++iter) {
         std::string bundleName = iter->first;
         std::vector<std::string> filePaths = iter->second;
-        auto task = [bundleName, filePaths, taskTotalNum, &taskEndNum, &bundlePromise, isOta]() {
-            std::vector<std::string> realHapPaths = filePaths;
-            if (realHapPaths.size() > 1) {
-                // If the bundle exists in different directories, the real hap file path needs to be obtained
-                std::vector<std::string> hapPaths;
-                for (const auto &path : realHapPaths) {
-                    std::vector<std::string> hapFilePathVec = {path};
-                    (void)BundleUtil::CheckFilePath(hapFilePathVec, hapPaths);
-                }
-                if (!hapPaths.empty()) {
-                    realHapPaths = hapPaths;
-                }
-            }
+        std::vector<std::string> realHapPaths = BMSEventHandler::ObtainRealPath(iter->second);
+        auto task = [bundleName, realHapPaths, taskTotalNum, &taskEndNum, &bundlePromise, isOta]() {
             (void)BMSEventHandler::InstallSystemBundleNeedCheckUserForPatch(realHapPaths, bundleName, isOta);
             taskEndNum++;
             if (bundlePromise && taskEndNum >= taskTotalNum) {
@@ -5679,6 +5702,29 @@ void BMSEventHandler::ProcessUpdateExtensionDirsApl()
         UpdateOtaFlag(OTAFlag::UPDATE_EXTENSION_DIRS_SELINUX_APL);
     }
     LOG_I(BMS_TAG_DEFAULT, "update selinux apl for extension dirs end");
+}
+
+bool BMSEventHandler::ProcessIdleInfo()
+{
+    LOG_I(BMS_TAG_DEFAULT, "begin");
+    bool flag = false;
+    CheckOtaFlag(OTAFlag::ADD_IDLE_INFO, flag);
+    if (flag) {
+        LOG_I(BMS_TAG_DEFAULT, "Not need to add idle info");
+        return true;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Need to add idle info");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return false;
+    }
+    if (!dataMgr->ProcessIdleInfo()) {
+        LOG_E(BMS_TAG_DEFAULT, "process idle info failed");
+        return false;
+    }
+    UpdateOtaFlag(OTAFlag::ADD_IDLE_INFO);
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

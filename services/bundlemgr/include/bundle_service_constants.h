@@ -209,6 +209,7 @@ constexpr const char* HYBRID_SPAWN_ENABLE = "persist.appspawn.hybridspawn.enable
 constexpr const char* IS_APP_CLONE_DISABLE = "persist.edm.app_clone_disable";
 constexpr const char* ENTERPRISE_SPACE_ENABLE = "persist.space_mgr_service.enterprise_space_enable";
 constexpr const char* ENTERPRISE_SPACE_USER_ID_LIST = "persist.space_mgr_service.enterprise_workspace_userid_list";
+constexpr const char* RELABLE_PARAM = "persist.bms.relabel";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config
@@ -304,6 +305,9 @@ constexpr const char* PLUGIN_FILE_PATH = "+plugins";
 // enterprise re sign cert
 constexpr const char* DELETE_CERT_PREFIX = ".deleteCer";
 
+// apl level
+constexpr const char* APL_NORMAL = "normal";
+
 // no report for expected errcode
 const std::set<int32_t> EXPECTED_ERROR = {
     ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST,
@@ -350,6 +354,13 @@ const std::set<int32_t> EXPECTED_ERROR = {
     // ark startup cache error
     ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_APP_OR_ATOMIC,
     ERR_APPEXECFWK_ARK_STARTUP_CACHE_ONLY_ALLOW_CREATE_IN_WHITE_LIST,
+};
+
+enum StopReason {
+    NONE,
+    BUSY,
+    UPDATE,
+    DELETE,
 };
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk

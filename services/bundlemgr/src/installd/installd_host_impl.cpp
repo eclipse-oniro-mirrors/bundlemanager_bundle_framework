@@ -1170,13 +1170,14 @@ ErrCode InstalldHostImpl::GetDiskUsage(const std::string &dir, int64_t &statSize
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize)
+ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
+    int64_t timeoutMs)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    statSize = InstalldOperator::GetDiskUsageFromPath(path);
+    statSize = InstalldOperator::GetDiskUsageFromPath(path, timeoutMs);
     return ERR_OK;
 }
 
