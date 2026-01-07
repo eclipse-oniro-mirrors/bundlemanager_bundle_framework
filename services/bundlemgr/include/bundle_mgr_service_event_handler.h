@@ -27,7 +27,6 @@
 #include "common_event_manager.h"
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
-#include "idle_condition_mgr/idle_condition_listener.h"
 #include "pre_install_bundle_info.h"
 #include "pre_install_exception_mgr.h"
 #include "pre_scan_info.h"

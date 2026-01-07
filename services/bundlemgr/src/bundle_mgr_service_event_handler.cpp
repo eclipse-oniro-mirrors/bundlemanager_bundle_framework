@@ -45,7 +45,6 @@
 #include "installd_client.h"
 #include "install_exception_mgr.h"
 #include "module_json_updater.h"
-#include "mem_mgr_client.h"
 #include "new_bundle_data_dir_mgr.h"
 #include "parameter.h"
 #include "parameters.h"
