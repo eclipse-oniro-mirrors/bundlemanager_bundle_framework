@@ -92,6 +92,7 @@ private:
     std::string appIdentifier_;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     bool isKeepData_ = false;
+    int64_t startTime_ = 0;
     bool existBeforeKeepDataApp_ = false;
 };
 } // AppExecFwk

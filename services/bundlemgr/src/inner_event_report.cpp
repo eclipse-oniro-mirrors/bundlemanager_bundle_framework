@@ -74,6 +74,8 @@ const char* EVENT_PARAM_APP_DISTRIBUTION_TYPE = "APP_DISTRIBUTION_TYPE";
 const char* EVENT_PARAM_FILE_PATH = "FILE_PATH";
 const char* EVENT_PARAM_HASH_VALUE = "HASH_VALUE";
 const char* EVENT_PARAM_INSTALL_TIME = "INSTALL_TIME";
+const char* EVENT_PARAM_START_TIME = "START_TIME";
+const char* EVENT_PARAM_END_TIME = "END_TIME";
 const char* EVENT_PARAM_APPLY_QUICK_FIX_FREQUENCY = "APPLY_QUICK_FIX_FREQUENCY";
 const char* EVENT_PARAM_CONTINUE_TYPE = "CONTINUE_TYPE";
 const char* EVENT_PARAM_PACKAGE_NAME = "PACKAGE_NAME";
@@ -504,6 +506,8 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
         EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
+        EVENT_PARAM_START_TIME, eventInfo.startTime,
+        EVENT_PARAM_END_TIME, eventInfo.endTime,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
@@ -537,7 +541,9 @@ void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
         EVENT_PARAM_INSTALL_TYPE, GetInstallType(eventInfo),
         EVENT_PARAM_APP_INDEX, eventInfo.appIndex,
-        EVENT_PARAM_IS_KEEPDATA, eventInfo.isKeepData);
+        EVENT_PARAM_IS_KEEPDATA, eventInfo.isKeepData,
+        EVENT_PARAM_START_TIME, eventInfo.startTime,
+        EVENT_PARAM_END_TIME, eventInfo.endTime);
 }
 
 void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
@@ -552,6 +558,8 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
         EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
+        EVENT_PARAM_START_TIME, eventInfo.startTime,
+        EVENT_PARAM_END_TIME, eventInfo.endTime,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
@@ -580,6 +588,8 @@ void InnerEventReport::InnerSendPreBundleRecoverEvent(const EventInfo& eventInfo
         EVENT_PARAM_VERSION, eventInfo.versionCode,
         EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
         EVENT_PARAM_INSTALL_TIME, eventInfo.timeStamp,
+        EVENT_PARAM_START_TIME, eventInfo.startTime,
+        EVENT_PARAM_END_TIME, eventInfo.endTime,
         EVENT_PARAM_CALLING_UID, eventInfo.callingUid,
         EVENT_PARAM_CALLING_APPID, eventInfo.callingAppId,
         EVENT_PARAM_CALLING_BUNDLE_NAME, eventInfo.callingBundleName,
