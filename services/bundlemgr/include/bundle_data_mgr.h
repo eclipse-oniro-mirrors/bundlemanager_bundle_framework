@@ -1493,6 +1493,7 @@ private:
         std::vector<BundleStorageStats> &bundleStats) const;
     void GetAllInstallBundleUids(const int32_t userId, const int32_t requestUserId, int32_t &responseUserId,
         std::vector<int32_t> &uids, std::vector<std::string> &bundleNames) const;
+    bool ProcessUninstallBundle(std::vector<BundleOptionInfo> &bundleOptionInfos) const;
 
 private:
     bool initialUserFlag_ = false;

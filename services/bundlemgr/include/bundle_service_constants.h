@@ -32,6 +32,7 @@ constexpr const char* RESOURCES_INDEX = "resources.index";
 constexpr int8_t INVALID_GID = -1;
 constexpr int8_t BUNDLE_RDB_VERSION = 1;
 constexpr const char* PATH_SEPARATOR = "/";
+constexpr const char* UNDER_LINE = "_";
 constexpr const char* LIBS = "libs/";
 constexpr const char* AN = "an/";
 constexpr const char* RES_FILE_PATH = "resources/resfile/";
