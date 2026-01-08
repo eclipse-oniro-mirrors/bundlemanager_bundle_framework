@@ -4898,12 +4898,10 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
 {
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
-    std::vector<int64_t> bundleStats;
-    std::string bundleName = "com.test.GetBundleStats_0300";
-    dataMgr->bundleInfos_.erase(bundleName);
-    dataMgr->RemoveUninstalledBundleinfos(USERID);
 
     // test bundlename not in bundleinfos_ and not uninstalled withkeepdata before
+    std::vector<int64_t> bundleStats;
+    std::string bundleName = "com.test.GetBundleStats_0300";
     bool res = dataMgr->GetBundleStats(bundleName, USERID, bundleStats);
     EXPECT_EQ(res, false);
 
@@ -4913,7 +4911,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
     UninstallDataUserInfo uninstallDataUserInfo;
     uninstallDataUserInfo.uid = 20020033;
     uninstallBundleInfo.userInfos.emplace(std::make_pair(std::to_string(USERID), uninstallDataUserInfo));
- 
+
     UninstallDataUserInfo uninstallDataUserInfo1;
     uninstallDataUserInfo1.uid = 20020034;
     std::string cloneInfoKey = std::to_string(USERID) + '_' + std::to_string(1);
@@ -4923,6 +4921,11 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
     uninstallDataUserInfo2.uid = -1;
     cloneInfoKey = std::to_string(USERID) + '_' + std::to_string(2);
     uninstallBundleInfo.userInfos.emplace(std::make_pair(cloneInfoKey, uninstallDataUserInfo2));
+
+    UninstallDataUserInfo uninstallDataUserInfo3;
+    uninstallDataUserInfo3.uid = 20020036;
+    cloneInfoKey = std::to_string(MULTI_USERID) + '_' + std::to_string(1);
+    uninstallBundleInfo.userInfos.emplace(std::make_pair(cloneInfoKey, uninstallDataUserInfo3));
 
     auto ret = dataMgr->UpdateUninstallBundleInfo(bundleName, uninstallBundleInfo);
     ASSERT_TRUE(ret);
@@ -4980,6 +4983,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleStats_0300, Function | SmallTest | Level
 
     dataMgr->bundleInfos_.erase(bundleName);
     dataMgr->RemoveUninstalledBundleinfos(USERID);
+    dataMgr->RemoveUninstalledBundleinfos(MULTI_USERID);
 }
 
 /**
