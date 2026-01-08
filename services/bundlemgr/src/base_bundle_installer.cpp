@@ -238,6 +238,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to process bundle install");
     AddInstallingBundleName(installParam);
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
+    sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessBundleInstall(bundlePaths, installParam, appType, uid, false);
     if (result != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && result != ERR_OK &&
@@ -292,6 +293,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
 {
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallBundleByBundleName -n %{public}s", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
+    sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
 
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessInstallBundleByBundleName(bundleName, installParam, uid);
@@ -334,6 +336,7 @@ ErrCode BaseBundleInstaller::Recover(
 {
     LOG_I(BMS_TAG_INSTALLER, "begin to process bundle recover by bundleName, which is %{public}s", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
+    sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
     int32_t userId = GetUserId(installParam.userId);
     if (IsAppInBlocklist(bundleName, userId)) {
         return ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
@@ -374,6 +377,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     CheckSystemFreeSizeAndClean();
     LOG_I(BMS_TAG_INSTALLER, "begin to process %{public}s bundle uninstall", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
+    sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
 
     std::string developerId = GetDeveloperId(bundleName);
     std::string assetAccessGroups = GetAssetAccessGroups(bundleName);
@@ -572,6 +576,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
 ErrCode BaseBundleInstaller::UninstallHspAndBundle(InnerBundleInfo &info, int32_t &versionCode,
     std::string &uninstallDir)
 {
+    sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
     std::vector<uint32_t> versionCodes = info.GetAllHspVersion();
     InstallParam installParam;
     ErrCode ret = ERR_OK;
@@ -598,6 +603,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(
     LOG_I(BMS_TAG_INSTALLER, "begin to process %{public}s module in %{public}s uninstall",
         modulePackage.c_str(), bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
+    sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
 
     std::string developerId;
     std::string assetAccessGroups;
@@ -1578,8 +1584,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #endif
     // copy hap to app_tmp path
     (void)AddAppGalleryHapToTempPath(installParam.isPreInstallApp, newInfos);
-    // delete app_tmp
-    ScopeGuard deleteAppGalleryHapFromTempPathRuleGuard([&] { (void)DeleteAppGalleryHapFromTempPath(); });
 
     // Roolback is unavailable below this line
     // copy hap or hsp to real install dir
@@ -1682,6 +1686,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         PatchDataMgr::GetInstance().DeleteInnerPatchInfo(bundleName_);
     }
     CHECK_RESULT_WITH_ROLLBACK(result, "mark install finish failed %{public}d", newInfos, oldInfo);
+    // delete app_tmp
+    (void)DeleteAppGalleryHapFromTempPath();
     DeleteUninstallBundleInfo(bundleName_);
     codePathGuard.Dismiss();
     ProcessOldCodePath(bundleName_, isFeatureNeedUninstall_);
@@ -4326,6 +4332,7 @@ ErrCode BaseBundleInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info, co
 ErrCode BaseBundleInstaller::RemoveBundleDataDir(
     const InnerBundleInfo &info, bool forException, const bool async)
 {
+    sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
     ErrCode result =
         InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_,
             info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE, async);
@@ -5910,6 +5917,7 @@ void BaseBundleInstaller::SendBundleSystemEvent(const std::string &bundleName, B
     sysEventInfo_.preBundleScene = preBundleScene;
     sysEventInfo_.isPatch = installParam.isPatch;
     sysEventInfo_.isKeepData = installParam.isKeepData;
+    sysEventInfo_.endTime = BundleUtil::GetCurrentTimeMs();
     GetCallingEventInfo(sysEventInfo_);
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo_);
 }
@@ -8530,6 +8538,10 @@ void BaseBundleInstaller::SetHybridSpawn()
     }
     std::string arkTSMode = info.GetApplicationArkTSMode();
     if (arkTSMode == Constants::ARKTS_MODE_STATIC || arkTSMode == Constants::ARKTS_MODE_HYBRID) {
+        if (OHOS::system::GetBoolParameter(ServiceConstants::HYBRID_SPAWN_UNIFIED, false)) {
+            LOG_D(BMS_TAG_INSTALLER, "persist.appspawn.hybridspawn.unified is true");
+            return;
+        }
         LOG_I(BMS_TAG_INSTALLER, "set persist.appspawn.hybridspawn.enable true");
         OHOS::system::SetParameter(ServiceConstants::HYBRID_SPAWN_ENABLE, BMS_TRUE);
     }

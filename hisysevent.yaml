@@ -133,6 +133,8 @@ BUNDLE_INSTALL:
   UID: {type: INT32, desc: uid}
   IS_ABC_COMPRESSED: {type: BOOL, desc: isAbcCompressed}
   IS_PATCH: {type: BOOL, desc: is patched}
+  START_TIME: {type: INT64, desc: bundle installation start time}
+  END_TIME: {type: INT64, desc: bundle installation end time}
 
 BUNDLE_UNINSTALL:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle uninstall}
@@ -147,6 +149,8 @@ BUNDLE_UNINSTALL:
   CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
   APP_INDEX: {type: INT32, desc: app index}
   IS_KEEPDATA: {type: BOOL, desc: is keepdata}
+  START_TIME: {type: INT64, desc: bundle uninstallation start time}
+  END_TIME: {type: INT64, desc: bundle uninstallation end time}
 
 BUNDLE_UPDATE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle update}
@@ -171,6 +175,8 @@ BUNDLE_UPDATE:
   UID: {type: INT32, desc: uid}
   IS_ABC_COMPRESSED: {type: BOOL, desc: isAbcCompressed}
   IS_PATCH: {type: BOOL, desc: is patched}
+  START_TIME: {type: INT64, desc: bundle update start time}
+  END_TIME: {type: INT64, desc: bundle update end time}
 
 PRE_BUNDLE_RECOVER:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: prebundle recover}
@@ -189,6 +195,8 @@ PRE_BUNDLE_RECOVER:
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
   INSTALL_TIME: {type: INT64, desc: the install time or the bundle}
   INSTALL_TYPE: {type: STRING, desc: only prebundle}
+  START_TIME: {type: INT64, desc: bundle installation start time}
+  END_TIME: {type: INT64, desc: bundle installation end time}
 
 BUNDLE_STATE_CHANGE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle or component disable or enable}
