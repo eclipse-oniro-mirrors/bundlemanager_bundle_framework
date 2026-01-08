@@ -14,6 +14,7 @@
  */
 
 #include "app_log_wrapper.h"
+#include "bundle_service_constants.h"
 #include "common_event_support.h"
 #include "idle_condition_mgr/idle_condition_event_subscribe.h"
 #include "idle_condition_mgr/idle_condition_mgr.h"
@@ -38,8 +39,8 @@ IdleConditionEventSubscriber::~IdleConditionEventSubscriber()
 {}
 void IdleConditionEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
-    std::string param = OHOS::system::GetParameter(RELABEL_PARAM, "");
-    if (param != "true") {
+    std::string param = OHOS::system::GetParameter(ServiceConstants::SYSTEM_DEVICE_TYPE, "");
+    if (param != "phone") {
         return;
     }
     APP_LOGI("OnReceiveEvent received idle condition event");

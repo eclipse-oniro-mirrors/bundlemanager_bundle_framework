@@ -1335,9 +1335,7 @@ void BMSEventHandler::ProcessRebootBundle()
     CleanAllBundleEl1ShaderCacheLocal();
     CleanSystemOptimizeShaderCache();
     CleanAllBundleEl1ArkStartupCacheLocal();
-    if (OHOS::system::GetParameter(ServiceConstants::RELABLE_PARAM, "") == ServiceConstants::BMS_TRUE) {
-        (void)ProcessIdleInfo();
-    }
+    (void)ProcessIdleInfo();
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
