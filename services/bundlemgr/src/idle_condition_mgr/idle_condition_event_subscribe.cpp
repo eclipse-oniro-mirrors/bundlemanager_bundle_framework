@@ -24,6 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* RELABEL_PARAM = "persist.bms.relabel";
+constexpr const char* COMMON_EVENT_KEY_TEMPERATURE = "temperature";
 constexpr const char* COMMERCIAL_MODE = "commercial";
 constexpr const char* COMMERCIAL_MODE_PARAM = "const.logsystem.versiontype";
 constexpr const char* USER_DATA_DIR = "/data";
@@ -65,7 +66,8 @@ void IdleConditionEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDat
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_STOPPING) {
         idleMgr->OnUserStopping();
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_CHANGED) {
-        idleMgr->OnBatteryChanged();
+        int32_t batteryTemperature = data.GetWant().GetIntParam(COMMON_EVENT_KEY_TEMPERATURE, 0);
+        idleMgr->OnBatteryChanged(batteryTemperature);
     }
 }
 

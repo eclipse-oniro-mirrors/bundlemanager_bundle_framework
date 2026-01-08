@@ -14,6 +14,7 @@
  */
 
 #include <chrono>
+#include <sstream>
 #include <thread>
 
 #include "account_helper.h"
@@ -21,7 +22,9 @@
 #include "battery_srv_client.h"
 #include "bms_update_selinux_mgr.h"
 #include "ffrt.h"
+#include "file_ex.h"
 #include "idle_condition_mgr/idle_condition_mgr.h"
+#include "mem_mgr_client.h"
 #include "parameter.h"
 #include "parameters.h"
 
@@ -30,14 +33,26 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* BMS_PARAM_RELABEL_BATTERY_CAPACITY = "ohos.bms.param.relabelBatteryCapacity";
 constexpr const char* BMS_PARAM_RELABEL_WAIT_TIME = "ohos.bms.param.relabelWaitTimeMinutes";
+constexpr const char* MEMORY_INFO_PATH = "/dev/memcg/memory.zswapd_presure_show";
+constexpr const char* MEMORY_BUFFER_KEY = "buffer_size";
 constexpr int32_t RELABEL_WAIT_TIME_SECONDS = 5 * 60; // 5 minutes
 constexpr int32_t RELABEL_MIN_BATTERY_CAPACITY = 20;
+constexpr int32_t RELABEL_MAX_BATTERY_TEMP = 370;
+constexpr int32_t RELABEL_MIN_BUFFER_SIZE = 700;
 }
 
-IdleConditionMgr::IdleConditionMgr() = default;
+
+IdleConditionMgr::IdleConditionMgr()
+{
+    idleConditionListener_ = std::make_shared<IdleConditionListener>();
+    Memory::MemMgrClient::GetInstance().SubscribeAppState(*idleConditionListener_);
+    APP_LOGI("IdleConditionMgr created");
+}
 
 IdleConditionMgr::~IdleConditionMgr()
 {
+    Memory::MemMgrClient::GetInstance().UnsubscribeAppState(*idleConditionListener_);
+    APP_LOGI("IdleConditionMgr destroyed");
 }
 
 void IdleConditionMgr::OnScreenLocked()
@@ -126,16 +141,64 @@ void IdleConditionMgr::OnPowerDisconnected()
     powerConnectedThreadActive_ = false;
     InterruptRelabel();
 }
+ 
+void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
+{
+    APP_LOGI("HandleOnTrim called, level=%{public}d", level);
+    switch (level) {
+        case Memory::SystemMemoryLevel::UNKNOWN:
+            [[fallthrough]];
+        case Memory::SystemMemoryLevel::MEMORY_LEVEL_PURGEABLE:
+            [[fallthrough]];
+        case Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE:
+            TryStartRelabel();
+            break;
+        case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:
+            [[fallthrough]];
+        case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
+            InterruptRelabel();
+            break;
+        default:
+            break;
+    }
+}
 
-void IdleConditionMgr::OnBatteryChanged()
+bool IdleConditionMgr::IsBufferSufficient()
+{
+    std::string content;
+    if (!LoadStringFromFile(MEMORY_INFO_PATH, content)) {
+        APP_LOGE("Failed to read memory info");
+        return false;
+    }
+    size_t pos = content.find(MEMORY_BUFFER_KEY);
+    if (pos == std::string::npos) {
+        APP_LOGE("Failed to find memory buffer info");
+        return false;
+    }
+    std::string bufferMb = content.substr(pos);
+    std::istringstream bufferStream(bufferMb);
+    std::string statTag;
+    std::string bufferSize;
+    bufferStream >> statTag >> bufferSize;
+    
+    int32_t currentBufferSizeMb = -1;
+    if (!OHOS::StrToInt(bufferSize, currentBufferSizeMb)) {
+        APP_LOGE("Failed to convert buffer size to int: %s", bufferSize.c_str());
+        return false;
+    }
+    return currentBufferSizeMb > RELABEL_MIN_BUFFER_SIZE;
+}
+
+void IdleConditionMgr::OnBatteryChanged(int32_t batteryTemperature)
 {
     APP_LOGI("OnBatteryChanged called");
     int32_t currentBatteryCap = OHOS::PowerMgr::BatterySrvClient::GetInstance().GetCapacity();
     int32_t relabelBatteryCapacity = OHOS::system::GetIntParameter<int32_t>(
         BMS_PARAM_RELABEL_BATTERY_CAPACITY, RELABEL_MIN_BATTERY_CAPACITY);
-    if (currentBatteryCap < relabelBatteryCapacity) {
-        APP_LOGD("battery capacity %{public}d less than %{public}d, interrupt relabel",
-            currentBatteryCap, relabelBatteryCapacity);
+    if (currentBatteryCap < relabelBatteryCapacity || batteryTemperature >= RELABEL_MAX_BATTERY_TEMP) {
+        APP_LOGD("battery capacity %{public}d less than %{public}d or temperature %{public}d "
+                 "greater than %{public}d, interrupt relabel",
+            currentBatteryCap, relabelBatteryCapacity, batteryTemperature, RELABEL_MAX_BATTERY_TEMP);
         {
             std::lock_guard<std::mutex> lock(mutex_);
             batterySatisfied_ = false;
@@ -154,11 +217,6 @@ bool IdleConditionMgr::CheckRelabelConditions()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_) {
-        if (isRelabeling_) {
-            APP_LOGI("Already relabeling, no need to process");
-            return false;
-        }
-        isRelabeling_ = true;
         return true;
     }
     APP_LOGI("userUnlocked_ %{public}d, screenLocked_ %{public}d, \
@@ -167,10 +225,29 @@ bool IdleConditionMgr::CheckRelabelConditions()
     return false;
 }
 
+bool IdleConditionMgr::SetIsRelabeling()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (isRelabeling_) {
+        APP_LOGI("Already relabeling, no need to process");
+        return false;
+    }
+    isRelabeling_ = true;
+    return true;
+}
+
 void IdleConditionMgr::TryStartRelabel()
 {
     if (!CheckRelabelConditions()) {
         APP_LOGI("Refresh conditions not met, no need to process");
+        return;
+    }
+    if (!IsBufferSufficient()) {
+        APP_LOGI("Buffer not sufficient, no need to process");
+        return;
+    }
+    if (!SetIsRelabeling()) {
+        APP_LOGI("Set isRelabeling failed");
         return;
     }
     std::weak_ptr<IdleConditionMgr> weakPtr = shared_from_this();
@@ -181,7 +258,14 @@ void IdleConditionMgr::TryStartRelabel()
             APP_LOGD("stop relabel task");
             return;
         }
-        // relabel logic here
+        if (!sharedPtr->CheckRelabelConditions()) {
+            APP_LOGI("Refresh conditions not met, no need to process");
+            return;
+        }
+        if (!sharedPtr->IsBufferSufficient()) {
+            APP_LOGI("Buffer not sufficient, no need to process");
+            return;
+        }
         int32_t userId = AccountHelper::GetCurrentActiveUserId();
         auto bmsUpdateSelinuxMgr = DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance();
         if (bmsUpdateSelinuxMgr == nullptr) {
