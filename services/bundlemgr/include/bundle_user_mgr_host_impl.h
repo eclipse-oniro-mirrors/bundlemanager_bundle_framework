@@ -84,6 +84,12 @@ private:
 
     bool DeleteReSignCert(int32_t userId);
 
+    ErrCode CheckCriticalApplicatiosAreInstalled(
+        int32_t userId,
+        const std::vector<std::string> &checkList,
+        const std::vector<std::string> &disallowList,
+        const std::optional<std::vector<std::string>> &allowList);
+
     std::mutex bundleUserMgrMutex_;
 
     std::mutex bundleEventMutex_;

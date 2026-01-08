@@ -171,8 +171,18 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
     } else {
         EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     }
-    APP_LOGW("CreateNewUser end userId: (%{public}d)", userId);
-    return ERR_OK;
+    std::vector<std::string> checkList;
+#ifdef WINDOW_ENABLE
+    if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
+        checkList.push_back(Constants::SCENE_BOARD_BUNDLE_NAME);
+    }
+#endif
+    ErrCode res = CheckCriticalApplicatiosAreInstalled(userId, checkList, disallowList, allowList);
+    if (res != ERR_OK) {
+        InnerRemoveUser(userId, false);
+    }
+    APP_LOGW("CreateNewUser end userId: (%{public}d) res:%{public}d", userId, res);
+    return res;
 }
 
 void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
@@ -747,6 +757,45 @@ bool BundleUserMgrHostImpl::DeleteReSignCert(int32_t userId)
         return false;
     }
     return (installer->DeleteReSignCert(userId) == ERR_OK);
+}
+
+ErrCode BundleUserMgrHostImpl::CheckCriticalApplicatiosAreInstalled(
+    int32_t userId,
+    const std::vector<std::string> &checkList,
+    const std::vector<std::string> &disallowList,
+    const std::optional<std::vector<std::string>> &allowList)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::vector<std::string> allowLst = allowList.value_or(std::vector<std::string>());
+    std::unordered_set<std::string> allowSet = allowLst.empty() ? std::unordered_set<std::string>() :
+        std::unordered_set<std::string>(allowLst.begin(), allowLst.end());
+    std::unordered_set<std::string> disallowSet = disallowList.empty() ? std::unordered_set<std::string>() :
+        std::unordered_set<std::string>(disallowList.begin(), disallowList.end());
+    for (auto &bundleName : checkList) {
+        if (disallowSet.count(bundleName)) {
+            APP_LOGI_NOFUNC("%{public}s in disallowList no need check", bundleName.c_str());
+            continue;
+        }
+        if (allowList.has_value() && !allowSet.count(bundleName)) {
+            APP_LOGI_NOFUNC("%{public}s not in whitelist no need check", bundleName.c_str());
+            continue;
+        }
+        bool installed = false;
+        ErrCode res = dataMgr->IsBundleInstalled(bundleName, userId, Constants::MAIN_APP_INDEX, installed);
+        if (res != ERR_OK) {
+            APP_LOGE_NOFUNC("IsBundleInstalled failed %{public}d", res);
+            return res;
+        }
+        if (!installed) {
+            APP_LOGE_NOFUNC("no critical app %{public}s", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
