@@ -9210,6 +9210,24 @@ HWTEST_F(BmsBundleInstallerTest, AddAppGalleryHapToTempPath_0010, Function | Sma
 }
 
 /**
+ * @tc.number: AddAppGalleryHapToTempPath_0020
+ * @tc.name: test AddAppGalleryHapToTempPath
+ * @tc.desc: AddAppGalleryHapToTempPath
+ */
+HWTEST_F(BmsBundleInstallerTest, AddAppGalleryHapToTempPath_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->isSystemApp = true;
+    innerBundleInfo.baseApplicationInfo_->bundleName =
+        OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
+    infos["/data/xxx.hap"] = innerBundleInfo;
+    bool ret = installer.AddAppGalleryHapToTempPath(false, infos);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: DeleteAppGalleryHapFromTempPath_0010
  * @tc.name: test DeleteAppGalleryHapFromTempPath
  * @tc.desc: DeleteAppGalleryHapFromTempPath

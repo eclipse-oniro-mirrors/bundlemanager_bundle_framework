@@ -7848,6 +7848,9 @@ bool BaseBundleInstaller::AddAppGalleryHapToTempPath(const bool isPreInstall,
         LOG_D(BMS_TAG_INSTALLER, "bundle %{public}s is not appGallery", bundleInfo.GetBundleName().c_str());
         return false;
     }
+    if (!BundleUtil::DeleteDir(ServiceConstants::BMS_APP_COPY_TEMP_PATH)) {
+        LOG_E(BMS_TAG_INSTALLER, "delete app copy temp path failed %{public}d", errno);
+    }
     std::string targetPath = BundleUtil::CreateTempDir(ServiceConstants::BMS_APP_COPY_TEMP_PATH);
     if (targetPath.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "app copy temp path create failed %{public}d", errno);
