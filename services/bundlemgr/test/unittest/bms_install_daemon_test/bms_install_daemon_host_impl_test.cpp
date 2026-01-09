@@ -1370,7 +1370,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_7700, Function | Sma
     std::unordered_set<int32_t> uids;
     uids.emplace(10000);
     const std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap = {{"com.example.bundlekit.test", uids}};
-    auto ret = hostImpl->BatchGetBundleStats(bundleNames, 100, uidMap, bundleStats);
+    auto ret = hostImpl->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

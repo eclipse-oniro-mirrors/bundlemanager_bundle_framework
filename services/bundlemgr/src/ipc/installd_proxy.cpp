@@ -398,7 +398,7 @@ ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32
     return ret;
 }
 
-ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundleNames,
     const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
     std::vector<BundleStorageStats> &bundleStats)
 {
@@ -409,7 +409,6 @@ ErrCode InstalldProxy::BatchGetBundleStats(const std::vector<std::string> &bundl
     for (const std::string &bundleName : bundleNames) {
         INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     }
-    INSTALLD_PARCEL_WRITE(data, Int32, userId);
     int32_t uidMapSize = static_cast<int32_t>(uidMap.size());
     INSTALLD_PARCEL_WRITE(data, Int32, uidMapSize);
     for (const auto &[bundleName, uids] : uidMap) {

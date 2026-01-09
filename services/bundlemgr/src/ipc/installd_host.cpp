@@ -628,7 +628,6 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
         std::string bundleName = Str16ToStr8(data.ReadString16());
         bundleNames.emplace_back(bundleName);
     }
-    int32_t userId = data.ReadInt32();
     std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap;
     int32_t uidMapSize = data.ReadInt32();
     if (uidMapSize < 0 || uidMapSize > MAX_BATCH_QUERY_BUNDLE_SIZE) {
@@ -646,7 +645,7 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
         uidMap.emplace(bundleName, uidSet);
     }
     std::vector<BundleStorageStats> bundleStats;
-    ErrCode result = BatchGetBundleStats(bundleNames, userId, uidMap, bundleStats);
+    ErrCode result = BatchGetBundleStats(bundleNames, uidMap, bundleStats);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     int32_t statsSize = static_cast<int32_t>(bundleStats.size());
     if (!reply.WriteInt32(statsSize)) {

@@ -1364,7 +1364,7 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+ErrCode InstalldHostImpl::BatchGetBundleStats(const std::vector<std::string> &bundleNames,
     const std::unordered_map<std::string, std::unordered_set<int32_t>> &uidMap,
     std::vector<BundleStorageStats> &bundleStats)
 {

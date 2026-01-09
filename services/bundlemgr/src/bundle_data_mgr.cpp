@@ -4638,7 +4638,7 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
 {
     auto activeUserId = AccountHelper::GetUserIdByCallerType();
     if (activeUserId != userId) {
-        return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, userId, uidMap, bundleStats);
+        return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
     }
     std::map<std::string, std::set<int32_t>> saUidMap;
     LoadSaUidMap(saUidMap);
@@ -4650,7 +4650,7 @@ ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundl
             }
         }
     }
-    return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, userId, uidMap, bundleStats);
+    return InstalldClient::GetInstance()->BatchGetBundleStats(bundleNames, uidMap, bundleStats);
 }
 
 ErrCode BundleDataMgr::BatchGetBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
@@ -4709,25 +4709,21 @@ void BundleDataMgr::GetPreBundleSize(const std::string &name, std::vector<Bundle
     if (statsIter == bundleStats.end()) {
         return;
     }
-    std::string hapPath;
-    bool getPreBundleSize = false;
+    std::vector<std::string> hapPaths;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         const auto infoItem = bundleInfos_.find(name);
-        if (infoItem != bundleInfos_.end()) {
-            if (infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
-                for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
-                    if (innerModuleInfo.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
-                        continue;
-                    }
-                    hapPath = innerModuleInfo.second.hapPath;
-                    getPreBundleSize = true;
+        if (infoItem != bundleInfos_.end() && infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+            for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+                if (innerModuleInfo.second.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
+                    continue;
                 }
+                hapPaths.emplace_back(innerModuleInfo.second.hapPath);
             }
         }
     }
-    if (getPreBundleSize) {
-        statsIter->bundleStats[0] += BundleUtil::GetFileSize(hapPath);
+    for (const auto &path : hapPaths) {
+        statsIter->bundleStats[0] += BundleUtil::GetFileSize(path);
     }
 }
 
