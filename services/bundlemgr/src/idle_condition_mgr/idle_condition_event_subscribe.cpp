@@ -30,7 +30,7 @@ constexpr const char* COMMERCIAL_MODE_PARAM = "const.logsystem.versiontype";
 constexpr const char* THERMAL_LEVEL_KEY = "0";
 constexpr const char* USER_DATA_DIR = "/data";
 constexpr double MIN_FREE_INODE_PERCENT = 0.2;
-constexpr int32_t THERMAL_LEVEL_NAME = -1;
+constexpr int8_t THERMAL_LEVEL_NAME = -1;
 }
 
 IdleConditionEventSubscriber::IdleConditionEventSubscriber(
