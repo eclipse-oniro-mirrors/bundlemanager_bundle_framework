@@ -20,6 +20,7 @@
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"
+#include "idle_condition_mgr/idle_condition_mgr.h"
 #include "ipc_skeleton.h"
 #include "parameters.h"
 #include "xcollie_helper.h"
@@ -242,6 +243,8 @@ void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::stri
     }
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "add task:%{public}s", taskName.c_str());
     g_taskCounter++;
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    idleMgr->InterruptRelabel();
     threadPool_->AddTask(task);
 }
 
@@ -275,6 +278,11 @@ size_t BundleInstallerManager::GetCurTaskNum()
     }
 
     return threadPool_->GetCurTaskNum();
+}
+
+bool BundleInstallerManager::HasRunningTask()
+{
+    return g_taskCounter.load() != 0;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

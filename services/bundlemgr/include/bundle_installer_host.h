@@ -150,6 +150,7 @@ public:
     void AddTask(const ThreadPoolTask &task, const std::string &taskName);
     size_t GetCurTaskNum();
     int32_t GetThreadsNum();
+    bool HasRunningTask();
 
     virtual ErrCode InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex) override;
 

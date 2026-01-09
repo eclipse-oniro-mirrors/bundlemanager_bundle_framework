@@ -1008,6 +1008,11 @@ size_t BundleInstallerHost::GetCurTaskNum()
     return manager_->GetCurTaskNum();
 }
 
+bool BundleInstallerHost::HasRunningTask()
+{
+    return manager_->HasRunningTask();
+}
+
 ErrCode BundleInstallerHost::InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex)
 {
     if (OHOS::system::GetBoolParameter(ServiceConstants::IS_APP_CLONE_DISABLE, false)) {
