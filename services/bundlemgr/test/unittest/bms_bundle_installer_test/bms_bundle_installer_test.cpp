@@ -795,8 +795,12 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0020, Function | SmallTest | Level0
     dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, info);
     BaseBundleInstaller installer;
     installer.InitDataMgr();
-    // test CleanShaderAndArkStartupCache succeed
-    ret = installer.CleanShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
+    // test CleanShaderCache succeed
+    ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // test CleanArkStartupCache succeed
+    ret = installer.CleanArkStartupCache(BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, ERR_OK);
 
     // test DeleteShaderCache succeed
@@ -835,9 +839,14 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0030, Function | SmallTest | Level0
     dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, info);
     BaseBundleInstaller installer;
     installer.InitDataMgr();
-    // test CleanShaderAndArkStartupCache failed
+    // test CleanShaderCache failed
     StopInstalldService();
-    ErrCode ret = installer.CleanShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
+    ErrCode ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
+    EXPECT_NE(ret, ERR_OK);
+
+    // test CleanArkStartupCache failed
+    StopInstalldService();
+    ret = installer.CleanArkStartupCache(BUNDLE_NAME, USERID);
     EXPECT_NE(ret, ERR_OK);
 
     // test DeleteShaderCache failed

@@ -1016,9 +1016,21 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
             userGuard.Dismiss();
         }
-        ErrCode res = CleanShaderAndArkStartupCache(oldInfo, bundleName_, userId_);
+        ErrCode res = CleanShaderCache(oldInfo, bundleName_, userId_);
         if (res != ERR_OK) {
             LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean shader fail %{public}d", bundleName_.c_str(), res);
+        }
+        res = CleanArkStartupCache(bundleName_, userId_);
+        if (res != ERR_OK) {
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean ark startup cache fail %{public}d, try again",
+                bundleName_.c_str(), res);
+            res = CleanArkStartupCache(bundleName_, userId_);
+            if (res != ERR_OK && installParam.isOTA && installParam.isPreInstallApp) {
+                LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean ark startup cache fail %{public}d",
+                    bundleName_.c_str(), res);
+            } else {
+                CHECK_RESULT(res, "CleanArkStartupCache failed %{public}d");
+            }
         }
     }
 
@@ -7247,7 +7259,7 @@ void BaseBundleInstaller::DeleteUseLessSharefilesForDefaultUser(const std::strin
     return;
 }
 
-ErrCode BaseBundleInstaller::CleanShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
+ErrCode BaseBundleInstaller::CleanShaderCache(const InnerBundleInfo &oldInfo,
     const std::string &bundleName, int32_t userId) const
 {
     LOG_D(BMS_TAG_INSTALLER, "start for -n:%{public}s -u:%{public}d", bundleName.c_str(), userId);
@@ -7275,10 +7287,22 @@ ErrCode BaseBundleInstaller::CleanShaderAndArkStartupCache(const InnerBundleInfo
         dirs.emplace_back(systemOptimizeShaderCache);
     }
 
+    ErrCode result = InstalldClient::GetInstance()->CleanBundleDirs(dirs, true);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "clean bundle shader cache dirs failed, error:%{public}d", result);
+        return result;
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CleanArkStartupCache(const std::string &bundleName, int32_t userId) const
+{
+    LOG_D(BMS_TAG_INSTALLER, "start for -n:%{public}s -u:%{public}d", bundleName.c_str(), userId);
     std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH + bundleName +
         ServiceConstants::ARK_STARTUP_CACHE_DIR;
     el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
         std::to_string(userId));
+    std::vector<std::string> dirs;
     dirs.emplace_back(el1ArkStartupCachePath);
 
     ErrCode result = InstalldClient::GetInstance()->CleanBundleDirs(dirs, true);
