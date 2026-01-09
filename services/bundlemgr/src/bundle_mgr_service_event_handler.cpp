@@ -4214,6 +4214,19 @@ void BMSEventHandler::RegisterRelabelEvent()
     subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
 
     auto subscriberPtr = std::make_shared<IdleConditionEventSubscriber>(subscribeInfo);
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
+        userId = Constants::START_USERID;
+    }
+    if (AccountHelper::IsOsAccountVerified(userId)) {
+        LOG_I(BMS_TAG_DEFAULT, "user %{public}d is unlocked", userId);
+        OHOS::AAFwk::Want want;
+        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+        EventFwk::CommonEventData data { want };
+        data.SetCode(userId);
+        subscriberPtr->OnReceiveEvent(data);
+    }
+
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
         LOG_W(BMS_TAG_DEFAULT, "subscribe relabel event failed");
     }
