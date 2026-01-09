@@ -216,18 +216,12 @@ void IdleConditionMgr::OnThermalLevelChanged(PowerMgr::ThermalLevel level)
 {
     APP_LOGI("OnThermalLevelChanged called, level=%{public}d", level);
     if (level < PowerMgr::ThermalLevel::WARM) {
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            thermalSatisfied_ = true;
-        }
+        thermalSatisfied_ = true;
         TryStartRelabel();
     } else {
-        {
-            APP_LOGD("thermal level %{public}d greater than %{public}d interrupt relabel",
-                level, PowerMgr::ThermalLevel::WARM);
-            std::lock_guard<std::mutex> lock(mutex_);
-            thermalSatisfied_ = false;
-        }
+        APP_LOGD("thermal level %{public}d greater than %{public}d interrupt relabel",
+            level, PowerMgr::ThermalLevel::WARM);
+        thermalSatisfied_ = false;
         InterruptRelabel();
     }
 }
