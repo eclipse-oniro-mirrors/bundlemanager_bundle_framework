@@ -37,7 +37,6 @@ constexpr const char* MEMORY_INFO_PATH = "/dev/memcg/memory.zswapd_presure_show"
 constexpr const char* MEMORY_BUFFER_KEY = "buffer_size";
 constexpr int32_t RELABEL_WAIT_TIME_SECONDS = 5 * 60; // 5 minutes
 constexpr int32_t RELABEL_MIN_BATTERY_CAPACITY = 20;
-constexpr int32_t RELABEL_MAX_BATTERY_TEMP = 370;
 constexpr int32_t RELABEL_MIN_BUFFER_SIZE = 700;
 }
 
@@ -47,6 +46,7 @@ IdleConditionMgr::IdleConditionMgr()
     idleConditionListener_ = std::make_shared<IdleConditionListener>();
     Memory::MemMgrClient::GetInstance().SubscribeAppState(*idleConditionListener_);
     APP_LOGI("IdleConditionMgr created");
+    thermalSatisfied_ = PowerMgr::ThermalMgrClient::GetInstance().GetThermalLevel() < PowerMgr::ThermalLevel::WARM;
 }
 
 IdleConditionMgr::~IdleConditionMgr()
@@ -189,16 +189,15 @@ bool IdleConditionMgr::IsBufferSufficient()
     return currentBufferSizeMb > RELABEL_MIN_BUFFER_SIZE;
 }
 
-void IdleConditionMgr::OnBatteryChanged(int32_t batteryTemperature)
+void IdleConditionMgr::OnBatteryChanged()
 {
     APP_LOGI("OnBatteryChanged called");
     int32_t currentBatteryCap = OHOS::PowerMgr::BatterySrvClient::GetInstance().GetCapacity();
     int32_t relabelBatteryCapacity = OHOS::system::GetIntParameter<int32_t>(
         BMS_PARAM_RELABEL_BATTERY_CAPACITY, RELABEL_MIN_BATTERY_CAPACITY);
-    if (currentBatteryCap < relabelBatteryCapacity || batteryTemperature >= RELABEL_MAX_BATTERY_TEMP) {
-        APP_LOGD("battery capacity %{public}d less than %{public}d or temperature %{public}d "
-                 "greater than %{public}d, interrupt relabel",
-            currentBatteryCap, relabelBatteryCapacity, batteryTemperature, RELABEL_MAX_BATTERY_TEMP);
+    if (currentBatteryCap < relabelBatteryCapacity) {
+        APP_LOGD("battery capacity %{public}d less than %{public}d interrupt relabel",
+            currentBatteryCap, relabelBatteryCapacity);
         {
             std::lock_guard<std::mutex> lock(mutex_);
             batterySatisfied_ = false;
@@ -210,6 +209,26 @@ void IdleConditionMgr::OnBatteryChanged(int32_t batteryTemperature)
             batterySatisfied_ = true;
         }
         TryStartRelabel();
+    }
+}
+
+void IdleConditionMgr::OnThermalLevelChanged(PowerMgr::ThermalLevel level)
+{
+    APP_LOGI("OnThermalLevelChanged called, level=%{public}d", level);
+    if (level < PowerMgr::ThermalLevel::WARM) {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            thermalSatisfied_ = true;
+        }
+        TryStartRelabel();
+    } else {
+        {
+            APP_LOGD("thermal level %{public}d greater than %{public}d interrupt relabel",
+                level, PowerMgr::ThermalLevel::WARM);
+            std::lock_guard<std::mutex> lock(mutex_);
+            thermalSatisfied_ = false;
+        }
+        InterruptRelabel();
     }
 }
 

@@ -18,8 +18,9 @@
 #include <atomic>
 #include <mutex>
 
-#include "singleton.h"
 #include "idle_condition_listener.h"
+#include "singleton.h"
+#include "thermal_mgr_client.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -36,7 +37,8 @@ public:
     void OnPowerDisconnected();
     void OnUserStopping();
     void HandleOnTrim(Memory::SystemMemoryLevel level);
-    void OnBatteryChanged(int32_t batteryTemperature);
+    void OnBatteryChanged();
+    void OnThermalLevelChanged(PowerMgr::ThermalLevel level);
     void TryStartRelabel();
     void InterruptRelabel();
 
@@ -53,6 +55,7 @@ private:
     std::atomic<bool> screenLocked_{false};
     std::atomic<bool> powerConnected_{false};
     std::atomic<bool> batterySatisfied_{false};
+    std::atomic<bool> thermalSatisfied_{false};
     
     std::atomic<bool> isRelabeling_{false};
     std::atomic<bool> powerConnectedThreadActive_{false};
