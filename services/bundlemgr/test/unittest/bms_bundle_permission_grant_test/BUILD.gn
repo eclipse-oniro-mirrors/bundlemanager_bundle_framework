@@ -105,6 +105,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
     "storage_service:storage_manager_sa_proxy",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_PERMISSION_DEF_LIST" ]
@@ -673,6 +674,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
     "storage_service:storage_manager_sa_proxy",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [
