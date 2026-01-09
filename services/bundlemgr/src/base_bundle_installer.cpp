@@ -43,6 +43,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_data_mgr.h"
+#include "bms_update_selinux_mgr.h"
 #include "bundle_clone_installer.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_parser.h"
@@ -404,6 +405,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     if (!installParam.isKeepData && (result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE ||
         result == ERR_APPEXECFWK_USER_NOT_INSTALL_HAP) &&
         DeleteUninstallBundleInfoFromDb(bundleName)) {
+        DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId_, 0);
         LOG_I(BMS_TAG_INSTALLER, "del uninstalled bundle %{public}s dir and info", bundleName.c_str());
         SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, installParam,
             sysEventInfo_.preBundleScene, ERR_OK);
@@ -2661,6 +2663,7 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
         }
+        DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(info.GetBundleName(), userId_, 0);
     }
 
     return ERR_OK;

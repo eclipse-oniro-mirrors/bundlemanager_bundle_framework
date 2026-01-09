@@ -33,6 +33,7 @@ public:
     ErrCode StartUpdateSelinuxLabel(const int32_t userId);
     ErrCode StopUpdateSelinuxLabel(const int32_t reason);
     ErrCode AddBundles(const std::vector<BundleOptionInfo> &bundleOptionInfos);
+    ErrCode DeleteBundle(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
 private:
     std::vector<std::string> GetBundleDataPath(const std::string &bundleName,

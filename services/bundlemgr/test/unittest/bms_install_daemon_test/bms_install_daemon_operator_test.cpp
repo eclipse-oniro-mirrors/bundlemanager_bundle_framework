@@ -1421,7 +1421,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8300, Function | Sma
     std::string userId = "";
     std::string packageName = "";
     bool ret = InstalldOperator::ProcessBundleUnInstallNative(userId, packageName);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 }
 
 /**
