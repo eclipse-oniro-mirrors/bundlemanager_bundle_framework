@@ -606,8 +606,8 @@ bool DefaultAppMgr::GetBundleInfo(int32_t userId, const std::string& type, const
         LOG_W(BMS_TAG_DEFAULT, "GetBundleInfo, type and skills not match");
         return false;
     }
-    ErrCode errCode = dataMgr->GetCloneBundleInfo(element.bundleName, GET_BUNDLE_DEFAULT,
-        element.appIndex, bundleInfo, userId);
+    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    ErrCode errCode = dataMgr->GetCloneBundleInfo(element.bundleName, flag, element.appIndex, bundleInfo, userId);
     if (errCode != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "GetCloneBundleInfo failed, errCode: %{public}d", errCode);
         return false;
