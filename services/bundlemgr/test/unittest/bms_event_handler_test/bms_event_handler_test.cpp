@@ -3154,4 +3154,19 @@ HWTEST_F(BmsEventHandlerTest, NotifyFWKAfterBmsStart_0100, Function | SmallTest 
     EXPECT_NO_THROW(handler->NotifyFWKAfterBmsStart());
 }
 #endif
+
+/**
+ * @tc.number: ProcessIdleInfo_0100
+ * @tc.name: ProcessIdleInfo
+ * @tc.desc: test ProcessIdleInfo
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessIdleInfo_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        auto ret = handler->ProcessIdleInfo();
+        EXPECT_FALSE(ret);
+    }
+}
 } // OHOS
