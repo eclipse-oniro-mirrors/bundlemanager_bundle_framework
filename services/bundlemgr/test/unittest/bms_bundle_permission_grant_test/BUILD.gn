@@ -292,6 +292,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -478,6 +479,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE" ]
@@ -859,6 +861,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE" ]
@@ -1046,6 +1049,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_NOT_IS_NAYIVE_TOKEN_TYPE" ]
@@ -1220,6 +1224,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [
@@ -1384,6 +1389,7 @@ ohos_unittest("BmsBundlePermissionIpcSkeletonTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [

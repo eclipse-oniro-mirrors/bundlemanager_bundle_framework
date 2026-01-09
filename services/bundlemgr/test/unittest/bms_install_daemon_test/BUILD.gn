@@ -64,6 +64,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += bundle_install_external_deps
@@ -234,6 +235,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += bundle_install_external_deps
@@ -315,6 +317,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += bundle_install_external_deps
@@ -392,6 +395,7 @@ ohos_unittest("BmsInstalldOperatorTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += bundle_install_external_deps

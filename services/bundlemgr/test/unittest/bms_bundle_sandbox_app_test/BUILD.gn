@@ -87,6 +87,7 @@ ohos_unittest("BmsSandboxAppTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -267,6 +268,7 @@ ohos_unittest("BmsSandboxRdbTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 

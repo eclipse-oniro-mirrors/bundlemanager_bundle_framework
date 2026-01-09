@@ -87,6 +87,7 @@ ohos_unittest("BmsBundleResourceIconRdbTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -190,6 +191,7 @@ ohos_unittest("BmsBundleResourceThemeProcessTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []

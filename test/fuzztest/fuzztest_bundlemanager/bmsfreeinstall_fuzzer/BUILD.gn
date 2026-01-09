@@ -70,6 +70,7 @@ ohos_fuzztest("BMSFreeInstallFuzzTest001") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -241,6 +242,7 @@ ohos_fuzztest("BMSFreeInstallFuzzTest002") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -412,6 +414,7 @@ ohos_fuzztest("BMSFreeInstallFuzzTest003") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -583,6 +586,7 @@ ohos_fuzztest("BMSFreeInstallFuzzTest004") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 

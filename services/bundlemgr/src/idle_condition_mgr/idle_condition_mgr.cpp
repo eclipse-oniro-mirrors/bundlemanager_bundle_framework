@@ -46,7 +46,6 @@ IdleConditionMgr::IdleConditionMgr()
     idleConditionListener_ = std::make_shared<IdleConditionListener>();
     Memory::MemMgrClient::GetInstance().SubscribeAppState(*idleConditionListener_);
     APP_LOGI("IdleConditionMgr created");
-    thermalSatisfied_ = PowerMgr::ThermalMgrClient::GetInstance().GetThermalLevel() < PowerMgr::ThermalLevel::WARM;
 }
 
 IdleConditionMgr::~IdleConditionMgr()
@@ -189,6 +188,11 @@ bool IdleConditionMgr::IsBufferSufficient()
     return currentBufferSizeMb > RELABEL_MIN_BUFFER_SIZE;
 }
 
+bool IdleConditionMgr::IsThermalSatisfied()
+{
+    return PowerMgr::ThermalMgrClient::GetInstance().GetThermalLevel() < PowerMgr::ThermalLevel::WARM;
+}
+
 void IdleConditionMgr::OnBatteryChanged()
 {
     APP_LOGI("OnBatteryChanged called");
@@ -216,12 +220,10 @@ void IdleConditionMgr::OnThermalLevelChanged(PowerMgr::ThermalLevel level)
 {
     APP_LOGI("OnThermalLevelChanged called, level=%{public}d", level);
     if (level < PowerMgr::ThermalLevel::WARM) {
-        thermalSatisfied_ = true;
         TryStartRelabel();
     } else {
         APP_LOGD("thermal level %{public}d greater than %{public}d interrupt relabel",
             level, PowerMgr::ThermalLevel::WARM);
-        thermalSatisfied_ = false;
         InterruptRelabel();
     }
 }
@@ -259,6 +261,10 @@ void IdleConditionMgr::TryStartRelabel()
         APP_LOGI("Buffer not sufficient, no need to process");
         return;
     }
+    if (!IsThermalSatisfied()) {
+        APP_LOGI("Thermal not satisfied, no need to process");
+        return;
+    }
     if (!SetIsRelabeling()) {
         APP_LOGI("Set isRelabeling failed");
         return;
@@ -277,6 +283,10 @@ void IdleConditionMgr::TryStartRelabel()
         }
         if (!sharedPtr->IsBufferSufficient()) {
             APP_LOGI("Buffer not sufficient, no need to process");
+            return;
+        }
+        if (!sharedPtr->IsThermalSatisfied()) {
+            APP_LOGI("Thermal not satisfied, no need to process");
             return;
         }
         int32_t userId = AccountHelper::GetCurrentActiveUserId();

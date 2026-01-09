@@ -52,6 +52,7 @@ ohos_systemtest("ExtendResourceManagerProxyTest") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 }
 

@@ -45,6 +45,7 @@ public:
 private:
     bool CheckRelabelConditions();
     bool IsBufferSufficient();
+    bool IsThermalSatisfied();
     bool SetIsRelabeling();
 
 private:
@@ -55,7 +56,6 @@ private:
     std::atomic<bool> screenLocked_{false};
     std::atomic<bool> powerConnected_{false};
     std::atomic<bool> batterySatisfied_{false};
-    std::atomic<bool> thermalSatisfied_{false};
     
     std::atomic<bool> isRelabeling_{false};
     std::atomic<bool> powerConnectedThreadActive_{false};
