@@ -20,6 +20,7 @@
 #include "ability_manager_helper.h"
 #include "account_helper.h"
 #include "bms_extension_data_mgr.h"
+#include "bms_update_selinux_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
@@ -100,6 +101,7 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(const std::string &bundleName, c
         result == ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID ||
         result == ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED) &&
         DeleteUninstalledCloneData(bundleName, userId, appIndex)) {
+        DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId, appIndex);
         SendBundleSystemEvent(bundleName, BundleEventType::UNINSTALL, userId, appIndex,
             false, false, InstallScene::NORMAL, ERR_OK);
         return ERR_OK;
@@ -376,6 +378,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             APP_LOGE("delete AT failed clone");
         }
+        DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId, appIndex);
     } else {
         isKeepData_ = true;
         UninstallBundleInfo uninstallBundleInfo;

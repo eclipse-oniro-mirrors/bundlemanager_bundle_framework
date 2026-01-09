@@ -153,5 +153,18 @@ ErrCode BmsUpdateSelinuxMgr::AddBundles(const std::vector<BundleOptionInfo> &bun
     }
     return idleManagerRdb_->AddBundles(bundleOptionInfos);
 }
+
+ErrCode BmsUpdateSelinuxMgr::DeleteBundle(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    BundleOptionInfo bundleOptionInfo;
+    bundleOptionInfo.bundleName = bundleName;
+    bundleOptionInfo.userId = userId;
+    bundleOptionInfo.appIndex = appIndex;
+    return idleManagerRdb_->DeleteBundle(bundleOptionInfo);
+}
 } // namespace AppExecFwk
 } // namespace OHOS
