@@ -81,6 +81,7 @@ ohos_fuzztest("BMSBundleResourceThemeProcessFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
     "zlib:shared_libz",
     "c_utils:utils",
     "ipc:ipc_core",

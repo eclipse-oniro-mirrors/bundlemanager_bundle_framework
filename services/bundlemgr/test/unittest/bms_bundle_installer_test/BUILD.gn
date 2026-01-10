@@ -112,6 +112,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -322,6 +323,7 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -535,6 +537,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -709,6 +712,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -871,6 +875,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -1027,6 +1032,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -1187,6 +1193,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   if (bundle_framework_graphics) {
@@ -1381,6 +1388,7 @@ ohos_unittest("BmsBundleInstallDriverTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   if (bundle_framework_graphics) {
@@ -1562,6 +1570,7 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -1768,6 +1777,7 @@ ohos_unittest("BmsBundleInstallerPermissionTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
@@ -1987,6 +1997,7 @@ ohos_unittest("BmsBundleHnpTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]

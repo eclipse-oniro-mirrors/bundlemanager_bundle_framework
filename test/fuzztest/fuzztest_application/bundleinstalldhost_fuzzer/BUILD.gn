@@ -78,6 +78,7 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
 
   external_deps += [

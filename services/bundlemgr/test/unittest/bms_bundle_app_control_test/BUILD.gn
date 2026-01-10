@@ -89,6 +89,7 @@ ohos_unittest("BmsBundleAppControlTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -256,6 +257,7 @@ ohos_unittest("BmsBundleMockAppControlTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -431,6 +433,7 @@ ohos_unittest("BmsBundleAppApiVersionTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "selinux_adapter:librestorecon",
+    "thermal_manager:thermalsrv_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []

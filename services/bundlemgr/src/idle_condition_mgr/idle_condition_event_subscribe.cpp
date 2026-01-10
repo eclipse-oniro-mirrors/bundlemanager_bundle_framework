@@ -19,17 +19,19 @@
 #include "idle_condition_mgr/idle_condition_event_subscribe.h"
 #include "idle_condition_mgr/idle_condition_mgr.h"
 #include "parameters.h"
+#include "thermal_mgr_client.h"
 #include <sys/statfs.h>
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* RELABEL_PARAM = "persist.bms.relabel";
-constexpr const char* COMMON_EVENT_KEY_TEMPERATURE = "temperature";
 constexpr const char* COMMERCIAL_MODE = "commercial";
 constexpr const char* COMMERCIAL_MODE_PARAM = "const.logsystem.versiontype";
+constexpr const char* THERMAL_LEVEL_KEY = "0";
 constexpr const char* USER_DATA_DIR = "/data";
 constexpr double MIN_FREE_INODE_PERCENT = 0.2;
+constexpr int8_t THERMAL_LEVEL_NAME = -1;
 }
 
 IdleConditionEventSubscriber::IdleConditionEventSubscriber(
@@ -67,8 +69,12 @@ void IdleConditionEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDat
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_STOPPING) {
         idleMgr->OnUserStopping();
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_CHANGED) {
-        int32_t batteryTemperature = data.GetWant().GetIntParam(COMMON_EVENT_KEY_TEMPERATURE, 0);
-        idleMgr->OnBatteryChanged(batteryTemperature);
+        idleMgr->OnBatteryChanged();
+    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_THERMAL_LEVEL_CHANGED) {
+        int32_t thermalLevelInt = data.GetWant().GetIntParam(THERMAL_LEVEL_KEY,
+            THERMAL_LEVEL_NAME);
+        PowerMgr::ThermalLevel thermalLevel = static_cast<PowerMgr::ThermalLevel>(thermalLevelInt);
+        idleMgr->OnThermalLevelChanged(thermalLevel);
     }
 }
 
