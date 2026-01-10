@@ -24,7 +24,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+#ifdef VERIFY_PLAT_FPGA  //Used only for chip platform, do not modify.
+constexpr int32_t LOAD_SA_TIMEOUT_MS = 80 * 1000;
+#else
 constexpr int16_t LOAD_SA_TIMEOUT_MS = 4 * 1000;
+#endif
 } // namespace
 
 ErrCode InstalldClient::CreateBundleDir(const std::string &bundleDir)
