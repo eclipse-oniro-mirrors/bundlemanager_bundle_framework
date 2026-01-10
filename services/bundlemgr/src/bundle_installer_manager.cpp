@@ -284,5 +284,10 @@ bool BundleInstallerManager::HasRunningTask()
 {
     return g_taskCounter.load() != 0;
 }
+
+void BundleInstallerManager::FinishTask()
+{
+    g_taskCounter--;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
