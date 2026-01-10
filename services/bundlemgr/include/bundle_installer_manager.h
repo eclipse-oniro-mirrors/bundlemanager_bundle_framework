@@ -107,6 +107,7 @@ public:
         return threadNum_;
     }
     bool HasRunningTask();
+    void FinishTask();
 
 private:
     /**
