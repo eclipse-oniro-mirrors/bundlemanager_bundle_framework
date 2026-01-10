@@ -415,6 +415,9 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     }
 #endif
     UninstallDebugAppSandbox(bundleName, uid_, appIndex, info);
+    if (!isKeepData_) {
+        StopRelable(info, uid_);
+    }
     APP_LOGI("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
@@ -740,6 +743,20 @@ bool BundleCloneInstaller::DeleteUninstallCloneBundleInfo(const std::string &bun
     }
     BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId, appIndex);
     return true;
+}
+
+void BundleCloneInstaller::StopRelable(const InnerBundleInfo &info, int32_t uid)
+{
+    if (OHOS::system::GetParameter(ServiceConstants::SYSTEM_DEVICE_TYPE, "") != "phone") {
+        return;
+    }
+    CreateDirParam param;
+    param.bundleName = info.GetBundleName();
+    param.uid = uid;
+    param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    param.apl = info.GetAppPrivilegeLevel();
+    param.isPreInstallApp = info.IsPreInstallApp();
+    InstalldClient::GetInstance()->StopSetFileCon(param, ServiceConstants::StopReason::DELETE);
 }
 } // AppExecFwk
 } // OHOS

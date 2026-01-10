@@ -2166,6 +2166,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             "DeleteShortcutVisibleInfo failed, bundleName: %{public}s, userId: %{public}d, appIndex: 0",
             bundleName.c_str(), userId_);
     }
+    if (!installParam.isKeepData) {
+        StopRelable(oldInfo);
+    }
     return ERR_OK;
 }
 
@@ -8614,6 +8617,20 @@ void BaseBundleInstaller::InnerProcessNewBundleDataDir(const bool isOta,
     if (newBundleDirMgr != nullptr) {
         (void)newBundleDirMgr->AddNewBundleDirInfo(newBundleInfo.GetBundleName(), dirType);
     }
+}
+
+void BaseBundleInstaller::StopRelable(const InnerBundleInfo &info)
+{
+    if (OHOS::system::GetParameter(ServiceConstants::SYSTEM_DEVICE_TYPE, "") != "phone") {
+        return;
+    }
+    CreateDirParam param;
+    param.bundleName = info.GetBundleName();
+    param.uid = info.GetUid(userId_);
+    param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
+    param.apl = info.GetAppPrivilegeLevel();
+    param.isPreInstallApp = info.IsPreInstallApp();
+    InstalldClient::GetInstance()->StopSetFileCon(param, ServiceConstants::StopReason::DELETE);
 }
 
 void BaseBundleInstaller::SetIsAbcCompressed()

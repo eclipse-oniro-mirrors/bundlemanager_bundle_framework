@@ -21,6 +21,7 @@
 #include "app_log_wrapper.h"
 #include "battery_srv_client.h"
 #include "bms_update_selinux_mgr.h"
+#include "bundle_mgr_service.h"
 #include "ffrt.h"
 #include "file_ex.h"
 #include "idle_condition_mgr/idle_condition_mgr.h"
@@ -230,13 +231,19 @@ void IdleConditionMgr::OnThermalLevelChanged(PowerMgr::ThermalLevel level)
 
 bool IdleConditionMgr::CheckRelabelConditions()
 {
+    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    if (installer == nullptr) {
+        APP_LOGE("installer is null");
+        return false;
+    }
     std::lock_guard<std::mutex> lock(mutex_);
-    if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_) {
+    if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_ && !installer->HasRunningTask()) {
         return true;
     }
-    APP_LOGI("userUnlocked_ %{public}d, screenLocked_ %{public}d, \
-        powerConnected_ %{public}d, batterySatisfied_ %{public}d",
-        userUnlocked_.load(), screenLocked_.load(), powerConnected_.load(), batterySatisfied_.load());
+    APP_LOGI("userUnlocked_ %{public}d, screenLocked_ %{public}d, "
+        "powerConnected_ %{public}d, batterySatisfied_ %{public}d, hasTask %{public}d",
+        userUnlocked_.load(), screenLocked_.load(),
+        powerConnected_.load(), batterySatisfied_.load(), installer->HasRunningTask());
     return false;
 }
 
