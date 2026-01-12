@@ -308,11 +308,6 @@ void BMSEventHandler::AfterBmsStart()
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart start");
     // need process install exception bundle
     DelayedSingleton<InstallExceptionMgr>::GetInstance()->HandleAllBundleExceptionInfo();
-#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    if (OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
-        DelayedSingleton<QuickFixBootScanner>::GetInstance()->ProcessQuickFixBootUp();
-    }
-#endif
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
     // process is online theme
     BundleResourceHelper::SetIsOnlineThemeWhenBoot();
@@ -321,6 +316,12 @@ void BMSEventHandler::AfterBmsStart()
     HandleSceneBoard();
     CleanTempDir();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
+    // delay after regist
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    if (OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
+        DelayedSingleton<QuickFixBootScanner>::GetInstance()->ProcessQuickFixBootUp();
+    }
+#endif
     BundleResourceHelper::RegisterCommonEventSubscriber();
     BundleResourceHelper::RegisterConfigurationObserver();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
