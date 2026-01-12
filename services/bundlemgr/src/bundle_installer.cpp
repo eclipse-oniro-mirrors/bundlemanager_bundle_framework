@@ -327,7 +327,7 @@ void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const I
     if (!installParam.isOTA && !CheckSystemInodeSatisfied(bundleName)) {
         APP_LOGE("System inode not satisfied for uninstall and recover");
         if (statusReceiver_ != nullptr) {
-            statusReceiver_->OnFinished(ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT, "");
+            statusReceiver_->OnFinished(ERR_BUNDLE_MANAGER_INSUFFICIENT_NUMBER_OF_SYSTEM_INODES, "");
         }
         return;
     }
