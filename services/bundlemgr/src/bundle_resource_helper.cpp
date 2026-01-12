@@ -39,6 +39,11 @@ void BundleResourceHelper::BundleSystemStateInit()
     BundleSystemState::GetInstance().SetSystemLanguage(BundleResourceParam::GetSystemLanguage());
     BundleSystemState::GetInstance().SetSystemColorMode(BundleResourceParam::GetSystemColorMode());
     APP_LOGI("current system state: %{public}s", BundleSystemState::GetInstance().ToString().c_str());
+    // ahead resource db connection for boot trubo
+    auto task = []() {
+        DelayedSingleton<BundleResourceManager>::GetInstance();
+    };
+    std::thread(task).detach();
 #endif
 }
 
