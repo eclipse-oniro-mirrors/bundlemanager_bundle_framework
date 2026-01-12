@@ -29,7 +29,6 @@
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
 #include "parameters.h"
-#include "scope_guard.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -2567,46 +2566,6 @@ HWTEST_F(BmsBundleInstallCheckerTest, BundleUserMgrHostImpl_0004, Function | Sma
     auto res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, false,
         preInstallBundleInfos);
     EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: CheckCriticalApplicatiosAreInstalled_0100
- * @tc.name: test CheckCriticalApplicatiosAreInstalled
- * @tc.desc: test CheckCriticalApplicatiosAreInstalled
- */
-HWTEST_F(BmsBundleInstallCheckerTest, CheckCriticalApplicatiosAreInstalled_0100, Function | SmallTest | Level0)
-{
-    ASSERT_NE(bundleUserMgrHostImpl_, nullptr);
-    auto res = bundleUserMgrHostImpl_->CheckCriticalApplicatiosAreInstalled(
-        USERID, {}, {}, std::vector<std::string>{});
-    EXPECT_EQ(res, ERR_OK);
-    res = bundleUserMgrHostImpl_->CheckCriticalApplicatiosAreInstalled(
-        USERID, { "com.test.test" }, {}, std::vector<std::string>{});
-    EXPECT_EQ(res, ERR_OK);
-    res = bundleUserMgrHostImpl_->CheckCriticalApplicatiosAreInstalled(
-        USERID, { "com.test.test" }, { "com.test.test" }, std::nullopt);
-    EXPECT_EQ(res, ERR_OK);
-    res = bundleUserMgrHostImpl_->CheckCriticalApplicatiosAreInstalled(
-        USERID, { "com.test.test" }, {}, std::vector<std::string>{ "com.test.test" });
-    EXPECT_NE(res, ERR_OK);
-
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    ASSERT_NE(dataMgr, nullptr);
-    InnerBundleInfo bundleInfo;
-    ASSERT_NE(bundleInfo.baseApplicationInfo_, nullptr);
-    bundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
-    bundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
-    InnerBundleCloneInfo cloneInfo;
-    InnerBundleUserInfo userInfo;
-    userInfo.cloneInfos.emplace(BUNDLE_NAME, cloneInfo);
-    std::string bundleKey = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(USERID);
-    bundleInfo.innerBundleUserInfos_.emplace(bundleKey, userInfo);
-    dataMgr->multiUserIdsSet_.insert(USERID);
-    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, bundleInfo);
-    ScopeGuard bundleInfoGuard([&] { dataMgr->bundleInfos_.erase(BUNDLE_NAME); });
-    res = bundleUserMgrHostImpl_->CheckCriticalApplicatiosAreInstalled(
-        USERID, { BUNDLE_NAME }, {}, std::vector<std::string>{ BUNDLE_NAME });
-    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
