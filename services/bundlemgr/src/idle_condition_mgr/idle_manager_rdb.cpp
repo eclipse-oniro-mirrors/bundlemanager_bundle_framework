@@ -121,7 +121,20 @@ ErrCode IdleManagerRdb::DeleteBundle(const BundleOptionInfo &bundleOptionInfo)
     return ERR_OK;
 }
 
-ErrCode IdleManagerRdb::GetAllBundle(int32_t userId, std::vector<BundleOptionInfo> &bundleOptionInfos)
+ErrCode IdleManagerRdb::DeleteBundle(const int32_t userId)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    NativeRdb::AbsRdbPredicates absRdbPredicates(IDLE_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(USER_ID, userId);
+    auto ret = rdbDataManager_->DeleteData(absRdbPredicates);
+    if (!ret) {
+        APP_LOGE("DeleteBundle failed -u:%{public}d", userId);
+        return ERR_APPEXECFWK_DB_DELETE_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode IdleManagerRdb::GetAllBundle(const int32_t userId, std::vector<BundleOptionInfo> &bundleOptionInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     NativeRdb::AbsRdbPredicates absRdbPredicates(IDLE_RDB_TABLE_NAME);

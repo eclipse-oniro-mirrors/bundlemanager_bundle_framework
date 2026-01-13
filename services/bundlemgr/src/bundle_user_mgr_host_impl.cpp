@@ -22,6 +22,7 @@
 #include "aot_handler.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
+#include "bms_update_selinux_mgr.h"
 #include "bundle_hitrace_chain.h"
 #include "bundle_mgr_service.h"
 #include "bundle_resource_helper.h"
@@ -445,6 +446,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
         dataMgr->RemoveAppInstallDir(userId);
         dataMgr->DeleteFirstInstallBundleInfo(userId);
         DeleteAllDisposedRulesForUser(userId);
+        DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundleForUser(userId);
         return ERR_OK;
     }
 
@@ -458,6 +460,7 @@ ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
     dataMgr->DeleteFirstInstallBundleInfo(userId);
     dataMgr->RemoveUninstalledBundleinfos(userId);
     DeleteAllDisposedRulesForUser(userId);
+    DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundleForUser(userId);
     BundleResourceHelper::DeleteUninstallBundleResourceForUser(userId);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
