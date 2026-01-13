@@ -237,13 +237,13 @@ bool IdleConditionMgr::CheckRelabelConditions()
         return false;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_ && !installer->HasRunningTask()) {
+    if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_ && g_taskCounter.load() == 0) {
         return true;
     }
     APP_LOGI("userUnlocked_ %{public}d, screenLocked_ %{public}d, "
-        "powerConnected_ %{public}d, batterySatisfied_ %{public}d, hasTask %{public}d",
+        "powerConnected_ %{public}d, batterySatisfied_ %{public}d, taskNum %{public}d",
         userUnlocked_.load(), screenLocked_.load(),
-        powerConnected_.load(), batterySatisfied_.load(), installer->HasRunningTask());
+        powerConnected_.load(), batterySatisfied_.load(), g_taskCounter.load());
     return false;
 }
 
