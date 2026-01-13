@@ -5724,7 +5724,7 @@ bool BMSEventHandler::ProcessIdleInfo()
     LOG_I(BMS_TAG_DEFAULT, "begin");
     bool flag = false;
     CheckOtaFlag(OTAFlag::ADD_IDLE_INFO, flag);
-    if (flag && (OHOS::system::GetParameter(ServiceConstants::RELABLE_PARAM, "") != ServiceConstants::BMS_TRUE)) {
+    if (flag && (OHOS::system::GetParameter(ServiceConstants::RELABEL_PARAM, "") != ServiceConstants::BMS_TRUE)) {
         LOG_I(BMS_TAG_DEFAULT, "Not need to add idle info");
         return true;
     }

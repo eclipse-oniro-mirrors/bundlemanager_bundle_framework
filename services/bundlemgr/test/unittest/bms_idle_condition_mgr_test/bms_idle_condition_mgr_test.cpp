@@ -76,7 +76,7 @@ HWTEST_F(BmsIdleConditionMgrTest, CheckRelabelConditions_0100, Function | SmallT
     ASSERT_NE(idleMgr, nullptr);
 
     idleMgr->screenLocked_ = false;
-    bool result = idleMgr->CheckRelabelConditions();
+    bool result = idleMgr->CheckRelabelConditions(100);
     EXPECT_FALSE(result);
 }
 
@@ -108,10 +108,10 @@ HWTEST_F(BmsIdleConditionMgrTest, OnUserUnlocked_0100, Function | SmallTest | Le
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
     
-    idleMgr->OnUserUnlocked();
-    EXPECT_TRUE(idleMgr->userUnlocked_);
-    idleMgr->OnUserStopping();
-    EXPECT_FALSE(idleMgr->userUnlocked_);
+    idleMgr->OnUserUnlocked(100);
+    EXPECT_TRUE(idleMgr->userUnlockedMap_[100]);
+    idleMgr->OnUserStopping(100);
+    EXPECT_FALSE(idleMgr->userUnlockedMap_[100]);
 }
 
 /**
@@ -166,7 +166,7 @@ HWTEST_F(BmsIdleConditionMgrTest, TryStartRelabel_0100, Function | SmallTest | L
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     ASSERT_NE(idleMgr, nullptr);
 
-    idleMgr->userUnlocked_ = true;
+    idleMgr->userUnlockedMap_[100] = true;
     idleMgr->screenLocked_ = true;
     idleMgr->powerConnected_ = true;
     idleMgr->batterySatisfied_ = true;
@@ -222,8 +222,8 @@ HWTEST_F(BmsIdleConditionMgrTest, OnReceiveEvent_0100, Function | SmallTest | Le
     want2.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED);
     eventData2.SetWant(want2);
     subscriberPtr->OnReceiveEvent(eventData2);
-    std::string param = OHOS::system::GetParameter(ServiceConstants::SYSTEM_DEVICE_TYPE, "");
-    if (param != "phone") {
+    std::string param = OHOS::system::GetParameter(ServiceConstants::BMS_RELABEL_PARAM, "");
+    if (param != "true") {
         EXPECT_TRUE(idleMgr->screenLocked_);
     } else {
         EXPECT_FALSE(idleMgr->screenLocked_);

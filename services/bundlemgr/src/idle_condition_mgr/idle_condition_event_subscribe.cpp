@@ -20,17 +20,11 @@
 #include "idle_condition_mgr/idle_condition_mgr.h"
 #include "parameters.h"
 #include "thermal_mgr_client.h"
-#include <sys/statfs.h>
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr const char* RELABEL_PARAM = "persist.bms.relabel";
-constexpr const char* COMMERCIAL_MODE = "commercial";
-constexpr const char* COMMERCIAL_MODE_PARAM = "const.logsystem.versiontype";
 constexpr const char* THERMAL_LEVEL_KEY = "0";
-constexpr const char* USER_DATA_DIR = "/data";
-constexpr double MIN_FREE_INODE_PERCENT = 0.2;
 constexpr int8_t THERMAL_LEVEL_NAME = -1;
 }
 
@@ -41,15 +35,11 @@ IdleConditionEventSubscriber::~IdleConditionEventSubscriber()
 {}
 void IdleConditionEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
-    std::string param = OHOS::system::GetParameter(ServiceConstants::SYSTEM_DEVICE_TYPE, "");
-    if (param != "phone") {
+    std::string param = OHOS::system::GetParameter(ServiceConstants::BMS_RELABEL_PARAM, "");
+    if (param != "true") {
         return;
     }
     APP_LOGI("OnReceiveEvent received idle condition event");
-    if (!CheckInodeForCommericalDevice()) {
-        APP_LOGE("inodes not satisfied");
-        return;
-    }
     std::string action = data.GetWant().GetAction();
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     if (idleMgr == nullptr) {
@@ -61,13 +51,13 @@ void IdleConditionEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDat
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_CONNECTED) {
         idleMgr->OnPowerConnected();
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
-        idleMgr->OnUserUnlocked();
+        idleMgr->OnUserUnlocked(data.GetCode());
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED) {
         idleMgr->OnScreenUnlocked();
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_POWER_DISCONNECTED) {
         idleMgr->OnPowerDisconnected();
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_STOPPING) {
-        idleMgr->OnUserStopping();
+        idleMgr->OnUserStopping(data.GetCode());
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_BATTERY_CHANGED) {
         idleMgr->OnBatteryChanged();
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_THERMAL_LEVEL_CHANGED) {
@@ -76,29 +66,6 @@ void IdleConditionEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDat
         PowerMgr::ThermalLevel thermalLevel = static_cast<PowerMgr::ThermalLevel>(thermalLevelInt);
         idleMgr->OnThermalLevelChanged(thermalLevel);
     }
-}
-
-bool IdleConditionEventSubscriber::CheckInodeForCommericalDevice()
-{
-    std::string versionType = OHOS::system::GetParameter(COMMERCIAL_MODE_PARAM, "");
-    if (versionType != COMMERCIAL_MODE) {
-        APP_LOGI("non commercial device");
-        return true;
-    }
-    struct statfs stat;
-    if (statfs(USER_DATA_DIR, &stat) != 0) {
-        APP_LOGE("statfs failed for %{public}s, error %{public}d",
-            USER_DATA_DIR, errno);
-        return false;
-    }
-    uint32_t minFreeInodeNum = static_cast<uint32_t>(stat.f_files * MIN_FREE_INODE_PERCENT);
-    if (stat.f_ffree > minFreeInodeNum) {
-        APP_LOGI("free inodes over threshold");
-        return false;
-    }
-    APP_LOGD("total inodes: %{public}llu, free inodes: %{public}llu",
-        stat.f_files, stat.f_ffree);
-    return true;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

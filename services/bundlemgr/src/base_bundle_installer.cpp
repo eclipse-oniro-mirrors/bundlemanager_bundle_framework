@@ -8692,7 +8692,7 @@ void BaseBundleInstaller::InnerProcessNewBundleDataDir(const bool isOta,
 
 void BaseBundleInstaller::StopRelable(const InnerBundleInfo &info)
 {
-    if (OHOS::system::GetParameter(ServiceConstants::SYSTEM_DEVICE_TYPE, "") != "phone") {
+    if (OHOS::system::GetParameter(ServiceConstants::BMS_RELABEL_PARAM, "") != "true") {
         return;
     }
     CreateDirParam param;
