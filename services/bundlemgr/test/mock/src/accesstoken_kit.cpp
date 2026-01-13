@@ -23,6 +23,13 @@ namespace AccessToken {
 static constexpr int GRANT_STATUS = 100;
 #endif
 #endif
+unsigned int g_accessTokenID = 0;
+
+void SetAccessTokenIDForTest(unsigned int value)
+{
+    g_accessTokenID = value;
+}
+
 AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy)
 {
     AccessTokenIDEx token;
@@ -151,6 +158,7 @@ AccessTokenID AccessTokenKit::GetHapTokenID(int userID, const std::string& bundl
 AccessTokenIDEx AccessTokenKit::GetHapTokenIDEx(int userID, const std::string& bundleName, int instIndex)
 {
     AccessTokenIDEx tokenIdEx;
+    tokenIdEx.tokenIdExStruct.tokenID = g_accessTokenID;
     return tokenIdEx;
 }
 

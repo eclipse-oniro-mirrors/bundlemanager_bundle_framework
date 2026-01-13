@@ -19,11 +19,29 @@ namespace OHOS {
 namespace AppExecFwk {
 int32_t retIndex = 0;
 std::vector<int32_t> retList = {};
+bool g_isDir = false;
+ErrCode g_errCode = ERR_OK;
+bool g_vectorEmpty = true;
 
 void SetTestReturnValue(const std::vector<int32_t> &list)
 {
     retList = list;
     retIndex = 0;
+}
+
+void SetIsDirForTest(bool value)
+{
+    g_isDir = value;
+}
+
+void SetErrCodeForTest(ErrCode value)
+{
+    g_errCode = value;
+}
+
+void SetVectorEmptyForTest(bool value)
+{
+    g_vectorEmpty = value;
 }
 
 ErrCode InstalldClient::CreateBundleDir(const std::string &bundleDir)
@@ -212,6 +230,9 @@ sptr<IInstalld> InstalldClient::GetInstalldProxy()
 ErrCode InstalldClient::ScanDir(
     const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths)
 {
+    if (!g_vectorEmpty) {
+        paths.emplace_back("");
+    }
     return 0;
 }
 
@@ -241,7 +262,8 @@ ErrCode InstalldClient::Mkdir(const std::string &dir, const int32_t mode, const 
 
 ErrCode InstalldClient::GetFileStat(const std::string &file, FileStat &fileStat)
 {
-    return 0;
+    fileStat.isDir = g_isDir;
+    return g_errCode;
 }
 
 ErrCode InstalldClient::ChangeFileStat(const std::string &file, FileStat &fileStat)
