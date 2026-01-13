@@ -8670,6 +8670,7 @@ void BaseBundleInstaller::StopRelable(const InnerBundleInfo &info)
     param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     param.apl = info.GetAppPrivilegeLevel();
     param.isPreInstallApp = info.IsPreInstallApp();
+    param.stopReason = "ProcessBundleUninstall";
     InstalldClient::GetInstance()->StopSetFileCon(param, ServiceConstants::StopReason::DELETE);
 }
 

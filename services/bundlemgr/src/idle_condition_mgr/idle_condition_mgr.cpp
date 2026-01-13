@@ -72,7 +72,7 @@ void IdleConditionMgr::OnScreenUnlocked()
         std::lock_guard<std::mutex> lock(mutex_);
         screenLocked_ = false;
     }
-    InterruptRelabel();
+    InterruptRelabel("OnScreenUnlocked called");
 }
 
 void IdleConditionMgr::OnUserUnlocked()
@@ -92,7 +92,7 @@ void IdleConditionMgr::OnUserStopping()
         std::lock_guard<std::mutex> lock(mutex_);
         userUnlocked_ = false;
     }
-    InterruptRelabel();
+    InterruptRelabel("OnUserStopping called");
 }
 
 void IdleConditionMgr::OnPowerConnected()
@@ -139,7 +139,7 @@ void IdleConditionMgr::OnPowerDisconnected()
         powerConnected_ = false;
     }
     powerConnectedThreadActive_ = false;
-    InterruptRelabel();
+    InterruptRelabel("OnPowerDisconnected called");
 }
  
 void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
@@ -156,7 +156,7 @@ void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:
             [[fallthrough]];
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
-            InterruptRelabel();
+            InterruptRelabel("memory level critical");
             break;
         default:
             break;
@@ -207,7 +207,7 @@ void IdleConditionMgr::OnBatteryChanged()
             std::lock_guard<std::mutex> lock(mutex_);
             batterySatisfied_ = false;
         }
-        InterruptRelabel();
+        InterruptRelabel("battery capacity low");
     } else {
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -225,7 +225,7 @@ void IdleConditionMgr::OnThermalLevelChanged(PowerMgr::ThermalLevel level)
     } else {
         APP_LOGD("thermal level %{public}d greater than %{public}d interrupt relabel",
             level, PowerMgr::ThermalLevel::WARM);
-        InterruptRelabel();
+        InterruptRelabel("OnThermalLevelChanged called");
     }
 }
 
@@ -311,7 +311,7 @@ void IdleConditionMgr::TryStartRelabel()
     std::thread(task).detach();
 }
 
-void IdleConditionMgr::InterruptRelabel()
+void IdleConditionMgr::InterruptRelabel(const std::string stopReason)
 {
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -327,7 +327,7 @@ void IdleConditionMgr::InterruptRelabel()
         APP_LOGE("bms update selinux mgr is null");
         return;
     }
-    if (bmsUpdateSelinuxMgr->StopUpdateSelinuxLabel(ServiceConstants::StopReason::BUSY) != ERR_OK) {
+    if (bmsUpdateSelinuxMgr->StopUpdateSelinuxLabel(ServiceConstants::StopReason::BUSY, stopReason) != ERR_OK) {
         std::lock_guard<std::mutex> lock(mutex_);
         isRelabeling_ = true;
     }

@@ -40,7 +40,7 @@ public:
     void OnBatteryChanged();
     void OnThermalLevelChanged(PowerMgr::ThermalLevel level);
     void TryStartRelabel();
-    void InterruptRelabel();
+    void InterruptRelabel(const std::string stopReason);
 
 private:
     bool CheckRelabelConditions();

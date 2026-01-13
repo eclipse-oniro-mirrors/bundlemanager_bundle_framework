@@ -244,7 +244,7 @@ void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::stri
     LOG_NOFUNC_I(BMS_TAG_INSTALLER, "add task:%{public}s", taskName.c_str());
     g_taskCounter++;
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
-    idleMgr->InterruptRelabel();
+    idleMgr->InterruptRelabel(taskName);
     threadPool_->AddTask(task);
 }
 

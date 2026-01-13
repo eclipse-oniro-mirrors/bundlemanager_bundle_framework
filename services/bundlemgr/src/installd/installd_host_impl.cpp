@@ -1478,7 +1478,7 @@ ErrCode InstalldHostImpl::SetFileConForce(const std::vector<std::string> &paths,
     hapFileInfo.hapFlags = hapFlags;
     hapFileInfo.uid = static_cast<uint32_t>(createDirParam.uid);
     ResultInfo resultInfo;
-    int ret = HapFileRestoreContext::GetInstance().SetFileConForce(hapFileInfo, resultInfo);
+    int ret = HapFileRestoreContext::GetInstance().SetFileConForce(hapFileInfo, createDirParam.remainingNum, resultInfo);
     if (ret != 0) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLD, "HapFileRestorecon failed, bundleName: %{public}s, errcode:%{public}d",
             createDirParam.bundleName.c_str(), ret);
@@ -1507,7 +1507,8 @@ ErrCode InstalldHostImpl::StopSetFileCon(const CreateDirParam &createDirParam, i
     hapFileInfo.flags = SELINUX_HAP_RESTORECON_RECURSE;
     hapFileInfo.hapFlags = hapFlags;
     hapFileInfo.uid = static_cast<uint32_t>(createDirParam.uid);
-    int ret = HapFileRestoreContext::GetInstance().StopSetFileCon(hapFileInfo, static_cast<StopReason>(reason));
+    int ret = HapFileRestoreContext::GetInstance().StopSetFileCon(hapFileInfo, static_cast<StopReason>(reason),
+        createDirParam.stopReason);
     if (ret != 0) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLD, "StopSetFileCon failed, bundleName: %{public}s, errcode:%{public}d",
             createDirParam.bundleName.c_str(), ret);
