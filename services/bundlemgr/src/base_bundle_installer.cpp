@@ -2089,6 +2089,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         SaveUninstallBundleInfo(bundleName, installParam.isKeepData, uninstallBundleInfo);
         if (installParam.isKeepData) {
             BundleResourceHelper::AddUninstallBundleResource(bundleName, userId_, 0);
+        } else {
+            DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId_, 0);
         }
         UninstallDebugAppSandbox(bundleName, uid, oldInfo);
         if (dataMgr_->DeleteShortcutVisibleInfo(bundleName, userId_, 0) != ERR_OK) {
@@ -2382,6 +2384,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "rm hnp failed");
             return result;
+        }
+        if (!installParam.isKeepData) {
+            DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance()->DeleteBundle(bundleName, userId_, 0);
         }
         if (onlyInstallInUser) {
             result = RemoveBundle(oldInfo, installParam.isKeepData);
