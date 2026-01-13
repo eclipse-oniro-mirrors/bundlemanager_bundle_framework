@@ -16,7 +16,9 @@
 #include "bundle_installer.h"
 
 #include <cinttypes>
+#include <fstream>
 #include <sys/statfs.h>
+#include <sstream>
 
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
@@ -28,6 +30,45 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* USER_DATA_DIR = "/data";
 constexpr double MIN_FREE_INODE_PERCENT = 0.005; // 0.5%
+constexpr const char* PROC_FILE_PATH = "/sys/fs/hmfs/userdata/orphan_nodes_info";
+constexpr double MAX_INSTALL_NEED_FDUSED_RATE = 0.8;
+constexpr int8_t ORPHAN_DATA_SIZE = 2;
+
+bool CheckOrphanNodeUseRateIsSufficient()
+{
+    std::vector<int64_t> numbers;
+    std::ifstream file(PROC_FILE_PATH);
+    if (!file.is_open()) {
+        APP_LOGW("proc file load failed!");
+        file.close();
+        return true;
+    }
+    std::string line;
+    if (getline(file, line)) {
+        std::istringstream iss(line);
+        int64_t num;
+        while (iss >> num) {
+            numbers.push_back(num);
+        }
+    }
+    file.close();
+    if (numbers.size() < ORPHAN_DATA_SIZE) {
+        APP_LOGW("proc file load failed!");
+        return true;
+    }
+    int64_t curOrphanNode = numbers[0];
+    int64_t maxOrphanNode = numbers[1];
+    LOG_D(BMS_TAG_INSTALLER, "orphan node %{public}s", GetJsonStrFromInfo(numbers).c_str());
+    if (curOrphanNode >= maxOrphanNode || curOrphanNode < 0) {
+        LOG_E(BMS_TAG_INSTALLER, "orphan node %{public}s", GetJsonStrFromInfo(numbers).c_str());
+        return false;
+    }
+    bool res = (static_cast<double>(curOrphanNode) / maxOrphanNode) < MAX_INSTALL_NEED_FDUSED_RATE;
+    if (!res) {
+        LOG_E(BMS_TAG_INSTALLER, "orphan node %{public}s", GetJsonStrFromInfo(numbers).c_str());
+    }
+    return res;
+}
 
 bool CheckSystemInodeSatisfied(const std::string &bundleName)
 {
@@ -48,9 +89,9 @@ bool CheckSystemInodeSatisfied(const std::string &bundleName)
     }
     LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}llu, free inodes: %{public}llu",
         stat.f_files, stat.f_ffree);
-    return true;
+    return CheckOrphanNodeUseRateIsSufficient();
 }
-}
+} // namespace
 BundleInstaller::BundleInstaller(const int64_t installerId, const sptr<IStatusReceiver> &statusReceiver)
     : installerId_(installerId), statusReceiver_(statusReceiver)
 {
