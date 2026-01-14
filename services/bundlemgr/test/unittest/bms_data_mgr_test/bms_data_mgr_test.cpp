@@ -5272,6 +5272,22 @@ HWTEST_F(BmsDataMgrTest, GetPluginHapModuleInfo_0001, TestSize.Level1)
 }
 
 /**
+ * @tc.number: NotifyPluginEventCallback_0001
+ * @tc.name: NotifyPluginEventCallback
+ * @tc.desc: test BundleDataMgr::NotifyPluginEventCallback
+ */
+HWTEST_F(BmsDataMgrTest, NotifyPluginEventCallback_0001, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    OHOS::EventFwk::CommonEventData commonData;
+    std::string bundleName = "test";
+    sptr<IBundleEventCallback> callback = nullptr;
+    bundleDataMgr.pluginCallbackMap_[std::string(Constants::FOUNDATION_PROCESS_NAME)].emplace_back(callback);
+    bundleDataMgr.pluginCallbackMap_[bundleName].emplace_back(callback);
+    EXPECT_NO_THROW(bundleDataMgr.NotifyPluginEventCallback(commonData, bundleName, false));
+}
+
+/**
  * @tc.number: UnregisterPluginEventCallback_0001
  * @tc.name: UnregisterPluginEventCallback
  * @tc.desc: test BundleDataMgr::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> &pluginEventCallback)
