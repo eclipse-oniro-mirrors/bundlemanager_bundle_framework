@@ -28,6 +28,7 @@
 #include "mem_mgr_client.h"
 #include "parameter.h"
 #include "parameters.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -284,6 +285,10 @@ void IdleConditionMgr::TryStartRelabel()
             APP_LOGD("stop relabel task");
             return;
         }
+        ScopeGuard relabelGuard([sharedPtr] {
+            std::lock_guard<std::mutex> lock(sharedPtr->mutex_);
+            sharedPtr->isRelabeling_ = false;
+        });
         if (!sharedPtr->CheckRelabelConditions()) {
             APP_LOGI("Refresh conditions not met, no need to process");
             return;
@@ -303,9 +308,6 @@ void IdleConditionMgr::TryStartRelabel()
             return;
         }
         bmsUpdateSelinuxMgr->StartUpdateSelinuxLabel(userId);
-
-        std::lock_guard<std::mutex> lock(sharedPtr->mutex_);
-        sharedPtr->isRelabeling_ = false;
         APP_LOGI("Relabel task finished");
     };
     std::thread(task).detach();
@@ -319,7 +321,6 @@ void IdleConditionMgr::InterruptRelabel()
             APP_LOGI("No relabeling in progress, no need to interrupt");
             return;
         }
-        isRelabeling_  = false;
     }
     // Interrupt logic here
     auto bmsUpdateSelinuxMgr = DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance();
@@ -327,10 +328,7 @@ void IdleConditionMgr::InterruptRelabel()
         APP_LOGE("bms update selinux mgr is null");
         return;
     }
-    if (bmsUpdateSelinuxMgr->StopUpdateSelinuxLabel(ServiceConstants::StopReason::BUSY) != ERR_OK) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        isRelabeling_ = true;
-    }
+    bmsUpdateSelinuxMgr->StopUpdateSelinuxLabel(ServiceConstants::StopReason::BUSY);
     APP_LOGI("Relabeling interrupted");
 }
 } // namespace AppExecFwk
