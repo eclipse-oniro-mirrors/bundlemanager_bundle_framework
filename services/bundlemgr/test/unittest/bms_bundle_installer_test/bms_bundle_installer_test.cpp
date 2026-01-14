@@ -179,6 +179,7 @@ const std::string PLUGIN_CODE_PATH_DIR_OLD = "/data/test/plugin_old";
 const int32_t TEST_U100 = 100;
 const int32_t TEST_U1 = 1;
 const int32_t MAX_WAITING_TIME = 600;
+constexpr const char* MULTIUSER_INSTALL_THIRD_PRELOAD_APP = "const.bms.multiUserInstallThirdPreloadApp";
 }  // namespace
 
 class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
@@ -13592,4 +13593,185 @@ HWTEST_F(BmsBundleInstallerTest, HashFiles_0010, Function | SmallTest | Level0)
     ret = installdHostImpl.HashFiles(files, filesHash);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+
+
+
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0100
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallation
+*/
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0100, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    int32_t userId = 101;
+    PreInstallBundleInfo preInfo;
+    bool ret = host.SkipThirdPreloadAppInstallation(userId,preInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0200
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallation
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0200, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.test");
+    std::string bundlePaths = {"/data/preload/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101; 
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0300
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0300, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.preload");
+    std::string bundlePaths = {"/preload/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101;
+    bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "false");
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0400
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0400, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.preload");
+    std::string bundlePaths = {"/test/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101;
+    bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "false");
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0500
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0500, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.preload");
+    std::string bundlePaths = {"/test/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101;
+    bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "true");
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0600
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0600, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.preload");
+    std::string bundlePaths = {"/preload/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101;
+    bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "true");
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0700
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0700, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.normal");
+    std::string bundlePaths = {"/system/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101;
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0100
+ * @tc.name: test GetAllPreInstallBundleInfos
+ * @tc.desc: 1.Test GetAllPreInstallBundleInfos the UserReceiverImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateNewUser_0100, Function | MediumTest | Level1)
+{
+    auto dataMgr =DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->initialUserFlag_ = true;
+    BundleUserMgrHostImpl host;
+    auto res = host.CreateNewUser(0);
+    EXPECT_EQ(res, ERR_OK);
+    InnerBundleInfo newInfo;
+    std::string bundleName = "test";
+    newInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
+    auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
+    newInfo.SetAppCodePath(appCodePath);
+    dataMgr->bundleInfos_.emplace("test", newInfo);
+    res = host.CreateNewUser(100);
+    host.BootFailError(nullptr);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/*
+ * @tc.number: InnerProcessSkipPreInstallBundles_0100
+ * @tc.name: test InnerProcessSkipPreInstallBundles
+ * @tc.desc: 1.Test InnerProcessSkipPreInstallBundles
+*/
+HWTEST_F(BmsBundleInstallerTest, InnerProcessSkipPreInstallBundles_0100, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    std::set<std::string> uninstallList;
+    uninstallList.insert(SYSTEMFIEID_NAME);
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    host.CheckSystemHspInstallPath();
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    host.GetAdditionalBundleInfos(preInstallBundleInfos);
+    bool ret = host.InnerProcessSkipPreInstallBundles(uninstallList, true);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_  = savedDataMgr;
+    EXPECT_FALSE(ret);
+}
+
+// /**
+//  * @tc.number: InnerRemoveUser_0500
+//  * @tc.name: test InnerRemoveUser
+//  * @tc.desc: 1.Test InnerRemoveUser
+// */
+HWTEST_F(BmsBundleInstallerTest, InnerRemoveUser_0100, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    int32_t userId = 120;
+    ErrCode res = host.InnerRemoveUser(userId, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
 } // OHOS
