@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -317,6 +317,36 @@ ErrCode InstalldProxy::GetDiskUsageFromPath(const std::vector<std::string> &path
         statSize = reply.ReadInt64();
     }
     return ret;
+}
+
+ErrCode InstalldProxy::GetBundleFileCount(const std::vector<int32_t> &uids, uint64_t &fileCount)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLD, "GetBundleFileCount write interface token failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!data.WriteInt32(static_cast<int32_t>(uids.size()))) {
+        LOG_E(BMS_TAG_INSTALLD, "GetBundleFileCount write uid failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (const auto &uid : uids) {
+        if (!data.WriteInt32(uid)) {
+            LOG_E(BMS_TAG_INSTALLD, "GetBundleFileCount write uid failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC, WAIT_TIME);
+    ErrCode ret = TransactInstalldCmd(InstalldInterfaceCode::GET_BUNDLE_FILE_COUNT, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "GetBundleFileCount send request failed");
+        return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
+    }
+    fileCount = reply.ReadInt64();
+    return ERR_OK;
 }
 
 ErrCode InstalldProxy::CleanBundleDataDir(const std::string &bundleDir)

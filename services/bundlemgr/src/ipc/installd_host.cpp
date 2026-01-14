@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -248,6 +248,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_DISK_USAGE_FROM_PATH):
             result = HandleGetDiskUsageFromPath(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_FILE_COUNT):
+            result = this->HandleGetBundleFileCount(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_DATA_GROUP_DIRS):
             result = HandleCreateDataGroupDirs(data, reply);
@@ -546,6 +549,33 @@ bool InstalldHost::HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel
         LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsageFromPath write failed");
         return false;
     }
+    return true;
+}
+bool InstalldHost::HandleGetBundleFileCount(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_D(BMS_TAG_INSTALLD, "HandleGetBundleFileCount start");
+
+    int32_t uidCount = data.ReadInt32();
+    std::vector<int32_t> uids;
+    for (int32_t i = 0; i < uidCount; i++) {
+        int32_t uid = data.ReadInt32();
+        uids.push_back(uid);
+    }
+    uint64_t fileCount = 0;
+    ErrCode result = GetBundleFileCount(uids, fileCount);
+
+    if (!reply.WriteInt32(result)) {
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetBundleFileCount write result failed");
+        return false;
+    }
+
+    if (result == ERR_OK) {
+        if (!reply.WriteInt64(fileCount)) {
+            LOG_E(BMS_TAG_INSTALLD, "HandleGetBundleFileCount write fileCount failed");
+            return false;
+        }
+    }
+
     return true;
 }
 

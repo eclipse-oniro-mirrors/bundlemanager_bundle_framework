@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -924,7 +924,8 @@ HWTEST_F(BmsCleanAllBundleCacheTest, CleanBundleCacheFilesAutomatic_0200, Functi
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
     uint64_t cacheSize = 0;
-    ErrCode result = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize);
+    std::optional<uint64_t> cleanedSize = std::nullopt;
+    ErrCode result = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize, CleanType::CACHE_SPACE, cleanedSize);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 }
 

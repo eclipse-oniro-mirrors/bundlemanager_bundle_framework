@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1239,6 +1239,39 @@ int64_t InstalldOperator::GetDiskUsageFromQuota(const int32_t uid)
     LOG_D(BMS_TAG_INSTALLD, "get disk usage from quota, uid: %{public}d, usage: %{public}llu",
         uid, static_cast<unsigned long long>(dq.dqb_curspace));
     return dq.dqb_curspace;
+}
+
+int64_t InstalldOperator::GetBundleFileCount(const std::vector<int32_t>& uids)
+{
+    std::lock_guard<std::recursive_mutex> lock(mMountsLock);
+    std::string device = "";
+    if (mQuotaReverseMounts.find(QUOTA_DEVICE_DATA_PATH) == mQuotaReverseMounts.end()) {
+        if (!InitialiseQuotaMounts()) {
+            LOG_E(BMS_TAG_INSTALLD, "Failed to initialise quota mounts");
+            return 0;
+        }
+    }
+    device = mQuotaReverseMounts[QUOTA_DEVICE_DATA_PATH];
+    if (device.empty()) {
+        LOG_W(BMS_TAG_INSTALLD, "skip when device no quotas present");
+        return 0;
+    }
+
+    int64_t totalInodes = 0;
+    for (const auto& currentUid : uids) {
+        struct dqblk dq;
+        if (quotactl(QCMD(Q_GETQUOTA, USRQUOTA), device.c_str(), currentUid, reinterpret_cast<char*>(&dq)) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "Failed to get quotactl, errno: %{public}d", errno);
+            continue;
+        } 
+        LOG_D(BMS_TAG_INSTALLD, "get file count from quota, uid: %{public}d, inodes: %{public}llu",
+            currentUid, static_cast<unsigned long long>(dq.dqb_curinodes));
+        totalInodes += dq.dqb_curinodes;
+    }
+    LOG_D(BMS_TAG_INSTALLD, "GetBundleFileCount finished for uid %{public}d, total inodes: %{public}" PRId64,
+        uids.size(), totalInodes);
+
+    return totalInodes;
 }
 
 bool InstalldOperator::ScanDir(

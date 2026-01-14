@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -178,6 +178,16 @@ ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &pat
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::GetDiskUsageFromPath, path, statSize, timeoutMs);
+}
+
+ErrCode InstalldClient::GetBundleFileCount(const std::vector<int32_t> &uids, uint64_t &fileCount)
+{
+    if (uids.empty()) {
+        APP_LOGE("uids is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::GetBundleFileCount, uids, fileCount);
 }
 
 ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1490,5 +1490,20 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8300, Function | Sma
 #else
     EXPECT_EQ(ret, ERR_OK);
 #endif
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_8400
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetBundleFileCount of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8400, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<int32_t> uids;
+    uint64_t fileCount = 0;
+    auto ret = hostImpl->GetBundleFileCount(uids, fileCount);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1729,6 +1729,23 @@ HWTEST_F(BmsInstallDaemonTest, GetDiskUsageFromPath_0100, Function | SmallTest |
     int64_t statSize = 0;
     ErrCode ret = hostImpl.GetDiskUsageFromPath(path, statSize);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleFileCount_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test GetBundleFileCount
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleFileCount_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<int32_t> uids;
+    uids.push_back(101);
+    uids.push_back(102);
+    uint64_t fileCount = -1;
+    ErrCode ret = hostImpl.GetBundleFileCount(uids, fileCount);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GE(fileCount, 0);
 }
 
 /**

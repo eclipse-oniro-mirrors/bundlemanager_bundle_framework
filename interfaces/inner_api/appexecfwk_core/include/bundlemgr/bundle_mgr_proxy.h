@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -581,9 +581,12 @@ public:
     /**
      * @brief Clears cache data of a specified size through the proxy object.
      * @param cacheSize Indicates the size of the cache data is to be cleared.
+     * @param cleanType Indicates the type of cache data to be cleared.
+     * @param cleanedSize Indicates the size of the cache data that is actually cleared.
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
-    virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize) override;
+    virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize, CleanType cleanType,
+        std::optional<uint64_t>& cleanedSize) override;
     /**
      * @brief Clears cache data of a specified application through the proxy object.
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.

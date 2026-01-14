@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1851,7 +1851,8 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
         BundleMgrInterfaceCode::GET_PERMISSION_DEF, data, permissionDef);
 }
 
-ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
+ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize,  CleanType cleanType,
+        std::optional<uint64_t>& cleanedSize)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
@@ -1869,13 +1870,22 @@ ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         APP_LOGE("fail to CleanBundleCacheFilesAutomatic due to write cache size fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    if (!data.WriteInt32(static_cast<int32_t>(cleanType))) {
+        APP_LOGE("fail to CleanBundleCacheFilesAutomatic due to write clean type fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
 
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::AUTO_CLEAN_CACHE_BY_SIZE, data, reply)) {
         APP_LOGE("fail to CleanBundleCacheFilesAutomatic from server");
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
-    return reply.ReadInt32();
+    ErrCode result = reply.ReadInt32();
+    bool res = reply.ReadBool();
+    if (res) {
+        cleanedSize = reply.ReadUint64();
+    }
+    return result;
 }
 
 ErrCode BundleMgrProxy::CleanBundleCacheFiles(

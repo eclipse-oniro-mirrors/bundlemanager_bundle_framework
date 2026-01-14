@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -221,6 +221,8 @@ public:
     static bool InitialiseQuotaMounts();
 
     static int64_t GetDiskUsageFromQuota(const int32_t uid);
+
+    static int64_t GetBundleFileCount(const std::vector<int32_t>& uids);
 
     static bool ScanDir(
         const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);

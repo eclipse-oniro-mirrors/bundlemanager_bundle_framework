@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -102,6 +102,27 @@ void BundleCacheMgr::GetBundleCacheSize(const std::vector<std::tuple<std::string
         }
     }
     return;
+}
+
+ErrCode BundleCacheMgr::GetBundleFileCount(const std::vector<int32_t> &uids, uint64_t &fileCount)
+{
+    if (uids.empty()) {
+        fileCount = 0;
+        return ERR_OK;
+    }
+
+    uint64_t totalInodeCount = 0;
+    ErrCode ret = InstalldClient::GetInstance()->GetBundleFileCount(uids, totalInodeCount);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetBundleFileCount failed for uid %{public}d, ret: %{public}d", uids.size(), ret);
+        return ret;
+    }
+
+    fileCount = totalInodeCount;
+    APP_LOGD("GetBundleFileCount succeeded, uids: %{public}zu, fileCount: %{public}llu",
+        uids.size(), fileCount);
+
+    return ERR_OK;
 }
 
 ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)

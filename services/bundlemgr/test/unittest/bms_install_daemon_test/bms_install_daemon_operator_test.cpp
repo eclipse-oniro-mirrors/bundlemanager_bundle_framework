@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -70,6 +70,9 @@ const std::string TEST_APP_IDENTIFIER = "5765880207854632823";
 const std::string HAP_COMPRESS_NATIVE_LIBS_FALSE_01 =
     "/data/test/resource/bms/install_operator/compressNativeLibsFalse01.hap";
 const std::string HAP_SO_LIBS = "libs/libhello.z.so";
+const std::vector<int32_t> TEST_UIDS_SINGLE = {20010001};
+const std::vector<int32_t> TEST_UIDS_MULTIPLE = {20010001, 20010002, 20010003};
+const std::vector<int32_t> TEST_UIDS_EMPTY = {};
 }; // namespace
 class BmsInstallDaemonOperatorTest : public testing::Test {
 public:
@@ -2416,5 +2419,43 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14100, Function | Sm
     param.appIdentifier = "123456";
     bool ret = InstalldOperator::ProcessBundleInstallNative(param);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetBundleFileCount of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15000, Function | SmallTest | Level0)
+{
+    std::vector<std::string> path;
+    path.push_back("");
+    std::vector<int32_t> uids = TEST_UIDS_SINGLE;
+    auto ret = InstalldOperator::GetBundleFileCount(uids);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15100
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetBundleFileCount of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15100, Function | MediumTest | Level1)
+{
+    std::vector<int32_t> uids = TEST_UIDS_MULTIPLE;
+    auto ret = InstalldOperator::GetBundleFileCount(uids);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetBundleFileCount of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15200, Function | MediumTest | Level1)
+{
+    std::vector<int32_t> uids = TEST_UIDS_EMPTY;
+    auto ret = InstalldOperator::GetBundleFileCount(uids);
+    EXPECT_EQ(ret, 0);
 }
 } // OHOS

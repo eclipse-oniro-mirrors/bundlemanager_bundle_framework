@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -663,6 +663,20 @@ HWTEST_F(BmsBundleInstallerPermissionTest, GetDiskUsageFromPath_0100, Function |
     std::vector<std::string> path;
     int64_t statSize = 0;
     ErrCode ret = installdHostImpl.GetDiskUsageFromPath(path, statSize);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetBundleFileCount_0100
+ * @tc.name: test GetBundleFileCount
+ * @tc.desc: 1.Test the GetBundleFileCount of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, GetBundleFileCount_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::vector<int32_t> uids;
+    uint64_t fileCount = 0;
+    ErrCode ret = installdHostImpl.GetBundleFileCount(uids, fileCount);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
