@@ -946,10 +946,12 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 #endif
         for (const auto &innerBundleInfo : newInfos) {
             auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
-            innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo);
-            preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
-            preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
-            preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+            if (innerBundleInfo.second.HasEntry() || preInstallBundleInfo.GetModuleName().empty()) {
+                innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo);
+                preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
+                preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+                preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+            }
             preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
             auto moduleMap = innerBundleInfo.second.GetInnerModuleInfos();
             if (innerBundleInfo.second.GetIsNewVersion()) {
