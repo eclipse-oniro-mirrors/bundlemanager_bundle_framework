@@ -5820,8 +5820,15 @@ bool BundleDataMgr::UnregisterBundleEventCallback(const sptr<IBundleEventCallbac
 void BundleDataMgr::NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const
 {
     APP_LOGD("begin to NotifyBundleEventCallback");
-    std::lock_guard lock(eventCallbackMutex_);
-    for (const auto &callback : eventCallbackList_) {
+    std::vector<sptr<IBundleEventCallback>> eventCallbackListCopy;
+    {
+        std::lock_guard lock(eventCallbackMutex_);
+        eventCallbackListCopy = eventCallbackList_;
+    }
+    for (const auto &callback : eventCallbackListCopy) {
+        if (callback == nullptr) {
+            continue;
+        }
         callback->OnReceiveEvent(eventData);
     }
     APP_LOGD("finish to NotifyBundleEventCallback");
@@ -12108,20 +12115,29 @@ void BundleDataMgr::NotifyPluginEventCallback(const EventFwk::CommonEventData &e
     const std::string &bundleName, bool isHsp)
 {
     APP_LOGI("begin");
-    std::lock_guard lock(pluginCallbackMutex_);
-    if (!isHsp) {
-        auto iter = pluginCallbackMap_.find(std::string(Constants::FOUNDATION_PROCESS_NAME));
-        if (iter != pluginCallbackMap_.end()) {
-            for (const auto &callback : iter->second) {
-                callback->OnReceiveEvent(eventData);
+    std::vector<sptr<IBundleEventCallback>> callbackList;
+    {
+        std::lock_guard lock(pluginCallbackMutex_);
+        if (!isHsp) {
+            auto iter = pluginCallbackMap_.find(std::string(Constants::FOUNDATION_PROCESS_NAME));
+            if (iter != pluginCallbackMap_.end()) {
+                for (const auto &callback : iter->second) {
+                    callbackList.push_back(callback);
+                }
+            }
+        }
+        auto bundleIter = pluginCallbackMap_.find(bundleName);
+        if (bundleIter != pluginCallbackMap_.end()) {
+            for (const auto &callback : bundleIter->second) {
+                callbackList.push_back(callback);
             }
         }
     }
-    auto bundleIter = pluginCallbackMap_.find(bundleName);
-    if (bundleIter != pluginCallbackMap_.end()) {
-        for (const auto &callback : bundleIter->second) {
-            callback->OnReceiveEvent(eventData);
+    for (const auto &callback : callbackList) {
+        if (callback == nullptr) {
+            continue;
         }
+        callback->OnReceiveEvent(eventData);
     }
     APP_LOGI("end");
 }
