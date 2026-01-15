@@ -2696,6 +2696,8 @@ ErrCode InstalldHostImpl::CreateDataGroupDir(const CreateDirParam &param)
             param.userId, param.uid, param.gid);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+    unsigned int hapFlags = GetHapFlags(param.isPreInstallApp, param.debug,
+        param.isDlpSandbox, param.dlpType, false);
     // create el2~el4 group dirs
     ErrCode result = ERR_OK;
     const std::vector<std::string> elList { "el2", "el3", "el4" };
@@ -2710,9 +2712,16 @@ ErrCode InstalldHostImpl::CreateDataGroupDir(const CreateDirParam &param)
         std::string groupDir = userDir + ServiceConstants::DATA_GROUP_PATH + param.uuid;
         if (!InstalldOperator::MkOwnerDir(
             groupDir, ServiceConstants::DATA_GROUP_DIR_MODE, param.uid, param.gid)) {
-            LOG_E(BMS_TAG_INSTALLD, "create group dir failed error %{public}s", strerror(errno));
+            LOG_E(BMS_TAG_INSTALLD, "create group dir:%{public}s failed error %{public}s",
+                groupDir.c_str(), strerror(errno));
             result = ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
             continue;
+        }
+        auto res = SetDirApl(groupDir, param.bundleName, param.apl, hapFlags, param.uid);
+        if (res != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLD, "SetDirApl failed: %{public}s, errno: %{public}d",
+                groupDir.c_str(), result);
+            result = res;
         }
     }
     return result;
