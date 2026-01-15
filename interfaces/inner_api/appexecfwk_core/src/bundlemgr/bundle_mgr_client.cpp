@@ -239,5 +239,23 @@ ErrCode BundleMgrClient::GetAllBundleDirs(int32_t userId, std::vector<BundleDir>
     }
     return impl_->GetAllBundleDirs(userId, bundleDirs);
 }
+
+ErrCode BundleMgrClient::RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return impl_->RegisterPluginEventCallback(pluginEventCallback);
+}
+
+ErrCode BundleMgrClient::UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback)
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return impl_->UnregisterPluginEventCallback(pluginEventCallback);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

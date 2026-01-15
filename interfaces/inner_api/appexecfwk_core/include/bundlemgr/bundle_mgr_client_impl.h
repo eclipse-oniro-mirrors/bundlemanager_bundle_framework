@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,10 +17,12 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_CLIENT_IMPL_H
 
 #include <shared_mutex>
+#include <vector>
 
 #include "appexecfwk_errors.h"
 #include "application_info.h"
 #include "bundle_dir.h"
+#include "bundle_event_callback_host.h"
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
 #include "bundle_mgr_interface.h"
@@ -33,6 +35,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 using Want = OHOS::AAFwk::Want;
+
+class PluginEventCallback;
 
 class BundleMgrClientImpl : public std::enable_shared_from_this<BundleMgrClientImpl> {
 public:
@@ -71,6 +75,9 @@ public:
     ErrCode CreateBundleDataDirWithEl(int32_t userId, DataDirEl dirEl);
     ErrCode GetDirByBundleNameAndAppIndex(const std::string &bundleName, const int32_t appIndex, std::string &dataDir);
     ErrCode GetAllBundleDirs(int32_t userId, std::vector<BundleDir> &bundleDirs);
+    ErrCode RegisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback);
+    ErrCode UnregisterPluginEventCallback(const sptr<IBundleEventCallback> pluginEventCallback);
+    void OnPluginEventCallback(const EventFwk::CommonEventData eventData);
 
 private:
     ErrCode Connect();
@@ -94,6 +101,18 @@ private:
     sptr<IBundleMgr> bundleMgr_;
     sptr<IBundleInstaller> bundleInstaller_;
     sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
+    std::mutex pluginCallbackMutex_;
+    sptr<PluginEventCallback> pluginEventCallback_ = nullptr;
+    std::vector<sptr<IBundleEventCallback>> pluginEventCallbackList_;
+};
+
+class PluginEventCallback : public BundleEventCallbackHost {
+public:
+    PluginEventCallback(std::shared_ptr<BundleMgrClientImpl> impl) : bundleMgrClientImpl_(impl) {}
+    virtual ~PluginEventCallback() = default;
+    void OnReceiveEvent(const EventFwk::CommonEventData eventData) override;
+private:
+    std::weak_ptr<BundleMgrClientImpl> bundleMgrClientImpl_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
