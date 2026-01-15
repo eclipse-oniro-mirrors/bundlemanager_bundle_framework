@@ -2417,4 +2417,17 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14100, Function | Sm
     bool ret = InstalldOperator::ProcessBundleInstallNative(param);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_14200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeleteFilesV9 of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14200, Function | SmallTest | Level0)
+{
+    ErrCode ret = InstalldOperator::DeleteFilesV9("");
+    EXPECT_EQ(ret, ERR_OK);
+    ret = InstalldOperator::DeleteFilesV9("/test/123");
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

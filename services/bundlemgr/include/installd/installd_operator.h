@@ -172,6 +172,12 @@ public:
      */
     static bool DeleteFiles(const std::string &dataPath);
     /**
+     * @brief Delete files in a directory.
+     * @param path Indicates the directory path of the files to be deleted.
+     * @return Returns ERR_OK if the files deleted successfully.
+     */
+    static ErrCode DeleteFilesV9(const std::string &dataPath);
+    /**
      * @brief Delete files in a directory except the directories to be kept.
      * @param dataPath Indicates the directory path of the files to be deleted.
      * @param dirsToKeep Indicates the directories to be kept.

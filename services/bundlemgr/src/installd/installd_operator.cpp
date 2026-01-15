@@ -986,6 +986,52 @@ bool InstalldOperator::DeleteFiles(const std::string &dataPath)
     return ret;
 }
 
+ErrCode InstalldOperator::DeleteFilesV9(const std::string &dataPath)
+{
+    LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::DeleteFiles start");
+    std::string subPath;
+    ErrCode errCode = ERR_OK;
+    DIR *dir = opendir(dataPath.c_str());
+    if (dir == nullptr) {
+        LOG_D(BMS_TAG_INSTALLD, "fail to opendir:%{public}s, errno:%{public}d", dataPath.c_str(), errno);
+        return errCode;
+    }
+    bool ret = true;
+    while (true) {
+        if (errCode == ERR_OK && !ret) {
+            errCode = ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
+        }
+        struct dirent *ptr = readdir(dir);
+        if (ptr == nullptr) {
+            LOG_D(BMS_TAG_INSTALLD, "fail to readdir errno:%{public}d", errno);
+            break;
+        }
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+            continue;
+        }
+        subPath = OHOS::IncludeTrailingPathDelimiter(dataPath) + std::string(ptr->d_name);
+        if (ptr->d_type == DT_DIR) {
+            if (!OHOS::ForceRemoveDirectoryBMS(subPath)) {
+                ret = false;
+                LOG_W(BMS_TAG_INSTALLD, "ForceRemoveDirectory %{public}s failed, error: %{public}d",
+                    dataPath.c_str(), errno);
+            }
+            continue;
+        }
+        if (access(subPath.c_str(), F_OK) == 0) {
+            ret = OHOS::RemoveFile(subPath);
+            if (!ret) {
+                LOG_W(BMS_TAG_INSTALLD, "RemoveFile %{public}s failed, error: %{public}d", dataPath.c_str(), errno);
+            }
+            continue;
+        }
+        // maybe lnk_file
+        ret = CheckAndDeleteLinkFile(subPath);
+    }
+    closedir(dir);
+    return errCode;
+}
+
 bool InstalldOperator::DeleteFilesExceptDirs(const std::string &dataPath, const std::vector<std::string> &dirsToKeep)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::DeleteFilesExceptBundleDataDirs start");

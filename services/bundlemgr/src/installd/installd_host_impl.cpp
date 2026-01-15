@@ -2925,8 +2925,8 @@ ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, 
         }
 
         if (keepParent) {
-            if (!InstalldOperator::DeleteFiles(dir)) {
-                ret = ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
+            ret = InstalldOperator::DeleteFilesV9(dir);
+            if (ret != ERR_OK) {
                 LOG_W(BMS_TAG_INSTALLD, "delete files in %{public}s failed errno:%{public}d", dir.c_str(), errno);
             }
         } else {
