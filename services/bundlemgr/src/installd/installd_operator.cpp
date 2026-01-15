@@ -2379,32 +2379,33 @@ bool InstalldOperator::GetAtomicServiceBundleDataDir(const std::string &bundleNa
 
 void InstalldOperator::AddDeleteDfx(const std::string &path)
 {
-    int32_t fd = open(path.c_str(), O_RDONLY);
-    if (fd < 0) {
+    FILE* fp = fopen(path.c_str(), "r");
+    if (fp == nullptr) {
         LOG_D(BMS_TAG_INSTALLD, "open dfx path %{public}s failed", path.c_str());
         return;
     }
+    int32_t fd = fileno(fp);
     unsigned int flags = 0;
     int32_t ret = ioctl(fd, HMF_IOCTL_HW_GET_FLAGS, &flags);
     if (ret < 0) {
         LOG_D(BMS_TAG_INSTALLD, "check dfx flag path %{public}s failed errno:%{public}d", path.c_str(), errno);
-        close(fd);
+        (void)fclose(fp);
         return;
     }
     if (flags & HMFS_MONITOR_FL) {
         LOG_D(BMS_TAG_INSTALLD, "Delete Control flag is already set");
-        close(fd);
+        (void)fclose(fp);
         return;
     }
     flags |= HMFS_MONITOR_FL;
     ret = ioctl(fd, HMF_IOCTL_HW_SET_FLAGS, &flags);
     if (ret < 0) {
         LOG_W(BMS_TAG_INSTALLD, "Add dfx flag failed errno:%{public}d path %{public}s", errno, path.c_str());
-        close(fd);
+        (void)fclose(fp);
         return;
     }
     LOG_I(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is set succeed", path.c_str());
-    close(fd);
+    (void)fclose(fp);
     return;
 }
 
@@ -2414,16 +2415,17 @@ void InstalldOperator::RmvDeleteDfx(const std::string &path)
         LOG_D(BMS_TAG_INSTALLD, "codeDir:%{public}s not need delete", path.c_str());
         return;
     }
-    int32_t fd = open(path.c_str(), O_RDONLY);
-    if (fd < 0) {
+    FILE* fp = fopen(path.c_str(), "r");
+    if (fp == nullptr) {
         LOG_D(BMS_TAG_INSTALLD, "open dfx path %{public}s failed", path.c_str());
         return;
     }
+    int32_t fd = fileno(fp);
     unsigned int flags = 0;
     int32_t ret = ioctl(fd, HMF_IOCTL_HW_GET_FLAGS, &flags);
     if (ret < 0) {
         LOG_D(BMS_TAG_INSTALLD, "check dfx flag path %{public}s failed errno:%{public}d", path.c_str(), errno);
-        close(fd);
+        (void)fclose(fp);
         return;
     }
     if (flags & HMFS_MONITOR_FL) {
@@ -2432,12 +2434,12 @@ void InstalldOperator::RmvDeleteDfx(const std::string &path)
         ret = ioctl(fd, HMF_IOCTL_HW_SET_FLAGS, &flags);
         if (ret < 0) {
             LOG_W(BMS_TAG_INSTALLD, "Rmv dfx flag failed errno:%{public}d path %{public}s", errno, path.c_str());
-            close(fd);
+            (void)fclose(fp);
             return;
         }
         LOG_D(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is Rmv succeed", path.c_str());
     }
-    close(fd);
+    (void)fclose(fp);
     return;
 }
 
