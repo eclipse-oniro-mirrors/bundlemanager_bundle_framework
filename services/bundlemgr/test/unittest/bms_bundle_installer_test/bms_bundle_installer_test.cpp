@@ -181,6 +181,15 @@ const int32_t TEST_U100 = 100;
 const int32_t TEST_U1 = 1;
 const int32_t MAX_WAITING_TIME = 600;
 constexpr const char* MULTIUSER_INSTALL_THIRD_PRELOAD_APP = "const.bms.multiUserInstallThirdPreloadApp";
+const int32_t TEST_ERROR_APP_INDEX = 1001;
+const int32_t TEST_LENGTH = 1;
+const int32_t TEST_VECTOR_SIZE = 300;
+const std::string TEST_EMPTY_STRING = "";
+const std::string TEST_BUNDLE_NAME = "com.example.test.bundleName";
+const std::string TEST_AMS_EXTENSION_CONFIG = "ams_extension_config";
+const std::string TEST_EXTENSION_TYPE_NAME = "extension_type_name";
+const std::string TEST_PATH = "../test";
+const std::string TEST_ERROR_STRING = "test.error.string";
 }  // namespace
 
 class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
@@ -14085,5 +14094,834 @@ HWTEST_F(BmsBundleInstallerTest, bmsExtensionDataMgrInitFail_0050, Function | Sm
     LauncherAbilityResourceInfo launcherAbilityResourceInfo;
     ErrCode ret4 = bmsExtensionDataMgr.GetLauncherAbilityResourceInfo(options, flags, launcherAbilityResourceInfo);
     EXPECT_EQ(ret4, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: ExtractHnpFiles_0100
+ * @tc.name: test ExtractHnpFiles
+ * @tc.desc: test the ExtractHnpFiles of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, ExtractHnpFiles_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::map<std::string, std::string> hnpPackageMap;
+    ExtractParam extractParam;
+    auto ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    extractParam.srcPath = INVALID_PATH;
+    ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    extractParam.targetPath = INVALID_PATH;
+    ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    hnpPackageMap.emplace(TEST_STRING, TEST_STRING);
+    ret = impl.ExtractHnpFiles(hnpPackageMap, extractParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED);
+}
+
+/**
+ * @tc.number: AclSetDir_0100
+ * @tc.name: test AclSetDir
+ * @tc.desc: test AclSetDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, AclSetDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    bool debug = true;
+    std::string dir = TEST_STRING;
+    bool setAccess = false;
+    bool setDefault = false;
+    auto ret = hostImpl.AclSetDir(debug, dir, setAccess, setDefault);
+    EXPECT_EQ(ret, ERR_OK);
+    setAccess = true;
+    ret = hostImpl.AclSetDir(debug, dir, setAccess, setDefault);
+    EXPECT_EQ(ret, ERR_OK);
+    setDefault = true;
+    ret = hostImpl.AclSetDir(debug, dir, setAccess, setDefault);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AclSetExtensionDirs_0100
+ * @tc.name: test AclSetExtensionDirs
+ * @tc.desc: test AclSetExtensionDirs of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, AclSetExtensionDirs_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    bool debug = true;
+    std::string parentDir = TEST_STRING;
+    std::vector<std::string> extensionDirs;
+    bool setAccess = false;
+    bool setDefault = false;
+    auto ret = hostImpl.AclSetExtensionDirs(debug, parentDir, extensionDirs, setAccess, setDefault);
+    EXPECT_EQ(ret, ERR_OK);
+    extensionDirs.emplace_back(TEST_STRING);
+    ret = hostImpl.AclSetExtensionDirs(debug, parentDir, extensionDirs, setAccess, setDefault);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithEl_0500
+ * @tc.name: test CreateBundleDataDirWithEl
+ * @tc.desc: test the CreateBundleDataDirWithEl
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDirWithEl_0500, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam;
+    auto res = hostImpl.CreateBundleDataDirWithEl(createDirParam);
+    createDirParam.bundleName = TEST_SHARE_FILES;
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.userId = USERID;
+    res = hostImpl.CreateBundleDataDirWithEl(createDirParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.uid = ZERO_CODE;
+    res = hostImpl.CreateBundleDataDirWithEl(createDirParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.gid = ZERO_CODE;
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithEl_0600
+ * @tc.name: test CreateBundleDataDirWithEl
+ * @tc.desc: test the CreateBundleDataDirWithEl
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDirWithEl_0600, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = TEST_SHARE_FILES;
+    createDirParam.userId = USERID;
+    createDirParam.uid = ZERO_CODE;
+    createDirParam.gid = ZERO_CODE;
+    createDirParam.apl = TEST_APL_INVALID;
+    createDirParam.isPreInstallApp = false;
+    createDirParam.dataDirEl = DataDirEl::NONE;
+    auto res = hostImpl.CreateBundleDataDirWithEl(createDirParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.dataDirEl = DataDirEl::EL1;
+    res = hostImpl.CreateBundleDataDirWithEl(createDirParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.dataDirEl = DataDirEl::EL5;
+    res = hostImpl.CreateBundleDataDirWithEl(createDirParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.dataDirEl = DataDirEl::EL2;
+    res = hostImpl.CreateBundleDataDirWithEl(createDirParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
+}
+
+/**
+ * @tc.number: CreateCommonDataDir_0100
+ * @tc.name: test CreateCommonDataDir
+ * @tc.desc: test the CreateCommonDataDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateCommonDataDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string el = TEST_STRING;
+    CreateDirParam createDirParam;
+    auto res = hostImpl.CreateCommonDataDir(createDirParam, el);
+    EXPECT_EQ(res, ERR_OK);
+    createDirParam.dataDirEl = DataDirEl::EL5;
+    res = hostImpl.CreateCommonDataDir(createDirParam, el);
+    EXPECT_EQ(res, ERR_OK);
+    createDirParam.dataDirEl = DataDirEl::EL1;
+    res = hostImpl.CreateCommonDataDir(createDirParam, el);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.bundleName = TEST_STRING;
+    createDirParam.uid = ZERO_CODE;
+    res = hostImpl.CreateCommonDataDir(createDirParam, el);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
+}
+
+/**
+ * @tc.number: CreateEl2DataDir_0100
+ * @tc.name: test CreateEl2DataDir
+ * @tc.desc: test the CreateEl2DataDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateEl2DataDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam;
+    auto res = hostImpl.CreateEl2DataDir(createDirParam);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateExtensionDir_0100
+ * @tc.name: test CreateExtensionDir
+ * @tc.desc: test CreateExtensionDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateExtensionDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    std::string bundleDataDir;
+    int mode = S_IRWXU;
+    createDirParam.gid = INVAILD_CODE;
+    createDirParam.extensionDirs.emplace_back(TEST_STRING);
+    bool isLog = true;
+    ErrCode ret = impl.CreateExtensionDir(createDirParam, bundleDataDir, mode, createDirParam.gid, isLog);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CleanBundleDataDirByName_0100
+ * @tc.name: test CleanBundleDataDirByName
+ * @tc.desc: test CleanBundleDataDirByName of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, CleanBundleDataDirByName_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string bundleName = TEST_EMPTY_STRING;
+    int userid = static_cast<int>(INVAILD_CODE);
+    int appIndex = static_cast<int>(INVAILD_CODE);
+    bool isAtomicService = false;
+    ErrCode ret = impl.CleanBundleDataDirByName(bundleName, userid, appIndex, isAtomicService);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    bundleName = TEST_STRING;
+    ret = impl.CleanBundleDataDirByName(bundleName, userid, appIndex, isAtomicService);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    userid = static_cast<int>(USERID);
+    ret = impl.CleanBundleDataDirByName(bundleName, userid, appIndex, isAtomicService);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    appIndex = static_cast<int>(TEST_ERROR_APP_INDEX);
+    ret = impl.CleanBundleDataDirByName(bundleName, userid, appIndex, isAtomicService);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    appIndex = static_cast<int>(ZERO_CODE);
+    ret = impl.CleanBundleDataDirByName(bundleName, userid, appIndex, isAtomicService);
+    EXPECT_EQ(ret, ERR_OK);
+    isAtomicService = true;
+    ret = impl.CleanBundleDataDirByName(bundleName, userid, appIndex, isAtomicService);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAppDataPath_0100
+ * @tc.name: test GetAppDataPath
+ * @tc.desc: test GetAppDataPath of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, GetAppDataPath_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string bundleName = TEST_STRING;
+    std::string el = TEST_STRING;
+    int32_t userId = USERID;
+    int32_t appIndex = ZERO_CODE;
+    auto path = impl.GetAppDataPath(bundleName, el, userId, appIndex);
+    EXPECT_FALSE(path.empty());
+    appIndex = TEST_ERROR_APP_INDEX;
+    auto clonePath = impl.GetAppDataPath(bundleName, el, userId, appIndex);
+    EXPECT_FALSE(clonePath.empty());
+}
+
+/**
+ * @tc.number: GetBundleStats_0100
+ * @tc.name: test GetBundleStats
+ * @tc.desc: test GetBundleStats of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, GetBundleStats_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string bundleName = TEST_STRING;
+    int32_t userId = USERID;
+    std::vector<int64_t> bundleStats;
+    std::unordered_set<int32_t> uids;
+    int32_t appIndex = ZERO_CODE;
+    uint32_t statFlag = Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_INSTALL_SIZE;
+    std::vector<std::string> moduleNameList;
+    auto ret = impl.GetBundleStats(bundleName, userId, bundleStats, uids, appIndex, statFlag, moduleNameList);
+    EXPECT_EQ(ret, ERR_OK);
+    statFlag = Constants::NoGetBundleStatsFlag::GET_BUNDLE_WITHOUT_DATA_SIZE;
+    ret = impl.GetBundleStats(bundleName, userId, bundleStats, uids, appIndex, statFlag, moduleNameList);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BatchGetBundleStats_0100
+ * @tc.name: test BatchGetBundleStats
+ * @tc.desc: test BatchGetBundleStats of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, BatchGetBundleStats_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<std::string> bundleNames;
+    std::unordered_map<std::string, std::unordered_set<int32_t>> uidMap;
+    std::vector<BundleStorageStats> bundleStats;
+    auto ret = impl.BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    bundleNames.emplace_back(TEST_STRING);
+    ret = impl.BatchGetBundleStats(bundleNames, uidMap, bundleStats);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetFileConForce_0100
+ * @tc.name: test SetFileConForce
+ * @tc.desc: test SetFileConForce of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, SetFileConForce_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<std::string> paths;
+    CreateDirParam createDirParam;
+    auto ret = impl.SetFileConForce(paths, createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    paths.emplace_back(TEST_STRING);
+    ret = impl.SetFileConForce(paths, createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.bundleName = TEST_STRING;
+    ret = impl.SetFileConForce(paths, createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.apl = TEST_STRING;
+    ret = impl.SetFileConForce(paths, createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.uid = ZERO_CODE;
+    ret = impl.SetFileConForce(paths, createDirParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: StopSetFileCon_0100
+ * @tc.name: test StopSetFileCon
+ * @tc.desc: test StopSetFileCon of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, StopSetFileCon_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    int32_t reason = ZERO_CODE;
+    auto ret = impl.StopSetFileCon(createDirParam, reason);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.bundleName = TEST_STRING;
+    ret = impl.StopSetFileCon(createDirParam, reason);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.uid = ZERO_CODE;
+    ret = impl.StopSetFileCon(createDirParam, reason);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: MoveFile_0100
+ * @tc.name: test MoveFile
+ * @tc.desc: test MoveFile of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, MoveFile_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string oldPath = TEST_EMPTY_STRING;
+    std::string newPath = TEST_EMPTY_STRING;
+    auto ret = impl.MoveFile(oldPath, newPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: RenameFile_0100
+ * @tc.name: test RenameFile
+ * @tc.desc: test RenameFile of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, RenameFile_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string oldPath = TEST_EMPTY_STRING;
+    std::string newPath = TEST_EMPTY_STRING;
+    auto ret = impl.RenameFile(oldPath, newPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+    oldPath = TEST_STRING;
+    newPath = TEST_STRING;
+    ret = impl.RenameFile(oldPath, newPath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ChangeFileStat_0200
+ * @tc.name: test ChangeFileStat
+ * @tc.desc: test ChangeFileStat of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, ChangeFileStat_0200, Function | SmallTest | Level1)
+{
+    InstalldHostImpl impl;
+    std::string file = TEST_STRING;
+    FileStat fileStat;
+    ErrCode ret = impl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    fileStat.mode = ServiceConstants::MODE_BASE + 1;
+    ret = impl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    fileStat.mode = ZERO_CODE;
+    ret = impl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    fileStat.uid = ZERO_CODE;
+    ret = impl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    fileStat.gid = ZERO_CODE;
+    ret = impl.ChangeFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+
+/**
+ * @tc.number: ApplyDiffPatch_0100
+ * @tc.name: test ApplyDiffPatch
+ * @tc.desc: test ApplyDiffPatch of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, ApplyDiffPatch_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    const std::string oldSoPath = TEST_STRING;
+    const std::string diffFilePath = TEST_STRING;
+    const std::string newSoPath = TEST_STRING;
+    int32_t uid = USERID;
+    ErrCode ret = impl.ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckEncryption_0100
+ * @tc.name: test CheckEncryption
+ * @tc.desc: test CheckEncryption of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckEncryption_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = TEST_ERROR_STRING;
+    checkEncryptionParam.targetSoPath = TEST_ERROR_STRING;
+    bool isEncrypted = false;
+    ErrCode ret = impl.CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ENCRYPTION_EXTRACTOR_INIT_FAILED);
+}
+
+/**
+ * @tc.number: VerifyCodeSignatureForHap_0100
+ * @tc.name: test VerifyCodeSignatureForHap
+ * @tc.desc: test VerifyCodeSignatureForHap of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForHap_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CodeSignatureParam codeSignatureParam;
+    ErrCode ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    codeSignatureParam.modulePath = TEST_ERROR_STRING;
+    codeSignatureParam.isEnterpriseBundle = true;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_PATH_INVALID);
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.isInternaltestingBundle = true;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_PATH_INVALID);
+    codeSignatureParam.isInternaltestingBundle = false;
+    codeSignatureParam.isPlugin = true;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_PATH_INVALID);
+    codeSignatureParam.signatureFileDir = TEST_ERROR_STRING;
+    ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeliverySignProfile_0100
+ * @tc.name: test DeliverySignProfile
+ * @tc.desc: test DeliverySignProfile of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, DeliverySignProfile_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string bundleName = TEST_EMPTY_STRING;
+    int32_t profileBlockLength = ZERO_CODE;
+    const unsigned char* profileBlock = new unsigned char[0];
+    ErrCode ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    bundleName = TEST_ERROR_STRING;
+    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, nullptr);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    profileBlockLength = TEST_LENGTH;
+    ret = impl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED);
+}
+
+/**
+ * @tc.number: AddCertAndEnableKey_0100
+ * @tc.name: test AddCertAndEnableKey
+ * @tc.desc: test AddCertAndEnableKey of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, AddCertAndEnableKey_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string certPath = TEST_EMPTY_STRING;
+    std::string certContent = TEST_EMPTY_STRING;
+    ErrCode ret = impl.AddCertAndEnableKey(certPath, certContent);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_CERT_FAILED);
+}
+
+/**
+ * @tc.number: RemoveSignProfile_0100
+ * @tc.name: test RemoveSignProfile
+ * @tc.desc: test RemoveSignProfile of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveSignProfile_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string bundleName = TEST_EMPTY_STRING;
+    ErrCode ret = impl.RemoveSignProfile(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    bundleName = TEST_ERROR_STRING;
+    ret = impl.RemoveSignProfile(bundleName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_CODE_SIGNATURE_REMOVE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_0200
+ * @tc.name: test SetEncryptionPolicy
+ * @tc.desc: test SetEncryptionPolicy of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, SetEncryptionPolicy_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.bundleName = TEST_EMPTY_STRING;
+    encryptionParam.groupId = TEST_EMPTY_STRING;
+    std::string keyId = TEST_EMPTY_STRING;
+    ErrCode ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    encryptionParam.bundleName = TEST_ERROR_STRING;
+    ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+    encryptionParam.bundleName = TEST_EMPTY_STRING;
+    encryptionParam.groupId = TEST_ERROR_STRING;
+    ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+    encryptionParam.bundleName = TEST_ERROR_STRING;
+    encryptionParam.groupId = TEST_ERROR_STRING;
+    ret = impl.SetEncryptionPolicy(encryptionParam, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+}
+
+/**
+ * @tc.number: DeleteEncryptionKeyId_0200
+ * @tc.name: test DeleteEncryptionKeyId
+ * @tc.desc: test DeleteEncryptionKeyId of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteEncryptionKeyId_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    EncryptionParam encryptionParam;
+    encryptionParam.bundleName = TEST_EMPTY_STRING;
+    encryptionParam.groupId = TEST_EMPTY_STRING;
+    std::string keyId = TEST_EMPTY_STRING;
+    ErrCode ret = impl.DeleteEncryptionKeyId(encryptionParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    encryptionParam.bundleName = TEST_ERROR_STRING;
+    ret = impl.DeleteEncryptionKeyId(encryptionParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
+    encryptionParam.bundleName = TEST_EMPTY_STRING;
+    encryptionParam.groupId = TEST_ERROR_STRING;
+    ret = impl.DeleteEncryptionKeyId(encryptionParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
+    encryptionParam.bundleName = TEST_ERROR_STRING;
+    encryptionParam.groupId = TEST_ERROR_STRING;
+    ret = impl.DeleteEncryptionKeyId(encryptionParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
+}
+
+/**
+ * @tc.number: RemoveExtensionDir_0100
+ * @tc.name: test RemoveExtensionDir
+ * @tc.desc: test RemoveExtensionDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveExtensionDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    int32_t userId = INVAILD_CODE;
+    std::vector<std::string> extensionBundleDirs;
+    ErrCode ret = impl.RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    extensionBundleDirs.emplace_back(TEST_ERROR_STRING);
+    ret = impl.RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    extensionBundleDirs.clear();
+    userId = ZERO_CODE;
+    ret = impl.RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    extensionBundleDirs.emplace_back(TEST_ERROR_STRING);
+    ret = impl.RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IsExistExtensionDir_0100
+ * @tc.name: test IsExistExtensionDir
+ * @tc.desc: test IsExistExtensionDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, IsExistExtensionDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    int32_t userId = ZERO_CODE;
+    std::string extensionBundleDir = TEST_BUNDLE_NAME;
+    bool isExist = false;
+    ErrCode ret = impl.IsExistExtensionDir(userId, extensionBundleDir, isExist);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateExtensionDataDir_0200
+ * @tc.name: test CreateExtensionDataDir
+ * @tc.desc: test CreateExtensionDataDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateExtensionDataDir_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = TEST_EMPTY_STRING;
+    ErrCode ret = impl.CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.bundleName = TEST_STRING;
+    ret = impl.CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.userId = USERID;
+    ret = impl.CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.uid = ZERO_CODE;
+    ret = impl.CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.gid = ZERO_CODE;
+    ret = impl.CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.extensionDirs.emplace_back(TEST_ERROR_STRING);
+    ret = impl.CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+    createDirParam.createDirFlag == CreateDirFlag::CREATE_DIR_UNLOCKED;
+    ret = impl.CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+}
+
+/**
+ * @tc.number: LoadNeedCreateSandbox_0100
+ * @tc.name: test LoadNeedCreateSandbox
+ * @tc.desc: test LoadNeedCreateSandbox of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, LoadNeedCreateSandbox_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    nlohmann::json object = {};
+    std::vector<std::string> typeList;
+    impl.LoadNeedCreateSandbox(object, typeList);
+    EXPECT_EQ(typeList.size(), 0);
+    object = { { TEST_AMS_EXTENSION_CONFIG, true } };
+    impl.LoadNeedCreateSandbox(object, typeList);
+    EXPECT_EQ(typeList.size(), 0);
+    object = { { TEST_AMS_EXTENSION_CONFIG, { { { TEST_ERROR_STRING, TEST_ERROR_STRING } } } } };
+    impl.LoadNeedCreateSandbox(object, typeList);
+    EXPECT_EQ(typeList.size(), 0);
+    object = { { TEST_AMS_EXTENSION_CONFIG, { { { TEST_EXTENSION_TYPE_NAME, true } } } } };
+    impl.LoadNeedCreateSandbox(object, typeList);
+    EXPECT_EQ(typeList.size(), 0);
+    object = { { TEST_AMS_EXTENSION_CONFIG, { { { TEST_EXTENSION_TYPE_NAME, TEST_ERROR_STRING } } } } };
+    impl.LoadNeedCreateSandbox(object, typeList);
+    EXPECT_EQ(typeList.size(), 0);
+}
+
+/**
+ * @tc.number: MigrateData_0100
+ * @tc.name: test MigrateData
+ * @tc.desc: test MigrateData of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, MigrateData_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<std::string> sourcePaths;
+    std::string destinationPath = TEST_EMPTY_STRING;
+    for (size_t i = 0; i < TEST_VECTOR_SIZE; i++) {
+        sourcePaths.emplace_back(TEST_ERROR_STRING);
+    }
+    ErrCode ret = impl.MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+    sourcePaths.clear();
+    ret = impl.MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+    sourcePaths.emplace_back(TEST_PATH);
+    ret = impl.MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+    sourcePaths.clear();
+    sourcePaths.emplace_back(TEST_ERROR_STRING);
+    ret = impl.MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
+    destinationPath = TEST_PATH;
+    ret = impl.MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
+    destinationPath = TEST_ERROR_STRING;
+    ret = impl.MigrateData(sourcePaths, destinationPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: CreateDataGroupDir_0100
+ * @tc.name: test CreateDataGroupDir
+ * @tc.desc: test CreateDataGroupDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateDataGroupDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    CreateDirParam createDirParam;
+    createDirParam.uuid = TEST_EMPTY_STRING;
+    ErrCode ret = impl.CreateDataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.uuid = TEST_ERROR_STRING;
+    ret = impl.CreateDataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.userId = USERID;
+    ret = impl.CreateDataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.uid = ZERO_CODE;
+    ret = impl.CreateDataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    createDirParam.gid = ZERO_CODE;
+    ret = impl.CreateDataGroupDir(createDirParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteDataGroupDirs_0100
+ * @tc.name: test DeleteDataGroupDirs
+ * @tc.desc: test DeleteDataGroupDirs of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteDataGroupDirs_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<std::string> uuidList;
+    int32_t userId = USERID;
+    ErrCode ret = impl.DeleteDataGroupDirs(uuidList, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    uuidList.emplace_back(TEST_ERROR_STRING);
+    userId = INVAILD_CODE;
+    ret = impl.DeleteDataGroupDirs(uuidList, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ClearDir_0100
+ * @tc.name: test ClearDir
+ * @tc.desc: test ClearDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, ClearDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string dir = TEST_EMPTY_STRING;
+    ErrCode ret = impl.ClearDir(dir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    dir = TEST_ERROR_STRING;
+    ret = impl.ClearDir(dir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+}
+
+/**
+ * @tc.number: RestoreconPath_0100
+ * @tc.name: test RestoreconPath
+ * @tc.desc: test RestoreconPath of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, RestoreconPath_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string path = TEST_EMPTY_STRING;
+    ErrCode ret = impl.RestoreconPath(path);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_RESTORECON_PATH_FAILED);
+    path = TEST_ERROR_STRING;
+    ret = impl.RestoreconPath(path);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_RESTORECON_PATH_FAILED);
+}
+
+/**
+ * @tc.number: ResetBmsDBSecurity_0100
+ * @tc.name: test ResetBmsDBSecurity
+ * @tc.desc: test ResetBmsDBSecurity of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, ResetBmsDBSecurity_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    ErrCode ret = impl.ResetBmsDBSecurity();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ResetBmsDBSecurityByPath_0100
+ * @tc.name: test ResetBmsDBSecurityByPath
+ * @tc.desc: test ResetBmsDBSecurityByPath of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, ResetBmsDBSecurityByPath_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string parentPath = TEST_EMPTY_STRING;
+    std::string fileFlag = TEST_EMPTY_STRING;
+    ErrCode ret = impl.ResetBmsDBSecurityByPath(parentPath, fileFlag);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CHANGE_FILE_STAT_FAILED);
+    parentPath = ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH;
+    ret = impl.ResetBmsDBSecurityByPath(parentPath, fileFlag);
+    EXPECT_EQ(ret, ERR_OK);
+    fileFlag = ServiceConstants::BUNDLE_RDB_BINLOG;
+    ret = impl.ResetBmsDBSecurityByPath(parentPath, fileFlag);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CleanBundleDirs_0100
+ * @tc.name: test CleanBundleDirs
+ * @tc.desc: test CleanBundleDirs of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, CleanBundleDirs_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<std::string> dirs;
+    dirs.emplace_back(TEST_EMPTY_STRING);
+    dirs.emplace_back(TEST_ERROR_STRING);
+    bool keepParent = true;
+    ErrCode ret = impl.CleanBundleDirs(dirs, keepParent);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CopyDir_0100
+ * @tc.name: test CopyDir
+ * @tc.desc: test CopyDir of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string sourceDir = TEST_EMPTY_STRING;
+    std::string destinationDir = TEST_EMPTY_STRING;
+    ErrCode ret = impl.CopyDir(sourceDir, destinationDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    sourceDir = TEST_ERROR_STRING;
+    ret = impl.CopyDir(sourceDir, destinationDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    destinationDir = TEST_ERROR_STRING;
+    ret = impl.CopyDir(sourceDir, destinationDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_COPY_DIR_FAILED);
+}
+
+/**
+ * @tc.number: DeleteCertAndRemoveKey_0100
+ * @tc.name: test DeleteCertAndRemoveKey
+ * @tc.desc: test DeleteCertAndRemoveKey of InstalldHostImpl
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteCertAndRemoveKey_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<std::string> certPaths;
+    ErrCode ret = impl.DeleteCertAndRemoveKey(certPaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    for (size_t i = 0; i < TEST_VECTOR_SIZE; i++) {
+        certPaths.emplace_back(TEST_EMPTY_STRING);
+    }
+    ret = impl.DeleteCertAndRemoveKey(certPaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    certPaths.clear();
+    certPaths.emplace_back(TEST_EMPTY_STRING);
+    ret = impl.DeleteCertAndRemoveKey(certPaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 } // OHOS
