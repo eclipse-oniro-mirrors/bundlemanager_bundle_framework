@@ -750,8 +750,8 @@ private:
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
     void DeleteUseLessSharefilesForDefaultUser(const std::string &bundleName, int32_t userId) const;
-    ErrCode CleanShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
-        const std::string &bundleName, int32_t userId) const;
+    ErrCode CleanShaderCache(const InnerBundleInfo &oldInfo, const std::string &bundleName, int32_t userId) const;
+    ErrCode CleanArkStartupCache(const std::string &bundleName, int32_t userId) const;
     void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteCloudShader(const std::string &bundleName) const;
     ErrCode DeleteEl1ShaderAndArkStartupCache(const InnerBundleInfo &oldInfo,
