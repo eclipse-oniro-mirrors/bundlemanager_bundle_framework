@@ -94,6 +94,7 @@ const int32_t APPINDEX = 10;
 constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
 const std::string FILE_URI = "file";
 const int32_t INVALID_USERID = -1;
+constexpr const char* DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE = "Cover";
 }  // namespace
 
 class BmsBundleManagerTest : public testing::Test {
@@ -3588,5 +3589,328 @@ HWTEST_F(BmsBundleManagerTest, GetPluginExtensionInfo_0200, Function | MediumTes
     ErrCode ret = hostImpl->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     setuid(Constants::ROOT_UID);
+}
+
+/**
+ * @tc.number: BundleUtil_0001
+ * @tc.name: Test CheckFilePath
+ * @tc.desc: 1.Test the CheckFilePath
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0001, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    std::string realPath;
+    ErrCode res = BundleUtil::CheckFilePath(bundlePath, realPath);
+    EXPECT_EQ(res, ERR_OK);
+
+    bundlePath += "bundle.hsp";
+    res = BundleUtil::CheckFilePath(bundlePath, realPath);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_IS_NOT_REAL);
+
+    bundlePath += "bundle.hqf";
+    res = BundleUtil::CheckFilePath(bundlePath, realPath);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_IS_NOT_REAL);
+
+    bundlePath += "bundle.sig";
+    res = BundleUtil::CheckFilePath(bundlePath, realPath);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_IS_NOT_REAL);
+
+    bundlePath = RESOURCE_ROOT_PATH;
+    res = BundleUtil::CheckFilePath(bundlePath, realPath);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: BundleUtil_0002
+ * @tc.name: Test IsExistDirNoLog
+ * @tc.desc: 1.Test the IsExistDirNoLog
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0002, Function | MediumTest | Level1)
+{
+    std::string bundlePath;
+    bool res = BundleUtil::IsExistDirNoLog(bundlePath);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: BundleUtil_0003
+ * @tc.name: Test IsPathInformationConsistent
+ * @tc.desc: 1.Test the IsPathInformationConsistent
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0003, Function | MediumTest | Level1)
+{
+    std::string bundlePath;
+    int32_t uid = -1;
+    int32_t gid = -1;
+    bool res = BundleUtil::IsPathInformationConsistent(bundlePath, uid, gid);
+    EXPECT_EQ(res, false);
+
+    bundlePath = "testPath";
+    res = BundleUtil::IsPathInformationConsistent(bundlePath, uid, gid);
+    EXPECT_EQ(res, false);
+
+    bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    res = BundleUtil::IsPathInformationConsistent(bundlePath, uid, gid);
+    EXPECT_EQ(res, false);
+
+    uid = getuid();
+    res = BundleUtil::IsPathInformationConsistent(bundlePath, uid, gid);
+    EXPECT_EQ(res, false);
+
+    gid = getgid();
+    uid = -1;
+    res = BundleUtil::IsPathInformationConsistent(bundlePath, uid, gid);
+    EXPECT_EQ(res, false);
+
+    uid = getuid();
+    res = BundleUtil::IsPathInformationConsistent(bundlePath, uid, gid);
+    EXPECT_EQ(res, true);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: BundleUtil_0004
+ * @tc.name: Test CalculateFileSize
+ * @tc.desc: 1.Test the CalculateFileSize
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0004, Function | MediumTest | Level1)
+{
+    std::string bundlePath;
+    int64_t res = BundleUtil::CalculateFileSize(bundlePath);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: BundleUtil_0005
+ * @tc.name: Test RenameFile
+ * @tc.desc: 1.Test the RenameFile
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0005, Function | MediumTest | Level1)
+{
+    std::string oldPath = RESOURCE_ROOT_PATH + "source.txt";
+    std::string newPath = RESOURCE_ROOT_PATH + "test.txt";
+    std::string content = "test";
+    {
+        std::ofstream file(newPath);
+        ASSERT_TRUE(file.is_open());
+        file << content;
+        file.close();
+    }
+    chmod(newPath.c_str(), 0444);
+    bool res = BundleUtil::RenameFile(oldPath, newPath);
+    EXPECT_EQ(res, false);
+    chmod(newPath.c_str(), 0644);
+
+    {
+        std::ofstream file1(oldPath);
+        ASSERT_TRUE(file1.is_open());
+        file1 << content;
+        file1.close();
+    }
+    res = BundleUtil::RenameFile(oldPath, newPath);
+    EXPECT_EQ(res, true);
+    res = BundleUtil::DeleteDir(oldPath);
+    EXPECT_EQ(res, true);
+    res = BundleUtil::DeleteDir(newPath);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BundleUtil_0006
+ * @tc.name: Test CreateDir
+ * @tc.desc: 1.Test the CreateDir
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0006, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + "test.txt";
+    std::string content = "test";
+    {
+        std::ofstream file(bundlePath);
+        ASSERT_TRUE(file.is_open());
+        file << content;
+        file.close();
+    }
+    chmod(bundlePath.c_str(), 0644);
+    bool res = BundleUtil::CreateDir(bundlePath);
+    EXPECT_EQ(res, true);
+    res = BundleUtil::DeleteDir(bundlePath);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BundleUtil_0007
+ * @tc.name: Test RevertToRealPath with invalid path or bundleName
+ * @tc.desc: 1.Test the RevertToRealPath
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0007, Function | MediumTest | Level1)
+{
+    std::string sandBoxPath;
+    std::string bundleName;
+    std::string realPath;
+    bool res = BundleUtil::RevertToRealPath(sandBoxPath, bundleName, realPath);
+    EXPECT_EQ(res, false);
+    res = BundleUtil::RevertToRealPath(sandBoxPath, BUNDLE_NAME, realPath);
+    EXPECT_EQ(res, false);
+    sandBoxPath = RESOURCE_ROOT_PATH;
+    res = BundleUtil::RevertToRealPath(sandBoxPath, bundleName, realPath);
+    EXPECT_EQ(res, false);
+    res = BundleUtil::RevertToRealPath(sandBoxPath, BUNDLE_NAME, realPath);
+    EXPECT_EQ(res, false);
+
+    sandBoxPath =
+        std::string(ServiceConstants::APP_INSTALL_SANDBOX_PATH) + std::string(ServiceConstants::SANDBOX_DATA_PATH);
+    res = BundleUtil::RevertToRealPath(sandBoxPath, bundleName, realPath);
+    EXPECT_EQ(res, false);
+    sandBoxPath =
+        std::string(ServiceConstants::APP_INSTALL_SANDBOX_PATH) + std::string(ServiceConstants::SANDBOX_DATA_PATH);
+    res = BundleUtil::RevertToRealPath(sandBoxPath, BUNDLE_NAME, realPath);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BundleUtil_0008
+ * @tc.name: Test RevertToRealPath
+ * @tc.desc: 1.Test the RevertToRealPath
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0008, Function | MediumTest | Level1)
+{
+    std::string sandBoxPath = RESOURCE_ROOT_PATH;
+    std::string bundleName;
+    std::string realPath;
+    bool res = BundleUtil::RevertToRealPath(sandBoxPath, bundleName, realPath);
+    EXPECT_EQ(res, false);
+    res = BundleUtil::RevertToRealPath(sandBoxPath, BUNDLE_NAME, realPath);
+    EXPECT_EQ(res, false);
+    sandBoxPath = sandBoxPath +
+        std::string(ServiceConstants::APP_INSTALL_SANDBOX_PATH) + std::string(ServiceConstants::SANDBOX_DATA_PATH);
+    res = BundleUtil::RevertToRealPath(sandBoxPath, BUNDLE_NAME, realPath);
+    EXPECT_EQ(res, false);
+    sandBoxPath =
+        std::string(ServiceConstants::APP_INSTALL_SANDBOX_PATH) + std::string(ServiceConstants::SANDBOX_DATA_PATH);
+    res = BundleUtil::RevertToRealPath(sandBoxPath, BUNDLE_NAME, realPath);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BundleUtil_0009
+ * @tc.name: Test IsSandBoxPath
+ * @tc.desc: 1.Test the IsSandBoxPath
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0009, Function | MediumTest | Level1)
+{
+    std::string sandBoxPath;
+    bool res = BundleUtil::IsSandBoxPath(sandBoxPath);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: BundleUtil_0010
+ * @tc.name: Test ExtractGroupIdByDevelopId
+ * @tc.desc: 1.Test the ExtractGroupIdByDevelopId
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0010, Function | MediumTest | Level1)
+{
+    std::string developerId = "test";
+    std::string res = BundleUtil::ExtractGroupIdByDevelopId(developerId);
+    EXPECT_EQ(res, developerId);
+    developerId = ".test";
+    res = BundleUtil::ExtractGroupIdByDevelopId(developerId);
+    EXPECT_EQ(res, "test");
+}
+
+/**
+ * @tc.number: BundleUtil_0011
+ * @tc.name: Test ExtractNumberFromString
+ * @tc.desc: 1.Test the ExtractNumberFromString
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0011, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    std::string key = "test";
+    int32_t number = 100;
+    jsonObject[key] = number;
+    auto res = BundleUtil::ExtractNumberFromString(jsonObject, key);
+    EXPECT_EQ(res, 0);
+    jsonObject[key] = "";
+    res = BundleUtil::ExtractNumberFromString(jsonObject, key);
+    EXPECT_EQ(res, 0);
+    std::string longString(Constants::MAX_JSON_STRING_LENGTH + 1, 'a');
+    jsonObject[key] = longString;
+    res = BundleUtil::ExtractNumberFromString(jsonObject, key);
+    EXPECT_EQ(res, 0);
+
+    std::string keyValue = "test";
+    jsonObject[key] = keyValue;
+    res = BundleUtil::ExtractNumberFromString(jsonObject, key);
+    EXPECT_EQ(res, 0);
+    keyValue = "test:";
+    jsonObject[key] = keyValue;
+    res = BundleUtil::ExtractNumberFromString(jsonObject, key);
+    EXPECT_EQ(res, 0);
+    keyValue = "test:12345";
+    jsonObject[key] = keyValue;
+    res = BundleUtil::ExtractNumberFromString(jsonObject, key);
+    EXPECT_EQ(res, 12345);
+    keyValue = "test:notNumber";
+    jsonObject[key] = keyValue;
+    res = BundleUtil::ExtractNumberFromString(jsonObject, key);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: BundleUtil_0012
+ * @tc.name: Test StrToUint32 when string format is invalid
+ * @tc.desc: 1.Test the StrToUint32
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0012, Function | MediumTest | Level1)
+{
+    std::string str = "";
+    uint32_t value;
+    bool res = BundleUtil::StrToUint32(str, value);
+    EXPECT_FALSE(res);
+    str = "test";
+    res = BundleUtil::StrToUint32(str, value);
+    EXPECT_FALSE(res);
+    
+    str = "12 123";
+    res = BundleUtil::StrToUint32(str, value);
+    EXPECT_FALSE(res);
+    str = "123abc";
+    res = BundleUtil::StrToUint32(str, value);
+    EXPECT_FALSE(res);
+    str = "-123";
+    res = BundleUtil::StrToUint32(str, value);
+    EXPECT_FALSE(res);
+    str = "4294967296";
+    res = BundleUtil::StrToUint32(str, value);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: BundleUtil_0013
+ * @tc.name: Test ExtractStringFromJson
+ * @tc.desc: 1.Test the ExtractStringFromJson
+ */
+HWTEST_F(BmsBundleManagerTest, BundleUtil_0013, Function | MediumTest | Level1)
+{
+    nlohmann::json jsonObject;
+    std::string key = "keyString";
+    int32_t number = 0;
+    jsonObject[key] = number;
+    std::string res = BundleUtil::ExtractStringFromJson(jsonObject, key);
+    EXPECT_EQ(res, DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE);
+    jsonObject[key] = EMPTY_STRING;
+    res = BundleUtil::ExtractStringFromJson(jsonObject, key);
+    EXPECT_EQ(res, DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE);
+    std::string longString(Constants::MAX_JSON_STRING_LENGTH + 1, 'a');
+    jsonObject[key] = longString;
+    res = BundleUtil::ExtractStringFromJson(jsonObject, key);
+    EXPECT_EQ(res, DEFAULT_START_WINDOW_BACKGROUND_IMAGE_FIT_VALUE);
 }
 } // OHOS
