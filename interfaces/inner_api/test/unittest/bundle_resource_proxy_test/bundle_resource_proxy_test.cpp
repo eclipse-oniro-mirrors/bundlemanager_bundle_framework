@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,7 +25,15 @@ using namespace testing::ext;
 namespace OHOS {
 namespace AppExecFwk {
 
+namespace {
 constexpr int32_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
+const std::string TEST_EMPTY_STRING = "";
+const std::string TEST_STRING = "test.string";
+const int32_t TEST_INVALID_INDEX = -1;
+const int32_t TEST_ERROR_INDEX = 10;
+const int32_t TEST_ZERO_INDEX = 0;
+const uint32_t TEST_FLAGS = 1;
+} // namespace
 
 ErrCode WriteVectorToParcel(std::vector<BundleResourceInfo> &parcelVector, MessageParcel &reply)
 {
@@ -349,6 +357,110 @@ HWTEST_F(BundleResourceProxyTest, GetAllUninstallBundleResourceInfo_0100, Functi
     auto ret = proxy->GetAllUninstallBundleResourceInfo(100, 1, bundleResourceInfos);
     GTEST_LOG_(INFO) << "GetAllUninstallBundleResourceInfo end, " << ret;
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckBundleOptionInfoInvalid_0100
+ * @tc.name: test CheckBundleOptionInfoInvalid
+ * @tc.desc: test CheckBundleOptionInfoInvalid of BundleResourceProxy
+ */
+HWTEST_F(BundleResourceProxyTest, CheckBundleOptionInfoInvalid_0100, Function | SmallTest | Level0)
+{
+    sptr<MockStub> stub = new MockStub();
+    ASSERT_NE(stub, nullptr);
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    ASSERT_NE(proxy, nullptr);
+    std::vector<BundleOptionInfo> optionsList;
+    BundleOptionInfo bundleOptionInfo;
+    bundleOptionInfo.bundleName = TEST_EMPTY_STRING;
+    optionsList.emplace_back(bundleOptionInfo);
+    auto ret = proxy->CheckBundleOptionInfoInvalid(optionsList);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    optionsList.clear();
+    bundleOptionInfo.bundleName = TEST_STRING;
+    bundleOptionInfo.moduleName = TEST_EMPTY_STRING;
+    optionsList.emplace_back(bundleOptionInfo);
+    ret = proxy->CheckBundleOptionInfoInvalid(optionsList);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    optionsList.clear();
+    bundleOptionInfo.bundleName = TEST_STRING;
+    bundleOptionInfo.moduleName = TEST_STRING;
+    bundleOptionInfo.abilityName = TEST_EMPTY_STRING;
+    optionsList.emplace_back(bundleOptionInfo);
+    ret = proxy->CheckBundleOptionInfoInvalid(optionsList);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: CheckBundleOptionInfoInvalid_0200
+ * @tc.name: test CheckBundleOptionInfoInvalid
+ * @tc.desc: test CheckBundleOptionInfoInvalid of BundleResourceProxy
+ */
+HWTEST_F(BundleResourceProxyTest, CheckBundleOptionInfoInvalid_0200, Function | SmallTest | Level0)
+{
+    sptr<MockStub> stub = new MockStub();
+    ASSERT_NE(stub, nullptr);
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    ASSERT_NE(proxy, nullptr);
+    std::vector<BundleOptionInfo> optionsList;
+    BundleOptionInfo bundleOptionInfo;
+    bundleOptionInfo.bundleName = TEST_STRING;
+    bundleOptionInfo.moduleName = TEST_STRING;
+    bundleOptionInfo.abilityName = TEST_STRING;
+    bundleOptionInfo.appIndex = TEST_INVALID_INDEX;
+    optionsList.emplace_back(bundleOptionInfo);
+    auto ret = proxy->CheckBundleOptionInfoInvalid(optionsList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+
+    optionsList.clear();
+    bundleOptionInfo.bundleName = TEST_STRING;
+    bundleOptionInfo.moduleName = TEST_STRING;
+    bundleOptionInfo.abilityName = TEST_STRING;
+    bundleOptionInfo.appIndex = TEST_ERROR_INDEX;
+    optionsList.emplace_back(bundleOptionInfo);
+    ret = proxy->CheckBundleOptionInfoInvalid(optionsList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+
+    optionsList.clear();
+    bundleOptionInfo.bundleName = TEST_STRING;
+    bundleOptionInfo.moduleName = TEST_STRING;
+    bundleOptionInfo.abilityName = TEST_STRING;
+    bundleOptionInfo.appIndex = TEST_ZERO_INDEX;
+    optionsList.emplace_back(bundleOptionInfo);
+    ret = proxy->CheckBundleOptionInfoInvalid(optionsList);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfoList_0100
+ * @tc.name: test GetLauncherAbilityResourceInfoList
+ * @tc.desc: test GetLauncherAbilityResourceInfoList of BundleResourceProxy
+ */
+HWTEST_F(BundleResourceProxyTest, GetLauncherAbilityResourceInfoList_0100, Function | SmallTest | Level0)
+{
+    sptr<MockStub> stub = new MockStub();
+    ASSERT_NE(stub, nullptr);
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    ASSERT_NE(proxy, nullptr);
+    std::vector<BundleOptionInfo> optionsList;
+    BundleOptionInfo bundleOptionInfo;
+    bundleOptionInfo.bundleName = TEST_EMPTY_STRING;
+    optionsList.emplace_back(bundleOptionInfo);
+    uint32_t flags = TEST_FLAGS;
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
+    auto ret = proxy->GetLauncherAbilityResourceInfoList(optionsList, flags, launcherAbilityResourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    optionsList.clear();
+    bundleOptionInfo.bundleName = TEST_STRING;
+    bundleOptionInfo.moduleName = TEST_STRING;
+    bundleOptionInfo.abilityName = TEST_STRING;
+    bundleOptionInfo.appIndex = TEST_ZERO_INDEX;
+    optionsList.emplace_back(bundleOptionInfo);
+    ret = proxy->GetLauncherAbilityResourceInfoList(optionsList, flags, launcherAbilityResourceInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 }
 }
