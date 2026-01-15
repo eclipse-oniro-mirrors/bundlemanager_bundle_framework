@@ -35,16 +35,20 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     uint32_t iconId = fdp.ConsumeIntegral<uint32_t>();
     int32_t density = fdp.ConsumeIntegral<int32_t>();
     OHOS::AppExecFwk::ResourceInfo resourceInfo;
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
     drawable.GetIconResourceByTheme(iconId, density, nullptr, resourceInfo);
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
     drawable.GetIconResourceByTheme(iconId, density, resourceManager, resourceInfo);
     resourceInfo.bundleName_ = "com.ohos.contacts";
     drawable.GetIconResourceByTheme(iconId, density, resourceManager, resourceInfo);
-
     drawable.GetIconResourceByHap(iconId, density, nullptr, resourceInfo);
     drawable.GetIconResourceByHap(iconId, density, resourceManager, resourceInfo);
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
     drawable.GetBadgedIconResource(nullptr, nullptr, resourceInfo);
+    std::pair<std::unique_ptr<uint8_t[]>, size_t> foregroundInfo;
+    drawable.ProcessForegroundIcon(foregroundInfo, resourceInfo);
+    std::shared_ptr<Media::PixelMap> layeredPixelMap;
+    std::shared_ptr<Media::PixelMap> badgedPixelMap;
+    drawable.GetBadgedIconResource(layeredPixelMap, badgedPixelMap, resourceInfo);
 #endif
     return true;
 }

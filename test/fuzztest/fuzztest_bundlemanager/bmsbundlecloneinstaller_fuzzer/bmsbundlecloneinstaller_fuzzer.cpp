@@ -92,6 +92,9 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 
     installer.GetDeveloperId(randomBundleName);
     installer.GetDeveloperId(emptyBundleName);
+    installer.DeleteUninstallCloneBundleInfo(bundleName, userId, appIndex);
+    Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
++   installer.RecoverHapToken(userId, 1, accessTokenIdEx, info, "");
 
     return true;
 }
