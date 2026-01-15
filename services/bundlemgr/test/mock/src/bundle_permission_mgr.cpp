@@ -19,6 +19,7 @@ bool g_isSystemApp = true;
 bool g_isNativeTokenType = true;
 bool g_verifyPermission = true;
 bool g_verifyCallingBundleSdkVersion  = true;
+bool g_isBundleSelfCalling = true;
 int32_t g_hapApiVersion = 0;
 
 void SetSystemAppForTest(bool value)
@@ -46,6 +47,11 @@ void SetVerifyCallingBundleSdkVersionForTest(bool value)
     g_verifyCallingBundleSdkVersion = value;
 }
 
+void SetIsBundleSelfCallingForTest(bool value)
+{
+    g_isBundleSelfCalling = value;
+}
+
 void ResetTestValues()
 {
     g_isNativeTokenType = true;
@@ -53,6 +59,7 @@ void ResetTestValues()
     g_isSystemApp = true;
     g_hapApiVersion = 0;
     g_verifyCallingBundleSdkVersion = true;
+    g_isBundleSelfCalling = true;
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
@@ -158,7 +165,7 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
 
 bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)
 {
-    return true;
+    return g_verifyPermission;
 }
 
 bool BundlePermissionMgr::IsSelfCalling()
@@ -178,7 +185,7 @@ bool BundlePermissionMgr::VerifyUninstallPermission()
 
 bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
 {
-    return true;
+    return g_isBundleSelfCalling;
 }
 
 bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex)
