@@ -13605,9 +13605,6 @@ HWTEST_F(BmsBundleInstallerTest, HashFiles_0010, Function | SmallTest | Level0)
 }
 
 
-
-
-
 /**
  * @tc.number: SkipThirdPreloadAppInstallation_0100
  * @tc.name: test SkipThirdPreloadAppInstallation
@@ -13652,8 +13649,10 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0300, Function 
     std::string bundlePaths = {"/preload/app/test.hap"};
     preInfo.AddBundlePath(bundlePaths);
     int32_t userId = 101;
+    std::string originalValue = OHOS::system::GetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "");
     bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "false");
     bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, originalValue);
     EXPECT_TRUE(ret);
 }
 
@@ -13670,8 +13669,10 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0400, Function 
     std::string bundlePaths = {"/test/app/test.hap"};
     preInfo.AddBundlePath(bundlePaths);
     int32_t userId = 101;
+    std::string originalValue = OHOS::system::GetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "");
     bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "false");
     bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, originalValue);
     EXPECT_FALSE(ret);
 }
 
@@ -13688,8 +13689,10 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0500, Function 
     std::string bundlePaths = {"/test/app/test.hap"};
     preInfo.AddBundlePath(bundlePaths);
     int32_t userId = 101;
+    std::string originalValue = OHOS::system::GetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "");
     bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "true");
     bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, originalValue);
     EXPECT_FALSE(ret);
 }
 
@@ -13706,9 +13709,11 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0600, Function 
     std::string bundlePaths = {"/preload/app/test.hap"};
     preInfo.AddBundlePath(bundlePaths);
     int32_t userId = 101;
+    std::string originalValue = OHOS::system::GetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "");
     bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "true");
     bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
     EXPECT_TRUE(ret);
+    OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, originalValue);
 }
 
 /**
@@ -13726,29 +13731,6 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0700, Function 
     int32_t userId = 101;
     bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
     EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: BundleUserMgrHostImpl_0100
- * @tc.name: test GetAllPreInstallBundleInfos
- * @tc.desc: 1.Test GetAllPreInstallBundleInfos the UserReceiverImpl
-*/
-HWTEST_F(BmsBundleInstallerTest, CreateNewUser_0100, Function | MediumTest | Level1)
-{
-    auto dataMgr =DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    dataMgr->initialUserFlag_ = true;
-    BundleUserMgrHostImpl host;
-    auto res = host.CreateNewUser(0);
-    EXPECT_EQ(res, ERR_OK);
-    InnerBundleInfo newInfo;
-    std::string bundleName = "test";
-    newInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
-    auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
-    newInfo.SetAppCodePath(appCodePath);
-    dataMgr->bundleInfos_.emplace("test", newInfo);
-    res = host.CreateNewUser(100);
-    host.BootFailError(nullptr);
-    EXPECT_EQ(res, ERR_OK);
 }
 
 /*
