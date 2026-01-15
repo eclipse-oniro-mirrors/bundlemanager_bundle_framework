@@ -1155,7 +1155,7 @@ void BMSEventHandler::AddTaskParallel(
             continue;
         }
 
-        auto task = [installInfo, userId, taskTotalNum, &taskEndNum, &bundlePromise, &installerHost]() {
+        auto task = [installInfo, userId, taskTotalNum, &taskEndNum, &bundlePromise]() {
             BMSEventHandler::ProcessSystemBundleInstall(installInfo, Constants::AppType::SYSTEM_APP, userId);
             taskEndNum++;
             if (bundlePromise && static_cast<int32_t>(taskEndNum) >= taskTotalNum) {
@@ -1163,7 +1163,7 @@ void BMSEventHandler::AddTaskParallel(
                 LOG_I(BMS_TAG_DEFAULT, "All tasks has executed and notify promise in priority(%{public}d)",
                     installInfo.priority);
             }
-            installerHost->FinishTask();
+            g_taskCounter--;
         };
 
         installerHost->AddTask(task, "BootStartInstall : " + installInfo.bundleDir);
@@ -2475,15 +2475,14 @@ bool BMSEventHandler::InnerMultiProcessBundleInstall(
         std::string bundleName = iter->first;
         std::pair pair = iter->second;
         std::vector<std::string> filePaths = BMSEventHandler::ObtainRealPath(pair.first);
-        auto task = [bundleName, pair, filePaths, taskTotalNum, appType,
-            &taskEndNum, &bundlePromise, &installerHost]() {
+        auto task = [bundleName, pair, filePaths, taskTotalNum, appType, &taskEndNum, &bundlePromise]() {
             (void)BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, pair.second);
             taskEndNum++;
             if (bundlePromise && taskEndNum >= taskTotalNum) {
                 bundlePromise->NotifyAllTasksExecuteFinished();
                 LOG_I(BMS_TAG_DEFAULT, "All tasks has executed and notify promise when ota");
             }
-            installerHost->FinishTask();
+            g_taskCounter--;
         };
 
         installerHost->AddTask(task, "BootRebootStartInstall : " + bundleName);
@@ -4636,14 +4635,14 @@ bool BMSEventHandler::InnerMultiProcessBundleInstallForPatch(
         std::string bundleName = iter->first;
         std::vector<std::string> filePaths = iter->second;
         std::vector<std::string> realHapPaths = BMSEventHandler::ObtainRealPath(iter->second);
-        auto task = [bundleName, realHapPaths, taskTotalNum, &taskEndNum, &bundlePromise, isOta, &installerHost]() {
+        auto task = [bundleName, realHapPaths, taskTotalNum, &taskEndNum, &bundlePromise, isOta]() {
             (void)BMSEventHandler::InstallSystemBundleNeedCheckUserForPatch(realHapPaths, bundleName, isOta);
             taskEndNum++;
             if (bundlePromise && taskEndNum >= taskTotalNum) {
                 bundlePromise->NotifyAllTasksExecuteFinished();
                 LOG_I(BMS_TAG_DEFAULT, "All tasks has executed and notify promise when patch install");
             }
-            installerHost->FinishTask();
+            g_taskCounter--;
         };
 
         installerHost->AddTask(task, "RebootStartPatchBundleInstall : " + bundleName);

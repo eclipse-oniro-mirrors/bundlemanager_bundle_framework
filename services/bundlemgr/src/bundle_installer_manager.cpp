@@ -36,7 +36,6 @@ constexpr unsigned int TIME_OUT_SECONDS = 60 * 25;
 constexpr int8_t MAX_TASK_NUMBER = 10;
 constexpr int8_t RETAIL_MODE_THREAD_NUMBER = 1;
 constexpr int8_t DELAY_INTERVAL_SECONDS = 60;
-static std::atomic<int32_t> g_taskCounter = 0;
 }
 
 BundleInstallerManager::BundleInstallerManager()
@@ -278,16 +277,6 @@ size_t BundleInstallerManager::GetCurTaskNum()
     }
 
     return threadPool_->GetCurTaskNum();
-}
-
-bool BundleInstallerManager::HasRunningTask()
-{
-    return g_taskCounter.load() != 0;
-}
-
-void BundleInstallerManager::FinishTask()
-{
-    g_taskCounter--;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

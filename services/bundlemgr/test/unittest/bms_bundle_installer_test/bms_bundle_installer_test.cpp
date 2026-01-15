@@ -61,6 +61,7 @@
 #include "installd/installd_permission_mgr.h"
 #include "bundle_cache_mgr.h"
 #include "process_cache_callback_host.h"
+#include "bms_extension_data_mgr.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -179,6 +180,7 @@ const std::string PLUGIN_CODE_PATH_DIR_OLD = "/data/test/plugin_old";
 const int32_t TEST_U100 = 100;
 const int32_t TEST_U1 = 1;
 const int32_t MAX_WAITING_TIME = 600;
+constexpr const char* MULTIUSER_INSTALL_THIRD_PRELOAD_APP = "const.bms.multiUserInstallThirdPreloadApp";
 }  // namespace
 
 class ProcessCacheCallbackImpl : public ProcessCacheCallbackHost {
@@ -795,8 +797,12 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0020, Function | SmallTest | Level0
     dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, info);
     BaseBundleInstaller installer;
     installer.InitDataMgr();
-    // test CleanShaderAndArkStartupCache succeed
-    ret = installer.CleanShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
+    // test CleanShaderCache succeed
+    ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // test CleanArkStartupCache succeed
+    ret = installer.CleanArkStartupCache(BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, ERR_OK);
 
     // test DeleteShaderCache succeed
@@ -835,9 +841,14 @@ HWTEST_F(BmsBundleInstallerTest, ShaderCache_0030, Function | SmallTest | Level0
     dataMgr->FetchInnerBundleInfo(BUNDLE_NAME, info);
     BaseBundleInstaller installer;
     installer.InitDataMgr();
-    // test CleanShaderAndArkStartupCache failed
+    // test CleanShaderCache failed
     StopInstalldService();
-    ErrCode ret = installer.CleanShaderAndArkStartupCache(info, BUNDLE_NAME, USERID);
+    ErrCode ret = installer.CleanShaderCache(info, BUNDLE_NAME, USERID);
+    EXPECT_NE(ret, ERR_OK);
+
+    // test CleanArkStartupCache failed
+    StopInstalldService();
+    ret = installer.CleanArkStartupCache(BUNDLE_NAME, USERID);
     EXPECT_NE(ret, ERR_OK);
 
     // test DeleteShaderCache failed
@@ -13591,5 +13602,488 @@ HWTEST_F(BmsBundleInstallerTest, HashFiles_0010, Function | SmallTest | Level0)
     files.push_back(bundleFile);
     ret = installdHostImpl.HashFiles(files, filesHash);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+
+
+
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0100
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallation
+*/
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0100, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    int32_t userId = 101;
+    PreInstallBundleInfo preInfo;
+    bool ret = host.SkipThirdPreloadAppInstallation(userId,preInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0200
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallation
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0200, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.test");
+    std::string bundlePaths = {"/data/preload/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101; 
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0300
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0300, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.preload");
+    std::string bundlePaths = {"/preload/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101;
+    bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "false");
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0400
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0400, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.preload");
+    std::string bundlePaths = {"/test/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101;
+    bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "false");
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0500
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0500, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.preload");
+    std::string bundlePaths = {"/test/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101;
+    bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "true");
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0600
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0600, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.preload");
+    std::string bundlePaths = {"/preload/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101;
+    bool multiUserInstallThirdPreloadApp = OHOS::system::SetParameter(MULTIUSER_INSTALL_THIRD_PRELOAD_APP, "true");
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SkipThirdPreloadAppInstallation_0700
+ * @tc.name: test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ */
+HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0700, Function | SmallTest | Level1)
+{
+    BundleUserMgrHostImpl hostImpl;
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName("com.example.normal");
+    std::string bundlePaths = {"/system/app/test.hap"};
+    preInfo.AddBundlePath(bundlePaths);
+    int32_t userId = 101;
+    bool ret = hostImpl.SkipThirdPreloadAppInstallation(userId, preInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0100
+ * @tc.name: test GetAllPreInstallBundleInfos
+ * @tc.desc: 1.Test GetAllPreInstallBundleInfos the UserReceiverImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateNewUser_0100, Function | MediumTest | Level1)
+{
+    auto dataMgr =DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->initialUserFlag_ = true;
+    BundleUserMgrHostImpl host;
+    auto res = host.CreateNewUser(0);
+    EXPECT_EQ(res, ERR_OK);
+    InnerBundleInfo newInfo;
+    std::string bundleName = "test";
+    newInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
+    auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
+    newInfo.SetAppCodePath(appCodePath);
+    dataMgr->bundleInfos_.emplace("test", newInfo);
+    res = host.CreateNewUser(100);
+    host.BootFailError(nullptr);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/*
+ * @tc.number: InnerProcessSkipPreInstallBundles_0100
+ * @tc.name: test InnerProcessSkipPreInstallBundles
+ * @tc.desc: 1.Test InnerProcessSkipPreInstallBundles
+*/
+HWTEST_F(BmsBundleInstallerTest, InnerProcessSkipPreInstallBundles_0100, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    std::set<std::string> uninstallList;
+    uninstallList.insert(SYSTEMFIEID_NAME);
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    host.CheckSystemHspInstallPath();
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    host.GetAdditionalBundleInfos(preInstallBundleInfos);
+    bool ret = host.InnerProcessSkipPreInstallBundles(uninstallList, true);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_  = savedDataMgr;
+    EXPECT_FALSE(ret);
+}
+
+// /**
+//  * @tc.number: InnerRemoveUser_0500
+//  * @tc.name: test InnerRemoveUser
+//  * @tc.desc: 1.Test InnerRemoveUser
+// */
+HWTEST_F(BmsBundleInstallerTest, InnerRemoveUser_0100, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    int32_t userId = 120;
+    ErrCode res = host.InnerRemoveUser(userId, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: OnIdle_0010
+ * @tc.name: test OnIdle
+ * @tc.desc: Test the OnIdle
+*/
+HWTEST_F(BmsBundleInstallerTest, OnIdle_0010, Function | SmallTest | Level0)
+{
+    InstalldService testInstall;
+    SystemAbilityOnDemandReason idleReason;
+
+    int32_t ret = -1;
+    ret = testInstall.OnIdle(idleReason);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: VerifyCallingPermission_0010
+ * @tc.name: test VerifyCallingPermission
+ * @tc.desc: Test VerifyCallingPermission
+*/
+HWTEST_F(BmsBundleInstallerTest, VerifyCallingPermission_0010, Function | SmallTest | Level0)
+{
+    int32_t testUid = IPCSkeleton::GetCallingUid();
+    InstalldPermissionMgr installdPermissionMgr;
+
+    bool ret = false;
+    ret = installdPermissionMgr.VerifyCallingPermission(testUid);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: bmsExtensionCheckApiInfo_0010
+ * @tc.name: test CheckApiInfo
+ * @tc.desc: Test function CheckApiInfo fail due init failure
+*/
+HWTEST_F(BmsBundleInstallerTest, bmsExtensionCheckApiInfo_0010, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    BundleInfo bundleInfo;
+    bundleInfo.compatibleVersion = COMPATIBLE_VERSION;
+    uint32_t sdkVersion = ZERO_CODE;
+
+    bool ret = true;
+    ret = bmsExtensionDataMgr.CheckApiInfo(bundleInfo, sdkVersion);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: HapVerify_0010
+ * @tc.name: test HapVerify
+ * @tc.desc: Test function HapVerify fail due init failure
+*/
+HWTEST_F(BmsBundleInstallerTest, HapVerify_0010, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::string filePath = "/data/app/el1";
+    Security::Verify::HapVerifyResult hapVerifyResult;
+
+    ErrCode ret1 = bmsExtensionDataMgr.HapVerify(filePath, hapVerifyResult);
+    EXPECT_EQ(ret1, ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: IsRdDevice_0010
+ * @tc.name: test IsRdDevice
+ * @tc.desc: Test function IsRdDevice fail due init failure
+*/
+HWTEST_F(BmsBundleInstallerTest, IsRdDevice_0010, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+
+    bool ret = bmsExtensionDataMgr.IsRdDevice();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QueryAbilityInfos_0010
+ * @tc.name: test QueryAbilityInfos
+ * @tc.desc: Test function QueryAbilityInfos fail due init failure
+*/
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfos_0010, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    Want want; 
+    int32_t userId =  Constants::START_USERID;
+    std::vector<AbilityInfo> abilityInfos;
+
+    ErrCode ret = bmsExtensionDataMgr.QueryAbilityInfos(want, userId, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosWithFlag_0010
+ * @tc.name: test QueryAbilityInfosWithFlag
+ * @tc.desc: Test function QueryAbilityInfosWithFlag fail due init failure
+*/
+HWTEST_F(BmsBundleInstallerTest, QueryAbilityInfosWithFlag_0010, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    Want want;
+    int32_t userId =  Constants::START_USERID;
+    int32_t flags = ZERO_CODE;
+    std::vector<AbilityInfo> abilityInfos;
+    bool isNewVersion = false;
+    ErrCode ret = bmsExtensionDataMgr.QueryAbilityInfosWithFlag(
+        want, userId, flags,abilityInfos, isNewVersion);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: GetBundleInfos_0010
+ * @tc.name: test GetBundleInfos
+ * @tc.desc: Test function GetBundleInfos fail due init failure
+*/
+HWTEST_F(BmsBundleInstallerTest, GetBundleInfos_0010, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int32_t userId =  Constants::START_USERID;
+    int32_t flags = ZERO_CODE;
+    std::vector<BundleInfo> bundleInfos;
+    bool isNewVersion = false;
+    ErrCode ret = bmsExtensionDataMgr.GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: Uninstall_0010
+ * @tc.name: test Uninstall
+ * @tc.desc: Test function Uninstall fail due init failure
+*/
+HWTEST_F(BmsBundleInstallerTest, Uninstall_0010, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::string bundleName = "com.example.test";
+
+    ErrCode ret = bmsExtensionDataMgr.Uninstall(bundleName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: bmsExtensionDataMgrInitFail_0010
+ * @tc.name: test bmsExtensionDataMgrInitFail
+ * @tc.desc: Test function bmsExtensionDataMgr Init Fail
+*/
+HWTEST_F(BmsBundleInstallerTest, bmsExtensionDataMgrInitFail_0010, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::START_USERID;
+
+    std::vector<int64_t> bundleStats;
+    ErrCode ret1 = bmsExtensionDataMgr.GetBundleStats(bundleName, userId, bundleStats);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    ErrCode ret2 = bmsExtensionDataMgr.ClearData(bundleName, userId);
+    EXPECT_EQ(ret2, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    int32_t appIndex = ZERO_CODE;
+    ErrCode ret3 = bmsExtensionDataMgr.BackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(ret3, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    sptr<IRemoteObject> callback;
+    ErrCode ret4 = bmsExtensionDataMgr.ClearCache(bundleName, callback, userId);
+    EXPECT_EQ(ret4, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    int32_t uid = 0;
+    ErrCode ret5 = bmsExtensionDataMgr.GetUidByBundleName(bundleName, userId, uid);
+    EXPECT_EQ(ret5, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    ErrCode ret6 = bmsExtensionDataMgr.GetBundleNameByUid(uid, bundleName);
+    EXPECT_EQ(ret6, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: bmsExtensionDataMgrInitFail_0020
+ * @tc.name: test bmsExtensionDataMgrInitFail
+ * @tc.desc: Test function bmsExtensionDataMgr Init Fail
+*/
+HWTEST_F(BmsBundleInstallerTest, bmsExtensionDataMgrInitFail_0020, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::START_USERID;
+
+    bool res = false;
+    ErrCode ret1 = bmsExtensionDataMgr.VerifyActivationLock(res);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    std::set<std::string> uninstallBundles;
+    ErrCode ret2 = bmsExtensionDataMgr.GetBackupUninstallList(userId, uninstallBundles);
+    EXPECT_EQ(ret2, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    ErrCode ret3 = bmsExtensionDataMgr.ClearBackupUninstallFile(userId);
+    EXPECT_EQ(ret3, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    bool ret4 = bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId);
+    EXPECT_EQ(ret4, false);
+    std::string appIdentifier = "testAppIdentifier";
+    bool ret5 = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName, appIdentifier);
+    EXPECT_TRUE(ret5);
+    ErrCode ret6 = bmsExtensionDataMgr.AddResourceInfoByBundleName(bundleName, userId);
+    EXPECT_EQ(ret6, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    std::string moduleName = "testModuleName";
+    std::string abilityName = "testAbilityName";
+    ErrCode ret7 = bmsExtensionDataMgr.AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId);
+    EXPECT_EQ(ret7, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: bmsExtensionDataMgrInitFail_0030
+ * @tc.name: test bmsExtensionDataMgrInitFail
+ * @tc.desc: Test function bmsExtensionDataMgr Init Fail
+*/
+HWTEST_F(BmsBundleInstallerTest, bmsExtensionDataMgrInitFail_0030, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::START_USERID;
+    int32_t appIndex = ZERO_CODE;
+    std::string key = "testKey"; 
+
+    ErrCode ret1 = bmsExtensionDataMgr.DeleteResourceInfo(key);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    std::vector<CodeProtectBundleInfo> codeProtectBundleInfos;
+    int32_t type = ZERO_CODE;
+    ErrCode ret2 = bmsExtensionDataMgr.KeyOperation(codeProtectBundleInfos, type);
+    EXPECT_EQ(ret2, ERR_OK);
+    std::string callingName = "testCallingName";
+    std::string appId = "testAppId";
+    std::string absRdbPredicatesStr = "testAbsRdbPredicates";
+    NativeRdb::AbsRdbPredicates absRdbPredicates(absRdbPredicatesStr);
+    ErrCode ret3 = bmsExtensionDataMgr.OptimizeDisposedPredicates(
+        callingName, appId, userId, appIndex, absRdbPredicates);
+    EXPECT_EQ(ret3, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    BundleResourceInfo bundleResourceInfo;
+    int32_t flags = ZERO_CODE;
+    ErrCode ret4 = bmsExtensionDataMgr.GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex);
+    EXPECT_EQ(ret4, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfoVec;
+    ErrCode ret5 = bmsExtensionDataMgr.GetLauncherAbilityResourceInfo(
+        bundleName, flags, launcherAbilityResourceInfoVec, appIndex);
+    EXPECT_EQ(ret5, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: bmsExtensionDataMgrInitFail_0040
+ * @tc.name: test bmsExtensionDataMgrInitFail
+ * @tc.desc: Test function bmsExtensionDataMgr Init Fail
+*/
+HWTEST_F(BmsBundleInstallerTest, bmsExtensionDataMgrInitFail_0040, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::START_USERID;
+    int32_t appIndex = ZERO_CODE;
+    int32_t flags = ZERO_CODE;
+    std::string appIdentifier = "testAppIdentifier";
+    bool res = false;
+    int uid = 0;
+
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    ErrCode ret1 = bmsExtensionDataMgr.GetAllBundleResourceInfo(flags, bundleResourceInfos);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    ErrCode ret2 = bmsExtensionDataMgr.GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
+    EXPECT_EQ(ret2, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    bool ret3 = bmsExtensionDataMgr.IsTargetApp(bundleName, appIdentifier);
+    EXPECT_FALSE(ret3);
+    int32_t cloneNum = ZERO_CODE;
+    bool ret4 = bmsExtensionDataMgr.DetermineCloneNum(bundleName, appIdentifier, cloneNum);
+    EXPECT_FALSE(ret4);
+    ErrCode ret5 = bmsExtensionDataMgr.VerifyActivationLockToken(res);
+    EXPECT_EQ(ret5, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    bool ret6 = bmsExtensionDataMgr.IsNeedToSkipPreBundleInstall();
+    EXPECT_FALSE(ret6);
+    std::vector<std::string> bundleNames;
+    ErrCode ret7 = bmsExtensionDataMgr.GetBundleNamesForUidExt(uid, bundleNames);
+    EXPECT_EQ(ret7, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    ErrCode ret8 = bmsExtensionDataMgr.BmsExtensionInit();
+    EXPECT_EQ(ret8, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    bool ret9 = bmsExtensionDataMgr.IsMCFlagSet();
+    EXPECT_FALSE(ret9);
+}
+
+/**
+ * @tc.number: bmsExtensionDataMgrInitFail_0050
+ * @tc.name: test bmsExtensionDataMgrInitFail
+ * @tc.desc: Test function bmsExtensionDataMgr Init Fail
+*/
+HWTEST_F(BmsBundleInstallerTest, bmsExtensionDataMgrInitFail_0050, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::string bundleName = "com.example.test";
+    int32_t userId = Constants::START_USERID;
+    int32_t appIndex = ZERO_CODE;
+    int32_t flags = ZERO_CODE;
+
+    ErrCode ret1 = bmsExtensionDataMgr.RecoverBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    ErrCode ret2 = bmsExtensionDataMgr.RemoveBackupBundleData(bundleName, userId, appIndex);
+    EXPECT_EQ(ret2, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    std::vector<std::string> bundleNames;
+    std::vector<BundleCompatibleDeviceType> compatibleDeviceTypes;
+    ErrCode ret3 = bmsExtensionDataMgr.BatchGetCompatibleDeviceType(bundleNames, compatibleDeviceTypes);
+    EXPECT_EQ(ret3, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    BundleOptionInfo options;
+    LauncherAbilityResourceInfo launcherAbilityResourceInfo;
+    ErrCode ret4 = bmsExtensionDataMgr.GetLauncherAbilityResourceInfo(options, flags, launcherAbilityResourceInfo);
+    EXPECT_EQ(ret4, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 }
 } // OHOS

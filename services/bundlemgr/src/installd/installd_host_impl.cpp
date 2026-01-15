@@ -1478,7 +1478,8 @@ ErrCode InstalldHostImpl::SetFileConForce(const std::vector<std::string> &paths,
     hapFileInfo.hapFlags = hapFlags;
     hapFileInfo.uid = static_cast<uint32_t>(createDirParam.uid);
     ResultInfo resultInfo;
-    int ret = HapFileRestoreContext::GetInstance().SetFileConForce(hapFileInfo, createDirParam.remainingNum, resultInfo);
+    int ret = HapFileRestoreContext::GetInstance().SetFileConForce(hapFileInfo,
+        createDirParam.remainingNum, resultInfo);
     if (ret != 0) {
         LOG_NOFUNC_E(BMS_TAG_INSTALLD, "HapFileRestorecon failed, bundleName: %{public}s, errcode:%{public}d",
             createDirParam.bundleName.c_str(), ret);
@@ -2927,6 +2928,7 @@ ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, 
 
         if (keepParent) {
             if (!InstalldOperator::DeleteFiles(dir)) {
+                ret = ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
                 LOG_W(BMS_TAG_INSTALLD, "delete files in %{public}s failed errno:%{public}d", dir.c_str(), errno);
             }
         } else {

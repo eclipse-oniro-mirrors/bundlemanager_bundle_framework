@@ -30,7 +30,8 @@ public:
     ErrCode AddBundles(const std::vector<BundleOptionInfo> &bundleOptionInfos);
     ErrCode AddBundle(const BundleOptionInfo &bundleOptionInfo);
     ErrCode DeleteBundle(const BundleOptionInfo &bundleOptionInfo);
-    ErrCode GetAllBundle(int32_t userId, std::vector<BundleOptionInfo> &bundleOptionInfos);
+    ErrCode DeleteBundle(const int32_t userId);
+    ErrCode GetAllBundle(const int32_t userId, std::vector<BundleOptionInfo> &bundleOptionInfos);
 private:
     bool ConvertToBundleOptionInfo(const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
         BundleOptionInfo &bundleOptionInfo);

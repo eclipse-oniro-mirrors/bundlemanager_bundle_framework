@@ -105,6 +105,7 @@ group("unittest") {
       "unittest/bms_event_handler_test:unittest",
       "unittest/bms_extend_resource_manager_test:unittest",
       "unittest/bms_hap_module_info_test:unittest",
+      "unittest/bms_idle_condition_mgr_test:unittest",
       "unittest/bms_install_daemon_test:unittest",
       "unittest/bms_install_exception_mgr_test:unittest",
       "unittest/bms_installd_client_test:unittest",

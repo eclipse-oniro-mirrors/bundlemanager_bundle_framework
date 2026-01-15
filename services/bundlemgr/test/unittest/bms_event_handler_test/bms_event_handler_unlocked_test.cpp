@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -39,6 +39,14 @@ using OHOS::DelayedSingleton;
 namespace OHOS {
 namespace AppExecFwk {
     void SetTestReturnValue(const std::vector<int32_t> &list);
+    void SetIsDirForTest(bool value);
+    void SetErrCodeForTest(ErrCode value);
+    void SetVectorEmptyForTest(bool value);
+}
+namespace Security {
+namespace AccessToken {
+    void SetAccessTokenIDForTest(unsigned int value);
+}
 }
 
 class BmsEventHandlerUnLockedTest : public testing::Test {
@@ -396,5 +404,88 @@ HWTEST_F(BmsEventHandlerUnLockedTest, ProcessGroupEl5Dir_0001, Function | SmallT
     SetTestReturnValue({0, 1, 0, 1});
     callback.ProcessGroupEl5Dir(info);
     EXPECT_EQ(info.type, Security::AccessToken::AppKeyType::GROUPID);
+}
+
+/**
+ * @tc.number: AnalyzeUserData_0100
+ * @tc.name: AnalyzeUserData
+ * @tc.desc: test AnalyzeUserData
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, AnalyzeUserData_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    int32_t userId = 100;
+    std::string userDataDir = "/test/userData/100/";
+    std::string userDataBundleName = "test.userData.bundleName";
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+    bool ret;
+    SetErrCodeForTest(-1);
+    ret = handler->AnalyzeUserData(userId, userDataDir, userDataBundleName, userMaps);
+    EXPECT_FALSE(ret);
+    SetErrCodeForTest(ERR_OK);
+    SetIsDirForTest(true);
+    AccessToken::SetAccessTokenIDForTest(1);
+    ret = handler->AnalyzeUserData(userId, userDataDir, userDataBundleName, userMaps);
+    EXPECT_TRUE(ret);
+    AccessToken::SetAccessTokenIDForTest(0);
+    ret = handler->AnalyzeUserData(userId, userDataDir, userDataBundleName, userMaps);
+    EXPECT_FALSE(ret);
+    SetIsDirForTest(false);
+    ret = handler->AnalyzeUserData(userId, userDataDir, userDataBundleName, userMaps);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ScanInstallDir_0100
+ * @tc.name: ScanInstallDir
+ * @tc.desc: test ScanInstallDir
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, ScanInstallDir_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    std::map<std::string, std::vector<std::string>> hapPathsMap;
+    int32_t userId = 100;
+    SetVectorEmptyForTest(false);
+    handler->OnBundleBootStart(userId);
+    handler->ScanInstallDir(hapPathsMap);
+    EXPECT_FALSE(hapPathsMap.empty());
+    hapPathsMap.clear();
+    SetVectorEmptyForTest(true);
+    handler->HandleModuleUpdate();
+    handler->ScanInstallDir(hapPathsMap);
+    EXPECT_TRUE(hapPathsMap.empty());
+}
+
+/**
+ * @tc.number: InnerProcessCheckCloudShaderCommonDir_0100
+ * @tc.name: InnerProcessCheckCloudShaderCommonDir
+ * @tc.desc: test InnerProcessCheckCloudShaderCommonDir
+ */
+HWTEST_F(BmsEventHandlerUnLockedTest, InnerProcessCheckCloudShaderCommonDir_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    int32_t uid = 1;
+    int32_t gid = 1;
+    BundleInfo bundleInfo;
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.hapPath = Constants::BUNDLE_CODE_DIR;
+    bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
+    SetTestReturnValue({0, 1});
+    handler->InnerProcessCheckCloudShaderDir();
+    handler->InnerProcessCheckCloudShaderCommonDir(uid, gid);
+    bool ret = handler->CheckIsBundleUpdatedByHapPath(bundleInfo);
+    EXPECT_TRUE(ret);
+    hapModuleInfo.hapPath.clear();
+    bundleInfo.hapModuleInfos.clear();
+    bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
+    SetTestReturnValue({0, 0});
+    handler->InnerProcessCheckCloudShaderDir();
+    SetTestReturnValue({});
+    handler->InnerProcessCheckCloudShaderCommonDir(uid, gid);
+    ret = handler->CheckIsBundleUpdatedByHapPath(bundleInfo);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

@@ -101,8 +101,9 @@ ErrCode BmsUpdateSelinuxMgr::StartUpdateSelinuxLabel(const int32_t userId)
             if (ret != ERR_OK) {
                 APP_LOGW("-n %{public}s -u %{public}d -i %{public}d delete failed -err %{public}d",
                     bundleOption.bundleName.c_str(), bundleOption.userId, bundleOption.appIndex, ret);
+            } else {
+                dirParam.remainingNum--;
             }
-            dirParam.remainingNum--;
         }
     }
     return ERR_OK;
@@ -157,7 +158,7 @@ ErrCode BmsUpdateSelinuxMgr::AddBundles(const std::vector<BundleOptionInfo> &bun
     return idleManagerRdb_->AddBundles(bundleOptionInfos);
 }
 
-ErrCode BmsUpdateSelinuxMgr::DeleteBundle(const std::string &bundleName, int32_t userId, int32_t appIndex)
+ErrCode BmsUpdateSelinuxMgr::DeleteBundle(const std::string &bundleName, const int32_t userId, const int32_t appIndex)
 {
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
@@ -168,6 +169,11 @@ ErrCode BmsUpdateSelinuxMgr::DeleteBundle(const std::string &bundleName, int32_t
     bundleOptionInfo.userId = userId;
     bundleOptionInfo.appIndex = appIndex;
     return idleManagerRdb_->DeleteBundle(bundleOptionInfo);
+}
+
+ErrCode BmsUpdateSelinuxMgr::DeleteBundleForUser(const int32_t userId)
+{
+    return idleManagerRdb_->DeleteBundle(userId);
 }
 } // namespace AppExecFwk
 } // namespace OHOS
