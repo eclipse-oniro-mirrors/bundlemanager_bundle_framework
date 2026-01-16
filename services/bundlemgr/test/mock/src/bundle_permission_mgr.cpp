@@ -22,6 +22,13 @@ bool g_verifyCallingBundleSdkVersion  = true;
 bool g_isBundleSelfCalling = true;
 bool g_checkUserFromShell = true;
 int32_t g_hapApiVersion = 0;
+bool g_isSystemAppFalse = false;
+bool g_verifyCallingBundleSdkVersionFalse = false;
+bool g_userFromShell = false;
+bool g_isSelfCalling = true;
+bool g_isShellTokenType = true;
+bool g_verifyUninstallPermission = true;
+bool g_isCallingUidValid = true;
 
 void SetSystemAppForTest(bool value)
 {
@@ -52,6 +59,40 @@ void SetIsBundleSelfCallingForTest(bool value)
 {
     g_isBundleSelfCalling = value;
 }
+void SetSystemAppFalseForTest(bool value)
+{
+    g_isSystemAppFalse = value;
+}
+
+void SetVerifyUninstallPermission(bool value)
+{
+    g_verifyUninstallPermission = value;
+}
+
+void SetVerifyCallingBundleSdkVersionForTestFalse(bool value)
+{
+    g_verifyCallingBundleSdkVersionFalse = value;
+}
+
+void SetUserFromShellForTest(bool value)
+{
+    g_userFromShell = value;
+}
+
+void SetIsSelfCalling(bool value)
+{
+    g_isSelfCalling = value;
+}
+
+void SetIsShellTokenType(bool value)
+{
+    g_isShellTokenType = value;
+}
+
+void SetIsCallingUidValid(bool value)
+{
+    g_isCallingUidValid = value;
+}
 
 void SetCheckUserFromShellForTest(bool value)
 {
@@ -67,6 +108,13 @@ void ResetTestValues()
     g_verifyCallingBundleSdkVersion = true;
     g_isBundleSelfCalling = true;
     g_checkUserFromShell = true;
+    g_isSystemAppFalse = false;
+    g_verifyCallingBundleSdkVersionFalse = false;
+    g_userFromShell = false;
+    g_isSelfCalling = true;
+    g_isShellTokenType = true;
+    g_verifyUninstallPermission = true;
+    g_isCallingUidValid = true;
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
@@ -156,7 +204,7 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
 
 bool BundlePermissionMgr::IsCallingUidValid(int32_t uid)
 {
-    return true;
+    return g_isCallingUidValid;
 }
 
 bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &permissionName,
@@ -177,7 +225,7 @@ bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::
 
 bool BundlePermissionMgr::IsSelfCalling()
 {
-    return true;
+    return g_isSelfCalling;
 }
 
 bool BundlePermissionMgr::VerifyRecoverPermission()
@@ -187,7 +235,7 @@ bool BundlePermissionMgr::VerifyRecoverPermission()
 
 bool BundlePermissionMgr::VerifyUninstallPermission()
 {
-    return true;
+    return g_verifyUninstallPermission;
 }
 
 bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
@@ -219,7 +267,7 @@ bool BundlePermissionMgr::IsNativeTokenType()
 
 bool BundlePermissionMgr::IsShellTokenType()
 {
-    return true;
+    return g_isShellTokenType;
 }
 
 bool BundlePermissionMgr::Init()
@@ -273,18 +321,18 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 
 bool BundlePermissionMgr::IsSystemApp()
 {
-    return false;
+    return g_isSystemAppFalse;
 }
 
 // for old api
 bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
 {
-    return false;
+    return g_verifyCallingBundleSdkVersionFalse;
 }
 
 bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
 {
-    return false;
+    return g_userFromShell;
 }
 #else
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)

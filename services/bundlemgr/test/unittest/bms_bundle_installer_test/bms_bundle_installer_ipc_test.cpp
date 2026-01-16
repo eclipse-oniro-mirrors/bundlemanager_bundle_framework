@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "ipc/installd_host.h"
+#include "mock_status_receiver.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -55,7 +56,10 @@ enum BundleInstallerInterfaceCode : uint32_t {
     UNINSTALL_CLONE_APP,
     INSTALL_EXISTED,
     INSTALL_PLUGIN_APP,
-    UNINSTALL_PLUGIN_APP
+    UNINSTALL_PLUGIN_APP,
+    ADD_ENTERPRISE_RESIGN_CERT,
+    DELETE_ENTERPRISE_RE_SIGNATURE_CERT,
+    GET_ENTERPRISE_RE_SIGNATURE_CERT
 };
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
 }; // namespace
@@ -1231,6 +1235,976 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_3400, Function | SmallTe
     BundleInstallerHost installdHost;
     int res = installdHost.OnRemoteRequest(code, datas, reply, option);
     EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_4600
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_4600, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL_CLONE_APP;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_4700
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_4700, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_CLONE_APP;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_4800
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_4800, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL_EXISTED;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_4900
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_4900, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::ADD_ENTERPRISE_RESIGN_CERT;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_5000
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_5000, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::DELETE_ENTERPRISE_RE_SIGNATURE_CERT;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_5100
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_5100, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::GET_ENTERPRISE_RE_SIGNATURE_CERT;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_5200
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_5200, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL;
+    std::string bundleName = "";
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(statusReceiver, nullptr);
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_5300
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_5300, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL;
+    std::string bundleName = "";
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "true";
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(statusReceiver, nullptr);
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_5400
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_5400, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL;
+    std::string bundleName = "";
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "true";
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(statusReceiver, nullptr);
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_5500
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_5500, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL;
+    std::string bundleName = "";
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "true";
+    sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    ASSERT_NE(statusReceiver, nullptr);
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_5600
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_5600, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::RECOVER;
+    std::string bundleName = "";
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_5700
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_5700, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::RECOVER;
+    std::string bundleName = "";
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_5800
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_5800, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::RECOVER;
+    std::string bundleName = "";
+    InstallParam installParam;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_5900
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_5900, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::RECOVER;
+    std::string bundleName = "";
+    InstallParam installParam;
+    sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_6000
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_6000, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS;
+    int32_t size = ServiceConstants::MAX_HAP_NUMBER - 1;
+    std::vector<std::string> bundleFilePaths;
+    for (uint32_t i = 0; i < size; ++i) {
+        bundleFilePaths.emplace_back(" ");
+    }
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(size);
+    for (uint32_t i = 0; i < size; ++i) {
+        datas.WriteString16(Str8ToStr16(bundleFilePaths[i]));
+    }
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_6100
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_6100, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS;
+    int32_t size = 0;
+    std::vector<std::string> bundleFilePaths;
+    for (uint32_t i = 0; i < size; ++i) {
+        bundleFilePaths.emplace_back(" ");
+    }
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(size);
+    for (uint32_t i = 0; i < size; ++i) {
+        datas.WriteString16(Str8ToStr16(bundleFilePaths[i]));
+    }
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_6200
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_6200, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS;
+    int32_t size = ServiceConstants::MAX_HAP_NUMBER - 1;
+    std::vector<std::string> bundleFilePaths;
+    for (uint32_t i = 0; i < size; ++i) {
+        bundleFilePaths.emplace_back(" ");
+    }
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(size);
+    for (uint32_t i = 0; i < size; ++i) {
+        datas.WriteString16(Str8ToStr16(bundleFilePaths[i]));
+    }
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_6300
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_6300, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS;
+    int32_t size = ServiceConstants::MAX_HAP_NUMBER - 1;
+    std::vector<std::string> bundleFilePaths;
+    for (uint32_t i = 0; i < size; ++i) {
+        bundleFilePaths.emplace_back(" ");
+    }
+    InstallParam installParam;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(size);
+    for (uint32_t i = 0; i < size; ++i) {
+        datas.WriteString16(Str8ToStr16(bundleFilePaths[i]));
+    }
+    datas.WriteParcelable(&installParam);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_6400
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_6400, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS;
+    int32_t size = ServiceConstants::MAX_HAP_NUMBER - 1;
+    std::vector<std::string> bundleFilePaths;
+    for (uint32_t i = 0; i < size; ++i) {
+        bundleFilePaths.emplace_back(" ");
+    }
+    InstallParam installParam;
+    sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(size);
+    for (uint32_t i = 0; i < size; ++i) {
+        datas.WriteString16(Str8ToStr16(bundleFilePaths[i]));
+    }
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_6500
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_6500, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS;
+    int32_t size = ServiceConstants::MAX_HAP_NUMBER - 1;
+    std::vector<std::string> bundleFilePaths;
+    for (uint32_t i = 0; i < size; ++i) {
+        bundleFilePaths.emplace_back(" ");
+    }
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "true";
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(size);
+    for (uint32_t i = 0; i < size; ++i) {
+        datas.WriteString16(Str8ToStr16(bundleFilePaths[i]));
+    }
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_6600
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_6600, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL;
+    std::string bundleName = "";
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_6700
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_6700, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL;
+    std::string bundleName = "";
+    InstallParam installParam;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_6800
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_6800, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL;
+    std::string bundleName = "";
+    InstallParam installParam;
+    sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_6900
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_6900, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_MODULE;
+    std::string bundleName = "";
+    std::string modulePackage = "";
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteString16(Str8ToStr16(modulePackage));
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_7000
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_7000, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_MODULE;
+    std::string bundleName = "";
+    std::string modulePackage = "";
+    InstallParam installParam;
+    sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteString16(Str8ToStr16(modulePackage));
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_7100
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_7100, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_MODULE;
+    std::string bundleName = "";
+    std::string modulePackage = "";
+    InstallParam installParam;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteString16(Str8ToStr16(modulePackage));
+    datas.WriteParcelable(&installParam);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_7200
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_7200, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_BY_UNINSTALL_PARAM;
+    UninstallParam uninstallParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteParcelable(&uninstallParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_7300
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_7300, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_BY_UNINSTALL_PARAM;
+    UninstallParam uninstallParam;
+    sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteParcelable(&uninstallParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_7400
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_7400, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_BY_UNINSTALL_PARAM;
+    UninstallParam uninstallParam;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteParcelable(&uninstallParam);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_7500
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_7500, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::CREATE_STREAM_INSTALLER;
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    std::vector<std::string> originHapPaths;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    datas.WriteStringVector(originHapPaths);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_7600
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_7600, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::CREATE_STREAM_INSTALLER;
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_7700
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_7700, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::CREATE_STREAM_INSTALLER;
+    InstallParam installParam;
+    sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_7800
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_7800, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::CREATE_STREAM_INSTALLER;
+    InstallParam installParam;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteParcelable(&installParam);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_7900
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_7900, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_AND_RECOVER;
+    std::string bundleName = "";
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_8000
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_8000, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_AND_RECOVER;
+    std::string bundleName = "";
+    InstallParam installParam;
+    sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    datas.WriteRemoteObject(statusReceiver->AsObject());
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_8100
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_8100, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_AND_RECOVER;
+    std::string bundleName = "";
+    InstallParam installParam;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(bundleName));
+    datas.WriteParcelable(&installParam);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_8200
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_8200, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::ADD_ENTERPRISE_RESIGN_CERT;
+    std::string certAlias = "certAlias";
+    int32_t userId = 100;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(certAlias));
+    datas.WriteUint32(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    int32_t retCode = reply.ReadInt32();
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_8300
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_8300, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::ADD_ENTERPRISE_RESIGN_CERT;
+    std::string certAlias = "certAlias";
+    int32_t userId = 100;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(certAlias));
+    datas.WriteUint32(1 * 1024 * 1000 + 1);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    int32_t retCode = reply.ReadInt32();
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_8400
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_8400, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::ADD_ENTERPRISE_RESIGN_CERT;
+    std::string certAlias = "certAlias";
+    std::string certContent = "certContent";
+    int32_t userId = 100;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteString16(Str8ToStr16(certAlias));
+    datas.WriteUint32(certContent.size() + 1);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    int32_t retCode = reply.ReadInt32();
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
