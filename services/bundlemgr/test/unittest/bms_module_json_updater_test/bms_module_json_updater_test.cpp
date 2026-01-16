@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,6 +48,8 @@ const int32_t USER_ID = 100;
 const int32_t WAIT_TIME_SECONDS = 5;
 const int32_t TARGET_MINOR_API_VERSION = 20;
 const int32_t TARGET_PATCH_API_VERSION = 21;
+const int32_t TEST_SIZE_ONE = 1;
+const int32_t TEST_SIZE_TWO = 2;
 const StartMode START_MODE = StartMode::RECENT_TASK;
 const std::vector<std::string> ASSET_ACCESS_GROUPS = {"group1", "group2"};
 const AppPreloadPhase APP_PRELOAD_PHASE = AppPreloadPhase::ABILITY_STAGE_CREATED;
@@ -62,6 +64,8 @@ const std::string FORM_EXTENSION_MODULE = "formExtensionModule";
 const std::string FORM_WIDGET_MODULE = "formWidgetModule";
 const std::string MODULE_ARK_TS_MODE = "static";
 const std::string ARK_TS_MODE = "static";
+const std::string TEST_STRING_ONE = "test.string.one";
+const std::string TEST_STRING_TWO = "test.string.two";
 const bool RESIZEABLE = true;
 const std::vector<Metadata> METADATA = {
     {"metaName1", "metaValue1", "metaResource1"},
@@ -605,5 +609,113 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdatePartialInnerBundleInfo_0700, Function |
     EXPECT_EQ(item->second.isolationProcess, ISOLATION_PROCESS);
     EXPECT_EQ(item->second.arkTSMode, ARK_TS_MODE);
     EXPECT_FALSE(item->second.metadata.empty());
+}
+
+/**
+ * @tc.number: UpdateExtensionType_0200
+ * @tc.name: test UpdateExtensionType
+ * @tc.desc: test UpdateExtensionType of ModuleJsonUpdater
+ */
+HWTEST_F(BmsModuleJsonUpdaterTest, UpdateExtensionType_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo curInfo;
+    InnerBundleInfo mergedInfo;
+    std::string key = TEST_STRING_ONE;
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.type = ExtensionAbilityType::CRYPTO;
+    curInfo.InsertExtensionInfo(key, extensionInfo);
+    ModuleJsonUpdater::UpdateExtensionType(curInfo, mergedInfo);
+    EXPECT_TRUE(mergedInfo.FetchInnerExtensionInfos().empty());
+}
+
+/**
+ * @tc.number: UpdateExtensionType_0300
+ * @tc.name: test UpdateExtensionType
+ * @tc.desc: test UpdateExtensionType of ModuleJsonUpdater
+ */
+HWTEST_F(BmsModuleJsonUpdaterTest, UpdateExtensionType_0300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo curInfo;
+    InnerBundleInfo mergedInfo;
+    std::string key = TEST_STRING_ONE;
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.type = ExtensionAbilityType::CRYPTO;
+    extensionInfo.moduleName = TEST_STRING_ONE;
+    curInfo.InsertExtensionInfo(key, extensionInfo);
+    extensionInfo.moduleName = TEST_STRING_TWO;
+    mergedInfo.InsertExtensionInfo(key, extensionInfo);
+    ModuleJsonUpdater::UpdateExtensionType(curInfo, mergedInfo);
+    auto baseExtensionInfos = mergedInfo.FetchInnerExtensionInfos();
+    ASSERT_EQ(baseExtensionInfos.size(), TEST_SIZE_ONE);
+    EXPECT_NE(baseExtensionInfos.begin()->second.type, ExtensionAbilityType::UNSPECIFIED);
+}
+
+/**
+ * @tc.number: UpdateExtensionType_0400
+ * @tc.name: test UpdateExtensionType
+ * @tc.desc: test UpdateExtensionType of ModuleJsonUpdater
+ */
+HWTEST_F(BmsModuleJsonUpdaterTest, UpdateExtensionType_0400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo curInfo;
+    InnerBundleInfo mergedInfo;
+    std::string key = TEST_STRING_ONE;
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.type = ExtensionAbilityType::CRYPTO;
+    extensionInfo.moduleName = TEST_STRING_ONE;
+    extensionInfo.name = TEST_STRING_ONE;
+    curInfo.InsertExtensionInfo(key, extensionInfo);
+    extensionInfo.name = TEST_STRING_TWO;
+    mergedInfo.InsertExtensionInfo(key, extensionInfo);
+    ModuleJsonUpdater::UpdateExtensionType(curInfo, mergedInfo);
+    auto baseExtensionInfos = mergedInfo.FetchInnerExtensionInfos();
+    ASSERT_EQ(baseExtensionInfos.size(), TEST_SIZE_ONE);
+    EXPECT_NE(baseExtensionInfos.begin()->second.type, ExtensionAbilityType::UNSPECIFIED);
+}
+
+/**
+ * @tc.number: UpdateExtensionType_0500
+ * @tc.name: test UpdateExtensionType
+ * @tc.desc: test UpdateExtensionType of ModuleJsonUpdater
+ */
+HWTEST_F(BmsModuleJsonUpdaterTest, UpdateExtensionType_0500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo curInfo;
+    InnerBundleInfo mergedInfo;
+    std::string key = TEST_STRING_ONE;
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.type = ExtensionAbilityType::CRYPTO;
+    extensionInfo.moduleName = TEST_STRING_ONE;
+    extensionInfo.name = TEST_STRING_ONE;
+    curInfo.InsertExtensionInfo(key, extensionInfo);
+    mergedInfo.InsertExtensionInfo(key, extensionInfo);
+    ModuleJsonUpdater::UpdateExtensionType(curInfo, mergedInfo);
+    auto baseExtensionInfos = mergedInfo.FetchInnerExtensionInfos();
+    ASSERT_EQ(baseExtensionInfos.size(), TEST_SIZE_ONE);
+    EXPECT_NE(baseExtensionInfos.begin()->second.type, ExtensionAbilityType::UNSPECIFIED);
+}
+
+/**
+ * @tc.number: UpdateExtensionType_0600
+ * @tc.name: test UpdateExtensionType
+ * @tc.desc: test UpdateExtensionType of ModuleJsonUpdater
+ */
+HWTEST_F(BmsModuleJsonUpdaterTest, UpdateExtensionType_0600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo curInfo;
+    InnerBundleInfo mergedInfo;
+    InnerExtensionInfo extensionInfo;
+    extensionInfo.type = ExtensionAbilityType::SERVICE;
+    extensionInfo.moduleName = TEST_STRING_ONE;
+    extensionInfo.name = TEST_STRING_ONE;
+    extensionInfo.hapPath = TEST_STRING_ONE;
+    curInfo.InsertExtensionInfo(TEST_STRING_ONE, extensionInfo);
+    curInfo.InsertExtensionInfo(TEST_STRING_TWO, extensionInfo);
+    mergedInfo.InsertExtensionInfo(TEST_STRING_ONE, extensionInfo);
+    mergedInfo.InsertExtensionInfo(TEST_STRING_TWO, extensionInfo);
+    ModuleJsonUpdater::UpdateExtensionType(curInfo, mergedInfo);
+    auto baseExtensionInfos = mergedInfo.FetchInnerExtensionInfos();
+    ASSERT_EQ(baseExtensionInfos.size(), TEST_SIZE_TWO);
+    EXPECT_NE(baseExtensionInfos.begin()->second.type, ExtensionAbilityType::UNSPECIFIED);
 }
 }
