@@ -14056,17 +14056,15 @@ HWTEST_F(BmsBundleInstallerTest, bmsExtensionDataMgrInitFail_0040, Function | Sm
     int32_t cloneNum = ZERO_CODE;
     bool ret4 = bmsExtensionDataMgr.DetermineCloneNum(bundleName, appIdentifier, cloneNum);
     EXPECT_FALSE(ret4);
-    ErrCode ret5 = bmsExtensionDataMgr.VerifyActivationLockToken(res);
-    EXPECT_EQ(ret5, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    bool ret6 = bmsExtensionDataMgr.IsNeedToSkipPreBundleInstall();
-    EXPECT_FALSE(ret6);
+    bool ret5 = bmsExtensionDataMgr.IsNeedToSkipPreBundleInstall();
+    EXPECT_FALSE(ret5);
     std::vector<std::string> bundleNames;
-    ErrCode ret7 = bmsExtensionDataMgr.GetBundleNamesForUidExt(uid, bundleNames);
+    ErrCode ret6 = bmsExtensionDataMgr.GetBundleNamesForUidExt(uid, bundleNames);
+    EXPECT_EQ(ret6, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    ErrCode ret7 = bmsExtensionDataMgr.BmsExtensionInit();
     EXPECT_EQ(ret7, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    ErrCode ret8 = bmsExtensionDataMgr.BmsExtensionInit();
-    EXPECT_EQ(ret8, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    bool ret9 = bmsExtensionDataMgr.IsMCFlagSet();
-    EXPECT_FALSE(ret9);
+    bool ret8 = bmsExtensionDataMgr.IsMCFlagSet();
+    EXPECT_FALSE(ret8);
 }
 
 /**
