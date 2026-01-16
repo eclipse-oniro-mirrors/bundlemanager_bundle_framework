@@ -5310,7 +5310,7 @@ ErrCode BundleMgrHost::HandleBatchGetCompatibleDeviceType(MessageParcel &data, M
         APP_LOGE("Write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret == ERR_OK && !WriteParcelableVector(compatibleDeviceType, reply)) {
+    if (ret == ERR_OK && !WriteVectorToParcelIntelligent(compatibleDeviceType, reply)) {
         APP_LOGE("write dataGroupInfo failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

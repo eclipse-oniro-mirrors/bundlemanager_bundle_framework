@@ -7067,7 +7067,7 @@ ErrCode BundleMgrProxy::BatchGetCompatibleDeviceType(
         }
     }
 
-    return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE,
+    return GetVectorFromParcelIntelligentWithErrCode(BundleMgrInterfaceCode::BATCH_GET_COMPATIBLED_DEVICE_TYPE,
         data, compatibleDeviceTypes);
 }
 
