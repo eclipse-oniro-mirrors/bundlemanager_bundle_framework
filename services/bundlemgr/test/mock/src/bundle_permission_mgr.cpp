@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@ bool g_isNativeTokenType = true;
 bool g_verifyPermission = true;
 bool g_verifyCallingBundleSdkVersion  = true;
 bool g_isBundleSelfCalling = true;
+bool g_checkUserFromShell = true;
 int32_t g_hapApiVersion = 0;
 
 void SetSystemAppForTest(bool value)
@@ -52,6 +53,11 @@ void SetIsBundleSelfCallingForTest(bool value)
     g_isBundleSelfCalling = value;
 }
 
+void SetCheckUserFromShellForTest(bool value)
+{
+    g_checkUserFromShell = value;
+}
+
 void ResetTestValues()
 {
     g_isNativeTokenType = true;
@@ -60,6 +66,7 @@ void ResetTestValues()
     g_hapApiVersion = 0;
     g_verifyCallingBundleSdkVersion = true;
     g_isBundleSelfCalling = true;
+    g_checkUserFromShell = true;
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
@@ -292,7 +299,7 @@ bool BundlePermissionMgr::IsSystemApp()
 
 bool BundlePermissionMgr::CheckUserFromShell(int32_t userId)
 {
-    return true;
+    return g_checkUserFromShell;
 }
 
 // for old api

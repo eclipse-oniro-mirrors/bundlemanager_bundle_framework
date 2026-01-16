@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1887,6 +1887,19 @@ HWTEST_F(BmsBundleDataMgrTest2, CleanBundleCacheFilesAutomatic_0001, Function | 
 }
 
 /**
+ * @tc.number: CleanBundleCacheFilesAutomatic_0002
+ * @tc.name: test BundleMgrHostImpl::CleanBundleCacheFilesAutomatic
+ * @tc.desc: @tc.desc: 1. system run normall
+ */
+HWTEST_F(BmsBundleDataMgrTest2, CleanBundleCacheFilesAutomatic_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    uint64_t cacheSize = 1;
+    ErrCode ret = hostImpl->CleanBundleCacheFilesAutomatic(cacheSize);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ALL_BUNDLES_ARE_RUNNING);
+}
+
+/**
  * @tc.number: RegisterBundleStatusCallback_0001
  * @tc.name: test BundleMgrHostImpl::RegisterBundleStatusCallback
  * @tc.desc: 1. system run normally
@@ -1936,6 +1949,24 @@ HWTEST_F(BmsBundleDataMgrTest2, RegisterBundleEventCallback_0002, Function | Med
 }
 
 /**
+ * @tc.number: RegisterBundleEventCallback_0003
+ * @tc.name: test BundleMgrHostImpl::RegisterBundleEventCallback
+ * @tc.desc: 1. system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest2, RegisterBundleEventCallback_0003, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new (std::nothrow) IBundleEventCallbackTest();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    bool ret = bundleMgrHostImpl_->RegisterBundleEventCallback(bundleEventCallback);
+    setuid(saveuid);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: UnregisterBundleEventCallback_0001
  * @tc.name: test BundleMgrHostImpl::UnregisterBundleEventCallback
  * @tc.desc: 1. system run normally
@@ -1969,6 +2000,24 @@ HWTEST_F(BmsBundleDataMgrTest2, UnregisterBundleEventCallback_0002, Function | M
 }
 
 /**
+ * @tc.number: UnregisterBundleEventCallback_0003
+ * @tc.name: test BundleMgrHostImpl::UnregisterBundleEventCallback
+ * @tc.desc: 1. system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest2, UnregisterBundleEventCallback_0003, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new (std::nothrow) IBundleEventCallbackTest();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    bool ret = bundleMgrHostImpl_->UnregisterBundleEventCallback(bundleEventCallback);
+    setuid(saveuid);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: ClearBundleStatusCallback_0001
  * @tc.name: test BundleMgrHostImpl::ClearBundleStatusCallback
  * @tc.desc: 1. system run normally
@@ -1982,6 +2031,60 @@ HWTEST_F(BmsBundleDataMgrTest2, ClearBundleStatusCallback_0001, Function | Mediu
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     bool ret = bundleMgrHostImpl_->ClearBundleStatusCallback(bundleStatusCallback);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ClearBundleStatusCallback_0002
+ * @tc.name: test BundleMgrHostImpl::ClearBundleStatusCallback
+ * @tc.desc: 1. system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest2, ClearBundleStatusCallback_0002, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    bool ret = bundleMgrHostImpl_->ClearBundleStatusCallback(nullptr);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ClearBundleStatusCallback_0003
+ * @tc.name: test BundleMgrHostImpl::ClearBundleStatusCallback
+ * @tc.desc: 1. system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest2, ClearBundleStatusCallback_0003, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    sptr<IBundleStatusCallback> bundleStatusCallback = new (std::nothrow) IBundleStatusCallbackTest();
+    bool ret = bundleMgrHostImpl_->ClearBundleStatusCallback(bundleStatusCallback);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: ResetAllAOT_0001
+ * @tc.name: test BundleMgrHostImpl::ResetAllAOT
+ * @tc.desc: 1. system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest2, ResetAllAOT_0001, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    auto ret = bundleMgrHostImpl_->ResetAllAOT();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ResetAllAOT_0002
+ * @tc.name: test BundleMgrHostImpl::ResetAllAOT
+ * @tc.desc: 1. system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest2, ResetAllAOT_0002, Function | MediumTest | Level1)
+{
+    ASSERT_NE(bundleMgrHostImpl_, nullptr);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto saveuid = getuid();
+    setuid(Constants::CODE_SIGN_UID);
+    auto ret = bundleMgrHostImpl_->ResetAllAOT();
+    setuid(saveuid);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
