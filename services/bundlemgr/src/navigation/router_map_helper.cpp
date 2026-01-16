@@ -13,16 +13,12 @@
  * limitations under the License.
  */
 #include "router_map_helper.h"
-#include "regex.h"
+
 #include "app_log_wrapper.h"
 #include "router_item_compare.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const char* ALNUM_PATTERN = "^[a-zA-Z0-9]*$";
-const char* NUM_PATTERN = "^[0-9]+$";
-}
 
 void RouterMapHelper::MergeRouter(BundleInfo &info, const std::vector<RouterItem> &pluginRouterInfos)
 {
@@ -90,33 +86,40 @@ void RouterMapHelper::MergeRouter(const std::vector<RouterItem>& routerArrayList
     }
 }
 
-bool RouterMapHelper::IsRegexMatch(const std::string& str, const char* pattern)
+bool RouterMapHelper::IsAlnumOrEmpty(const std::string& str)
 {
-    regex_t regex;
-    if (regcomp(&regex, pattern, REG_EXTENDED | REG_NOSUB) != 0) {
-        APP_LOGE("regex compilation failed");
+    for (unsigned char c : str) {
+        bool isAlnum = (c >= 'a' && c <= 'z') ||
+                       (c >= 'A' && c <= 'Z') ||
+                       (c >= '0' && c <= '9');
+        if (!isAlnum) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool RouterMapHelper::IsNumeric(const std::string& str)
+{
+    if (str.empty()) {
         return false;
     }
-    int32_t ret = regexec(&regex, str.c_str(), 0, NULL, 0);
-    if (ret == 0) {
-        regfree(&regex);
-        return true;
+    for (unsigned char c : str) {
+        if (c < '0' || c > '9') {
+            return false;
+        }
     }
-    APP_LOGE("failed to perform a match");
-    regfree(&regex);
-    return false;
+    return true;
 }
 
 int32_t RouterMapHelper::CompareIdentifiers(const std::string& a, const std::string& b)
 {
-    bool aAlnum = IsRegexMatch(a, ALNUM_PATTERN);
-    bool bAlnum = IsRegexMatch(b, ALNUM_PATTERN);
-    if (!aAlnum || !bAlnum) {
+    if (!IsAlnumOrEmpty(a) || !IsAlnumOrEmpty(b)) {
         return 1;
     }
-    
-    bool anum = IsRegexMatch(a, NUM_PATTERN);
-    bool bnum = IsRegexMatch(b, NUM_PATTERN);
+
+    bool anum = IsNumeric(a);
+    bool bnum = IsNumeric(b);
     if (anum && bnum) {
         auto diff = atoi(a.c_str()) - atoi(b.c_str());
         if (diff) {
