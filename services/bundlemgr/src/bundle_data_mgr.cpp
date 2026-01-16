@@ -11431,9 +11431,11 @@ void BundleDataMgr::GetBundleInfosForContinuation(std::vector<BundleInfo> &bundl
         return;
     }
     bundleInfos.erase(std::remove_if(bundleInfos.begin(), bundleInfos.end(), [](BundleInfo bundleInfo) {
-        for (auto abilityInfo : bundleInfo.abilityInfos) {
-            if (abilityInfo.continuable) {
-                return false;
+        for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+            for (const auto &abilityInfo : hapModuleInfo.abilityInfos) {
+                if (abilityInfo.continuable) {
+                    return false;
+                }
             }
         }
         return true;
