@@ -210,6 +210,8 @@ public:
      * @return If the bit value is 1, return true; return false otherwise.
      */
     static bool GetBitValue(const uint8_t num, const uint8_t pos);
+    static bool CheckOrphanNodeUseRateIsSufficient();
+    static bool GetOrphanNodes(const std::string &sysFile, std::vector<int64_t> &numbers);
     static bool IsUtd(const std::string &param);
     static bool IsSpecificUtd(const std::string &param);
     static std::vector<std::string> GetUtdVectorByMimeType(const std::string &mimeType);
