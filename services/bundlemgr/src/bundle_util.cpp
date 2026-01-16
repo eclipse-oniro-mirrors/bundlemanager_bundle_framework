@@ -54,6 +54,11 @@ constexpr const char* BUNDLE_ID_FILE = "appid";
 // single max hap size
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
+constexpr const char* PROC_FILE_PATH = "/sys/fs/hmfs/userdata/orphan_nodes_info";
+constexpr double MAX_INSTALL_NEED_FDUSED_RATE = 0.8;
+constexpr int8_t ORPHAN_DATA_SIZE = 2;
+constexpr int32_t ONE_M = 1024 * 1024;
+
 constexpr const char* ABC_FILE_PATH = "abc_files";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
 #ifdef CONFIG_POLOCY_ENABLE
@@ -1233,6 +1238,61 @@ void BundleUtil::ResetBit(const uint8_t pos, uint8_t &num)
 bool BundleUtil::GetBitValue(const uint8_t num, const uint8_t pos)
 {
     return (num & (1U << pos)) != 0;
+}
+
+bool BundleUtil::CheckOrphanNodeUseRateIsSufficient()
+{
+    std::vector<int64_t> numbers;
+    if (!GetOrphanNodes(PROC_FILE_PATH, numbers)) {
+        APP_LOGW("GetOrphanNodes failed!");
+        return true;
+    }
+    int64_t curOrphanNode = numbers[0];
+    int64_t maxOrphanNode = numbers[1];
+    APP_LOGD("orphan node %{public}lld, %{public}lld", static_cast<long long>(curOrphanNode),
+        static_cast<long long>(maxOrphanNode));
+    if (curOrphanNode >= maxOrphanNode || curOrphanNode < 0) {
+        APP_LOGE("orphan node insuff %{public}lld, %{public}lld", static_cast<long long>(curOrphanNode),
+            static_cast<long long>(maxOrphanNode));
+        return false;
+    }
+    bool res = (static_cast<double>(curOrphanNode) / maxOrphanNode) < MAX_INSTALL_NEED_FDUSED_RATE;
+    if (!res) {
+        APP_LOGE("orphan node insuff %{public}lld, %{public}lld", static_cast<long long>(curOrphanNode),
+            static_cast<long long>(maxOrphanNode));
+    }
+    return res;
+}
+
+bool BundleUtil::GetOrphanNodes(const std::string &sysFile, std::vector<int64_t> &numbers)
+{
+    std::ifstream file(sysFile);
+    if (!file.is_open()) {
+        APP_LOGW("proc file load failed!");
+        return false;
+    }
+    std::string line;
+    file.seekg(0, std::ios::end);
+    int64_t size = file.tellg();
+    if (size <= 0 || size > ONE_M) {
+        APP_LOGE("file is empty or too big");
+        file.close();
+        return false;
+    }
+    file.seekg(0, std::ios::beg);
+    if (getline(file, line)) {
+        std::istringstream iss(line);
+        int64_t num;
+        while (iss >> num) {
+            numbers.push_back(num);
+        }
+    }
+    file.close();
+    if (numbers.size() < ORPHAN_DATA_SIZE) {
+        APP_LOGW("proc file data incorrect!");
+        return false;
+    }
+    return true;
 }
 
 std::vector<std::string> BundleUtil::FileTypeNormalize(const std::string &fileType)
