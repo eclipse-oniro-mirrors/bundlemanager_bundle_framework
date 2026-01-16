@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,7 @@ namespace OHOS {
 namespace {
 const int32_t USERID = 100;
 const int32_t TEST_UID = 20065535;
+const int32_t TEST_NUMBER_ONE = 1;
 constexpr int32_t REMOTE_RESULT = 8585601;
 const uint32_t SDK_VERSION = 10;
 const uint32_t COMPATIBLE_VERSION = 11;
@@ -51,6 +52,7 @@ const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
 const std::string BMS_DATA_PATH = "data/data";
 const std::string BUNDLE_EXT_NAME = "bundleExtName";
 const std::string TEST_BUNDLE_NAME = "testBundleName";
+const std::string TEST_EXTENSION_NAME = "testExtensionName";
 const nlohmann::json EXTENSIONS_JSON_1 = R"(
 {
     "bms-extensions": {
@@ -2423,5 +2425,28 @@ HWTEST_F(BmsExtensionDataMgrTest, GetDetermineCloneNumList_0001, Function | Smal
     BmsExtensionDataMgr bmsExtensionDataMgr;
     std::vector<std::tuple<std::string, std::string, uint32_t>> determineCloneNumList;
     EXPECT_NO_THROW(bmsExtensionDataMgr.GetDetermineCloneNumList(determineCloneNumList));
+}
+
+/**
+ * @tc.number: GetInstallAndRecoverList_0001
+ * @tc.name: GetInstallAndRecoverList
+ * @tc.desc: GetInstallAndRecoverList
+ */
+HWTEST_F(BmsExtensionDataMgrTest, GetInstallAndRecoverList_0001, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int32_t userId = USERID;
+    std::vector<std::string> bundleList;
+    std::vector<std::string> installList;
+    std::vector<std::string> recoverList;
+    bmsExtensionDataMgr.handler_ = nullptr;
+    ErrCode res = bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
+    EXPECT_FALSE(res);
+
+    bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = TEST_EXTENSION_NAME;
+    int32_t handleTest = TEST_NUMBER_ONE;
+    bmsExtensionDataMgr.handler_ = &handleTest;
+    res = bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
+    EXPECT_FALSE(res);
 }
 } // OHOS
