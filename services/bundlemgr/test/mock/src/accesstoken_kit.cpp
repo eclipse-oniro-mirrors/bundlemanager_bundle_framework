@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,10 +24,16 @@ static constexpr int GRANT_STATUS = 100;
 #endif
 #endif
 unsigned int g_accessTokenID = 0;
+int32_t g_errCode = 0;
 
 void SetAccessTokenIDForTest(unsigned int value)
 {
     g_accessTokenID = value;
+}
+
+void SetErrCodeForTest(int32_t value)
+{
+    g_errCode = value;
 }
 
 AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy)
@@ -201,7 +207,7 @@ int32_t AccessTokenKit::UpdateHapToken(AccessTokenIDEx& tokenIdEx, const UpdateH
 int AccessTokenKit::GetHapTokenInfo(AccessTokenID tokenID, HapTokenInfo& hapTokenInfoRes)
 {
     hapTokenInfoRes.bundleName = "tokenBundle";
-    return 0;
+    return g_errCode;
 }
 }
 }
