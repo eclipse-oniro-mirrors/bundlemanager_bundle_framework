@@ -1354,6 +1354,578 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8500
 }
 
 /**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0012
+ * @tc.name: test UninstallAndRecover of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. UninstallAndRecover false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0012, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.parameters[Constants::VERIFY_UNINSTALL_FORCED_KEY] = "true";
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    SetSystemAppFalseForTest(true);
+    SetIsSelfCalling(true);
+    bool ret = bundleInstallerHost_->UninstallAndRecover(BUNDLE_NAME, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0013
+ * @tc.name: test UninstallAndRecover of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. UninstallAndRecover true
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0013, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.parameters[Constants::VERIFY_UNINSTALL_FORCED_KEY] = "false";
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    SetSystemAppFalseForTest(true);
+    SetIsSelfCalling(true);
+    bool ret = bundleInstallerHost_->UninstallAndRecover(BUNDLE_NAME, installParam, statusReceiver);
+    EXPECT_EQ(ret, true);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0014
+ * @tc.name: test InstallCloneApp of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. InstallCloneApp false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0014, Function | SmallTest | Level0)
+{
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    bundleInstallerHost_->Init();
+    OHOS::system::SetParameter(ServiceConstants::IS_APP_CLONE_DISABLE, "false");
+    SetSystemAppFalseForTest(false);
+    ErrCode ret = bundleInstallerHost_->InstallCloneApp(BUNDLE_NAME, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_APP_CLONE_DISABLE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0015
+ * @tc.name: test InstallCloneApp of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. InstallCloneApp false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0015, Function | SmallTest | Level0)
+{
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    bundleInstallerHost_->Init();
+    OHOS::system::SetParameter(ServiceConstants::IS_APP_CLONE_DISABLE, "false");
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode ret = bundleInstallerHost_->InstallCloneApp(BUNDLE_NAME, userId, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_APP_CLONE_DISABLE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0016
+ * @tc.name: test UninstallCloneApp of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. UninstallCloneApp false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0016, Function | SmallTest | Level0)
+{
+    DestroyAppCloneParam destroyAppCloneParam;
+    bundleInstallerHost_->Init();
+    SetSystemAppFalseForTest(false);
+    ErrCode ret = bundleInstallerHost_->UninstallCloneApp(BUNDLE_NAME, USERID, APP_INDEX, destroyAppCloneParam);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0017
+ * @tc.name: test UninstallCloneApp of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. UninstallCloneApp false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0017, Function | SmallTest | Level0)
+{
+    DestroyAppCloneParam destroyAppCloneParam;
+    bundleInstallerHost_->Init();
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode ret = bundleInstallerHost_->UninstallCloneApp(BUNDLE_NAME, USERID, APP_INDEX, destroyAppCloneParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0018
+ * @tc.name: test UninstallCloneApp of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. UninstallCloneApp false by appIndex invalid
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0018, Function | SmallTest | Level0)
+{
+    DestroyAppCloneParam destroyAppCloneParam;
+    int32_t appIndex = 7;
+    bundleInstallerHost_->Init();
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode ret = bundleInstallerHost_->UninstallCloneApp(BUNDLE_NAME, USERID, appIndex, destroyAppCloneParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0019
+ * @tc.name: test InstallExisted of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. InstallExisted false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0019, Function | SmallTest | Level0)
+{
+    bundleInstallerHost_->Init();
+    SetSystemAppFalseForTest(false);
+    ErrCode ret = bundleInstallerHost_->InstallExisted(BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0020
+ * @tc.name: test InstallExisted of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. InstallExisted false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0020, Function | SmallTest | Level0)
+{
+    bundleInstallerHost_->Init();
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode ret = bundleInstallerHost_->InstallExisted(BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0021
+ * @tc.name: test AddEnterpriseResignCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. AddEnterpriseResignCert false by certAlias empty
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0021, Function | SmallTest | Level0)
+{
+    std::string certAlias = "";
+    std::string certContent = "certContent";
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    ErrCode ret = bundleInstallerHost_->AddEnterpriseResignCert(certAlias, certContent, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0022
+ * @tc.name: test AddEnterpriseResignCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. AddEnterpriseResignCert false by certContent empty
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0022, Function | SmallTest | Level0)
+{
+    std::string certAlias = "certAlias";
+    std::string certContent = "";
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    ErrCode ret = bundleInstallerHost_->AddEnterpriseResignCert(certAlias, certContent, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0023
+ * @tc.name: test AddEnterpriseResignCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. AddEnterpriseResignCert false by less max size
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0023, Function | SmallTest | Level0)
+{
+    std::string certAlias = "certAlias";
+    std::string certContent = "certContent";
+    uint32_t size = 1 * 1024 * 1000;
+    for (uint32_t i = 0; i < size; ++i) {
+        certContent.push_back('i');
+    }
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    ErrCode ret = bundleInstallerHost_->AddEnterpriseResignCert(certAlias, certContent, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0024
+ * @tc.name: test AddEnterpriseResignCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. AddEnterpriseResignCert false by less max size
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0024, Function | SmallTest | Level0)
+{
+    std::string certAlias = "certAlias";
+    std::string certContent = "certContent";
+    uint32_t size = 256;
+    for (uint32_t i = 0; i < size; ++i) {
+        certAlias.push_back('i');
+    }
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    ErrCode ret = bundleInstallerHost_->AddEnterpriseResignCert(certAlias, certContent, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0025
+ * @tc.name: test AddEnterpriseResignCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. AddEnterpriseResignCert false by userId invaild
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0025, Function | SmallTest | Level0)
+{
+    std::string certAlias = "certAlias";
+    std::string certContent = "certContent";
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    ErrCode ret = bundleInstallerHost_->AddEnterpriseResignCert(certAlias, certContent, USERID + 1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0026
+ * @tc.name: test AddEnterpriseResignCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. AddEnterpriseResignCert false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0026, Function | SmallTest | Level0)
+{
+    std::string certAlias = "certAlias";
+    std::string certContent = "certContent";
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(false);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    ErrCode ret = bundleInstallerHost_->AddEnterpriseResignCert(certAlias, certContent, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0027
+ * @tc.name: test AddEnterpriseResignCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. AddEnterpriseResignCert false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0027, Function | SmallTest | Level0)
+{
+    std::string certAlias = "certAlias";
+    std::string certContent = "certContent";
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
+    ErrCode ret = bundleInstallerHost_->AddEnterpriseResignCert(certAlias, certContent, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_DEVICE_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0028
+ * @tc.name: test AddEnterpriseResignCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. AddEnterpriseResignCert false by param error
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0028, Function | SmallTest | Level0)
+{
+    std::string certAlias = "certAlias";
+    std::string certContent = "certContent";
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    ErrCode ret = bundleInstallerHost_->AddEnterpriseResignCert(certAlias, certContent, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0029
+ * @tc.name: test DeleteEnterpriseReSignatureCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. DeleteEnterpriseReSignatureCert false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0029, Function | SmallTest | Level0)
+{
+    std::string certificateAlias = "certificateAlias";
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(false);
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->DeleteEnterpriseReSignatureCert(certificateAlias, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0030
+ * @tc.name: test DeleteEnterpriseReSignatureCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. DeleteEnterpriseReSignatureCert false by certificateAlias empty
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0030, Function | SmallTest | Level0)
+{
+    std::string certificateAlias = "";
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->DeleteEnterpriseReSignatureCert(certificateAlias, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0031
+ * @tc.name: test DeleteEnterpriseReSignatureCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. DeleteEnterpriseReSignatureCert false by certificateAlias less max size
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0031, Function | SmallTest | Level0)
+{
+    std::string certificateAlias = "certificateAlias";
+    uint32_t size = 256;
+    for (uint32_t i = 0; i < size; ++i) {
+        certificateAlias.push_back('i');
+    }
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->DeleteEnterpriseReSignatureCert(certificateAlias, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0032
+ * @tc.name: test DeleteEnterpriseReSignatureCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. DeleteEnterpriseReSignatureCert false by userId invalid
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0032, Function | SmallTest | Level0)
+{
+    std::string certificateAlias = "certificateAlias";
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->DeleteEnterpriseReSignatureCert(certificateAlias, USERID - 1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0033
+ * @tc.name: test DeleteEnterpriseReSignatureCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. DeleteEnterpriseReSignatureCert false by userId not have
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0033, Function | SmallTest | Level0)
+{
+    std::string certificateAlias = "certificateAlias";
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->RemoveUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->DeleteEnterpriseReSignatureCert(certificateAlias, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0034
+ * @tc.name: test DeleteEnterpriseReSignatureCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. DeleteEnterpriseReSignatureCert false by file is not cer
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0034, Function | SmallTest | Level0)
+{
+    std::string certificateAlias = "certificateAlias";
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->DeleteEnterpriseReSignatureCert(certificateAlias, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0035
+ * @tc.name: test GetEnterpriseReSignatureCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. GetEnterpriseReSignatureCert false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0035, Function | SmallTest | Level0)
+{
+    std::vector<std::string> certificateAlias;
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(false);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->GetEnterpriseReSignatureCert(USERID, certificateAlias);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0036
+ * @tc.name: test GetEnterpriseReSignatureCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. GetEnterpriseReSignatureCert false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0036, Function | SmallTest | Level0)
+{
+    std::vector<std::string> certificateAlias;
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "false");
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->GetEnterpriseReSignatureCert(USERID, certificateAlias);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_DEVICE_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0037
+ * @tc.name: test GetEnterpriseReSignatureCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. GetEnterpriseReSignatureCert false by param error
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0037, Function | SmallTest | Level0)
+{
+    std::vector<std::string> certificateAlias;
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->GetEnterpriseReSignatureCert(USERID - 1, certificateAlias);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0038
+ * @tc.name: test GetEnterpriseReSignatureCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. GetEnterpriseReSignatureCert false by param error
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0038, Function | SmallTest | Level0)
+{
+    std::vector<std::string> certificateAlias;
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->RemoveUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->GetEnterpriseReSignatureCert(USERID, certificateAlias);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0039
+ * @tc.name: test GetEnterpriseReSignatureCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. GetEnterpriseReSignatureCert false by get cert error
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0039, Function | SmallTest | Level0)
+{
+    std::vector<std::string> certificateAlias;
+    bundleInstallerHost_->Init();
+    SetVerifyCallingPermissionForTest(true);
+    OHOS::system::SetParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, "true");
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+    ErrCode ret = bundleInstallerHost_->GetEnterpriseReSignatureCert(USERID, certificateAlias);
+    EXPECT_EQ(ret, ERR_OK);
+    ResetTestValues();
+    OHOS::system::RemoveParameter(ServiceConstants::IS_ENTERPRISE_DEVICE);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0040
+ * @tc.name: test DeleteReSignCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. DeleteReSignCert false by param error
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0040, Function | SmallTest | Level0)
+{
+    bundleInstallerHost_->Init();
+    ErrCode ret = bundleInstallerHost_->DeleteReSignCert(USERID - 1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0041
+ * @tc.name: test DeleteReSignCert of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. DeleteReSignCert false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0041, Function | SmallTest | Level0)
+{
+    bundleInstallerHost_->Init();
+    SetIsCallingUidValid(false);
+    ErrCode ret = bundleInstallerHost_->DeleteReSignCert(USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
  * @tc.number: BmsBundleSyetemAppFalseTest_8600
  * @tc.name: test GetLauncherAbilityInfoSync
  * @tc.desc: 1.system run normally
@@ -1564,5 +2136,936 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, GetDeveloperIdsTest, Function | 
     int32_t userId = 100;
     auto result = bundleMgrProxy->GetDeveloperIds(appDistributionType, developerIdList, userId);
     EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0042
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. AddAppInstallControlRule test
+ *           2. AddAppInstallControlRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0042, Function | SmallTest | Level1)
+{
+    std::vector<std::string> appIds;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    ErrCode res = impl->AddAppInstallControlRule(appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0043
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteAppInstallControlRule test
+ *           2. DeleteAppInstallControlRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0043, Function | SmallTest | Level1)
+{
+    std::vector<std::string> appIds;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    ErrCode res = impl->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, appIds, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0044
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteAppInstallControlRule test
+ *           2. DeleteAppInstallControlRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0044, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    ErrCode res = impl->DeleteAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0045
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetAppInstallControlRule test
+ *           2. GetAppInstallControlRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0045, Function | SmallTest | Level1)
+{
+    std::vector<std::string> appIds;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    ErrCode res = impl->GetAppInstallControlRule(AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID, appIds);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0046
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. AddAppRunningControlRule test
+ *           2. AddAppRunningControlRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0046, Function | SmallTest | Level1)
+{
+    std::vector<AppRunningControlRule> controlRules;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    ErrCode res = impl->AddAppRunningControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0047
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteAppRunningControlRule test
+ *           2. DeleteAppRunningControlRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0047, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    ErrCode res = impl->DeleteAppRunningControlRule(USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0048
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetAppRunningControlRule test
+ *           2. GetAppRunningControlRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0048, Function | SmallTest | Level1)
+{
+    AppRunningControlRuleResult controlRuleResult;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    ErrCode res = impl->GetAppRunningControlRule(BUNDLE_NAME, USERID, controlRuleResult);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0049
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetAppRunningControlRule test
+ *           2. GetAppRunningControlRule false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0049, Function | SmallTest | Level1)
+{
+    AppRunningControlRuleResult controlRuleResult;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    ErrCode res = impl->GetAppRunningControlRule(BUNDLE_NAME, USERID, controlRuleResult);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ResetCallingUid();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0050
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. AddAppJumpControlRule test
+ *           2. AddAppJumpControlRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0050, Function | SmallTest | Level1)
+{
+    std::vector<AppJumpControlRule> controlRules;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    ErrCode res = impl->AddAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0051
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteAppJumpControlRule test
+ *           2. DeleteAppJumpControlRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0051, Function | SmallTest | Level1)
+{
+    std::vector<AppJumpControlRule> controlRules;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    ErrCode res = impl->DeleteAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0052
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteRuleByCallerBundleName test
+ *           2. DeleteRuleByCallerBundleName false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0052, Function | SmallTest | Level1)
+{
+    const std::string callerBundleName = "callerBundleName";
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    ErrCode res = impl->DeleteRuleByCallerBundleName(callerBundleName, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0053
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetAppJumpControlRule test
+ *           2. GetAppJumpControlRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0053, Function | SmallTest | Level1)
+{
+    std::string callerBundleName = "callerBundleName";
+    std::string targetBundleName = "callerBundleName";
+    AppJumpControlRule controlRule;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    ErrCode res = impl->GetAppJumpControlRule(callerBundleName, targetBundleName, USERID, controlRule);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0054
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. SetDisposedStatus test
+ *           2. SetDisposedStatus false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0054, Function | SmallTest | Level1)
+{
+    std::string appId;
+    Want want;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->SetDisposedStatus(appId, want, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0055
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteDisposedStatus test
+ *           2. DeleteDisposedStatus false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0055, Function | SmallTest | Level1)
+{
+    std::string appId;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->DeleteDisposedStatus(appId, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0056
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedStatus test
+ *           2. GetDisposedStatus false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0056, Function | SmallTest | Level1)
+{
+    std::string appId;
+    Want want;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetDisposedStatus(appId, want, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0057
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. UpdateAppControlledInfo test
+ *           2. UpdateAppControlledInfo false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0057, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetAppIdentifier("appId4");
+    innerBundleInfo.baseBundleInfo_->appId = "appId5";
+    impl->dataMgr_->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    std::string key = BUNDLE_NAME + Constants::FILE_UNDERLINE + std::to_string(AppExecFwk::Constants::ALL_USERID);
+    impl->dataMgr_->bundleInfos_.at(BUNDLE_NAME).innerBundleUserInfos_.emplace(key, userInfo);
+    std::vector<std::string> modifyAppIds;
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    impl->UpdateAppControlledInfo(USERID, modifyAppIds);
+    EXPECT_TRUE(userInfo.isRemovable);
+    ResetCallingUid();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0058
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRule test
+ *           2. GetDisposedRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0058, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    DisposedRule rule;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetDisposedRule(appId, rule, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0059
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRules test
+ *           2. GetDisposedRules false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0059, Function | SmallTest | Level1)
+{
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetDisposedRules(userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0060
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRules test
+ *           2. GetDisposedRules false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0060, Function | SmallTest | Level1)
+{
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode res = impl->GetDisposedRules(userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0061
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRules test
+ *           2. GetDisposedRules false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0061, Function | SmallTest | Level1)
+{
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetDisposedRules(userId, disposedRuleConfigurations);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0062
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. SetDisposedRule test
+ *           2. SetDisposedRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0062, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    DisposedRule rule;
+    int32_t userId = 100;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->SetDisposedRule(appId, rule, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0063
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetAbilityRunningControlRule test
+ *           2. GetAbilityRunningControlRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0063, Function | SmallTest | Level1)
+{
+    std::string bundleName = "bundleName";
+    int32_t userId = 100;
+    std::vector<DisposedRule> disposedRules;
+    int32_t appIndex = 0;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    ErrCode res = impl->GetAbilityRunningControlRule(bundleName, userId, disposedRules, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0064
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRuleForCloneApp test
+ *           2. GetDisposedRuleForCloneApp false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0064, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    DisposedRule rule;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetDisposedRuleForCloneApp(appId, rule, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0065
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRuleForCloneApp test
+ *           2. GetDisposedRuleForCloneApp false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0065, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    DisposedRule rule;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode res = impl->GetDisposedRuleForCloneApp(appId, rule, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0066
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetDisposedRuleForCloneApp test
+ *           2. GetDisposedRuleForCloneApp false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0066, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    DisposedRule rule;
+    int32_t appIndex = 1;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetDisposedRuleForCloneApp(appId, rule, appIndex, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0067
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. SetDisposedRuleForCloneApp test
+ *           2. SetDisposedRuleForCloneApp false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0067, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    DisposedRule rule;
+    int32_t appIndex = 1;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->SetDisposedRuleForCloneApp(appId, rule, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0068
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. SetDisposedRuleForCloneApp test
+ *           2. SetDisposedRuleForCloneApp false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0068, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    DisposedRule rule;
+    int32_t appIndex = 1;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode res = impl->SetDisposedRuleForCloneApp(appId, rule, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0069
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. SetDisposedRuleForCloneApp test
+ *           2. SetDisposedRuleForCloneApp false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0069, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    DisposedRule rule;
+    int32_t appIndex = 1;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    int32_t uid = 20000001;
+    impl->callingNameMap_[uid] = "uid";
+    SetGetCallingUid(5523);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->SetDisposedRuleForCloneApp(appId, rule, appIndex, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetCallingUid();
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0070
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteDisposedRuleForCloneApp test
+ *           2. DeleteDisposedRuleForCloneApp false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0070, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    int32_t appIndex = 1;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->DeleteDisposedRuleForCloneApp(appId, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0071
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteDisposedRuleForCloneApp test
+ *           2. DeleteDisposedRuleForCloneApp false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0071, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    int32_t appIndex = 1;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode res = impl->DeleteDisposedRuleForCloneApp(appId, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0072
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteDisposedRuleForCloneApp test
+ *           2. DeleteDisposedRuleForCloneApp false appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0072, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    int32_t appIndex = 1;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->DeleteDisposedRuleForCloneApp(appId, appIndex, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0073
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetUninstallDisposedRule test
+ *           2. GetUninstallDisposedRule false no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0073, Function | SmallTest | Level1)
+{
+    std::string appIdentifier = "appIdentifier";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    UninstallDisposedRule rule;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetUninstallDisposedRule(appIdentifier, appIndex, userId, rule);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0074
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetUninstallDisposedRule test
+ *           2. GetUninstallDisposedRule false no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0074, Function | SmallTest | Level1)
+{
+    std::string appIdentifier = "appIdentifier";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    UninstallDisposedRule rule;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode res = impl->GetUninstallDisposedRule(appIdentifier, appIndex, userId, rule);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0075
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. GetUninstallDisposedRule test
+ *           2. GetUninstallDisposedRule false appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0075, Function | SmallTest | Level1)
+{
+    std::string appIdentifier = "appIdentifier";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    UninstallDisposedRule rule;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->GetUninstallDisposedRule(appIdentifier, appIndex, userId, rule);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0076
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. SetUninstallDisposedRule test
+ *           2. SetUninstallDisposedRule false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0076, Function | SmallTest | Level1)
+{
+    std::string appIdentifier = "appIdentifier";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    UninstallDisposedRule rule;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->SetUninstallDisposedRule(appIdentifier, rule, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0077
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. SetUninstallDisposedRule test
+ *           2. SetUninstallDisposedRule false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0077, Function | SmallTest | Level1)
+{
+    std::string appIdentifier = "appIdentifier";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    UninstallDisposedRule rule;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode res = impl->SetUninstallDisposedRule(appIdentifier, rule, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0078
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. SetUninstallDisposedRule test
+ *           2. SetUninstallDisposedRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0078, Function | SmallTest | Level1)
+{
+    std::string appIdentifier = "appIdentifier";
+    int32_t appIndex = 1;
+    int32_t userId = -2;
+    UninstallDisposedRule rule;
+    rule.want = std::make_shared<AAFwk::Want>();
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(true);
+    ErrCode res = impl->SetUninstallDisposedRule(appIdentifier, rule, appIndex, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0079
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. SetUninstallDisposedRule test
+ *           2. SetUninstallDisposedRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0079, Function | SmallTest | Level1)
+{
+    std::string appIdentifier = "appIdentifier";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    UninstallDisposedRule rule;
+    rule.want = std::make_shared<AAFwk::Want>();
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    SetNativeTokenTypeForTest(true);
+    ErrCode res = impl->SetUninstallDisposedRule(appIdentifier, rule, appIndex, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0080
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteUninstallDisposedRule test
+ *           2. DeleteUninstallDisposedRule false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0080, Function | SmallTest | Level1)
+{
+    std::string appIdentifier = "appIdentifier";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->DeleteUninstallDisposedRule(appIdentifier, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0081
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteUninstallDisposedRule test
+ *           2. DeleteUninstallDisposedRule false by no permission.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0081, Function | SmallTest | Level1)
+{
+    std::string appIdentifier = "appIdentifier";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+    ErrCode res = impl->DeleteUninstallDisposedRule(appIdentifier, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0082
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteUninstallDisposedRule test
+ *           2. DeleteUninstallDisposedRule false by appControlManager_ nullptr.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0082, Function | SmallTest | Level1)
+{
+    std::string appIdentifier = "appIdentifier";
+    int32_t appIndex = 1;
+    int32_t userId = 100;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->appControlManager_ = nullptr;
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->DeleteUninstallDisposedRule(appIdentifier, appIndex, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NULL_PTR);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0083
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1. DeleteUninstallDisposedRule test
+ *           2. DeleteUninstallDisposedRule OK.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0083, Function | SmallTest | Level1)
+{
+    std::string appIdentifier = "appIdentifier";
+    int32_t appIndex = 1;
+    int32_t userId = -2;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    SetSystemAppFalseForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+    ErrCode res = impl->DeleteUninstallDisposedRule(appIdentifier, appIndex, userId);
+    EXPECT_EQ(res, ERR_OK);
+    ResetTestValues();
 }
 } // OHOS
