@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <unordered_map>
 
 #include "idle_condition_listener.h"
 #include "singleton.h"
@@ -32,10 +33,10 @@ public:
 
     void OnScreenLocked();
     void OnPowerConnected();
-    void OnUserUnlocked();
+    void OnUserUnlocked(const int32_t userId);
     void OnScreenUnlocked();
     void OnPowerDisconnected();
-    void OnUserStopping();
+    void OnUserStopping(const int32_t userId);
     void HandleOnTrim(Memory::SystemMemoryLevel level);
     void OnBatteryChanged();
     void OnThermalLevelChanged(PowerMgr::ThermalLevel level);
@@ -43,16 +44,17 @@ public:
     void InterruptRelabel();
 
 private:
-    bool CheckRelabelConditions();
+    bool CheckRelabelConditions(const int32_t userId);
     bool IsBufferSufficient();
     bool IsThermalSatisfied();
+    bool CheckInodeForCommericalDevice();
     bool SetIsRelabeling();
 
 private:
     std::mutex mutex_;
     std::mutex stateMutex_;
-    
-    std::atomic<bool> userUnlocked_{false};
+
+    std::unordered_map<int32_t, std::atomic<bool>> userUnlockedMap_;
     std::atomic<bool> screenLocked_{false};
     std::atomic<bool> powerConnected_{false};
     std::atomic<bool> batterySatisfied_{false};
