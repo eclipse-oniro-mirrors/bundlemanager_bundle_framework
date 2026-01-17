@@ -32,7 +32,7 @@ using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
 constexpr size_t U32_AT_SIZE = 4;
 constexpr size_t MESSAGE_SIZE = 10;
-constexpr size_t CODE_MAX = 13;
+constexpr size_t CODE_MAX = 19;
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
@@ -58,7 +58,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string bundleFilePath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::string modulePackage = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::string hostBundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::string pluginFilePath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     std::vector<std::string> bundleFilePaths = GenerateStringArray(fdp);
+    std::vector<std::string> pluginFilePaths = GenerateStringArray(fdp);
+    InstallPluginParam installPluginParam;
     InstallParam installParam;
     GenerateInstallParam(fdp, installParam);
 
@@ -75,6 +79,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleInstallerHost->InstallByBundleName(bundleName, installParam, statusReceiver);
     bundleInstallerHost->InstallSandboxApp(bundleName, dplType, userId, appIndex);
     bundleInstallerHost->UninstallSandboxApp(bundleName, appIndex, userId);
+    bundleInstallerHost->InstallPlugin(hostBundleName, pluginFilePaths, installPluginParam);
+    bundleInstallerHost->UninstallPlugin(hostBundleName, pluginFilePath, installPluginParam);
     bundleInstallerHost->CreateStreamInstaller(installParam, statusReceiver, originHapPaths);
     bundleInstallerHost->DestoryBundleStreamInstaller(streamInstallerId);
     bundleInstallerHost->StreamInstall(bundleFilePaths, installParam, statusReceiver);
@@ -89,6 +95,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     InstallParam installParam2;
     GenerateInstallParam(fdp, installParam2);
     bundleInstallerHost->IsPermissionVaild(installParam, installParam2);
+    bundleInstallerHost->CheckBundleInstallerManager(statusReceiver);
+
     DestroyAppCloneParam destroyAppCloneParam;
     Parcel parcel;
     destroyAppCloneParam.Marshalling(parcel);
