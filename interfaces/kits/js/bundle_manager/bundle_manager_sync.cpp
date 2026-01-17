@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -650,12 +650,13 @@ napi_value GetLaunchWantForBundleSync(napi_env env, napi_callback_info info)
     }
     OHOS::AAFwk::Want want;
     ErrCode ret = CommonFunc::ConvertErrCode(
-        iBundleMgr->GetLaunchWantForBundle(bundleName, want, userId));
+        iBundleMgr->GetLaunchWantForBundle(bundleName, want, userId, true));
     if (ret != NO_ERROR) {
         APP_LOGE("GetLaunchWantForBundle failed, bundleName is %{public}s, userId is %{public}d",
             bundleName.c_str(), userId);
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            env, ret, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC,
+            Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
         napi_throw(env, businessError);
         return nullptr;
     }

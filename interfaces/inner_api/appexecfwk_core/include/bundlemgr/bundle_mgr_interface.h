@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -777,7 +777,8 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
      */
     virtual ErrCode GetLaunchWantForBundle(
-        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID)
+        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID,
+        bool isSync = false)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

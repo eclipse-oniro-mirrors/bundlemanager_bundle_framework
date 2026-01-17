@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -577,12 +577,13 @@ static ani_object GetLaunchWantForBundleNative(ani_env* env,
         return nullptr;
     }
     OHOS::AAFwk::Want want;
-    ErrCode ret = iBundleMgr->GetLaunchWantForBundle(bundleName, want, aniUserId);
     bool isSync = CommonFunAni::AniBooleanToBool(aniIsSync);
+    ErrCode ret = iBundleMgr->GetLaunchWantForBundle(bundleName, want, aniUserId, isSync);
     if (ret != ERR_OK) {
         APP_LOGE("GetLaunchWantForBundle failed ret: %{public}d", ret);
         BusinessErrorAni::ThrowCommonError(env, CommonFunc::ConvertErrCode(ret),
             isSync ? GET_LAUNCH_WANT_FOR_BUNDLE_SYNC : GET_LAUNCH_WANT_FOR_BUNDLE,
+            isSync ? Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS :
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         return nullptr;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1660,14 +1660,22 @@ bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t
     return dataMgr->GetHapModuleInfo(abilityInfo, hapModuleInfo, userId);
 }
 
-ErrCode BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName, Want &want, int32_t userId)
+ErrCode BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName, Want &want,
+    int32_t userId, bool isSync)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     APP_LOGD("start GetLaunchWantForBundle, bundleName : %{public}s", bundleName.c_str());
-    if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    if (!isSync) {
+        if (!BundlePermissionMgr::IsSystemApp() &&
+            !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
+            APP_LOGE_NOFUNC("non-system app calling system api");
+            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        }
+    } else {
+        if (!BundlePermissionMgr::IsSystemApp() && !CheckAcrossUserPermission(userId)) {
+            APP_LOGE_NOFUNC("verify permission across local account failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");

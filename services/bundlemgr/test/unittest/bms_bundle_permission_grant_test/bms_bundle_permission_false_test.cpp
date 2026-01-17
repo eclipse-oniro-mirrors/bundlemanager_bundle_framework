@@ -2129,4 +2129,16 @@ HWTEST_F(BmsBundlePermissionFalseTest, GetPluginExtensionInfo_0001, Function | S
     ErrCode testRet = bundleMgrHostImpl_->GetPluginExtensionInfo(hostBundleName, want, userId, extensionInfo);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: GetLaunchWantForBundle_0001
+ * @tc.name: test GetLaunchWantForBundle of BundleMgrHostImpl
+ * @tc.desc: 1. GetLaunchWantForBundle failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, GetLaunchWantForBundle_0001, Function | SmallTest | Level0)
+{
+    Want want;
+    ErrCode ret = bundleMgrHostImpl_->GetLaunchWantForBundle(BUNDLE_NAME, want, USERID, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS
