@@ -3192,6 +3192,24 @@ HWTEST_F(BmsEventHandlerTest, ProcessIdleInfo_0100, Function | SmallTest | Level
 }
 
 /**
+ * @tc.number: ProcessIdleInfo_0200
+ * @tc.name: ProcessIdleInfo
+ * @tc.desc: test ProcessIdleInfo
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessIdleInfo_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    if (handler) {
+        auto bmsParam = std::make_shared<BmsParam>();
+        ASSERT_NE(bmsParam, nullptr);
+        DelayedSingleton<BundleMgrService>::GetInstance()->bmsParam_ = bmsParam;
+        auto ret = handler->ProcessIdleInfo();
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
  * @tc.number: HotPatchAppProcessing_0100
  * @tc.name: HotPatchAppProcessing
  * @tc.desc: test HotPatchAppProcessing

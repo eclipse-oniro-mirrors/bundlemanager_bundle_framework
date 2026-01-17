@@ -35,8 +35,7 @@ IdleConditionEventSubscriber::~IdleConditionEventSubscriber()
 {}
 void IdleConditionEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
-    std::string param = OHOS::system::GetParameter(ServiceConstants::BMS_RELABEL_PARAM, "");
-    if (param != "true") {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
         return;
     }
     APP_LOGI("OnReceiveEvent received idle condition event");
