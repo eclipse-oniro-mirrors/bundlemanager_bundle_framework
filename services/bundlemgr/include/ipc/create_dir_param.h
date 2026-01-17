@@ -48,6 +48,8 @@ struct CreateDirParam : public Parcelable {
     std::vector<std::string> extensionDirs;
     std::string uuid;
     int32_t dlpType = 0;
+    uint32_t remainingNum = 0;
+    std::string stopReason;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

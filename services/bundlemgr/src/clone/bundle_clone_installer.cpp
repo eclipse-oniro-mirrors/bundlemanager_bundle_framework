@@ -756,6 +756,7 @@ void BundleCloneInstaller::StopRelable(const InnerBundleInfo &info, int32_t uid)
     param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     param.apl = info.GetAppPrivilegeLevel();
     param.isPreInstallApp = info.IsPreInstallApp();
+    param.stopReason = "ProcessCloneBundleUninstall";
     InstalldClient::GetInstance()->StopSetFileCon(param, ServiceConstants::StopReason::DELETE);
 }
 } // AppExecFwk

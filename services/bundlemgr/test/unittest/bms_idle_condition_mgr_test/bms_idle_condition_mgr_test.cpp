@@ -187,11 +187,11 @@ HWTEST_F(BmsIdleConditionMgrTest, InterruptRelabel_0100, Function | SmallTest | 
     ASSERT_NE(idleMgr, nullptr);
 
     idleMgr->isRelabeling_ = false;
-    idleMgr->InterruptRelabel();
+    idleMgr->InterruptRelabel("InterruptRelabel_0100");
     EXPECT_FALSE(idleMgr->isRelabeling_);
 
     idleMgr->isRelabeling_ = true;
-    idleMgr->InterruptRelabel();
+    idleMgr->InterruptRelabel("InterruptRelabel_0100");
     EXPECT_TRUE(idleMgr->isRelabeling_);
 }
 
