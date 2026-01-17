@@ -2215,7 +2215,7 @@ HWTEST_F(BmsBundleDataGroupTest, IsGwpAsanEnabled_0001, Function | MediumTest | 
 {
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.innerModuleInfos_["test"] = InnerModuleInfo();
-    innerBundleInfo.innerModuleInfos_["test"].isGwpAsanEnabled = true;
+    innerBundleInfo.innerModuleInfos_["test"].gwpAsanEnabled = true;
     auto ret = innerBundleInfo.IsGwpAsanEnabled();
     EXPECT_TRUE(ret);
 }
@@ -2229,7 +2229,7 @@ HWTEST_F(BmsBundleDataGroupTest, IsTsanEnabled_0001, Function | MediumTest | Lev
 {
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.innerModuleInfos_["test"] = InnerModuleInfo();
-    innerBundleInfo.innerModuleInfos_["test"].IsTsanEnabled = true;
+    innerBundleInfo.innerModuleInfos_["test"].tsanEnabled = true;
     auto ret = innerBundleInfo.IsTsanEnabled();
     EXPECT_TRUE(ret);
 }
