@@ -13661,7 +13661,7 @@ HWTEST_F(BmsBundleInstallerTest, HashFiles_0010, Function | SmallTest | Level0)
 /**
  * @tc.number: SkipThirdPreloadAppInstallation_0100
  * @tc.name: test SkipThirdPreloadAppInstallation
- * @tc.desc: 1.Test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallation of BundleUserMgrHostImpl
 */
 HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0100, Function | MediumTest | Level1)
 {
@@ -13675,7 +13675,7 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0100, Function 
 /**
  * @tc.number: SkipThirdPreloadAppInstallation_0200
  * @tc.name: test SkipThirdPreloadAppInstallation
- * @tc.desc: 1.Test SkipThirdPreloadAppInstallation
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallation of BundleUserMgrHostImpl
  */
 HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0200, Function | SmallTest | Level1)
 {
@@ -13692,7 +13692,7 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0200, Function 
 /**
  * @tc.number: SkipThirdPreloadAppInstallation_0300
  * @tc.name: test SkipThirdPreloadAppInstallation
- * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione of BundleUserMgrHostImpl
  */
 HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0300, Function | SmallTest | Level1)
 {
@@ -13712,7 +13712,7 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0300, Function 
 /**
  * @tc.number: SkipThirdPreloadAppInstallation_0400
  * @tc.name: test SkipThirdPreloadAppInstallation
- * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione of BundleUserMgrHostImpl
  */
 HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0400, Function | SmallTest | Level1)
 {
@@ -13732,7 +13732,7 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0400, Function 
 /**
  * @tc.number: SkipThirdPreloadAppInstallation_0500
  * @tc.name: test SkipThirdPreloadAppInstallation
- * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione of BundleUserMgrHostImpl
  */
 HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0500, Function | SmallTest | Level1)
 {
@@ -13752,7 +13752,7 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0500, Function 
 /**
  * @tc.number: SkipThirdPreloadAppInstallation_0600
  * @tc.name: test SkipThirdPreloadAppInstallation
- * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione of BundleUserMgrHostImpl
  */
 HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0600, Function | SmallTest | Level1)
 {
@@ -13772,7 +13772,7 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0600, Function 
 /**
  * @tc.number: SkipThirdPreloadAppInstallation_0700
  * @tc.name: test SkipThirdPreloadAppInstallation
- * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione
+ * @tc.desc: 1.Test SkipThirdPreloadAppInstallatione of BundleUserMgrHostImpl
  */
 HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0700, Function | SmallTest | Level1)
 {
@@ -13789,7 +13789,7 @@ HWTEST_F(BmsBundleInstallerTest, SkipThirdPreloadAppInstallation_0700, Function 
 /*
  * @tc.number: InnerProcessSkipPreInstallBundles_0100
  * @tc.name: test InnerProcessSkipPreInstallBundles
- * @tc.desc: 1.Test InnerProcessSkipPreInstallBundles
+ * @tc.desc: 1.Test InnerProcessSkipPreInstallBundles of BundleUserMgrHostImpl
 */
 HWTEST_F(BmsBundleInstallerTest, InnerProcessSkipPreInstallBundles_0100, Function | MediumTest | Level1)
 {
@@ -13806,11 +13806,11 @@ HWTEST_F(BmsBundleInstallerTest, InnerProcessSkipPreInstallBundles_0100, Functio
     EXPECT_FALSE(ret);
 }
 
-// /**
-//  * @tc.number: InnerRemoveUser_0500
-//  * @tc.name: test InnerRemoveUser
-//  * @tc.desc: 1.Test InnerRemoveUser
-// */
+/**
+ * @tc.number: InnerRemoveUser_0100
+ * @tc.name: test InnerRemoveUser
+ * @tc.desc: 1.Test InnerRemoveUser of BundleUserMgrHostImpl
+*/
 HWTEST_F(BmsBundleInstallerTest, InnerRemoveUser_0100, Function | MediumTest | Level1)
 {
     BundleUserMgrHostImpl host;
@@ -15360,5 +15360,49 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1024, Function | SmallTest 
 
     EXPECT_EQ(ret, ERR_APPEXECFWK_NULL_PTR);
     bundleMgrService_->dataMgr_ = backupDataMgr;
+}
+
+/**
+ * @tc.number: InnerProcessSkipPreInstallBundles_0200
+ * @tc.name: test InnerProcessSkipPreInstallBundles
+ * @tc.desc: 1.Test InnerProcessSkipPreInstallBundles of BundleUserMgrHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, InnerProcessSkipPreInstallBundles_0200, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    std::set<std::string> uninstallList;
+    std::string bundleName = "test2";
+    uninstallList.insert(bundleName);
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName);
+    preInstallBundleInfo.AddBundlePath("/data/preloads/app/test.hap");
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto saveRes = dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    bool ret = host.InnerProcessSkipPreInstallBundles(uninstallList, true);
+    EXPECT_TRUE(ret);
+    dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+}
+
+/**
+ * @tc.number: InnerProcessSkipPreInstallBundles_0300
+ * @tc.name: test InnerProcessSkipPreInstallBundles
+ * @tc.desc: 1.Test InnerProcessSkipPreInstallBundles of BundleUserMgrHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, InnerProcessSkipPreInstallBundles_0300, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+    std::set<std::string> uninstallList;
+    std::string bundleName = "test3";
+    uninstallList.insert(bundleName);
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName);
+    preInstallBundleInfo.AddBundlePath("/preload/app/test.hap");
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto saveRes = dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    bool ret = host.InnerProcessSkipPreInstallBundles(uninstallList, true);
+    EXPECT_TRUE(ret);
+    dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
 }
 } // OHOS
