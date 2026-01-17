@@ -341,7 +341,10 @@ void BMSEventHandler::AfterBmsStart()
 #ifdef WEBVIEW_ENABLE
     NotifyFWKAfterBmsStart();
 #endif
-    RegisterRelabelEvent();
+    if (OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
+        APP_LOGI_NOFUNC("relabel is true");
+        RegisterRelabelEvent();
+    }
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
 }
 
@@ -1337,7 +1340,9 @@ void BMSEventHandler::ProcessRebootBundle()
     CleanAllBundleEl1ShaderCacheLocal();
     CleanSystemOptimizeShaderCache();
     CleanAllBundleEl1ArkStartupCacheLocal();
-    (void)ProcessIdleInfo();
+    if (OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
+        (void)ProcessIdleInfo();
+    }
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)

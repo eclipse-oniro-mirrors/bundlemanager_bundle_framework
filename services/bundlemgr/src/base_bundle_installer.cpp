@@ -8652,7 +8652,7 @@ void BaseBundleInstaller::InnerProcessNewBundleDataDir(const bool isOta,
 
 void BaseBundleInstaller::StopRelable(const InnerBundleInfo &info)
 {
-    if (OHOS::system::GetParameter(ServiceConstants::BMS_RELABEL_PARAM, "") != "true") {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
         return;
     }
     CreateDirParam param;

@@ -222,8 +222,7 @@ HWTEST_F(BmsIdleConditionMgrTest, OnReceiveEvent_0100, Function | SmallTest | Le
     want2.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED);
     eventData2.SetWant(want2);
     subscriberPtr->OnReceiveEvent(eventData2);
-    std::string param = OHOS::system::GetParameter(ServiceConstants::BMS_RELABEL_PARAM, "");
-    if (param != "true") {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
         EXPECT_TRUE(idleMgr->screenLocked_);
     } else {
         EXPECT_FALSE(idleMgr->screenLocked_);

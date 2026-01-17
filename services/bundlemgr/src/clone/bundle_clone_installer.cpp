@@ -747,7 +747,7 @@ bool BundleCloneInstaller::DeleteUninstallCloneBundleInfo(const std::string &bun
 
 void BundleCloneInstaller::StopRelable(const InnerBundleInfo &info, int32_t uid)
 {
-    if (OHOS::system::GetParameter(ServiceConstants::BMS_RELABEL_PARAM, "") != "true") {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
         return;
     }
     CreateDirParam param;
