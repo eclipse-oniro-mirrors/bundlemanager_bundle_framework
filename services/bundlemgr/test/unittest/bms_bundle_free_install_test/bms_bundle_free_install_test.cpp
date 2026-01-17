@@ -2152,4 +2152,56 @@ HWTEST_F(BmsBundleFreeInstallTest, CheckSubPackageName_0100, Function | SmallTes
     auto ret = connectAbilityMgr->CheckSubPackageName(innerBundleInfo, want);
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: QueryBundleStatsInfoByInterval_0200
+ * @tc.name: test QueryBundleStatsInfoByInterval results empty
+ * @tc.desc: cover StatisticsUsageStats emplace_back branch
+ */
+HWTEST_F(BmsBundleFreeInstallTest, QueryBundleStatsInfoByInterval_0200,
+    Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
+    bool ret = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QueryBundleStatsInfoByInterval_0300
+ * @tc.name: test QueryBundleStatsInfoByInterval any_of hit or not hit
+ * @tc.desc: cover any_of lambda both branches
+ */
+HWTEST_F(BmsBundleFreeInstallTest, QueryBundleStatsInfoByInterval_0300,
+    Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+
+    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
+    DeviceUsageStats::BundleActivePackageStats stat;
+    stat.bundleName_ = "com.test.bundle";
+    stat.startCount_ = 1;
+    stat.lastTimeUsed_ = 100;
+    results.emplace_back(stat);
+
+    bool ret = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: QueryBundleStatsInfoByInterval_0400
+ * @tc.name: test QueryBundleStatsInfoByInterval multi user
+ * @tc.desc: cover for loop of GetAllUser
+ */
+HWTEST_F(BmsBundleFreeInstallTest, QueryBundleStatsInfoByInterval_0400,
+    Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
+    DeviceUsageStats::BundleActivePackageStats stat;
+    stat.bundleName_ = "bundle.multi.user";
+    results.emplace_back(stat);
+    bool ret = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
+    EXPECT_TRUE(ret);
+}
 } // OHOS
