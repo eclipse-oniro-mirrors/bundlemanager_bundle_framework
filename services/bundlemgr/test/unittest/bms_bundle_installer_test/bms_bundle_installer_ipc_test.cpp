@@ -40,6 +40,9 @@ constexpr int32_t DEFAULT_INSTALLER_ID = 0;
 constexpr int32_t TEST_INSTALLER_UID = 100;
 constexpr int32_t INVAILD_ID = -1;
 const int32_t ERR_CODE = 8388613;
+const int32_t TEST_UID_ONE = 20010009;
+const int32_t TEST_UID_TWO = 20010010;
+const int32_t TEST_UID_THREE = 20010011;
 enum BundleInstallerInterfaceCode : uint32_t {
     INSTALL = 0,
     INSTALL_MULTIPLE_HAPS,
@@ -2683,6 +2686,27 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleGetDiskUsageFromPath_0001, Function | 
     InstalldHost installdHost;
     int res = installdHost.HandleGetDiskUsageFromPath(datas, reply);
     EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: HandleGetBundleFileCount_0001
+ * @tc.name: HandleGetBundleFileCount
+ * @tc.desc: test HandleGetBundleFileCount of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleGetBundleFileCount_0001, Function | SmallTest | Level0)
+{
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(2);
+    datas.WriteInt32(20010001);
+    datas.WriteInt32(20010002);
+
+    datas.RewindRead(0);
+    MessageParcel reply;
+    InstalldHost installdHost;
+    bool res = installdHost.HandleGetBundleFileCount(datas, reply);
+    EXPECT_EQ(res, true);
 }
 
 /**

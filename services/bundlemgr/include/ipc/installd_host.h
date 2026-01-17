@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -128,6 +128,13 @@ private:
      * @return Returns true if called successfully; returns false otherwise.
      */
     bool HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the GetDiskUsage function called from a IInstalld proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleGetBundleFileCount(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the CleanBundleDataDir function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.

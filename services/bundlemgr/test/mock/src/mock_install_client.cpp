@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -140,6 +140,11 @@ ErrCode InstalldClient::GetDiskUsage(const std::string &dir, int64_t &statSize, 
 
 ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
     int64_t timeoutMs)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::GetBundleFileCount(const std::vector<int32_t> &uids, uint64_t &fileCount)
 {
     return 0;
 }

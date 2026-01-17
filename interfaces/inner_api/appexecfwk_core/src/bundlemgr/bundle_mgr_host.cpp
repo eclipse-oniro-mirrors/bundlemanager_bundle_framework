@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1881,11 +1881,25 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFilesAutomatic(MessageParcel &data,
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
 
     uint64_t cacheSize = data.ReadUint64();
-    ErrCode ret = CleanBundleCacheFilesAutomatic(cacheSize);
+    CleanType cleanType = static_cast<CleanType>(data.ReadInt32());
+    std::optional<uint64_t> cleanedSize = std::nullopt;
+    ErrCode ret = CleanBundleCacheFilesAutomatic(cacheSize, cleanType, cleanedSize);
 
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!cleanedSize.has_value()) {
+        reply.WriteBool(false);
+    } else {
+        reply.WriteBool(true);
+        uint64_t size = cleanedSize.value();
+        if (!reply.WriteUint64(size)) {
+            APP_LOGE("WriteInt32 failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        APP_LOGI("cleaned size %{public}llu", cleanedSize.value());
     }
     return ERR_OK;
 }

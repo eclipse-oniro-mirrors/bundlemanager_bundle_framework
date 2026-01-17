@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1178,6 +1178,17 @@ ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &p
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     statSize = InstalldOperator::GetDiskUsageFromPath(path, timeoutMs);
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::GetBundleFileCount(const std::vector<int32_t> &uids, uint64_t &fileCount)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    fileCount = InstalldOperator::GetBundleFileCount(uids);
     return ERR_OK;
 }
 

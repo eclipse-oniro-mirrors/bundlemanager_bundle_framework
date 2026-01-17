@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -187,6 +187,16 @@ public:
      */
     virtual ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize,
         int64_t timeoutMs = -1)
+    {
+        return ERR_OK;
+    }
+    /**
+     * @brief Get bundle file count (inode count) for UID.
+     * @param uids Indicates the list of user IDs of the applications (including clones).
+     * @param fileCount Output parameter for file count.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    virtual ErrCode GetBundleFileCount(const  std::vector<int32_t> &uids, uint64_t &fileCount)
     {
         return ERR_OK;
     }

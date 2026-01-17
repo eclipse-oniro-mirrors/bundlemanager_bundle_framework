@@ -1693,4 +1693,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, DeleteCertAndRemoveKey_0100, Function | S
     auto ret = hostImpl->DeleteCertAndRemoveKey(certPaths);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: InstalldHostImplTest_8400
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetBundleFileCount of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8400, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<int32_t> uids;
+    uint64_t fileCount = 0;
+    auto ret = hostImpl->GetBundleFileCount(uids, fileCount);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS

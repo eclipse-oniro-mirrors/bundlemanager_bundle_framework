@@ -1944,7 +1944,9 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CleanBundleCacheFilesAutomaticTe
     auto bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
     uint64_t cacheSize = 0;
-    auto result = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize);
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    std::optional<uint64_t> cleanedSize;
+    auto result = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize, cleanType, cleanedSize);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 }
 

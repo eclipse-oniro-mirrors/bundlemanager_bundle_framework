@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1300,6 +1300,34 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsageFromPath_0200,
     path.emplace_back("disk.path");
     ASSERT_NE(installClient_, nullptr);
     ErrCode result = installClient_->GetDiskUsageFromPath(path, statSize);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+ /**
+ * @tc.number: BmsInstalldClientTest_GetBundleFileCount_0100
+ * @tc.name: GetBundleFileCount
+ * @tc.desc: test GetBundleFileCount with empty uids vector
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleFileCount_0100, TestSize.Level1)
+{
+    std::vector<int32_t> uids;
+    uint64_t fileCount = 0;
+    ASSERT_NE(installClient_, nullptr);
+    ErrCode result = installClient_->GetBundleFileCount(uids, fileCount);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+ /**
+ * @tc.number: BmsInstalldClientTest_GetBundleFileCount_0200
+ * @tc.name: GetBundleFileCount
+ * @tc.desc: test GetBundleFileCount with valid uids but proxy error
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleFileCount_0200, TestSize.Level1)
+{
+    std::vector<int32_t> uids = {101, 102};
+    uint64_t fileCount = 0;
+    ASSERT_NE(installClient_, nullptr);
+    ErrCode result = installClient_->GetBundleFileCount(uids, fileCount);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
