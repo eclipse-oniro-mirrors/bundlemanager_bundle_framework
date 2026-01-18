@@ -341,7 +341,10 @@ void BMSEventHandler::AfterBmsStart()
 #ifdef WEBVIEW_ENABLE
     NotifyFWKAfterBmsStart();
 #endif
-    RegisterRelabelEvent();
+    if (OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
+        APP_LOGI_NOFUNC("relabel is true");
+        RegisterRelabelEvent();
+    }
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
 }
 
@@ -1337,7 +1340,9 @@ void BMSEventHandler::ProcessRebootBundle()
     CleanAllBundleEl1ShaderCacheLocal();
     CleanSystemOptimizeShaderCache();
     CleanAllBundleEl1ArkStartupCacheLocal();
-    (void)ProcessIdleInfo();
+    if (OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
+        (void)ProcessIdleInfo();
+    }
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
@@ -5724,7 +5729,7 @@ bool BMSEventHandler::ProcessIdleInfo()
     LOG_I(BMS_TAG_DEFAULT, "begin");
     bool flag = false;
     CheckOtaFlag(OTAFlag::ADD_IDLE_INFO, flag);
-    if (flag && (OHOS::system::GetParameter(ServiceConstants::RELABLE_PARAM, "") != ServiceConstants::BMS_TRUE)) {
+    if (flag && (OHOS::system::GetParameter(ServiceConstants::RELABEL_PARAM, "") != ServiceConstants::BMS_TRUE)) {
         LOG_I(BMS_TAG_DEFAULT, "Not need to add idle info");
         return true;
     }

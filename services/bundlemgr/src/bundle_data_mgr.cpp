@@ -3255,7 +3255,7 @@ ErrCode BundleDataMgr::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInf
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, sandboxInfo) != ERR_OK) {
-            LOG_NOFUNC_W(BMS_TAG_QUERY, "sandbox GetBundleInfoForSelf failed uid:%{public}d", uid);
+            LOG_D(BMS_TAG_QUERY, "sandbox GetBundleInfoForSelf failed uid:%{public}d", uid);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         innerBundleInfo = &sandboxInfo;
@@ -4562,7 +4562,7 @@ std::set<int32_t> BundleDataMgr::GetBindingSAUidsByBundleName(const std::string 
     }
     auto relation = saUidMap.find(bundleName);
     if (relation == saUidMap.end()) {
-        APP_LOGE("Bundle %{public}s not found in saUidMap", bundleName.c_str());
+        APP_LOGD("Bundle %{public}s not found in saUidMap", bundleName.c_str());
         return saUids;
     }
     return relation->second;
@@ -5307,7 +5307,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     if (appIndex == 0) {
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
             && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
-            LOG_NOFUNC_W(BMS_TAG_COMMON, "set enabled false or not installed -n %{public}s -u %{public}d"
+            LOG_NOFUNC_W(BMS_TAG_COMMON, "not found -n %{public}s -u %{public}d"
                 " -i %{public}d -f %{public}d", bundleName.c_str(), responseUserId, appIndex, flags);
             return false;
         }
@@ -9302,7 +9302,7 @@ bool BundleDataMgr::QueryDataGroupInfos(const std::string &bundleName, int32_t u
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGW("bundleName: %{public}s is not existed", bundleName.c_str());
+        APP_LOGW_NOFUNC("QueryDataGroupInfos %{public}s is not existed", bundleName.c_str());
         return false;
     }
     auto dataGroupInfos = infoItem->second.GetDataGroupInfos();
@@ -10246,7 +10246,7 @@ int32_t BundleDataMgr::GetUidByBundleName(const std::string &bundleName, int32_t
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGW_NOFUNC("GetUidByBundleName not found %{public}s", bundleName.c_str());
+        APP_LOGD("GetUidByBundleName not found %{public}s", bundleName.c_str());
         return Constants::INVALID_UID;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
@@ -11462,9 +11462,11 @@ void BundleDataMgr::GetBundleInfosForContinuation(std::vector<BundleInfo> &bundl
         return;
     }
     bundleInfos.erase(std::remove_if(bundleInfos.begin(), bundleInfos.end(), [](BundleInfo bundleInfo) {
-        for (auto abilityInfo : bundleInfo.abilityInfos) {
-            if (abilityInfo.continuable) {
-                return false;
+        for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+            for (const auto &abilityInfo : hapModuleInfo.abilityInfos) {
+                if (abilityInfo.continuable) {
+                    return false;
+                }
             }
         }
         return true;

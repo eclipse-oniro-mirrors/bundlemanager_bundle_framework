@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1801,6 +1801,41 @@ const nlohmann::json MODULE_JSON_15 = R"(
     }
 }
 )"_json;
+
+const nlohmann::json MODULE_JSON_16 = R"(
+{
+    "app": {
+        "bundleName": "com.example.app",
+        "vendor": "example",
+        "version": { "code": 1, "name": "1.0" },
+        "apiVersion": { "compatible": 8, "target": 8, "releaseType": "Release" },
+        "2in1": {
+            "minAPIVersion": 9,
+            "keepAlive": true,
+            "removable": false,
+            "singleton": true,
+            "userDataClearable": true,
+            "accessible": false
+        }
+    },
+    "deviceConfig": { "default": { } },
+    "module": {
+        "package": "com.example.app.entry",
+        "name": ".Entry",
+        "deviceType": [ "phone" ],
+        "distro": { "moduleType": "entry", "moduleName": "entry", "deliveryWithInstall": true },
+        "abilities": [
+            {
+                "name": ".MainAbility",
+                "type": "page",
+                "srcLanguage": "ets",
+                "srcPath": "MainAbility",
+                "label": "main",
+                "visible": true
+            }
+        ]
+    }
+})"_json;
 }  // namespace
 
 class BmsBundleParserTest : public testing::Test {
@@ -4901,6 +4936,46 @@ HWTEST_F(BmsBundleParserTest, ParseQuerySchemes_0100, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: ParseDeviceConfig_0100
+ * @tc.name: deviceConfig keys missing
+ * @tc.desc: 1. system running normally
+ */
+
+HWTEST_F(BmsBundleParserTest, ParseDeviceConfig_0100, Function | SmallTest | Level0)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream buf;
+
+    nlohmann::json profile = CONFIG_JSON_3;
+    profile["deviceConfig"]["default"] = nlohmann::json::object();
+    buf << profile.dump();
+
+    BundleExtractor extractor("");
+    ErrCode ret = bundleProfile.TransformTo(buf, extractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ParseAppTwoInOne_0001
+ * @tc.name: app_two_in_one present parses successfully
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleParserTest, ParseAppTwoInOne_0100, Function | SmallTest | Level0)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream buf;
+
+    nlohmann::json profile = MODULE_JSON_16;
+
+    buf << profile.dump();
+    BundleExtractor extractor("");
+    ErrCode ret = bundleProfile.TransformTo(buf, extractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: ParseQuerySchemes_0200
  * @tc.name: parse querySchemes
  * @tc.desc: 1. system running normally
@@ -5139,5 +5214,230 @@ HWTEST_F(BmsBundleParserTest, to_json_standby, Function | MediumTest | Level1)
     EXPECT_TRUE(jsonObject["standby"]["isSupported"]);
     EXPECT_FALSE(jsonObject["standby"]["isAdapted"]);
     EXPECT_FALSE(jsonObject["standby"]["isPrivacySensitive"]);
+}
+
+/**
+ * @tc.number: ModuleProfile_ParseBadProfile_0001
+ * Function: ModuleProfile TransformTo
+ * @tc.name: bad profile json
+ * @tc.desc: test the interface of TransformTo
+ */
+HWTEST_F(BmsBundleParserTest, ModuleProfile_ParseBadProfile_0100, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    BundleExtractor extractor("");
+
+    std::ostringstream badStream;
+    badStream << "{ invalid json";
+
+    ErrCode ret = moduleProfile.TransformTo(badStream, extractor, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_BAD_PROFILE);
+}
+
+/**
+ * @tc.number: TransformToTestRunner_0100
+ * @tc.name: bad profile json for testRunner
+ * @tc.desc: test the interface of TransformToTestRunner
+ */
+HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0100, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    ModuleTestRunner runner;
+    std::ostringstream badStream;
+    badStream << "{ invalid json";
+
+    ErrCode ret = moduleProfile.TransformToTestRunner(badStream, runner);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_BAD_PROFILE);
+}
+
+/**
+ * @tc.number: TransformToTestRunner_0200
+ * @tc.name: missing module field returns parse bad profile
+ * @tc.desc: test the interface of TransformToTestRunner
+ */
+HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0200, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    ModuleTestRunner runner;
+    std::ostringstream buf;
+    buf << R"({"app": {}})";
+
+    ErrCode ret = moduleProfile.TransformToTestRunner(buf, runner);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_BAD_PROFILE);
+}
+
+/**
+ * @tc.number: TransformToTestRunner_0200
+ * @tc.name: missing testRunner field
+ * @tc.desc: test the interface of TransformToTestRunner
+ */
+HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0300, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    ModuleTestRunner runner;
+    std::ostringstream buf;
+    buf << R"({"module": {"name": "entry"}})";
+
+    ErrCode ret = moduleProfile.TransformToTestRunner(buf, runner);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_BAD_PROFILE);
+}
+
+/**
+ * @tc.number: TransformToTestRunner_0400
+ * @tc.name: testRunner is not object
+ * @tc.desc: test the interface of TransformToTestRunner
+ */
+HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0400, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    ModuleTestRunner runner;
+    std::ostringstream buf;
+    buf << R"({"module": {"testRunner": "not_object"}})";
+
+    ErrCode ret = moduleProfile.TransformToTestRunner(buf, runner);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_BAD_PROFILE);
+}
+
+/**
+ * @tc.number: TransformToTestRunner_0500
+ * @tc.name: testRunner without name field
+ * @tc.desc: test the interface of TransformToTestRunner
+ */
+HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0500, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    ModuleTestRunner runner;
+    std::ostringstream buf;
+    buf << R"({
+        "module": {
+            "testRunner": {
+                "srcPath": "TestRunner.ts",
+                "arkTSMode": "dynamic"
+            }
+        }
+    })";
+
+    ErrCode ret = moduleProfile.TransformToTestRunner(buf, runner);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(runner.name.empty());
+    EXPECT_EQ(runner.srcPath, "TestRunner.ts");
+}
+
+/**
+ * @tc.number: TransformToTestRunner_0600
+ * @tc.name: testRunner name not string
+ * @tc.desc: test the interface of TransformToTestRunner
+ */
+HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0600, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    ModuleTestRunner runner;
+    std::ostringstream buf;
+    buf << R"({"module":{"testRunner":{"name":123,"srcPath":"TestRunner.ts","arkTSMode":"dynamic"}}})";
+
+    ErrCode ret = moduleProfile.TransformToTestRunner(buf, runner);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(runner.name.empty());
+    EXPECT_EQ(runner.srcPath, "TestRunner.ts");
+    EXPECT_EQ(runner.arkTSMode, "dynamic");
+}
+
+/**
+ * @tc.number: TransformToTestRunner_0700
+ * @tc.name: testRunner without srcPath
+ * @tc.desc: test the interface of TransformToTestRunner
+ */
+HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0700, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    ModuleTestRunner runner;
+    std::ostringstream buf;
+    buf << R"({"module":{"testRunner":{"name":"Runner","arkTSMode":"dynamic"}}})";
+
+    ErrCode ret = moduleProfile.TransformToTestRunner(buf, runner);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(runner.name, "Runner");
+    EXPECT_TRUE(runner.srcPath.empty());
+}
+
+/**
+ * @tc.number: TransformToTestRunner_0800
+ * @tc.name: testRunner srcPath not string
+ * @tc.desc: test the interface of TransformToTestRunner
+ */
+HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0800, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    ModuleTestRunner runner;
+    std::ostringstream buf;
+    buf << R"({"module":{"testRunner":{"name":"Runner","srcPath":123,"arkTSMode":"dynamic"}}})";
+
+    ErrCode ret = moduleProfile.TransformToTestRunner(buf, runner);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(runner.name, "Runner");
+    EXPECT_TRUE(runner.srcPath.empty());
+    EXPECT_EQ(runner.arkTSMode, "dynamic");
+}
+
+/**
+ * @tc.number: TransformToTestRunner_0900
+ * @tc.name: arkTSMode is string
+ * @tc.desc: test the interface of TransformToTestRunner
+ */
+HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0900, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    ModuleTestRunner runner;
+    std::ostringstream buf;
+    buf << R"({"module":{"testRunner":{"arkTSMode":"dynamic"}}})";
+
+    ErrCode ret = moduleProfile.TransformToTestRunner(buf, runner);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(runner.arkTSMode, "dynamic");
+}
+
+/**
+ * @tc.number: TransformToTestRunner_0110
+ * @tc.name: arkTSMode is not string
+ * @tc.desc: test the interface of TransformToTestRunner
+ */
+HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0110, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    ModuleTestRunner runner;
+    std::ostringstream buf;
+    buf << R"({"module":{"testRunner":{"arkTSMode":123}}})";
+
+    ErrCode ret = moduleProfile.TransformToTestRunner(buf, runner);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(runner.arkTSMode.empty());
+}
+
+/**
+ * @tc.number: TransformToTestRunner_0120
+ * @tc.name: testRunner fields type error (indirect from_json)
+ * @tc.desc: test the interface of TransformToTestRunner
+ */
+HWTEST_F(BmsBundleParserTest, TransformToTestRunner_0120, Function | SmallTest | Level0)
+{
+    ModuleProfile moduleProfile;
+    ModuleTestRunner runner;
+    std::ostringstream buf;
+    buf << R"({
+        "module": {
+            "testRunner": {
+                "name": 123,
+                "srcPath": true,
+                "arkTSMode": null
+            }
+        }
+    })";
+
+    ErrCode ret = moduleProfile.TransformToTestRunner(buf, runner);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(runner.name.empty());
+    EXPECT_TRUE(runner.srcPath.empty());
+    EXPECT_TRUE(runner.arkTSMode.empty());
 }
 } // OHOS

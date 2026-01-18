@@ -2646,6 +2646,54 @@ HWTEST_F(BmsBundleDataMgrTest3, GetBundleInfosForContinuation_0100, Function | S
 }
 
 /**
+ * @tc.number: GetBundleInfosForContinuation_0200
+ * @tc.name: test GetBundleInfosForContinuation
+ * @tc.desc: 1.system run normally
+ *           2.check GetBundleInfosForContinuation success
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetBundleInfosForContinuation_0200, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    std::vector<BundleInfo> bundleInfos;
+    BundleInfo bundleInfo;
+    HapModuleInfo hapModuleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.continuable = true;
+    hapModuleInfo.abilityInfos.push_back(abilityInfo);
+    bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
+    bundleInfos.push_back(bundleInfo);
+
+    GetBundleDataMgr()->GetBundleInfosForContinuation(bundleInfos);
+    EXPECT_FALSE(bundleInfos.empty());
+    EXPECT_EQ(bundleInfos.size(), 1);
+}
+
+/**
+ * @tc.number: GetBundleInfosForContinuation_0300
+ * @tc.name: test GetBundleInfosForContinuation
+ * @tc.desc: 1.system run normally
+ *           2.check GetBundleInfosForContinuation success
+ */
+HWTEST_F(BmsBundleDataMgrTest3, GetBundleInfosForContinuation_0300, Function | SmallTest | Level1)
+{
+    ResetDataMgr();
+    std::vector<BundleInfo> bundleInfos;
+    BundleInfo bundleInfo;
+    HapModuleInfo hapModuleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.continuable = true;
+    hapModuleInfo.abilityInfos.push_back(abilityInfo);
+    bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
+    BundleInfo bundleInfo1;
+    bundleInfos.push_back(bundleInfo);
+    bundleInfos.push_back(bundleInfo1);
+
+    GetBundleDataMgr()->GetBundleInfosForContinuation(bundleInfos);
+    EXPECT_FALSE(bundleInfos.empty());
+    EXPECT_EQ(bundleInfos.size(), 1);
+}
+
+/**
  * @tc.number: GetContinueBundleNames_0100
  * @tc.name: test GetContinueBundleNames
  * @tc.desc: 1.system run normally

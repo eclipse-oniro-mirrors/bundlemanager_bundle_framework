@@ -5829,8 +5829,12 @@ ErrCode BundleMgrHostImpl::GetOdidByBundleName(const std::string &bundleName, st
 bool BundleMgrHostImpl::GetBundleInfosForContinuation(int32_t flags, std::vector<BundleInfo> &bundleInfos,
     int32_t userId)
 {
-    GetBundleInfos(flags, bundleInfos, userId);
+    GetBundleInfosV9(flags, bundleInfos, userId);
     auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
     dataMgr->GetBundleInfosForContinuation(bundleInfos);
     return !bundleInfos.empty();
 }

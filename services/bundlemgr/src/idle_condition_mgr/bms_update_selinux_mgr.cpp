@@ -74,6 +74,7 @@ ErrCode BmsUpdateSelinuxMgr::StartUpdateSelinuxLabel(const int32_t userId)
         return ERR_APPEXECFWK_NULL_PTR;
     }
     CreateDirParam dirParam;
+    dirParam.remainingNum = static_cast<uint32_t>(bundleOptionInfos.size());
     for (const auto &bundleOption : bundleOptionInfos) {
         if (needStop_.load()) {
             APP_LOGW("-u %{public}d need stop running", bundleOption.userId);
@@ -100,13 +101,15 @@ ErrCode BmsUpdateSelinuxMgr::StartUpdateSelinuxLabel(const int32_t userId)
             if (ret != ERR_OK) {
                 APP_LOGW("-n %{public}s -u %{public}d -i %{public}d delete failed -err %{public}d",
                     bundleOption.bundleName.c_str(), bundleOption.userId, bundleOption.appIndex, ret);
+            } else {
+                dirParam.remainingNum--;
             }
         }
     }
     return ERR_OK;
 }
 
-ErrCode BmsUpdateSelinuxMgr::StopUpdateSelinuxLabel(const int32_t reason)
+ErrCode BmsUpdateSelinuxMgr::StopUpdateSelinuxLabel(const int32_t reason, const std::string stopReason)
 {
     APP_LOGI("stop update selinux label -r %{public}d -n %{public}s", reason, createDirParam_.bundleName.c_str());
     if (needStop_.load()) {
@@ -115,6 +118,7 @@ ErrCode BmsUpdateSelinuxMgr::StopUpdateSelinuxLabel(const int32_t reason)
     }
     needStop_.store(true);
     std::lock_guard<std::mutex> lock(createDirParamMutex_);
+    createDirParam_.stopReason = stopReason;
     auto ret = InstalldClient::GetInstance()->StopSetFileCon(createDirParam_, reason);
     if (ret != ERR_OK) {
         APP_LOGE("stop update selinux label -r %{public}d failed err:%{public}d", reason, ret);

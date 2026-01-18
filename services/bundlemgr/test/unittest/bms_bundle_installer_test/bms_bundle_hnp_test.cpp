@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -118,6 +118,10 @@ HWTEST_F(BmsBundleHnpTest, GetInnerModuleInfoHnpInfo_0001, Function | SmallTest 
     // query with empty moduleName should return the first non-empty hnpPackages
     auto ret3 = info.GetInnerModuleInfoHnpInfo("");
     EXPECT_NE(ret3, std::nullopt);
+
+    // query non-existing module should return nullopt
+    auto ret4 = info.GetInnerModuleInfoHnpInfo("nonExistModule");
+    EXPECT_EQ(ret4, std::nullopt);
 }
 
 HWTEST_F(BmsBundleHnpTest, GetInnerModuleInfoHnpPath_0001, Function | SmallTest | Level3)

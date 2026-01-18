@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,19 @@
 
 #include "ipc_skeleton.h"
 
+constexpr int32_t DEFAULT_UID = 20000001;
+int32_t g_getCallingUid = DEFAULT_UID;
+
+void SetGetCallingUid(int32_t uid)
+{
+    g_getCallingUid = uid;
+}
+
+void ResetCallingUid()
+{
+    g_getCallingUid = DEFAULT_UID;
+}
+
 namespace OHOS {
 #ifdef CONFIG_IPC_SINGLE
 using namespace IPC_SINGLE;
@@ -25,7 +38,7 @@ int32_t tokenId_ = 0;
 
 int32_t IPCSkeleton::GetCallingUid()
 {
-    return uid_;
+    return g_getCallingUid;
 }
 
 int32_t IPCSkeleton::GetCallingPid()

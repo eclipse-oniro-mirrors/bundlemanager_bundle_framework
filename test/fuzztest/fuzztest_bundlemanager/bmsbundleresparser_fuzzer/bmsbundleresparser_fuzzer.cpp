@@ -42,18 +42,26 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     resourceInfo.labelNeedParse_ = false;
     resourceInfo.iconNeedParse_  = false;
     BundleResourceParser parser;
+    parser.ParseResourceInfosNoTheme(userId, resourceInfos);
+    parser.ParseIconResourceInfosWithTheme(userId, resourceInfos);
     if (!resourceInfos.empty()) {
         parser.ParseResourceInfo(userId, resourceInfos[0]);
         resourceInfos[0].label_ = "";
         resourceInfos[0].icon_ = "";
         parser.ParseResourceInfos(userId, resourceInfos);
         parser.ParseIconResourceByPath(resourceInfos[0].hapPath_, resourceInfos[0].iconId_, resourceInfo);
+        parser.ParseResourceInfosNoTheme(userId, resourceInfos);
+        parser.ParseIconResourceInfosWithTheme(userId, resourceInfos);
     }
     int32_t appIndex = 1;
     parser.ParserCloneResourceInfo(appIndex, resourceInfos);
     parser.ParseResourceInfoWithSameHap(userId, resourceInfo);
     std::string label = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::string hapPath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    uint32_t labelId = fdp.ConsumeIntegral<uint32_t>();
     parser.ParseLabelResourceByPath(HAP_NOT_EXIST, 0, label);
+    parser.ParseLabelResourceByPath(hapPath, labelId, label);
+    parser.ParseLabelResourceByPath("", labelId, label);
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
     parser.ParseResourceInfoByResourceManager(resourceManager, resourceInfo);
     parser.ParseLabelResourceByResourceManager(resourceManager, 0, label);
@@ -77,6 +85,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     parser.GetMediaDataById(resourceManager, iconId, density, datas);
     ResourceInfo newResourceInfo;
     parser.IsNeedToParseResourceInfo(newResourceInfo, resourceInfo);
+    std::map<std::string, std::string> labelMap;
+    parser.ParseUninstallBundleResource(resourceInfo, labelMap);
     return true;
 }
 }

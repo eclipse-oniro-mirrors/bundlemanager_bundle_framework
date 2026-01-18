@@ -131,10 +131,6 @@ constexpr double MIN_FREE_INODE_PERCENT = 0.005; // 0.5%
 constexpr const char* MODULE_NAME_IS_LIBS = "libs";
 constexpr const char* MODULE_DIR_IS_LIBS = "/libs";
 
-constexpr const char* PROC_FILE_PATH = "/sys/fs/hmfs/userdata/orphan_nodes_info";
-constexpr double MAX_INSTALL_NEED_FDUSED_RATE = 0.8;
-constexpr int8_t ORPHAN_DATA_SIZE = 2;
-
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
     std::string fileSuffix = ServiceConstants::INSTALL_FILE_SUFFIX;
@@ -164,42 +160,6 @@ std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
     return prefixPath + ServiceConstants::TMP_SUFFIX + suffixPath;
 }
 
-bool CheckOrphanNodeUseRateIsSufficient()
-{
-    std::vector<int64_t> numbers;
-    std::ifstream file(PROC_FILE_PATH);
-    if (!file.is_open()) {
-        APP_LOGW("proc file load failed!");
-        file.close();
-        return true;
-    }
-    std::string line;
-    if (getline(file, line)) {
-        std::istringstream iss(line);
-        int64_t num;
-        while (iss >> num) {
-            numbers.push_back(num);
-        }
-    }
-    file.close();
-    if (numbers.size() < ORPHAN_DATA_SIZE) {
-        APP_LOGW("proc file load failed!");
-        return true;
-    }
-    int64_t curOrphanNode = numbers[0];
-    int64_t maxOrphanNode = numbers[1];
-    LOG_D(BMS_TAG_INSTALLER, "orphan node %{public}s", GetJsonStrFromInfo(numbers).c_str());
-    if (curOrphanNode >= maxOrphanNode || curOrphanNode < 0) {
-        LOG_E(BMS_TAG_INSTALLER, "orphan node %{public}s", GetJsonStrFromInfo(numbers).c_str());
-        return false;
-    }
-    bool res = (static_cast<double>(curOrphanNode) / maxOrphanNode) < MAX_INSTALL_NEED_FDUSED_RATE;
-    if (!res) {
-        LOG_E(BMS_TAG_INSTALLER, "orphan node %{public}s", GetJsonStrFromInfo(numbers).c_str());
-    }
-    return res;
-}
-
 bool CheckSystemInodeSatisfied(const std::string &bundleName)
 {
     std::string appGalleryName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
@@ -219,7 +179,7 @@ bool CheckSystemInodeSatisfied(const std::string &bundleName)
     }
     LOG_D(BMS_TAG_INSTALLER, "total inodes: %{public}llu, free inodes: %{public}llu",
         stat.f_files, stat.f_ffree);
-    return CheckOrphanNodeUseRateIsSufficient();
+    return BundleUtil::CheckOrphanNodeUseRateIsSufficient();
 }
 } // namespace
 
@@ -8695,7 +8655,7 @@ void BaseBundleInstaller::InnerProcessNewBundleDataDir(const bool isOta,
 
 void BaseBundleInstaller::StopRelable(const InnerBundleInfo &info)
 {
-    if (OHOS::system::GetParameter(ServiceConstants::SYSTEM_DEVICE_TYPE, "") != "phone") {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
         return;
     }
     CreateDirParam param;
@@ -8704,6 +8664,7 @@ void BaseBundleInstaller::StopRelable(const InnerBundleInfo &info)
     param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     param.apl = info.GetAppPrivilegeLevel();
     param.isPreInstallApp = info.IsPreInstallApp();
+    param.stopReason = "ProcessBundleUninstall";
     InstalldClient::GetInstance()->StopSetFileCon(param, ServiceConstants::StopReason::DELETE);
 }
 

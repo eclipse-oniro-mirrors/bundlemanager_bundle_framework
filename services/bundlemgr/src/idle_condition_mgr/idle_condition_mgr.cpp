@@ -15,6 +15,7 @@
 
 #include <chrono>
 #include <sstream>
+#include <sys/statfs.h>
 #include <thread>
 
 #include "account_helper.h"
@@ -37,6 +38,10 @@ constexpr const char* BMS_PARAM_RELABEL_BATTERY_CAPACITY = "ohos.bms.param.relab
 constexpr const char* BMS_PARAM_RELABEL_WAIT_TIME = "ohos.bms.param.relabelWaitTimeMinutes";
 constexpr const char* MEMORY_INFO_PATH = "/dev/memcg/memory.zswapd_presure_show";
 constexpr const char* MEMORY_BUFFER_KEY = "buffer_size";
+constexpr const char* COMMERCIAL_MODE = "commercial";
+constexpr const char* COMMERCIAL_MODE_PARAM = "const.logsystem.versiontype";
+constexpr const char* USER_DATA_DIR = "/data";
+constexpr double MIN_FREE_INODE_PERCENT = 0.2;
 constexpr int32_t RELABEL_WAIT_TIME_SECONDS = 5 * 60; // 5 minutes
 constexpr int32_t RELABEL_MIN_BATTERY_CAPACITY = 20;
 constexpr int32_t RELABEL_MIN_BUFFER_SIZE = 700;
@@ -73,27 +78,27 @@ void IdleConditionMgr::OnScreenUnlocked()
         std::lock_guard<std::mutex> lock(mutex_);
         screenLocked_ = false;
     }
-    InterruptRelabel();
+    InterruptRelabel("OnScreenUnlocked called");
 }
 
-void IdleConditionMgr::OnUserUnlocked()
+void IdleConditionMgr::OnUserUnlocked(const int32_t userId)
 {
     APP_LOGI("OnUserUnlocked called");
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        userUnlocked_ = true;
+        userUnlockedMap_[userId] = true;
     }
     TryStartRelabel();
 }
 
-void IdleConditionMgr::OnUserStopping()
+void IdleConditionMgr::OnUserStopping(const int32_t userId)
 {
     APP_LOGI("OnUserStopping called");
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        userUnlocked_ = false;
+        userUnlockedMap_[userId] = false;
     }
-    InterruptRelabel();
+    InterruptRelabel("OnUserStopping called");
 }
 
 void IdleConditionMgr::OnPowerConnected()
@@ -140,7 +145,7 @@ void IdleConditionMgr::OnPowerDisconnected()
         powerConnected_ = false;
     }
     powerConnectedThreadActive_ = false;
-    InterruptRelabel();
+    InterruptRelabel("OnPowerDisconnected called");
 }
  
 void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
@@ -157,7 +162,7 @@ void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:
             [[fallthrough]];
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL:
-            InterruptRelabel();
+            InterruptRelabel("memory level critical");
             break;
         default:
             break;
@@ -195,6 +200,29 @@ bool IdleConditionMgr::IsThermalSatisfied()
     return PowerMgr::ThermalMgrClient::GetInstance().GetThermalLevel() < PowerMgr::ThermalLevel::WARM;
 }
 
+bool IdleConditionMgr::CheckInodeForCommericalDevice()
+{
+    std::string versionType = OHOS::system::GetParameter(COMMERCIAL_MODE_PARAM, "");
+    if (versionType != COMMERCIAL_MODE) {
+        APP_LOGI("non commercial device");
+        return true;
+    }
+    struct statfs stat;
+    if (statfs(USER_DATA_DIR, &stat) != 0) {
+        APP_LOGE("statfs failed for %{public}s, error %{public}d",
+            USER_DATA_DIR, errno);
+        return false;
+    }
+    uint32_t minFreeInodeNum = static_cast<uint32_t>(stat.f_files * MIN_FREE_INODE_PERCENT);
+    if (stat.f_ffree > minFreeInodeNum) {
+        APP_LOGI("free inodes over threshold");
+        return false;
+    }
+    APP_LOGD("total inodes: %{public}llu, free inodes: %{public}llu",
+        stat.f_files, stat.f_ffree);
+    return true;
+}
+
 void IdleConditionMgr::OnBatteryChanged()
 {
     APP_LOGI("OnBatteryChanged called");
@@ -208,7 +236,7 @@ void IdleConditionMgr::OnBatteryChanged()
             std::lock_guard<std::mutex> lock(mutex_);
             batterySatisfied_ = false;
         }
-        InterruptRelabel();
+        InterruptRelabel("battery capacity low");
     } else {
         {
             std::lock_guard<std::mutex> lock(mutex_);
@@ -226,11 +254,11 @@ void IdleConditionMgr::OnThermalLevelChanged(PowerMgr::ThermalLevel level)
     } else {
         APP_LOGD("thermal level %{public}d greater than %{public}d interrupt relabel",
             level, PowerMgr::ThermalLevel::WARM);
-        InterruptRelabel();
+        InterruptRelabel("OnThermalLevelChanged called");
     }
 }
 
-bool IdleConditionMgr::CheckRelabelConditions()
+bool IdleConditionMgr::CheckRelabelConditions(const int32_t userId)
 {
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     if (installer == nullptr) {
@@ -238,12 +266,17 @@ bool IdleConditionMgr::CheckRelabelConditions()
         return false;
     }
     std::lock_guard<std::mutex> lock(mutex_);
-    if (userUnlocked_ && screenLocked_ && powerConnected_ && batterySatisfied_ && g_taskCounter.load() == 0) {
+    bool userUnlocked = false;
+    auto iter = userUnlockedMap_.find(userId);
+    if (iter != userUnlockedMap_.end() && iter->second) {
+        userUnlocked = true;
+    }
+    if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_ && g_taskCounter.load() == 0) {
         return true;
     }
-    APP_LOGI("userUnlocked_ %{public}d, screenLocked_ %{public}d, "
+    APP_LOGI("user %{public}d unlocked %{public}d, screenLocked_ %{public}d, "
         "powerConnected_ %{public}d, batterySatisfied_ %{public}d, taskNum %{public}d",
-        userUnlocked_.load(), screenLocked_.load(),
+        userId, userUnlocked, screenLocked_.load(),
         powerConnected_.load(), batterySatisfied_.load(), g_taskCounter.load());
     return false;
 }
@@ -261,8 +294,13 @@ bool IdleConditionMgr::SetIsRelabeling()
 
 void IdleConditionMgr::TryStartRelabel()
 {
-    if (!CheckRelabelConditions()) {
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (!CheckRelabelConditions(currentUserId)) {
         APP_LOGI("Refresh conditions not met, no need to process");
+        return;
+    }
+    if (!CheckInodeForCommericalDevice()) {
+        APP_LOGI("inode sufficient, no need to process");
         return;
     }
     if (!IsBufferSufficient()) {
@@ -289,7 +327,8 @@ void IdleConditionMgr::TryStartRelabel()
             std::lock_guard<std::mutex> lock(sharedPtr->mutex_);
             sharedPtr->isRelabeling_ = false;
         });
-        if (!sharedPtr->CheckRelabelConditions()) {
+        int32_t userId = AccountHelper::GetCurrentActiveUserId();
+        if (!sharedPtr->CheckRelabelConditions(userId)) {
             APP_LOGI("Refresh conditions not met, no need to process");
             return;
         }
@@ -301,7 +340,6 @@ void IdleConditionMgr::TryStartRelabel()
             APP_LOGI("Thermal not satisfied, no need to process");
             return;
         }
-        int32_t userId = AccountHelper::GetCurrentActiveUserId();
         auto bmsUpdateSelinuxMgr = DelayedSingleton<BmsUpdateSelinuxMgr>::GetInstance();
         if (bmsUpdateSelinuxMgr == nullptr) {
             APP_LOGE("bms update selinux mgr is null");
@@ -313,7 +351,7 @@ void IdleConditionMgr::TryStartRelabel()
     std::thread(task).detach();
 }
 
-void IdleConditionMgr::InterruptRelabel()
+void IdleConditionMgr::InterruptRelabel(const std::string stopReason)
 {
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -328,7 +366,7 @@ void IdleConditionMgr::InterruptRelabel()
         APP_LOGE("bms update selinux mgr is null");
         return;
     }
-    bmsUpdateSelinuxMgr->StopUpdateSelinuxLabel(ServiceConstants::StopReason::BUSY);
+    bmsUpdateSelinuxMgr->StopUpdateSelinuxLabel(ServiceConstants::StopReason::BUSY, stopReason);
     APP_LOGI("Relabeling interrupted");
 }
 } // namespace AppExecFwk

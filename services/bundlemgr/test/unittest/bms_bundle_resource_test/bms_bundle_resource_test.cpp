@@ -113,6 +113,7 @@ const std::string TEST_BUNDLE_NAME = "testBundleName";
 const int32_t U1 = 1;
 const int32_t INVALID_INDEX = 6;
 const std::string INVALID_ABILITY_NAME = "com.example.bmsaccesstoken.Ability";
+constexpr const char* CONTACTS_BUNDLE_NAME = "com.ohos.contacts";
 }  // namespace
 
 class BmsBundleResourceTest : public testing::Test {
@@ -6300,6 +6301,108 @@ HWTEST_F(BmsBundleResourceTest, GetSingleLauncherAbilityResourceInfo_0002, Funct
 }
 
 /**
+ * @tc.number: GetSingleLauncherAbilityResourceInfo_0003
+ * Function: GetSingleLauncherAbilityResourceInfo
+ * @tc.name: test
+ * @tc.desc: test GetSingleLauncherAbilityResourceInfo_0003
+ */
+HWTEST_F(BmsBundleResourceTest, GetSingleLauncherAbilityResourceInfo_0003, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+
+    ResourceInfo resExact;
+    resExact.bundleName_ = BUNDLE_NAME;
+    resExact.moduleName_ = MODULE_NAME;
+    resExact.abilityName_ = ABILITY_NAME;
+    resExact.appIndex_ = 0;
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resExact));
+
+    ResourceInfo resFallback;
+    resFallback.bundleName_ = BUNDLE_NAME;
+    resFallback.moduleName_ = "anotherModule";
+    resFallback.abilityName_ = "AnotherAbility";
+    resExact.appIndex_ = 0;
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resFallback));
+
+    std::vector<ResourceInfo> iconInfos;
+    ResourceInfo iconExact = resExact;
+    iconExact.icon_ = "icon_exact";
+    iconInfos.push_back(iconExact);
+
+    ResourceInfo iconFallback;
+    iconFallback.bundleName_ = BUNDLE_NAME;
+    iconFallback.appIndex_ = APP_INDEX;
+    iconFallback.icon_ = "icon_fallback";
+    iconInfos.push_back(iconFallback);
+
+    EXPECT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(
+        USERID, IconResourceType::THEME_ICON, iconInfos));
+
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    std::vector<LauncherAbilityResourceInfo> infos;
+    EXPECT_TRUE(manager->GetSingleLauncherAbilityResourceInfo(BUNDLE_NAME, flags, infos, 0));
+    ASSERT_EQ(infos.size(), 2u);
+
+    auto itExact = std::find_if(infos.begin(), infos.end(),
+        [](const auto &info) { return info.abilityName == ABILITY_NAME; });
+    ASSERT_NE(itExact, infos.end());
+
+    auto itFallback = std::find_if(infos.begin(), infos.end(),
+        [](const auto &info) { return info.abilityName == "AnotherAbility"; });
+    ASSERT_NE(itFallback, infos.end());
+}
+
+/**
+ * @tc.number: GetAllBundleResourceInfo_0001
+ * Function: GetAllBundleResourceInfo
+ * @tc.name: test
+ * @tc.desc: test GetAllBundleResourceInfo_0001
+ */
+HWTEST_F(BmsBundleResourceTest, GetAllBundleResourceInfo_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    ResourceInfo resNormal;
+    resNormal.bundleName_ = BUNDLE_NAME;
+    resNormal.moduleName_ = MODULE_NAME;
+    resNormal.abilityName_ = ABILITY_NAME;
+    resNormal.appIndex_ = 0;
+    resNormal.icon_ = "icon_normal";
+    resNormal.label_ = "label_normal";
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resNormal));
+
+    ResourceInfo resContacts;
+    resContacts.bundleName_ = "com.ohos.contacts";
+    resContacts.moduleName_ = "contactsModule";
+    resContacts.abilityName_ = "MainAbility";
+    resContacts.appIndex_ = 0;
+    resContacts.icon_ = "icon_contacts";
+    resContacts.label_ = "label_contacts";
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resContacts));
+
+    int32_t userId = manager->GetUserId();
+    std::vector<ResourceInfo> iconInfos;
+    ResourceInfo iconNormal = resNormal;
+    iconInfos.push_back(iconNormal);
+
+    ResourceInfo iconContacts = resContacts;
+    iconInfos.push_back(iconContacts);
+
+    EXPECT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(
+        userId, IconResourceType::THEME_ICON, iconInfos));
+
+    std::vector<BundleResourceInfo> infos;
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    EXPECT_TRUE(manager->GetAllBundleResourceInfo(flags, infos));
+    EXPECT_TRUE(!infos.empty());
+}
+
+/**
  * @tc.number: GetLauncherAbilityResourceInfoList_0001
  * Function: GetLauncherAbilityResourceInfoList
  * @tc.name: test
@@ -6565,6 +6668,63 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0260, Function | SmallTest
     EXPECT_NE(ret, ERR_OK);
 }
 
+/**
+ * @tc.number: BmsBundleResourceTest_02601
+ * @tc.name: GetLauncherAbilityResourceInfo
+ * @tc.desc: test GetLauncherAbilityResourceInfo of BundleResourceManager
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0261, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+
+    ResourceInfo resExact;
+    resExact.bundleName_ = BUNDLE_NAME;
+    resExact.moduleName_ = MODULE_NAME;
+    resExact.abilityName_ = ABILITY_NAME;
+    resExact.appIndex_ = 0;
+    resExact.icon_ = "icon_exact_base";
+    resExact.label_ = "label_exact";
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resExact));
+
+    ResourceInfo resFallback;
+    resFallback.bundleName_ = BUNDLE_NAME;
+    resFallback.moduleName_ = "anotherModule";
+    resFallback.abilityName_ = "AnotherAbility";
+    resFallback.appIndex_ = 0;
+    resFallback.icon_ = "icon_fallback_base";
+    resFallback.label_ = "label_fallback";
+    EXPECT_TRUE(manager->bundleResourceRdb_->AddResourceInfo(resFallback));
+
+    int32_t userId = manager->GetUserId();
+    std::vector<ResourceInfo> iconInfos;
+    ResourceInfo iconExact = resExact;
+    iconExact.icon_ = "icon_exact_theme";
+    iconInfos.push_back(iconExact);
+
+    ResourceInfo iconFallback = resFallback;
+    iconFallback.moduleName_ = "other";
+    iconFallback.abilityName_ = "Other";
+    iconFallback.icon_ = "icon_fallback_theme";
+    iconInfos.push_back(iconFallback);
+
+    EXPECT_TRUE(manager->bundleResourceIconRdb_->AddResourceIconInfos(
+        userId, IconResourceType::THEME_ICON, iconInfos));
+
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    std::vector<LauncherAbilityResourceInfo> infos;
+    EXPECT_TRUE(manager->GetAllLauncherAbilityResourceInfo(flags, infos));
+
+    auto itExact = std::find_if(infos.begin(), infos.end(),
+        [](const auto &info) { return info.abilityName == ABILITY_NAME; });
+    ASSERT_NE(itExact, infos.end());
+
+    auto itFallback = std::find_if(infos.begin(), infos.end(),
+        [](const auto &info) { return info.abilityName == "AnotherAbility"; });
+    ASSERT_NE(itFallback, infos.end());
+    EXPECT_TRUE(!infos.empty());
+}
 
 /**
  * @tc.number: FilterUninstallResource_0001
@@ -6581,5 +6741,93 @@ HWTEST_F(BmsBundleResourceTest, FilterUninstallResource_0001, Function | SmallTe
     std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
     bundleResourceHostImpl->FilterUninstallResource(100, resourceList);
     EXPECT_EQ(true, resourceList.empty());
+}
+
+/**
+ * @tc.number: GetBundleResourceInfo_0001
+ * @tc.name: test GetBundleResourceInfo for contacts bundle
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo when bundleName is contacts bundle
+ */
+HWTEST_F(BmsBundleResourceTest, GetBundleResourceInfo_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    
+    ResourceInfo bundleResource;
+    bundleResource.bundleName_ = CONTACTS_BUNDLE_NAME;
+    bundleResource.label_ = "Contacts";
+    bundleResource.icon_ = "data:image/png;base64,original_icon";
+    bool added = manager->bundleResourceRdb_->AddResourceInfo(bundleResource);
+    EXPECT_TRUE(added);
+    
+    ResourceInfo themeResource;
+    themeResource.bundleName_ = CONTACTS_BUNDLE_NAME;
+    themeResource.icon_ = "data:image/png;base64,theme_icon";
+    themeResource.foreground_.push_back(1);
+    themeResource.background_.push_back(2);
+    std::vector<ResourceInfo> themeResources;
+    themeResources.push_back(themeResource);
+    
+    bool addedIcon = manager->bundleResourceIconRdb_->AddResourceIconInfos(
+        USERID,
+        IconResourceType::THEME_ICON,
+        themeResources);
+    EXPECT_TRUE(addedIcon);
+    
+    BundleResourceInfo result;
+    bool ret = manager->GetBundleResourceInfo(
+        CONTACTS_BUNDLE_NAME,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+        result);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetBundleResourceInfo_0002
+ * @tc.name: test GetBundleResourceInfo when match found
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo when match found in resourceIconInfos
+ */
+HWTEST_F(BmsBundleResourceTest, GetBundleResourceInfo_0002, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    ASSERT_NE(manager, nullptr);
+    
+    std::string bundleName = "com.example.testbundle";
+    int32_t appIndex = 0;
+    
+    ResourceInfo bundleResource;
+    bundleResource.bundleName_ = bundleName;
+    bundleResource.label_ = "Test Bundle";
+    bundleResource.icon_ = "data:image/png;base64,original_icon";
+    bool added = manager->bundleResourceRdb_->AddResourceInfo(bundleResource);
+    EXPECT_TRUE(added);
+    
+    ResourceInfo themeResource;
+    themeResource.bundleName_ = bundleName;
+    themeResource.appIndex_ = appIndex;
+    themeResource.icon_ = "data:image/png;base64,matched_icon";
+    themeResource.foreground_.push_back(3);
+    themeResource.background_.push_back(4);
+    std::vector<ResourceInfo> themeResources;
+    themeResources.push_back(themeResource);
+    
+    bool addedIcon = manager->bundleResourceIconRdb_->AddResourceIconInfos(
+        USERID,
+        IconResourceType::THEME_ICON,
+        themeResources);
+    EXPECT_TRUE(addedIcon);
+    
+    BundleResourceInfo result;
+    bool ret = manager->GetBundleResourceInfo(
+        bundleName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+        result,
+        appIndex);
+    
+    EXPECT_TRUE(ret);
 }
 } // OHOS

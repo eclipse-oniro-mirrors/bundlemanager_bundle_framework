@@ -119,6 +119,7 @@ group("unittest") {
       "unittest/bms_service_startup_test:unittest",
       "unittest/bms_space_isolation_test:unittest",
       "unittest/bms_syscap_tool_test:unittest",
+      "unittest/bundle_util_test:unittest",
       "unittest/bundle_install_checker_test:unittest",
       "unittest/bms_bundle_resource_icon_test:unittest",
     ]

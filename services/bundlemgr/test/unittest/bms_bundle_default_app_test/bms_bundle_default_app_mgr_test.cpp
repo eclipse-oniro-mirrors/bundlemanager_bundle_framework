@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -66,6 +66,7 @@ const std::string BROWSER = "BROWSER";
 const std::string DEFAULT_APPLICATION_CHANGED_EVENT = "usual.event.DEFAULT_APPLICATION_CHANGED";
 const std::string UTD_IDS = "utdIds";
 const std::string USER_ID_STRING = "userId";
+constexpr uint16_t TYPE_MAX_SIZE = 512;
 } // namespace
 
 class DefaultAppChangedTestEventSubscriber;
@@ -1482,5 +1483,21 @@ HWTEST_F(BmsBundleDefaultAppMgrTest, SetDefaultApplicationForAppClone_0050, Func
     int32_t appIndex = 2;
     auto res = impl.SetDefaultApplicationForAppClone(USER_ID, appIndex, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
     EXPECT_EQ(res, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: IsDefaultApplication_0080
+ * @tc.name: test IsDefaultApplication
+ * @tc.desc: 1.when type > TYPE_MAX_SIZE, isDefaultApp = false;
+ */
+HWTEST_F(BmsBundleDefaultAppMgrTest, IsDefaultApplication_0080, Function | SmallTest | Level1)
+{
+    int32_t userId = ALL_USER_ID;
+    std::string type(TYPE_MAX_SIZE + 1, 'a');
+    bool isDefaultApp = true;
+
+    auto ret = DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type, isDefaultApp);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isDefaultApp);
 }
 } // namespace OHOS
