@@ -1012,11 +1012,6 @@ static ErrCode RemoveDistributedDir(const std::string &bundleName, const int use
 
 static void CleanDistributedDir(const std::string &bundleName, const int userid)
 {
-    std::string distributedFile = DISTRIBUTED_FILE + bundleName;
-    distributedFile = distributedFile.replace(distributedFile.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::DeleteFiles(distributedFile)) {
-        LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed, errno is %{public}d", distributedFile.c_str(), errno);
-    }
     std::string fileNonAccount = DISTRIBUTED_FILE_NON_ACCOUNT + bundleName;
     fileNonAccount = fileNonAccount.replace(fileNonAccount.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteFiles(fileNonAccount)) {
