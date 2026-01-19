@@ -1361,7 +1361,7 @@ bool InstalldHost::HandleCopyDir(MessageParcel &data, MessageParcel &reply)
 bool InstalldHost::HandleDeleteCertAndRemoveKey(MessageParcel &data, MessageParcel &reply)
 {
     int32_t pathSize = data.ReadInt32();
-    if (pathSize == 0 || pathSize > ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
+    if (pathSize <= 0 || pathSize > ServiceConstants::MAX_ENTERPRISE_RESIGN_CERT_NUM) {
         APP_LOGE("pathSize is error");
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
         return false;
