@@ -71,6 +71,10 @@ using namespace OHOS::DisplayPowerMgr;
 using namespace OHOS::PowerMgr;
 
 namespace OHOS {
+namespace AppExecFwk {
+    void SetGetBundleInodeCountResult(int32_t remainCalls);
+    void SetCleanBundleDataDirResult(bool cleanResult);
+}
 namespace {
 const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
 const std::string BUNDLE_NAME_TEST_CLEAR = "com.example.bundlekit.test.clear";
@@ -208,6 +212,7 @@ const std::string URI_UTD = "utd";
 const std::string URI_LINK_FEATURE = "login";
 const std::string SKILL_PERMISSION = "permission1";
 const int32_t MAX_FILE_SUPPORTED = 1;
+const int32_t DEFAULT_APP_INDEX = 0;
 }  // namespace
 
 class BmsCleanAllBundleCacheTest : public testing::Test {
@@ -244,6 +249,8 @@ public:
     void SaveToDatabase(const std::string &bundleName, InnerBundleInfo &innerBundleInfo,
         bool userDataClearable, bool isSystemApp) const;
     Skill MockAbilitySkillInfo() const;
+    void SetDataMgrData(const std::string &bundleName) const;
+    void ClearDataMgrData(const std::string &bundleName) const;
 public:
     static std::shared_ptr<InstalldService> installdService_;
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
@@ -667,6 +674,34 @@ void BmsCleanAllBundleCacheTest::CheckCacheExist() const
     EXPECT_EQ(dataExist, 0);
 }
 
+void BmsCleanAllBundleCacheTest::SetDataMgrData(const std::string &bundleName) const
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    int32_t userId = dataMgr->GetUserIdByUid(callingUid);
+    int32_t bundleId = callingUid - userId * Constants::BASE_USER_RANGE;
+    dataMgr->bundleIdMap_.insert({bundleId, bundleName});
+    InnerBundleInfo bundleInfo;
+    bundleInfo.baseApplicationInfo_->bundleName = bundleName;
+
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.uid = callingUid;
+    std::string userKey = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
+    bundleInfo.innerBundleUserInfos_.insert({userKey, innerBundleUserInfo});
+    dataMgr->bundleInfos_.insert({bundleName, bundleInfo});
+}
+
+void BmsCleanAllBundleCacheTest::ClearDataMgrData(const std::string &bundleName) const
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto infoItem = dataMgr->bundleInfos_.find(bundleName);
+    if (infoItem != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(infoItem);
+    }
+}
+
 /**
  * @tc.number: CleanCache_0300
  * @tc.name: test can clean the cache files
@@ -1021,5 +1056,88 @@ HWTEST_F(BmsCleanAllBundleCacheTest, HandleCleanBundleCacheFilesForSelf_0200, Fu
     ErrCode result = host.HandleCleanBundleCacheFilesForSelf(data, reply);
 
     EXPECT_EQ(result, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: CleanBundleCacheByInodeCount_0100
+ * @tc.name: test with valid uid
+ * @tc.desc: 1. Set target data to dataMgr
+ *           2. Call CleanBundleCacheByInodeCount
+ *           3. Expect success and return true
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanBundleCacheByInodeCount_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> moduleNames = {"entry"};
+    uint64_t cleanCacheSize = 0;
+    SetDataMgrData(BUNDLE_NAME_TEST);
+    bool ret = hostImpl->CleanBundleCacheByInodeCount(
+        BUNDLE_NAME_TEST, DEFAULT_USERID, DEFAULT_APP_INDEX, moduleNames, cleanCacheSize);
+    EXPECT_TRUE(ret);
+    ClearDataMgrData(BUNDLE_NAME_TEST);
+}
+
+
+/**
+ * @tc.number: CleanBundleCacheByInodeCount_0200
+ * @tc.name: test GetBundleInodeCount in CleanBundleCacheByInodeCount only can success once
+ * @tc.desc: 1. set remainingSuccessfulCalls to 1
+ *           2. Call CleanBundleCacheByInodeCount
+ *           3. Expect failed at the second call and return false
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanBundleCacheByInodeCount_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> moduleNames = {"entry"};
+    uint64_t cleanCacheSize = 0;
+    SetDataMgrData(BUNDLE_NAME_TEST);
+    SetGetBundleInodeCountResult(1);
+    bool ret = hostImpl->CleanBundleCacheByInodeCount(
+        BUNDLE_NAME_TEST, DEFAULT_USERID, DEFAULT_APP_INDEX, moduleNames, cleanCacheSize);
+    EXPECT_FALSE(ret);
+    ClearDataMgrData(BUNDLE_NAME_TEST);
+    SetGetBundleInodeCountResult(2);
+}
+
+/**
+ * @tc.number: CleanBundleCacheByInodeCount_0300
+ * @tc.name: test GetBundleInodeCount in CleanBundleCacheByInodeCount failed
+ * @tc.desc: 1. set remainingSuccessfulCalls to 0
+ *           2. Call CleanBundleCacheByInodeCount
+ *           3. Expect failed at the first call and return false
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanBundleCacheByInodeCount_0300, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> moduleNames = {"entry"};
+    uint64_t cleanCacheSize = 0;
+    SetDataMgrData(BUNDLE_NAME_TEST);
+    SetGetBundleInodeCountResult(0);
+    bool ret = hostImpl->CleanBundleCacheByInodeCount(
+        BUNDLE_NAME_TEST, DEFAULT_USERID, DEFAULT_APP_INDEX, moduleNames, cleanCacheSize);
+    EXPECT_FALSE(ret);
+    ClearDataMgrData(BUNDLE_NAME_TEST);
+    SetGetBundleInodeCountResult(2);
+}
+
+/**
+ * @tc.number: CleanBundleCacheByInodeCount_0400
+ * @tc.name: test CleanBundleCloneCache in CleanBundleCacheByInodeCount failed
+ * @tc.desc: 1. set cleanBundleDataDirResult to 0
+ *           2. Call CleanBundleCacheByInodeCount
+ *           3. Expect failed and return false
+ */
+HWTEST_F(BmsCleanAllBundleCacheTest, CleanBundleCacheByInodeCount_0400, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> moduleNames = {"entry"};
+    uint64_t cleanCacheSize = 0;
+    SetDataMgrData(BUNDLE_NAME_TEST);
+    SetCleanBundleDataDirResult(false);
+    bool ret = hostImpl->CleanBundleCacheByInodeCount(
+        BUNDLE_NAME_TEST, DEFAULT_USERID, DEFAULT_APP_INDEX, moduleNames, cleanCacheSize);
+    EXPECT_FALSE(ret);
+    ClearDataMgrData(BUNDLE_NAME_TEST);
+    SetCleanBundleDataDirResult(true);
 }
 }

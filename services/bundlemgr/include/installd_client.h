@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -104,6 +104,14 @@ public:
      * @return Returns true if successfully; returns false otherwise.
      */
     ErrCode GetDiskUsageFromPath(const std::vector<std::string> &path, int64_t &statSize, int64_t timeoutMs = -1);
+    /**
+     * @brief Get bundle inode count for UID.
+     * @param uid The user ID of the application).
+     * @param inodeCount Output parameter for inode count.
+     * @return Returns ERR_OK if successfully; returns false otherwise.
+     */
+    ErrCode GetBundleInodeCount(int32_t uid, uint64_t &inodeCount);
+
     /**
      * @brief Clean all files in a bundle data directory.
      * @param bundleDir Indicates the data directory path that to be cleaned.

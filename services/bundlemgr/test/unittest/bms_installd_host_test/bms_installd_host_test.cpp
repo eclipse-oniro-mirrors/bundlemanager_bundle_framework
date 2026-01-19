@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -281,6 +281,20 @@ HWTEST_F(BmsInstalldHostTest, HandleGetDiskUsage_0100, Function | SmallTest | Le
     MessageParcel data;
     MessageParcel reply;
     bool res = installdHost.HandleGetDiskUsage(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleGetBundleInodeCount_0100
+ * @tc.name: test HandleGetBundleInodeCount
+ * @tc.desc: 1.HandleGetBundleInodeCount test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleGetBundleInodeCount_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    bool res = installdHost.HandleGetBundleInodeCount(data, reply);
     EXPECT_TRUE(res);
 }
 

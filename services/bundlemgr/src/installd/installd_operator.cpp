@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,7 @@
 #include <unistd.h>
 
 #include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
@@ -117,7 +118,7 @@ static const char* CODE_DECRYPT = "/dev/code_decrypt";
 static int8_t INVALID_RETURN_VALUE = -1;
 static int8_t INVALID_FILE_DESCRIPTOR = -1;
 #endif
-std::recursive_mutex mMountsLock;
+std::mutex mMountsLock;
 static std::map<std::string, std::string> mQuotaReverseMounts;
 using ApplyPatch = int32_t (*)(const std::string, const std::string, const std::string);
 
@@ -1218,27 +1219,49 @@ bool InstalldOperator::InitialiseQuotaMounts()
 
 int64_t InstalldOperator::GetDiskUsageFromQuota(const int32_t uid)
 {
-    std::lock_guard<std::recursive_mutex> lock(mMountsLock);
-    std::string device = "";
-    if (mQuotaReverseMounts.find(QUOTA_DEVICE_DATA_PATH) == mQuotaReverseMounts.end()) {
-        if (!InitialiseQuotaMounts()) {
-            LOG_E(BMS_TAG_INSTALLD, "Failed to initialise quota mounts");
-            return 0;
-        }
-    }
-    device = mQuotaReverseMounts[QUOTA_DEVICE_DATA_PATH];
-    if (device.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "skip when device no quotas present");
-        return 0;
-    }
-    struct dqblk dq;
-    if (quotactl(QCMD(Q_GETQUOTA, USRQUOTA), device.c_str(), uid, reinterpret_cast<char*>(&dq)) != 0) {
-        LOG_E(BMS_TAG_INSTALLD, "Failed to get quotactl, errno: %{public}d", errno);
+    auto dq = GetQuotaData(uid);
+    if (!dq.has_value()) {
         return 0;
     }
     LOG_D(BMS_TAG_INSTALLD, "get disk usage from quota, uid: %{public}d, usage: %{public}llu",
-        uid, static_cast<unsigned long long>(dq.dqb_curspace));
-    return dq.dqb_curspace;
+        uid, static_cast<unsigned long long>(dq->dqb_curspace));
+    return dq->dqb_curspace;
+}
+
+int64_t InstalldOperator::GetBundleInodeCount(int32_t uid)
+{
+    auto dq = GetQuotaData(uid);
+    if (!dq.has_value()) {
+        return 0;
+    }
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD, "get inodes from quota, uid: %{public}d, inodes: %{public}llu",
+        uid, static_cast<unsigned long long>(dq->dqb_curinodes));
+    return dq->dqb_curinodes;
+}
+
+std::optional<struct dqblk> InstalldOperator::GetQuotaData(int32_t uid)
+{
+    std::string device = "";
+    {
+        std::lock_guard<std::mutex> lock(mMountsLock);
+        if (mQuotaReverseMounts.find(QUOTA_DEVICE_DATA_PATH) == mQuotaReverseMounts.end()) {
+            if (!InitialiseQuotaMounts()) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLD, "Failed to initialise quota mounts");
+                return std::nullopt;
+            }
+        }
+        device = mQuotaReverseMounts[QUOTA_DEVICE_DATA_PATH];
+    }
+    if (device.empty()) {
+        APP_LOGW_NOFUNC("skip when device no quotas present");
+        return std::nullopt;
+    }
+    struct dqblk dq;
+    if (quotactl(QCMD(Q_GETQUOTA, USRQUOTA), device.c_str(), uid, reinterpret_cast<char*>(&dq)) != 0) {
+        APP_LOGE_NOFUNC("Failed to get quotactl, errno: %{public}d", errno);
+        return std::nullopt;
+    }
+    return dq;
 }
 
 bool InstalldOperator::ScanDir(

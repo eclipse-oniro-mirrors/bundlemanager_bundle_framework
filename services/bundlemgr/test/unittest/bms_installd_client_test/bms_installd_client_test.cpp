@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1300,6 +1300,20 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsageFromPath_0200,
     path.emplace_back("disk.path");
     ASSERT_NE(installClient_, nullptr);
     ErrCode result = installClient_->GetDiskUsageFromPath(path, statSize);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+ /**
+ * @tc.number: BmsInstalldClientTest_GetBundleInodeCount_0100
+ * @tc.name: GetBundleInodeCount
+ * @tc.desc: test GetBundleInodeCount with empty uids vector
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleInodeCount_0100, TestSize.Level1)
+{
+    int32_t uid = 100;
+    uint64_t inodeCount = 0;
+    ASSERT_NE(installClient_, nullptr);
+    ErrCode result = installClient_->GetBundleInodeCount(uid, inodeCount);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 

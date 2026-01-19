@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -46,6 +46,7 @@
 #include "install_param.h"
 #include "extension_ability_info.h"
 #include "installd/installd_service.h"
+#include "installd/installd_operator.h"
 #include "installd_client.h"
 #include "inner_bundle_info.h"
 #include "launcher_service.h"
@@ -67,6 +68,7 @@ namespace AppExecFwk {
     void ClearGlobalQueryEventInfo();
     bool InsertQueryEventInfo(int32_t errCode, const QueryEventInfo& info);
     bool TransQueryEventInfo(const std::vector<QueryEventInfo> &infos, EventInfo &report);
+    void SetCleanBundleDataDirResult(bool cleanResult);
 }
 }
 
@@ -184,6 +186,7 @@ const int32_t TEST_U200 = 200;
 const int32_t TEST_U1 = 1;
 const int32_t TEST_SIZE_ONE = 1;
 const int32_t TEST_VALUE_ZERO = 0;
+const int32_t DEFAULT_APP_INDEX = 0;
 const nlohmann::json APP_LIST0 = R"(
 {
     "app_list": [
@@ -6967,6 +6970,26 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllInstallBundleUids_0500, Function | SmallTes
 }
 
 /**
+ * @tc.number: CleanBundleCacheFilesAutomatic_0100
+ * @tc.name: test CleanBundleCacheFilesAutomatic
+ * @tc.desc: 1.Test the CleanBundleCacheFilesAutomatic by BundleMgrProxy
+ */
+HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheFilesAutomatic_0100, Function | SmallTest | Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    ASSERT_NE(systemAbilityManager, nullptr) << "Failed to get SystemAbilityManager";
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    ASSERT_NE(remoteObject, nullptr) << "Failed to get Bundle Manager Service";
+    std::shared_ptr<BundleMgrProxy> bundleMgrProxy = std::make_shared<BundleMgrProxy>(remoteObject);
+    uint64_t cacheSize = 1;
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    std::optional<uint64_t> cleanedSize;
+    auto res = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize, cleanType, cleanedSize);
+    EXPECT_NE(res, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
+}
+
+/**
  * @tc.number: ProcessUninstallBundle_1000
  * @tc.name: test ProcessUninstallBundle
  * @tc.desc: 1.Test the ProcessUninstallBundle by BundleDataMgr
@@ -7004,5 +7027,114 @@ HWTEST_F(BmsBundleDataMgrTest, ProcessUninstallBundle_2000, Function | SmallTest
     EXPECT_EQ(bundleOptionInfos.size(), 1);
     dataMgr->DeleteUninstallBundleInfo(bundleName, TEST_USERID);
     dataMgr->multiUserIdsSet_.erase(TEST_USERID);
+}
+
+/**
+ * @tc.number: CleanBundleCacheByInodeCount_0100
+ * @tc.name: test CleanBundleCacheByInodeCount
+ * @tc.desc: 1.Test the CleanBundleCacheByInodeCount by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheByInodeCount_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> moduleNames = {"entry"};
+    uint64_t cleanCacheSize = 0;
+    ClearDataMgr();
+    bool ret = hostImpl->CleanBundleCacheByInodeCount(
+        BUNDLE_NAME_TEST, USERID, DEFAULT_APP_INDEX, moduleNames, cleanCacheSize);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CleanBundleCacheByInodeCount_0200
+ * @tc.name: test CleanBundleCacheByInodeCount
+ * @tc.desc: 1.Test the CleanBundleCacheByInodeCount by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheByInodeCount_0200, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> moduleNames = {"entry"};
+    uint64_t cleanCacheSize = 0;
+    bool ret = hostImpl->CleanBundleCacheByInodeCount(
+        BUNDLE_NAME_TEST, USERID, DEFAULT_APP_INDEX, moduleNames, cleanCacheSize);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CleanBundleCacheTaskGetCleanSize_0100
+ * @tc.name: test CleanBundleCacheTaskGetCleanSize
+ * @tc.desc: 1.Test the CleanBundleCacheTaskGetCleanSize by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheTaskGetCleanSize_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    uint64_t cleanCacheSize = 0;
+    std::string callingName = "callingBundleName";
+    ClearDataMgr();
+    hostImpl->CleanBundleCacheTaskGetCleanSize(
+        BUNDLE_NAME_TEST, USERID, CleanType::CACHE_SPACE, DEFAULT_APP_INDEX, TEST_UID, callingName, cleanCacheSize);
+    EXPECT_EQ(cleanCacheSize, 0);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+}
+
+/**
+ * @tc.number: CleanBundleCacheTaskGetCleanSize_0200
+ * @tc.name: test CleanBundleCacheTaskGetCleanSize
+ * @tc.desc: 1.Test the CleanBundleCacheTaskGetCleanSize by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheTaskGetCleanSize_0200, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    uint64_t cleanCacheSize = 0;
+    std::string callingName = "callingBundleName";
+    hostImpl->CleanBundleCacheTaskGetCleanSize(
+        BUNDLE_NAME_TEST, USERID, CleanType::CACHE_SPACE, DEFAULT_APP_INDEX, TEST_UID, callingName, cleanCacheSize);
+    EXPECT_EQ(cleanCacheSize, 0);
+    
+    SetCleanBundleDataDirResult(false);
+    hostImpl->CleanBundleCacheTaskGetCleanSize(
+        BUNDLE_NAME_TEST, USERID, CleanType::CACHE_SPACE, DEFAULT_APP_INDEX, TEST_UID, callingName, cleanCacheSize);
+    EXPECT_EQ(cleanCacheSize, 0);
+    SetCleanBundleDataDirResult(true);
+}
+
+/**
+ * @tc.number: CleanBundleCacheTaskGetCleanSize_0300
+ * @tc.name: test CleanBundleCacheTaskGetCleanSize
+ * @tc.desc: 1.Test the CleanBundleCacheTaskGetCleanSize by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheTaskGetCleanSize_0300, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> hostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    uint64_t cleanCacheSize = 0;
+    std::string callingName = "callingBundleName";
+    hostImpl->CleanBundleCacheTaskGetCleanSize(
+        BUNDLE_NAME_TEST, USERID, CleanType::INODE_COUNT, DEFAULT_APP_INDEX, TEST_UID, callingName, cleanCacheSize);
+    EXPECT_EQ(cleanCacheSize, 0);
+}
+
+/**
+ * @tc.number: GetQuotaData_0100
+ * @tc.name: test GetQuotaData
+ * @tc.desc: 1.system run normally
+ *           2.dbqlk has value
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetQuotaData_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto uid = GetBundleDataMgr()->GetUidByBundleName(BUNDLE_NAME_TEST, USERID, DEFAULT_APP_INDEX);
+    auto dbqlk = InstalldOperator::GetQuotaData(uid);
+    EXPECT_TRUE(dbqlk.has_value());
+    int64_t quotaValue = InstalldOperator::GetDiskUsageFromQuota(uid);
+    EXPECT_EQ(quotaValue, 0);
+    quotaValue = InstalldOperator::GetBundleInodeCount(uid);
+    EXPECT_EQ(quotaValue, 0);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 } // OHOS

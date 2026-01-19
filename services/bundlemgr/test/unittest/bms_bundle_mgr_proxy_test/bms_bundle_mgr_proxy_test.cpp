@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1634,6 +1634,26 @@ HWTEST_F(BmsBundleMgrProxyTest, SetShortcutsEnabled_0003, Function | MediumTest 
     bool isEnabled = false;
     auto ret = bundleMgrProxy.SetShortcutsEnabled(shortcutInfos, isEnabled);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesAutomatic_0200
+ * @tc.name: test the CleanBundleCacheFilesAutomatic
+ * @tc.desc: 1. system running normally
+ *           2. test CleanBundleCacheFilesAutomatic
+ */
+HWTEST_F(BmsBundleMgrProxyTest, CleanBundleCacheFilesAutomatic_0200, Function | MediumTest | Level1)
+{
+    sptr<IRemoteObject> impl;
+    BundleMgrProxy bundleMgrProxy(impl);
+    uint64_t cacheSize = 0;
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    std::optional<uint64_t> cleanedSize;
+    auto res = bundleMgrProxy.CleanBundleCacheFilesAutomatic(cacheSize, cleanType, cleanedSize);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    cacheSize = 1;
+    res = bundleMgrProxy.CleanBundleCacheFilesAutomatic(cacheSize, cleanType, cleanedSize);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_IPC_TRANSACTION);
 }
 }
 }

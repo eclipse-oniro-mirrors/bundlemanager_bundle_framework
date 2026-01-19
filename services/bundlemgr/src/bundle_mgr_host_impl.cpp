@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1703,6 +1703,13 @@ ErrCode BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, P
 
 ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
 {
+    std::optional<uint64_t> cleanedSize = std::nullopt;
+    return CleanBundleCacheFilesAutomatic(cacheSize, CleanType::CACHE_SPACE, cleanedSize);
+}
+
+ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize, CleanType cleanType,
+    std::optional<uint64_t>& cleanedSize)
+{
     if (cacheSize == 0) {
         APP_LOGE("parameter error, cache size must be greater than 0");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
@@ -1726,13 +1733,14 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
     int64_t endTime = BundleUtil::GetCurrentTimeMs();
     const int32_t PERIOD_ANNUALLY = 4; // 4 is the number of the period ANN
     uint32_t notRunningSum = 0; // The total amount of application that is not running
+    cleanedSize = std::nullopt;
 #ifdef DEVICE_USAGE_STATISTICS_ENABLED
     std::vector<DeviceUsageStats::BundleActivePackageStats> useStats;
     DeviceUsageStats::BundleActiveClient::GetInstance().QueryBundleStatsInfoByInterval(
         useStats, PERIOD_ANNUALLY, startTime, endTime, currentUserId);
 
     if (useStats.empty()) {
-        APP_LOGE("useStats under the current active user is empty");
+        APP_LOGE_NOFUNC("useStats under the current active user is empty");
         return ERR_BUNDLE_MANAGER_DEVICE_USAGE_STATS_EMPTY;
     }
 
@@ -1747,14 +1755,14 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
     sptr<IAppMgr> appMgrProxy =
         iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
     if (appMgrProxy == nullptr) {
-        APP_LOGE("fail to find the app mgr service to check app is running");
+        APP_LOGE_NOFUNC("fail to find the app mgr service to check app is running");
         return ERR_BUNDLE_MANAGER_GET_SYSTEM_ABILITY_FAILED;
     }
 
     std::vector<RunningProcessInfo> runningList;
     int result = appMgrProxy->GetAllRunningProcesses(runningList);
     if (result != ERR_OK) {
-        APP_LOGE("GetAllRunningProcesses failed");
+        APP_LOGE_NOFUNC("Get all running processes failed");
         return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
     }
 
@@ -1765,13 +1773,24 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
             runningSet.insert(info.bundleNames.begin(), info.bundleNames.end());
         }
     }
-
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("get dataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
     uint64_t cleanCacheSum = 0; // The total amount of application cache currently cleaned
     for (auto useStat : useStats) {
-        if (runningSet.find(useStat.bundleName_) == runningSet.end()) {
-            notRunningSum++;
+        if (runningSet.find(useStat.bundleName_) != runningSet.end()) {
+            continue;
+        }
+        notRunningSum++;
+        std::vector<int32_t> appIndexes = {0};
+        std::vector<int32_t> cloneIndexes = dataMgr->GetCloneAppIndexes(useStat.bundleName_, currentUserId);
+        appIndexes.insert(appIndexes.end(), cloneIndexes.begin(), cloneIndexes.end());
+        for (const int32_t &appIndex : appIndexes) {
             uint64_t cleanCacheSize = 0; // The cache size of a single application cleaned up
-            ErrCode ret = CleanBundleCacheFilesGetCleanSize(useStat.bundleName_, currentUserId, cleanCacheSize);
+            ErrCode ret = CleanBundleCacheFilesGetCleanSize(useStat.bundleName_, currentUserId, cleanType,
+                appIndex, cleanCacheSize);
             if (ret != ERR_OK) {
                 APP_LOGE("CleanBundleCacheFilesGetCleanSize failed,"
                     "bundleName: %{public}s, currentUserId: %{public}d, ret: %{public}d",
@@ -1787,10 +1806,12 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
                     cleanCacheSum, cleanCacheSize);
             }
             if (cleanCacheSum >= cacheSize) {
+                cleanedSize = cleanCacheSum;
                 return ERR_OK;
             }
         }
     }
+    cleanedSize = cleanCacheSum;
 #endif
     if (notRunningSum == 0) {
         APP_LOGE("All apps are running under the current active user");
@@ -1801,9 +1822,9 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
 }
 
 ErrCode BundleMgrHostImpl::CleanBundleCacheFilesGetCleanSize(const std::string &bundleName,
-    int32_t userId, uint64_t &cleanCacheSize)
+    int32_t userId, CleanType cleanType, int32_t appIndex, uint64_t &cleanCacheSize)
 {
-    APP_LOGI("start CleanBundleCacheFilesGetCleanSize, bundleName : %{public}s, userId : %{public}d",
+    APP_LOGI("start GetCleanSize, bundleName : %{public}s, userId : %{public}d",
         bundleName.c_str(), userId);
 
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -1814,7 +1835,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesGetCleanSize(const std::string &
     int32_t callingUid =  IPCSkeleton::GetCallingUid();
     std::string callingBundleName;
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        APP_LOGE("CacheFile dataMgr is nullptr");
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -1845,38 +1866,42 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesGetCleanSize(const std::string &
         APP_LOGE("can not clean cacheFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
     }
-
-    CleanBundleCacheTaskGetCleanSize(bundleName, userId, cleanCacheSize, callingUid, callingBundleName);
+    CleanBundleCacheTaskGetCleanSize(bundleName, userId, cleanType, appIndex, callingUid, callingBundleName,
+        cleanCacheSize);
     return ERR_OK;
 }
 
-void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,
-    int32_t userId, uint64_t &cleanCacheSize, int32_t callingUid, const std::string &callingBundleName)
+void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bundleName, int32_t userId,
+    CleanType cleanType, int32_t appIndex, int32_t callingUid, const std::string &callingBundleName,
+    uint64_t &cleanCacheSize)
 {
-    InnerBundleInfo info;
     auto dataMgr = GetDataMgrFromService();
-    if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
-        APP_LOGE("can not get bundleinfo of %{public}s", bundleName.c_str());
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("BundleCacheTask dataMgr is nullptr");
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
         return;
     }
-    std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
-    dataMgr->GetBundleCacheInfo([](std::string &bundleName, std::vector<int32_t> &allidx) {
-            return allidx;
-        }, info, validBundles, userId, false);
-    uint64_t cleanSize;
-    BundleCacheMgr().GetBundleCacheSize(validBundles, userId, cleanSize);
-    auto ret = BundleCacheMgr().CleanBundleCache(validBundles, userId);
-    if (ret != ERR_OK) {
-        APP_LOGE("can not get CleanBundleCache of %{public}s", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true, callingUid, callingBundleName);
+    bool succeed = true;
+    std::vector<std::string> moduleNames;
+    dataMgr->GetBundleModuleNames(bundleName, moduleNames);
+    uint64_t cleanSize = 0;
+    if (cleanType == CleanType::INODE_COUNT) {
+        succeed = CleanBundleCacheByInodeCount(bundleName, userId, appIndex, moduleNames, cleanSize);
+    } else {
+        BundleCacheMgr::GetBundleCacheSizeByAppIndex(bundleName, userId, appIndex, moduleNames, cleanSize);
+        auto ret = BundleCacheMgr::CleanBundleCloneCache(bundleName, userId, appIndex, moduleNames);
+        if (ret != ERR_OK) {
+            succeed = false;
+        }
+    }
+    if (!succeed) {
+        APP_LOGE_NOFUNC("can not get BundleCloneCache of %{public}s", bundleName.c_str());
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed, callingUid, callingBundleName);
         return;
     }
     cleanCacheSize = cleanSize;
-    bool succeed = true;
-
     EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed, callingUid, callingBundleName);
-    APP_LOGI("CleanBundleCacheFiles with succeed %{public}d", succeed);
+    APP_LOGI("CleanCacheFiles with succeed %{public}d", succeed);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!this->GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
@@ -1890,6 +1915,52 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
         .bundleName = bundleName
     };
     NotifyBundleStatus(installRes);
+}
+
+bool BundleMgrHostImpl::CleanBundleCacheByInodeCount(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, const std::vector<std::string> &moduleNames, uint64_t &cleanCacheSize)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE_NOFUNC("ByInodeCount dataMgr is nullptr");
+        return false;
+    }
+
+    int32_t uid = dataMgr->GetUidByBundleName(bundleName, userId, appIndex);
+    if (uid < 0) {
+        APP_LOGE_NOFUNC("No valid uid for %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    uint64_t initialInodeCount = 0;
+    ErrCode ret = BundleCacheMgr::GetBundleInodeCount(uid, initialInodeCount);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("can not get initial file count for %{public}s", bundleName.c_str());
+        return false;
+    }
+    ret = BundleCacheMgr::CleanBundleCloneCache(bundleName, userId, appIndex, moduleNames);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("can not get clean bundle clone cache of %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    uint64_t inodeCount = 0;
+    ret = BundleCacheMgr::GetBundleInodeCount(uid, inodeCount);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("can not get file count for %{public}s", bundleName.c_str());
+        return false;
+    }
+    
+    if (inodeCount > initialInodeCount) {
+        APP_LOGE_NOFUNC("can not clean cacheFiles of %{public}s due to inodeCount is not less than initialInodeCount",
+            bundleName.c_str());
+        cleanCacheSize = 0;
+    } else {
+        cleanCacheSize = initialInodeCount - inodeCount;
+    }
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "bundle: %{public}s, inode count: %{public}llu", bundleName.c_str(),
+        cleanCacheSize);
+    return true;
 }
 
 bool BundleMgrHostImpl::CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex)

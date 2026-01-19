@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -66,6 +66,10 @@ enum class DumpFlag {
     DUMP_DEBUG_BUNDLE_LIST, // corresponse to option "-debug-bundle-list"
     DUMP_BUNDLE_LABEL,      // corresponse to option "-l"
     DUMP_LABEL_LIST         // corresponse to option "-a -l"
+};
+enum class CleanType : int8_t {
+    CACHE_SPACE = 0,
+    INODE_COUNT = 1
 };
 
 class IBundleMgr : public IRemoteBroker {
@@ -820,6 +824,20 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    /**
+     * @brief Clears cache data of a specified size.
+     * @param cacheSize Indicates the size of the cache data is to be cleared.
+	 * @param cleanType Indicates the type of cache data to be cleared.
+     * @param cleanedSize Indicates the size of the cache data that is actually cleared.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize, CleanType cleanType,
+        std::optional<uint64_t>& cleanedSize)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     /**
      * @brief Clears application running data of a specified application.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.

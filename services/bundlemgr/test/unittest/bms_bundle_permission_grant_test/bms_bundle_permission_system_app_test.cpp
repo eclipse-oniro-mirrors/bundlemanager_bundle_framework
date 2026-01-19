@@ -2516,8 +2516,48 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CleanBundleCacheFilesAutomaticTe
     auto bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
     uint64_t cacheSize = 0;
-    auto result = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize);
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    std::optional<uint64_t> cleanedSize;
+    auto result = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize, cleanType, cleanedSize);
     EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0101
+ * @tc.name: test CleanBundleCacheByInodeCount of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. CleanBundleCacheByInodeCount false by dataMgr nullptr
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0101, Function | SmallTest | Level0)
+{
+    uint64_t cleanCacheSize = 0;
+    int32_t appIndex = 1;
+    std::vector<std::string> moduleNames = {"entry1", "entry2"};
+    std::shared_ptr<BundleDataMgr> dataMgrImpl = nullptr;
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(dataMgrImpl);
+    bool ret = bundleMgrHostImpl_->CleanBundleCacheByInodeCount(BUNDLE_NAME, USERID, appIndex,
+        moduleNames, cleanCacheSize);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0102
+ * @tc.name: test CleanBundleCacheByInodeCount of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. CleanBundleCacheByInodeCount false by uid empty
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0102, Function | SmallTest | Level0)
+{
+    std::string bundleName = "";
+    int32_t userId = 100;
+    uint64_t cleanCacheSize = 0;
+    int32_t appIndex = 1;
+    std::vector<std::string> moduleNames = {"entry1", "entry2"};
+    std::shared_ptr<BundleDataMgr> dataMgrImpl = std::make_unique<BundleDataMgr>();
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(dataMgrImpl);
+    bool ret = bundleMgrHostImpl_->CleanBundleCacheByInodeCount(bundleName, userId, appIndex,
+        moduleNames, cleanCacheSize);
+    EXPECT_EQ(ret, false);
 }
 
 /**

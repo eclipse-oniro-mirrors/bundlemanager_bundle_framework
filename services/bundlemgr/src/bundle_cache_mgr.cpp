@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "app_log_tag_wrapper.h"
 #include "bundle_cache_mgr.h"
 
 #include <cinttypes>
@@ -102,6 +103,44 @@ void BundleCacheMgr::GetBundleCacheSize(const std::vector<std::tuple<std::string
         }
     }
     return;
+}
+
+void BundleCacheMgr::GetBundleCacheSizeByAppIndex(const std::string &bundleName, int32_t userId,
+    int32_t appIndex, const std::vector<std::string> &moduleNames, uint64_t &cacheStat)
+{
+    std::vector<std::string> cachePaths = GetBundleCachePath(bundleName, userId, appIndex, moduleNames);
+    int64_t cacheSize = 0;
+    ErrCode ret = InstalldClient::GetInstance()->GetDiskUsageFromPath(cachePaths, cacheSize);
+    if (ret != ERR_OK) {
+        APP_LOGW_NOFUNC("BundleCache failed for %{public}s", bundleName.c_str());
+        return;
+    }
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "BundleCache stat: %{public}" PRId64 " bundlename: %{public}s",
+        cacheSize, bundleName.c_str());
+    cacheStat += static_cast<uint64_t>(cacheSize);
+    return;
+}
+
+ErrCode BundleCacheMgr::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+{
+    if (uid < 0) {
+        inodeCount = 0;
+        APP_LOGE_NOFUNC("Invalid uid: %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
+    }
+
+    uint64_t totalInodeCount = 0;
+    ErrCode ret = InstalldClient::GetInstance()->GetBundleInodeCount(uid, totalInodeCount);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("InodeCount failed for uid %{public}d", uid);
+        return ret;
+    }
+
+    inodeCount = totalInodeCount;
+    LOG_NOFUNC_D(BMS_TAG_INSTALLER, "succeeded, uid: %{public}d, inodeCount: %{public}llu",
+        uid, inodeCount);
+
+    return ERR_OK;
 }
 
 ErrCode BundleCacheMgr::GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback)

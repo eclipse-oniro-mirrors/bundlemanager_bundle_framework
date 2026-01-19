@@ -2686,6 +2686,27 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleGetDiskUsageFromPath_0001, Function | 
 }
 
 /**
+ * @tc.number: HandleGetBundleInodeCount_0001
+ * @tc.name: HandleGetBundleInodeCount
+ * @tc.desc: test HandleGetBundleInodeCount of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleGetBundleInodeCount_0001, Function | SmallTest | Level0)
+{
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteInt32(2);
+    datas.WriteInt32(20010001);
+    datas.WriteInt32(20010002);
+
+    datas.RewindRead(0);
+    MessageParcel reply;
+    InstalldHost installdHost;
+    bool res = installdHost.HandleGetBundleInodeCount(datas, reply);
+    EXPECT_EQ(res, true);
+}
+
+/**
  * @tc.number: HandleCreateDataGroupDirs_0001
  * @tc.name: HandleCreateDataGroupDirs
  * @tc.desc: test HandleCreateDataGroupDirs of InstalldHost

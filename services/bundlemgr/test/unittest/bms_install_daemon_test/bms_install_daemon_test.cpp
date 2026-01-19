@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1728,6 +1728,20 @@ HWTEST_F(BmsInstallDaemonTest, GetDiskUsageFromPath_0100, Function | SmallTest |
     path.emplace_back("dir/path/");
     int64_t statSize = 0;
     ErrCode ret = hostImpl.GetDiskUsageFromPath(path, statSize);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test GetBundleInodeCount
+*/
+HWTEST_F(BmsInstallDaemonTest, GetBundleInodeCount_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t uid = 100;
+    uint64_t inodeCount = 0;
+    ErrCode ret = hostImpl.GetBundleInodeCount(uid, inodeCount);
     EXPECT_EQ(ret, ERR_OK);
 }
 
