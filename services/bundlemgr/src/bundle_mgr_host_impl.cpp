@@ -3716,12 +3716,12 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return false;
     }
     bool ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName);
     if (!ret) {
         APP_LOGE("query calling bundle name failed");
-        return ret;
+        return false;
     }
     APP_LOGD("calling bundleName is : %{public}s", bundleName.c_str());
     return ret;
