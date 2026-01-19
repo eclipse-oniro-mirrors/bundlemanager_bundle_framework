@@ -15207,11 +15207,14 @@ HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1017, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, BaseBundleInstaller_1018, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
-
     OHOS::system::SetParameter("persist.arkwebcore.package_name", "");
+    
     bool ret = installer.IsArkWeb("com.ohos.arkwebcore");
-
+#ifdef USE_EXTENSION_DATA
+    EXPECT_FALSE(ret);
+#else
     EXPECT_TRUE(ret);
+#endif
 }
 
 /**
