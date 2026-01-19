@@ -90,6 +90,12 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     overlayHaps.push_back(fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH));
     cfg.InitResourceGlobalConfig(fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH), overlayHaps, nullptr,
         fdp.ConsumeBool(), fdp.ConsumeBool());
+    std::string language = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    std::shared_ptr<Global::Resource::ResourceManager> manager = nullptr;
+    cfg.UpdateResourceGlobalConfig(language, manager);
+    cfg.UpdateResourceGlobalConfig(language, resourceManager);
+    cfg.GetSystemLanguages();
 
     ResourceInfo resourceInfo;
     resourceInfo.abilityName_ = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);

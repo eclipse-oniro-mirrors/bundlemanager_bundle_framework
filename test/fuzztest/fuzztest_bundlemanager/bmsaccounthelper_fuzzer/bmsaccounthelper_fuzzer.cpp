@@ -42,6 +42,11 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     AccountHelper::GetCurrentActiveUserIdWithRetry(isOtaInstall);
     std::string constraint = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
     AccountHelper::CheckOsAccountConstraintEnabled(userId, constraint);
+    AccountHelper::GetUserIdByCallerType();
+    AccountHelper::GetEnterpriseUserIds();
+    std::unordered_set<int32_t> installedUserIds;
+    int32_t targetUserId = fdp.ConsumeIntegral<int32_t>();
+    AccountHelper::CheckUserIsolation(targetUserId, installedUserIds);
     return true;
 }
 } // namespace OHOS
