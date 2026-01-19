@@ -5952,5 +5952,27 @@ bool InnerBundleInfo::GetPluginBundleInfoByName(const int32_t userId, const std:
     }
     return false;
 }
+
+bool InnerBundleInfo::HasKeepTokenIdMetadata() const
+{
+    if (innerModuleInfos_.empty()) {
+        return false;
+    }
+    for (const auto &item : innerModuleInfos_) {
+        const auto &moduleInfo = item.second;
+        
+        if (!moduleInfo.isEntry || moduleInfo.metadata.empty()) {
+            continue;
+        }
+
+        for (const auto &meta : moduleInfo.metadata) {
+            if (meta.name == ServiceConstants::META_KEEP_TOKEN_ID_KEY) {
+                APP_LOGI_NOFUNC("Found keepTokenId in module");
+                return true;
+            }
+        }
+    }
+    return false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

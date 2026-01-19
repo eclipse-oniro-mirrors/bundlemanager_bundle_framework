@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,7 @@ namespace AccessToken {
 class AccessTokenKit {
 public:
     static AccessTokenIDEx AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy);
-    static int DeleteToken(AccessTokenID tokenID);
+    static int DeleteToken(AccessTokenID tokenID, bool isTokenReserved = false);
     /* Get token type by ATM service */
     static ATokenTypeEnum GetTokenType(AccessTokenID tokenID);
     /* Get token type from flag in tokenId, which doesn't depend on ATM service */

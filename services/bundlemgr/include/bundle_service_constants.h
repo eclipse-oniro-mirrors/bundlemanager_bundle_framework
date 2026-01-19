@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -298,6 +298,7 @@ constexpr const char* EXT_PROFILE = "ext_profile";
 constexpr const char* ENTERPRISE_MANIFEST = "ohos.bms.param.enterpriseManifest";
 constexpr const char* MANIFEST_JSON = "manifest.json";
 constexpr const char* CLOUD_PROFILE_PATH = "resources/base/profile/cloudkit_config.json";
+constexpr const char* META_KEEP_TOKEN_ID_KEY = "ohos.fileshare.supportPreservePersistentPermisson";
 // for install param
 constexpr const char* BMS_PARA_INSTALL_BUNDLE_NAME = "ohos.bms.param.installBundleName";
 // for install downgrade

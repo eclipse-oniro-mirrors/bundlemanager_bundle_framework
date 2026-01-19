@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -71,7 +71,8 @@ public:
 
     static std::string GetCheckResultMsg(const Security::AccessToken::HapInfoCheckResult &checkResult);
 
-    static int32_t DeleteAccessTokenId(const Security::AccessToken::AccessTokenID tokenId);
+    static int32_t DeleteAccessTokenId(const Security::AccessToken::AccessTokenID tokenId,
+        bool isTokenReserved = false);
 
     static bool GetRequestPermissionStates(BundleInfo &bundleInfo, uint32_t tokenId, const std::string deviceId);
 
