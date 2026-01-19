@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -436,6 +436,10 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
     ani_object firstInstallTime = BoxValue(env, bundleInfo.firstInstallTime);
     RETURN_NULL_IF_FALSE(firstInstallTime);
 
+    // buildVersion: string
+    ani_string buildVersion = nullptr;
+    RETURN_NULL_IF_FALSE(StringToAniStr(env, bundleInfo.buildVersion, buildVersion));
+
     ani_value args[] = {
         { .r = name },
         { .r = vendor },
@@ -453,6 +457,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         { .r = routerMap },
         { .i = bundleInfo.appIndex },
         { .r = firstInstallTime },
+        { .r = buildVersion },
     };
     static const std::string ctorSig = SignatureBuilder()
         .AddClass(CommonFunAniNS::CLASSNAME_STRING) // moduleName: string
@@ -471,6 +476,7 @@ ani_object CommonFunAni::ConvertBundleInfo(ani_env* env, const BundleInfo& bundl
         .AddClass(CommonFunAniNS::CLASSNAME_ARRAY)  // routerMap: Array<RouterItem>
         .AddInt()                                   // appIndex: int
         .AddClass(CommonFunAniNS::CLASSNAME_LONG)   // firstInstallTime?: long
+        .AddClass(CommonFunAniNS::CLASSNAME_STRING) // buildVersion?: string
         .BuildSignatureDescriptor();
     return CreateNewObjectByClassV2(env, CLASSNAME_BUNDLE_INFO_INNER, ctorSig, args);
 }

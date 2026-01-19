@@ -1411,7 +1411,8 @@ const nlohmann::json MODULE_JSON_10 = R"(
         "vendor": "example",
         "versionCode": 1000000,
         "versionName": "1.0.0",
-        "appPreloadPhase": "processCreated"
+        "appPreloadPhase": "processCreated",
+        "buildVersion": "1.0.0"
     },
     "module": {
         "deliveryWithInstall": true,
@@ -4913,6 +4914,54 @@ HWTEST_F(BmsBundleParserTest, ParseAppPreloadPhase_0300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     applicationInfo = innerBundleInfo.GetBaseApplicationInfo();
     EXPECT_EQ(applicationInfo.appPreloadPhase, AppExecFwk::AppPreloadPhase::DEFAULT);
+}
+
+/**
+ * @tc.number: ParseBuildVersion_0100
+ * @tc.name: parse buildVersion
+ * @tc.desc: 1. system running normally
+ *           2. test parsing success when set buildVersion
+ */
+HWTEST_F(BmsBundleParserTest, ParseBuildVersion_0100, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_10;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    bundleInfo = innerBundleInfo.GetBaseBundleInfo();
+    EXPECT_EQ(bundleInfo.buildVersion, "1.0.0");
+}
+
+/**
+ * @tc.number: ParseBuildVersion_0200
+ * @tc.name: parse buildVersion
+ * @tc.desc: 1. system running normally
+ *           2. test parsing success when not set buildVersion
+ */
+HWTEST_F(BmsBundleParserTest, ParseBuildVersion_0200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_11;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    bundleInfo = innerBundleInfo.GetBaseBundleInfo();
+    EXPECT_EQ(bundleInfo.buildVersion, "");
 }
 
 /**

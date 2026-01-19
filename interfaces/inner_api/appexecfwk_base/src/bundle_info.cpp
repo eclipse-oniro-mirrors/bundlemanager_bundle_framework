@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -593,6 +593,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
         routerArray.emplace_back(*routerItem);
     }
     isNewVersion = parcel.ReadBool();
+    buildVersion = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -715,6 +716,7 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &router);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isNewVersion);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildVersion));
     return true;
 }
 
@@ -917,7 +919,8 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {OVERLAY_BUNDLE_INFO, bundleInfo.overlayBundleInfos},
         {BUNDLE_INFO_OLD_APPIDS, bundleInfo.oldAppIds},
         {BUNDLE_INFO_ROUTER_ARRAY, bundleInfo.routerArray},
-        {BUNDLE_INFO_IS_NEW_VERSION, bundleInfo.isNewVersion}
+        {BUNDLE_INFO_IS_NEW_VERSION, bundleInfo.isNewVersion},
+        {Constants::BUILD_VERSION, bundleInfo.buildVersion}
     };
 }
 
@@ -1285,6 +1288,12 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         jsonObjectEnd,
         BUNDLE_INFO_IS_NEW_VERSION,
         bundleInfo.isNewVersion,
+        false,
+        parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::BUILD_VERSION,
+        bundleInfo.buildVersion,
         false,
         parseResult);
     if (parseResult != ERR_OK) {

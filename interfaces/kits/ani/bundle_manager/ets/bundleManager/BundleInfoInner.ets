@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,7 @@ export class BundleInfoInner implements BundleInfo {
   readonly routerMap: Array<RouterItem> = new Array<RouterItem>;
   readonly appIndex: int;
   readonly firstInstallTime?: long;
+  readonly buildVersion?: string | undefined;
 
   constructor() { }
   constructor(name: string,
@@ -54,7 +55,8 @@ export class BundleInfoInner implements BundleInfo {
     updateTime: long,
     routerMap: Array<RouterItem>,
     appIndex: int,
-    firstInstallTime?: long) {
+    firstInstallTime?: long,
+    buildVersion?: string) {
       this.name = name;
       this.vendor = vendor;
       this.versionCode = versionCode;
@@ -71,6 +73,7 @@ export class BundleInfoInner implements BundleInfo {
       this.routerMap = routerMap;
       this.appIndex = appIndex;
       this.firstInstallTime = firstInstallTime;
+      this.buildVersion = buildVersion;
   }
   constructor(name: string, hapModulesInfo: Array<HapModuleInfo>) {
       this.name = name;
