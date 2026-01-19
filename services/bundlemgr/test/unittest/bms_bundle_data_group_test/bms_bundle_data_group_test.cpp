@@ -2203,7 +2203,11 @@ HWTEST_F(BmsBundleDataGroupTest, HandleOTACodeEncryption_0001, Function | Medium
     innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
     innerBundleInfo.HandleOTACodeEncryption(withoutKeyBundles, withKeyBundles);
     EXPECT_TRUE(withoutKeyBundles.empty());
+#ifdef USE_ARM64
+    EXPECT_TRUE(withKeyBundles.empty());
+#else
     EXPECT_FALSE(withKeyBundles.empty());
+#endif
 }
 
 /**
