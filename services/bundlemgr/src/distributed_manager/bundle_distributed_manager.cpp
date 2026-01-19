@@ -83,26 +83,33 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
         APP_LOGE("jsonObject is_discarded");
         return ErrorCode::DECODE_SYS_CAP_FAILED;
     }
-    if ((jsonObject.find(CHARACTER_OS_SYSCAP) == jsonObject.end()) ||
-        (jsonObject.find(CHARACTER_PRIVATE_SYSCAP) == jsonObject.end())) {
-        APP_LOGE("ossyscap no exist ");
+    auto osSysCapIt = jsonObject.find(CHARACTER_OS_SYSCAP);
+    auto privateSysCapIt = jsonObject.find(CHARACTER_PRIVATE_SYSCAP);
+    if (osSysCapIt == jsonObject.end() || privateSysCapIt == jsonObject.end()) {
+        APP_LOGE_NOFUNC("syscap no exist");
         return ErrorCode::DECODE_SYS_CAP_FAILED;
     }
     std::string pcId;
-    try {
-        std::vector<int> values = jsonObject[CHARACTER_OS_SYSCAP].get<std::vector<int>>();
-        for (int value : values) {
-            pcId = pcId + std::to_string(value) + ",";
-        }
-        std::string capabilities = jsonObject[CHARACTER_PRIVATE_SYSCAP];
-        if (capabilities.empty()) {
-            pcId.resize(pcId.empty() ? pcId.length() : (pcId.length() - 1));
-        } else {
-            pcId = pcId + capabilities;
-        }
-    } catch (const nlohmann::json::exception &e) {
-        APP_LOGE("ossyscap json err: %{public}s", e.what());
+    if (!osSysCapIt->is_array()) {
+        APP_LOGE_NOFUNC("ossyscap is not array");
         return ErrorCode::DECODE_SYS_CAP_FAILED;
+    }
+    for (const auto& item : *osSysCapIt) {
+        if (!item.is_number_integer()) {
+            APP_LOGE_NOFUNC("ossyscap item is not integer");
+            return ErrorCode::DECODE_SYS_CAP_FAILED;
+        }
+        pcId = pcId + std::to_string(item.get<int>()) + ",";
+    }
+    if (!privateSysCapIt->is_string()) {
+        APP_LOGE_NOFUNC("privatesyscap is not string");
+        return ErrorCode::DECODE_SYS_CAP_FAILED;
+    }
+    std::string capabilities = privateSysCapIt->get<std::string>();
+    if (capabilities.empty()) {
+        pcId.resize(pcId.empty() ? pcId.length() : (pcId.length() - 1));
+    } else {
+        pcId = pcId + capabilities;
     }
     APP_LOGD("sysCap pcId:%{public}s", pcId.c_str());
     for (auto &rpcId : rpcIdResult.abilityInfo.rpcId) {

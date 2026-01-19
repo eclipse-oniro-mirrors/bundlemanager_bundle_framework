@@ -781,6 +781,23 @@ HWTEST_F(BmsBundleResourceIconRdbTest, ToString_0001, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: ToString_0002
+ * Function: UninstallBundleResourceRdb
+ * @tc.name: test UninstallBundleResourceRdb ToString with invalid UTF-8
+ * @tc.desc: 1. test ToString with invalid UTF-8 string
+ *           2. SafeDump should fail and return empty string
+ */
+HWTEST_F(BmsBundleResourceIconRdbTest, ToString_0002, Function | SmallTest | Level0)
+{
+    std::map<std::string, std::string> labelMap;
+    // Invalid UTF-8 string
+    labelMap[BUNDLE_NAME] = "\xC4\xE3\xBA\xCA";
+    UninstallBundleResourceRdb uninstallBundleResourceRdb;
+    std::string labels = uninstallBundleResourceRdb.ToString(labelMap);
+    EXPECT_TRUE(labels.empty());
+}
+
+/**
  * @tc.number: FromString_0001
  * Function: UninstallBundleResourceRdb
  * @tc.name: test UninstallBundleResourceRdb
