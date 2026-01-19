@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2927,7 +2927,7 @@ ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, 
         }
 
         if (keepParent) {
-            if (!InstalldOperator::DeleteFiles(dir)) {
+            if (!InstalldOperator::ClearDir(dir)) {
                 ret = ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
                 LOG_W(BMS_TAG_INSTALLD, "delete files in %{public}s failed errno:%{public}d", dir.c_str(), errno);
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2771,7 +2771,7 @@ bool InstalldOperator::ClearDir(const std::string &dir)
     std::error_code ec;
     if (!std::filesystem::exists(path, ec) || !std::filesystem::is_directory(path, ec)) {
         LOG_E(BMS_TAG_INSTALLD, "invalid path:%{public}s,err:%{public}s", dir.c_str(), ec.message().c_str());
-        return false;
+        return true;
     }
 
     std::filesystem::directory_iterator dirIter(path, std::filesystem::directory_options::skip_permission_denied, ec);
@@ -2790,15 +2790,21 @@ bool InstalldOperator::ClearDir(const std::string &dir)
         delPathVector.emplace_back(dirIter->path());
     }
 
+    bool isSuccess = true;
     for (const auto &delPath : delPathVector) {
+        ec.clear();
         std::filesystem::remove_all(delPath, ec);
         if (ec) {
             LOG_E(BMS_TAG_INSTALLD, "remove_all failed,%{public}s,err:%{public}s", dir.c_str(), ec.message().c_str());
-            return false;
+            isSuccess = false;
         }
     }
-    LOG_I(BMS_TAG_INSTALLD, "clearDir success");
-    return true;
+    if (isSuccess) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "clearDir success");
+    } else {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLD, "clearDir completed with errors");
+    }
+    return isSuccess;
 }
 
 std::string InstalldOperator::Sha256File(const std::string& filePath)
