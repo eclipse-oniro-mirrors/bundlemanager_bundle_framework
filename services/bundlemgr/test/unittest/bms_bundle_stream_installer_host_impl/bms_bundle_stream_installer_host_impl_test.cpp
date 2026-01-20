@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -218,6 +218,47 @@ HWTEST_F(bundle_stream_installer_host_impl_test, test_CreateSignatureFileStream_
 }
 
 /**
+ * @tc.number: test_CreateSignatureFileStream_0600
+ * @tc.name: test CreateSignatureFileStream
+ * @tc.desc: 1. test CreateSignatureFileStream_0600
+ */
+HWTEST_F(bundle_stream_installer_host_impl_test, test_CreateSignatureFileStream_0600, Function | SmallTest | Level0)
+{
+    bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
+    std::string moduleName = "moduleName_error_failed";
+    std::string fileName = "fileName.sig";
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    IPCSkeleton::SetCallingUid(0);
+    int32_t installedUidOld = bundleStreamInstaller_->installedUid_;
+    bundleStreamInstaller_->installedUid_ = 0;
+    EXPECT_TRUE(bundleStreamInstaller_->CreateSignatureFileStream(moduleName, fileName) < 0);
+    IPCSkeleton::SetCallingUid(callingUid);
+    bundleStreamInstaller_->installedUid_ = installedUidOld;
+}
+
+/**
+ * @tc.number: test_CreateSignatureFileStream_0700
+ * @tc.name: test CreateSignatureFileStream
+ * @tc.desc: 1. test CreateSignatureFileStream_0700
+ */
+HWTEST_F(bundle_stream_installer_host_impl_test, test_CreateSignatureFileStream_0700, Function | SmallTest | Level0)
+{
+    bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
+    std::string moduleName = "moduleName_error_failed";
+    std::string fileName = "../fileName.sig";
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    IPCSkeleton::SetCallingUid(0);
+    int32_t installedUidOld = bundleStreamInstaller_->installedUid_;
+    bundleStreamInstaller_->installedUid_ = 0;
+    std::map<std::string, std::string> verifyCodeParamsOld = bundleStreamInstaller_->installParam_.verifyCodeParams;
+    bundleStreamInstaller_->installParam_.verifyCodeParams = { { moduleName, moduleName }, { "test", "test" } };
+    EXPECT_TRUE(bundleStreamInstaller_->CreateSignatureFileStream(moduleName, fileName) < 0);
+    IPCSkeleton::SetCallingUid(callingUid);
+    bundleStreamInstaller_->installedUid_ = installedUidOld;
+    bundleStreamInstaller_->installParam_.verifyCodeParams = verifyCodeParamsOld;
+}
+
+/**
  * @tc.number: test_CreateSharedBundleStream_0100
  * @tc.name: test CreateSharedBundleStream
  * @tc.desc: 1. test CreateSharedBundleStream_0100
@@ -403,6 +444,25 @@ HWTEST_F(bundle_stream_installer_host_impl_test, test_CreatePgoFileStream_0500, 
 }
 
 /**
+ * @tc.number: test_CreatePgoFileStream_0600
+ * @tc.name: test CreatePgoFileStream
+ * @tc.desc: 1. test CreatePgoFileStream_0600
+ */
+HWTEST_F(bundle_stream_installer_host_impl_test, test_CreatePgoFileStream_0600, Function | SmallTest | Level0)
+{
+    bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
+    std::string moduleName = "moduleName";
+    std::string fileName = "../fileName.ap";
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    IPCSkeleton::SetCallingUid(0);
+    int32_t installedUidOld = bundleStreamInstaller_->installedUid_;
+    bundleStreamInstaller_->installedUid_ = 0;
+    EXPECT_TRUE(bundleStreamInstaller_->CreatePgoFileStream(moduleName, fileName) < 0);
+    IPCSkeleton::SetCallingUid(callingUid);
+    bundleStreamInstaller_->installedUid_ = installedUidOld;
+}
+
+/**
  * @tc.number: test_CreateExtProfileFileStream_0100
  * @tc.name: test CreateExtProfileFileStream
  * @tc.desc: 1. test CreateExtProfileFileStream_0200
@@ -473,6 +533,24 @@ HWTEST_F(bundle_stream_installer_host_impl_test, test_CreateExtProfileFileStream
     int32_t installedUidOld = bundleStreamInstaller_->installedUid_;
     bundleStreamInstaller_->installedUid_ = 0;
     EXPECT_TRUE(bundleStreamInstaller_->CreateExtProfileFileStream(fileName) > 0);
+    IPCSkeleton::SetCallingUid(callingUid);
+    bundleStreamInstaller_->installedUid_ = installedUidOld;
+}
+
+/**
+* @tc.number: test_CreateExtProfileFileStream_0500
+* @tc.name: test CreateExtProfileFileStream
+* @tc.desc: 1. test CreateExtProfileFileStream_0500
+*/
+HWTEST_F(bundle_stream_installer_host_impl_test, test_CreateExtProfileFileStream_0500, Function | SmallTest | Level0)
+{
+    bundleStreamInstaller_ = std::make_shared<BundleStreamInstallerHostImpl>(0, 0);
+    std::string fileName = "fileName.json";
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    IPCSkeleton::SetCallingUid(0);
+    int32_t installedUidOld = bundleStreamInstaller_->installedUid_;
+    bundleStreamInstaller_->installedUid_ = 1;
+    EXPECT_TRUE(bundleStreamInstaller_->CreateExtProfileFileStream(fileName) < 0);
     IPCSkeleton::SetCallingUid(callingUid);
     bundleStreamInstaller_->installedUid_ = installedUidOld;
 }
