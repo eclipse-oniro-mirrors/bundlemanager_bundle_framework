@@ -31,7 +31,7 @@ public:
     BmsUpdateSelinuxMgr();
     ~BmsUpdateSelinuxMgr();
     ErrCode StartUpdateSelinuxLabel(const int32_t userId);
-    ErrCode StopUpdateSelinuxLabel(const int32_t reason);
+    ErrCode StopUpdateSelinuxLabel(const int32_t reason, const std::string stopReason);
     ErrCode AddBundles(const std::vector<BundleOptionInfo> &bundleOptionInfos);
     ErrCode DeleteBundle(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode DeleteBundleForUser(const int32_t userId);

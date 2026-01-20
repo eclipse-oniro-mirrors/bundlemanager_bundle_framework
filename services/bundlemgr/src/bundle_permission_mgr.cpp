@@ -304,7 +304,7 @@ bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &pe
         AccessToken::PermissionState::PERMISSION_GRANTED) {
         return true;
     }
-    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "permission denied caller:%{public}u", callerToken);
+    LOG_D(BMS_TAG_DEFAULT, "permission denied caller:%{public}u", callerToken);
     return false;
 }
 
@@ -317,7 +317,7 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
         AccessToken::PermissionState::PERMISSION_GRANTED) {
         return true;
     }
-    LOG_NOFUNC_W(BMS_TAG_DEFAULT, "permission denied caller:%{public}u", callerToken);
+    LOG_D(BMS_TAG_DEFAULT, "permission denied caller:%{public}u", callerToken);
     return false;
 }
 

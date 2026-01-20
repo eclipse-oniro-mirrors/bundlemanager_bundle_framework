@@ -15,6 +15,7 @@
 
 #include "uninstall_bundle_resource_rdb.h"
 
+#include "exception_util.h"
 #include "json_util.h"
 #include "nlohmann/json.hpp"
 
@@ -79,14 +80,14 @@ std::map<std::string, std::string> UninstallBundleResourceRdb::FromString(const 
 
 std::string UninstallBundleResourceRdb::ToString(const std::map<std::string, std::string> &labelMap)
 {
-    try {
-        nlohmann::json json;
-        json[BundleResourceConstants::LABEL] = labelMap;
-        return json.dump();
-    } catch (const nlohmann::json::exception &e) {
-        APP_LOGE("ToString err: %{public}s", e.what());
+    nlohmann::json json;
+    json[BundleResourceConstants::LABEL] = labelMap;
+    std::string result;
+    if (!ExceptionUtil::GetInstance().SafeDump(json, result)) {
+        APP_LOGE_NOFUNC("SafeDump failed");
         return Constants::EMPTY_STRING;
     }
+    return result;
 }
 
 bool UninstallBundleResourceRdb::AddUninstallBundleResource(const std::string &bundleName,

@@ -59,6 +59,16 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     bundleOptionInfo.appIndex = 0;
     optionsList.push_back(bundleOptionInfo);
     bundleResourceHostImpl->GetLauncherAbilityResourceInfoList(optionsList, flags, launcherInfos);
+    std::vector<LauncherAbilityResourceInfo> extensionAbilityResourceInfo;
+    bundleResourceHostImpl->GetExtensionAbilityResourceInfo(bundleName, ExtensionAbilityType::INPUTMETHOD,
+        flags, extensionAbilityResourceInfo, appIndex);
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    bundleResourceHostImpl->FilterUninstallResource(userId, bundleResourceInfos);
+    bundleResourceHostImpl->GetAllUninstallBundleResourceInfo(userId, flags, bundleResourceInfos);
+    std::vector<LauncherAbilityResourceInfo> allResources;
+    LauncherAbilityResourceInfo resourceInfo;
+    bundleResourceHostImpl->GetElementLauncherAbilityResourceInfo(allResources,
+        moduleName, abilityName, appIndex, resourceInfo);
     return true;
 }
 }

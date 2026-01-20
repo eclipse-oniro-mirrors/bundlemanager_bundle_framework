@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2091,6 +2091,229 @@ HWTEST_F(BmsBundleDataGroupTest, DeleteUninstallTmpDirs_0001, Function | SmallTe
     std::vector<std::string> dirs;
     auto ret = InstalldClient::GetInstance()->DeleteUninstallTmpDirs(dirs);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IsModuleRemovable_0001
+ * @tc.name: test IsModuleRemovable
+ * @tc.desc: 1.Test IsModuleRemovable when bundleType is ATOMIC_SERVICE
+*/
+HWTEST_F(BmsBundleDataGroupTest, IsModuleRemovable_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string moduleName = "test";
+    int32_t userId = 100;
+    info.innerModuleInfos_[moduleName] = InnerModuleInfo();
+    info.innerModuleInfos_[moduleName].moduleName = moduleName;
+    info.innerModuleInfos_[moduleName].isRemovableSet.insert("#100");
+    info.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    bool isRemovable = true;
+    auto ret = info.IsModuleRemovable(moduleName, userId, isRemovable);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(isRemovable, false);
+}
+
+/**
+ * @tc.number: IsModuleRemovable_0002
+ * @tc.name: test IsModuleRemovable
+ * @tc.desc: 1.Test IsModuleRemovable when bundleType is ATOMIC_SERVICE and isRemovableSet is empty
+*/
+HWTEST_F(BmsBundleDataGroupTest, IsModuleRemovable_0002, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string moduleName = "test";
+    int32_t userId = 100;
+    info.innerModuleInfos_[moduleName] = InnerModuleInfo();
+    info.innerModuleInfos_[moduleName].moduleName = moduleName;
+    info.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    bool isRemovable = false;
+    auto ret = info.IsModuleRemovable(moduleName, userId, isRemovable);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(isRemovable, true);
+}
+
+/**
+ * @tc.number: IsModuleRemovable_0003
+ * @tc.name: test IsModuleRemovable
+ * @tc.desc: 1.Test IsModuleRemovable when bundleType is ATOMIC_SERVICE and isRemovableSet is empty
+*/
+HWTEST_F(BmsBundleDataGroupTest, IsModuleRemovable_0003, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string moduleName = "test";
+    int32_t userId = 100;
+    info.innerModuleInfos_[moduleName] = InnerModuleInfo();
+    info.innerModuleInfos_[moduleName].moduleName = moduleName;
+    info.innerModuleInfos_[moduleName].isRemovable.emplace(std::to_string(userId), false);
+    info.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    bool isRemovable = true;
+    auto ret = info.IsModuleRemovable(moduleName, userId, isRemovable);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(isRemovable, false);
+}
+
+/**
+ * @tc.number: GetRequiredDeviceFeatures_0001
+ * @tc.name: test GetRequiredDeviceFeatures
+ * @tc.desc: 1.Test GetRequiredDeviceFeatures
+*/
+HWTEST_F(BmsBundleDataGroupTest, GetRequiredDeviceFeatures_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string packageName = "test";
+    EXPECT_TRUE(info.innerModuleInfos_.empty());
+    auto retMap = info.GetRequiredDeviceFeatures(packageName);
+    EXPECT_TRUE(retMap.empty());
+}
+
+/**
+ * @tc.number: GetRequiredDeviceFeatures_0002
+ * @tc.name: test GetRequiredDeviceFeatures
+ * @tc.desc: 1.Test GetRequiredDeviceFeatures
+*/
+HWTEST_F(BmsBundleDataGroupTest, GetRequiredDeviceFeatures_0002, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string packageName = "test";
+    info.innerModuleInfos_["test"] = InnerModuleInfo();
+    info.innerModuleInfos_["test"].requiredDeviceFeatures.emplace("test", std::vector<std::string>());
+    EXPECT_FALSE(info.innerModuleInfos_.empty());
+    auto retMap = info.GetRequiredDeviceFeatures(packageName);
+    EXPECT_FALSE(retMap.empty());
+}
+
+/**
+ * @tc.number: HandleOTACodeEncryption_0001
+ * @tc.name: test HandleOTACodeEncryption
+ * @tc.desc: 1.Test HandleOTACodeEncryption
+*/
+HWTEST_F(BmsBundleDataGroupTest, HandleOTACodeEncryption_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::vector<std::string> withoutKeyBundles;
+    std::vector<std::string> withKeyBundles;
+    innerBundleInfo.baseApplicationInfo_ = std::make_unique<ApplicationInfo>();
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::ATOMIC_SERVICE;
+    innerBundleInfo.baseApplicationInfo_->applicationReservedFlag = 1;
+
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = 100;
+    innerBundleUserInfos["_100"] = userInfo;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    innerBundleInfo.HandleOTACodeEncryption(withoutKeyBundles, withKeyBundles);
+    EXPECT_TRUE(withoutKeyBundles.empty());
+#ifdef USE_ARM64
+    EXPECT_TRUE(withKeyBundles.empty());
+#else
+    EXPECT_FALSE(withKeyBundles.empty());
+#endif
+}
+
+/**
+ * @tc.number: IsGwpAsanEnabled_0001
+ * @tc.name: test IsGwpAsanEnabled
+ * @tc.desc: 1.Test IsGwpAsanEnabled
+*/
+HWTEST_F(BmsBundleDataGroupTest, IsGwpAsanEnabled_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.innerModuleInfos_["test"] = InnerModuleInfo();
+    innerBundleInfo.innerModuleInfos_["test"].gwpAsanEnabled = true;
+    auto ret = innerBundleInfo.IsGwpAsanEnabled();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsTsanEnabled_0001
+ * @tc.name: test IsTsanEnabled
+ * @tc.desc: 1.Test IsTsanEnabled
+*/
+HWTEST_F(BmsBundleDataGroupTest, IsTsanEnabled_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.innerModuleInfos_["test"] = InnerModuleInfo();
+    innerBundleInfo.innerModuleInfos_["test"].tsanEnabled = true;
+    auto ret = innerBundleInfo.IsTsanEnabled();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SetCanUninstall_0001
+ * @tc.name: test SetCanUninstall
+ * @tc.desc: 1.Test SetCanUninstall
+*/
+HWTEST_F(BmsBundleDataGroupTest, SetCanUninstall_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo userInfo;
+    int32_t userId = 100;
+    userInfo.canUninstall = true;
+    userInfo.bundleUserInfo.userId = userId;
+    std::string bundleName = "test";
+    innerBundleInfo.baseApplicationInfo_->bundleName = bundleName;
+    innerBundleUserInfos["test_100"] = userInfo;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    bool state = true;
+    bool stateChange = true;
+    auto ret = innerBundleInfo.SetCanUninstall(0, state, stateChange);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = innerBundleInfo.SetCanUninstall(userId, state, stateChange);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(stateChange, false);
+    state = false;
+    ret = innerBundleInfo.SetCanUninstall(userId, state, stateChange);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(stateChange, true);
+}
+
+/**
+ * @tc.number: UpdatePluginBundleInfo_0001
+ * @tc.name: test UpdatePluginBundleInfo
+ * @tc.desc: 1.Test UpdatePluginBundleInfo
+*/
+HWTEST_F(BmsBundleDataGroupTest, UpdatePluginBundleInfo_0001, Function | MediumTest | Level1)
+{
+    PluginBundleInfo pluginBundleInfo;
+    pluginBundleInfo.pluginBundleName = "test";
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.pluginBundleInfos_.emplace(pluginBundleInfo.pluginBundleName, pluginBundleInfo);
+    auto ret = innerBundleInfo.UpdatePluginBundleInfo(pluginBundleInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SetInnerModuleAtomicResizeable_0001
+ * @tc.name: test SetInnerModuleAtomicResizeable
+ * @tc.desc: 1.Test SetInnerModuleAtomicResizeable
+*/
+HWTEST_F(BmsBundleDataGroupTest, SetInnerModuleAtomicResizeable_0001, Function | MediumTest | Level1)
+{
+    std::string moduleName = "test";
+    bool resizeable = true;
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "entry";
+    innerBundleInfo.innerModuleInfos_["entry"] = innerModuleInfo;
+    auto ret = innerBundleInfo.SetInnerModuleAtomicResizeable(moduleName, resizeable);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetInnerModuleInfoForEntry_0001
+ * @tc.name: test GetInnerModuleInfoForEntry
+ * @tc.desc: 1.Test GetInnerModuleInfoForEntry
+*/
+HWTEST_F(BmsBundleDataGroupTest, GetInnerModuleInfoForEntry_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = false;
+    innerModuleInfo.moduleName = "feature";
+    innerBundleInfo.innerModuleInfos_["feature"] = innerModuleInfo;
+    auto ret = innerBundleInfo.GetInnerModuleInfoForEntry();
+    EXPECT_EQ(ret, std::nullopt);
 }
 
 /**

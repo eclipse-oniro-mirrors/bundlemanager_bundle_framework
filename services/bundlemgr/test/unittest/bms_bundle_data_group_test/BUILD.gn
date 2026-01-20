@@ -175,6 +175,10 @@ ohos_unittest("BmsBundleDataGroupTest") {
     sources += user_auth
   }
 
+  if(current_cpu == "arm64") {
+    defines += [ "USE_ARM64" ]
+  }
+
   if (bms_device_info_manager_part_enabled) {
     external_deps += [
       "device_info_manager:distributed_device_profile_common",

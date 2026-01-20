@@ -275,7 +275,7 @@ void PerfProfile::Dump() const
         (abilityLoadEnd_ > abilityLoadStart_) || (bmsLoadEnd_ > bmsLoadStart_) || (amsLoadEnd_ > amsLoadStart_)) {
         APP_LOGD("start\n");
         if (bmsLoadEnd_ > bmsLoadStart_) {
-            APP_LOGD("BmsLoadTime: %{public}" PRId64 "(ms) \n", (bmsLoadEnd_ - bmsLoadStart_));
+            APP_LOGI_NOFUNC("BmsLoadTime: %{public}" PRId64 "(ms) \n", (bmsLoadEnd_ - bmsLoadStart_));
         }
         if (bundleScanEnd_ > bundleScanStart_) {
             APP_LOGD("BundleScanTime: %{public}" PRId64 "(ms) \n", (bundleScanEnd_ - bundleScanStart_));

@@ -79,6 +79,12 @@ const uint32_t ACCESS_TOKEN_ID = 1765341;
 const std::string TOKEN_BUNDLE = "tokenBundle";
 }  // namespace
 
+namespace Security {
+namespace AccessToken {
+    void SetErrCodeForTest(int32_t value);
+}
+}
+
 class BmsDataMgrTest : public testing::Test {
 public:
     BmsDataMgrTest();
@@ -3166,6 +3172,23 @@ HWTEST_F(BmsDataMgrTest, GetAppIdentifierAndAppIndex_0002, Function | MediumTest
 }
 
 /**
+ * @tc.number: GetAppIdentifierAndAppIndex_0003
+ * @tc.name: GetAppIdentifierAndAppIndex
+ * @tc.desc: test GetAppIdentifierAndAppIndex
+ */
+HWTEST_F(BmsDataMgrTest, GetAppIdentifierAndAppIndex_0003, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    uint32_t accessTokenId = 0;
+    std::string appIdentifier;
+    int32_t appIndex = 0;
+    Security::AccessToken::SetErrCodeForTest(-1);
+    ErrCode ret = bundleDataMgr.GetAppIdentifierAndAppIndex(accessTokenId, appIdentifier, appIndex);
+    Security::AccessToken::SetErrCodeForTest(0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ACCESS_TOKENID_NOT_EXIST);
+}
+
+/**
  * @tc.number: CreateBundleDataDir_0001
  * @tc.name: CreateBundleDataDir
  * @tc.desc: test CreateBundleDataDir(int32_t userId)
@@ -3656,6 +3679,22 @@ HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithSandboxByUid_0001, Function | Med
 }
 
 /**
+ * @tc.number: GetInnerBundleInfoWithSandboxByUid_0002
+ * @tc.name: GetInnerBundleInfoWithSandboxByUid
+ * @tc.desc: test GetInnerBundleInfoWithSandboxByUid(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithSandboxByUid_0002, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int uid = 0;
+    InnerBundleInfo innerBundleInfo;
+    std::string bundleName;
+    bundleDataMgr.sandboxAppHelper_ = nullptr;
+    ErrCode ret = bundleDataMgr.GetInnerBundleInfoWithSandboxByUid(uid, innerBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_UID);
+}
+
+/**
  * @tc.number: IsDisableState_0001
  * @tc.name: IsDisableState
  * @tc.desc: test IsDisableState(const InstallState state)
@@ -3761,6 +3800,30 @@ HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfos_0003, Function | MediumTest 
     std::vector<ExtensionAbilityInfo> extensionInfos;
     bool result = bundleDataMgr.QueryExtensionAbilityInfos(ExtensionAbilityType::FORM, userId, extensionInfos);
     EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_0004
+ * @tc.name: QueryExtensionAbilityInfos
+ * @tc.desc: test QueryExtensionAbilityInfos
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfos_0004, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    uint32_t flags = 0;
+    int32_t userId = Constants::ALL_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t appIndex = 0;
+    ErrCode ret = bundleDataMgr.QueryExtensionAbilityInfos(flags, userId, extensionInfos, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionInfos.emplace_back(extensionAbilityInfo);
+    ret = bundleDataMgr.QueryExtensionAbilityInfos(flags, userId, extensionInfos, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    bundleDataMgr.sandboxAppHelper_ = nullptr;
+    ret = bundleDataMgr.QueryExtensionAbilityInfos(flags, userId, extensionInfos, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 }
 
 /**
@@ -4306,6 +4369,24 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryCurExtensionInfos_0001, TestSize.Level1)
 }
 
 /**
+ * @tc.number: ImplicitQueryCurExtensionInfos_0002
+ * @tc.name: ImplicitQueryCurExtensionInfos
+ * @tc.desc: test ImplicitQueryCurExtensionInfos
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryCurExtensionInfos_0002, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    uint32_t flags = 0;
+    int32_t userId = 100;
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    bundleDataMgr.sandboxAppHelper_ = nullptr;
+    auto ret = bundleDataMgr.ImplicitQueryCurExtensionInfos(want, flags, userId, infos, appIndex);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: ImplicitQueryAllExtensionInfos_0001
  * @tc.name: ImplicitQueryAllExtensionInfos
  * @tc.desc: test BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t flags,
@@ -4333,6 +4414,25 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryAllExtensionInfos_0001, TestSize.Level1)
     bundleDataMgr.AddInnerBundleInfo(bundleName, info);
     bundleDataMgr.ImplicitQueryAllExtensionInfos(want, flags, userId, infos, appIndex);
     EXPECT_TRUE(bundleDataMgr.GetUserId(userId) != Constants::INVALID_USERID);
+}
+
+/**
+ * @tc.number: ImplicitQueryAllExtensionInfos_0002
+ * @tc.name: ImplicitQueryAllExtensionInfos
+ * @tc.desc: test ImplicitQueryAllExtensionInfos
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryAllExtensionInfos_0002, TestSize.Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    uint32_t flags = 0;
+    int32_t userId = 100;
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    ErrCode ret = bundleDataMgr.ImplicitQueryAllExtensionInfos(flags, userId, infos, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    bundleDataMgr.sandboxAppHelper_ = nullptr;
+    ret = bundleDataMgr.ImplicitQueryAllExtensionInfos(flags, userId, infos, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 }
 
 /**
@@ -8292,5 +8392,421 @@ HWTEST_F(BmsDataMgrTest, CheckBundleAndAbilityDisabled_0001, Function | MediumTe
     info.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
     ret = bundleDataMgr.CheckBundleAndAbilityDisabled(info, flags, userId);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_DISABLED);
+}
+
+/**
+ * @tc.number: GetAllBundleInfosV9_0001
+ * @tc.name: GetAllBundleInfosV9
+ * @tc.desc: test GetAllBundleInfosV9
+ */
+HWTEST_F(BmsDataMgrTest, GetAllBundleInfosV9_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY);
+    std::vector<BundleInfo> bundleInfos;
+    bundleDataMgr.bundleInfos_.clear();
+    ErrCode ret = bundleDataMgr.GetAllBundleInfosV9(flags, bundleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
+    bundleDataMgr.bundleInfos_.emplace("com.ohos.test", innerBundleInfo);
+    ret = bundleDataMgr.GetAllBundleInfosV9(flags, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::ENABLED;
+    EXPECT_NE(innerBundleInfo.baseApplicationInfo_, nullptr);
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
+    innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = true;
+    ret = bundleDataMgr.GetAllBundleInfosV9(flags, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    std::vector<BundleStorageStats> bundleStats;
+    bundleDataMgr.GetPreBundleSize("test", bundleStats);
+    flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLOUD_KIT);
+    innerBundleInfo.baseApplicationInfo_->cloudFileSyncEnabled = true;
+    ret = bundleDataMgr.GetAllBundleInfosV9(flags, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    innerBundleInfo.baseApplicationInfo_->cloudFileSyncEnabled = false;
+    innerBundleInfo.baseApplicationInfo_->cloudStructuredDataSyncEnabled = true;
+    ret = bundleDataMgr.GetAllBundleInfosV9(flags, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    innerBundleInfo.baseApplicationInfo_->cloudStructuredDataSyncEnabled = false;
+    ret = bundleDataMgr.GetAllBundleInfosV9(flags, bundleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetRecoverablePreInstallBundleInfos_0001
+ * @tc.name: GetRecoverablePreInstallBundleInfos
+ * @tc.desc: test GetRecoverablePreInstallBundleInfos
+ */
+HWTEST_F(BmsDataMgrTest, GetRecoverablePreInstallBundleInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int32_t userId = Constants::INVALID_USERID;
+    auto ret = bundleDataMgr.GetRecoverablePreInstallBundleInfos(userId);
+    EXPECT_TRUE(ret.empty());
+}
+
+/**
+ * @tc.number: CheckIsSystemAppByUid_0001
+ * @tc.name: CheckIsSystemAppByUid
+ * @tc.desc: test CheckIsSystemAppByUid
+ */
+HWTEST_F(BmsDataMgrTest, CheckIsSystemAppByUid_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    int uid = Constants::ROOT_UID;
+    bool ret = bundleDataMgr.CheckIsSystemAppByUid(uid);
+    EXPECT_TRUE(ret);
+    uid = ServiceConstants::BMS_UID;
+    ret = bundleDataMgr.CheckIsSystemAppByUid(uid);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DisableBundle_0001
+ * @tc.name: DisableBundle
+ * @tc.desc: test DisableBundle
+ */
+HWTEST_F(BmsDataMgrTest, DisableBundle_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    bool ret = bundleDataMgr.DisableBundle(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SetApplicationEnabled_0001
+ * @tc.name: SetApplicationEnabled
+ * @tc.desc: test SetApplicationEnabled
+ */
+HWTEST_F(BmsDataMgrTest, SetApplicationEnabled_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t appIndex = 1;
+    bool isEnable = true;
+    std::string caller;
+    int32_t userId = Constants::ALL_USERID;
+    InnerBundleInfo innerBundleInfo;
+    bundleDataMgr.bundleInfos_.emplace(bundleName, innerBundleInfo);
+    ErrCode ret = bundleDataMgr.SetApplicationEnabled(bundleName, appIndex, isEnable, caller, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetModuleRemovable_0001
+ * @tc.name: SetModuleRemovable
+ * @tc.desc: test SetModuleRemovable
+ */
+HWTEST_F(BmsDataMgrTest, SetModuleRemovable_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName;
+    std::string moduleName;
+    bool isEnable = false;
+    int32_t userId = Constants::INVALID_USERID;
+    int32_t callingUid = 0;
+    bool ret = bundleDataMgr.SetModuleRemovable(bundleName, moduleName, isEnable, userId, callingUid);
+    EXPECT_FALSE(ret);
+    bundleName = "com.ohos.test";
+    ret = bundleDataMgr.SetModuleRemovable(bundleName, moduleName, isEnable, userId, callingUid);
+    EXPECT_FALSE(ret);
+    moduleName = "test";
+    ret = bundleDataMgr.SetModuleRemovable(bundleName, moduleName, isEnable, userId, callingUid);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsModuleRemovable_0001
+ * @tc.name: IsModuleRemovable
+ * @tc.desc: test IsModuleRemovable
+ */
+HWTEST_F(BmsDataMgrTest, IsModuleRemovable_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName;
+    std::string moduleName;
+    bool isRemovable = false;
+    int32_t userId = Constants::INVALID_USERID;
+    ErrCode ret = bundleDataMgr.IsModuleRemovable(bundleName, moduleName, isRemovable, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    moduleName = "test";
+    ret = bundleDataMgr.IsModuleRemovable(bundleName, moduleName, isRemovable, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    bundleName = "com.ohos.test";
+    ret = bundleDataMgr.IsModuleRemovable(bundleName, moduleName, isRemovable, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: RegisterBundleEventCallback_0001
+ * @tc.name: RegisterBundleEventCallback
+ * @tc.desc: test RegisterBundleEventCallback
+ */
+HWTEST_F(BmsDataMgrTest, RegisterBundleEventCallback_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    sptr<IBundleEventCallback> bundleEventCallback = nullptr;
+    bool ret = bundleDataMgr.RegisterBundleEventCallback(bundleEventCallback);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetProvisionId_0001
+ * @tc.name: GetProvisionId
+ * @tc.desc: test GetProvisionId
+ */
+HWTEST_F(BmsDataMgrTest, GetProvisionId_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    std::string provisionId;
+    bool ret = bundleDataMgr.GetProvisionId(bundleName, provisionId);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetAppFeature_0001
+ * @tc.name: GetAppFeature
+ * @tc.desc: test GetAppFeature
+ */
+HWTEST_F(BmsDataMgrTest, GetAppFeature_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    std::string appFeature;
+    bool ret = bundleDataMgr.GetAppFeature(bundleName, appFeature);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetShortcutInfos_0001
+ * @tc.name: GetShortcutInfos
+ * @tc.desc: test GetShortcutInfos
+ */
+HWTEST_F(BmsDataMgrTest, GetShortcutInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName;
+    int32_t userId = Constants::INVALID_USERID;
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool ret = bundleDataMgr.GetShortcutInfos(bundleName, userId, shortcutInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetShortcutInfosByInnerBundleInfo_0001
+ * @tc.name: GetShortcutInfosByInnerBundleInfo
+ * @tc.desc: test GetShortcutInfosByInnerBundleInfo
+ */
+HWTEST_F(BmsDataMgrTest, GetShortcutInfosByInnerBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    InnerBundleInfo info;
+    info.isNewVersion_ = true;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.entryAbilityKey = "testAbility";
+    info.innerModuleInfos_.emplace("testModule", innerModuleInfo);
+    InnerAbilityInfo innerAbilityInfo;
+    info.baseAbilityInfos_.emplace("testAbility", innerAbilityInfo);
+    std::vector<ShortcutInfo> shortcutInfos;
+    bool ret = bundleDataMgr.GetShortcutInfosByInnerBundleInfo(info, shortcutInfos);
+    EXPECT_FALSE(ret);
+    info.baseAbilityInfos_.clear();
+    Metadata metadata;
+    innerAbilityInfo.metadata.emplace_back(metadata);
+    info.baseAbilityInfos_.emplace("testAbility", innerAbilityInfo);
+    ret = bundleDataMgr.GetShortcutInfosByInnerBundleInfo(info, shortcutInfos);
+    EXPECT_FALSE(ret);
+    info.baseAbilityInfos_.clear();
+    innerAbilityInfo.hapPath = "testPath";
+    info.baseAbilityInfos_.emplace("testAbility", innerAbilityInfo);
+    ret = bundleDataMgr.GetShortcutInfosByInnerBundleInfo(info, shortcutInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SavePreInstallBundleInfo_0001
+ * @tc.name: SavePreInstallBundleInfo
+ * @tc.desc: test SavePreInstallBundleInfo
+ */
+HWTEST_F(BmsDataMgrTest, SavePreInstallBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName;
+    PreInstallBundleInfo preInstallBundleInfo;
+    bundleDataMgr.preInstallDataStorage_ = nullptr;
+    bool ret = bundleDataMgr.SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DeletePreInstallBundleInfo_0001
+ * @tc.name: DeletePreInstallBundleInfo
+ * @tc.desc: test DeletePreInstallBundleInfo
+ */
+HWTEST_F(BmsDataMgrTest, DeletePreInstallBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName;
+    PreInstallBundleInfo preInstallBundleInfo;
+    bundleDataMgr.preInstallDataStorage_ = nullptr;
+    bool ret = bundleDataMgr.DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetPreInstallBundleInfo_0001
+ * @tc.name: GetPreInstallBundleInfo
+ * @tc.desc: test GetPreInstallBundleInfo
+ */
+HWTEST_F(BmsDataMgrTest, GetPreInstallBundleInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    PreInstallBundleInfo preInstallBundleInfo;
+    bundleDataMgr.preInstallDataStorage_ = nullptr;
+    bool ret = bundleDataMgr.GetPreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: LoadAllPreInstallBundleInfos_0001
+ * @tc.name: LoadAllPreInstallBundleInfos
+ * @tc.desc: test LoadAllPreInstallBundleInfos
+ */
+HWTEST_F(BmsDataMgrTest, LoadAllPreInstallBundleInfos_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos;
+    bundleDataMgr.preInstallDataStorage_ = nullptr;
+    bool ret = bundleDataMgr.LoadAllPreInstallBundleInfos(preInstallBundleInfos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetInnerBundleUserInfoByUserId_0001
+ * @tc.name: GetInnerBundleUserInfoByUserId
+ * @tc.desc: test GetInnerBundleUserInfoByUserId
+ */
+HWTEST_F(BmsDataMgrTest, GetInnerBundleUserInfoByUserId_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string bundleName = "com.ohos.test";
+    int32_t userId = Constants::ALL_USERID;
+    InnerBundleUserInfo innerBundleUserInfo;
+    bundleDataMgr.bundleInfos_.clear();
+    bool ret = bundleDataMgr.GetInnerBundleUserInfoByUserId(bundleName, userId, innerBundleUserInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosByExtensionTypeName_0001
+ * @tc.name: QueryExtensionAbilityInfosByExtensionTypeName
+ * @tc.desc: test QueryExtensionAbilityInfosByExtensionTypeName
+ */
+HWTEST_F(BmsDataMgrTest, QueryExtensionAbilityInfosByExtensionTypeName_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    std::string typeName;
+    uint32_t flags = 0;
+    int32_t userId = Constants::INVALID_USERID;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t appIndex = 0;
+    ErrCode ret = bundleDataMgr.QueryExtensionAbilityInfosByExtensionTypeName(
+        typeName, flags, userId, extensionInfos, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    userId = Constants::ALL_USERID;
+    ret = bundleDataMgr.QueryExtensionAbilityInfosByExtensionTypeName(
+        typeName, flags, userId, extensionInfos, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    bundleDataMgr.sandboxAppHelper_ = nullptr;
+    ret = bundleDataMgr.QueryExtensionAbilityInfosByExtensionTypeName(
+        typeName, flags, userId, extensionInfos, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: ExplicitQueryExtensionInfo_0001
+ * @tc.name: ExplicitQueryExtensionInfo
+ * @tc.desc: test ExplicitQueryExtensionInfo
+ */
+HWTEST_F(BmsDataMgrTest, ExplicitQueryExtensionInfo_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    ElementName elementName;
+    elementName.bundleName_ = "com.ohos.test";
+    want.SetElement(elementName);
+    int32_t flags = 0;
+    int32_t userId = Constants::ALL_USERID;
+    ExtensionAbilityInfo extensionInfo;
+    int32_t appIndex = 0;
+    bundleDataMgr.bundleInfos_.clear();
+    bool ret = bundleDataMgr.ExplicitQueryExtensionInfo(want, flags, userId, extensionInfo, appIndex);
+    EXPECT_FALSE(ret);
+    appIndex = Constants::INITIAL_SANDBOX_APP_INDEX;
+    ret = bundleDataMgr.ExplicitQueryExtensionInfo(want, flags, userId, extensionInfo, appIndex);
+    EXPECT_FALSE(ret);
+    InnerBundleInfo innerBundleInfo;
+    bundleDataMgr.bundleInfos_.emplace(elementName.bundleName_, innerBundleInfo);
+    ret = bundleDataMgr.ExplicitQueryExtensionInfo(want, flags, userId, extensionInfo, appIndex);
+    EXPECT_FALSE(ret);
+    appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    ret = bundleDataMgr.ExplicitQueryExtensionInfo(want, flags, userId, extensionInfo, appIndex);
+    EXPECT_FALSE(ret);
+    bundleDataMgr.sandboxAppHelper_ = nullptr;
+    ret = bundleDataMgr.ExplicitQueryExtensionInfo(want, flags, userId, extensionInfo, appIndex);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ExplicitQueryExtensionInfoV9_0001
+ * @tc.name: ExplicitQueryExtensionInfoV9
+ * @tc.desc: test ExplicitQueryExtensionInfoV9
+ */
+HWTEST_F(BmsDataMgrTest, ExplicitQueryExtensionInfoV9_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    int32_t flags = 0;
+    int32_t userId = Constants::INVALID_USERID;
+    ExtensionAbilityInfo extensionInfo;
+    int32_t appIndex = 0;
+    ErrCode ret = bundleDataMgr.ExplicitQueryExtensionInfoV9(want, flags, userId, extensionInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    userId = Constants::ALL_USERID;
+    appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    ret = bundleDataMgr.ExplicitQueryExtensionInfoV9(want, flags, userId, extensionInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    bundleDataMgr.sandboxAppHelper_ = nullptr;
+    ret = bundleDataMgr.ExplicitQueryExtensionInfoV9(want, flags, userId, extensionInfo, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: ImplicitQueryCurExtensionInfosV9_0001
+ * @tc.name: ImplicitQueryCurExtensionInfosV9
+ * @tc.desc: test ImplicitQueryCurExtensionInfosV9
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryCurExtensionInfosV9_0001, Function | MediumTest | Level1)
+{
+    BundleDataMgr bundleDataMgr;
+    Want want;
+    int32_t flags = 0;
+    int32_t userId = Constants::ALL_USERID;
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t appIndex = 0;
+    appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+    bundleDataMgr.ImplicitQueryAllExtensionInfosV9(want, flags, userId, infos, appIndex);
+    ErrCode ret = bundleDataMgr.ImplicitQueryCurExtensionInfosV9(want, flags, userId, infos, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    bundleDataMgr.sandboxAppHelper_ = nullptr;
+    bundleDataMgr.ImplicitQueryAllExtensionInfos(want, flags, userId, infos, appIndex);
+    bundleDataMgr.ImplicitQueryAllExtensionInfosV9(want, flags, userId, infos, appIndex);
+    ret = bundleDataMgr.ImplicitQueryCurExtensionInfosV9(want, flags, userId, infos, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 }
 } // OHOS

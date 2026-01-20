@@ -211,8 +211,8 @@ constexpr const char* HYBRID_SPAWN_UNIFIED = "persist.appspawn.hybridspawn.unifi
 constexpr const char* IS_APP_CLONE_DISABLE = "persist.edm.app_clone_disable";
 constexpr const char* ENTERPRISE_SPACE_ENABLE = "persist.space_mgr_service.enterprise_space_enable";
 constexpr const char* ENTERPRISE_SPACE_USER_ID_LIST = "persist.space_mgr_service.enterprise_workspace_userid_list";
-constexpr const char* RELABLE_PARAM = "persist.bms.relabel";
-constexpr const char* SYSTEM_DEVICE_TYPE = "const.product.devicetype";
+constexpr const char* RELABEL_PARAM = "persist.bms.test.relabel";
+constexpr const char* BMS_RELABEL_PARAM = "const.bms.relabel";
 //extResource
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 // hmdfs and sharefs config

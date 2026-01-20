@@ -747,7 +747,7 @@ bool BundleCloneInstaller::DeleteUninstallCloneBundleInfo(const std::string &bun
 
 void BundleCloneInstaller::StopRelable(const InnerBundleInfo &info, int32_t uid)
 {
-    if (OHOS::system::GetParameter(ServiceConstants::SYSTEM_DEVICE_TYPE, "") != "phone") {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
         return;
     }
     CreateDirParam param;
@@ -756,6 +756,7 @@ void BundleCloneInstaller::StopRelable(const InnerBundleInfo &info, int32_t uid)
     param.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     param.apl = info.GetAppPrivilegeLevel();
     param.isPreInstallApp = info.IsPreInstallApp();
+    param.stopReason = "ProcessCloneBundleUninstall";
     InstalldClient::GetInstance()->StopSetFileCon(param, ServiceConstants::StopReason::DELETE);
 }
 } // AppExecFwk

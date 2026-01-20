@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -72,6 +72,88 @@ const int32_t CLONE_APP_INDEX_MAX = 6;
 const int32_t APP_INDEX = 1;
 const int32_t UNSPECIFIED_USERID = -2;
 }  // namespace
+
+class MockAppControlHost : public AppControlHost {
+public:
+    MockAppControlHost() = default;
+    virtual ~MockAppControlHost() = default;
+
+    virtual ErrCode AddAppInstallControlRule(const std::vector<std::string> &appIds,
+        const AppInstallControlRuleType controlRuleType, int32_t userId)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType,
+        const std::vector<std::string> &appIds, int32_t userId)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType, int32_t userId)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode GetAppInstallControlRule(
+        const AppInstallControlRuleType controlRuleType, int32_t userId, std::vector<std::string> &appIds)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode DeleteAppRunningControlRule(int32_t userId)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds, bool &allowRunning)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode GetAppRunningControlRule(
+        const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode ConfirmAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
+        int32_t userId)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode GetAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
+        int32_t userId, AppJumpControlRule &controlRule)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode GetDisposedStatus(
+        const std::string &appId, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode GetDisposedRule(
+        const std::string &appId, DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode GetDisposedRules(
+        int32_t userId, std::vector<DisposedRuleConfiguration>& disposedRuleConfigurations)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode GetAbilityRunningControlRule(const std::string &bundleName, int32_t userId,
+        std::vector<DisposedRule>& disposedRules, int32_t appIndex = Constants::MAIN_APP_INDEX)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode GetDisposedRuleForCloneApp(const std::string &appId, DisposedRule& disposedRule,
+        int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_OK;
+    }
+};
 
 class BmsBundleAppControlTest : public testing::Test {
 public:
@@ -5053,5 +5135,399 @@ HWTEST_F(BmsBundleAppControlTest, GetCallerByUid_0200, Function | SmallTest | Le
     std::string callerName;
     impl->GetCallerByUid(userInfo.uid, callerName);
     EXPECT_EQ(callerName, CLONE_CALLER_NAME);
+}
+
+/**
+ * @tc.number: HandleAddAppInstallControlRule_0100
+ * @tc.name: test HandleAddAppInstallControlRule by AppControlHost
+ * @tc.desc: 1.HandleAddAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleAddAppInstallControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    int32_t size = 0;
+    data.WriteInt32(size);
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleAddAppInstallControlRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+
+    size = AppControlConstants::LIST_MAX_SIZE + 1;
+    MessageParcel data2;
+    data2.WriteInt32(size);
+    res = appControlHost->HandleAddAppInstallControlRule(data2, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    
+    size = -1;
+    MessageParcel data3;
+    data3.WriteInt32(size);
+    res = appControlHost->HandleAddAppInstallControlRule(data3, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: HandleDeleteAppInstallControlRule_0100
+ * @tc.name: test HandleDeleteAppInstallControlRule by AppControlHost
+ * @tc.desc: 1.HandleDeleteAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleDeleteAppInstallControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    int32_t size = 0;
+    data.WriteInt32(size);
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleDeleteAppInstallControlRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleCleanAppInstallControlRule_0100
+ * @tc.name: test HandleCleanAppInstallControlRule by AppControlHost
+ * @tc.desc: 1.HandleCleanAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleCleanAppInstallControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleCleanAppInstallControlRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetAppInstallControlRule_0100
+ * @tc.name: test HandleGetAppInstallControlRule by AppControlHost
+ * @tc.desc: 1.HandleGetAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetAppInstallControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleGetAppInstallControlRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleCleanAppRunningControlRule_0100
+ * @tc.name: test HandleCleanAppRunningControlRule by AppControlHost
+ * @tc.desc: 1.HandleCleanAppRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleCleanAppRunningControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleCleanAppRunningControlRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetAppRunningControlRule_0100
+ * @tc.name: test HandleGetAppRunningControlRule by AppControlHost
+ * @tc.desc: 1.HandleGetAppRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetAppRunningControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleGetAppRunningControlRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetAppRunningControlRule_0200
+ * @tc.name: test HandleGetAppRunningControlRuleResult by AppControlHost
+ * @tc.desc: 1.HandleGetAppRunningControlRuleResult test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetAppRunningControlRule_0200, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(BUNDLE_NAME);
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleGetAppRunningControlRuleResult(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleConfirmAppJumpControlRule_0100
+ * @tc.name: test HandleConfirmAppJumpControlRule by AppControlHost
+ * @tc.desc: 1.HandleConfirmAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleConfirmAppJumpControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(CALLER_BUNDLE_NAME);
+    data.WriteString(TARGET_BUNDLE_NAME);
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleConfirmAppJumpControlRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleDeleteRuleByCallerBundleName_0100
+ * @tc.name: test HandleDeleteRuleByCallerBundleName by AppControlHost
+ * @tc.desc: 1.HandleDeleteRuleByCallerBundleName test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleDeleteRuleByCallerBundleName_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(CALLER_BUNDLE_NAME);
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleDeleteRuleByCallerBundleName(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleDeleteRuleByTargetBundleName_0100
+ * @tc.name: test HandleDeleteRuleByTargetBundleName by AppControlHost
+ * @tc.desc: 1.HandleDeleteRuleByTargetBundleName test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleDeleteRuleByTargetBundleName_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(TARGET_BUNDLE_NAME);
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleDeleteRuleByTargetBundleName(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetAppJumpControlRule_0100
+ * @tc.name: test HandleGetAppRunningControlRuleResult by AppControlHost
+ * @tc.desc: 1.HandleGetAppRunningControlRuleResult test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetAppJumpControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(CALLER_BUNDLE_NAME);
+    data.WriteString(TARGET_BUNDLE_NAME);
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleGetAppRunningControlRuleResult(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetDisposedStatus_0100
+ * @tc.name: test HandleGetDisposedStatus by AppControlHost
+ * @tc.desc: 1.HandleGetDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetDisposedStatus_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(APPID);
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleGetDisposedStatus(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetDisposedRule_0100
+ * @tc.name: test HandleGetDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleGetDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetDisposedRule_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleGetDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetDisposedRule_0200
+ * @tc.name: test HandleGetDisposedRules by AppControlHost
+ * @tc.desc: 1.HandleGetDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetDisposedRule_0200, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleGetDisposedRules(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetAbilityRunningControlRule_0100
+ * @tc.name: test HandleGetAbilityRunningControlRule by AppControlHost
+ * @tc.desc: 1.HandleGetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetAbilityRunningControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(BUNDLE_NAME);
+    data.WriteInt32(USERID);
+    data.WriteInt32(APP_INDEX);
+    auto res = appControlHost->HandleGetAbilityRunningControlRule(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetDisposedRuleForCloneApp_0100
+ * @tc.name: test HandleGetDisposedRuleForCloneApp by AppControlHost
+ * @tc.desc: 1.HandleGetDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleGetDisposedRuleForCloneApp_0100, Function | SmallTest | Level1)
+{
+    sptr<MockAppControlHost> appControlHost(new MockAppControlHost());
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(APPID);
+    data.WriteInt32(USERID);
+    data.WriteInt32(APP_INDEX);
+    auto res = appControlHost->HandleGetDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleSetDisposedRules_0100
+ * @tc.name: test HandleSetDisposedRules by AppControlHost
+ * @tc.desc: 1.HandleSetDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleSetDisposedRules_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    DisposedRuleConfiguration configuration;
+    disposedRuleConfigurations.emplace_back(configuration);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageParcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
+    tempParcel.WriteInt32(static_cast<int32_t>(disposedRuleConfigurations.size()));
+
+    for (auto &parcel : disposedRuleConfigurations) {
+        tempParcel.WriteParcelable(&parcel);
+    }
+    data.WriteUint32(tempParcel.GetDataSize());
+    data.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), tempParcel.GetDataSize());
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleSetDisposedRules(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleSetDisposedRules_0200
+ * @tc.name: test HandleSetDisposedRules by AppControlHost
+ * @tc.desc: 1.HandleSetDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleSetDisposedRules_0200, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.resize(1001);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageParcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
+    tempParcel.WriteInt32(static_cast<int32_t>(disposedRuleConfigurations.size()));
+
+    for (auto &parcel : disposedRuleConfigurations) {
+        tempParcel.WriteParcelable(&parcel);
+    }
+    data.WriteUint32(tempParcel.GetDataSize());
+    data.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), tempParcel.GetDataSize());
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleSetDisposedRules(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: HandleDeleteDisposedRules_0100
+ * @tc.name: test HandleDeleteDisposedRules by AppControlHost
+ * @tc.desc: 1.HandleDeleteDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleDeleteDisposedRules_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    DisposedRuleConfiguration configuration;
+    disposedRuleConfigurations.emplace_back(configuration);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageParcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
+    tempParcel.WriteInt32(static_cast<int32_t>(disposedRuleConfigurations.size()));
+
+    for (auto &parcel : disposedRuleConfigurations) {
+        tempParcel.WriteParcelable(&parcel);
+    }
+    data.WriteUint32(tempParcel.GetDataSize());
+    data.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), tempParcel.GetDataSize());
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleDeleteDisposedRules(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleDeleteDisposedRules_0200
+ * @tc.name: test HandleDeleteDisposedRules by AppControlHost
+ * @tc.desc: 1.HandleDeleteDisposedRules test
+ */
+HWTEST_F(BmsBundleAppControlTest, HandleDeleteDisposedRules_0200, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    disposedRuleConfigurations.resize(1001);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageParcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
+    tempParcel.WriteInt32(static_cast<int32_t>(disposedRuleConfigurations.size()));
+
+    for (auto &parcel : disposedRuleConfigurations) {
+        tempParcel.WriteParcelable(&parcel);
+    }
+    data.WriteUint32(tempParcel.GetDataSize());
+    data.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), tempParcel.GetDataSize());
+    data.WriteInt32(USERID);
+    auto res = appControlHost->HandleDeleteDisposedRules(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 } // OHOS

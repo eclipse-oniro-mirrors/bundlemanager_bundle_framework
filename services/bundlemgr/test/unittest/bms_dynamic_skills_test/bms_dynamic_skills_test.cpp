@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -346,10 +346,17 @@ HWTEST_F(BmsDynamicSkillsTest, SetAbilityFileTypesForSelf_1000, Function | Small
     InnerBundleInfo info;
     info.AppendDynamicSkillsToAbilityIfExist(abilityInfo);
 
-    std::string key = BundleUtil::GetAbilityKey(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME);
-    info.dynamicSkills_ = {{key, BuildSkillsVector(1)}};
+    std::string bundleNameNoMatch = "test";
+    std::string key = BundleUtil::GetAbilityKey(bundleNameNoMatch, MODULE_NAME, ABILITY_NAME);
+    info.dynamicSkills_.emplace(key, BuildSkillsVector(1));
     info.AppendDynamicSkillsToAbilityIfExist(abilityInfo);
-    size_t expectSize = 2;
+    size_t expectSize = 1;
+    EXPECT_EQ(abilityInfo.skills.size(), expectSize);
+
+    key = BundleUtil::GetAbilityKey(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME);
+    info.dynamicSkills_.emplace(key, BuildSkillsVector(1));
+    info.AppendDynamicSkillsToAbilityIfExist(abilityInfo);
+    expectSize = 2;
     EXPECT_EQ(abilityInfo.skills.size(), expectSize);
 }
 
@@ -637,4 +644,4 @@ HWTEST_F(BmsDynamicSkillsTest, SetAbilityFileTypesForSelf_2500, Function | Small
     ret = installer.GetTempBundleInfo(tmpInfo);
     EXPECT_TRUE(ret);
 }
-}
+}

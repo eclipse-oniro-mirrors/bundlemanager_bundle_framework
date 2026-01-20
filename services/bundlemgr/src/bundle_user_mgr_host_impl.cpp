@@ -15,6 +15,7 @@
 
 #include "bundle_user_mgr_host_impl.h"
 
+#include <algorithm>
 #include <cstring>
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -164,7 +165,12 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BeforeCreateNewUser(userId);
-    OnCreateNewUser(userId, needToSkipPreBundleInstall, disallowList, allowList);
+    ErrCode res = OnCreateNewUser(userId, needToSkipPreBundleInstall, disallowList, allowList);
+    if (res != ERR_OK) {
+        APP_LOGE("OnCreateNewUser failed %{public}d %{public}d", userId, res);
+        InnerRemoveUser(userId, false);
+        return res;
+    }
     UninstallBackupUninstallList(userId, needToSkipPreBundleInstall);
     AfterCreateNewUser(userId);
     if (needToSkipPreBundleInstall) {
@@ -183,19 +189,19 @@ void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
     CreateArkStartupCacheDir(userId);
 }
 
-void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBundleInstall,
+ErrCode BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBundleInstall,
     const std::vector<std::string> &disallowList, const std::optional<std::vector<std::string>> &allowList)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     auto installer = GetBundleInstaller();
     if (installer == nullptr) {
         APP_LOGE("installer is nullptr");
-        return;
+        return ERR_APPEXECFWK_NULL_PTR;
     }
 
     if (dataMgr->HasUserId(userId)) {
@@ -208,7 +214,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBu
     if (!GetAllPreInstallBundleInfos(disallowList, userId, needToSkipPreBundleInstall,
         preInstallBundleInfos, allowList)) {
         APP_LOGE("GetAllPreInstallBundleInfos failed %{public}d", userId);
-        return;
+        return ERR_OK;
     }
     GetAdditionalBundleInfos(preInstallBundleInfos);
     g_installedHapNum = 0;
@@ -243,11 +249,17 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, bool needToSkipPreBu
         APP_LOGI("OnCreateNewUser wait complete");
     }
     CheckSystemHspInstallPath();
+    ErrCode res = CheckCriticalAppAreInstalled(userId, preInstallBundleInfos);
+    if (res != ERR_OK) {
+        APP_LOGE("CheckCriticalAppAreInstalled failed %{public}d", userId);
+        return res;
+    }
     // process keep alive bundle
     if (userId == Constants::START_USERID) {
         BMSEventHandler::ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
     }
     IPCSkeleton::SetCallingIdentity(identity);
+    return ERR_OK;
 }
 
 void BundleUserMgrHostImpl::BootFailError(const char *exceptionInfo)
@@ -750,6 +762,46 @@ bool BundleUserMgrHostImpl::DeleteReSignCert(int32_t userId)
         return false;
     }
     return (installer->DeleteReSignCert(userId) == ERR_OK);
+}
+
+ErrCode BundleUserMgrHostImpl::CheckCriticalAppAreInstalled(
+    int32_t userId, const std::set<PreInstallBundleInfo> &preInfos)
+{
+    if (userId < Constants::START_USERID) {
+        return ERR_OK;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_NULL_PTR;
+    }
+    std::vector<std::string> checkList;
+#ifdef WINDOW_ENABLE
+    if (Rosen::SceneBoardJudgement::IsSceneBoardEnabled()) {
+        checkList.push_back(Constants::SCENE_BOARD_BUNDLE_NAME);
+    } else {
+        checkList.push_back(ServiceConstants::LAUNCHER_BUNDLE_NAME);
+    }
+#endif
+    for (const auto &bundleName : checkList) {
+        bool foundInPreInfos = std::any_of(preInfos.begin(), preInfos.end(),
+            [&](const PreInstallBundleInfo &info) { return info.GetBundleName() == bundleName; });
+        if (!foundInPreInfos) {
+            APP_LOGI_NOFUNC("critical app %{public}s not in preInfos, skip", bundleName.c_str());
+            continue;
+        }
+        bool installed = false;
+        ErrCode res = dataMgr->IsBundleInstalled(bundleName, userId, Constants::MAIN_APP_INDEX, installed);
+        if (res != ERR_OK) {
+            APP_LOGE_NOFUNC("IsBundleInstalled failed %{public}d", res);
+            return res;
+        }
+        if (!installed) {
+            APP_LOGE_NOFUNC("no critical app %{public}s", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -17,6 +17,7 @@
 
 #include "account_helper.h"
 #include "app_log_tag_wrapper.h"
+#include "exception_util.h"
 #include "app_mgr_interface.h"
 #include "aot/aot_handler.h"
 #include "bms_extension_client.h"
@@ -2495,12 +2496,12 @@ bool BundleMgrHostImpl::DumpBundleInfo(
     jsonObject["userInfo"] = innerBundleUserInfos;
     jsonObject["appIdentifier"] = bundleInfo.signatureInfo.appIdentifier;
     jsonObject["pluginBundleInfos"] = pluginBundleInfos;
-    try {
-        result.append(jsonObject.dump(Constants::DUMP_INDENT));
-    } catch (const nlohmann::json::type_error &e) {
-        APP_LOGE("dump[%{public}s] failed: %{public}s", bundleName.c_str(), e.what());
+    std::string dumpResult;
+    if (!ExceptionUtil::GetInstance().SafeDump(jsonObject, dumpResult, Constants::DUMP_INDENT)) {
+        APP_LOGE_NOFUNC("dump %{public}s failed", bundleName.c_str());
         return false;
     }
+    result.append(dumpResult);
     result.append("\n");
     APP_LOGD("DumpBundleInfo success with bundleName %{public}s", bundleName.c_str());
     return true;
@@ -2531,12 +2532,12 @@ bool BundleMgrHostImpl::DumpShortcutInfo(
         result.append("\"shortcut\"");
         result.append(":\n");
         nlohmann::json jsonObject = info;
-        try {
-            result.append(jsonObject.dump(Constants::DUMP_INDENT));
-        } catch (const nlohmann::json::type_error &e) {
-            APP_LOGE("dump shortcut failed: %{public}s", e.what());
+        std::string dumpResult;
+        if (!ExceptionUtil::GetInstance().SafeDump(jsonObject, dumpResult, Constants::DUMP_INDENT)) {
+            APP_LOGE_NOFUNC("dump shortcut failed");
             return false;
         }
+        result.append(dumpResult);
         result.append("\n");
     }
     APP_LOGD("DumpShortcutInfo success with bundleName %{public}s", bundleName.c_str());
@@ -3716,12 +3717,12 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return false;
     }
     bool ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName);
     if (!ret) {
         APP_LOGE("query calling bundle name failed");
-        return ret;
+        return false;
     }
     APP_LOGD("calling bundleName is : %{public}s", bundleName.c_str());
     return ret;

@@ -124,7 +124,8 @@ enum class ExtensionAbilityType {
     RECENT_PHOTO = 506,
     AWC_WEBPAGE = 507,
     AWC_NEWSFEED = 508,
-    CONTENT_EMBED = 509
+    CONTENT_EMBED = 509,
+    EMBEDDED_CASHIER = 510
 };
 
 enum class CompileMode {
