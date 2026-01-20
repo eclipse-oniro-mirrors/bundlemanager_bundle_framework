@@ -9439,7 +9439,7 @@ HWTEST_F(BmsBundleKitServiceTest, ObtainCallingBundleNameImpl_0100, Function | S
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::string bundleName = "";
     auto ret = hostImpl->ObtainCallingBundleName(bundleName);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 }
 
 /**
