@@ -24,7 +24,7 @@
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-constexpr size_t CODE_MAX = 187;
+constexpr size_t CODE_MAX = 221;
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
@@ -38,7 +38,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
         MessageOption option;
         BundleMgrHost bundleMgrHost;
         bundleMgrHost.OnRemoteRequest(code, datas, reply, option);
-        bundleMgrHost.HandleGetDependentBundleInfo(datas, reply);
     }
     return true;
 }

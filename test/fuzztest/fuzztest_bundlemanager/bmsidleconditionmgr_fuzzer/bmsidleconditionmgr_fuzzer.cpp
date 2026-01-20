@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,51 +13,49 @@
  * limitations under the License.
  */
 
-#include "bmsbundlestreaminstallerhost_fuzzer.h"
-
 #include <cstddef>
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
 #define private public
-#include "bundle_stream_installer_host.h"
+#include "idle_condition_mgr.h"
+#include "bmsidleconditionmgr_fuzzer.h"
 #undef private
-#include "message_parcel.h"
 #include "securec.h"
 #include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-constexpr uint32_t CODE_MAX = 4;
-
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
-    MessageParcel datas;
-    std::u16string descriptor = BundleStreamInstallerHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    BundleStreamInstallerHost host;
     FuzzedDataProvider fdp(data, size);
-    uint8_t code = fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX);
-    host.Init();
-    host.OnRemoteRequest(code, datas, reply, option);
-    host.HandleCreateSharedBundleStream(datas, reply);
-    host.HandleCreateExtProfileFileStream(datas, reply);
-    host.HandleCreatePgoFileStream(datas, reply);
-    host.HandleCreateSignatureFileStream(datas, reply);
-    host.HandleCreateStream(datas, reply);
-    host.HandleInstall(datas, reply);
+    auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
+    int32_t userId = GenerateRandomUser(fdp);
+    idleMgr->OnScreenLocked();
+    idleMgr->OnScreenUnlocked();
+    idleMgr->OnUserUnlocked(userId);
+    idleMgr->OnUserStopping(userId);
+    idleMgr->OnPowerConnected();
+    idleMgr->OnPowerDisconnected();
+    idleMgr->HandleOnTrim(Memory::SystemMemoryLevel::UNKNOWN);
+    idleMgr->HandleOnTrim(Memory::SystemMemoryLevel::MEMORY_LEVEL_PURGEABLE);
+    idleMgr->HandleOnTrim(Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE);
+    idleMgr->HandleOnTrim(Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW);
+    idleMgr->HandleOnTrim(Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL);
+    idleMgr->IsBufferSufficient();
+    idleMgr->IsThermalSatisfied();
+    idleMgr->SetIsRelabeling();
+    idleMgr->CheckRelabelConditions(userId);
+    idleMgr->TryStartRelabel();
+    idleMgr->InterruptRelabel();
+    idleMgr->OnThermalLevelChanged(PowerMgr::ThermalLevel::WARM);
     return true;
 }
 }
 
-/* Fuzzer entry point */
+// Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    /* Run your code on data */
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }

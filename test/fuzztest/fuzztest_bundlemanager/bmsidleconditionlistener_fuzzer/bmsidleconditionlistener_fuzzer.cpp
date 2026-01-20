@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,51 +13,30 @@
  * limitations under the License.
  */
 
-#include "bmsbundlestreaminstallerhost_fuzzer.h"
-
 #include <cstddef>
 #include <cstdint>
 #include <fuzzer/FuzzedDataProvider.h>
 #define private public
-#include "bundle_stream_installer_host.h"
+#include "bmsidleconditionlistener_fuzzer.h"
+#include "idle_condition_listener.h"
 #undef private
-#include "message_parcel.h"
 #include "securec.h"
 #include "bms_fuzztest_util.h"
 
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-constexpr uint32_t CODE_MAX = 4;
-
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
-    MessageParcel datas;
-    std::u16string descriptor = BundleStreamInstallerHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    BundleStreamInstallerHost host;
-    FuzzedDataProvider fdp(data, size);
-    uint8_t code = fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX);
-    host.Init();
-    host.OnRemoteRequest(code, datas, reply, option);
-    host.HandleCreateSharedBundleStream(datas, reply);
-    host.HandleCreateExtProfileFileStream(datas, reply);
-    host.HandleCreatePgoFileStream(datas, reply);
-    host.HandleCreateSignatureFileStream(datas, reply);
-    host.HandleCreateStream(datas, reply);
-    host.HandleInstall(datas, reply);
+    IdleConditionListener idleConditionListener;
+    idleConditionListener.OnTrim(Memory::SystemMemoryLevel::UNKNOWN);
     return true;
 }
 }
 
-/* Fuzzer entry point */
+// Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
-    /* Run your code on data */
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }
