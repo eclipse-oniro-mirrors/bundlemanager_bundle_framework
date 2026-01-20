@@ -56,7 +56,7 @@ BmsUpdateSelinuxMgr::~BmsUpdateSelinuxMgr()
 
 ErrCode BmsUpdateSelinuxMgr::StartUpdateSelinuxLabel(const int32_t userId)
 {
-    APP_LOGI("start update selinux label -u %{public}d", userId);
+    APP_LOGI_NOFUNC("start update selinux label -u %{public}d", userId);
     needStop_.store(false);
     std::vector<BundleOptionInfo> bundleOptionInfos;
     ErrCode ret = idleManagerRdb_->GetAllBundle(userId, bundleOptionInfos);
@@ -65,7 +65,7 @@ ErrCode BmsUpdateSelinuxMgr::StartUpdateSelinuxLabel(const int32_t userId)
         return ret;
     }
     if (bundleOptionInfos.empty()) {
-        APP_LOGI("no bundles in rdb -u %{public}d", userId);
+        APP_LOGI_NOFUNC("no bundles in rdb -u %{public}d", userId);
         return ERR_OK;
     }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -89,8 +89,8 @@ ErrCode BmsUpdateSelinuxMgr::StartUpdateSelinuxLabel(const int32_t userId)
             std::lock_guard<std::mutex> lock(createDirParamMutex_);
             createDirParam_ = dirParam;
         }
-        APP_LOGI("start -n %{public}s -u %{public}d -i %{public}d", bundleOption.bundleName.c_str(),
-            bundleOption.userId, bundleOption.appIndex);
+        APP_LOGI_NOFUNC("UpdateSelinuxLabel start -n %{public}s -u %{public}d -i %{public}d",
+            bundleOption.bundleName.c_str(), bundleOption.userId, bundleOption.appIndex);
         auto ret = InstalldClient::GetInstance()->SetFileConForce(GetBundleDataPath(bundleOption.bundleName,
             bundleOption.userId, bundleOption.appIndex, dirParam.isContainsEl5Dir), dirParam);
         if (ret != ERR_OK) {
@@ -111,9 +111,9 @@ ErrCode BmsUpdateSelinuxMgr::StartUpdateSelinuxLabel(const int32_t userId)
 
 ErrCode BmsUpdateSelinuxMgr::StopUpdateSelinuxLabel(const int32_t reason, const std::string stopReason)
 {
-    APP_LOGI("stop update selinux label -r %{public}d -n %{public}s", reason, createDirParam_.bundleName.c_str());
+    APP_LOGI_NOFUNC("stop relabel -r %{public}d -n %{public}s", reason, createDirParam_.bundleName.c_str());
     if (needStop_.load()) {
-        APP_LOGI("already stoped -r %{public}d", reason);
+        APP_LOGI_NOFUNC("already stoped -r %{public}d", reason);
         return ERR_OK;
     }
     needStop_.store(true);
