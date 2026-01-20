@@ -15,6 +15,7 @@
 
 #include "bundle_data_mgr.h"
 
+#include <algorithm>
 #include <sys/stat.h>
 #include <tuple>
 
@@ -10456,14 +10457,13 @@ ErrCode BundleDataMgr::HandleDetermineCloneNumList(
                 bundleName.c_str(), static_cast<int32_t>(infoItem->second.GetMultiAppModeType()));
             continue;
         }
-        if (infoItem->second.GetMultiAppMaxCount() >= static_cast<int32_t>(cloneNum)) {
+        if (infoItem->second.GetMultiAppMaxCount() >= cloneNum) {
             APP_LOGW_NOFUNC("%{public}s cloneNum is smaller no need to refresh", bundleName.c_str());
             continue;
         }
         MultiAppModeData multiAppMode;
         multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
-        multiAppMode.maxCount =
-            ((cloneNum > Constants::CLONE_APP_INDEX_MAX) ? Constants::CLONE_APP_INDEX_MAX : cloneNum);
+        multiAppMode.maxCount = std::min(cloneNum, static_cast<uint32_t>(Constants::CLONE_APP_INDEX_MAX));
         infoItem->second.SetMultiAppMode(multiAppMode);
         if (!dataStorage_->SaveStorageBundleInfo(infoItem->second)) {
             APP_LOGW_NOFUNC("SaveStorageBundleInfo failed -n %{public}s", bundleName.c_str());
@@ -10472,6 +10472,17 @@ ErrCode BundleDataMgr::HandleDetermineCloneNumList(
     }
     APP_LOGI_NOFUNC("HandleDetermineCloneNumList end");
     return ERR_OK;
+}
+
+bool BundleDataMgr::GetMultiAppModeTypeByBundleName(const std::string &bundleName, MultiAppModeType &type)
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        return false;
+    }
+    type = item->second.GetMultiAppModeType();
+    return true;
 }
 
 void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const

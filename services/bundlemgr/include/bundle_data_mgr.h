@@ -1167,6 +1167,7 @@ public:
     void HandleOTACodeEncryption();
     ErrCode HandleDetermineCloneNumList(
         const std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList);
+    bool GetMultiAppModeTypeByBundleName(const std::string &bundleName, MultiAppModeType &type);
     bool HasAppOrAtomicServiceInUser(const std::string &bundleName, int32_t userId) const;
     bool GetAllAppAndAtomicServiceInUser(int32_t userId, std::vector<std::string> &bundleList) const;
 

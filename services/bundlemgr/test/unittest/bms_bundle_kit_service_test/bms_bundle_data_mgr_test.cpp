@@ -6346,6 +6346,36 @@ HWTEST_F(BmsBundleDataMgrTest, InnerGetAllAppProvisionInfo_0200, Function | Smal
 }
 
 /**
+ * @tc.number: GetMultiAppModeTypeByBundleName_0100
+ * @tc.name: test GetMultiAppModeTypeByBundleName
+ * @tc.desc: 1.Test the GetMultiAppModeTypeByBundleName
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetMultiAppModeTypeByBundleName_0100, Function | SmallTest | Level1)
+{
+    std::string testBundle5 = "com.test.bundle5";
+    InnerBundleInfo innerBundleInfo5;
+    innerBundleInfo5.SetApplicationBundleType(BundleType::APP);
+    innerBundleInfo5.SetAppIdentifier("testAppIdentifier5");
+    MultiAppModeData multiAppMode;
+    multiAppMode.multiAppModeType = MultiAppModeType::MULTI_INSTANCE;
+    multiAppMode.maxCount = 1;
+    innerBundleInfo5.SetMultiAppMode(multiAppMode);
+    InnerBundleUserInfo innerBundleUserInfo5;
+    innerBundleUserInfo5.bundleUserInfo.userId = 100;
+    innerBundleInfo5.innerBundleUserInfos_.emplace(testBundle5, innerBundleUserInfo5);
+    GetBundleDataMgr()->bundleInfos_.emplace(testBundle5, innerBundleInfo5);
+
+    MultiAppModeType installedBundleMultiAppModeType;
+    bool ret = GetBundleDataMgr()->GetMultiAppModeTypeByBundleName(testBundle5, installedBundleMultiAppModeType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(installedBundleMultiAppModeType, MultiAppModeType::MULTI_INSTANCE);
+
+    ret = GetBundleDataMgr()->GetMultiAppModeTypeByBundleName(
+        "com.test.bundle.notexist", installedBundleMultiAppModeType);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: HandleDetermineCloneNumList_0100
  * @tc.name: test HandleDetermineCloneNumList
  * @tc.desc: 1.Test the HandleDetermineCloneNumList
