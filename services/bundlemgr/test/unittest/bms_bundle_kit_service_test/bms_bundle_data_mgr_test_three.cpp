@@ -4064,4 +4064,21 @@ HWTEST_F(BmsBundleDataMgrTest3, GenerateBundleId_0100, Function | MediumTest | L
     ret = bundleDataMgr->GenerateBundleId(BUNDLE_TEST5, bundleId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLEID_EXCEED_MAX_NUMBER);
 }
+
+/**
+ * @tc.number: LauncherService_0100
+ * @tc.name: GetShortcutInfoByAppIndex bundle not exist
+ * @tc.desc: Should return bundle not exist error
+ */
+HWTEST_F(BmsBundleDataMgrTest3,LauncherService_0100, Function | MediumTest | Level1)
+{
+    auto launcherService = GetLauncherService();
+    ASSERT_NE(launcherService, nullptr);
+
+    std::vector<ShortcutInfo> shortcutInfos;
+    ErrCode ret = launcherService->GetShortcutInfoByAppIndex(
+        "not.exist.bundle", 0, shortcutInfos);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
 } // OHOS
