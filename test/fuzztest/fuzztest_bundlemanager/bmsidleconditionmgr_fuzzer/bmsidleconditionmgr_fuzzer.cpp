@@ -47,7 +47,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     idleMgr->SetIsRelabeling();
     idleMgr->CheckRelabelConditions(userId);
     idleMgr->TryStartRelabel();
-    idleMgr->InterruptRelabel();
+    std::string stopReason = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    idleMgr->InterruptRelabel(stopReason);
     idleMgr->OnThermalLevelChanged(PowerMgr::ThermalLevel::WARM);
     return true;
 }
