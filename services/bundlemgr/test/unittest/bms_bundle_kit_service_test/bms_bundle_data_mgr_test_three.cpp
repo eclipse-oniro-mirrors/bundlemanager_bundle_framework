@@ -4070,7 +4070,7 @@ HWTEST_F(BmsBundleDataMgrTest3, GenerateBundleId_0100, Function | MediumTest | L
  * @tc.name: GetShortcutInfoByAppIndex bundle not exist
  * @tc.desc: Should return bundle not exist error
  */
-HWTEST_F(BmsBundleDataMgrTest3,LauncherService_0100, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest3, LauncherService_0100, Function | MediumTest | Level1)
 {
     auto launcherService = GetLauncherService();
     ASSERT_NE(launcherService, nullptr);
