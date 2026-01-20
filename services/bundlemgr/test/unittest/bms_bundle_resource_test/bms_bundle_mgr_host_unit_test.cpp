@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,14 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string TEST_EMPTY_BUNDLE_NAME = "";
+const std::string TEST_BUNDLE_NAME = "com.example.testbundle";
+const std::string TEST_NETWORK_ID = "testnetworkid";
+constexpr int32_t TEST_BUNDLE_NAME_COUNT = 1;
+constexpr int32_t TEST_UID = 12345;
+constexpr int32_t TEST_WANT_COUNT = 1;
+}
 
 class BmsBundleMgrHostUnitTest : public testing::Test {
 public:
@@ -4113,6 +4121,122 @@ HWTEST_F(BmsBundleMgrHostUnitTest, OnRemoteRequest_2260, Function | SmallTest | 
     MessageOption option;
     ErrCode res = bundleMgrHost.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(res, UNKNOWN_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetBundleInfoWithIntFlagsV9_0100
+ * @tc.name: test the HandleGetBundleInfoWithIntFlagsV9
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetBundleInfoWithIntFlagsV9 when bundleName is not empty
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetBundleInfoWithIntFlagsV9_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(TEST_BUNDLE_NAME);
+    ErrCode res = bundleMgrHost.HandleGetBundleInfoWithIntFlagsV9(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetBundleInfoForException_0100
+ * @tc.name: test the HandleGetBundleInfoForException
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetBundleInfoForException when bundleName is not empty
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetBundleInfoForException_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(TEST_BUNDLE_NAME);
+    ErrCode res = bundleMgrHost.HandleGetBundleInfoForException(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleBatchGetBundleInfo_0100
+ * @tc.name: test the HandleBatchGetBundleInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleBatchGetBundleInfo when bundleNames is empty and bundleNameCount is not zero
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleBatchGetBundleInfo_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(TEST_BUNDLE_NAME_COUNT);
+    data.WriteString(TEST_EMPTY_BUNDLE_NAME);
+    ErrCode res = bundleMgrHost.HandleBatchGetBundleInfo(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: HandleBatchGetBundleInfo_0200
+ * @tc.name: test the HandleBatchGetBundleInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleBatchGetBundleInfo when bundleNames is not empty and bundleNameCount is not zero
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleBatchGetBundleInfo_0200, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(TEST_BUNDLE_NAME_COUNT);
+    data.WriteString(TEST_BUNDLE_NAME);
+    ErrCode res = bundleMgrHost.HandleBatchGetBundleInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetSimpleAppInfoForUid_0100
+ * @tc.name: test the HandleGetSimpleAppInfoForUid
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetSimpleAppInfoForUid when uidList is not empty
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetSimpleAppInfoForUid_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    std::vector<std::int32_t> uidList = { TEST_UID };
+    data.WriteInt32Vector(uidList);
+    ErrCode res = bundleMgrHost.HandleGetSimpleAppInfoForUid(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleBatchQueryAbilityInfos_0100
+ * @tc.name: test the HandleBatchQueryAbilityInfos
+ * @tc.desc: 1. system running normally
+ *           2. test HandleBatchQueryAbilityInfos when wantCount is valid but no wants
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleBatchQueryAbilityInfos_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteInt32(TEST_WANT_COUNT);
+    ErrCode res = bundleMgrHost.HandleBatchQueryAbilityInfos(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetDistributedBundleInfo_0100
+ * @tc.name: test the HandleGetDistributedBundleInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetDistributedBundleInfo when networkId and bundleName are not empty
+ */
+HWTEST_F(BmsBundleMgrHostUnitTest, HandleGetDistributedBundleInfo_0100, Function | SmallTest | Level0)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteString(TEST_NETWORK_ID);
+    data.WriteString(TEST_BUNDLE_NAME);
+    ErrCode res = bundleMgrHost.HandleGetDistributedBundleInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
 }
 } // namespace AppExecFwk
 } // namespace OHOS
