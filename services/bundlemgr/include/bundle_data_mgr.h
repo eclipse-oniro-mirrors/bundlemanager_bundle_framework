@@ -1031,7 +1031,7 @@ public:
         bool needSaveStorage = false);
     bool CreateAppGroupDir(const std::string &bundleName, int32_t userId);
     bool CreateAppGroupDir(const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfoMap,
-        int32_t userId, bool needCreateEl5Dir, DataDirEl dirEl = DataDirEl::NONE);
+        const CreateDirParam baseParam, bool needCreateEl5Dir, DataDirEl dirEl = DataDirEl::NONE);
     void CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId);
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap,
         std::unordered_set<int32_t> &uniqueIdSet) const;
@@ -1254,6 +1254,8 @@ public:
         std::vector<JsonProfileInfo> &profileInfos) const;
     ErrCode GetPluginExtensionInfo(const std::string &hostBundleName,
         const Want &want, const int32_t userId, ExtensionAbilityInfo &extensionInfo);
+    bool CheckDeveloperIdSameWithDataGroupIds(const std::unordered_set<std::string> &dataGroupIds,
+        const std::string &targetDeveloperId, int32_t userId) const;
     std::vector<CreateDirParam> GetAllExtensionDirsToUpdateSelinuxApl();
     ErrCode GetCreateDirParamByBundleOption(const BundleOptionInfo &optionInfo, CreateDirParam &dirParam) const;
     bool ProcessIdleInfo() const;
@@ -1453,10 +1455,11 @@ private:
         int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const;
     void CreateNewDataGroupInfo(const std::string &groupId, const int32_t userId,
         const DataGroupInfo &oldDataGroupInfo, DataGroupInfo &newDataGroupInfo);
-    ErrCode CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId);
-    ErrCode CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, int32_t userId,
+    ErrCode CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, const CreateDirParam baseParam);
+    ErrCode CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos, const CreateDirParam baseParam,
         bool needCreateEl5Dir, DataDirEl dirEl);
-    bool CreateAppGroupDir(const InnerBundleInfo &info, int32_t userId, DataDirEl dirEl = DataDirEl::NONE);
+    bool CreateAppGroupDir(const InnerBundleInfo &info, int32_t userId,
+        DataDirEl dirEl = DataDirEl::NONE);
 
     void PreProcessAnyUserFlag(const std::string &bundleName, int32_t& flags, int32_t &userId) const;
     void PostProcessAnyUserFlags(int32_t flags, int32_t userId,
