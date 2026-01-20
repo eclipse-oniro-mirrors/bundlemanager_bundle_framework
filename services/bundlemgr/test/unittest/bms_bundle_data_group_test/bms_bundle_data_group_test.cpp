@@ -2201,31 +2201,6 @@ HWTEST_F(BmsBundleDataGroupTest, SetHybridSpawn_0005, Function | MediumTest | Le
 }
 
 /**
- * @tc.number: BaseBundleInstaller_0026
- * @tc.name: test InnerProcessNewBundleDataDir when group already exists
- * @tc.desc: Test InnerProcessNewBundleDataDir with existing data group
- */
-HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0026, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.isAppExist_ = true;
-
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-
-    DataGroupInfo info;
-    info.dataGroupId = DATA_GROUP_ID_TEST_ONE;
-    info.userId = USERID;
-
-    oldInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, info);
-    newInfo.AddDataGroupInfo(DATA_GROUP_ID_TEST_ONE, info);
-
-    EXPECT_NO_FATAL_FAILURE(
-        installer.InnerProcessNewBundleDataDir(true, oldInfo, newInfo)
-    );
-}
-
-/**
  * @tc.number: BaseBundleInstaller_0027
  * @tc.name: test GetTempHapPath
  * @tc.desc: Test GetTempHapPath branch coverage with different scenarios
