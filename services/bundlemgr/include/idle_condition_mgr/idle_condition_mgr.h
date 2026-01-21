@@ -42,6 +42,7 @@ public:
     void OnThermalLevelChanged(PowerMgr::ThermalLevel level);
     void TryStartRelabel();
     void InterruptRelabel(const std::string stopReason);
+    void OnConfigChanged();
 
 private:
     bool CheckRelabelConditions(const int32_t userId);
@@ -49,16 +50,17 @@ private:
     bool IsThermalSatisfied();
     bool CheckInodeForCommericalDevice();
     bool SetIsRelabeling();
+    void ReloadParam();
 
 private:
     std::mutex mutex_;
     std::mutex stateMutex_;
 
     std::unordered_map<int32_t, std::atomic<bool>> userUnlockedMap_;
+    std::atomic<bool> featureEnabled_{true};
     std::atomic<bool> screenLocked_{false};
     std::atomic<bool> powerConnected_{false};
     std::atomic<bool> batterySatisfied_{false};
-    
     std::atomic<bool> isRelabeling_{false};
     std::atomic<bool> powerConnectedThreadActive_{false};
     std::shared_ptr<IdleConditionListener> idleConditionListener_;
