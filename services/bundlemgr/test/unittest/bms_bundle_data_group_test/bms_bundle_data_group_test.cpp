@@ -2422,4 +2422,138 @@ HWTEST_F(BmsBundleDataGroupTest, SetHybridSpawn_0005, Function | MediumTest | Le
     EXPECT_EQ(info.GetApplicationArkTSMode(), Constants::ARKTS_MODE_STATIC);
     dataMgr->bundleInfos_.erase("test");
 }
+
+/**
+ * @tc.number: BaseBundleInstaller_0027
+ * @tc.name: test GetTempHapPath
+ * @tc.desc: Test GetTempHapPath branch coverage with different scenarios
+ */
+HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0027, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+
+    const std::string moduleName = "entry";
+    info.SetCurrentModulePackage(moduleName);
+
+    moduleInfo.hapPath = "/data/app/entry/test.hap";
+    moduleInfos.clear();
+    moduleInfos[moduleName] = moduleInfo;
+    info.AddInnerModuleInfo(moduleInfos);
+
+    installer.isFeatureNeedUninstall_ = true;
+    std::string result = installer.GetTempHapPath(info);
+    EXPECT_FALSE(result.empty());
+
+    installer.isFeatureNeedUninstall_ = false;
+    installer.installedModules_.clear();
+    installer.installedModules_[moduleName] = false;
+
+    result = installer.GetTempHapPath(info);
+    EXPECT_FALSE(result.empty());
+    EXPECT_EQ(result.find(ServiceConstants::TMP_SUFFIX), std::string::npos);
+
+    installer.installedModules_[moduleName] = true;
+    result = installer.GetTempHapPath(info);
+    EXPECT_FALSE(result.empty());
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0028
+ * @tc.name: test IsBundleEncrypted when encrypted module not updated
+ * @tc.desc: Test IsBundleEncrypted returns false when old encrypted module is not updated
+ */
+HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0028, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+
+    InnerBundleInfo oldInfo;
+    InnerModuleInfo encryptedModule;
+    std::map<std::string, InnerModuleInfo> oldModules;
+
+    const std::string encryptedModuleName = "encryptedA";
+
+    encryptedModule.modulePackage = encryptedModuleName;
+    encryptedModule.isEncrypted = true;
+    oldModules[encryptedModuleName] = encryptedModule;
+
+    oldInfo.AddInnerModuleInfo(oldModules);
+    oldInfo.SetCurrentModulePackage(encryptedModuleName);
+    installer.versionCode_ = oldInfo.GetVersionCode();
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+
+    InnerBundleInfo newInstalledInfo;
+    InnerModuleInfo normalModule;
+    std::map<std::string, InnerModuleInfo> newModules;
+
+    const std::string normalModuleName = "normalB";
+
+    normalModule.modulePackage = normalModuleName;
+    normalModule.isEncrypted = false;
+    newModules[normalModuleName] = normalModule;
+
+    newInstalledInfo.AddInnerModuleInfo(newModules);
+    newInstalledInfo.SetCurrentModulePackage(normalModuleName);
+
+    infos[normalModuleName] = newInstalledInfo;
+
+    InnerBundleInfo newInfo = newInstalledInfo;
+    EXPECT_FALSE(installer.IsBundleEncrypted(infos, oldInfo, newInfo));
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0029
+ * @tc.name: test IsBundleEncrypted when all encrypted modules updated
+ * @tc.desc: Test IsBundleEncrypted returns true when all encrypted modules are updated
+ */
+HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0029, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+
+    InnerBundleInfo oldInfo;
+    InnerModuleInfo encryptedModule;
+    std::map<std::string, InnerModuleInfo> oldModules;
+
+    const std::string moduleName = "encryptedA";
+
+    encryptedModule.modulePackage = moduleName;
+    encryptedModule.isEncrypted = true;
+    oldModules[moduleName] = encryptedModule;
+
+    oldInfo.AddInnerModuleInfo(oldModules);
+    oldInfo.SetCurrentModulePackage(moduleName);
+    installer.versionCode_ = oldInfo.GetVersionCode();
+    
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo updatedInfo;
+    updatedInfo.AddInnerModuleInfo(oldModules);
+    updatedInfo.SetCurrentModulePackage(moduleName);
+
+    infos[moduleName] = updatedInfo;
+    InnerBundleInfo newInfo = updatedInfo;
+
+    EXPECT_TRUE(installer.IsBundleEncrypted(infos, oldInfo, newInfo));
+}
+
+/**
+ * @tc.number: BaseBundleInstaller_0030
+ * @tc.name: test IsBundleEncrypted when old has no encrypted module
+ * @tc.desc: Test IsBundleEncrypted returns false when old bundle has no encrypted modules
+ */
+HWTEST_F(BmsBundleDataGroupTest, BaseBundleInstaller_0030, Function | MediumTest | Level1)
+{
+    BaseBundleInstaller installer;
+
+    InnerBundleInfo oldInfo;
+
+    installer.versionCode_ = oldInfo.GetVersionCode();
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo newInfo;
+    
+    EXPECT_FALSE(installer.IsBundleEncrypted(infos, oldInfo, newInfo));
+}
 } // OHOS
