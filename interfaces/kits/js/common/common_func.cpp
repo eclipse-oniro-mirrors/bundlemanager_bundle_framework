@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2136,6 +2136,11 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, bundleInfo.versionName.c_str(), NAPI_AUTO_LENGTH, &nVersionName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "versionName", nVersionName));
+
+    napi_value nBuildVersion;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, bundleInfo.buildVersion.c_str(), NAPI_AUTO_LENGTH, &nBuildVersion));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "buildVersion", nBuildVersion));
 
     napi_value nMinCompatibleVersionCode;
     NAPI_CALL_RETURN_VOID(
