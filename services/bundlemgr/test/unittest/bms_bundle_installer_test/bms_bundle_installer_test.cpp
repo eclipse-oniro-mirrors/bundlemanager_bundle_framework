@@ -15632,4 +15632,75 @@ HWTEST_F(BmsBundleInstallerTest, InnerProcessSkipPreInstallBundles_0300, Functio
     EXPECT_TRUE(ret);
     dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
 }
+
+/**
+ * @tc.number: InstallExisted_0001
+ * @tc.name: test InstallExisted
+ * @tc.desc: Test InstallExisted
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallExisted_0001, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string bundleName = "";
+    int32_t userId = TEST_U100;
+
+    ErrCode ret = bundleInstallerHost.InstallExisted(bundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExisted_0002
+ * @tc.name: test InstallExisted
+ * @tc.desc: Test InstallExisted
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallExisted_0002, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller bundleMultiUserInstaller;
+    bundleMultiUserInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    std::string bundleName = "com.example.test";
+    int32_t userId = TEST_U100;
+
+    ErrCode ret = bundleMultiUserInstaller.InstallExistedApp(bundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InstallExisted_0003
+ * @tc.name: test InstallExisted
+ * @tc.desc: Test InstallExisted
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallExisted_0003, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller bundleMultiUserInstaller;
+    bundleMultiUserInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    std::string bundleName = "com.example.test";
+    int32_t userId = 0;
+
+    ErrCode ret = bundleMultiUserInstaller.InstallExistedApp(bundleName, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: InstallExisted_0004
+ * @tc.name: test InstallExisted
+ * @tc.desc: Test InstallExisted
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallExisted_0004, Function | SmallTest | Level0)
+{
+    BundleMultiUserInstaller bundleMultiUserInstaller;
+    bundleMultiUserInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    std::string bundleName = "com.example.test";
+    int32_t userId = TEST_U100;
+    InnerBundleInfo info;
+    info.baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
+    info.baseApplicationInfo_->bundleName = bundleName;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = userId;
+    info.AddInnerBundleUserInfo(innerBundleUserInfo);
+    bundleMultiUserInstaller.dataMgr_->bundleInfos_.try_emplace(bundleName, info);
+    bundleMultiUserInstaller.dataMgr_->multiUserIdsSet_.insert(userId);
+    
+    ErrCode ret = bundleMultiUserInstaller.InstallExistedApp(bundleName, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
