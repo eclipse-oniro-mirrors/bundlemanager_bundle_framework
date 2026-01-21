@@ -75,6 +75,7 @@ void SetHapApiVersion(int32_t version);
 void SetVerifyCallingBundleSdkVersionForTest(bool value);
 void SetIsBundleSelfCallingForTest(bool value);
 void SetCheckUserFromShellForTest(bool value);
+void SetIsCallingUidValid(bool value);
 void ResetTestValues();
 namespace OHOS {
 namespace {
@@ -292,6 +293,8 @@ constexpr const char* TEST_SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* TEST_APP_INSTALL_SANDBOX_PATH = "/data/bms_app_install";
 constexpr int32_t TEST_SANDBOX_APP_INDEX = 1001;
 const std::string TYPE_FORM = "form";
+constexpr size_t TEST_VECTOR_SIZE_MAX = 200;
+constexpr const char* TEST_PATH = "/data/app/dest";
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -9898,5 +9901,283 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosOnlyWithTypeNameImpl
     auto ret = bundleMgrHostImpl_->QueryExtensionAbilityInfosOnlyWithTypeName(
         TYPE_FORM, 0, Constants::INVALID_USERID, extensionInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: ResetAOTCompileStatusImpl_0100
+ * @tc.name: test ResetAOTCompileStatus with dataMgr nullptr
+ * @tc.desc: 1. test ResetAOTCompileStatus when dataMgr nullptr
+ *           2. should return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, ResetAOTCompileStatusImpl_0100, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t triggerMode = 0;
+    auto ret = hostImpl->ResetAOTCompileStatus(BUNDLE_NAME_TEST, MODULE_NAME_TEST, triggerMode);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetJsonProfilefImpl_0100
+ * @tc.name: test GetJsonProfile with non-system app calling
+ * @tc.desc: 1. test GetJsonProfile when non-system app calling
+ *           2. should return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ProfileType profileType = AppExecFwk::ProfileType::UNSPECIFIED_PROFILE;
+    std::string profile = "";
+    auto ret = hostImpl->GetJsonProfile(
+        profileType, BUNDLE_NAME_TEST, MODULE_NAME_TEST, profile, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetJsonProfilefImpl_0200
+ * @tc.name: test GetJsonProfile with dataMgr nullptr
+ * @tc.desc: 1. test GetJsonProfile when dataMgr nullptr
+ *           2. should return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetJsonProfilefImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ProfileType profileType = AppExecFwk::ProfileType::UNSPECIFIED_PROFILE;
+    std::string profile = "";
+    auto ret = hostImpl->GetJsonProfile(
+        profileType, BUNDLE_NAME_TEST, MODULE_NAME_TEST, profile, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirImpl_0100
+ * @tc.name: test CreateBundleDataDir with no permission
+ * @tc.desc: 1. test CreateBundleDataDir when no permission
+ *           2. should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirImpl_0100, Function | SmallTest | Level1)
+{
+    SetIsCallingUidValid(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = hostImpl->CreateBundleDataDir(DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateBundleDataDirImpl_0200
+ * @tc.name: test CreateBundleDataDir with dataMgr nullptr
+ * @tc.desc: 1. test CreateBundleDataDir when dataMgr nullptr
+ *           2. should return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto ret = hostImpl->CreateBundleDataDir(DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithElImpl_0100
+ * @tc.name: test CreateBundleDataDir with no permission
+ * @tc.desc: 1. test CreateBundleDataDir when no permission
+ *           2. should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirWithElImpl_0100, Function | SmallTest | Level1)
+{
+    SetIsCallingUidValid(false);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    DataDirEl dirEl = DataDirEl::NONE;
+    auto ret = hostImpl->CreateBundleDataDirWithEl(DEFAULT_USERID, dirEl);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithElImpl_0200
+ * @tc.name: test CreateBundleDataDir with dataMgr nullptr
+ * @tc.desc: 1. test CreateBundleDataDir when dataMgr nullptr
+ *           2. should return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateBundleDataDirWithElImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    DataDirEl dirEl = DataDirEl::NONE;
+    auto ret = hostImpl->CreateBundleDataDirWithEl(DEFAULT_USERID, dirEl);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: UpdateAppEncryptedStatusImpl_0100
+ * @tc.name: test UpdateAppEncryptedStatus with bundle not exist
+ * @tc.desc: 1. test UpdateAppEncryptedStatus when bundle not exist
+ *           2. should return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppEncryptedStatusImpl_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool isExisted = false;
+    int32_t appIndex = 1;
+    auto ret = hostImpl->UpdateAppEncryptedStatus(BUNDLE_NAME_TEST, isExisted, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: UpdateAppEncryptedStatusImpl_0200
+ * @tc.name: test UpdateAppEncryptedStatus with dataMgr nullptr
+ * @tc.desc: 1. test UpdateAppEncryptedStatus when dataMgr nullptr
+ *           2. should return ERR_BUNDLE_MANAGER_INTERNAL_ERROR
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateAppEncryptedStatusImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool isExisted = false;
+    int32_t appIndex = 1;
+    auto ret = hostImpl->UpdateAppEncryptedStatus(BUNDLE_NAME_TEST, isExisted, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: MigrateDataParameterCheckImpl_0100
+ * @tc.name: test MigrateDataParameterCheck with sourcePaths.size() > VECTOR_SIZE_MAX
+ * @tc.desc: 1. test MigrateDataParameterCheck when sourcePaths.size() > VECTOR_SIZE_MAX
+ *           2. should return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID
+ */
+HWTEST_F(BmsBundleKitServiceTest, MigrateDataParameterCheckImpl_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> sourcePaths(TEST_VECTOR_SIZE_MAX + 1, TEST_PATH);
+    std::string destPath = TEST_PATH;
+    auto ret = hostImpl->MigrateDataParameterCheck(sourcePaths, destPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: MigrateDataParameterCheckImpl_0200
+ * @tc.name: test MigrateDataParameterCheck with sourcePaths invalid
+ * @tc.desc: 1. test MigrateDataParameterCheck when sourcePaths invalid
+ *           2. should return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID
+ */
+HWTEST_F(BmsBundleKitServiceTest, MigrateDataParameterCheckImpl_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> sourcePaths;
+    std::string destPath = TEST_RELATIVE_PATH;
+    auto ret = hostImpl->MigrateDataParameterCheck(sourcePaths, destPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+    
+    sourcePaths.push_back(TEST_RELATIVE_PATH);
+    ret = hostImpl->MigrateDataParameterCheck(sourcePaths, destPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: MigrateDataParameterCheckImpl_0300
+ * @tc.name: test MigrateDataParameterCheck with destinationPath invalid
+ * @tc.desc: 1. test MigrateDataParameterCheck when destinationPath invalid
+ *           2. should return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID
+ */
+HWTEST_F(BmsBundleKitServiceTest, MigrateDataParameterCheckImpl_0300, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> sourcePaths = {TEST_PATH};
+    std::string destPath = TEST_RELATIVE_PATH;
+    auto ret = hostImpl->MigrateDataParameterCheck(sourcePaths, destPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
+
+    std::string destPath2 = "";
+    ret = hostImpl->MigrateDataParameterCheck(sourcePaths, destPath2);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
+}
+
+/**
+ * @tc.number: MigrateDataParameterCheckImpl_0400
+ * @tc.name: test MigrateDataParameterCheck with IsSandBoxPath false
+ * @tc.desc: 1. test MigrateDataParameterCheck when IsSandBoxPath false
+ *           2. should return ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, MigrateDataParameterCheckImpl_0400, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> sourcePaths = {TEST_PATH};
+    std::string destPath = TEST_PATH;
+    auto ret = hostImpl->MigrateDataParameterCheck(sourcePaths, destPath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: MigrateDataImpl_0100
+ * @tc.name: test MigrateData with user authentication failed
+ * @tc.desc: 1. test MigrateData with user authentication failed
+ *           2. should return ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED
+ */
+HWTEST_F(BmsBundleKitServiceTest, MigrateDataImpl_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> sourcePaths = {TEST_PATH};
+    std::string destPath = TEST_PATH;
+    auto ret = hostImpl->MigrateData(sourcePaths, destPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_USER_AUTHENTICATION_FAILED);
+}
+
+/**
+ * @tc.number: MigrateDataImpl_0200
+ * @tc.name: test MigrateData with sourcePaths invalid
+ * @tc.desc: 1. test MigrateData when sourcePaths invalid
+ *           2. should return ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, MigrateDataImpl_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> sourcePaths = {TEST_RELATIVE_PATH};
+    std::string destPath = TEST_PATH;
+    auto ret = hostImpl->MigrateData(sourcePaths, destPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: CheckSandboxPathImpl_0100
+ * @tc.name: test CheckSandboxPath with sourcePaths IsSandBoxPaths
+ * @tc.desc: 1. test CheckSandboxPath when sourcePaths IsSandBoxPaths
+ *           2. should return ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckSandboxPathImpl_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> sourcePaths = {TEST_SANDBOX_DATA_PATH};
+    std::string destPath = TEST_PATH;
+    auto ret = hostImpl->CheckSandboxPath(sourcePaths, destPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED);
+
+    std::vector<std::string> sourcePaths2 = {TEST_PATH};
+    std::string destPath2 = TEST_SANDBOX_DATA_PATH;
+    ret = hostImpl->CheckSandboxPath(sourcePaths2, destPath2);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED);
+}
+
+/**
+ * @tc.number: CheckSandboxPathImpl_0200
+ * @tc.name: test CheckSandboxPath with dataMgr nullptr
+ * @tc.desc: 1. test CheckSandboxPath when dataMgr nullptr
+ *           2. should return ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED
+ */
+HWTEST_F(BmsBundleKitServiceTest, CheckSandboxPathImpl_0200, Function | SmallTest | Level1)
+{
+    DataMgrGuard guard;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<std::string> sourcePaths = {TEST_SANDBOX_DATA_PATH};
+    std::string destPath = TEST_PATH;
+    auto ret = hostImpl->CheckSandboxPath(sourcePaths, destPath);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED);
 }
 }
