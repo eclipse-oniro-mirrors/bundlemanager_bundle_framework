@@ -221,6 +221,8 @@ void InstallerHelper::CreateErrCodeMap(std::unordered_map<int32_t, int32_t>& err
             ERROR_INSTALL_FAILED_CONTROLLED },
         { IStatusReceiver::ERR_INSTALL_U1_ENABLE_NOT_SUPPORT_APP_SERVICE_AND_SHARED_BUNDLE,
             ERROR_INSTALL_FAILED_CONTROLLED},
+        { IStatusReceiver::ERR_INSTALL_INSUFFICIENT_NUMBER_OF_SYSTEM_INODES,
+            ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED},
         { IStatusReceiver::ERR_INSTALL_CHECK_DEVELOPERID_IN_THIRD_PARTY_BUNDLE_FAILED,
             ERROR_INSTALL_VERIFY_SIGNATURE_FAILED },
     };
@@ -266,6 +268,8 @@ void InstallerHelper::CreateProxyErrCode(std::unordered_map<int32_t, int32_t>& e
             IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID },
         { ERR_APPEXECFWK_INSTALL_ONLY_ONE_SIG_FILE_CAN_BE_CONTAINED_IN_SHARED_BUNDLE_DIR,
             IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID },
+        { ERR_BUNDLE_MANAGER_INSUFFICIENT_NUMBER_OF_SYSTEM_INODES,
+            IStatusReceiver::ERR_INSTALL_INSUFFICIENT_NUMBER_OF_SYSTEM_INODES },
     };
 }
 
