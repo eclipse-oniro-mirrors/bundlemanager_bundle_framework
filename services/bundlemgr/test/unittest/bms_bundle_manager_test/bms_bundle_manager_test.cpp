@@ -491,6 +491,98 @@ HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0900, Function | Sm
 }
 
 /**
+ * @tc.number: BundleStreamInstallerHostImpl_1000
+ * @tc.name: test Init
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_1000, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "";
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    const std::vector<std::string> originHapPaths;
+    bool ret = impl.Init(installParam, statusReceiver, originHapPaths);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_1100
+ * @tc.name: test Init
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_1100, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::ENTERPRISE_MANIFEST] = "manifest.json";
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    const std::vector<std::string> originHapPaths;
+    bool ret = impl.Init(installParam, statusReceiver, originHapPaths);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_1200
+ * @tc.name: test Install
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_1200, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    impl.receiver_ = statusReceiver;
+    impl.installParam_.isSelfUpdate = true;
+    bool ret = impl.Install();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_1300
+ * @tc.name: test CreateStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_1300, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    impl.receiver_ = statusReceiver;
+    impl.isInstallSharedBundlesOnly_ = false;
+    auto ret = impl.Install();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_1400
+ * @tc.name: test CreateStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_1400, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    impl.receiver_ = statusReceiver;
+    impl.installParam_.parameters[InstallParam::RENAME_INSTALL_KEY] = "true";
+    auto ret = impl.Install();
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: QueryExtensionAbilityInfosV9_0100
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap
