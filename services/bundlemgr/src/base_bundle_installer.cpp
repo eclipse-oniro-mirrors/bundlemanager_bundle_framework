@@ -1024,11 +1024,11 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         if (res != ERR_OK) {
             LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean shader fail %{public}d", bundleName_.c_str(), res);
         }
-        res = CleanArkStartupCache(bundleName_, userId_);
+        res = CleanArkStartupCache(bundleName_);
         if (res != ERR_OK) {
             LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean ark startup cache fail %{public}d, try again",
                 bundleName_.c_str(), res);
-            res = CleanArkStartupCache(bundleName_, userId_);
+            res = CleanArkStartupCache(bundleName_);
             if (res != ERR_OK && installParam.isOTA && installParam.isPreInstallApp) {
                 LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean ark startup cache fail %{public}d",
                     bundleName_.c_str(), res);
@@ -7311,15 +7311,18 @@ ErrCode BaseBundleInstaller::CleanShaderCache(const InnerBundleInfo &oldInfo,
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::CleanArkStartupCache(const std::string &bundleName, int32_t userId) const
+ErrCode BaseBundleInstaller::CleanArkStartupCache(const std::string &bundleName) const
 {
-    LOG_D(BMS_TAG_INSTALLER, "start for -n:%{public}s -u:%{public}d", bundleName.c_str(), userId);
+    LOG_D(BMS_TAG_INSTALLER, "start for -n:%{public}s", bundleName.c_str());
     std::string el1ArkStartupCachePath = ServiceConstants::SYSTEM_OPTIMIZE_PATH + bundleName +
         ServiceConstants::ARK_STARTUP_CACHE_DIR;
-    el1ArkStartupCachePath = el1ArkStartupCachePath.replace(el1ArkStartupCachePath.find("%"), 1,
-        std::to_string(userId));
     std::vector<std::string> dirs;
-    dirs.emplace_back(el1ArkStartupCachePath);
+    auto userIds = dataMgr_->GetUserIds(bundleName);
+    for (const auto &userId : userIds) {
+        auto multiPath = el1ArkStartupCachePath;
+        multiPath = multiPath.replace(multiPath.find("%"), 1, std::to_string(userId));
+        dirs.emplace_back(multiPath);
+    }
 
     ErrCode result = InstalldClient::GetInstance()->CleanBundleDirs(dirs, true);
     if (result != ERR_OK) {
