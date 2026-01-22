@@ -542,21 +542,28 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
         LOG_E(BMS_TAG_INSTALLER, "file is not real path, file path: %{private}s", path.c_str());
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
-    int32_t inputFd = open(realPath.c_str(), O_RDONLY);
+
+    FILE *inputFp = fopen(realPath.c_str(), "r");
+    if (inputFp == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "fopen %{public}s failed, errno:%{public}d", realPath.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    int32_t inputFd = fileno(inputFp);
     if (inputFd < 0) {
-        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to open the hap file, errno:%{public}d", errno);
+        LOG_E(BMS_TAG_INSTALLER, "open %{public}s failed, errno:%{public}d", realPath.c_str(), errno);
+        (void)fclose(inputFp);
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
     struct stat sourceStat;
     if (fstat(inputFd, &sourceStat) == -1) {
         LOG_E(BMS_TAG_INSTALLER, "fstat failed, errno : %{public}d", errno);
-        close(inputFd);
+        (void)fclose(inputFp);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
     if (sourceStat.st_size < 0) {
         LOG_E(BMS_TAG_INSTALLER, "invalid st_size");
-        close(inputFd);
+        (void)fclose(inputFp);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
@@ -570,11 +577,11 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
         LOG_E(BMS_TAG_INSTALLER, "errno: %{public}d, send count: %{public}zu, file size: %{public}zu",
             errno, transferCount, static_cast<size_t>(sourceStat.st_size));
-        close(inputFd);
+        (void)fclose(inputFp);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
-    close(inputFd);
+    (void)fclose(inputFp);
     fsync(outputFd);
 
     LOG_D(BMS_TAG_INSTALLER, "write file stream to service terminal end");
