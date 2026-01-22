@@ -63,7 +63,7 @@ IdleConditionMgr::~IdleConditionMgr()
 
 void IdleConditionMgr::OnScreenLocked()
 {
-    APP_LOGI("OnScreenLocked called");
+    APP_LOGI_NOFUNC("OnScreenLocked");
     {
         std::lock_guard<std::mutex> lock(mutex_);
         screenLocked_ = true;
@@ -73,7 +73,7 @@ void IdleConditionMgr::OnScreenLocked()
 
 void IdleConditionMgr::OnScreenUnlocked()
 {
-    APP_LOGI("OnScreenUnlocked called");
+    APP_LOGI_NOFUNC("OnScreenUnlocked");
     {
         std::lock_guard<std::mutex> lock(mutex_);
         screenLocked_ = false;
@@ -83,7 +83,7 @@ void IdleConditionMgr::OnScreenUnlocked()
 
 void IdleConditionMgr::OnUserUnlocked(const int32_t userId)
 {
-    APP_LOGI("OnUserUnlocked called");
+    APP_LOGI_NOFUNC("OnUserUnlocked");
     {
         std::lock_guard<std::mutex> lock(mutex_);
         userUnlockedMap_[userId] = true;
@@ -93,7 +93,7 @@ void IdleConditionMgr::OnUserUnlocked(const int32_t userId)
 
 void IdleConditionMgr::OnUserStopping(const int32_t userId)
 {
-    APP_LOGI("OnUserStopping called");
+    APP_LOGI_NOFUNC("OnUserStopping");
     {
         std::lock_guard<std::mutex> lock(mutex_);
         userUnlockedMap_[userId] = false;
@@ -103,7 +103,7 @@ void IdleConditionMgr::OnUserStopping(const int32_t userId)
 
 void IdleConditionMgr::OnPowerConnected()
 {
-    APP_LOGI("OnPowerConnected called");
+    APP_LOGI_NOFUNC("OnPowerConnected");
     if (powerConnectedThreadActive_) {
         return;
     }
@@ -139,7 +139,7 @@ void IdleConditionMgr::OnPowerConnected()
 
 void IdleConditionMgr::OnPowerDisconnected()
 {
-    APP_LOGI("OnPowerDisconnected called");
+    APP_LOGI_NOFUNC("OnPowerDisconnected");
     {
         std::lock_guard<std::mutex> lock(mutex_);
         powerConnected_ = false;
@@ -150,7 +150,7 @@ void IdleConditionMgr::OnPowerDisconnected()
  
 void IdleConditionMgr::HandleOnTrim(Memory::SystemMemoryLevel level)
 {
-    APP_LOGI("HandleOnTrim called, level=%{public}d", level);
+    APP_LOGI_NOFUNC("HandleOnTrim called, level=%{public}d", level);
     switch (level) {
         case Memory::SystemMemoryLevel::UNKNOWN:
             [[fallthrough]];
@@ -204,7 +204,7 @@ bool IdleConditionMgr::CheckInodeForCommericalDevice()
 {
     std::string versionType = OHOS::system::GetParameter(COMMERCIAL_MODE_PARAM, "");
     if (versionType != COMMERCIAL_MODE) {
-        APP_LOGI("non commercial device");
+        APP_LOGD("non commercial device");
         return true;
     }
     struct statfs stat;
@@ -225,7 +225,7 @@ bool IdleConditionMgr::CheckInodeForCommericalDevice()
 
 void IdleConditionMgr::OnBatteryChanged()
 {
-    APP_LOGI("OnBatteryChanged called");
+    APP_LOGI_NOFUNC("OnBatteryChanged");
     int32_t currentBatteryCap = OHOS::PowerMgr::BatterySrvClient::GetInstance().GetCapacity();
     int32_t relabelBatteryCapacity = OHOS::system::GetIntParameter<int32_t>(
         BMS_PARAM_RELABEL_BATTERY_CAPACITY, RELABEL_MIN_BATTERY_CAPACITY);
@@ -248,7 +248,7 @@ void IdleConditionMgr::OnBatteryChanged()
 
 void IdleConditionMgr::OnThermalLevelChanged(PowerMgr::ThermalLevel level)
 {
-    APP_LOGI("OnThermalLevelChanged called, level=%{public}d", level);
+    APP_LOGI_NOFUNC("OnThermalLevelChanged called, level=%{public}d", level);
     if (level < PowerMgr::ThermalLevel::WARM) {
         TryStartRelabel();
     } else {
@@ -274,8 +274,7 @@ bool IdleConditionMgr::CheckRelabelConditions(const int32_t userId)
     if (userUnlocked && screenLocked_ && powerConnected_ && batterySatisfied_ && g_taskCounter.load() == 0) {
         return true;
     }
-    APP_LOGI("user %{public}d unlocked %{public}d, screenLocked_ %{public}d, "
-        "powerConnected_ %{public}d, batterySatisfied_ %{public}d, taskNum %{public}d",
+    APP_LOGI_NOFUNC("relabel state: -u %{public}d, %{public}d, %{public}d, %{public}d, %{public}d, %{public}d",
         userId, userUnlocked, screenLocked_.load(),
         powerConnected_.load(), batterySatisfied_.load(), g_taskCounter.load());
     return false;
@@ -285,7 +284,7 @@ bool IdleConditionMgr::SetIsRelabeling()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (isRelabeling_) {
-        APP_LOGI("Already relabeling, no need to process");
+        APP_LOGI_NOFUNC("Already relabeling");
         return false;
     }
     isRelabeling_ = true;
@@ -296,28 +295,28 @@ void IdleConditionMgr::TryStartRelabel()
 {
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if (!CheckRelabelConditions(currentUserId)) {
-        APP_LOGI("Refresh conditions not met, no need to process");
+        APP_LOGI_NOFUNC("Refresh conditions not met");
         return;
     }
     if (!CheckInodeForCommericalDevice()) {
-        APP_LOGI("inode sufficient, no need to process");
+        APP_LOGI_NOFUNC("inode sufficient");
         return;
     }
     if (!IsBufferSufficient()) {
-        APP_LOGI("Buffer not sufficient, no need to process");
+        APP_LOGI_NOFUNC("Buffer not sufficient");
         return;
     }
     if (!IsThermalSatisfied()) {
-        APP_LOGI("Thermal not satisfied, no need to process");
+        APP_LOGI_NOFUNC("Thermal not satisfied");
         return;
     }
     if (!SetIsRelabeling()) {
-        APP_LOGI("Set isRelabeling failed");
+        APP_LOGD("Set isRelabeling failed");
         return;
     }
     std::weak_ptr<IdleConditionMgr> weakPtr = shared_from_this();
     auto task = [weakPtr] {
-        APP_LOGI("Relabel task started");
+        APP_LOGI_NOFUNC("Relabel task started");
         auto sharedPtr = weakPtr.lock();
         if (sharedPtr == nullptr) {
             APP_LOGD("stop relabel task");
@@ -346,7 +345,7 @@ void IdleConditionMgr::TryStartRelabel()
             return;
         }
         bmsUpdateSelinuxMgr->StartUpdateSelinuxLabel(userId);
-        APP_LOGI("Relabel task finished");
+        APP_LOGI_NOFUNC("Relabel task finished");
     };
     std::thread(task).detach();
 }
@@ -356,7 +355,7 @@ void IdleConditionMgr::InterruptRelabel(const std::string stopReason)
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (!isRelabeling_) {
-            APP_LOGI("No relabeling in progress, no need to interrupt");
+            APP_LOGI_NOFUNC("No relabeling in progress");
             return;
         }
     }
@@ -367,7 +366,7 @@ void IdleConditionMgr::InterruptRelabel(const std::string stopReason)
         return;
     }
     bmsUpdateSelinuxMgr->StopUpdateSelinuxLabel(ServiceConstants::StopReason::BUSY, stopReason);
-    APP_LOGI("Relabeling interrupted");
+    APP_LOGI_NOFUNC("Relabeling interrupted");
 }
 } // namespace AppExecFwk
 } // namespace OHOS
