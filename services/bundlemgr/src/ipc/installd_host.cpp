@@ -29,6 +29,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
+constexpr int16_t MAX_BUNDLE_SA_UID_SIZE = 10;
+constexpr int16_t BUNDLE_UID_SIZE = 1;
 constexpr uint16_t MAX_VEC_SIZE = 1024;
 }
 
@@ -594,6 +596,10 @@ bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &repl
     int32_t userId = data.ReadInt32();
     std::unordered_set<int32_t> uids;
     int32_t uidSize = data.ReadInt32();
+    if (uidSize < BUNDLE_UID_SIZE || uidSize > (MAX_BUNDLE_SA_UID_SIZE + BUNDLE_UID_SIZE)) {
+        LOG_E(BMS_TAG_INSTALLD, "uidSize out of range");
+        return false;
+    }
     for (int32_t i = 0; i < uidSize; ++i) {
         int32_t uid = data.ReadInt32();
         uids.emplace(uid);
@@ -637,6 +643,10 @@ bool InstalldHost::HandleBatchGetBundleStats(MessageParcel &data, MessageParcel 
     for (int32_t i = 0; i < uidMapSize; ++i) {
         std::string bundleName = Str16ToStr8(data.ReadString16());
         int32_t uidSize = data.ReadInt32();
+        if (uidSize < BUNDLE_UID_SIZE || uidSize > (MAX_BUNDLE_SA_UID_SIZE + BUNDLE_UID_SIZE)) {
+            LOG_E(BMS_TAG_INSTALLD, "uidSize out of range");
+            return false;
+        }
         std::unordered_set<int32_t> uidSet;
         for (int32_t j = 0; j < uidSize; ++j) {
             int32_t uid = data.ReadInt32();

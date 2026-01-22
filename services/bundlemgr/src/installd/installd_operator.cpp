@@ -647,7 +647,7 @@ bool InstalldOperator::ProcessBundleInstallNative(const InstallHnpParam &param)
     for (size_t i = 0; i < count; i++) {
         independentSignHnps.emplace_back(const_cast<char*>(param.hnpPaths[i].c_str()));
     }
-    hapInfo.count = count;
+    hapInfo.count = static_cast<int32_t>(count);
     hapInfo.independentSignHnpPaths = independentSignHnps.data();
 
     int ret = NativeInstallHnp(param.userId.c_str(), param.hnpRootPath.c_str(), &hapInfo, 1);
