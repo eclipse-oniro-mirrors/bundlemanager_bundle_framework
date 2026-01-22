@@ -5074,7 +5074,8 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
     std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos(userId);
     for (auto recoverableBundleInfo: recoverableBundleInfos) {
         std::string bundleName = recoverableBundleInfo.GetBundleName();
-        if (bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId)) {
+        ErrCode result = bmsExtensionDataMgr.CheckAppBlackList(bundleName, userId);
+        if (result!= ERR_OK) {
             APP_LOGI("recover app %{public}s is in blocklist", bundleName.c_str());
             continue;
         }

@@ -16,6 +16,7 @@
 #ifndef BUSINESS_ERROR_H
 #define BUSINESS_ERROR_H
 
+#include "error_data.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -42,6 +43,8 @@ static napi_value CreateInstallError(
     const std::string &functionName, const std::string &permissionName);
 
 static napi_value CreateError(napi_env env, int32_t err, const std::string &msg);
+
+static napi_value CreateError(napi_env env, int32_t err, const std::string &msg, const ErrorData &errorData);
 
 static void ThrowEnumError(napi_env env,
     const std::string &parameter, const std::string &type);
