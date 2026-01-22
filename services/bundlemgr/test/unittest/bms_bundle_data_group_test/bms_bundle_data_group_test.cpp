@@ -17,13 +17,16 @@
 #define protected public
 
 #include <fstream>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "app_provision_info_manager.h"
 #include "base_bundle_installer.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
+#include "bundle_util.h"
 #include "data_group_info.h"
+#include "encryption_param.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "migrate_data_user_auth_callback.h"
@@ -35,6 +38,8 @@ using namespace OHOS::AppExecFwk;
 using OHOS::Parcel;
 
 namespace OHOS {
+
+
 namespace {
 const std::string BUNDLE_NAME = "com.example.demo.testDataGroup";
 const std::string BUNDLE_NAME_TEST = "com.example.demo.testDataGroup.test";
@@ -2417,5 +2422,342 @@ HWTEST_F(BmsBundleDataGroupTest, SetHybridSpawn_0005, Function | MediumTest | Le
     installer.SetHybridSpawn();
     EXPECT_EQ(info.GetApplicationArkTSMode(), Constants::ARKTS_MODE_STATIC);
     dataMgr->bundleInfos_.erase("test");
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0010
+ * @tc.name: test CreateEl5GroupDirs with empty dataGroupInfos
+ * @tc.desc: Test empty dataGroupInfos vector should return ERR_OK
+ */
+HWTEST_F(BmsBundleDataGroupTest, CreateEl5GroupDirs_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<DataGroupInfo> emptyDataGroupInfos;
+    ErrCode result = dataMgr->CreateEl5GroupDirs(emptyDataGroupInfos, USERID);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0020
+ * @tc.name: test CreateEl5GroupDirs with missing parent directory
+ * @tc.desc: Test when parent directory does not exist
+ */
+HWTEST_F(BmsBundleDataGroupTest, CreateEl5GroupDirs_0020, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Mock BundleUtil::IsExistDir to return false
+    EXPECT_CALL(BundleUtil, IsExistDir(testing::_)).WillOnce(testing::Return(false));
+
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+    dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+    dataGroupInfo.uid = TEST_UID;
+    dataGroupInfo.gid = TEST_UID;
+    std::vector<DataGroupInfo> dataGroupInfos = {dataGroupInfo};
+
+    ErrCode result = dataMgr->CreateEl5GroupDirs(dataGroupInfos, USERID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0030
+ * @tc.name: test CreateEl5GroupDirs successful creation
+ * @tc.desc: Test successful directory creation and encryption policy setting
+ */
+HWTEST_F(BmsBundleDataGroupTest, CreateEl5GroupDirs_0030, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Mock BundleUtil::IsExistDir to return true
+    EXPECT_CALL(BundleUtil, IsExistDir(testing::_)).WillOnce(testing::Return(true));
+
+    // Mock InstalldClient::Mkdir to return success
+    EXPECT_CALL(InstalldClient::GetInstance(), Mkdir(testing::_, testing::_, testing::_, testing::_))
+        .WillOnce(testing::Return(ERR_OK));
+
+    // Mock InstalldClient::SetEncryptionPolicy to return success
+    EXPECT_CALL(InstalldClient::GetInstance(), SetEncryptionPolicy(testing::_, testing::_))
+        .WillOnce(testing::Return(ERR_OK));
+
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+    dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+    dataGroupInfo.uid = TEST_UID;
+    dataGroupInfo.gid = TEST_UID;
+    std::vector<DataGroupInfo> dataGroupInfos = {dataGroupInfo};
+
+    ErrCode result = dataMgr->CreateEl5GroupDirs(dataGroupInfos, USERID);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0040
+ * @tc.name: test CreateEl5GroupDirs with partial Mkdir failures
+ * @tc.desc: Test some directories fail to create but encryption succeeds
+ */
+HWTEST_F(BmsBundleDataGroupTest, CreateEl5GroupDirs_0040, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Mock BundleUtil::IsExistDir to return true
+    EXPECT_CALL(BundleUtil, IsExistDir(testing::_)).WillOnce(testing::Return(true));
+
+    DataGroupInfo dataGroupInfo1;
+    dataGroupInfo1.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+    dataGroupInfo1.uuid = DATA_GROUP_UUID_ONE;
+    dataGroupInfo1.uid = TEST_UID;
+    dataGroupInfo1.gid = TEST_UID;
+
+    DataGroupInfo dataGroupInfo2;
+    dataGroupInfo2.dataGroupId = DATA_GROUP_ID_TEST_TWO;
+    dataGroupInfo2.uuid = DATA_GROUP_UUID_TWO;
+    dataGroupInfo2.uid = TEST_UID + 1;
+    dataGroupInfo2.gid = TEST_UID + 1;
+
+    std::vector<DataGroupInfo> dataGroupInfos = {dataGroupInfo1, dataGroupInfo2};
+
+    // Mock InstalldClient::Mkdir - first fails, second succeeds
+    EXPECT_CALL(InstalldClient::GetInstance(), Mkdir(testing::_, testing::_, testing::_, testing::_))
+        .WillOnce(testing::Return(ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR))
+        .WillOnce(testing::Return(ERR_OK));
+
+    // Mock InstalldClient::SetEncryptionPolicy to return success for both
+    EXPECT_CALL(InstalldClient::GetInstance(), SetEncryptionPolicy(testing::_, testing::_))
+        .Times(2)
+        .WillRepeatedly(testing::Return(ERR_OK));
+
+    ErrCode result = dataMgr->CreateEl5GroupDirs(dataGroupInfos, USERID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0050
+ * @tc.name: test CreateEl5GroupDirs with partial SetEncryptionPolicy failures
+ * @tc.desc: Test some encryption policies fail but directory creation succeeds
+ */
+HWTEST_F(BmsBundleDataGroupTest, CreateEl5GroupDirs_0050, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Mock BundleUtil::IsExistDir to return true
+    EXPECT_CALL(BundleUtil, IsExistDir(testing::_)).WillOnce(testing::Return(true));
+
+    DataGroupInfo dataGroupInfo1;
+    dataGroupInfo1.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+    dataGroupInfo1.uuid = DATA_GROUP_UUID_ONE;
+    dataGroupInfo1.uid = TEST_UID;
+    dataGroupInfo1.gid = TEST_UID;
+
+    DataGroupInfo dataGroupInfo2;
+    dataGroupInfo2.dataGroupId = DATA_GROUP_ID_TEST_TWO;
+    dataGroupInfo2.uuid = DATA_GROUP_UUID_TWO;
+    dataGroupInfo2.uid = TEST_UID + 1;
+    dataGroupInfo2.gid = TEST_UID + 1;
+
+    std::vector<DataGroupInfo> dataGroupInfos = {dataGroupInfo1, dataGroupInfo2};
+
+    // Mock InstalldClient::Mkdir to return success for both
+    EXPECT_CALL(InstalldClient::GetInstance(), Mkdir(testing::_, testing::_, testing::_, testing::_))
+        .Times(2)
+        .WillRepeatedly(testing::Return(ERR_OK));
+
+    // Mock InstalldClient::SetEncryptionPolicy - first fails, second succeeds
+    EXPECT_CALL(InstalldClient::GetInstance(), SetEncryptionPolicy(testing::_, testing::_))
+        .WillOnce(testing::Return(ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR))
+        .WillOnce(testing::Return(ERR_OK));
+
+    ErrCode result = dataMgr->CreateEl5GroupDirs(dataGroupInfos, USERID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0060
+ * @tc.name: test CreateEl5GroupDirs with complete failure scenario
+ * @tc.desc: Test all operations fail completely
+ */
+HWTEST_F(BmsBundleDataGroupTest, CreateEl5GroupDirs_0060, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Mock BundleUtil::IsExistDir to return true
+    EXPECT_CALL(BundleUtil, IsExistDir(testing::_)).WillOnce(testing::Return(true));
+
+    DataGroupInfo dataGroupInfo1;
+    dataGroupInfo1.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+    dataGroupInfo1.uuid = DATA_GROUP_UUID_ONE;
+    dataGroupInfo1.uid = TEST_UID;
+    dataGroupInfo1.gid = TEST_UID;
+
+    DataGroupInfo dataGroupInfo2;
+    dataGroupInfo2.dataGroupId = DATA_GROUP_ID_TEST_TWO;
+    dataGroupInfo2.uuid = DATA_GROUP_UUID_TWO;
+    dataGroupInfo2.uid = TEST_UID + 1;
+    dataGroupInfo2.gid = TEST_UID + 1;
+
+    std::vector<DataGroupInfo> dataGroupInfos = {dataGroupInfo1, dataGroupInfo2};
+
+    // Mock InstalldClient::Mkdir to return failure for both
+    EXPECT_CALL(InstalldClient::GetInstance(), Mkdir(testing::_, testing::_, testing::_, testing::_))
+        .Times(2)
+        .WillRepeatedly(testing::Return(ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR));
+
+    // Mock InstalldClient::SetEncryptionPolicy to return failure for both
+    EXPECT_CALL(InstalldClient::GetInstance(), SetEncryptionPolicy(testing::_, testing::_))
+        .Times(2)
+        .WillRepeatedly(testing::Return(ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR));
+
+    ErrCode result = dataMgr->CreateEl5GroupDirs(dataGroupInfos, USERID);
+    EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0070
+ * @tc.name: test CreateEl5GroupDirs with multiple data groups
+ * @tc.desc: Test successful creation with multiple data groups
+ */
+HWTEST_F(BmsBundleDataGroupTest, CreateEl5GroupDirs_0070, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Mock BundleUtil::IsExistDir to return true
+    EXPECT_CALL(BundleUtil, IsExistDir(testing::_)).WillOnce(testing::Return(true));
+
+    DataGroupInfo dataGroupInfo1;
+    dataGroupInfo1.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+    dataGroupInfo1.uuid = DATA_GROUP_UUID_ONE;
+    dataGroupInfo1.uid = TEST_UID;
+    dataGroupInfo1.gid = TEST_UID;
+
+    DataGroupInfo dataGroupInfo2;
+    dataGroupInfo2.dataGroupId = DATA_GROUP_ID_TEST_TWO;
+    dataGroupInfo2.uuid = DATA_GROUP_UUID_TWO;
+    dataGroupInfo2.uid = TEST_UID + 1;
+    dataGroupInfo2.gid = TEST_UID + 1;
+
+    DataGroupInfo dataGroupInfo3;
+    dataGroupInfo3.dataGroupId = DATA_GROUP_ID_TEST_THREE;
+    dataGroupInfo3.uuid = "550e8400-e29b-41d4-a716-446655440000";
+    dataGroupInfo3.uid = TEST_UID + 2;
+    dataGroupInfo3.gid = TEST_UID + 2;
+
+    std::vector<DataGroupInfo> dataGroupInfos = {dataGroupInfo1, dataGroupInfo2, dataGroupInfo3};
+
+    // Mock InstalldClient::Mkdir to return success for all
+    EXPECT_CALL(InstalldClient::GetInstance(), Mkdir(testing::_, testing::_, testing::_, testing::_))
+        .Times(3)
+        .WillRepeatedly(testing::Return(ERR_OK));
+
+    // Mock InstalldClient::SetEncryptionPolicy to return success for all
+    EXPECT_CALL(InstalldClient::GetInstance(), SetEncryptionPolicy(testing::_, testing::_))
+        .Times(3)
+        .WillRepeatedly(testing::Return(ERR_OK));
+
+    ErrCode result = dataMgr->CreateEl5GroupDirs(dataGroupInfos, USERID);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0080
+ * @tc.name: test CreateEl5GroupDirs with invalid user ID
+ * @tc.desc: Test with minimum valid user ID
+ */
+HWTEST_F(BmsBundleDataGroupTest, CreateEl5GroupDirs_0080, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Mock BundleUtil::IsExistDir to return true
+    EXPECT_CALL(BundleUtil, IsExistDir(testing::_)).WillOnce(testing::Return(true));
+
+    // Mock InstalldClient::Mkdir to return success
+    EXPECT_CALL(InstalldClient::GetInstance(), Mkdir(testing::_, testing::_, testing::_, testing::_))
+        .WillOnce(testing::Return(ERR_OK));
+
+    // Mock InstalldClient::SetEncryptionPolicy to return success
+    EXPECT_CALL(InstalldClient::GetInstance(), SetEncryptionPolicy(testing::_, testing::_))
+        .WillOnce(testing::Return(ERR_OK));
+
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+    dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+    dataGroupInfo.uid = TEST_UID;
+    dataGroupInfo.gid = TEST_UID;
+    std::vector<DataGroupInfo> dataGroupInfos = {dataGroupInfo};
+
+    ErrCode result = dataMgr->CreateEl5GroupDirs(dataGroupInfos, 0);  // Minimum valid user ID
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0090
+ * @tc.name: test CreateEl5GroupDirs with invalid user ID edge case
+ * @tc.desc: Test with maximum valid user ID
+ */
+HWTEST_F(BmsBundleDataGroupTest, CreateEl5GroupDirs_0090, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Mock BundleUtil::IsExistDir to return true
+    EXPECT_CALL(BundleUtil, IsExistDir(testing::_)).WillOnce(testing::Return(true));
+
+    // Mock InstalldClient::Mkdir to return success
+    EXPECT_CALL(InstalldClient::GetInstance(), Mkdir(testing::_, testing::_, testing::_, testing::_))
+        .WillOnce(testing::Return(ERR_OK));
+
+    // Mock InstalldClient::SetEncryptionPolicy to return success
+    EXPECT_CALL(InstalldClient::GetInstance(), SetEncryptionPolicy(testing::_, testing::_))
+        .WillOnce(testing::Return(ERR_OK));
+
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+    dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+    dataGroupInfo.uid = TEST_UID;
+    dataGroupInfo.gid = TEST_UID;
+    std::vector<DataGroupInfo> dataGroupInfos = {dataGroupInfo};
+
+    ErrCode result = dataMgr->CreateEl5GroupDirs(dataGroupInfos, 9999);  // Maximum valid user ID
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateEl5GroupDirs_0100
+ * @tc.name: test CreateEl5GroupDirs with different UIDs and GIDs
+ * @tc.desc: Test with different UID/GID combinations
+ */
+HWTEST_F(BmsBundleDataGroupTest, CreateEl5GroupDirs_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Mock BundleUtil::IsExistDir to return true
+    EXPECT_CALL(BundleUtil, IsExistDir(testing::_)).WillOnce(testing::Return(true));
+
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.dataGroupId = DATA_GROUP_ID_TEST_ONE;
+    dataGroupInfo.uuid = DATA_GROUP_UUID_ONE;
+    dataGroupInfo.uid = 300000;  // Different UID
+    dataGroupInfo.gid = 400000;  // Different GID
+    std::vector<DataGroupInfo> dataGroupInfos = {dataGroupInfo};
+
+    // Mock InstalldClient::Mkdir to return success
+    EXPECT_CALL(InstalldClient::GetInstance(), Mkdir(testing::_, testing::_, testing::_, testing::_))
+        .WillOnce(testing::Return(ERR_OK));
+
+    // Mock InstalldClient::SetEncryptionPolicy to return success
+    EXPECT_CALL(InstalldClient::GetInstance(), SetEncryptionPolicy(testing::_, testing::_))
+        .WillOnce(testing::Return(ERR_OK));
+
+    ErrCode result = dataMgr->CreateEl5GroupDirs(dataGroupInfos, USERID);
+    EXPECT_EQ(result, ERR_OK);
 }
 } // OHOS
