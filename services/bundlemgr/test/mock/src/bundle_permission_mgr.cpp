@@ -29,6 +29,8 @@ bool g_isSelfCalling = true;
 bool g_isShellTokenType = true;
 bool g_verifyUninstallPermission = true;
 bool g_isCallingUidValid = true;
+bool g_verifyPermissionFalse = false;
+bool g_isBundleSelfCallingFalse = false;
 
 void SetSystemAppForTest(bool value)
 {
@@ -99,6 +101,16 @@ void SetCheckUserFromShellForTest(bool value)
     g_checkUserFromShell = value;
 }
 
+void SetVerifyCallingPermissionForTestFalse(bool value)
+{
+    g_verifyPermissionFalse = value;
+}
+
+void SetIsBundleSelfCallingForTestFalse(bool value)
+{
+    g_isBundleSelfCallingFalse = value;
+}
+
 void ResetTestValues()
 {
     g_isNativeTokenType = true;
@@ -115,6 +127,8 @@ void ResetTestValues()
     g_isShellTokenType = true;
     g_verifyUninstallPermission = true;
     g_isCallingUidValid = true;
+    g_verifyPermissionFalse = false;
+    g_isBundleSelfCallingFalse = false;
 }
 namespace OHOS {
 int32_t g_testVerifyPermission = 0;
@@ -146,12 +160,12 @@ bool BundlePermissionMgr::VerifyPermissionByCallingTokenId(const std::string &pe
 
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
 {
-    return false;
+    return g_verifyPermissionFalse;
 }
 
 bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)
 {
-    return false;
+    return g_verifyPermissionFalse;
 }
 
 bool BundlePermissionMgr::IsSelfCalling()
@@ -171,7 +185,7 @@ bool BundlePermissionMgr::VerifyUninstallPermission()
 
 bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
 {
-    return false;
+    return g_isBundleSelfCallingFalse;
 }
 
 bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName, const int32_t &appIndex)

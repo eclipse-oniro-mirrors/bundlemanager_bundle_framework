@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,11 +22,16 @@
 #include "overlay_manager_host.h"
 #undef private
 #include "bundle_overlay_manager_host_impl.h"
+#include "bundle_permission_mgr.h"
 #include "bundle_mgr_service.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
-
+void SetCheckUserFromShellForTest(bool value);
+void SetSystemAppForTest(bool value);
+void SetVerifyCallingPermissionForTestFalse(bool value);
+void SetIsBundleSelfCallingForTestFalse(bool value);
+void ResetTestValues();
 namespace OHOS {
 namespace {
 const std::string TEST_BUNDLE_NAME = "testBundleName";
@@ -1090,5 +1095,238 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_4020, Function | SmallTest | Le
     EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
     auto res = reply.ReadInt32();
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllOverlayModuleInfo_0100
+ * @tc.name: test GetAllOverlayModuleInfo
+ * @tc.desc: test GetAllOverlayModuleInfo of OverlayManagerHostImpl
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, GetAllOverlayModuleInfo_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    SetCheckUserFromShellForTest(false);
+    std::string bundleName = TEST_BUNDLE_NAME;
+    std::vector<OverlayModuleInfo> overlayModuleInfo;
+    int32_t userId = TEST_USER_ID;
+    auto ret = hostImpl->GetAllOverlayModuleInfo(bundleName, overlayModuleInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfo_0100
+ * @tc.name: test GetOverlayModuleInfo
+ * @tc.desc: test GetOverlayModuleInfo of OverlayManagerHostImpl
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, GetOverlayModuleInfo_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    SetCheckUserFromShellForTest(false);
+    OverlayModuleInfo info;
+    auto ret = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, info);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfo_0200
+ * @tc.name: test GetOverlayModuleInfo
+ * @tc.desc: test GetOverlayModuleInfo of OverlayManagerHostImpl
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, GetOverlayModuleInfo_0200, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    SetCheckUserFromShellForTest(false);
+    OverlayModuleInfo info;
+    auto ret = hostImpl->GetOverlayModuleInfo(TEST_MODULE_NAME, info);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfo_0300
+ * @tc.name: test GetOverlayModuleInfo
+ * @tc.desc: test GetOverlayModuleInfo of OverlayManagerHostImpl
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, GetOverlayModuleInfo_0300, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    OverlayModuleInfo info;
+    auto ret = hostImpl->GetOverlayModuleInfo(TEST_MODULE_NAME, info, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetTargetOverlayModuleInfo_0100
+ * @tc.name: test GetTargetOverlayModuleInfo
+ * @tc.desc: test GetTargetOverlayModuleInfo of OverlayManagerHostImpl
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, GetTargetOverlayModuleInfo_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    auto ret = hostImpl->GetTargetOverlayModuleInfo(TEST_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfoByBundleName_0100
+ * @tc.name: test GetOverlayModuleInfoByBundleName
+ * @tc.desc: test GetOverlayModuleInfoByBundleName of OverlayManagerHostImpl
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, GetOverlayModuleInfoByBundleName_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    SetSystemAppForTest(false);
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    auto ret = hostImpl->GetOverlayModuleInfoByBundleName(
+        TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTestFalse(true);
+    SetIsBundleSelfCallingForTestFalse(true);
+    ret = hostImpl->GetOverlayModuleInfoByBundleName(
+        TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+
+    SetVerifyCallingPermissionForTestFalse(false);
+    ret = hostImpl->GetOverlayModuleInfoByBundleName(
+        TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+
+    SetVerifyCallingPermissionForTestFalse(true);
+    SetIsBundleSelfCallingForTestFalse(false);
+    ret = hostImpl->GetOverlayModuleInfoByBundleName(
+        TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+
+    SetVerifyCallingPermissionForTestFalse(false);
+    ret = hostImpl->GetOverlayModuleInfoByBundleName(
+        TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetOverlayBundleInfoForTarget_0100
+ * @tc.name: test GetOverlayBundleInfoForTarget
+ * @tc.desc: test GetOverlayBundleInfoForTarget of OverlayManagerHostImpl
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, GetOverlayBundleInfoForTarget_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    SetCheckUserFromShellForTest(false);
+    std::vector<OverlayBundleInfo> vec;
+    auto ret = hostImpl->GetOverlayBundleInfoForTarget(TEST_TARGET_BUNDLE_NAME, vec);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfoForTarget_0100
+ * @tc.name: test GetOverlayModuleInfoForTarget
+ * @tc.desc: test GetOverlayModuleInfoForTarget of OverlayManagerHostImpl
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, GetOverlayModuleInfoForTarget_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    SetCheckUserFromShellForTest(false);
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    auto ret = hostImpl->GetOverlayModuleInfoForTarget(
+        TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+
+    SetCheckUserFromShellForTest(true);
+    SetSystemAppForTest(false);
+    ret = hostImpl->GetOverlayModuleInfoForTarget(
+        TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTestFalse(true);
+    SetIsBundleSelfCallingForTestFalse(true);
+    ret = hostImpl->GetOverlayModuleInfoForTarget(
+        TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+
+    SetVerifyCallingPermissionForTestFalse(false);
+    ret = hostImpl->GetOverlayModuleInfoForTarget(
+        TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+
+    SetVerifyCallingPermissionForTestFalse(true);
+    SetIsBundleSelfCallingForTestFalse(false);
+    ret = hostImpl->GetOverlayModuleInfoForTarget(
+        TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+
+    SetVerifyCallingPermissionForTestFalse(false);
+    ret = hostImpl->GetOverlayModuleInfoForTarget(
+        TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME, overlayModuleInfos, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: SetOverlayEnabledForSelf_0100
+ * @tc.name: test SetOverlayEnabledForSelf
+ * @tc.desc: test SetOverlayEnabledForSelf of OverlayManagerHostImpl
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, SetOverlayEnabledForSelf_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    bool isEnabled = false;
+    std::string moduleName = TEST_MODULE_NAME;
+    auto ret = hostImpl->SetOverlayEnabledForSelf(moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: SetOverlayEnabled_0100
+ * @tc.name: test SetOverlayEnabled
+ * @tc.desc: test SetOverlayEnabled of OverlayManagerHostImpl
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, SetOverlayEnabled_0100, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+
+    SetSystemAppForTest(false);
+    bool isEnabled = false;
+    std::string bundleName = TEST_TARGET_BUNDLE_NAME;
+    std::string moduleName = TEST_TARGET_MODULE_NAME;
+    auto ret = hostImpl->SetOverlayEnabled(bundleName, moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTestFalse(true);
+    SetIsBundleSelfCallingForTestFalse(true);
+    ret = hostImpl->SetOverlayEnabled(bundleName, moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+
+    SetVerifyCallingPermissionForTestFalse(false);
+    ret = hostImpl->SetOverlayEnabled(bundleName, moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+
+    SetVerifyCallingPermissionForTestFalse(true);
+    SetIsBundleSelfCallingForTestFalse(false);
+    ret = hostImpl->SetOverlayEnabled(bundleName, moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+
+    SetVerifyCallingPermissionForTestFalse(false);
+    ret = hostImpl->SetOverlayEnabled(bundleName, moduleName, isEnabled, TEST_USER_ID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+    ResetTestValues();
 }
 } // OHOS
