@@ -1283,41 +1283,135 @@ HWTEST_F(BmsBundleNavigationTest, RouterMapMerge_0013, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: IsRegexMatch_0001
- * @tc.name: test IsRegexMatch function for router map
- * @tc.desc: 1.IsRegexMatch
+ * @tc.number: IsAlnumOrEmpty_0001
+ * @tc.name: test IsAlnumOrEmpty function for router map
+ * @tc.desc: 1.IsAlnumOrEmpty returns true for empty string
  */
-HWTEST_F(BmsBundleNavigationTest, IsRegexMatch_0001, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleNavigationTest, IsAlnumOrEmpty_0001, Function | SmallTest | Level0)
 {
-    const char *pattern = "";
     std::string str = "";
-    bool result = RouterMapHelper::IsRegexMatch(str, pattern);
+    bool result = RouterMapHelper::IsAlnumOrEmpty(str);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: IsAlnumOrEmpty_0002
+ * @tc.name: test IsAlnumOrEmpty function for router map
+ * @tc.desc: 1.IsAlnumOrEmpty returns true for alphanumeric string
+ */
+HWTEST_F(BmsBundleNavigationTest, IsAlnumOrEmpty_0002, Function | SmallTest | Level0)
+{
+    std::string str = "abc123";
+    bool result = RouterMapHelper::IsAlnumOrEmpty(str);
     EXPECT_TRUE(result);
 
-    pattern = "[";
-    str = "test";
-    result = RouterMapHelper::IsRegexMatch(str, pattern);
+    str = "ABC";
+    result = RouterMapHelper::IsAlnumOrEmpty(str);
+    EXPECT_TRUE(result);
+
+    str = "123";
+    result = RouterMapHelper::IsAlnumOrEmpty(str);
+    EXPECT_TRUE(result);
+
+    str = "aB1cD2";
+    result = RouterMapHelper::IsAlnumOrEmpty(str);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: IsAlnumOrEmpty_0003
+ * @tc.name: test IsAlnumOrEmpty function for router map
+ * @tc.desc: 1.IsAlnumOrEmpty returns false for non-alphanumeric string
+ */
+HWTEST_F(BmsBundleNavigationTest, IsAlnumOrEmpty_0003, Function | SmallTest | Level0)
+{
+    std::string str = "abc-123";
+    bool result = RouterMapHelper::IsAlnumOrEmpty(str);
     EXPECT_FALSE(result);
 
-    pattern = "a.*b";
-    str = "abc";
-    result = RouterMapHelper::IsRegexMatch(str, pattern);
-    EXPECT_TRUE(result);
-
-    pattern = "a.*b";
-    str = "acd";
-    result = RouterMapHelper::IsRegexMatch(str, pattern);
+    str = "abc_123";
+    result = RouterMapHelper::IsAlnumOrEmpty(str);
     EXPECT_FALSE(result);
 
-    pattern = ".";
-    str = "a";
-    result = RouterMapHelper::IsRegexMatch(str, pattern);
+    str = "abc.123";
+    result = RouterMapHelper::IsAlnumOrEmpty(str);
+    EXPECT_FALSE(result);
+
+    str = " ";
+    result = RouterMapHelper::IsAlnumOrEmpty(str);
+    EXPECT_FALSE(result);
+
+    str = "abc 123";
+    result = RouterMapHelper::IsAlnumOrEmpty(str);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: IsNumeric_0001
+ * @tc.name: test IsNumeric function for router map
+ * @tc.desc: 1.IsNumeric returns false for empty string
+ */
+HWTEST_F(BmsBundleNavigationTest, IsNumeric_0001, Function | SmallTest | Level0)
+{
+    std::string str = "";
+    bool result = RouterMapHelper::IsNumeric(str);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: IsNumeric_0002
+ * @tc.name: test IsNumeric function for router map
+ * @tc.desc: 1.IsNumeric returns true for numeric string
+ */
+HWTEST_F(BmsBundleNavigationTest, IsNumeric_0002, Function | SmallTest | Level0)
+{
+    std::string str = "123";
+    bool result = RouterMapHelper::IsNumeric(str);
     EXPECT_TRUE(result);
 
-    pattern = "^a";
-    str = "a\nb";
-    result = RouterMapHelper::IsRegexMatch(str, pattern);
+    str = "0";
+    result = RouterMapHelper::IsNumeric(str);
     EXPECT_TRUE(result);
+
+    str = "9876543210";
+    result = RouterMapHelper::IsNumeric(str);
+    EXPECT_TRUE(result);
+
+    str = "00123";
+    result = RouterMapHelper::IsNumeric(str);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: IsNumeric_0003
+ * @tc.name: test IsNumeric function for router map
+ * @tc.desc: 1.IsNumeric returns false for non-numeric string
+ */
+HWTEST_F(BmsBundleNavigationTest, IsNumeric_0003, Function | SmallTest | Level0)
+{
+    std::string str = "abc";
+    bool result = RouterMapHelper::IsNumeric(str);
+    EXPECT_FALSE(result);
+
+    str = "123abc";
+    result = RouterMapHelper::IsNumeric(str);
+    EXPECT_FALSE(result);
+
+    str = "abc123";
+    result = RouterMapHelper::IsNumeric(str);
+    EXPECT_FALSE(result);
+
+    str = "12.34";
+    result = RouterMapHelper::IsNumeric(str);
+    EXPECT_FALSE(result);
+
+    str = "-123";
+    result = RouterMapHelper::IsNumeric(str);
+    EXPECT_FALSE(result);
+
+    str = "12 34";
+    result = RouterMapHelper::IsNumeric(str);
+    EXPECT_FALSE(result);
 }
 
 /**

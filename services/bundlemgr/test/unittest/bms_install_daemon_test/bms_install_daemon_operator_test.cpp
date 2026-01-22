@@ -2417,4 +2417,251 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14100, Function | Sm
     bool ret = InstalldOperator::ProcessBundleInstallNative(param);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_14200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling IsExistApFile of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14200, Function | SmallTest | Level0)
+{
+    std::string testFile = "/data/test/test.txt";
+    CreateFile(testFile, "test content");
+    bool ret = InstalldOperator::IsExistApFile(testFile + "/test.ap");
+    EXPECT_FALSE(ret);
+    DeleteFile(testFile);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_14300
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetSameLevelTmpPath of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14300, Function | SmallTest | Level0)
+{
+    std::string result = InstalldOperator::GetSameLevelTmpPath("test.txt");
+    EXPECT_EQ(result, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_14400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeleteCertAndRemoveKey of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14400, Function | SmallTest | Level0)
+{
+    ErrCode ret = InstalldOperator::DeleteCertAndRemoveKey("");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_14500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeleteCertAndRemoveKey of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14500, Function | SmallTest | Level0)
+{
+    std::string longPath(Constants::BMS_MAX_PATH_LENGTH + 1, 'a');
+    ErrCode ret = InstalldOperator::DeleteCertAndRemoveKey(longPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_14600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeleteCertAndRemoveKey of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14600, Function | SmallTest | Level0)
+{
+    std::string certPath = "/data/test/test_cert.pem";
+    ErrCode ret = InstalldOperator::DeleteCertAndRemoveKey(certPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_READ_CERT_FAILED);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_14700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeleteCertAndRemoveKey of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14700, Function | SmallTest | Level0)
+{
+    std::string certPath = "/data/test/test_cert.pem";
+    std::string certDir = "/data/test/";
+    InstalldOperator::MkRecursiveDir(certDir, false);
+    CreateFile(certPath, "test cert content");
+    chmod(certDir.c_str(), 0444);
+    ErrCode ret = InstalldOperator::DeleteCertAndRemoveKey(certPath);
+    chmod(certDir.c_str(), 0755);
+    DeleteFile(certPath);
+    InstalldOperator::DeleteDir(certDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_ENTERPRISE_CERT_REMOVE_KEY_ERROR);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_14800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling CopyDir of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14800, Function | SmallTest | Level0)
+{
+    std::string srcDir = "/data/test/test_dir1";
+    std::string destDir = "/data/test/test_dir2";
+    bool ret = InstalldOperator::CopyDir(srcDir, destDir);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_14900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling TraverseCacheDirectory of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_14900, Function | SmallTest | Level0)
+{
+    std::string testDir = "/data/test/test_dir";
+    InstalldOperator::MkRecursiveDir(testDir, true);
+    std::vector<std::string> cacheDirs;
+    InstalldOperator::TraverseCacheDirectory(testDir, cacheDirs);
+    InstalldOperator::DeleteDir(testDir);
+    EXPECT_TRUE(true);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ScanDir of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15000, Function | SmallTest | Level0)
+{
+    std::string nonExistentPath = "/data/test/test_dir";
+    std::vector<std::string> paths;
+    bool ret = InstalldOperator::ScanDir(nonExistentPath, ScanMode::SUB_FILE_ALL,
+        ResultMode::ABSOLUTE_PATH, paths);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15100
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ObtainNativeSoFile of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15100, Function | SmallTest | Level0)
+{
+    std::string testFile = "/data/test/empty.zip";
+    CreateFile(testFile, "");
+    std::ofstream ofs(testFile, std::ios::binary);
+    const unsigned char emptyZip[] = {
+        0x50, 0x4b, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+    };
+    ofs.write(reinterpret_cast<const char*>(emptyZip), sizeof(emptyZip));
+    ofs.close();
+    BundleExtractor extractor(testFile);
+    extractor.Init();
+    std::vector<std::string> soEntryFiles;
+    bool ret = InstalldOperator::ObtainNativeSoFile(extractor, "arm64", soEntryFiles);
+    DeleteFile(testFile);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractDriverSoFiles of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15200, Function | SmallTest | Level0)
+{
+    std::string srcPath = "/data/test/src";
+    std::unordered_multimap<std::string, std::string> dirMap;
+    dirMap.insert({".", "/system/lib"});
+    bool ret = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15300
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling SetKeyIdPolicy of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15300, Function | SmallTest | Level0)
+{
+    EncryptionParam param;
+    param.bundleName = "com.test.policy";
+    param.userId = 100;
+    param.encryptionDirType = EncryptionDirType::APP;
+    std::string longKeyId;
+    for (int i = 0; i < 9; i++) {
+        longKeyId += "00";
+    }
+    bool ret = InstalldOperator::SetKeyIdPolicy(param, longKeyId);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling MigrateDataCreateAhead of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15400, Function | SmallTest | Level0)
+{
+    std::string sourcePath = "noSlashPath";  // No '/' character
+    std::string destPath = "/data/test/dest";
+    AppExecFwk::InstalldOperator::OwnershipInfo info;
+    info.uid = 1000;
+    info.gid = 1000;
+    info.mode = 0755;
+    int32_t ret = InstalldOperator::MigrateDataCreateAhead(sourcePath, destPath, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ClearDir of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15500, Function | SmallTest | Level0)
+{
+    std::string nonExistentPath = "/data/test/nonexistent_clear_dir_12345";
+    bool ret = InstalldOperator::ClearDir(nonExistentPath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling WriteCertToFile of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15600, Function | SmallTest | Level0)
+{
+    std::string emptyCertFilePath = "";
+    std::string certContent = "test cert content";
+    bool ret = InstalldOperator::WriteCertToFile(emptyCertFilePath, certContent);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling RestoreconPath of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15700, Function | SmallTest | Level0)
+{
+    std::string invalidPath = "/data/test/test_dir";
+    bool ret = InstalldOperator::RestoreconPath(invalidPath);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_15800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessApplyDiffPatchPath of InstalldOperator
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15800, Function | SmallTest | Level0)
+{
+    std::vector<std::string> oldSoFileNames;
+    std::vector<std::string> diffFileNames;
+    bool res = InstalldOperator::ProcessApplyDiffPatchPath(
+        "noExist", "", "noExist", oldSoFileNames, diffFileNames);
+    EXPECT_EQ(res, false);
+}
 } // OHOS

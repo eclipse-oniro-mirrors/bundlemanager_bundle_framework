@@ -896,6 +896,8 @@ private:
 #endif
     ErrCode ProcessPluginFilesWhenUpdate(const InnerBundleInfo &oldInfo,
         const std::string &oldPath, const std::string &newPath);
+    ErrCode CheckThirdPartyBundleDeveloperIdValid(const InnerBundleInfo &newInfo,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, int32_t userId);
     void NotifyBundleCallback(const NotifyType &type, int32_t uid);
 
     bool isAppExist_ = false;

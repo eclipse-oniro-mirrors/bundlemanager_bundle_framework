@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Copyright (c) 2025-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -42,6 +42,7 @@ group("bundlemanagerfuzztest") {
     "bmsbeforeaddextresource_fuzzer:BMSBeforeAddExtResourceFuzzTest",
     "bmsbmsjsonutil_fuzzer:BMSBMSJsonUtilFuzzTest",
     "bmsbundleagingmgr_fuzzer:BMSBundleAgingMgrFuzzTest",
+    "bmsbundlebackupmgr_fuzzer:BMSBundleBackupMgrFuzzTest",
     "bmsbundlecloneinstaller_fuzzer:BmsBundleCloneInstallerFuzzTest",
     "bmsbundleconnectabilitymgr_fuzzer:BMSBundleConnectAbilityMgrFuzzTest",
     "bmsbundleeventcallbackhost_fuzzer:BMSBundleEventCallbackHostFuzzTest",
@@ -135,18 +136,23 @@ group("bundlemanagerfuzztest") {
     "bmsgetuidbybundlename_fuzzer:BMSGetUidByBundleNameFuzzTest",
     "bmshapmoduleinfo_fuzzer:BMSHapModuleInfoFuzzTest",
     "bmshmpbundleinstaller_fuzzer:BMSHmpBundleInstallerFuzzTest",
-    "bmsondemandinstalldatamgr_fuzzer:BMSOnDemandInstallDataMgrFuzzTest",
-    "bmsondemandinstalldatastoragerdb_fuzzer:BMSOnDemandInstallDataStorageRdbFuzzTest",
+    "bmsidleconditionlistener_fuzzer:BMSIdleConditionListenerFuzzTest",
+    "bmsidleconditionmgr_fuzzer:BMSIdleConditionMgrFuzzTest",
+    "bmsidlemanagerrdb_fuzzer:BMSIdleManagerRdbFuzzTest",
     "bmsinstalldloadcallback_fuzzer:BMSInstalldLoadCallbackFuzzTest",
     "bmsinstalldpermissionmgr_fuzzer:BMSInstalldPermissionMgrFuzzTest",
     "bmsinstalldservice_fuzzer:BMSInstalldServiceFuzzTest",
     "bmsinstalldserviceparallelization_fuzzer:BMSInstalldServiceParallezationFuzzTest",
+    "bmsinstallexceptionmgr_fuzzer:BMSInstallExceptionMgrFuzzTest",
     "bmsinstallparam_fuzzer:BMSInstallParamFuzzTest",
     "bmsinstallpluginparam_fuzzer:BMSInstallPluginParamFuzzTest",
     "bmsisexistfirstinstallbundleinfo_fuzzer:BMSIsExistFirstInstallBundleInfoFuzzTest",
     "bmskeyeventmgr_fuzzer:BMSKeyEventMgrFuzzTest",
     "bmsnavigation_fuzzer:BMSNavigationFuzzTest",
+    "bmsnewbundledatadirmgr_fuzzer:BMSNewBundleDataDirMgrFuzzTest",
     "bmsplugininstaller_fuzzer:BMSPluginInstallerFuzzTest",
+    "bmsondemandinstalldatamgr_fuzzer:BMSOnDemandInstallDataMgrFuzzTest",
+    "bmsondemandinstalldatastoragerdb_fuzzer:BMSOnDemandInstallDataStorageRdbFuzzTest",
     "bmsonqueryrpcidfinished_fuzzer:BMSOnQueryRpcIdFinishedFuzzTest",
     "bmspreinstallexceptionmgr_fuzzer:BMSPreInstallExceptionMgrFuzzTest",
     "bmsprocesscachecallbackhost_fuzzer:BMSProcessCacheCallbackHostFuzzTest",
@@ -166,6 +172,7 @@ group("bundlemanagerfuzztest") {
     "bmsremoteabilityinfo_fuzzer:BMSRemoteAbilityInfoFuzzTest",
     "bmsshortcutvisibledatastoragerdb_fuzzer:BMSShortcutVisibleDataStorageRdbFuzzTest",
     "bmssendcallback_fuzzer:BMSSendCallbackFuzzTest",
+    "bmssetdisposedstatus_fuzzer:BMSSetDisposedStatusFuzzTest",
     "bmsshortcutdatastoragerdb_fuzzer:BMSShortCutDataStorageRdbFuzzTest",
     "bmsshortcutenableddatastoragerdb_fuzzer:BMSShortcutEnabledDataStorageRdbFuzzTest",
     "bmsuninstallbundleresourcerdb_fuzzer:BMSUninstallBundleResourceRdbFuzzTest",

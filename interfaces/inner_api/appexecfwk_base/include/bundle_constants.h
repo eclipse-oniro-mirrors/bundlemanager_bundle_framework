@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -190,6 +190,8 @@ constexpr int8_t INHERIT_CROWDTEST_DEADLINE = -2;
 // app sign type
 constexpr const char* APP_SIGN_TYPE_NONE = "none";
 constexpr const char* APP_SIGN_TYPE_ENTERPRISE_RE_SIGN = "enterpriseReSign";
+// app build version
+constexpr const char* BUILD_VERSION = "buildVersion";
 
 // overlay installation
 constexpr const char* OVERLAY_STATE = "overlayState";

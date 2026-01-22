@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -288,6 +288,7 @@ struct App {
     std::string description;
     std::string vendor;
     std::string versionName;
+    std::string buildVersion;
     std::string apiReleaseType = APP_API_RELEASETYPE_DEFAULT_VALUE;
     std::pair<bool, bool> removable = std::make_pair<>(false, true);
     std::vector<std::string> targetBundleList;
@@ -1428,6 +1429,12 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         jsonObjectEnd,
         APP_PRELOAD_PHASE,
         app.appPreloadPhase,
+        false,
+        g_parseResult);
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        Constants::BUILD_VERSION,
+        app.buildVersion,
         false,
         g_parseResult);
 }
@@ -2775,6 +2782,7 @@ bool ToInnerBundleInfo(
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;
+    bundleInfo.buildVersion = moduleJson.app.buildVersion;
     ToBundleInfo(applicationInfo, innerModuleInfo, transformParam, bundleInfo);
 
     // handle abilities

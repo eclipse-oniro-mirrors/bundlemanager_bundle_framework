@@ -15,30 +15,32 @@
 
 #include <cstddef>
 #include <cstdint>
-
+#include <fuzzer/FuzzedDataProvider.h>
 #include "bundle_mgr_proxy.h"
 
 #include "bmsqueryabilityinfo_fuzzer.h"
-
+#include "bms_fuzztest_util.h"
+#include "securec.h"
 using Want = OHOS::AAFwk::Want;
-
+using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
-    {
-        sptr<IRemoteObject> object;
-        BundleMgrProxy bundleMgrProxy(object);
-        AbilityInfo abilityInfo;
-        Want want;
-        std::string bundleName (reinterpret_cast<const char*>(data), size);
-        want.SetAction(bundleName);
-        bundleMgrProxy.QueryAbilityInfo (want, abilityInfo);
-        bundleMgrProxy.QueryAbilityInfo (want, reinterpret_cast<uintptr_t>(data),
-            reinterpret_cast<uintptr_t>(data), abilityInfo, object);
-        bundleMgrProxy.QueryAbilityInfo (want, reinterpret_cast<uintptr_t>(data),
-            reinterpret_cast<uintptr_t>(data), abilityInfo);
-        return true;
-    }
+bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
+{
+    sptr<IRemoteObject> object;
+    BundleMgrProxy bundleMgrProxy(object);
+    FuzzedDataProvider fdp(data, size);
+    AbilityInfo abilityInfo;
+    Want want;
+    std::string bundleName = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
+    want.SetAction(bundleName);
+    bundleMgrProxy.QueryAbilityInfo (want, abilityInfo);
+    int32_t flags = fdp.ConsumeIntegral<int32_t>();
+    int32_t userId = GenerateRandomUser(fdp);
+    bundleMgrProxy.QueryAbilityInfo (want, flags, userId, abilityInfo, object);
+    bundleMgrProxy.QueryAbilityInfo (want, flags, userId, abilityInfo);
+    return true;
+}
 }
 
 // Fuzzer entry point.

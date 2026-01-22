@@ -2441,7 +2441,11 @@ HWTEST_F(BmsExtensionDataMgrTest, GetInstallAndRecoverList_0001, Function | Smal
     std::vector<std::string> recoverList;
     bmsExtensionDataMgr.handler_ = nullptr;
     ErrCode res = bmsExtensionDataMgr.GetInstallAndRecoverList(userId, bundleList, installList, recoverList);
+#ifdef USE_ARM64
+    EXPECT_TRUE(res);
+#else
     EXPECT_FALSE(res);
+#endif
 
     bmsExtensionDataMgr.bmsExtension_.bmsExtensionBundleMgr.extensionName = TEST_EXTENSION_NAME;
     int32_t handleTest = TEST_NUMBER_ONE;

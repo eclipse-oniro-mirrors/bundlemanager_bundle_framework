@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "common_json_converter.h"
+#include "exception_util.h"
 #include "free_install_params.h"
 #include "installd_client.h"
 #include "parameters.h"
@@ -1348,10 +1349,9 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
 
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
 {
-    try {
-        const auto &jsonObjectEnd = jsonObject.end();
-        int32_t parseResult = ERR_OK;
-        GetValueIfFindKey<Constants::AppType>(jsonObject,
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<Constants::AppType>(jsonObject,
             jsonObjectEnd,
             APP_TYPE,
             appType_,
@@ -1622,14 +1622,10 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
             isDelayAging_,
             false,
             parseResult);
-        if (parseResult != ERR_OK) {
-            APP_LOGE("read InnerBundleInfo from database error code : %{public}d", parseResult);
-        }
-        return parseResult;
-    } catch (const nlohmann::json::exception &e) {
-        APP_LOGE("FromJson err: %{public}s", e.what());
-        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    if (parseResult != ERR_OK) {
+        APP_LOGE_NOFUNC("read InnerBundleInfo from database error code : %{public}d", parseResult);
     }
+    return parseResult;
 }
 
 void InnerBundleInfo::BuildDefaultUserInfo()
@@ -1920,28 +1916,27 @@ void InnerBundleInfo::AppendDynamicSkillsToAbilityIfExist(AbilityInfo &abilityIn
 
 bool InnerBundleInfo::ValidateDynamicSkills(const std::map<std::string, std::vector<Skill>> &dynamicSkills) const
 {
-    try {
-        // validate to json
-        nlohmann::json jsonObject;
-        jsonObject[DYNAMIC_SKILLS] = dynamicSkills;
-        (void)jsonObject.dump();
-        // validate from json
-        int32_t ret = ERR_OK;
-        std::map<std::string, std::vector<Skill>> tmpDynamicSkills;
-        GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
-            jsonObject.end(),
-            DYNAMIC_SKILLS,
-            tmpDynamicSkills,
-            JsonType::OBJECT,
-            false,
-            ret,
-            ArrayType::NOT_ARRAY);
-        if (ret != ERR_OK) {
-            APP_LOGE("ValidateDynamicSkills error:%{public}d", ret);
-            return false;
-        }
-    } catch (const nlohmann::json::exception& e) {
-        APP_LOGE("ValidateDynamicSkills exception:%{public}s, %{public}d", e.what(), e.id);
+    // validate to json
+    nlohmann::json jsonObject;
+    jsonObject[DYNAMIC_SKILLS] = dynamicSkills;
+    std::string dumpResult;
+    if (!ExceptionUtil::GetInstance().SafeDump(jsonObject, dumpResult)) {
+        APP_LOGE_NOFUNC("ValidateDynamicSkills dump failed");
+        return false;
+    }
+    // validate from json
+    int32_t ret = ERR_OK;
+    std::map<std::string, std::vector<Skill>> tmpDynamicSkills;
+    GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
+        jsonObject.end(),
+        DYNAMIC_SKILLS,
+        tmpDynamicSkills,
+        JsonType::OBJECT,
+        false,
+        ret,
+        ArrayType::NOT_ARRAY);
+    if (ret != ERR_OK) {
+        APP_LOGE_NOFUNC("ValidateDynamicSkills error:%{public}d", ret);
         return false;
     }
     return true;
@@ -2026,6 +2021,7 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
 
     baseBundleInfo_->versionCode = bundleInfo.versionCode;
     baseBundleInfo_->versionName = bundleInfo.versionName;
+    baseBundleInfo_->buildVersion = bundleInfo.buildVersion;
     baseBundleInfo_->minCompatibleVersionCode = bundleInfo.minCompatibleVersionCode;
     baseBundleInfo_->compatibleVersion = bundleInfo.compatibleVersion;
     baseBundleInfo_->targetVersion = bundleInfo.targetVersion;
@@ -2624,14 +2620,14 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
 
 std::string InnerBundleInfo::ToString() const
 {
-    try {
-        nlohmann::json j;
-        ToJson(j);
-        return j.dump();
-    } catch (const nlohmann::json::exception &e) {
-        LOG_E(BMS_TAG_DEFAULT, "ToString err: %{public}s", e.what());
+    nlohmann::json j;
+    ToJson(j);
+    std::string result;
+    if (!ExceptionUtil::GetInstance().SafeDump(j, result)) {
+        APP_LOGE_NOFUNC("ToString SafeDump failed");
         return Constants::EMPTY_STRING;
     }
+    return result;
 }
 
 void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, ApplicationInfo &appInfo,

@@ -26,22 +26,22 @@
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::BMSFuzzTestUtil;
 namespace OHOS {
-constexpr uint32_t CODE_MAX = 6;
+constexpr uint32_t CODE_MAX = 10;
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
-    MessageParcel datas;
-    std::u16string descriptor = BundleResourceHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    BundleResourceHost bundleResourceHost;
-
-    FuzzedDataProvider fdp(data, size);
-    uint8_t code = fdp.ConsumeIntegralInRange<uint8_t>(0, CODE_MAX);
-    bundleResourceHost.OnRemoteRequest(code, datas, reply, option);
+    for (uint32_t code = 0; code <= CODE_MAX; code++) {
+        MessageParcel datas;
+        std::u16string descriptor = BundleResourceHost::GetDescriptor();
+        datas.WriteInterfaceToken(descriptor);
+        datas.WriteBuffer(data, size);
+        datas.RewindRead(0);
+        MessageParcel reply;
+        MessageOption option;
+        BundleResourceHost bundleResourceHost;
+        FuzzedDataProvider fdp(data, size);
+        bundleResourceHost.OnRemoteRequest(code, datas, reply, option);
+    }
     return true;
 }
 }

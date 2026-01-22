@@ -66,7 +66,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     inBundlePaths.emplace_back(fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH));
     installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, parsedPaths, signatureFilePath);
     installer.ObtainHspFileAndSignatureFilePath(pluginFilePaths, parsedPaths, signatureFilePath);
-
     installer.CopyHspToSecurityDir(pluginFilePaths, installPluginParam);
 
     std::string bundlePath = fdp.ConsumeRandomLengthString(STRING_MAX_LENGTH);
@@ -127,7 +126,10 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     NotifyType type = static_cast<NotifyType>(fdp.ConsumeIntegralInRange<uint8_t>(0, ORIENTATION_MAX));
     int32_t uid = fdp.ConsumeIntegral<int32_t>();
     installer.NotifyPluginEvents(type, uid);
-
+    InnerBundleInfo pluginInfo;
+    installer.UpdateRouterInfoForPlugin(hostBundleName, pluginInfo);
+    installer.DeleteRouterInfoForPlugin(hostBundleName);
+    installer.SendPluginCommonEvent(hostBundleName, pluginBundleName, NotifyType::INSTALL);
     return true;
 }
 }

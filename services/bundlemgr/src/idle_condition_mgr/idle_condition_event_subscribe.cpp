@@ -38,7 +38,7 @@ void IdleConditionEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDat
     if (!OHOS::system::GetBoolParameter(ServiceConstants::BMS_RELABEL_PARAM, false)) {
         return;
     }
-    APP_LOGI("OnReceiveEvent received idle condition event");
+    APP_LOGD("OnReceiveEvent received idle condition event");
     std::string action = data.GetWant().GetAction();
     auto idleMgr = DelayedSingleton<IdleConditionMgr>::GetInstance();
     if (idleMgr == nullptr) {

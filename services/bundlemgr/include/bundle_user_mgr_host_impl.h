@@ -52,7 +52,7 @@ private:
     void InnerUninstallBundle(int32_t userId, const std::vector<BundleInfo> &bundleInfos);
     ErrCode CheckInitialUser();
     void BeforeCreateNewUser(int32_t userId);
-    void OnCreateNewUser(int32_t userId, bool needToSkipPreBundleInstall,
+    ErrCode OnCreateNewUser(int32_t userId, bool needToSkipPreBundleInstall,
         const std::vector<std::string> &disallowList = {},
         const std::optional<std::vector<std::string>> &allowList = std::nullopt);
     void AfterCreateNewUser(int32_t userId);
@@ -83,6 +83,8 @@ private:
     ErrCode RemoveSystemOptimizeDir(int32_t userId);
 
     bool DeleteReSignCert(int32_t userId);
+
+    ErrCode CheckCriticalAppAreInstalled(int32_t userId, const std::set<PreInstallBundleInfo> &preInfos);
 
     std::mutex bundleUserMgrMutex_;
 
