@@ -2111,10 +2111,8 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7700, Function | SmallTest | 
     InstallParam installParam;
     installParam.userId = USERID;
     int32_t uid = USERID;
-    auto res = installer.ProcessBundleUninstall(BUNDLE_NAME, installParam, uid);
-    EXPECT_EQ(res, ERR_OK);
-
-    dataMgr->RemoveInnerBundleUserInfo(BUNDLE_NAME, ADD_NEW_USERID);
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
     OHOS::system::RemoveParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS);
 }
 
@@ -2141,10 +2139,8 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7800, Function | SmallTest | 
     InstallParam installParam;
     installParam.userId = USERID;
     int32_t uid = USERID;
-    auto res = installer.ProcessBundleUninstall(BUNDLE_NAME, installParam, uid);
-    EXPECT_EQ(res, ERR_OK);
-
-    dataMgr->RemoveInnerBundleUserInfo(BUNDLE_NAME, ADD_NEW_USERID);
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
     OHOS::system::RemoveParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS);
 }
 
@@ -2173,10 +2169,8 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7900, Function | SmallTest | 
     InstallParam installParam;
     installParam.userId = USERID;
     int32_t uid = USERID;
-    auto res = installer.ProcessBundleUninstall(BUNDLE_NAME, installParam, uid);
-    EXPECT_EQ(res, ERR_OK);
-
-    dataMgr->RemoveInnerBundleUserInfo(BUNDLE_NAME, ADD_NEW_USERID);
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
     OHOS::system::RemoveParameter(ServiceConstants::IS_DRIVER_FOR_ALL_USERS);
     OHOS::system::RemoveParameter(ServiceConstants::ENTERPRISE_SPACE_ENABLE);
 }

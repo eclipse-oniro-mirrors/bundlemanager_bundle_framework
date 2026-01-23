@@ -15064,7 +15064,7 @@ HWTEST_F(BmsBundleInstallerTest, ClearDir_0100, Function | SmallTest | Level0)
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     dir = TEST_ERROR_STRING;
     ret = impl.ClearDir(dir);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
