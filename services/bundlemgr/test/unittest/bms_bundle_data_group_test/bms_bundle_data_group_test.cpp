@@ -17,16 +17,13 @@
 #define protected public
 
 #include <fstream>
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include "app_provision_info_manager.h"
 #include "base_bundle_installer.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
-#include "bundle_util.h"
 #include "data_group_info.h"
-#include "encryption_param.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "migrate_data_user_auth_callback.h"
@@ -38,8 +35,6 @@ using namespace OHOS::AppExecFwk;
 using OHOS::Parcel;
 
 namespace OHOS {
-
-
 namespace {
 const std::string BUNDLE_NAME = "com.example.demo.testDataGroup";
 const std::string BUNDLE_NAME_TEST = "com.example.demo.testDataGroup.test";

@@ -466,6 +466,12 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForException(const std::string &bundleNa
     bundleInfoForException.allowedAcls = innerBundleInfo.GetAllowedAcls();
     bundleInfoForException.abilityNames = innerBundleInfo.GetAbilityNames();
 
+    // Add ExtensionAbilityInfo names to abilityNames
+    const auto &innerExtensionInfos = innerBundleInfo.GetInnerExtensionInfos();
+    for (const auto &[key, extensionInfo] : innerExtensionInfos) {
+        bundleInfoForException.abilityNames.push_back(extensionInfo.name);
+    }
+
     // get hapHashValueAndDevelopCerts
     bundleInfoForException.hapHashValueAndDevelopCerts = innerBundleInfo.GetModuleHapHash();
     for (size_t i = 0; i < bundleInfoForException.hapHashValueAndDevelopCerts.size(); i++) {

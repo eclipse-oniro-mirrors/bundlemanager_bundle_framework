@@ -128,7 +128,7 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
         if (stat(bundlePath.c_str(), &s) == 0) {
             std::string realPath = "";
             // it is a direction
-            if ((s.st_mode & S_IFDIR) && (ret = GetHapFilesFromBundlePath(bundlePath, realPaths) != ERR_OK)) {
+            if ((s.st_mode & S_IFDIR) && ((ret = GetHapFilesFromBundlePath(bundlePath, realPaths)) != ERR_OK)) {
                 APP_LOGE("GetHapFilesFromBundlePath failed with bundlePath:%{public}s", bundlePaths.front().c_str());
                 return ret;
             }
