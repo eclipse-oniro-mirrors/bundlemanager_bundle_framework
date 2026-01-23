@@ -55,7 +55,7 @@ namespace OHOS {
         appServiceFwk.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath);
         std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
         appServiceFwk.DeliveryProfileToCodeSign(hapVerifyResults);
-        appServiceFwk.GenerateOdid(infos, hapVerifyResults);
+        appServiceFwk.UpdateDeveloperId(infos, hapVerifyResults);
         return true;
     }
 }

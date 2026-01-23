@@ -2612,6 +2612,84 @@ HWTEST_F(BmsDataMgrTest, GetOdid_0100, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: GenerateOdid_0100
+ * @tc.name: test GenerateOdidNoLock with empty developerId
+ * @tc.desc: 1.test GenerateOdidNoLock with empty developerId should return empty
+ */
+HWTEST_F(BmsDataMgrTest, GenerateOdid_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string developerId = "";
+    std::string odid = dataMgr->GenerateOdidNoLock(developerId);
+    EXPECT_EQ(odid, "");
+}
+
+/**
+ * @tc.number: GenerateOdid_0200
+ * @tc.name: test GenerateOdidNoLock finds existing odid
+ * @tc.desc: 1.test GenerateOdidNoLock finds existing odid for same groupId
+ *           developerId1="DevID.001" and developerId2="DevID.002" have '.' delimiter
+ *           ExtractGroupIdByDevelopId("DevID.001") == ExtractGroupIdByDevelopId("DevID.002") == "DevID"
+ */
+HWTEST_F(BmsDataMgrTest, GenerateOdid_0200, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    // Add a bundle with developerId and odid
+    std::string bundleName = "test.odid.bundle";
+    std::string developerId1 = "DevID.001";
+    std::string existingOdid = "test-odid-123";
+
+    InnerBundleInfo info;
+    info.UpdateOdid(developerId1, existingOdid);
+    dataMgr->bundleInfos_.emplace(bundleName, info);
+
+    // developerId2 is different from developerId1 but has the same groupId
+    std::string developerId2 = "DevID.002";
+    std::string odid = dataMgr->GenerateOdidNoLock(developerId2);
+    EXPECT_EQ(odid, existingOdid);
+
+    // Cleanup
+    dataMgr->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: GenerateOdid_0300
+ * @tc.name: test GenerateOdidNoLock generates new odid
+ * @tc.desc: 1.test GenerateOdidNoLock generates new odid when not found
+ */
+HWTEST_F(BmsDataMgrTest, GenerateOdid_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string developerId = "NewDevID_0400";
+    std::string odid = dataMgr->GenerateOdidNoLock(developerId);
+    EXPECT_NE(odid, "");
+}
+
+/**
+ * @tc.number: GenerateOdid_0400
+ * @tc.name: test GenerateOdidNoLock with different groupIds
+ * @tc.desc: 1.test GenerateOdidNoLock generates different odids for different groupIds
+ *           developerId1="DiffGroup.001" and developerId2="DiffGroup.002" have different groupIds
+ */
+HWTEST_F(BmsDataMgrTest, GenerateOdid_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::string developerId1 = "DiffGroup.001";
+    std::string odid1 = dataMgr->GenerateOdidNoLock(developerId1);
+    std::string developerId2 = "AnotherGroup.002";  // Different groupId
+    std::string odid2 = dataMgr->GenerateOdidNoLock(developerId2);
+    EXPECT_NE(odid1, odid2);
+}
+
+/**
  * @tc.number:GetDeveloperIds_0100
  * @tc.name: test GetDeveloperIds
  * @tc.desc: 1.test get developer ids
@@ -8809,4 +8887,5 @@ HWTEST_F(BmsDataMgrTest, ImplicitQueryCurExtensionInfosV9_0001, Function | Mediu
     ret = bundleDataMgr.ImplicitQueryCurExtensionInfosV9(want, flags, userId, infos, appIndex);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 }
+
 } // OHOS

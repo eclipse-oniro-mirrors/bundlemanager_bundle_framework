@@ -4568,7 +4568,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     }
     // protect err scene
     dataMgr_->UpdateAppEncryptedStatus(infos.begin()->second.GetBundleName(), false, 0, true);
-    GenerateOdid(infos, hapVerifyRes);
+    UpdateDeveloperId(infos, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     /* At this place, hapVerifyRes cannot be empty and unnecessary to check it */
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyRes[0]);
@@ -4868,7 +4868,7 @@ void BaseBundleInstaller::SetAppDistributionType(const std::unordered_map<std::s
     appDistributionType_ = infos.begin()->second.GetAppDistributionType();
 }
 
-void BaseBundleInstaller::GenerateOdid(
+void BaseBundleInstaller::UpdateDeveloperId(
     std::unordered_map<std::string, InnerBundleInfo> &infos,
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
 {
@@ -4886,11 +4886,9 @@ void BaseBundleInstaller::GenerateOdid(
     if (developerId.empty()) {
         developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.bundleName;
     }
-    std::string odid;
-    dataMgr->GenerateOdid(developerId, odid);
 
     for (auto &item : infos) {
-        item.second.UpdateOdid(developerId, odid);
+        item.second.UpdateDeveloperId(developerId);
     }
 }
 

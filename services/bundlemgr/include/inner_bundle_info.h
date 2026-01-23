@@ -2341,6 +2341,7 @@ public:
     ErrCode GetAppServiceHspInfo(BundleInfo &bundleInfo) const;
     std::vector<std::string> GetQuerySchemes() const;
     void UpdateOdid(const std::string &developerId, const std::string &odid);
+    void UpdateDeveloperId(const std::string &developerId);
     void UpdateOdidByBundleInfo(const InnerBundleInfo &info);
     void GetDeveloperidAndOdid(std::string &developerId, std::string &odid) const;
     void GetOdid(std::string &odid) const;

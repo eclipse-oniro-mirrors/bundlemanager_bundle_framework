@@ -7867,14 +7867,14 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModule_0100, Function | SmallTest | Leve
     std::unordered_map<std::string, InnerBundleInfo> infos;
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
 
-    appServiceFwkInstaller.GenerateOdid(infos, hapVerifyRes);
+    appServiceFwkInstaller.UpdateDeveloperId(infos, hapVerifyRes);
 
     Security::Verify::HapVerifyResult hapVerifyResult;
     Security::Verify::ProvisionInfo provisionInfo;
     hapVerifyResult.SetProvisionInfo(provisionInfo);
     hapVerifyRes.push_back(hapVerifyResult);
 
-    appServiceFwkInstaller.GenerateOdid(infos, hapVerifyRes);
+    appServiceFwkInstaller.UpdateDeveloperId(infos, hapVerifyRes);
 
     ErrCode ret = appServiceFwkInstaller.ExtractModule(newInfo, bundlePath);
     EXPECT_EQ(ret, ERR_OK);
