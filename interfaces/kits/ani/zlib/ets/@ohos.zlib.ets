@@ -501,7 +501,7 @@ export default namespace zlib {
     gzread(buf: ArrayBuffer): Promise<long>;
     gzputs(str: string): Promise<int>;
     gzputc(c: int): Promise<int>;
-    gzprintf(format: string, ...args: Array<string | number>): Promise<int>;
+    gzprintf(format: string, ...args: Array<string | double>): Promise<int>;
     gzoffset(): Promise<long>;
     gzgets(buf: ArrayBuffer): Promise<string>;
   }
@@ -533,7 +533,7 @@ export default namespace zlib {
     private native gzreadNative(buf: ArrayBuffer): long;
     private native gzputsNative(str: string): int;
     private native gzputcNative(c: int): int;
-    private native gzprintfNative(format: string, ...args: Array<string | number>): int;
+    private native gzprintfNative(format: string, ...args: Array<string | double>): int;
     private native gzoffsetNative(): long;
     private native gzgetsNative(buf: ArrayBuffer): string;
 
@@ -920,7 +920,7 @@ export default namespace zlib {
       return p;
     }
 
-    public gzprintf(format: string, ...args: Array<string | number>): Promise<int> {
+    public gzprintf(format: string, ...args: Array<string | double>): Promise<int> {
       let p = new Promise<int>((resolve: (v:int) => void, reject: (error: BusinessError) => void) : void => {
         let execFun = (): int => {
           return this.gzprintfNative(format, ...args);
