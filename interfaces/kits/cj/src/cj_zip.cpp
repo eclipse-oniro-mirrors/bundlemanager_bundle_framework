@@ -283,17 +283,18 @@ ErrCode UnzipWithFilterCallback(
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
 
-    PlatformFile zipFd = open(src.Value().c_str(), S_IREAD, O_CREAT);
-    if (zipFd == kInvalidPlatformFile) {
+    FILE* zipFile = fopen(src.Value().c_str(), "r");
+    if (zipFile == nullptr) {
         APP_LOGI("Failed to open");
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
+    PlatformFile zipFd = fileno(zipFile);
     ErrCode ret = UnzipWithFilterAndWriters(zipFd,
         dest,
         std::bind(&CreateFilePathWriterDelegate, std::placeholders::_1, std::placeholders::_2),
         std::bind(&CreateDirectory, std::placeholders::_1, std::placeholders::_2),
         unzipParam);
-    close(zipFd);
+    fclose(zipFile);
     return ret;
 }
 
