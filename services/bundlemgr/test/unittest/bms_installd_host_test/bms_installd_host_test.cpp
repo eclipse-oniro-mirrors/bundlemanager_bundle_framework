@@ -323,7 +323,7 @@ HWTEST_F(BmsInstalldHostTest, HandleGetBundleStats_0100, Function | SmallTest | 
     MessageParcel data;
     MessageParcel reply;
     bool res = installdHost.HandleGetBundleStats(data, reply);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**

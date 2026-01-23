@@ -723,21 +723,21 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         return false;
     }
 
-    int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
-    if (sourceFd == -1) {
+    FILE* sourceFp = fopen(sourcePath.c_str(), "r");
+    if (sourceFp == nullptr) {
         APP_LOGE("sourcePath open failed, errno : %{public}d", errno);
         return CopyFile(sourcePath, destPath);
     }
-
+    int32_t sourceFd = fileno(sourceFp);
     struct stat sourceStat;
     if (fstat(sourceFd, &sourceStat) == -1) {
         APP_LOGE("fstat failed, errno : %{public}d", errno);
-        close(sourceFd);
+        (void)fclose(sourceFp);
         return CopyFile(sourcePath, destPath);
     }
     if (sourceStat.st_size < 0) {
         APP_LOGE("invalid st_size");
-        close(sourceFd);
+        (void)fclose(sourceFp);
         return CopyFile(sourcePath, destPath);
     }
 
@@ -745,7 +745,7 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
         destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (destFd == -1) {
         APP_LOGE("destPath open failed, errno : %{public}d", errno);
-        close(sourceFd);
+        (void)fclose(sourceFp);
         return CopyFile(sourcePath, destPath);
     }
 
@@ -759,12 +759,12 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
         APP_LOGE("sendfile failed, errno : %{public}d, send count : %{public}zu , file size : %{public}zu",
             errno, transferCount, static_cast<size_t>(sourceStat.st_size));
-        close(sourceFd);
+        (void)fclose(sourceFp);
         close(destFd);
         return CopyFile(sourcePath, destPath);
     }
 
-    close(sourceFd);
+    (void)fclose(sourceFp);
     if (needFsync) {
         (void)fsync(destFd);
     }

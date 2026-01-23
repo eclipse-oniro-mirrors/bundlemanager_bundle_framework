@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1012,11 +1012,6 @@ static ErrCode RemoveDistributedDir(const std::string &bundleName, const int use
 
 static void CleanDistributedDir(const std::string &bundleName, const int userid)
 {
-    std::string distributedFile = DISTRIBUTED_FILE + bundleName;
-    distributedFile = distributedFile.replace(distributedFile.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::DeleteFiles(distributedFile)) {
-        LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed, errno is %{public}d", distributedFile.c_str(), errno);
-    }
     std::string fileNonAccount = DISTRIBUTED_FILE_NON_ACCOUNT + bundleName;
     fileNonAccount = fileNonAccount.replace(fileNonAccount.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteFiles(fileNonAccount)) {
@@ -2936,7 +2931,7 @@ ErrCode InstalldHostImpl::CleanBundleDirs(const std::vector<std::string> &dirs, 
         }
 
         if (keepParent) {
-            if (!InstalldOperator::DeleteFiles(dir)) {
+            if (!InstalldOperator::ClearDir(dir)) {
                 ret = ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
                 LOG_W(BMS_TAG_INSTALLD, "delete files in %{public}s failed errno:%{public}d", dir.c_str(), errno);
             }
