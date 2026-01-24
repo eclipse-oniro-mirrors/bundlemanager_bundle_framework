@@ -32,11 +32,11 @@ static std::set<void *> callbackInfos;
 
 void HandleEnvCleanup(void *data)
 {
-    APP_LOGI("on hook %{public}d", data == nullptr);
+    APP_LOGI_NOFUNC("on hook %{public}d", data == nullptr);
     std::lock_guard<std::mutex> callbackLock(callbackMutex);
     auto it = callbackInfos.find(data);
     if (it == callbackInfos.end()) {
-        APP_LOGI("ZlibCallbackInfo destroyed");
+        APP_LOGI_NOFUNC("ZlibCallbackInfo destroyed");
         return;
     }
     if (data != nullptr) {
@@ -49,86 +49,72 @@ ZlibCallbackInfo::ZlibCallbackInfo(napi_env env, napi_ref callback, napi_deferre
     : env_(env), callback_(callback), deferred_(deferred), isCallBack_(isCallback)
 {
     napi_status status = napi_add_env_cleanup_hook(env_, HandleEnvCleanup, this);
-    APP_LOGI("add hook %{public}d", status);
+    APP_LOGI_NOFUNC("add hook %{public}d", status);
     std::lock_guard<std::mutex> callbackLock(callbackMutex);
     callbackInfos.insert(this);
 }
 
 ZlibCallbackInfo::~ZlibCallbackInfo()
 {
-    APP_LOGI("~");
+    APP_LOGI_NOFUNC("~");
     std::lock_guard<std::mutex> callbackLock(callbackMutex);
     callbackInfos.erase(this);
 }
 
-int32_t ZlibCallbackInfo::ExecuteWork(uv_loop_s* loop, uv_work_t* work)
+int32_t ZlibCallbackInfo::ExecuteWork(AsyncCallbackInfo* asyncCallbackInfo)
 {
-    int32_t ret = uv_queue_work(
-        loop, work, [](uv_work_t* work) {
-            APP_LOGD("ExecuteWork asyn work done");
-        },
-        [](uv_work_t* work, int status) {
-            if (work == nullptr) {
-                APP_LOGE("work null");
-                return;
-            }
-            AsyncCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncCallbackInfo*>(work->data);
-            if (asyncCallbackInfo == nullptr) {
-                APP_LOGE("asyncCallbackInfo null");
-                return;
-            }
-            napi_handle_scope scope = nullptr;
-            napi_status openRet = napi_open_handle_scope(asyncCallbackInfo->env, &scope);
-            if (openRet != napi_ok || scope == nullptr) {
-                APP_LOGE("scope null");
-                delete work;
-                return;
-            }
-            std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
-            napi_value result[ARGS_ONE] = {0};
-            if (asyncCallbackInfo->deliverErrcode) {
-                if (asyncCallbackInfo->callbackResult == ERR_OK) {
-                    CHKRV_SCOPE(asyncCallbackInfo->env, napi_get_null(asyncCallbackInfo->env, &result[0]), scope);
-                } else {
-                    result[0] = BusinessError::CreateCommonError(asyncCallbackInfo->env,
-                        asyncCallbackInfo->callbackResult, "");
-                }
+    auto task = [asyncCallbackInfo]() {
+        if (asyncCallbackInfo == nullptr) {
+            APP_LOGE("asyncCallbackInfo null");
+            return;
+        }
+        napi_handle_scope scope = nullptr;
+        napi_status openRet = napi_open_handle_scope(asyncCallbackInfo->env, &scope);
+        if (openRet != napi_ok || scope == nullptr) {
+            APP_LOGE("scope null");
+            return;
+        }
+        std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
+        napi_value result[ARGS_ONE] = {0};
+        if (asyncCallbackInfo->deliverErrcode) {
+            if (asyncCallbackInfo->callbackResult == ERR_OK) {
+                CHKRV_SCOPE(asyncCallbackInfo->env, napi_get_null(asyncCallbackInfo->env, &result[0]), scope);
             } else {
-                napi_create_int32(asyncCallbackInfo->env, asyncCallbackInfo->callbackResult, &result[0]);
+                result[0] = BusinessError::CreateCommonError(asyncCallbackInfo->env,
+                    asyncCallbackInfo->callbackResult, "");
             }
-            if (asyncCallbackInfo->isCallBack) {
-                napi_value callback = 0;
-                napi_value placeHolder = nullptr;
-                napi_get_reference_value(asyncCallbackInfo->env, asyncCallbackInfo->callback, &callback);
-                CHKRV_SCOPE(asyncCallbackInfo->env, napi_call_function(asyncCallbackInfo->env, nullptr,
-                    callback, sizeof(result) / sizeof(result[0]), result, &placeHolder), scope);
-                if (asyncCallbackInfo->callback != nullptr) {
-                    napi_delete_reference(asyncCallbackInfo->env, asyncCallbackInfo->callback);
-                }
+        } else {
+            napi_create_int32(asyncCallbackInfo->env, asyncCallbackInfo->callbackResult, &result[0]);
+        }
+        if (asyncCallbackInfo->isCallBack) {
+            napi_value callback = 0;
+            napi_value placeHolder = nullptr;
+            napi_get_reference_value(asyncCallbackInfo->env, asyncCallbackInfo->callback, &callback);
+            CHKRV_SCOPE(asyncCallbackInfo->env, napi_call_function(asyncCallbackInfo->env, nullptr,
+                callback, sizeof(result) / sizeof(result[0]), result, &placeHolder), scope);
+            if (asyncCallbackInfo->callback != nullptr) {
+                napi_delete_reference(asyncCallbackInfo->env, asyncCallbackInfo->callback);
+            }
+        } else {
+            if (asyncCallbackInfo->callbackResult == ERR_OK) {
+                CHKRV_SCOPE(asyncCallbackInfo->env, napi_resolve_deferred(asyncCallbackInfo->env,
+                    asyncCallbackInfo->deferred, result[0]), scope);
             } else {
-                if (asyncCallbackInfo->callbackResult == ERR_OK) {
-                    CHKRV_SCOPE(asyncCallbackInfo->env, napi_resolve_deferred(asyncCallbackInfo->env,
-                        asyncCallbackInfo->deferred, result[0]), scope);
-                } else {
-                    CHKRV_SCOPE(asyncCallbackInfo->env, napi_reject_deferred(asyncCallbackInfo->env,
-                        asyncCallbackInfo->deferred, result[0]), scope);
-                }
+                CHKRV_SCOPE(asyncCallbackInfo->env, napi_reject_deferred(asyncCallbackInfo->env,
+                    asyncCallbackInfo->deferred, result[0]), scope);
             }
-            if (work != nullptr) {
-                delete work;
-                work = nullptr;
-            }
-            napi_status ret = napi_remove_env_cleanup_hook(asyncCallbackInfo->env, HandleEnvCleanup,
-                asyncCallbackInfo->data);
-            APP_LOGI("rm hook %{public}d", ret);
-            napi_close_handle_scope(asyncCallbackInfo->env, scope);
-        });
-    return ret;
+        }
+        napi_status ret = napi_remove_env_cleanup_hook(asyncCallbackInfo->env, HandleEnvCleanup,
+            asyncCallbackInfo->data);
+        APP_LOGI_NOFUNC("rm hook %{public}d", ret);
+        napi_close_handle_scope(asyncCallbackInfo->env, scope);
+    };
+    return napi_send_event(asyncCallbackInfo->env, task, napi_eprio_high);
 }
 
 void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
 {
-    APP_LOGI("finish %{public}d", result);
+    APP_LOGI_NOFUNC("finish %{public}d", result);
     std::lock_guard<std::mutex> lock(validMutex_);
     if (!valid_) {
         APP_LOGE("module exported object is invalid");
@@ -136,17 +122,6 @@ void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
     }
 
     // do callback or promise
-    uv_loop_s* loop = nullptr;
-    napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        APP_LOGE("loop is nullptr");
-        return;
-    }
-    uv_work_t* work = new (std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        APP_LOGE("create work failed");
-        return;
-    }
     ErrCode err = ERR_OK;
     if (!deliverErrcode_) {
         err = result == ERR_OK ? ERR_OK : ERROR_CODE_ERRNO;
@@ -165,17 +140,13 @@ void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
     };
     std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (asyncCallbackInfo == nullptr) {
-        delete work;
         return;
     }
-    work->data = reinterpret_cast<void*>(asyncCallbackInfo);
-    int32_t ret = ExecuteWork(loop, work);
+    int32_t ret = ExecuteWork(asyncCallbackInfo);
     if (ret != 0) {
+        APP_LOGE("ExecuteWork failed %{public}d", ret);
         if (asyncCallbackInfo != nullptr) {
             delete asyncCallbackInfo;
-        }
-        if (work != nullptr) {
-            delete work;
         }
     }
     callbackPtr.release();
