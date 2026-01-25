@@ -15,6 +15,10 @@
 
 #include "bundle_common_event_mgr.h"
 
+#include <chrono>
+#include <condition_variable>
+#include <thread>
+
 #include "account_helper.h"
 #include "app_log_tag_wrapper.h"
 #include "bundle_common_event.h"
@@ -22,6 +26,7 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "ipc_skeleton.h"
+#include "ffrt.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -584,5 +589,96 @@ void BundleCommonEventMgr::NotifyShortcutsEnabledChanged(const std::vector<Short
     }
     IPCSkeleton::SetCallingIdentity(identity);
 }
+
+void BundleCommonEventMgr::SubmitEventAsync(const EventPublishFunc &publishFunc)
+{
+    {
+        std::lock_guard<std::mutex> lock(eventQueueMutex_);
+        eventQueue_.push(publishFunc);
+    }
+    StartAsyncProcessingIfNeeded();
+}
+
+void BundleCommonEventMgr::StartAsyncProcessingIfNeeded()
+{
+    std::lock_guard<std::mutex> lock(eventQueueMutex_);
+
+    // Check if queue is empty while holding the lock
+    if (eventQueue_.empty()) {
+        return;
+    }
+
+    // Try to start processing if not already running
+    bool expected = false;
+    if (isProcessingQueue_.compare_exchange_strong(expected, true)) {
+        // Capture shared_ptr to ensure object lifetime during async execution
+        std::shared_ptr<BundleCommonEventMgr> self = shared_from_this();
+        auto task = [self]() {
+            self->ProcessEventQueue();
+        };
+        ffrt::submit(task);
+    }
+}
+
+void BundleCommonEventMgr::ProcessEventQueue()
+{
+    APP_LOGI_NOFUNC("ProcessEventQueue started");
+
+    while (true) {
+        std::vector<EventPublishFunc> batch;
+        batch.reserve(MAX_EVENTS_PER_BATCH);
+        bool hasMoreEvents = false;
+
+        // Extract a batch of events
+        {
+            std::lock_guard<std::mutex> lock(eventQueueMutex_);
+            if (eventQueue_.empty()) {
+                isProcessingQueue_.store(false);
+                APP_LOGI_NOFUNC("ProcessEventQueue completed, queue empty");
+                break;
+            }
+
+            for (int32_t i = 0; i < MAX_EVENTS_PER_BATCH && !eventQueue_.empty(); ++i) {
+                batch.push_back(eventQueue_.front());
+                eventQueue_.pop();
+            }
+
+            // Check if there are more events after this batch
+            hasMoreEvents = !eventQueue_.empty();
+        }
+
+        // Process the batch: execute each publish function
+        for (const auto &publishFunc : batch) {
+            if (publishFunc) {
+                publishFunc();
+            }
+        }
+
+        APP_LOGD("Processed batch of %{public}zu events", batch.size());
+
+        // Sleep outside the lock to avoid blocking other threads
+        if (hasMoreEvents) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(BATCH_INTERVAL_MS));
+        }
+    }
+
+    APP_LOGI_NOFUNC("ProcessEventQueue finished");
+}
+
+void BundleCommonEventMgr::NotifySetDisposedRuleAsync(
+    const std::string &appId, int32_t userId, const std::string &data, int32_t appIndex)
+{
+    SubmitEventAsync([this, appId, userId, data, appIndex]() {
+        NotifySetDisposedRule(appId, userId, data, appIndex);
+    });
+}
+
+void BundleCommonEventMgr::NotifyDeleteDisposedRuleAsync(const std::string &appId, int32_t userId, int32_t appIndex)
+{
+    SubmitEventAsync([this, appId, userId, appIndex]() {
+        NotifyDeleteDisposedRule(appId, userId, appIndex);
+    });
+}
+
 } // AppExecFwk
 } // OHOS

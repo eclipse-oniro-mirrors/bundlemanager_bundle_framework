@@ -16,7 +16,10 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_COMMON_EVENT_MGR_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_COMMON_EVENT_MGR_H
 
+#include <atomic>
 #include <functional>
+#include <mutex>
+#include <queue>
 #include <unordered_map>
 
 #include "appexecfwk_errors.h"
@@ -78,7 +81,7 @@ struct NotifyBundleEvents {
     bool isInstallByBundleName = false;
 };
 
-class BundleCommonEventMgr {
+class BundleCommonEventMgr : public std::enable_shared_from_this<BundleCommonEventMgr> {
 public:
     BundleCommonEventMgr();
     virtual ~BundleCommonEventMgr() = default;
@@ -104,7 +107,20 @@ public:
     void NotifyShortcutsEnabledChanged(const std::vector<ShortcutInfo> &shortcutInfos, bool isEnabled);
     void NotifyPluginCommonEvents(const std::string &hostBundleName, const std::string &pluginBundleName,
         const NotifyType &type);
+
+    // Async version of NotifySetDisposedRule
+    void NotifySetDisposedRuleAsync(const std::string &appId, int32_t userId,
+        const std::string &data, int32_t appIndex);
+
+    // Async version of NotifyDeleteDisposedRule
+    void NotifyDeleteDisposedRuleAsync(const std::string &appId, int32_t userId, int32_t appIndex);
+
 private:
+    // Async notification with rate limiting (15 events per 5ms max)
+    using EventPublishFunc = std::function<void()>;
+
+    // Generic async event submission - internal use only
+    void SubmitEventAsync(const EventPublishFunc &publishFunc);
     std::string GetCommonEventData(const NotifyType &type);
     void SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBundleEvents &installResult);
     bool PublishCommonEvent(const std::string &bundleName, const std::string &action,
@@ -114,8 +130,21 @@ private:
         const EventFwk::CommonEventData &commonData);
     void Init();
 
+    // Async event processing
+    void ProcessEventQueue();
+    void StartAsyncProcessingIfNeeded();
+
     std::unordered_map<NotifyType, std::string> commonEventMap_;
     std::set<std::string> eventSet_;
+
+    // Async event queue members
+    std::queue<EventPublishFunc> eventQueue_;
+    std::mutex eventQueueMutex_;
+    std::atomic<bool> isProcessingQueue_{false};
+
+    // Rate limiting configuration
+    static constexpr int32_t MAX_EVENTS_PER_BATCH = 15;
+    static constexpr int32_t BATCH_INTERVAL_MS = 5;
 };
 } // AppExecFwk
 } // OHOS

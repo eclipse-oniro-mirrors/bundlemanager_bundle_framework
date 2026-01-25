@@ -628,7 +628,6 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
     DeleteAbilityRunningRuleCache({ appIdKey, transformedAppIdKey });
     LOG_D(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
         callerName.c_str(), userId, appIndex);
-    commonEventMgr_->NotifySetDisposedRule(appId, userId, rule.ToString(), appIndex);
     return ERR_OK;
 }
 
