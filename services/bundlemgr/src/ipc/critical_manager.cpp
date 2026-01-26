@@ -28,6 +28,12 @@ constexpr const char* TASK_NAME = "CriticalTask";
 
 std::mutex CriticalManager::mutex_;
 
+CriticalManager& CriticalManager::GetInstance()
+{
+    static CriticalManager instance;
+    return instance;
+}
+
 CriticalManager::CriticalManager()
 {
     delayedTaskMgr_ = std::make_shared<SingleDelayedTaskMgr>(TASK_NAME, DELAY_MILLI_SECONDS);

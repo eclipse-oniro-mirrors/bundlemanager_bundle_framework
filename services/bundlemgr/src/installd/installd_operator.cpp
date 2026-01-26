@@ -52,6 +52,7 @@
 #include "el5_filekey_manager_error.h"
 #include "el5_filekey_manager_kit.h"
 #include "ffrt.h"
+#include "ipc/critical_manager.h"
 #include "parameters.h"
 #include "securec.h"
 #include "hnp_api.h"
@@ -282,11 +283,13 @@ bool InstalldOperator::DeleteDirFast(const std::string &path)
             std::strerror(errno), path.c_str(), newPath.c_str());
         return DeleteDir(path);
     }
+    CriticalManager::GetInstance().BeforeRequest();
     auto task = [newPath]() {
         bool ret = InstalldOperator::DeleteDir(newPath);
         if (!ret) {
             LOG_E(BMS_TAG_INSTALLD, "async del failed,%{public}s", newPath.c_str());
         }
+        CriticalManager::GetInstance().AfterRequest();
     };
     ffrt::submit(task);
     return true;

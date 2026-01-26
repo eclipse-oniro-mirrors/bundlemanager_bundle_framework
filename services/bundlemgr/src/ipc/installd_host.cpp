@@ -46,12 +46,12 @@ InstalldHost::~InstalldHost()
 
 void InstalldHost::SetMemMgrStatus(bool started)
 {
-    criticalManager_.SetMemMgrStatus(started);
+    CriticalManager::GetInstance().SetMemMgrStatus(started);
 }
 
 bool InstalldHost::IsCritical()
 {
-    return criticalManager_.IsCritical();
+    return CriticalManager::GetInstance().IsCritical();
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -65,7 +65,7 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         LOG_E(BMS_TAG_INSTALLD, "descripter is not matched");
         return OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    criticalManager_.BeforeRequest();
+    CriticalManager::GetInstance().BeforeRequest();
     bool result = true;
     switch (code) {
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DIR):
@@ -293,11 +293,11 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             int ret = IPCObjectStub::OnRemoteRequest(code, data, reply, option);
-            criticalManager_.AfterRequest();
+            CriticalManager::GetInstance().AfterRequest();
             return ret;
     }
     LOG_D(BMS_TAG_INSTALLD, "installd host finish to process message from client");
-    criticalManager_.AfterRequest();
+    CriticalManager::GetInstance().AfterRequest();
     return result ? NO_ERROR : OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
 }
 
