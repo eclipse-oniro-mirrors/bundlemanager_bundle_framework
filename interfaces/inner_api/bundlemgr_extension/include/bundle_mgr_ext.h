@@ -39,7 +39,7 @@ public:
 
     virtual bool CheckApiInfo(const BundleInfo& bundleInfo) = 0;
     virtual ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,
-        const std::string &localCertDir = "")
+    bool readFile = false, const std::string &localCertDir = "")
     {
         return ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED;
     }

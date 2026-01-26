@@ -64,7 +64,8 @@ const ErrCode HAP_VERIFY_ERR_MAP_VALUE[] = {
 };
 } // namespace
 
-ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult &hapVerifyResult, const int32_t userId)
+ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult &hapVerifyResult,
+    bool readFile, const int32_t userId)
 {
     std::string localCertDir = std::string(ServiceConstants::HAP_COPY_PATH) +
         ServiceConstants::ENTERPRISE_CERT_PATH + std::to_string(userId);
@@ -72,9 +73,9 @@ ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult 
         localCertDir.clear();
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    ErrCode res = bmsExtensionDataMgr.HapVerify(filePath, hapVerifyResult, localCertDir);
+    ErrCode res = bmsExtensionDataMgr.HapVerify(filePath, hapVerifyResult, readFile, localCertDir);
     if (res == ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED) {
-        auto ret = Security::Verify::HapVerify(filePath, hapVerifyResult, false, localCertDir);
+        auto ret = Security::Verify::HapVerify(filePath, hapVerifyResult, readFile, localCertDir);
         APP_LOGI("HapVerify result %{public}d", ret);
         size_t len = sizeof(HAP_VERIFY_ERR_MAP_KEY) / sizeof(HAP_VERIFY_ERR_MAP_KEY[0]);
         for (size_t i = 0; i < len; i++) {

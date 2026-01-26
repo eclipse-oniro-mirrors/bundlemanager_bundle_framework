@@ -111,7 +111,7 @@ bool BmsExtensionDataMgr::CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkV
 }
 
 ErrCode BmsExtensionDataMgr::HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,
-    const std::string &localCertDir)
+    bool readFile, const std::string &localCertDir)
 {
     if ((Init() == ERR_OK) && handler_) {
         auto bundleMgrExtPtr =
@@ -120,7 +120,7 @@ ErrCode BmsExtensionDataMgr::HapVerify(const std::string &filePath, Security::Ve
             APP_LOGW("bundleMgrExtPtr is nullptr");
             return ERR_APPEXECFWK_NULL_PTR;
         }
-        return bundleMgrExtPtr->HapVerify(filePath, hapVerifyResult, localCertDir);
+        return bundleMgrExtPtr->HapVerify(filePath, hapVerifyResult, readFile, localCertDir);
     }
     APP_LOGW("access bms-extension failed");
     return ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED;

@@ -42,7 +42,7 @@ public:
     bool CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sdkVersion);
     bool CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkVersion);
     ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult,
-        const std::string &localCertDir = "");
+        bool readFile = false, const std::string &localCertDir = "");
     bool IsRdDevice();
     ErrCode QueryAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos);
     ErrCode QueryAbilityInfosWithFlag(const Want &want, int32_t flags, int32_t userId,
