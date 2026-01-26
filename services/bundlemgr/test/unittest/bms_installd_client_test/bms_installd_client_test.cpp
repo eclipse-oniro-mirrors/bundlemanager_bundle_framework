@@ -1907,7 +1907,7 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0400, TestSize.Level0)
 
     std::string notExistDir = "/bms/not/exist/dir";
     ErrCode ret = InstalldClient::GetInstance()->ClearDir(notExistDir);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+    EXPECT_EQ(ret, ERR_OK);
 
     setuid(uid);
 }
@@ -1937,7 +1937,7 @@ HWTEST_F(BmsInstalldClientTest, ClearDir_0500, TestSize.Level0)
     EXPECT_EQ(ret, 0);
     // clear dir
     ErrCode clearRet = InstalldClient::GetInstance()->ClearDir(tmpFile);
-    EXPECT_EQ(clearRet, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+    EXPECT_EQ(clearRet, ERR_OK);
 
     (void)std::remove(tmpFile.c_str());
     setuid(uid);

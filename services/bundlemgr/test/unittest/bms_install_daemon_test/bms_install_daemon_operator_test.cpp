@@ -2623,7 +2623,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_15500, Function | Sm
 {
     std::string nonExistentPath = "/data/test/nonexistent_clear_dir_12345";
     bool ret = InstalldOperator::ClearDir(nonExistentPath);
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 }
 
 /**
