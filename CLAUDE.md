@@ -127,45 +127,27 @@ bundlemanager_bundle_framework/
 - **ipc/**: IPC 通信
 - **common/**: 公共工具和辅助类
 
-### 进程架构与 IPC 通信
+### 进程架构
 
-包管理框架采用**多进程架构**，将不同权限级别的操作分离到独立进程中：
+包管理框架采用**多进程架构**，将不同权限级别的操作分离到独立进程中，包管理调用installd模块时需通过IPC：
 
-```
-┌─────────────────────────────────────────┐
-│      Foundation 进程                     │
-│  ┌───────────────────────────────────┐  │
-│  │  BundleMgrService (SA 401)       │  │
-│  │  - 包管理核心功能                 │  │
-│  │  - 业务逻辑、数据管理             │  │
-│  └───────────────────────────────────┘  │
-│         ↓ IPC 调用                      │
-│  ┌───────────────────────────────────┐  │
-│  │  InstalldClient                   │  │
-│  └───────────────────────────────────┘  │
-└─────────────────────────────────────────┘
-         ↓ IPC (SA 511)
-┌─────────────────────────────────────────┐
-│      Installs 进程 (特权进程)             │
-│  ┌───────────────────────────────────┐  │
-│  │  InstalldService (SA 511)        │  │
-│  │  - 文件/目录操作                  │  │
-│  │  - HAP 包提取                     │  │
-│  │  - SELinux 管理                   │  │
-│  │  - 代码签名验证                   │  │
-│  └───────────────────────────────────┘  │
-└─────────────────────────────────────────┘
-```
+#### BundleMgrService (SA 401)
+- **进程**: Foundation 进程
+- **功能**: 提供应用包管理的核心 API（安装、卸载、查询等）
+- **依赖服务**:
+  - 公共事件服务（用于系统事件）
+  - 包代理服务
+  - EL5 文件密钥服务
+  - InstalldService (SA 511)
 
-**调用流程**:
-```cpp
-// Foundation 进程
-InstalldClient::GetInstance()->CreateBundleDir(dir);
-    ↓ IPC 跨进程调用
-// Installs 进程
-InstalldHostImpl::CreateBundleDir()
-  → 权限验证 → InstalldOperator::MkRecursiveDir()
-```
+#### InstalldService (SA 511)
+- **进程**: Installs 进程（独立特权进程）
+- **功能**: 执行需要提升权限的文件系统操作
+- **配置**: 见 `sa_profile/511.json`
+  - 进程名: `installs`
+  - 库文件: `libinstalls.z.so`
+  - 启动阶段: `CoreStartPhase`
+  - 按需卸载: 长期未使用 180 秒后自动卸载
 
 ## 构建系统
 
@@ -215,7 +197,7 @@ InstalldHostImpl::CreateBundleDir()
 - `bundle_framework_overlay_install`: 启用叠加安装
 - `bundle_framework_sandbox_app`: 启用沙箱应用支持
 
-## 代码组织模式
+## 开发模式
 
 ### 通用工具
 
@@ -241,12 +223,6 @@ APP_LOGI("信息消息: %{public}s", "string");
 APP_LOGW("警告消息");
 APP_LOGE("错误消息: %{private}s", "敏感信息");
 ```
-
-### IPC 通信
-
-- 使用 OpenHarmony 的 IPC 框架，采用 proxy/stub 模式
-- 接口定义在 `interfaces/inner_api/appexecfwk_core/include/bundlemgr/`
-- IPC 接口代码定义在 `services/bundlemgr/include/bundle_framework_services_ipc_interface_code.h`
 
 ### 数据存储
 
@@ -303,28 +279,6 @@ APP_LOGE("错误消息: %{private}s", "敏感信息");
 - `resource_manager`: 资源管理
 - `appverify`: 应用验证
 - `hitrace`, `hisysevent`, `hilog`: DFX 能力
-
-## 服务注册
-
-包管理框架涉及两个系统能力（SA）：
-
-### BundleMgrService (SA 401)
-- **进程**: Foundation 进程
-- **功能**: 提供应用包管理的核心 API（安装、卸载、查询等）
-- **依赖服务**:
-  - 公共事件服务（用于系统事件）
-  - 包代理服务
-  - EL5 文件密钥服务
-  - InstalldService (SA 511)
-
-### InstalldService (SA 511)
-- **进程**: Installs 进程（独立特权进程）
-- **功能**: 执行需要提升权限的文件系统操作
-- **配置**: 见 `sa_profile/511.json`
-  - 进程名: `installs`
-  - 库文件: `libinstalls.z.so`
-  - 启动阶段: `CoreStartPhase`
-  - 按需卸载: 长期未使用 180 秒后自动卸载
 
 ## 配置文件
 
