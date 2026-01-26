@@ -59,14 +59,73 @@ bundlemanager_bundle_framework/
 └── etc/                             # 配置文件
 ```
 
-### 核心组件
+### 关键组件
 
-包管理系统由几个关键模块组成：
+包管理框架的核心组件和功能子系统（位于 `services/bundlemgr/src/`）：
 
-- **BundleMgrService** (`services/bundlemgr/src/bundle_mgr_service.cpp`): 主系统能力服务（SA ID: 401），协调所有包管理操作
-- **BundleDataMgr** (`services/bundlemgr/src/bundle_data_mgr.cpp`): 中央数据管理器，用于存储和查询包/组件信息
-- **BundleInstaller** (`services/bundlemgr/src/bundle_installer.cpp`): 处理安装、更新和卸载逻辑
-- **BundleMgrHostImpl** (`services/bundlemgr/src/bundle_mgr_host_impl.cpp`): 提供 IBundleMgr 接口的 IPC 主机实现
+#### 核心服务类
+
+- **bundle_mgr_service.cpp**: BundleMgrService 实现（SA 401），主系统能力服务，协调所有包管理操作
+- **bundle_data_mgr.cpp**: BundleDataMgr 实现，中央数据管理器，存储和查询包/组件信息
+- **bundle_installer.cpp**: BundleInstaller 实现，处理安装、更新和卸载逻辑
+- **bundle_mgr_host_impl.cpp**: BundleMgrHostImpl 实现，提供 IBundleMgr 接口的 IPC 主机
+
+#### 功能模块分类
+
+**安装与卸载**
+- **base_bundle_installer.cpp**: 基础安装器实现
+- **bundle_install_checker.cpp**: 安装检查器
+- **bundle_parser.cpp**: Bundle 解析器
+- **installd/**: Installd 客户端，与 InstalldService (SA 511) IPC 通信，执行特权文件/目录操作
+
+**数据与资源管理**
+- **data/**: 数据处理模块
+- **rdb/**: 关系型数据库封装
+- **bundle_resource/**: Bundle 资源管理
+- **extend_resource/**: 扩展资源管理
+- **bundle_backup/**: 备份和恢复功能
+
+**权限与安全**
+- **verify/**: 验证功能（代码签名、完整性校验等）
+- **bundle_permission_mgr.cpp**: Bundle 权限管理
+- **user_auth/**: 用户认证
+
+**高级特性**
+- **free_install/**: 免安装（按需安装）能力
+- **on_demand_install/**: 按需安装
+- **overlay/**: 叠加安装支持
+- **quick_fix/**: 快速修复（补丁）管理
+- **clone/**: 应用克隆支持
+- **sandbox_app/**: 沙箱应用支持
+- **shared/**: 共享包管理
+- **aot/**: AOT（Ahead-Of-Time）编译管理
+
+**应用控制**
+- **app_control/**: 应用控制和应用跳转拦截
+- **default_app/**: 默认应用管理
+- **app_service_fwk/**: 应用服务框架安装
+
+**分布式与备份**
+- **distributed_manager/**: 分布式包管理
+- **first_install_data_mgr/**: 首次安装数据管理
+- **uninstall_data_mgr/**: 卸载数据管理
+
+**系统功能**
+- **aging/**: 包老化管理，用于资源清理
+- **app_provision_info/**: 应用配置文件（profile）管理
+- **bms_extension/**: BMS 扩展客户端
+- **bundlemgr_ext/**: BundleManager 扩展
+- **driver/**: 驱动安装支持
+- **exception/**: 异常处理
+- **idle_condition_mgr/**: 空闲条件管理
+- **navigation/**: 导航相关
+- **plugin/**: 插件支持
+- **rpcid_decode/**: RPC ID 解码
+- **utd/**: 统类型描述（Unified Type Descriptor）
+
+**通信与基础设施**
+- **ipc/**: IPC 通信
+- **common/**: 公共工具和辅助类
 
 ### 进程架构与 IPC 通信
 
@@ -107,52 +166,6 @@ InstalldClient::GetInstance()->CreateBundleDir(dir);
 InstalldHostImpl::CreateBundleDir()
   → 权限验证 → InstalldOperator::MkRecursiveDir()
 ```
-
-**主要接口** (定义在 `interfaces/inner_api/appexecfwk_core/include/bundlemgr/installd_host.h`):
-- 目录管理: `CreateBundleDir()`, `CreateBundleDataDir()`, `RemoveBundleDataDir()`
-- 文件操作: `ExtractModuleFiles()`, `ExtractFiles()`, `CopyFile()`
-- 权限安全: `SetDirApl()`, `VerifyCodeSignature()`, `SetEncryptionPolicy()`
-- AOT 编译: `ExecuteAOT()`, `PendSignAOT()`, `StopAOT()`
-
-### 关键子系统
-
-位于 `services/bundlemgr/src/`：
-
-- **aging**: 包老化管理，用于资源清理
-- **aot**: AOT（Ahead-Of-Time）编译管理
-- **app_control**: 应用控制和应用跳转拦截
-- **app_provision_info**: 应用配置文件管理
-- **app_service_fwk**: 应用服务框架安装
-- **bms_extension**: BMS 扩展客户端
-- **bundle_backup**: 备份和恢复功能
-- **clone**: 应用克隆支持
-- **default_app**: 默认应用管理
-- **distributed_manager**: 分布式包管理
-- **free_install**: 免安装（按需）能力
-- **overlay**: 叠加安装支持
-- **quick_fix**: 快速修复（补丁）管理
-- **sandbox_app**: 沙箱应用支持
-- **shared**: 共享包管理
-- **verify**: 验证功能
-- **installd**: Installd 客户端，用于与独立运行的 InstalldService (SA 511) 进行 IPC 通信，执行需要特权权限的文件/目录操作
-
-### 接口
-
-三个主要接口层：
-
-1. **Native C/C++ API** (`interfaces/kits/native/`): 原生应用的 NDK 接口
-2. **JS API** (`interfaces/kits/js/`): 基于 NAPI 的 JavaScript 接口
-3. **内部 API** (`interfaces/inner_api/`): 其他 OpenHarmony 子系统使用的内部接口
-   - `appexecfwk_base`: 基础数据结构（ApplicationInfo、BundleInfo、AbilityInfo）
-   - `appexecfwk_core`: 核心包管理器接口（IBundleMgr、IBundleInstaller）
-   - `bundlemgr_extension`: BMS 扩展的扩展接口
-
-**关键子系统模块（位于 services/bundlemgr/src/）：**
-- **核心功能**: `bundle_mgr_service.cpp`, `bundle_data_mgr.cpp`, `bundle_installer.cpp`
-- **安装相关**: `base_bundle_installer.cpp`, `bundle_install_checker.cpp`, `bundle_parser.cpp`
-- **高级特性**: `free_install/`, `overlay/`, `quick_fix/`, `clone/`, `sandbox_app/`
-- **数据管理**: `rdb/`, `data/`, `bundle_resource/`
-- **权限安全**: `verify/`, `bundle_permission_mgr.cpp`, `user_auth/`
 
 ## 构建系统
 
