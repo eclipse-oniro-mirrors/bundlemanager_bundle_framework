@@ -68,6 +68,52 @@ bundlemanager_bundle_framework/
 - **BundleInstaller** (`services/bundlemgr/src/bundle_installer.cpp`): 处理安装、更新和卸载逻辑
 - **BundleMgrHostImpl** (`services/bundlemgr/src/bundle_mgr_host_impl.cpp`): 提供 IBundleMgr 接口的 IPC 主机实现
 
+### 进程架构与 IPC 通信
+
+包管理框架采用**多进程架构**，将不同权限级别的操作分离到独立进程中：
+
+```
+┌─────────────────────────────────────────┐
+│      Foundation 进程                     │
+│  ┌───────────────────────────────────┐  │
+│  │  BundleMgrService (SA 401)       │  │
+│  │  - 包管理核心功能                 │  │
+│  │  - 业务逻辑、数据管理             │  │
+│  └───────────────────────────────────┘  │
+│         ↓ IPC 调用                      │
+│  ┌───────────────────────────────────┐  │
+│  │  InstalldClient                   │  │
+│  └───────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+         ↓ IPC (SA 511)
+┌─────────────────────────────────────────┐
+│      Installs 进程 (特权进程)             │
+│  ┌───────────────────────────────────┐  │
+│  │  InstalldService (SA 511)        │  │
+│  │  - 文件/目录操作                  │  │
+│  │  - HAP 包提取                     │  │
+│  │  - SELinux 管理                   │  │
+│  │  - 代码签名验证                   │  │
+│  └───────────────────────────────────┘  │
+└─────────────────────────────────────────┘
+```
+
+**调用流程**:
+```cpp
+// Foundation 进程
+InstalldClient::GetInstance()->CreateBundleDir(dir);
+    ↓ IPC 跨进程调用
+// Installs 进程
+InstalldHostImpl::CreateBundleDir()
+  → 权限验证 → InstalldOperator::MkRecursiveDir()
+```
+
+**主要接口** (定义在 `interfaces/inner_api/appexecfwk_core/include/bundlemgr/installd_host.h`):
+- 目录管理: `CreateBundleDir()`, `CreateBundleDataDir()`, `RemoveBundleDataDir()`
+- 文件操作: `ExtractModuleFiles()`, `ExtractFiles()`, `CopyFile()`
+- 权限安全: `SetDirApl()`, `VerifyCodeSignature()`, `SetEncryptionPolicy()`
+- AOT 编译: `ExecuteAOT()`, `PendSignAOT()`, `StopAOT()`
+
 ### 关键子系统
 
 位于 `services/bundlemgr/src/`：
@@ -88,7 +134,7 @@ bundlemanager_bundle_framework/
 - **sandbox_app**: 沙箱应用支持
 - **shared**: 共享包管理
 - **verify**: 验证功能
-- **installd**: Installd 客户端，用于特权文件/目录操作
+- **installd**: Installd 客户端，用于与独立运行的 InstalldService (SA 511) 进行 IPC 通信，执行需要特权权限的文件/目录操作
 
 ### 接口
 
@@ -247,10 +293,25 @@ APP_LOGE("错误消息: %{private}s", "敏感信息");
 
 ## 服务注册
 
-BundleMgrService 以 ID 401（BUNDLE_MGR_SERVICE_SYS_ABILITY_ID）注册为系统能力。它监听其他系统能力，如：
-- 公共事件服务（用于系统事件）
-- 包代理服务
-- EL5 文件密钥服务
+包管理框架涉及两个系统能力（SA）：
+
+### BundleMgrService (SA 401)
+- **进程**: Foundation 进程
+- **功能**: 提供应用包管理的核心 API（安装、卸载、查询等）
+- **依赖服务**:
+  - 公共事件服务（用于系统事件）
+  - 包代理服务
+  - EL5 文件密钥服务
+  - InstalldService (SA 511)
+
+### InstalldService (SA 511)
+- **进程**: Installs 进程（独立特权进程）
+- **功能**: 执行需要提升权限的文件系统操作
+- **配置**: 见 `sa_profile/511.json`
+  - 进程名: `installs`
+  - 库文件: `libinstalls.z.so`
+  - 启动阶段: `CoreStartPhase`
+  - 按需卸载: 长期未使用 180 秒后自动卸载
 
 ## 配置文件
 
