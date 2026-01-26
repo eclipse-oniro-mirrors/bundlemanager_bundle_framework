@@ -1,0 +1,261 @@
+# CLAUDE.md
+
+此文件为 Claude Code (claude.ai/code) 在此代码仓库中工作时提供指导。
+
+## 概述
+
+这是 OpenHarmony 的 **BundleManager Bundle Framework（包管理包框架）**，是一个负责应用包（bundle）管理的核心子系统。它提供应用的安装、更新、卸载和信息查询能力。
+
+## 架构
+
+### 目录结构
+
+```
+bundlemanager_bundle_framework/
+├── interfaces/                      # 接口层
+│   ├── inner_api/                   # 内部 API（供其他子系统使用）
+│   └── kits/                        # 应用开发接口（支持 C/C++、JS、Cangjie、ANI）
+├── services/                        # 服务实现
+│   └── bundlemgr/                   # 包管理器服务
+│       ├── include/                 # 头文件（组织方式与 src/ 相同）
+│       ├── src/                     # 源代码
+│       │   ├── aging/               # 包老化管理（资源清理）
+│       │   ├── aot/                 # AOT（Ahead-Of-Time）编译管理
+│       │   ├── app_control/         # 应用控制和应用跳转拦截
+│       │   ├── app_provision_info/  # 应用配置文件（profile）管理
+│       │   ├── app_service_fwk/     # 应用服务框架安装
+│       │   ├── bms_extension/       # BMS 扩展客户端
+│       │   ├── bundle_backup/       # 备份和恢复功能
+│       │   ├── bundle_resource/     # Bundle 资源管理
+│       │   ├── bundlemgr_ext/       # BundleManager 扩展
+│       │   ├── clone/               # 应用克隆支持
+│       │   ├── common/              # 公共工具和辅助类
+│       │   ├── data/                # 数据处理
+│       │   ├── default_app/         # 默认应用管理
+│       │   ├── distributed_manager/ # 分布式包管理
+│       │   ├── driver/              # 驱动安装支持
+│       │   ├── exception/           # 异常处理
+│       │   ├── extend_resource/     # 扩展资源管理
+│       │   ├── first_install_data_mgr/ # 首次安装数据管理
+│       │   ├── free_install/        # 免安装（按需安装）能力
+│       │   ├── idle_condition_mgr/  # 空闲条件管理
+│       │   ├── installd/            # Installd 客户端（特权进程）
+│       │   ├── ipc/                 # IPC 通信
+│       │   ├── navigation/          # 导航相关
+│       │   ├── on_demand_install/   # 按需安装
+│       │   ├── overlay/             # 叠加安装支持
+│       │   ├── plugin/              # 插件支持
+│       │   ├── quick_fix/           # 快速修复（补丁）管理
+│       │   ├── rdb/                 # 关系型数据库封装
+│       │   ├── rpcid_decode/        # RPC ID 解码
+│       │   ├── sandbox_app/         # 沙箱应用支持
+│       │   ├── shared/              # 共享包管理
+│       │   ├── uninstall_data_mgr/  # 卸载数据管理
+│       │   ├── user_auth/           # 用户认证
+│       │   ├── utd/                 # 统类型描述（Unified Type Descriptor）
+│       │   └── verify/              # 验证功能
+│       └── test/                    # 服务层单元测试
+├── test/                            # 系统/集成级测试
+└── etc/                             # 配置文件
+```
+
+### 核心组件
+
+包管理系统由几个关键模块组成：
+
+- **BundleMgrService** (`services/bundlemgr/src/bundle_mgr_service.cpp`): 主系统能力服务（SA ID: 401），协调所有包管理操作
+- **BundleDataMgr** (`services/bundlemgr/src/bundle_data_mgr.cpp`): 中央数据管理器，用于存储和查询包/组件信息
+- **BundleInstaller** (`services/bundlemgr/src/bundle_installer.cpp`): 处理安装、更新和卸载逻辑
+- **BundleMgrHostImpl** (`services/bundlemgr/src/bundle_mgr_host_impl.cpp`): 提供 IBundleMgr 接口的 IPC 主机实现
+
+### 关键子系统
+
+位于 `services/bundlemgr/src/`：
+
+- **aging**: 包老化管理，用于资源清理
+- **aot**: AOT（Ahead-Of-Time）编译管理
+- **app_control**: 应用控制和应用跳转拦截
+- **app_provision_info**: 应用配置文件管理
+- **app_service_fwk**: 应用服务框架安装
+- **bms_extension**: BMS 扩展客户端
+- **bundle_backup**: 备份和恢复功能
+- **clone**: 应用克隆支持
+- **default_app**: 默认应用管理
+- **distributed_manager**: 分布式包管理
+- **free_install**: 免安装（按需）能力
+- **overlay**: 叠加安装支持
+- **quick_fix**: 快速修复（补丁）管理
+- **sandbox_app**: 沙箱应用支持
+- **shared**: 共享包管理
+- **verify**: 验证功能
+- **installd**: Installd 客户端，用于特权文件/目录操作
+
+### 接口
+
+三个主要接口层：
+
+1. **Native C/C++ API** (`interfaces/kits/native/`): 原生应用的 NDK 接口
+2. **JS API** (`interfaces/kits/js/`): 基于 NAPI 的 JavaScript 接口
+3. **内部 API** (`interfaces/inner_api/`): 其他 OpenHarmony 子系统使用的内部接口
+   - `appexecfwk_base`: 基础数据结构（ApplicationInfo、BundleInfo、AbilityInfo）
+   - `appexecfwk_core`: 核心包管理器接口（IBundleMgr、IBundleInstaller）
+   - `bundlemgr_extension`: BMS 扩展的扩展接口
+
+**关键子系统模块（位于 services/bundlemgr/src/）：**
+- **核心功能**: `bundle_mgr_service.cpp`, `bundle_data_mgr.cpp`, `bundle_installer.cpp`
+- **安装相关**: `base_bundle_installer.cpp`, `bundle_install_checker.cpp`, `bundle_parser.cpp`
+- **高级特性**: `free_install/`, `overlay/`, `quick_fix/`, `clone/`, `sandbox_app/`
+- **数据管理**: `rdb/`, `data/`, `bundle_resource/`
+- **权限安全**: `verify/`, `bundle_permission_mgr.cpp`, `user_auth/`
+
+## 构建系统
+
+此项目使用 **GN (Generate Ninja)** 作为构建系统。
+
+### 关键构建文件
+
+- 根构建: `BUILD.gn`
+- 服务构建: `services/bundlemgr/BUILD.gn`
+- 配置: `appexecfwk.gni`, `services/bundlemgr/appexecfwk_bundlemgr.gni`
+
+### 构建目标
+
+主构建目标：
+```bash
+# 构建所有包框架目标
+./build.sh --product-name <product> --build-target bundle_framework
+```
+
+测试目标：
+```bash
+# 单元测试
+./build.sh --product-name <product> --build-target BmsBundleCommonTest
+./build.sh --product-name <product> --build-target BmsBundleDataMgrTest
+
+# 模块测试
+./build.sh --product-name <product> --build-target moduletest
+
+# 系统测试
+./build.sh --product-name <product> --build-target systemtest_bms
+
+# 性能测试
+./build.sh --product-name <product> --build-target benchmarktest
+```
+
+单个测试示例：
+- `services/bundlemgr/test/unittest/` 包含 40+ 个单元测试目录
+- 每个测试目录都有一个 `BUILD.gn` 文件定义测试目标
+- 测试命名模式: `Bms*Test` (例如: `BmsBundleCommonTest`, `BmsBundleDataMgrNullptrTest`)
+
+### 构建配置
+
+特性开关（定义在 `appexecfwk.gni` 中）：
+- `bundle_framework_free_install`: 启用免安装能力
+- `bundle_framework_default_app`: 启用默认应用管理
+- `bundle_framework_quick_fix`: 启用快速修复支持
+- `bundle_framework_overlay_install`: 启用叠加安装
+- `bundle_framework_sandbox_app`: 启用沙箱应用支持
+
+## 代码组织模式
+
+### 通用工具
+
+`common/` 目录包含共享工具：
+- `log/`: 日志组件（使用方法见 `common/log/README.md`）
+
+### 日志
+
+C++ 日志使用（来自 `common/log/README.md`）：
+```cpp
+// 包含头文件
+#include "app_log_wrapper.h"
+
+// 在 GN 文件中定义
+defines = [
+    "APP_LOG_TAG = \"BMS\"",
+    "LOG_DOMAIN = 0xD001120",
+]
+
+// 使用日志宏
+APP_LOGD("调试消息: %{public}d", 123);
+APP_LOGI("信息消息: %{public}s", "string");
+APP_LOGW("警告消息");
+APP_LOGE("错误消息: %{private}s", "敏感信息");
+```
+
+### IPC 通信
+
+- 使用 OpenHarmony 的 IPC 框架，采用 proxy/stub 模式
+- 接口定义在 `interfaces/inner_api/appexecfwk_core/include/bundlemgr/`
+- IPC 接口代码定义在 `services/bundlemgr/include/bundle_framework_services_ipc_interface_code.h`
+
+### 数据存储
+
+- 使用 RDB（关系型数据库）进行持久化存储
+- 存储接口在 `services/bundlemgr/include/bundle_data_storage_interface.h`
+- RDB 实现在 `services/bundlemgr/src/rdb/`
+
+## 测试
+
+### 测试结构
+
+- `test/unittest/`: 单个组件的单元测试
+- `test/moduletest/`: 模块集成测试
+- `test/systemtest/`: 系统级端到端测试
+- `test/benchmarktest/`: 性能基准测试
+- `test/fuzztest/`: 模糊测试
+- `test/sceneProject/`: 测试 HAP 文件和测试应用
+
+### 测试资源
+
+- `test/resource/bmssystemtestability/`: 测试 Ability 源码
+- `test/resource/bundlemgrservice/`: 包管理器服务测试资源
+
+### 运行测试
+
+```bash
+# 运行特定单元测试
+./build.sh --product-name <product> --build-target BmsBundleCommonTest
+# 然后在设备上运行测试二进制文件
+
+# 运行所有单元测试
+./build.sh --product-name <product> --build-target unittest
+```
+
+## 重要概念
+
+- **Bundle**: 应用包（HAP 文件），包含代码、资源和配置
+- **HAP**: Harmonymony Ability Package - OpenHarmony 应用的包格式
+- **Module**: 包含一个或多个 Ability 的 HAP 文件
+- **Ability**: 表示功能的应用组件（类似于 Android 的 Activity/Service）
+- **Extension**: 特殊的 Ability 类型（数据、卡片等）
+- **InnerBundleInfo**: 包信息的内部表示，包含丰富的元数据
+- **ApplicationInfo**: 应用级信息（包名、版本、权限等）
+- **AbilityInfo**: 组件级信息（类型、启动模式、权限等）
+
+## 关键依赖
+
+此组件依赖众多 OpenHarmony 子系统（完整列表见 `bundle.json`）：
+- `ability_runtime`: Ability 框架
+- `samgr`: 系统能力管理器
+- `ipc`: IPC 框架
+- `storage_service`: 文件存储
+- `access_token`: 权限管理
+- `resource_manager`: 资源管理
+- `appverify`: 应用验证
+- `hitrace`, `hisysevent`, `hilog`: DFX 能力
+
+## 服务注册
+
+BundleMgrService 以 ID 401（BUNDLE_MGR_SERVICE_SYS_ABILITY_ID）注册为系统能力。它监听其他系统能力，如：
+- 公共事件服务（用于系统事件）
+- 包代理服务
+- EL5 文件密钥服务
+
+## 配置文件
+
+- `bundle.json`: 组件元数据和依赖
+- `sa_profile/401.json`: BundleMgrService 的系统能力配置
+- `sa_profile/511.json`: 安装服务的系统能力配置
+- `services/bundlemgr/installs.cfg`: 安装配置
+- `hisysevent.yaml`: HiSysEvent 事件报告配置
