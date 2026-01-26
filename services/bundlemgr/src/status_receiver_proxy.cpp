@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -253,6 +253,7 @@ const char* MSG_ERR_INSTALL_DECOMPRESS_APP_FAILED = "[MSG_ERR_INSTALL_DECOMPRESS
 const char* MSG_ERR_INSTALL_NO_SUITABLE_BUNDLES = "[MSG_ERR_INSTALL_NO_SUITABLE_BUNDLES]";
 const char* MSG_ERR_INSTALL_VERIFY_APP_SIGNATURE_FAILED = "[MSG_ERR_INSTALL_VERIFY_APP_SIGNATURE_FAILED]";
 const char* MSG_ERR_INSUFFICIENT_NUMBER_OF_SYSTEM_INODES = "[MSG_ERR_INSUFFICIENT_NUMBER_OF_SYSTEM_INODES]";
+const char* MSG_ERR_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE = "[MSG_ERR_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE]";
 
 const std::unordered_map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
     {ERR_OK, {IStatusReceiver::SUCCESS, MSG_SUCCESS}},
@@ -825,6 +826,10 @@ const std::unordered_map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
         {IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR, MSG_ERR_INSTALL_INTERNAL_ERROR}},
     {ERR_APPEXECFWK_INSTALL_FAILED_VERIFY_BIN_PERMISSION,
         {IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR, MSG_ERR_INSTALL_INTERNAL_ERROR}},
+    {ERR_APPEXECFWK_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE,
+        {IStatusReceiver::ERR_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE,
+            MSG_ERR_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE}},
+    
 };
 }  // namespace
 

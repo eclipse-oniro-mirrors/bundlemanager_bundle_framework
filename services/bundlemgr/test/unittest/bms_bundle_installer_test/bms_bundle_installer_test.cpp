@@ -15682,4 +15682,184 @@ HWTEST_F(BmsBundleInstallerTest, ProcessBinFiles_002, Function | SmallTest | Lev
     EXPECT_EQ(result, ERR_OK);
     OHOS::system::SetParameter("const.bms.bin_install", "false");
 }
+
+/**
+ * @tc.number: CheckInstallGrantPermission_0100
+ * @tc.name: test CheckInstallGrantPermission
+ * @tc.desc: 1.Test the CheckInstallGrantPermission
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallGrantPermission_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.isCallByShell = false;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    ErrCode ret = installer.CheckInstallGrantPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallGrantPermission_0200
+ * @tc.name: test CheckInstallGrantPermission
+ * @tc.desc: 1.Test the CheckInstallGrantPermission
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallGrantPermission_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    ErrCode ret = installer.CheckInstallGrantPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallGrantPermission_0300
+ * @tc.name: test CheckInstallGrantPermission
+ * @tc.desc: 1.Test the CheckInstallGrantPermission
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallGrantPermission_0300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    ErrCode ret = installer.CheckInstallGrantPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckInstallGrantPermission_0400
+ * @tc.name: test CheckInstallGrantPermission
+ * @tc.desc: 1.Test the CheckInstallGrantPermission
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallGrantPermission_0400, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_GRANT_PERMISSION] = "true";
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    ErrCode ret = installer.CheckInstallGrantPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE);
+}
+
+/**
+ * @tc.number: CheckInstallGrantPermission_0500
+ * @tc.name: test CheckInstallGrantPermission
+ * @tc.desc: 1.Test the CheckInstallGrantPermission
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckInstallGrantPermission_0500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_GRANT_PERMISSION] = "false";
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.emplace_back(hapVerifyResult);
+    ErrCode ret = installer.CheckInstallGrantPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckIsDebugGrant_0010
+ * @tc.name: CheckIsDebugGrant
+ * @tc.desc: test CheckIsDebugGrant
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckIsDebugGrant_0010, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_GRANT_PERMISSION] = "true";
+    installParam.isCallByShell = true;
+    std::string appProvisionType = "debug";
+
+    bool result = installer.CheckIsDebugGrant(installParam, appProvisionType);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckIsDebugGrant_0020
+ * @tc.name: CheckIsDebugGrant
+ * @tc.desc: test CheckIsDebugGrant
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckIsDebugGrant_0020, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::string appProvisionType = "debug";
+
+    bool result = installer.CheckIsDebugGrant(installParam, appProvisionType);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckIsDebugGrant_0030
+ * @tc.name: CheckIsDebugGrant
+ * @tc.desc: test CheckIsDebugGrant
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckIsDebugGrant_0030, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_GRANT_PERMISSION] = "false";
+    installParam.isCallByShell = true;
+    std::string appProvisionType = "debug";
+
+    bool result = installer.CheckIsDebugGrant(installParam, appProvisionType);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckIsDebugGrant_0040
+ * @tc.name: CheckIsDebugGrant
+ * @tc.desc: test CheckIsDebugGrant
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckIsDebugGrant_0040, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_GRANT_PERMISSION] = "true";
+    installParam.isCallByShell = false;
+    std::string appProvisionType = "debug";
+
+    bool result = installer.CheckIsDebugGrant(installParam, appProvisionType);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: CheckIsDebugGrant_0050
+ * @tc.name: CheckIsDebugGrant
+ * @tc.desc: test CheckIsDebugGrant
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckIsDebugGrant_0050, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+
+    InstallParam installParam;
+    installParam.parameters[ServiceConstants::BMS_PARA_INSTALL_GRANT_PERMISSION] = "true";
+    installParam.isCallByShell = true;
+    std::string appProvisionType = "release";
+
+    bool result = installer.CheckIsDebugGrant(installParam, appProvisionType);
+    EXPECT_FALSE(result);
+}
 } // OHOS

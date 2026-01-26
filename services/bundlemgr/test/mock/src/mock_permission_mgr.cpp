@@ -109,7 +109,7 @@ Security::AccessToken::ATokenAplEnum BundlePermissionMgr::GetTokenApl(const std:
 }
 
 Security::AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const InnerBundleInfo &innerBundleInfo,
-    const std::string &appServiceCapabilities)
+    const std::string &appServiceCapabilities, const bool isDebugGrant)
 {
     Security::AccessToken::HapPolicyParams hapPolicy;
     return hapPolicy;
@@ -275,14 +275,15 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
 
 int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
-    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities)
+    Security::AccessToken::HapInfoCheckResult &checkResult, const std::string &appServiceCapabilities,
+    const bool isDebugGrant)
 {
     return ERR_OK;
 }
 
 int32_t BundlePermissionMgr::UpdateHapToken(Security::AccessToken::AccessTokenIDEx& tokenIdeEx,
     const InnerBundleInfo &innerBundleInfo, int32_t userId, Security::AccessToken::HapInfoCheckResult &checkResult,
-    const std::string &appServiceCapabilities, bool dataRefresh)
+    const std::string &appServiceCapabilities, bool dataRefresh, const bool isDebugGrant)
 {
     return ERR_OK;
 }

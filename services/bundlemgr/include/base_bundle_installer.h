@@ -223,6 +223,8 @@ private:
     ErrCode InnerProcessBundleInstall(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid);
 
+    bool CheckIsDebugGrant(const InstallParam &installParam, const std::string &appProvisionType);
+
     /**
      * @brief The real procedure function for uninstall a bundle.
      * @param bundleName Indicates the bundle name of the application to uninstall.
@@ -247,7 +249,7 @@ private:
      * @param uid Indicates the uid of the application.
      * @return Returns ERR_OK if the new bundle install successfully; returns error code otherwise.
      */
-    ErrCode ProcessBundleInstallStatus(InnerBundleInfo &info, int32_t &uid);
+    ErrCode ProcessBundleInstallStatus(InnerBundleInfo &info, int32_t &uid, const bool isDebugGrant = false);
     /**
      * @brief The process of installing a native bundle.
      * @param info Indicates the InnerBundleInfo parsed from the config.json in the HAP package.
@@ -572,7 +574,7 @@ private:
         const InnerBundleInfo &info, bool forException = false, const bool async = false);
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    ErrCode UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo);
+    ErrCode UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo, const bool isDebugGrant = false);
     ErrCode SetDirApl(const InnerBundleInfo &info);
     ErrCode SetDirApl(const CreateDirParam &createDirParam, const std::string &CloneBundleName);
     /**
@@ -799,7 +801,7 @@ private:
         const InnerBundleInfo &info) const;
     void RemoveCreatedExtensionDirsForException() const;
     void RemoveOldExtensionDirs() const;
-    ErrCode InnerProcessUpdateHapToken(const bool isOldSystemApp);
+    ErrCode InnerProcessUpdateHapToken(const bool isOldSystemApp, const bool isDebugGrant = false);
     bool InitDataMgr();
     std::string GetCloneInstallSource(const std::string &originalInstallSource,
         const std::string &callingBundleName) const;
@@ -861,12 +863,15 @@ private:
         const InnerBundleInfo &oldBundleInfo, ErrCode &result);
 
     bool RecoverHapToken(const std::string &bundleName, const int32_t userId,
-        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo);
+        Security::AccessToken::AccessTokenIDEx& accessTokenIdEx, const InnerBundleInfo &innerBundleInfo,
+        const bool isDebugGrant = false);
     void UpdateKillApplicationProcess(const InnerBundleInfo &innerBundleInfo);
     std::string GetAssetAccessGroups(const std::string &bundleName);
     std::string GetDeveloperId(const std::string &bundleName);
     void GetModuleNames(const std::string &bundleName, std::vector<std::string> &moduleNames);
     ErrCode CheckPreAppAllowHdcInstall(const InstallParam &installParam,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+    ErrCode CheckInstallGrantPermission(const InstallParam &installParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     void CheckPreBundleRecoverResult(ErrCode &result);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -629,6 +629,8 @@ enum {
 
     // hash file err
     ERR_APPEXECFWK_NO_SO_EXISTED = 8522670,
+
+    ERR_APPEXECFWK_INSTALL_GRANT_PERMISSION_NOT_DEBUG_BUNDLE = 8522672,
     // enterprise re signature cert
     ERR_APPEXECFWK_ENTERPRISE_CERT_PARAM_ERROR = 8522680,
     ERR_APPEXECFWK_ENTERPRISE_CERT_WRITE_CERT_FAILED = 8522681,
