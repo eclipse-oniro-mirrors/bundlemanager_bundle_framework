@@ -7324,6 +7324,9 @@ ErrCode BaseBundleInstaller::CleanArkStartupCache(const std::string &bundleName)
         dirs.emplace_back(multiPath);
     }
 
+    if (dirs.empty()) {
+        return ERR_OK;
+    }
     ErrCode result = InstalldClient::GetInstance()->CleanBundleDirs(dirs, true);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "clean bundle shader cache dirs failed, error:%{public}d", result);
