@@ -199,14 +199,11 @@ bundlemanager_bundle_framework/
 
 ## 开发模式
 
-### 通用工具
-
-`common/` 目录包含共享工具：
-- `log/`: 日志组件（使用方法见 `common/log/README.md`）
-
 ### 日志
 
-C++ 日志使用（来自 `common/log/README.md`）：
+**位置**：`common/log/`（详见 `common/log/README.md`）
+
+**使用方法**：
 ```cpp
 // 包含头文件
 #include "app_log_wrapper.h"
@@ -218,17 +215,39 @@ defines = [
 ]
 
 // 使用日志宏
-APP_LOGD("调试消息: %{public}d", 123);
-APP_LOGI("信息消息: %{public}s", "string");
-APP_LOGW("警告消息");
-APP_LOGE("错误消息: %{private}s", "敏感信息");
+APP_LOGD("调试: %{public}d", 123);         // Debug
+APP_LOGI("信息: %{public}s", "string");    // Info
+APP_LOGW("警告");                          // Warning
+APP_LOGE("错误: %{private}s", "敏感信息"); // Error
 ```
 
 ### 数据存储
 
-- 使用 RDB（关系型数据库）进行持久化存储
-- 存储接口在 `services/bundlemgr/include/bundle_data_storage_interface.h`
-- RDB 实现在 `services/bundlemgr/src/rdb/`
+**技术**：使用 RDB（关系型数据库）进行持久化存储
+
+**关键文件**：
+- 接口：`services/bundlemgr/include/bundle_data_storage_interface.h`
+- 实现：`services/bundlemgr/src/rdb/`
+
+### 错误处理
+
+**错误码定义**：`interfaces/kits/native/inner_api/appexecfwk_errors.h`
+- 按模块分类：通用、安装、数据库、代码签名、快速修复、叠加安装等
+
+**错误检查宏**：`services/bundlemgr/src/common/common_fun_ani.h`
+- RETURN_IF_NULL、RETURN_FALSE_IF_NULL 等空指针检查宏
+
+**处理模式**：检查-返回、错误码转换（RDB_ERR_MAP、CODE_SIGNATURE_ERR_MAP）、异常保护（JSON、动态库加载）、重试机制
+
+### 线程同步
+
+**同步机制**：
+- **读写锁**（std::shared_mutex）：读多写少场景，如 `bundle_data_mgr.cpp` 的 bundleInfoMutex_
+- **互斥锁**（std::mutex）：独占访问，如 `bundle_mgr_service.cpp` 的 bundleConnectMutex_
+- **条件变量**（std::condition_variable）：线程等待和通知，如 `installd_client.cpp`
+- **单例模式**：DelayedSingleton 模板实现线程安全单例
+
+**最佳实践**：读写分离（读共享、写独占）、分层锁设计、固定加锁顺序避免死锁、RAII 管理锁生命周期
 
 ## 测试
 
