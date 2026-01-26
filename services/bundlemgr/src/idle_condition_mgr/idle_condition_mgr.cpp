@@ -26,6 +26,7 @@
 #include "ffrt.h"
 #include "file_ex.h"
 #include "idle_condition_mgr/idle_condition_mgr.h"
+#include "idle_condition_mgr/idle_param_util.h"
 #include "mem_mgr_client.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -52,6 +53,7 @@ IdleConditionMgr::IdleConditionMgr()
 {
     idleConditionListener_ = std::make_shared<IdleConditionListener>();
     Memory::MemMgrClient::GetInstance().SubscribeAppState(*idleConditionListener_);
+    ReloadParam();
     APP_LOGI("IdleConditionMgr created");
 }
 
@@ -298,6 +300,10 @@ void IdleConditionMgr::TryStartRelabel()
         APP_LOGI_NOFUNC("Refresh conditions not met");
         return;
     }
+    if (!featureEnabled_) {
+        APP_LOGI("Feature not enabled, no need to process");
+        return;
+    }
     if (!CheckInodeForCommericalDevice()) {
         APP_LOGI_NOFUNC("inode sufficient");
         return;
@@ -367,6 +373,23 @@ void IdleConditionMgr::InterruptRelabel(const std::string stopReason)
     }
     bmsUpdateSelinuxMgr->StopUpdateSelinuxLabel(ServiceConstants::StopReason::BUSY, stopReason);
     APP_LOGI_NOFUNC("Relabeling interrupted");
+}
+
+void IdleConditionMgr::OnConfigChanged()
+{
+    APP_LOGI("OnConfigChanged called");
+    ReloadParam();
+}
+
+void IdleConditionMgr::ReloadParam()
+{
+    if (IdleParamUtil::IsRelabelFeatureDisabled()) {
+        featureEnabled_ = false;
+        APP_LOGI("Relabel feature disabled");
+    } else {
+        featureEnabled_ = true;
+        APP_LOGI("Relabel feature enabled");
+    }
 }
 } // namespace AppExecFwk
 } // namespace OHOS

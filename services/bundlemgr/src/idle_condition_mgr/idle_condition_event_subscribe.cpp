@@ -64,6 +64,8 @@ void IdleConditionEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDat
             THERMAL_LEVEL_NAME);
         PowerMgr::ThermalLevel thermalLevel = static_cast<PowerMgr::ThermalLevel>(thermalLevelInt);
         idleMgr->OnThermalLevelChanged(thermalLevel);
+    } else if (action == "usual.event.DUE_SA_CFG_UPDATED") {
+        idleMgr->OnConfigChanged();
     }
 }
 } // namespace AppExecFwk
