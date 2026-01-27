@@ -226,30 +226,28 @@ struct ApplicationInfo : public Parcelable {
     bool asanEnabled = false;
     bool debug = false;
     bool distributedNotificationEnabled = true;
+    bool allowEnableNotification = false;
+    bool allowArkTsLargeHeap = false;
+    bool allowMultiProcess = false;
+    bool enabled = false;
+    bool tsanEnabled = false;
+    bool gwpAsanEnabled = false;
+    bool hasPlugin = false;
+    // switch
+    bool multiProjects = false;
+    bool isCompressNativeLibs = true;
+    // app detail ability
+    bool needAppDetail = false;
+    bool cloudFileSyncEnabled = false;
+    bool cloudStructuredDataSyncEnabled = false;
+
+    bool hwasanEnabled = false;
+    bool ubsanEnabled = false;
     bool installedForAllUser = false;
 
     // forceRotate only for broker
     bool isForceRotate = false;
 
-    bool allowEnableNotification = false;
-    bool allowArkTsLargeHeap = false;
-    bool allowMultiProcess = false;
-    bool gwpAsanEnabled = false;
-    bool enabled = false;
-    bool hasPlugin = false;
-
-    // switch
-    bool multiProjects = false;
-
-    bool isCompressNativeLibs = true;
-    bool tsanEnabled = false;
-    bool hwasanEnabled = false;
-    bool ubsanEnabled = false;
-    bool cloudFileSyncEnabled = false;
-    bool cloudStructuredDataSyncEnabled = false;
-
-    // app detail ability
-    bool needAppDetail = false;
     uint32_t versionCode = 0;
 
     uint32_t apiCompatibleVersion = 0;
@@ -260,13 +258,15 @@ struct ApplicationInfo : public Parcelable {
     // user related fields, assign when calling the get interface
     uint32_t accessTokenId = 0;
     uint32_t applicationReservedFlag = 0;
+    int32_t minCompatibleVersionCode = 0;
     int32_t apiTargetVersion = 0;
     int32_t targetMinorApiVersion = 0;
     int32_t targetPatchApiVersion = 0;
-    int32_t minCompatibleVersionCode = 0;
+
     int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
     int32_t appIndex = 0;
     int32_t uid = -1;
+
     int32_t flags = 0;
     int32_t targetPriority = 0;
     int32_t overlayState = 0;
@@ -283,7 +283,6 @@ struct ApplicationInfo : public Parcelable {
     uint64_t accessTokenIdEx = 0;
     std::string name;  // application name is same to bundleName
     std::string bundleName;
-
     std::string versionName;
 
     std::string iconPath;
@@ -291,6 +290,8 @@ struct ApplicationInfo : public Parcelable {
     std::string label;
 
     std::string description;
+
+    std::string appDetailAbilityLibraryPath;
 
     std::string asanLogPath;
     std::string codePath;
@@ -327,7 +328,6 @@ struct ApplicationInfo : public Parcelable {
     std::string compileSdkVersion;
     std::string compileSdkType = DEFAULT_COMPILE_SDK_TYPE;
     std::string organization;
-    std::string appDetailAbilityLibraryPath;
 
     std::string installSource;
     std::string configuration;
@@ -335,10 +335,8 @@ struct ApplicationInfo : public Parcelable {
     Resource iconResource;
     Resource labelResource;
     Resource descriptionResource;
-
     std::vector<int32_t> resourcesApply;
     std::vector<std::string> allowCommonEvent;
-    std::vector<std::string> assetAccessGroups;
 
     // assign when calling the get interface
     std::vector<std::string> permissions;
@@ -346,8 +344,8 @@ struct ApplicationInfo : public Parcelable {
     std::vector<ModuleInfo> moduleInfos;
     // Installation-free
     std::vector<std::string> targetBundleList;
-
     std::vector<ApplicationEnvironment> appEnvironments;
+    std::vector<std::string> assetAccessGroups;
     std::map<std::string, std::vector<HnpPackage>> hnpPackages;
     std::map<std::string, std::vector<CustomizeData>> metaData;
     std::map<std::string, std::vector<Metadata>> metadata;

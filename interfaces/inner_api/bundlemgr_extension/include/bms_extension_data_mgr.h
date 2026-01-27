@@ -61,13 +61,13 @@ public:
     ErrCode VerifyActivationLock(bool &res);
     ErrCode GetBackupUninstallList(int32_t userId, std::set<std::string> &uninstallBundles);
     ErrCode ClearBackupUninstallFile(int32_t userId);
+    ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
+        int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
+    ErrCode CheckAppBlackList(const std::string &bundleName, const int32_t userId);
     ErrCode AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId);
     ErrCode AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const int32_t userId);
     ErrCode DeleteResourceInfo(const std::string &key);
-    ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
-        int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
-    ErrCode CheckAppBlackList(const std::string &bundleName, const int32_t userId);
     ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type);
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName, const std::string &appIdentifier);
     ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
@@ -79,10 +79,10 @@ public:
     ErrCode GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
     ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
+    bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum);
+
     void CheckBundleNameAndStratAbility(const std::string &bundleName, const std::string &appIdentifier);
     bool IsTargetApp(const std::string &bundleName, const std::string &appIdentifier);
-
-    bool DetermineCloneNum(const std::string &bundleName, const std::string &appIdentifier, int32_t &cloneNum);
     std::string GetCompatibleDeviceType(const std::string &bundleName);
     ErrCode VerifyActivationLockToken(bool &res);
     bool IsNeedToSkipPreBundleInstall();
@@ -93,10 +93,10 @@ public:
     ErrCode RemoveBackupBundleData(const std::string &bundleName, const int32_t userId, const int32_t appIndex);
     ErrCode BatchGetCompatibleDeviceType(
         const std::vector<std::string> &bundleNames, std::vector<BundleCompatibleDeviceType> &compatibleDeviceTypes);
-    bool GetInstallAndRecoverList(const int32_t userId, const std::vector<std::string> &bundleList,
-        std::vector<std::string> &installList, std::vector<std::string> &recoverList);
     ErrCode GetDetermineCloneNumList(
         std::vector<std::tuple<std::string, std::string, uint32_t>> &determineCloneNumList);
+    bool GetInstallAndRecoverList(const int32_t userId, const std::vector<std::string> &bundleList,
+        std::vector<std::string> &installList, std::vector<std::string> &recoverList);
 private:
     bool OpenHandler();
     static void *handler_;

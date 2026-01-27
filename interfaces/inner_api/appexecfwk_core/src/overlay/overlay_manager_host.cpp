@@ -76,7 +76,7 @@ int OverlayManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
             errCode = this->HandleSetOverlayEnabledForSelf(data, reply);
             break;
         default :
-            APP_LOGW("overlayMgr host receives unknown code %{public}u", code);
+            APP_LOGW("overlayMgr host receives unknown code, code = %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     APP_LOGD("overlayMgr host finish to process message");

@@ -101,12 +101,13 @@ constexpr const char* PERMISSION_UNINSTALL_PLUGIN = "ohos.permission.UNINSTALL_P
 constexpr const char* PERMISSION_PERFORM_LOCAL_DEBUG = "ohos.permission.PERFORM_LOCAL_DEBUG";
 constexpr const char* PERMISSION_GET_ABILITY_INFO = "ohos.permission.GET_ABILITY_INFO";
 constexpr const char* PERMISSION_BMS_INTERACT_ACROSS_LOCAL_ACCOUNTS = "ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS";
-constexpr const char* PERMISSION_MANAGE_SELF_SKILLS = "ohos.permission.MANAGE_SELF_SKILLS";
 constexpr const char* PERMISSION_RECOVER_BUNDLE = "ohos.permission.RECOVER_BUNDLE";
 constexpr const char* PERMISSION_CLEAN_APPLICATION_DATA = "ohos.permission.CLEAN_APPLICATION_DATA";
+constexpr const char* PERMISSION_MANAGE_SELF_SKILLS = "ohos.permission.MANAGE_SELF_SKILLS";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS =
     "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED or "
     "(ohos.permission.GET_BUNDLE_INFO_PRIVILEGED and ohos.permission.INTERACT_ACROSS_LOCAL_ACCOUNTS)";
+
 enum class AppType {
     SYSTEM_APP = 0,
     THIRD_SYSTEM_APP,
@@ -205,9 +206,6 @@ constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 constexpr int32_t ALL_CLONE_APP_INDEX = -1;
 
 //param key-value
-constexpr const char* VERIFY_UNINSTALL_FORCED_KEY = "ohos.bms.param.verifyUninstallForced";
-constexpr const char* VERIFY_UNINSTALL_FORCED_VALUE = "true";
-
 constexpr const char* VERIFY_UNINSTALL_RULE_KEY = "ohos.bms.param.verifyUninstallRule";
 constexpr const char* VERIFY_UNINSTALL_RULE_VALUE = "true";
 
@@ -217,6 +215,10 @@ constexpr const char* IS_KEEP_DATA_TRUE = "true";
 constexpr const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
 constexpr const char* SCHEME_SEPARATOR = "://";
 constexpr const char* APP_DISTRIBUTION_TYPE_WHITE_LIST = "appDistributionTypeWhiteList";
+
+//param key-value
+constexpr const char* VERIFY_UNINSTALL_FORCED_KEY = "ohos.bms.param.verifyUninstallForced";
+constexpr const char* VERIFY_UNINSTALL_FORCED_VALUE = "true";
 
 constexpr const char* ARKTS_MODE = "arkTSMode";
 constexpr const char* MODULE_ARKTS_MODE = "moduleArkTSMode";
