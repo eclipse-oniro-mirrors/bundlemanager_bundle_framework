@@ -223,6 +223,7 @@ void InstallerHelper::CreateErrCodeMap(std::unordered_map<int32_t, int32_t>& err
             ERROR_INSTALL_FAILED_CONTROLLED},
         { IStatusReceiver::ERR_INSTALL_INSUFFICIENT_NUMBER_OF_SYSTEM_INODES,
             ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED},
+        { IStatusReceiver::ERR_INSTALL_CHECK_BIN_FILE_FAILED, ERROR_INSTALL_PARSE_FAILED},
     };
 }
 

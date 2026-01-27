@@ -36,6 +36,7 @@ install_daemon_sources = [
   "${services_path}/bundlemgr/src/ipc/install_hnp_param.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
+  "${services_path}/bundlemgr/src/ipc/verify_bin_param.cpp",
   "${services_path}/bundlemgr/src/driver_install_ext.cpp",
 ]
 
@@ -77,6 +78,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/ipc/install_hnp_param.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
+  "${services_path}/bundlemgr/src/ipc/verify_bin_param.cpp",
   "${services_path}/bundlemgr/src/module_json_updater.cpp",
   "${services_path}/bundlemgr/src/plugin/plugin_installer.cpp",
   "${services_path}/bundlemgr/src/pre_install_bundle_info.cpp",

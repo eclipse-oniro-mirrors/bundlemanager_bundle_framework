@@ -718,4 +718,78 @@ HWTEST_F(BmsModuleJsonUpdaterTest, UpdateExtensionType_0600, Function | SmallTes
     ASSERT_EQ(baseExtensionInfos.size(), TEST_SIZE_TWO);
     EXPECT_NE(baseExtensionInfos.begin()->second.type, ExtensionAbilityType::UNSPECIFIED);
 }
+
+/**
+ * @tc.number: ExecutableBinaryPaths_001
+ * @tc.name: test ExecutableBinaryPaths parsing from json
+ * @tc.desc: 1. create InnerModuleInfo with executableBinaryPaths
+ *           2. verify from_json parses correctly
+ */
+HWTEST_F(BmsModuleJsonUpdaterTest, ExecutableBinaryPaths_001, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = MODULE_A;
+
+    nlohmann::json binPath1;
+    binPath1["path"] = "/libs/test1.bin";
+    nlohmann::json binPath2;
+    binPath2["path"] = "/libs/test2.bin";
+
+    nlohmann::json binPathsArray = nlohmann::json::array();
+    binPathsArray.push_back(binPath1);
+    binPathsArray.push_back(binPath2);
+    jsonObject["executableBinaryPaths"] = binPathsArray;
+
+    InnerModuleInfo moduleInfo;
+    from_json(jsonObject, moduleInfo);
+
+    EXPECT_EQ(moduleInfo.executableBinaryPaths.size(), static_cast<size_t>(2));
+    EXPECT_EQ(moduleInfo.executableBinaryPaths[0].path, "/libs/test1.bin");
+    EXPECT_EQ(moduleInfo.executableBinaryPaths[1].path, "/libs/test2.bin");
+}
+
+/**
+ * @tc.number: ExecutableBinaryPaths_002
+ * @tc.name: test ExecutableBinaryPaths with empty array
+ * @tc.desc: 1. executableBinaryPaths is empty array
+ *           2. verify parsing handles empty array
+ */
+HWTEST_F(BmsModuleJsonUpdaterTest, ExecutableBinaryPaths_002, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject;
+    jsonObject["name"] = MODULE_A;
+    jsonObject["executableBinaryPaths"] = nlohmann::json::array();
+
+    InnerModuleInfo moduleInfo;
+    from_json(jsonObject, moduleInfo);
+
+    EXPECT_TRUE(moduleInfo.executableBinaryPaths.empty());
+}
+
+/**
+ * @tc.number: ExecutableBinaryPaths_to_json_001
+ * @tc.name: test to_json for ExecutableBinaryPaths
+ * @tc.desc: 1. create InnerModuleInfo with executableBinaryPaths
+ *           2. verify to_json generates correct json
+ */
+HWTEST_F(BmsModuleJsonUpdaterTest, ExecutableBinaryPaths_to_json_001, Function | SmallTest | Level0)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = MODULE_A;
+
+    ExecutableBinaryPath binPath1;
+    binPath1.path = "/libs/test1.bin";
+    ExecutableBinaryPath binPath2;
+    binPath2.path = "/libs/test2.bin";
+    moduleInfo.executableBinaryPaths.push_back(binPath1);
+    moduleInfo.executableBinaryPaths.push_back(binPath2);
+
+    nlohmann::json jsonObject;
+    to_json(jsonObject, moduleInfo);
+
+    ASSERT_TRUE(jsonObject.contains("executableBinaryPaths"));
+    EXPECT_EQ(jsonObject["executableBinaryPaths"].size(), static_cast<size_t>(2));
+    EXPECT_EQ(jsonObject["executableBinaryPaths"][0]["path"], "/libs/test1.bin");
+    EXPECT_EQ(jsonObject["executableBinaryPaths"][1]["path"], "/libs/test2.bin");
+}
 }

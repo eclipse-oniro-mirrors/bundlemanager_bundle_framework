@@ -174,6 +174,10 @@ struct HnpPackage {
     bool independentSign = false;
 };
 
+struct ExecutableBinaryPath {
+    std::string path;
+};
+
 struct Ability {
     bool visible = false;
     bool continuable = false;
@@ -354,6 +358,7 @@ struct Module {
     std::string arkTSMode = Constants::ARKTS_MODE_DYNAMIC;
     std::string formExtensionModule;
     std::string formWidgetModule;
+    std::vector<ExecutableBinaryPath> executableBinaryPaths;
 };
 
 struct ModuleJson {
@@ -441,6 +446,18 @@ void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage)
         jsonObjectEnd,
         HNP_INDEPENDENT_SIGN,
         hnpPackage.independentSign,
+        false,
+        g_parseResult);
+}
+
+void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executableBinaryPath)
+{
+    APP_LOGD("read executableBinaryPath tag from module.json");
+    const auto &jsonObjectEnd = jsonObject.end();
+    BMSJsonUtil::GetStrValueIfFindKey(jsonObject,
+        jsonObjectEnd,
+        EXECUTABLE_BINARY_PATH,
+        executableBinaryPath.path,
         false,
         g_parseResult);
 }
@@ -1771,6 +1788,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.deduplicateHar,
         false,
         g_parseResult);
+    GetValueIfFindKey<std::vector<ExecutableBinaryPath>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_EXECUTABLE_BINARY_PATHS,
+        module.executableBinaryPaths,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -1821,6 +1846,16 @@ void GetHnpPackage(std::vector<HnpPackage> &hnpPackage, const std::vector<Profil
         tmpHnpPackage.type = item.type;
         tmpHnpPackage.independentSign = item.independentSign;
         hnpPackage.emplace_back(tmpHnpPackage);
+    }
+}
+
+void GetExecutableBinaryPath(std::vector<ExecutableBinaryPath> &executableBinaryPath,
+    const std::vector<Profile::ExecutableBinaryPath> &profileExecutableBinaryPath)
+{
+    for (const Profile::ExecutableBinaryPath &item : profileExecutableBinaryPath) {
+        ExecutableBinaryPath tmpExecutableBinaryPath;
+        tmpExecutableBinaryPath.path = item.path;
+        executableBinaryPath.emplace_back(tmpExecutableBinaryPath);
     }
 }
 
@@ -2695,6 +2730,9 @@ bool ToInnerModuleInfo(
     for (const std::string &queryScheme : moduleJson.module.querySchemes) {
         innerModuleInfo.querySchemes.emplace_back(queryScheme);
     }
+
+    // Convert Profile::ExecutableBinaryPath to AppExecFwk::ExecutableBinaryPath
+    GetExecutableBinaryPath(innerModuleInfo.executableBinaryPaths, moduleJson.module.executableBinaryPaths);
 
     innerModuleInfo.routerMap = moduleJson.module.routerMap;
     // abilities and fileContextMenu store in InnerBundleInfo

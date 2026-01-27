@@ -229,4 +229,30 @@ HWTEST_F(BmsInstalldOperatorTest, InstalldOperatorTest_0007, Function | SmallTes
         EXPECT_FALSE(ret);
     }
 }
+
+/**
+ * @tc.number: SetBinFileLabel_001
+ * @tc.name: test SetBinFileLabel with empty path
+ * @tc.desc: 1. binFilePath is empty
+ *           2. verify return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR
+ */
+HWTEST_F(BmsInstalldOperatorTest, SetBinFileLabel_001, Function | SmallTest | Level0)
+{
+    std::string emptyPath = "";
+    auto result = InstalldOperator::SetBinFileLabel(emptyPath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetBinFileLabel_002
+ * @tc.name: test SetBinFileLabel with non-existent file
+ * @tc.desc: 1. binFilePath not exists
+ *           2. verify return ERR_APPEXECFWK_INSTALL_FAILED_ACCESS_BIN_FILE
+ */
+HWTEST_F(BmsInstalldOperatorTest, SetBinFileLabel_002, Function | SmallTest | Level0)
+{
+    std::string nonExistPath = "/data/test/non_exist_bin_file_12345.bin";
+    auto result = InstalldOperator::SetBinFileLabel(nonExistPath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_FAILED_ACCESS_BIN_FILE);
+}
 } // OHOS

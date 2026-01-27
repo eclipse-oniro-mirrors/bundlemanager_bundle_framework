@@ -423,6 +423,15 @@ private:
     ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos, ErrCode checkSysCapRes);
 
+    ErrCode CheckHapBinInstallCondition(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+
+    void GetBinFilePaths(const InnerBundleInfo &info, const std::string &targetSoPath,
+        std::vector<std::string> &binFilePaths) const;
+
+    ErrCode ProcessBinFiles(const InnerBundleInfo &info) const;
+
+    ErrCode ChangeBinFileStat(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+
     ErrCode CheckInstallPermission(const InstallParam &installParam,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     /**

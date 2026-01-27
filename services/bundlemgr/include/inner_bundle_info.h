@@ -153,6 +153,7 @@ struct InnerModuleInfo {
     std::vector<std::string> querySchemes;
     std::vector<std::string> preloads;
     std::vector<HnpPackage> hnpPackages;
+    std::vector<ExecutableBinaryPath> executableBinaryPaths;
     // new version fields
     std::vector<DefinePermission> definePermissions;
     std::vector<RequestPermission> requestPermissions;
@@ -2560,6 +2561,7 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency);
 void from_json(const nlohmann::json &jsonObject, OverlayBundleInfo &overlayBundleInfo);
 void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResourceInfo);
 void to_json(nlohmann::json &jsonObject, const ExtendResourceInfo &extendResourceInfo);
+void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_INFO_H

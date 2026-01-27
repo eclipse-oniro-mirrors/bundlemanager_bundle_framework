@@ -436,6 +436,8 @@ constexpr const char* META_DATA_RESOURCE = "resource";
 constexpr const char* HNP_PACKAGE = "package";
 constexpr const char* HNP_TYPE = "type";
 constexpr const char* HNP_INDEPENDENT_SIGN = "independentSign";
+// executableBinaryPath
+constexpr const char* EXECUTABLE_BINARY_PATH = "path";
 // metadata reserved
 constexpr const char* META_DATA_FORM = "ohos.extension.form";
 constexpr const char* META_DATA_SHORTCUTS = "ohos.ability.shortcuts";
@@ -554,6 +556,9 @@ constexpr const char* MODULE_SHARE_FILES = "shareFiles";
 
 // module router
 constexpr const char* MODULE_ROUTER_MAP = "routerMap";
+
+// module executableBinaryPaths
+constexpr const char* MODULE_EXECUTABLE_BINARY_PATHS = "executableBinaryPaths";
 
 //module appEnvironment
 constexpr const char* MODULE_APP_ENVIRONMENTS = "appEnvironments";

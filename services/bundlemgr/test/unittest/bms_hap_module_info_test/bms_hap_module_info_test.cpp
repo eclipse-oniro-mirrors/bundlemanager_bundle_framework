@@ -28,6 +28,7 @@
 #include "extension_ability_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
+#include "ipc/verify_bin_param.h"
 #include "json_util.h"
 #include "preinstalled_application_info.h"
 #include "nlohmann/json.hpp"
@@ -115,6 +116,8 @@ void to_json(nlohmann::json &jsonObject, const DisposedRule &disposedRule);
 void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule);
 void to_json(nlohmann::json &jsonObject, const DisposedRuleConfiguration &disposedRuleConfiguration);
 void from_json(const nlohmann::json &jsonObject, DisposedRuleConfiguration &disposedRuleConfiguration);
+void to_json(nlohmann::json &jsonObject, const ExecutableBinaryPath &executableBinaryPath);
+void from_json(const nlohmann::json &jsonObject, ExecutableBinaryPath &executableBinaryPath);
 
 class BmsHapModuleInfoTest : public testing::Test {
 public:
@@ -810,6 +813,169 @@ HWTEST_F(BmsHapModuleInfoTest, Unmarshalling_0300, Function | SmallTest | Level0
     parcel.WriteInt32(APP_INDEX);
     auto result = disposedRuleConfiguration.Unmarshalling(parcel);
     ASSERT_NE(result, nullptr);
+}
+
+/**
+ * @tc.number: ExecutableBinaryPath_Marshalling_001
+ * @tc.name: test Marshalling interface in ExecutableBinaryPath.
+ * @tc.desc: 1. create ExecutableBinaryPath with path data
+ *           2. verify marshalling success
+ */
+HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_Marshalling_001, Function | SmallTest | Level0)
+{
+    ExecutableBinaryPath executableBinaryPath;
+    executableBinaryPath.path = "/data/app/el1/bundle/public/com.example.app/libs/test.bin";
+
+    Parcel parcel;
+    bool result = executableBinaryPath.Marshalling(parcel);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: ExecutableBinaryPath_ReadFromParcel_001
+ * @tc.name: test ReadFromParcel interface in ExecutableBinaryPath.
+ * @tc.desc: 1. write path to parcel
+ *           2. verify ReadFromParcel reads correctly
+ */
+HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_ReadFromParcel_001, Function | SmallTest | Level0)
+{
+    std::string testPath = "/data/app/el1/bundle/public/com.example.app/libs/test.bin";
+    ExecutableBinaryPath executableBinaryPath;
+    Parcel parcel;
+    parcel.WriteString16(Str8ToStr16(testPath));
+
+    bool result = executableBinaryPath.ReadFromParcel(parcel);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(executableBinaryPath.path, testPath);
+}
+
+/**
+ * @tc.number: ExecutableBinaryPath_Unmarshalling_001
+ * @tc.name: test Unmarshalling interface in ExecutableBinaryPath.
+ * @tc.desc: 1. marshal ExecutableBinaryPath
+ *           2. verify unmarshalling data matches
+ */
+HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_Unmarshalling_001, Function | SmallTest | Level0)
+{
+    ExecutableBinaryPath originalPath;
+    originalPath.path = "/data/app/el1/bundle/public/com.example.app/libs/test.bin";
+
+    Parcel parcel;
+    ASSERT_TRUE(originalPath.Marshalling(parcel));
+    parcel.RewindRead(0);
+
+    ExecutableBinaryPath* unmarshalledPath = ExecutableBinaryPath::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalledPath, nullptr);
+    EXPECT_EQ(unmarshalledPath->path, originalPath.path);
+    delete unmarshalledPath;
+}
+
+/**
+ * @tc.number: ExecutableBinaryPath_to_json_001
+ * @tc.name: test to_json interface in ExecutableBinaryPath.
+ * @tc.desc: 1. create ExecutableBinaryPath with data
+ *           2. verify to_json success
+ */
+HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_to_json_001, Function | SmallTest | Level0)
+{
+    ExecutableBinaryPath executableBinaryPath;
+    executableBinaryPath.path = "/data/app/libs/test.bin";
+
+    nlohmann::json jsonObject;
+    to_json(jsonObject, executableBinaryPath);
+    EXPECT_EQ(executableBinaryPath.path, "/data/app/libs/test.bin");
+}
+
+/**
+ * @tc.number: ExecutableBinaryPath_from_json_001
+ * @tc.name: test from_json interface in ExecutableBinaryPath.
+ * @tc.desc: 1. create json with path
+ *           2. verify from_json parses correctly
+ */
+HWTEST_F(BmsHapModuleInfoTest, ExecutableBinaryPath_from_json_001, Function | SmallTest | Level0)
+{
+    nlohmann::json jsonObject;
+    jsonObject["path"] = "/data/app/libs/test.bin";
+
+    ExecutableBinaryPath result;
+    from_json(jsonObject, result);
+    EXPECT_EQ(result.path, "/data/app/libs/test.bin");
+}
+
+/**
+ * @tc.number: VerifyBinParam_Marshalling_001
+ * @tc.name: test VerifyBinParam marshalling
+ * @tc.desc: 1. create VerifyBinParam with data
+ *           2. verify marshalling success
+ */
+HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_Marshalling_001, Function | SmallTest | Level0)
+{
+    VerifyBinParam param;
+    param.bundleName = "com.example.test";
+    param.appIdentifier = "testAppId";
+    param.userId = 100;
+    param.binFilePaths = {"/data/app/libs/test1.bin", "/data/app/libs/test2.bin"};
+
+    Parcel parcel;
+    bool result = param.Marshalling(parcel);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: VerifyBinParam_ReadFromParcel_001
+ * @tc.name: test VerifyBinParam ReadFromParcel
+ * @tc.desc: 1. write data to parcel
+ *           2. verify ReadFromParcel reads correctly
+ */
+HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_ReadFromParcel_001, Function | SmallTest | Level0)
+{
+    VerifyBinParam originalParam;
+    originalParam.bundleName = "com.example.test";
+    originalParam.appIdentifier = "testAppId";
+    originalParam.userId = 100;
+    originalParam.binFilePaths = {"/data/app/libs/test1.bin", "/data/app/libs/test2.bin"};
+
+    Parcel parcel;
+    ASSERT_TRUE(originalParam.Marshalling(parcel));
+    parcel.RewindRead(0);
+
+    VerifyBinParam resultParam;
+    bool readResult = resultParam.ReadFromParcel(parcel);
+    EXPECT_TRUE(readResult);
+    EXPECT_EQ(resultParam.bundleName, originalParam.bundleName);
+    EXPECT_EQ(resultParam.appIdentifier, originalParam.appIdentifier);
+    EXPECT_EQ(resultParam.userId, originalParam.userId);
+    EXPECT_EQ(resultParam.binFilePaths.size(), originalParam.binFilePaths.size());
+    EXPECT_EQ(resultParam.binFilePaths[0], originalParam.binFilePaths[0]);
+    EXPECT_EQ(resultParam.binFilePaths[1], originalParam.binFilePaths[1]);
+}
+
+/**
+ * @tc.number: VerifyBinParam_Unmarshalling_001
+ * @tc.name: test VerifyBinParam Unmarshalling
+ * @tc.desc: 1. marshal VerifyBinParam
+ *           2. verify unmarshalling data matches
+ */
+HWTEST_F(BmsHapModuleInfoTest, VerifyBinParam_Unmarshalling_001, Function | SmallTest | Level0)
+{
+    VerifyBinParam originalParam;
+    originalParam.bundleName = "com.example.test";
+    originalParam.appIdentifier = "testAppId";
+    originalParam.userId = 100;
+    originalParam.binFilePaths = {"/data/app/libs/test.bin"};
+
+    Parcel parcel;
+    ASSERT_TRUE(originalParam.Marshalling(parcel));
+    parcel.RewindRead(0);
+
+    VerifyBinParam* unmarshalledParam = VerifyBinParam::Unmarshalling(parcel);
+    ASSERT_NE(unmarshalledParam, nullptr);
+    EXPECT_EQ(unmarshalledParam->bundleName, originalParam.bundleName);
+    EXPECT_EQ(unmarshalledParam->appIdentifier, originalParam.appIdentifier);
+    EXPECT_EQ(unmarshalledParam->userId, originalParam.userId);
+    EXPECT_EQ(unmarshalledParam->binFilePaths.size(), originalParam.binFilePaths.size());
+    EXPECT_EQ(unmarshalledParam->binFilePaths[0], originalParam.binFilePaths[0]);
+    delete unmarshalledParam;
 }
 }
 }

@@ -295,6 +295,11 @@ public:
 
     ErrCode RestoreconPath(const std::string &path);
 
+    ErrCode ProcessBinFiles(const VerifyBinParam &verifyBinParam);
+
+    ErrCode ChmodFiles(const std::vector<std::string> &filePaths, uint32_t mode,
+        const std::string &bundleName, const std::string &nativeLibraryPath);
+
     ErrCode HashSoFile(const std::string& soPath, uint32_t catchSoNum, uint64_t catchSoMaxSize,
         std::vector<std::string> &soName, std::vector<std::string> &soHash);
 

@@ -1340,6 +1340,35 @@ ErrCode InstalldProxy::RestoreconPath(const std::string &path)
     return TransactInstalldCmd(InstalldInterfaceCode::RESTORE_CON_LIBS, data, reply, option);
 }
 
+ErrCode InstalldProxy::ProcessBinFiles(const VerifyBinParam &verifyBinParam)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Parcelable, &verifyBinParam);
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::PROCESS_BIN_FILES, data, reply, option);
+}
+
+ErrCode InstalldProxy::ChmodFiles(const std::vector<std::string> &filePaths, uint32_t mode,
+    const std::string &bundleName, const std::string &nativeLibraryPath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, filePaths.size());
+    for (const auto &filePath : filePaths) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(filePath));
+    }
+    INSTALLD_PARCEL_WRITE(data, Uint32, mode);
+    INSTALLD_PARCEL_WRITE(data, String, bundleName);
+    INSTALLD_PARCEL_WRITE(data, String, nativeLibraryPath);
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::CHMOD_FILES, data, reply, option);
+}
+
 ErrCode InstalldProxy::ResetBmsDBSecurity()
 {
     MessageParcel data;
