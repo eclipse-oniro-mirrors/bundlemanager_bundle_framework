@@ -1029,11 +1029,12 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean ark startup cache fail %{public}d, try again",
                 bundleName_.c_str(), res);
             res = CleanArkStartupCache(bundleName_);
-            if (res != ERR_OK && installParam.isOTA && installParam.isPreInstallApp) {
-                LOG_NOFUNC_I(BMS_TAG_INSTALLER, "%{public}s clean ark startup cache fail %{public}d",
-                    bundleName_.c_str(), res);
-            } else {
+            if (res != ERR_OK && installParam.isPatch) {
                 CHECK_RESULT(res, "CleanArkStartupCache failed %{public}d");
+            }
+            if (res != ERR_OK) {
+                LOG_NOFUNC_E(BMS_TAG_INSTALLER, "%{public}s clean ark startup cache fail %{public}d",
+                    bundleName_.c_str(), res);
             }
         }
     }
