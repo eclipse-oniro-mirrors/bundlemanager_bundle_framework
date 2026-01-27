@@ -591,7 +591,6 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleSetCloneAbilityEnabled(MessageParcel &data, MessageParcel &reply);
-    ErrCode HandleSetAbilityFileTypesForSelf(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetAllFormsInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -908,6 +907,8 @@ private:
 
     ErrCode HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetSignatureInfoByBundleName(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSignatureInfoByUid(MessageParcel &data, MessageParcel &reply);
@@ -918,10 +919,7 @@ private:
 
     ErrCode HandleGetAllDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply);
-
     ErrCode HandleUpdateAppEncryptedStatus(MessageParcel &data, MessageParcel &reply);
-
     /**
      * @brief Handles the GetBundleInfosForContinuation function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -975,12 +973,14 @@ private:
      */
     ErrCode HandleGetAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleSetAbilityFileTypesForSelf(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetPluginBundlePathForSelf(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleRecoverBackupBundleData(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleRemoveBackupBundleData(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetBundleInfoForException(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleCreateNewBundleEl5Dir(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetBundleInstallStatus(MessageParcel &data, MessageParcel &reply);
-    ErrCode HandleGetBundleInfoForException(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetAllJsonProfile(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetPluginExtensionInfo(MessageParcel &data, MessageParcel &reply);
 

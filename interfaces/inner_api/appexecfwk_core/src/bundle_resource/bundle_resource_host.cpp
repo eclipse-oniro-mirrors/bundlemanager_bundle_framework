@@ -83,7 +83,7 @@ int32_t BundleResourceHost::OnRemoteRequest(uint32_t code, MessageParcel &data,
             errCode = this->HandleGetLauncherAbilityResourceInfoList(data, reply);
             break;
         default:
-            APP_LOGW("bundle resource host receives unknown %{public}u", code);
+            APP_LOGW("bundle resource host receives unknown code, code = %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     APP_LOGD("bundle resource host finish to process message, errCode: %{public}d", errCode);
@@ -180,6 +180,42 @@ ErrCode BundleResourceHost::HandleGetAllLauncherAbilityResourceInfo(MessageParce
     return ERR_OK;
 }
 
+int32_t BundleResourceHost::AllocatAshmemNum()
+{
+    std::lock_guard<std::mutex> lock(bundleAshmemMutex_);
+    return ashmemNum_++;
+}
+
+ErrCode BundleResourceHost::WriteParcelableIntoAshmem(MessageParcel &tempParcel, MessageParcel &reply)
+{
+    size_t dataSize = tempParcel.GetDataSize();
+    // The ashmem name must be unique.
+    sptr<Ashmem> ashmem = Ashmem::CreateAshmem(
+        (BUNDLE_RESOURCE_ASHMEM_NAME + std::to_string(AllocatAshmemNum())).c_str(), dataSize);
+    if (ashmem == nullptr) {
+        APP_LOGE("Create shared memory failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    // Set the read/write mode of the ashme.
+    if (!ashmem->MapReadAndWriteAshmem()) {
+        APP_LOGE("Map shared memory fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    // Write the size and content of each item to the ashmem.
+    int32_t offset = 0;
+    if (!ashmem->WriteToAshmem(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize, offset)) {
+        APP_LOGE("Write info to shared memory fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteAshmem(ashmem)) {
+        APP_LOGE("Write ashmem to tempParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleResourceHost::HandleAddResourceInfoByBundleName(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -253,42 +289,6 @@ ErrCode BundleResourceHost::HandleGetAllUninstallBundleResourceInfo(MessageParce
     }
     if (ret == ERR_OK) {
         return WriteVectorToParcel<BundleResourceInfo>(bundleResourceInfos, reply);
-    }
-    return ERR_OK;
-}
-
-int32_t BundleResourceHost::AllocatAshmemNum()
-{
-    std::lock_guard<std::mutex> lock(bundleAshmemMutex_);
-    return ashmemNum_++;
-}
-
-ErrCode BundleResourceHost::WriteParcelableIntoAshmem(MessageParcel &tempParcel, MessageParcel &reply)
-{
-    size_t dataSize = tempParcel.GetDataSize();
-    // The ashmem name must be unique.
-    sptr<Ashmem> ashmem = Ashmem::CreateAshmem(
-        (BUNDLE_RESOURCE_ASHMEM_NAME + std::to_string(AllocatAshmemNum())).c_str(), dataSize);
-    if (ashmem == nullptr) {
-        APP_LOGE("Create shared memory failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    // Set the read/write mode of the ashme.
-    if (!ashmem->MapReadAndWriteAshmem()) {
-        APP_LOGE("Map shared memory fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    // Write the size and content of each item to the ashmem.
-    int32_t offset = 0;
-    if (!ashmem->WriteToAshmem(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize, offset)) {
-        APP_LOGE("Write info to shared memory fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    if (!reply.WriteAshmem(ashmem)) {
-        APP_LOGE("Write ashmem to tempParcel fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
