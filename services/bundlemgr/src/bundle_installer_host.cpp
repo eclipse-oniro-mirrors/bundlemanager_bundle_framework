@@ -1229,7 +1229,7 @@ void BundleInstallerHost::HandleAddEnterpriseResignCert(MessageParcel &data, Mes
         reply.WriteInt32(ERR_APPEXECFWK_PARCEL_ERROR);
         return;
     }
-    std::string certContent = content;
+    std::string certContent(content, dataSize);
     int32_t userId = data.ReadInt32();
 
     auto ret = AddEnterpriseResignCert(certAlias, certContent, userId);
