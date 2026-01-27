@@ -134,22 +134,54 @@ HWTEST_F(BmsAccountConstraintTest, CheckOsAccountConstraintEnabled_0002, Functio
  */
 HWTEST_F(BmsAccountConstraintTest, InnerProcessBundleInstall_0001, Function | MediumTest | Level1)
 {
+    auto bundleName = "com.example.helloworld";
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetSingleton(false);
-    newInfos.insert(std::pair<std::string, InnerBundleInfo>("com.example.helloworld", innerBundleInfo));
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>(bundleName, innerBundleInfo));
     InnerBundleInfo oldInfo;
     InnerBundleUserInfo innerBundleUserInfo;
     oldInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
     InstallParam installParam;
     installParam.needSavePreInstallInfo = false;
-    installParam.isPreInstallApp = true;
-    installParam.isOTA = true;
+    installParam.isPatch = true;
     int32_t uid = 0;
 
     BaseBundleInstaller installer;
+    installer.bundleName_ = bundleName;
     installer.isAppExist_ = true;
     installer.userId_ = -3;
+    installer.InitDataMgr();
+    installer.dataMgr_->bundleInfos_.emplace(bundleName, oldInfo);
+    auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED);
+}
+
+/**
+ * @tc.number: InnerProcessBundleInstall_0002
+ * @tc.name: CleanArkStartupCache
+ * @tc.desc: test CleanArkStartupCache
+ */
+HWTEST_F(BmsAccountConstraintTest, InnerProcessBundleInstall_0002, Function | MediumTest | Level1)
+{
+    auto bundleName = "com.example.helloworld";
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetSingleton(false);
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>(bundleName, innerBundleInfo));
+    InnerBundleInfo oldInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    oldInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    InstallParam installParam;
+    installParam.needSavePreInstallInfo = false;
+    int32_t uid = 0;
+
+    BaseBundleInstaller installer;
+    installer.bundleName_ = bundleName;
+    installer.isAppExist_ = true;
+    installer.userId_ = -3;
+    installer.InitDataMgr();
+    installer.dataMgr_->bundleInfos_.emplace(bundleName, oldInfo);
     auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     EXPECT_EQ(res, ERR_APPEXECFWK_GET_INSTALL_TEMP_BUNDLE_ERROR);
 }

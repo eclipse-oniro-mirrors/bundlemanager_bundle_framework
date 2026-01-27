@@ -34,9 +34,11 @@ ohos_unittest("BmsAccountConstraintTest") {
   sources += sandbox_app
   sources -= [
     "${services_path}/bundlemgr/src/account_helper.cpp",
+    "${services_path}/bundlemgr/src/installd_client.cpp"
   ]
   sources += [
     "${services_path}/bundlemgr/test/mock/src/mock_account_helper_constraint.cpp",
+    "${services_path}/bundlemgr/test/unittest/bms_account_constraint_test/mock/mock_install_client.cpp",
   ]
 
   sources += [ "bms_account_constraint_test.cpp" ]
