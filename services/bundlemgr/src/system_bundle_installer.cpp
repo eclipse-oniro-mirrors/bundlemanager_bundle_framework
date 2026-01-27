@@ -209,6 +209,7 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName)
         installParam.SetKillProcess(false);
         installParam.needSendEvent = false;
         installParam.isKeepData = true;
+        installParam.isOTA = true;
         MarkPreBundleSyeEventBootTag(false);
         ErrCode result = UninstallBundle(bundleName, installParam);
         if (result != ERR_OK) {
@@ -236,6 +237,7 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName,
         installParam.SetKillProcess(false);
         installParam.needSendEvent = false;
         installParam.isKeepData = isKeepData;
+        installParam.isOTA = true;
         MarkPreBundleSyeEventBootTag(false);
         ErrCode result = UninstallBundle(bundleName, installParam);
         if (result != ERR_OK) {
@@ -263,6 +265,7 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName,
         installParam.SetKillProcess(false);
         installParam.needSendEvent = false;
         installParam.isKeepData = true;
+        installParam.isOTA = true;
         MarkPreBundleSyeEventBootTag(false);
         ErrCode result = UninstallBundle(bundleName, modulePackage, installParam);
         if (result != ERR_OK) {

@@ -363,6 +363,10 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     if (!AbilityManagerHelper::UninstallApplicationProcesses(bundleName, uid_, false, appIndex)) {
         APP_LOGE("fail to kill running application");
     }
+    if (!dataMgr_->UMountCryptoPath(userId, BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex))) {
+        APP_LOGW_NOFUNC("umount crypto path failed -u:%{public}d -n:%{public}s -i:%{public}d",
+            userId, bundleName.c_str(), appIndex);
+    }
     if (dataMgr_->RemoveCloneBundle(bundleName, userId, appIndex)) {
         APP_LOGE("RemoveCloneBundle failed");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
@@ -397,7 +401,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         }
         BundleResourceHelper::AddUninstallBundleResource(bundleName, userId, appIndex);
     }
-    
+
     // process icon and label
     {
         InnerBundleInfo info;
