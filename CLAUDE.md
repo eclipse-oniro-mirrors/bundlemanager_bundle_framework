@@ -167,27 +167,6 @@ bundlemanager_bundle_framework/
 ./build.sh --product-name <product> --build-target bundle_framework
 ```
 
-测试目标：
-```bash
-# 单元测试
-./build.sh --product-name <product> --build-target BmsBundleCommonTest
-./build.sh --product-name <product> --build-target BmsBundleDataMgrTest
-
-# 模块测试
-./build.sh --product-name <product> --build-target moduletest
-
-# 系统测试
-./build.sh --product-name <product> --build-target systemtest_bms
-
-# 性能测试
-./build.sh --product-name <product> --build-target benchmarktest
-```
-
-单个测试示例：
-- `services/bundlemgr/test/unittest/` 包含 40+ 个单元测试目录
-- 每个测试目录都有一个 `BUILD.gn` 文件定义测试目标
-- 测试命名模式: `Bms*Test` (例如: `BmsBundleCommonTest`, `BmsBundleDataMgrNullptrTest`)
-
 ### 构建配置
 
 特性开关（定义在 `appexecfwk.gni` 中）：
@@ -264,17 +243,6 @@ APP_LOGE("错误: %{private}s", "敏感信息"); // Error
 
 - `test/resource/bmssystemtestability/`: 测试 Ability 源码
 - `test/resource/bundlemgrservice/`: 包管理器服务测试资源
-
-### 运行测试
-
-```bash
-# 运行特定单元测试
-./build.sh --product-name <product> --build-target BmsBundleCommonTest
-# 然后在设备上运行测试二进制文件
-
-# 运行所有单元测试
-./build.sh --product-name <product> --build-target unittest
-```
 
 ## 重要概念
 
