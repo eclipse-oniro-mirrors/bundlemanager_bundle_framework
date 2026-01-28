@@ -1103,7 +1103,7 @@ bool InstalldHost::HandleAddCertAndEnableKey(MessageParcel &data, MessageParcel 
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
-    std::string certContent = content;
+    std::string certContent(content, dataSize);
     if (certPath.empty() || certContent.empty() || certPath.size() > Constants::BMS_MAX_PATH_LENGTH ||
         certContent.size() > Constants::CAPACITY_SIZE) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
