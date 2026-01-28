@@ -339,11 +339,12 @@ ErrCode BaseBundleInstaller::Recover(
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     sysEventInfo_.startTime = BundleUtil::GetCurrentTimeMs();
     int32_t userId = GetUserId(installParam.userId);
-    if (IsAppInBlocklist(bundleName, userId)) {
-        return ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
+    ErrCode result = CheckAppBlackList(bundleName, userId);
+    if (result != ERR_OK) {
+        return result;
     }
     int32_t uid = Constants::INVALID_UID;
-    ErrCode result = ProcessRecover(bundleName, installParam, uid);
+    result = ProcessRecover(bundleName, installParam, uid);
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .type = NotifyType::INSTALL,
@@ -1515,9 +1516,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CheckUserId(userId_);
     CHECK_RESULT(result, "userId check failed %{public}d");
 
-    if (!installParam.isPreInstallApp && IsAppInBlocklist((newInfos.begin()->second).GetBundleName(), userId_)) {
-        result = ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
-        CHECK_RESULT(result, "app is in block list %{public}d");
+    if (!installParam.isPreInstallApp) {
+        result = CheckAppBlackList((newInfos.begin()->second).GetBundleName(), userId_);
+        if (result != ERR_OK) {
+            CHECK_RESULT(result, "app is in block list %{public}d");
+        }
     }
     // check hap hash param
     result = CheckHapHashParams(newInfos, installParam.hashParams);
@@ -7607,15 +7610,10 @@ ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::IsAppInBlocklist(const std::string &bundleName, const int32_t userId) const
+ErrCode BaseBundleInstaller::CheckAppBlackList(const std::string &bundleName, const int32_t userId) const
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    bool res = bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId);
-    if (res) {
-        LOG_E(BMS_TAG_INSTALLER, "app %{public}s is in blocklist", bundleName.c_str());
-        return true;
-    }
-    return false;
+    return bmsExtensionDataMgr.CheckAppBlackList(bundleName, userId);
 }
 
 bool BaseBundleInstaller::CheckWhetherCanBeUninstalled(const std::string &bundleName,

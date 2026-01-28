@@ -125,9 +125,9 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
-    virtual bool IsAppInBlocklist(const std::string &bundleName, const int32_t userId)
+    virtual ErrCode CheckAppBlackList(const std::string &bundleName, const int32_t userId)
     {
-        return false;
+        return ERR_OK;
     }
     virtual ErrCode KeyOperation(const std::vector<CodeProtectBundleInfo> &codeProtectBundleInfos, int32_t type)
     {

@@ -14202,8 +14202,8 @@ HWTEST_F(BmsBundleInstallerTest, bmsExtensionDataMgrInitFail_0020, Function | Sm
     EXPECT_EQ(ret2, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     ErrCode ret3 = bmsExtensionDataMgr.ClearBackupUninstallFile(userId);
     EXPECT_EQ(ret3, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
-    bool ret4 = bmsExtensionDataMgr.IsAppInBlocklist(bundleName, userId);
-    EXPECT_EQ(ret4, false);
+    bool ret4 = bmsExtensionDataMgr.CheckAppBlackList(bundleName, userId);
+    EXPECT_EQ(ret4, ERR_OK);
     std::string appIdentifier = "testAppIdentifier";
     bool ret5 = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName, appIdentifier);
     EXPECT_TRUE(ret5);

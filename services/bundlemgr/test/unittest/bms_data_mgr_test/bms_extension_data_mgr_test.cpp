@@ -872,15 +872,15 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0018, Function | SmallTest | Leve
 
 /**
  * @tc.number: BundleMgrExt_0019
- * @tc.name: IsAppInBlocklist
- * @tc.desc: IsAppInBlocklist
+ * @tc.name: CheckAppBlackList
+ * @tc.desc: CheckAppBlackList
  */
 HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0019, Function | SmallTest | Level0)
 {
     BundleMgrExtTest bundleMgrExtTest;
     std::string bundleName{ "extension" };
-    auto res = bundleMgrExtTest.IsAppInBlocklist(bundleName, 100);
-    EXPECT_FALSE(res);
+    auto res = bundleMgrExtTest.CheckAppBlackList(bundleName, 100);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -986,16 +986,16 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0021, Function | SmallTest
 
 /**
  * @tc.number: BmsExtensionDataMgr_0022
- * @tc.name: IsAppInBlocklist
- * @tc.desc: IsAppInBlocklist
+ * @tc.name: CheckAppBlackList
+ * @tc.desc: CheckAppBlackList
  */
 HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0022, Function | SmallTest | Level0)
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
 
     std::string bundleName{ "extension" };
-    auto res = bmsExtensionDataMgr.IsAppInBlocklist(bundleName, 100);
-    EXPECT_FALSE(res);
+    auto res = bmsExtensionDataMgr.CheckAppBlackList(bundleName, 100);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -1817,23 +1817,23 @@ HWTEST_F(BmsExtensionDataMgrTest, ClearBackupUninstallFile_001, Function | Small
 }
 
 /**
- * @tc.number: IsAppInBlocklist_001
- * @tc.name: IsAppInBlocklist
- * @tc.desc: IsAppInBlocklist
+ * @tc.number: CheckAppBlackList_001
+ * @tc.name: CheckAppBlackList
+ * @tc.desc: CheckAppBlackList
  */
-HWTEST_F(BmsExtensionDataMgrTest, IsAppInBlocklist_001, Function | SmallTest | Level0)
+HWTEST_F(BmsExtensionDataMgrTest, CheckAppBlackList_001, Function | SmallTest | Level0)
 {
     BmsExtensionDataMgr bmsExtensionDataMgrTest;
     bmsExtensionDataMgrTest.handler_ = nullptr;
     int32_t userId = 0;
     std::string bundleName = "testname";
-    ErrCode res = bmsExtensionDataMgrTest.IsAppInBlocklist(bundleName, userId);
-    EXPECT_FALSE(res);
+    ErrCode res = bmsExtensionDataMgrTest.CheckAppBlackList(bundleName, userId);
+    EXPECT_EQ(res, ERR_OK);
 
     int16_t handleTest = 1;
     bmsExtensionDataMgrTest.handler_ = &handleTest;
-    res = bmsExtensionDataMgrTest.IsAppInBlocklist(bundleName, userId);
-    EXPECT_FALSE(res);
+    res = bmsExtensionDataMgrTest.CheckAppBlackList(bundleName, userId);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**

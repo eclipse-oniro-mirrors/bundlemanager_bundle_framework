@@ -19,6 +19,7 @@
 
 #include "bundle_errors.h"
 #include "business_error_map.h"
+#include "error_data.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -49,6 +50,27 @@ napi_value BusinessError::CreateError(napi_env env, int32_t err, const std::stri
     napi_value errorMessage = nullptr;
     NAPI_CALL(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH, &errorMessage));
     napi_create_error(env, nullptr, errorMessage, &businessError);
+    napi_set_named_property(env, businessError, "code", errorCode);
+    return businessError;
+}
+
+napi_value BusinessError::CreateError(napi_env env, int32_t err, const std::string& msg, const ErrorData &errorData)
+{
+    napi_value businessError = nullptr;
+    napi_value errorCode = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, err, &errorCode));
+    napi_value errorMessage = nullptr;
+    NAPI_CALL(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH, &errorMessage));
+    napi_create_error(env, nullptr, errorMessage, &businessError);
+    napi_value data = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &data));
+    napi_value reasonCode = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, errorData.reasonCode, &reasonCode));
+    napi_value reasonMsg = nullptr;
+    NAPI_CALL(env, napi_create_string_utf8(env, errorData.reasonMsg.c_str(), NAPI_AUTO_LENGTH, &reasonMsg));
+    napi_set_named_property(env, data, "reasonCode", reasonCode);
+    napi_set_named_property(env, data, "reasonMsg", reasonMsg);
+    napi_set_named_property(env, businessError, "data", data);
     napi_set_named_property(env, businessError, "code", errorCode);
     return businessError;
 }
@@ -129,7 +151,9 @@ napi_value BusinessError::CreateInstallError(
             errMessage = errMessage.replace(iter, 1, permissionName);
         }
     }
-    return CreateError(env, err, errMessage);
+    ErrorData data;
+    data.reasonCode = innerCode;
+    return CreateError(env, err, errMessage, data);
 }
 
 void BusinessError::ThrowEnumError(napi_env env,

@@ -197,6 +197,7 @@
                         "bundle_errors.h",
                         "business_error.h",
                         "common_func.h",
+                        "error_data.h",
                         "napi_arg.h",
                         "napi_constants.h"
                       ]

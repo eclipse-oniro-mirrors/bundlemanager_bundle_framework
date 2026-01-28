@@ -367,20 +367,20 @@ ErrCode BmsExtensionDataMgr::ClearBackupUninstallFile(int32_t userId)
     return bundleMgrExtPtr->ClearBackupUninstallFile(userId);
 }
 
-bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName, const int32_t userId)
+ErrCode BmsExtensionDataMgr::CheckAppBlackList(const std::string &bundleName, const int32_t userId)
 {
     if ((Init() != ERR_OK) || handler_ == nullptr) {
         APP_LOGW("link failed");
-        return false;
+        return ERR_OK;
     }
     auto bundleMgrExtPtr =
         BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
     if (bundleMgrExtPtr == nullptr) {
         APP_LOGW("GetBundleMgrExt failed");
-        return false;
+        return ERR_OK;
     }
-    APP_LOGI_NOFUNC("EXT IsAppInBlocklist");
-    return bundleMgrExtPtr->IsAppInBlocklist(bundleName, userId);
+    APP_LOGI_NOFUNC("EXT CheckAppBlackList");
+    return bundleMgrExtPtr->CheckAppBlackList(bundleName, userId);
 }
 
 bool BmsExtensionDataMgr::CheckWhetherCanBeUninstalled(const std::string &bundleName,
