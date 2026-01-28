@@ -1968,7 +1968,8 @@ bool BundleInstallChecker::DetermineCloneApp(InnerBundleInfo &innerBundleInfo)
     BmsExtensionDataMgr bmsExtensionDataMgr;
     int32_t cloneNum = 0;
     if (!bmsExtensionDataMgr.DetermineCloneNum(
-        innerBundleInfo.GetBundleName(), innerBundleInfo.GetAppIdentifier(), cloneNum)) {
+        innerBundleInfo.GetBundleName(), innerBundleInfo.GetAppIdentifier(), cloneNum) ||
+        cloneNum == 0) {
         LOG_NOFUNC_W(BMS_TAG_INSTALLER, "DetermineCloneNum failed");
         return false;
     }
