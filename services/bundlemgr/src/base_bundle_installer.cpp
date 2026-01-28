@@ -2037,7 +2037,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
     }
 
-    DeleteEncryptionKeyId(oldInfo, installParam.isKeepData);
+    DeleteEncryptionKeyId(oldInfo.GetBundleName(), oldInfo.NeedCreateEl5Dir(), installParam.isKeepData);
     if (!installParam.isRemoveUser &&
         !SaveFirstInstallBundleInfo(bundleName, userId_, oldInfo.IsPreInstallApp(), curInnerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "save first install bundle info failed");
@@ -3860,6 +3860,7 @@ bool BaseBundleInstaller::DeleteUninstallBundleInfoFromDb(const std::string &bun
         result = InstalldClient::GetInstance()->RemoveExtensionDir(userId_, uninstallBundleInfo.extensionDirs);
         LOG_I(BMS_TAG_INSTALLER, "remove extension dirs res %{public}d", result);
     }
+    DeleteEncryptionKeyId(bundleName, true, false);
     BundleResourceHelper::DeleteUninstallBundleResource(bundleName, userId_, 0);
     bool ret = dataMgr_->DeleteUninstallBundleInfo(bundleName, userId_);
     if (!ret) {
@@ -3945,30 +3946,31 @@ bool BaseBundleInstaller::CheckInstallOnKeepData(const std::string &bundleName, 
     return true;
 }
 
-void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &info, bool isKeepData) const
+void BaseBundleInstaller::DeleteEncryptionKeyId(const std::string &bundleName, bool existEl5Dir,
+    bool isKeepData) const
 {
-    if (info.GetBundleName().empty()) {
+    if (bundleName.empty()) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName is empty");
         return;
     }
     if (isKeepData) {
-        LOG_I(BMS_TAG_INSTALLER, "keep el5 dir -n %{public}s", info.GetBundleName().c_str());
+        LOG_I(BMS_TAG_INSTALLER, "keep el5 dir -n %{public}s", bundleName.c_str());
         return;
     }
-    LOG_D(BMS_TAG_INSTALLER, "delete el5 dir -n %{public}s", info.GetBundleName().c_str());
-    std::vector<std::string> dirs = GenerateScreenLockProtectionDir(info.GetBundleName());
+    LOG_D(BMS_TAG_INSTALLER, "delete el5 dir -n %{public}s", bundleName.c_str());
+    std::vector<std::string> dirs = GenerateScreenLockProtectionDir(bundleName);
     for (const std::string &dir : dirs) {
         if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
         }
     }
 
-    if (!info.NeedCreateEl5Dir()) {
+    if (!existEl5Dir) {
         return;
     }
-    EncryptionParam encryptionParam(info.GetBundleName(), "", 0, userId_, EncryptionDirType::APP);
+    EncryptionParam encryptionParam(bundleName, "", 0, userId_, EncryptionDirType::APP);
     if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(encryptionParam) != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "delete encryption key id failed");
+        LOG_D(BMS_TAG_INSTALLER, "delete encryption key id failed");
     }
 }
 

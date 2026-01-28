@@ -578,7 +578,7 @@ void BundleCloneInstaller::RemoveEl5Dir(InnerBundleUserInfo &userInfo,
     }
     EncryptionParam encryptionParam(key, "", 0, userId, EncryptionDirType::APP);
     if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(encryptionParam) != ERR_OK) {
-        APP_LOGW("delete encryption key id failed");
+        APP_LOGD("delete encryption key id failed");
     }
 }
 
