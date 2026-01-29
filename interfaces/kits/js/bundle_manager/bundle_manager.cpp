@@ -3397,6 +3397,16 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::PARTNER_AGENT), &nPartnerAgent));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PARTNER_AGENT", nPartnerAgent));
+
+    napi_value nAgent;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::AGENT), &nAgent));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AGENT", nAgent));
+
+    napi_value nAgentUI;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::AGENT_UI), &nAgentUI));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AGENT_UI", nAgentUI));
 }
 
 void CreateApplicationFlagObject(napi_env env, napi_value value)

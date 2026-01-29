@@ -109,6 +109,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "awc/newsfeed", ExtensionAbilityType::AWC_NEWSFEED },
     { "contentEmbed", ExtensionAbilityType::CONTENT_EMBED },
     { "partnerAgent", ExtensionAbilityType::PARTNER_AGENT },
+    { "agent", ExtensionAbilityType::AGENT },
+    { "agentUI", ExtensionAbilityType::AGENT_UI },
     { "embeddedCashier", ExtensionAbilityType::EMBEDDED_CASHIER }
 };
 
