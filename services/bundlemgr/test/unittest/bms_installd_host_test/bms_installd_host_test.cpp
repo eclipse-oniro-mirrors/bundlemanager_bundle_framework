@@ -851,7 +851,7 @@ HWTEST_F(BmsInstalldHostTest, HandleSetArkStartupCacheApl_0100, Function | Small
  */
 HWTEST_F(BmsInstalldHostTest, BeforeAfterRequest_0100, Function | SmallTest | Level1)
 {
-    CriticalManager criticalManager;
+    auto &criticalManager = CriticalManager::GetInstance();
     criticalManager.SetMemMgrStatus(true);
     criticalManager.counter_ = 0;
     criticalManager.critical_ = false;
@@ -891,11 +891,11 @@ HWTEST_F(BmsInstalldHostTest, SetMemMgrStatus_0100, Function | SmallTest | Level
 {
     InstalldHost installdHost;
     installdHost.SetMemMgrStatus(true);
-    EXPECT_TRUE(installdHost.criticalManager_.memMgrStarted_);
+    EXPECT_TRUE(CriticalManager::GetInstance().memMgrStarted_);
     installdHost.SetMemMgrStatus(false);
-    EXPECT_FALSE(installdHost.criticalManager_.memMgrStarted_);
+    EXPECT_FALSE(CriticalManager::GetInstance().memMgrStarted_);
 
-    CriticalManager criticalManager;
+    auto &criticalManager = CriticalManager::GetInstance();
     criticalManager.SetMemMgrStatus(true);
     EXPECT_TRUE(criticalManager.memMgrStarted_);
     criticalManager.SetMemMgrStatus(false);
