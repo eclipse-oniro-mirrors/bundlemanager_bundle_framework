@@ -220,7 +220,6 @@ ErrCode BundleCacheMgr::CleanAllBundleCache(const sptr<IProcessCacheCallback> pr
         APP_LOGE("Invalid userid: %{public}d", userId);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
-
     std::vector<std::tuple<std::string, std::vector<std::string>, std::vector<int32_t>>> validBundles;
     dataMgr->GetBundleCacheInfos(userId, validBundles, true);
     if (!validBundles.empty()) {

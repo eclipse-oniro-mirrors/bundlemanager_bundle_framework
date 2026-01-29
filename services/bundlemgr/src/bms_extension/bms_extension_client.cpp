@@ -369,6 +369,17 @@ ErrCode BmsExtensionClient::GetBundleNameByUid(int32_t uid, std::string &bundleN
     return bmsExtensionImpl_->GetBundleNameByUid(uid, bundleName);
 }
 
+ErrCode BmsExtensionClient::OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
+    int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->OptimizeDisposedPredicates(callingName, appId, userId, appIndex, absRdbPredicates);
+}
+
 ErrCode BmsExtensionClient::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
@@ -398,17 +409,6 @@ ErrCode BmsExtensionClient::DeleteResourceInfo(const std::string &key)
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return bmsExtensionImpl_->DeleteResourceInfo(key);
-}
-
-ErrCode BmsExtensionClient::OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
-    int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
-{
-    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
-    if (bmsExtensionImpl_ == nullptr) {
-        APP_LOGW("bmsExtensionImpl_ is null");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-    }
-    return bmsExtensionImpl_->OptimizeDisposedPredicates(callingName, appId, userId, appIndex, absRdbPredicates);
 }
 
 void BmsExtensionClient::ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const

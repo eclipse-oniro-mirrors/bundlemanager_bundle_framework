@@ -2207,7 +2207,7 @@ void CleanBundleCacheFilesExec(napi_env env, void *data)
             asyncCallbackInfo->err = asyncCallbackInfo->cleanCacheCallback->GetErr() ?
                 NO_ERROR : ERROR_BUNDLE_SERVICE_EXCEPTION;
         } else {
-            APP_LOGI("clean exec timeout");
+            APP_LOGE("clean exec timeout");
             asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         }
     }
@@ -3163,15 +3163,15 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::BACKUP), &nBackup));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BACKUP", nBackup));
 
-    napi_value nDistributed;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::DISTRIBUTED), &nDistributed));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DISTRIBUTED", nDistributed));
-
     napi_value nAppService;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::APP_SERVICE), &nAppService));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "APP_SERVICE", nAppService));
+
+    napi_value nDistributed;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::DISTRIBUTED), &nDistributed));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DISTRIBUTED", nDistributed));
 
     napi_value nSelection;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
@@ -3835,6 +3835,7 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE), &nGetBundleInfoExcludeClone));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_EXCLUDE_CLONE",
         nGetBundleInfoExcludeClone));
+
     napi_value nGetBundleInfoOfAnyUser;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
         GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER), &nGetBundleInfoOfAnyUser));

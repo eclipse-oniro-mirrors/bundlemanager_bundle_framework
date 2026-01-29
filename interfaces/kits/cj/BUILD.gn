@@ -57,6 +57,7 @@ ohos_shared_library("cj_bundle_manager_ffi") {
     "-fstack-protector-strong",
   ]
 
+  use_exceptions = true
   if (product_name != "ohos-sdk") {
     sources = [
       "${kits_path}/js/zip/src/file_path.cpp",

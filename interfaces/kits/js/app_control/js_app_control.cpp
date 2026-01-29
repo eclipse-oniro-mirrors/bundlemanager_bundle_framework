@@ -613,7 +613,7 @@ bool ParseDisposedRuleConfiguration(napi_env env, napi_value nDisposedRuleConfig
     int32_t appIndex = Constants::MAIN_APP_INDEX;
     if (!CommonFunc::ParseInt(env, prop, appIndex)) {
         APP_LOGE("appIndex invalid");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, Constants::APP_INDEX, TYPE_NUMBER);
         return false;
     }
     if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {

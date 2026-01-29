@@ -17,11 +17,12 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_PRE_BUNDLE_PROFILE_H
 
 #include <set>
+#include <unordered_set>
 
 #include "appexecfwk_errors.h"
 #include "json_util.h"
 #include "pre_scan_info.h"
-#include <unordered_set>
+
 namespace OHOS {
 namespace AppExecFwk {
 class PreBundleProfile {
