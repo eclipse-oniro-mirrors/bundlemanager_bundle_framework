@@ -1199,7 +1199,7 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], callbackPtr->bundleName)) {
-                APP_LOGE("bundleName %{public}s invalid!", callbackPtr->bundleName.c_str());
+                APP_LOGE("bundleName %{public}s invalid", callbackPtr->bundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
@@ -1208,7 +1208,7 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
                 APP_LOGW("Parse installParam failed");
             }
         } else {
-            APP_LOGE("The number of parameters is incorrect.");
+            APP_LOGE("The number of parameters is incorrect");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
@@ -1424,6 +1424,10 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
     APP_LOGI("begin to CreateAppClone");
     NapiArg args(env, info);
     std::unique_ptr<CreateAppCloneCallbackInfo> asyncCallbackInfo = std::make_unique<CreateAppCloneCallbackInfo>(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGW("asyncCallbackInfo is null");
+        return nullptr;
+    }
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGW("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);

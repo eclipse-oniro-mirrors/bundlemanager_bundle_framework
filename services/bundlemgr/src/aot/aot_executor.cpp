@@ -256,7 +256,7 @@ ErrCode AOTExecutor::EnforceCodeSign(const std::string &anFileName, const std::v
     APP_LOGI("sign aot file success");
     return ERR_OK;
 #else
-    APP_LOGI("code signature disable, ignore");
+    APP_LOGE("code signature disable, ignore");
     return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
 #endif
 }
@@ -303,7 +303,7 @@ ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_
     APP_LOGI("aot compiler success");
     return ERR_OK;
 #else
-    APP_LOGI("code signature disable, ignore");
+    APP_LOGE("code signature disable, ignore");
     return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
 #endif
 }
@@ -345,7 +345,7 @@ void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret, std::vector<u
         ResetState();
     }
 #else
-    APP_LOGI("code signature disable, ignore");
+    APP_LOGE("code signature disable, ignore");
     ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
 #endif
 }

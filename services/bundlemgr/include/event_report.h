@@ -214,9 +214,6 @@ struct EventInfo {
     std::vector<std::string> hashValue;
     std::vector<std::string> totalBundleNames;
     std::vector<std::string> appIds;
-    bool isIntercepted = false;
-    std::vector<uint64_t> fileSize;
-    std::vector<uint64_t> partitionSize;
     std::vector<int32_t> funcIdList;
     std::vector<int32_t> uidList;
     std::vector<int32_t> userIdList;
@@ -233,6 +230,9 @@ struct EventInfo {
 
     std::string want;
     std::string utd;
+    bool isIntercepted = false;
+    std::vector<uint64_t> fileSize;
+    std::vector<uint64_t> partitionSize;
 
     void Reset()
     {
@@ -421,11 +421,6 @@ public:
      * @param eventInfo event info.
      */
     static EventInfo ProcessIsIntercepted(const EventInfo &eventInfo);
-
-    /**
-     * @brief rport the usage event of data partition.
-     */
-    static void ReportDataPartitionUsageEvent();
     
     /**
      * @brief Send info when set or reset default app.
@@ -438,6 +433,11 @@ public:
      */
     static void SendDefaultAppEvent(DefaultAppActionType actionType, int32_t userId, const int32_t appIndex,
         const std::string& callingName, const std::string& want, const std::string& utd);
+
+    /**
+     * @brief rport the usage event of data partition.
+     */
+    static void ReportDataPartitionUsageEvent();
 
     /**
      * @brief Send info when add or delete dynamic shortcuts.

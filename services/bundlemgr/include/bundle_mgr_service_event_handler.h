@@ -147,6 +147,12 @@ public:
     static bool UpdateOtaFlag(OTAFlag flag);
 
     static bool SaveBmsSystemTimeForShortcut();
+    ErrCode CheckSystemOptimizeBundleShaderCache(const std::string &bundleName,
+        int32_t appIndex, int32_t userId, int32_t uid);
+    ErrCode CheckSystemOptimizeShaderCache();
+    ErrCode CleanSystemOptimizeBundleShaderCache(const std::string &bundleName,
+        int32_t appIndex, int32_t userId);
+    ErrCode CleanSystemOptimizeShaderCache();
 private:
     /**
      * @brief Before Bms start.
@@ -694,11 +700,11 @@ private:
     void CleanTempDir() const;
     bool CheckIsBundleUpdatedByHapPath(const BundleInfo &bundleInfo);
     void CheckBundleProvisionInfo();
-    void CheckBundleCloneEl1ShaderCacheLocal(const std::string &bundleName, int32_t appIndex,
-        int32_t userId, int32_t uid);
-    void CleanBundleCloneEl1ShaderCacheLocal(const std::string &bundleName, int32_t appIndex,
-        int32_t userId);
+    void CheckBundleCloneEl1ShaderCacheLocal(const std::string &bundleName,
+        int32_t appIndex, int32_t userId, int32_t uid);
     void CheckAllBundleEl1ShaderCacheLocal();
+    void CleanBundleCloneEl1ShaderCacheLocal(const std::string &bundleName,
+        int32_t appIndex, int32_t userId);
     void CleanAllBundleEl1ShaderCacheLocal();
     void InnerProcessBootCheckOnDemandBundle();
     void ProcessRebootCheckOnDemandBundle();
@@ -722,12 +728,6 @@ private:
     void NotifyFWKAfterBmsStart();
 #endif
 
-    ErrCode CheckSystemOptimizeBundleShaderCache(const std::string &bundleName,
-        int32_t appIndex, int32_t userId, int32_t uid);
-    ErrCode CheckSystemOptimizeShaderCache();
-    ErrCode CleanSystemOptimizeBundleShaderCache(const std::string &bundleName,
-        int32_t appIndex, int32_t userId);
-    ErrCode CleanSystemOptimizeShaderCache();
     bool IsRecoverListEmpty(const std::string &bundleName, std::vector<int32_t> &userIds);
     void ProcessRecoverList(const std::string &bundleName, const std::string &filePath, bool removable,
         Constants::AppType appType, const std::vector<int32_t> userIds,

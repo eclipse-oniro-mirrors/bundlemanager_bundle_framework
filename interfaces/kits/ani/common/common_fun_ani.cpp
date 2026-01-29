@@ -3080,42 +3080,6 @@ bool CommonFunAni::ParseElementName(ani_env* env, ani_object object, ElementName
     return true;
 }
 
-bool CommonFunAni::ParseBundleOption(ani_env* env, ani_object object, BundleOptionInfo& option)
-{
-    RETURN_FALSE_IF_NULL(env);
-    RETURN_FALSE_IF_NULL(object);
-    ani_string string = nullptr;
-
-    // userId?: int
-    int32_t intUserId = 0;
-    if (CallGetterOptional(env, object, PROPERTYNAME_USER_ID, &intUserId)) {
-        option.userId = intUserId;
-    }
-
-    // appIndex?: int
-    int32_t intAppIndex = 0;
-    if (CallGetterOptional(env, object, PROPERTYNAME_APP_INDEX, &intAppIndex)) {
-        option.appIndex = intAppIndex;
-    }
-
-    // bundleName?: string
-    if (CallGetterOptional(env, object, PROPERTYNAME_BUNDLE_NAME, &string)) {
-        option.bundleName = AniStrToString(env, string);
-    }
-
-    // moduleName?: string
-    if (CallGetterOptional(env, object, PROPERTYNAME_MODULE_NAME, &string)) {
-        option.moduleName = AniStrToString(env, string);
-    }
-
-    // abilityName?: string
-    if (CallGetterOptional(env, object, PROPERTYNAME_ABILITY_NAME, &string)) {
-        option.abilityName = AniStrToString(env, string);
-    }
-
-    return true;
-}
-
 template<typename valueType>
 bool CommonFunAni::CallSetter(ani_env* env, ani_class cls, ani_object object, const char* propertyName, valueType value)
 {
@@ -3165,6 +3129,42 @@ bool CommonFunAni::CallSetter(ani_env* env, ani_class cls, ani_object object, co
     if (status != ANI_OK) {
         APP_LOGE("Object_CallMethod_Void_A %{public}s failed %{public}d", propertyName, status);
         return false;
+    }
+
+    return true;
+}
+
+bool CommonFunAni::ParseBundleOption(ani_env* env, ani_object object, BundleOptionInfo& option)
+{
+    RETURN_FALSE_IF_NULL(env);
+    RETURN_FALSE_IF_NULL(object);
+    ani_string string = nullptr;
+
+    // userId?: int
+    int32_t intUserId = 0;
+    if (CallGetterOptional(env, object, PROPERTYNAME_USER_ID, &intUserId)) {
+        option.userId = intUserId;
+    }
+
+    // appIndex?: int
+    int32_t intAppIndex = 0;
+    if (CallGetterOptional(env, object, PROPERTYNAME_APP_INDEX, &intAppIndex)) {
+        option.appIndex = intAppIndex;
+    }
+
+    // bundleName?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_BUNDLE_NAME, &string)) {
+        option.bundleName = AniStrToString(env, string);
+    }
+
+    // moduleName?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_MODULE_NAME, &string)) {
+        option.moduleName = AniStrToString(env, string);
+    }
+
+    // abilityName?: string
+    if (CallGetterOptional(env, object, PROPERTYNAME_ABILITY_NAME, &string)) {
+        option.abilityName = AniStrToString(env, string);
     }
 
     return true;

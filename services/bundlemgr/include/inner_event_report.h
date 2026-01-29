@@ -61,8 +61,8 @@ private:
     static void InnerSendBmsDiskSpaceEvent(const EventInfo& eventInfo);
     static void InnerSendAppControlRule(const EventInfo& eventInfo);
     static void InnerSendDbErrorEvent(const EventInfo& eventInfo);
-    static void InnerSendDataPartitionUsageEvent(const EventInfo& eventInfo);
     static void InnerSendDefaultAppEvent(const EventInfo& eventInfo);
+    static void InnerSendDataPartitionUsageEvent(const EventInfo& eventInfo);
     static void InnerSendQueryBundleInfoEvent(const EventInfo& eventInfo);
     static void InnerSendDynamicShortcutEvent(const EventInfo& eventInfo);
     static void InnerSendDesktopShortcutEvent(const EventInfo& eventInfo);
