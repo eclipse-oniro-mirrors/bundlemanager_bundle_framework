@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <sys/quota.h>
 
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
@@ -222,6 +223,8 @@ public:
 
     static int64_t GetDiskUsageFromQuota(const int32_t uid);
 
+    static int64_t GetBundleInodeCount(int32_t uid);
+
     static bool ScanDir(
         const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
 
@@ -383,6 +386,7 @@ private:
     static int32_t MigrateDataCreateAhead(
         const std::string &sourcePaths, std::string &destinationPath, const OwnershipInfo &info);
     static bool ReadCert(const std::string &path, std::vector<unsigned char> &certData);
+    static std::optional<struct dqblk> GetQuotaData(int32_t uid);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

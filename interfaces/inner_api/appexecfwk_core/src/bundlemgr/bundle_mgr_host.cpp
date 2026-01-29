@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -235,6 +235,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::AUTO_CLEAN_CACHE_BY_SIZE):
             errCode = this->HandleCleanBundleCacheFilesAutomatic(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::AUTO_CLEAN_CACHE_BY_INODE):
+            errCode = this->HandleCleanBundleCacheFilesAutomaticByType(data, reply);
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES):
             errCode = this->HandleCleanBundleCacheFiles(data, reply);
@@ -1886,6 +1889,32 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFilesAutomatic(MessageParcel &data,
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCleanBundleCacheFilesAutomaticByType(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    uint64_t cacheSize = data.ReadUint64();
+    CleanType cleanType = static_cast<CleanType>(data.ReadInt8());
+    std::optional<uint64_t> cleanedSize = std::nullopt;
+    ErrCode ret = CleanBundleCacheFilesAutomatic(cacheSize, cleanType, cleanedSize);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE_NOFUNC("WriteInt32 failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    bool hasValue = cleanedSize.has_value();
+    if (!reply.WriteBool(hasValue)) {
+        APP_LOGE_NOFUNC("WriteBool failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (hasValue) {
+        if (!reply.WriteUint64(cleanedSize.value())) {
+            APP_LOGE_NOFUNC("WriteUint64 failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        APP_LOGI_NOFUNC("cleaned size %{public}llu", cleanedSize.value());
     }
     return ERR_OK;
 }

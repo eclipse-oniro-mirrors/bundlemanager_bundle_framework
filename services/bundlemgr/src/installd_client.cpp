@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -178,6 +178,16 @@ ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &pat
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::GetDiskUsageFromPath, path, statSize, timeoutMs);
+}
+
+ErrCode InstalldClient::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+{
+    if (uid < 0) {
+        APP_LOGE_NOFUNC("Invalid uid: %{public}d", uid);
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::GetBundleInodeCount, uid, inodeCount);
 }
 
 ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)

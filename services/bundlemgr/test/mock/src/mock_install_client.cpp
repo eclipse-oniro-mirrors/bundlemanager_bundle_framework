@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,11 +22,19 @@ std::vector<int32_t> retList = {};
 bool g_isDir = false;
 ErrCode g_errCode = ERR_OK;
 bool g_vectorEmpty = true;
+ErrCode g_testErrCode = ERR_OK;
+uint64_t g_inodeCount = 0;
 
 void SetTestReturnValue(const std::vector<int32_t> &list)
 {
     retList = list;
     retIndex = 0;
+}
+
+void SetInodeCountValue(uint64_t count, uint32_t value)
+{
+    g_inodeCount = count;
+    g_testErrCode = value;
 }
 
 void SetIsDirForTest(bool value)
@@ -142,6 +150,16 @@ ErrCode InstalldClient::GetDiskUsageFromPath(const std::vector<std::string> &pat
     int64_t timeoutMs)
 {
     return 0;
+}
+
+ErrCode InstalldClient::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+{
+    if (g_testErrCode != ERR_OK) {
+        inodeCount = 0;
+        return g_testErrCode;
+    }
+    inodeCount = g_inodeCount;
+    return ERR_OK;
 }
 
 ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)

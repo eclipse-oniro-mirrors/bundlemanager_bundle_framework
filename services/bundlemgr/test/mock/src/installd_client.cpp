@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,18 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+int32_t g_remainingSuccessfulCalls = 2;
+bool g_mockCleanBundleDataDirResult = true;
+void SetGetBundleInodeCountResult(int32_t remainCalls)
+{
+    g_remainingSuccessfulCalls = remainCalls;
+}
+
+void SetCleanBundleDataDirResult(bool cleanResult)
+{
+    g_mockCleanBundleDataDirResult = cleanResult;
+}
+
 ErrCode InstalldClient::CreateBundleDir(const std::string &bundleDir)
 {
     if (bundleDir.empty()) {
@@ -153,7 +165,9 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
         APP_LOGE("bundle dir is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-
+    if (!g_mockCleanBundleDataDirResult) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
     return CallService(&IInstalld::CleanBundleDataDir, bundleDir);
 }
 
@@ -165,6 +179,16 @@ ErrCode InstalldClient::CleanBundleDirs(const std::vector<std::string> &dirs, bo
     }
 
     return CallService(&IInstalld::CleanBundleDirs, dirs, keepParent);
+}
+
+
+ErrCode InstalldClient::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+{
+    if (g_remainingSuccessfulCalls <= 0) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    g_remainingSuccessfulCalls = g_remainingSuccessfulCalls - 1;
+    return CallService(&IInstalld::GetBundleInodeCount, uid, inodeCount);
 }
 
 ErrCode InstalldClient::CleanBundleDataDirByName(

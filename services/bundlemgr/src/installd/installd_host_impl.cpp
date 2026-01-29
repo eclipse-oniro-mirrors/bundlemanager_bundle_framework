@@ -1176,6 +1176,17 @@ ErrCode InstalldHostImpl::GetDiskUsageFromPath(const std::vector<std::string> &p
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::GetBundleInodeCount(int32_t uid, uint64_t &inodeCount)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE_NOFUNC("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    inodeCount = InstalldOperator::GetBundleInodeCount(uid);
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::CleanBundleDataDir start");

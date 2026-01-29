@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1876,6 +1876,44 @@ ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize, CleanType cleanType,
+    std::optional<uint64_t>& cleanedSize)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+
+    if (cacheSize == 0) {
+        APP_LOGE_NOFUNC("parameter error, cache size must be greater than 0");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE_NOFUNC("fail to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint64(cacheSize)) {
+        APP_LOGE_NOFUNC("fail to write cache size fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt8(static_cast<int8_t>(cleanType))) {
+        APP_LOGE_NOFUNC("fail to write clean type fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::AUTO_CLEAN_CACHE_BY_INODE, data, reply)) {
+        APP_LOGE_NOFUNC("fail from CBCFA server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+
+    ErrCode result = reply.ReadInt32();
+    bool hasValue = reply.ReadBool();
+    if (hasValue) {
+        cleanedSize = reply.ReadUint64();
+    }
+    return result;
 }
 
 ErrCode BundleMgrProxy::CleanBundleCacheFiles(

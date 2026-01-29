@@ -6588,6 +6588,22 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAutomaticImpl_0100, Funct
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_USAGE_STATS_EMPTY);
 }
 #endif
+/**
+ * @tc.number: CleanBundleCacheFilesAutomaticImpl_0200
+ * @tc.name: test CleanBundleCacheFilesAutomaticImpl
+ * @tc.desc: Verify the function of CleanBundleCacheFilesAutomaticImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAutomaticImpl_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    uint64_t cacheSize = 1;
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    std::optional<uint64_t> cleanedSize;
+    auto ret = hostImpl->CleanBundleCacheFilesAutomatic(cacheSize, cleanType, cleanedSize);
+    EXPECT_NE(ret, ERR_OK);
+    EXPECT_FALSE(cleanedSize.has_value());
+}
 
 /**
  * @tc.number: CleanBundleCacheFilesGetCleanSize_0100
@@ -6607,9 +6623,11 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSize_0100, Functi
     info.bundleUserInfo.userId = DEFAULT_USERID;
     innerBundleUserInfos["_100"] = info;
     innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    int32_t appIndex = 0;
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
         BUNDLE_NAME_DEMO, innerBundleInfo);
-    ErrCode ret = hostImpl->CleanBundleCacheFilesGetCleanSize(BUNDLE_NAME_DEMO, DEFAULT_USERID, cacheSize);
+    ErrCode ret = hostImpl->CleanBundleCacheFilesGetCleanSize(BUNDLE_NAME_DEMO, DEFAULT_USERID, cleanType, appIndex, cacheSize);
     EXPECT_EQ(ret, ERR_OK);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(BUNDLE_NAME_DEMO);
 }
@@ -6624,11 +6642,13 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSize_0200, Functi
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
     uint64_t cacheSize = 1;
-    ErrCode ret = hostImpl->CleanBundleCacheFilesGetCleanSize(BUNDLE_NAME_TEST, ALL_USERID, cacheSize);
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    int32_t appIndex = 0;
+    ErrCode ret = hostImpl->CleanBundleCacheFilesGetCleanSize(BUNDLE_NAME_TEST, ALL_USERID, cleanType, appIndex, cacheSize);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-    ret = hostImpl->CleanBundleCacheFilesGetCleanSize("", DEFAULT_USERID, cacheSize);
+    ret = hostImpl->CleanBundleCacheFilesGetCleanSize("", DEFAULT_USERID, cleanType, appIndex, cacheSize);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
-    ret = hostImpl->CleanBundleCacheFilesGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cacheSize);
+    ret = hostImpl->CleanBundleCacheFilesGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cleanType, appIndex, cacheSize);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -6642,6 +6662,8 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSize_0300, Functi
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
     uint64_t cacheSize = 1;
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    int32_t appIndex = 0;
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     InnerBundleInfo innerBundleInfo;
@@ -6655,7 +6677,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSize_0300, Functi
     std::string bundleName = "com.test.CleanBundleCacheFilesGetCleanSize_0300";
     ClearBundleInfo(bundleName);
     dataMgr->bundleInfos_.insert(pair<std::string, InnerBundleInfo>(bundleName, innerBundleInfo));
-    ErrCode ret = hostImpl->CleanBundleCacheFilesGetCleanSize(bundleName, 1, cacheSize);
+    ErrCode ret = hostImpl->CleanBundleCacheFilesGetCleanSize(bundleName, 1, cleanType, appIndex, cacheSize);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
     dataMgr->bundleInfos_.erase(bundleName);
 }
@@ -6670,9 +6692,48 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheTaskGetCleanSize_0100, Functio
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ASSERT_NE(hostImpl, nullptr);
     uint64_t cacheSize = 1;
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    int32_t appIndex = 0;
     uint64_t uid = 1;
-    hostImpl->CleanBundleCacheTaskGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cacheSize, uid, BUNDLE_NAME_TEST);
+    hostImpl->CleanBundleCacheTaskGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cleanType,
+        appIndex, uid, BUNDLE_NAME_TEST, cacheSize);
     EXPECT_FALSE(DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.empty());
+}
+
+/**
+ * @tc.number: CleanBundleCacheTaskGetCleanSize_0200
+ * @tc.name: test CleanBundleCacheTaskGetCleanSize
+ * @tc.desc: 1.Test the CleanBundleCacheTaskGetCleanSize by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheTaskGetCleanSize_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    uint64_t cacheSize = 1;
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    int32_t appIndex = 0;
+    int32_t uid = 20010001;
+    std::string callingBundleName = "com.test.caller";
+    hostImpl->CleanBundleCacheTaskGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cleanType,
+        appIndex, uid, callingBundleName, cacheSize);
+    EXPECT_EQ(cacheSize, 0);
+}
+
+/**
+ * @tc.number: CleanBundleCacheByInodeCount_0100
+ * @tc.name: test CleanBundleCacheByInodeCount
+ * @tc.desc: 1.Test the CleanBundleCacheByInodeCount by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheByInodeCount_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> moduleNames = {MODULE_NAME};
+    uint64_t cacheSize = 1;
+    int32_t appIndex = 0;
+    ErrCode ret = hostImpl->CleanBundleCacheByInodeCount(BUNDLE_NAME_TEST, DEFAULT_USERID,
+        appIndex, moduleNames, cacheSize);
+	EXPECT_FALSE(ret);
 }
 
 /**
@@ -8651,7 +8712,10 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesGetCleanSizeImpl_0100, Fu
     DataMgrGuard guard;
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     uint64_t cacheSize = 1;
-    auto ret = hostImpl->CleanBundleCacheFilesGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cacheSize);
+    CleanType cleanType = CleanType::CACHE_SPACE;
+    int32_t appIndex = 0;
+    auto ret = hostImpl->CleanBundleCacheFilesGetCleanSize(BUNDLE_NAME_TEST, DEFAULT_USERID, cleanType, appIndex,
+        cacheSize);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
 }
 

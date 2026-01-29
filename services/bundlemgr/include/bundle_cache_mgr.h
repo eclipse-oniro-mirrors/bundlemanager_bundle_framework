@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,9 @@ public:
     static void GetBundleCacheSize(const std::vector<std::tuple<std::string,
         std::vector<std::string>, std::vector<int32_t>>> &validBundles,
         const int32_t userId, uint64_t &cacheStat);
+    static void GetBundleCacheSizeByAppIndex(const std::string &bundleName, int32_t userId,
+        int32_t appIndex, const std::vector<std::string> &moduleNames, uint64_t &cacheStat);
+    static ErrCode GetBundleInodeCount(int32_t uid, uint64_t &inodeCount);
     static ErrCode GetAllBundleCacheStat(const sptr<IProcessCacheCallback> processCacheCallback);
     static ErrCode CleanBundleCloneCache(const std::string &bundleName, int32_t userId,
         int32_t appCloneIndex, const std::vector<std::string> &moduleNames);

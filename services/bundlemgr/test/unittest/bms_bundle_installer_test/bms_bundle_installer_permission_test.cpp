@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -663,6 +663,20 @@ HWTEST_F(BmsBundleInstallerPermissionTest, GetDiskUsageFromPath_0100, Function |
     std::vector<std::string> path;
     int64_t statSize = 0;
     ErrCode ret = installdHostImpl.GetDiskUsageFromPath(path, statSize);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0100
+ * @tc.name: test GetBundleInodeCount
+ * @tc.desc: 1.Test the GetBundleInodeCount of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, GetBundleInodeCount_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    int32_t uid = -1;
+    uint64_t inodeCount = 0;
+    ErrCode ret = installdHostImpl.GetBundleInodeCount(uid, inodeCount);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

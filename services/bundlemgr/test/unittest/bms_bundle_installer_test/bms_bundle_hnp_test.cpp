@@ -58,6 +58,9 @@ using namespace OHOS::AppExecFwk;
 using OHOS::DelayedSingleton;
 
 namespace OHOS {
+namespace AppExecFwk {
+void SetInodeCountValue(uint64_t count, uint32_t value);
+}
 namespace {
 const int32_t USERID = 100;
 }  // namespace
@@ -277,5 +280,101 @@ HWTEST_F(BmsBundleHnpTest, ExtractModule_0001, Function | SmallTest | Level3)
     info.SetCpuAbi(supportedAbi);
     ret = installer.ExtractModule(info, "/tmp/modulePath");
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleCacheSizeByAppIndex_0010
+ * @tc.name: test GetBundleCacheSizeByAppIndex
+ * @tc.desc: 1.Test the GetBundleCacheSizeByAppIndex of BundleCacheMgr
+*/
+HWTEST_F(BmsBundleHnpTest, GetBundleCacheSizeByAppIndex_0010, Function | SmallTest | Level0)
+{
+    std::string bundleName = "com.example.testapp";
+    int32_t userId = 100;
+    int32_t appIndex = 0;
+    std::vector<std::string> moduleNames = {"entry", "feature"};
+    uint64_t cacheStat = 0;
+    BundleCacheMgr bundleCacheMgr;
+    bundleCacheMgr.GetBundleCacheSizeByAppIndex(bundleName, userId, appIndex, moduleNames, cacheStat);
+    EXPECT_GE(cacheStat, 0);
+}
+
+/**
+ * @tc.number: GetBundleCacheSizeByAppIndex_0020
+ * @tc.name: test GetBundleCacheSizeByAppIndex
+ * @tc.desc: 1.Test the GetBundleCacheSizeByAppIndex of BundleCacheMgr
+*/
+HWTEST_F(BmsBundleHnpTest, GetBundleCacheSizeByAppIndex_0020, Function | SmallTest | Level0)
+{
+    std::string bundleName = "com.example.testapp";
+    BundleCacheMgr bundleCacheMgr;
+    int32_t invalidAppIndex = -1;
+    std::vector<std::string> moduleNames;
+    uint64_t cacheStat = 0;
+    bundleCacheMgr.GetBundleCacheSizeByAppIndex(bundleName, USERID, invalidAppIndex, moduleNames, cacheStat);
+    EXPECT_EQ(cacheStat, 0);
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0010
+ * @tc.name: test GetBundleInodeCount
+ * @tc.desc: 1.Test the GetBundleInodeCount of BundleCacheMgr
+*/
+HWTEST_F(BmsBundleHnpTest, GetBundleInodeCount_0010, Function | SmallTest | Level0)
+{
+    int32_t uid = 20010001;
+    uint64_t inodeCount = 0;
+    SetInodeCountValue(100, 0);
+    BundleCacheMgr bundleCacheMgr;
+    ErrCode result = bundleCacheMgr.GetBundleInodeCount(uid, inodeCount);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(inodeCount, 100);
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0020
+ * @tc.name: test GetBundleInodeCount
+ * @tc.desc: 1.Test the GetBundleInodeCount of BundleCacheMgr
+*/
+HWTEST_F(BmsBundleHnpTest, GetBundleInodeCount_0020, Function | SmallTest | Level0)
+{
+    int32_t uid = -1;
+    uint64_t inodeCount = 100;
+    BundleCacheMgr bundleCacheMgr;
+    ErrCode result = bundleCacheMgr.GetBundleInodeCount(uid, inodeCount);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_UID);
+    EXPECT_EQ(inodeCount, 0);
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0030
+ * @tc.name: test GetBundleInodeCount
+ * @tc.desc: 1.Test the GetBundleInodeCount of BundleCacheMgr
+*/
+HWTEST_F(BmsBundleHnpTest, GetBundleInodeCount_0030, Function | MediumTest | Level0)
+{
+    int32_t uid = 0;
+    uint64_t inodeCount = 0;
+    SetInodeCountValue(50, 0);
+    BundleCacheMgr bundleCacheMgr;
+    ErrCode result = bundleCacheMgr.GetBundleInodeCount(uid, inodeCount);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(inodeCount, 50);
+}
+
+/**
+ * @tc.number: GetBundleInodeCount_0040
+ * @tc.name: test GetBundleInodeCount
+ * @tc.desc: 1.Test the GetBundleInodeCount of BundleCacheMgr
+*/
+HWTEST_F(BmsBundleHnpTest, GetBundleInodeCount_0040, Function | SmallTest | Level0)
+{
+    int32_t uid = 20010001;
+    uint64_t inodeCount = 0;
+    SetInodeCountValue(150, 1);
+    BundleCacheMgr bundleCacheMgr;
+    ErrCode result = bundleCacheMgr.GetBundleInodeCount(uid, inodeCount);
+    EXPECT_EQ(result, 1);
+    EXPECT_GE(inodeCount, 0);
 }
 } // OHOS

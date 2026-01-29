@@ -1693,4 +1693,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, DeleteCertAndRemoveKey_0100, Function | S
     auto ret = hostImpl->DeleteCertAndRemoveKey(certPaths);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: InstalldHostImplTest_8400
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling GetBundleInodeCount of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_8400, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    int32_t uid = 100;
+    uint64_t inodeCount = 0;
+    auto ret = hostImpl->GetBundleInodeCount(uid, inodeCount);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS

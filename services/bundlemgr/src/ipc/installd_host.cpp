@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -250,6 +250,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_DISK_USAGE_FROM_PATH):
             result = HandleGetDiskUsageFromPath(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_FILE_COUNT):
+            result = this->HandleGetBundleInodeCount(data, reply);
             break;
         case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_DATA_GROUP_DIRS):
             result = HandleCreateDataGroupDirs(data, reply);
@@ -547,6 +550,24 @@ bool InstalldHost::HandleGetDiskUsageFromPath(MessageParcel &data, MessageParcel
     if (!reply.WriteInt64(statSize)) {
         LOG_E(BMS_TAG_INSTALLD, "HandleGetDiskUsageFromPath write failed");
         return false;
+    }
+    return true;
+}
+bool InstalldHost::HandleGetBundleInodeCount(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_NOFUNC_D(BMS_TAG_INSTALLD, "HandleGetBundleInodeCount start");
+    int32_t uid = data.ReadInt32();
+    uint64_t inodeCount = 0;
+    ErrCode result = GetBundleInodeCount(uid, inodeCount);
+    if (!reply.WriteInt32(result)) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "Handle Get Inode Count write result failed");
+        return false;
+    }
+    if (result == ERR_OK) {
+        if (!reply.WriteUint64(inodeCount)) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLD, "Handle Get Inode Count write inodeCount failed");
+            return false;
+        }
     }
     return true;
 }
