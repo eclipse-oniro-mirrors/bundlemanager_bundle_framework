@@ -1498,8 +1498,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // check the dependencies whether or not exists
     result = CheckDependency(newInfos, sharedBundleInstaller);
     CHECK_RESULT(result, "check dependency failed %{public}d");
-    result = CheckThirdPartyBundleDeveloperIdValid(newInfos.begin()->second, hapVerifyResults, userId_);
-    CHECK_RESULT(result, "check developid in third party bundle valid failed %{public}d");
     
     // hapVerifyResults at here will not be empty
     verifyRes_ = hapVerifyResults[0];
@@ -8720,38 +8718,6 @@ bool BaseBundleInstaller::DeleteInstallingBundleName(const InstallParam &install
         dataMgr_->DeleteInstallingBundleName(iter->second, installParam.userId);
     }
     return true;
-}
-
-ErrCode BaseBundleInstaller::CheckThirdPartyBundleDeveloperIdValid(const InnerBundleInfo &newInfo,
-    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes, int32_t userId)
-{
-    // check is third party app or not
-    std::string bundleName = newInfo.GetBundleName();
-    if (newInfo.IsSystemApp()) {
-        return ERR_OK;
-    }
-    
-    if (hapVerifyRes.empty()) {
-        return ERR_APPEXECFWK_HAP_VERIFY_RES_EMPTY;
-    }
-    std::string developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.developerId;
-    std::unordered_set<std::string> dataGroupIds;
-    GetDataGroupIds(hapVerifyRes, dataGroupIds);
-    if (dataGroupIds.empty()) {
-        return ERR_OK;
-    }
-
-    if (dataMgr_ == nullptr) {
-        LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
-        return ERR_APPEXECFWK_NULL_PTR;
-    }
-
-    if (!dataMgr_->CheckDeveloperIdSameWithDataGroupIds(dataGroupIds, developerId, userId)) {
-        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s: datagroupid in installed bundles, but developerId is not same",
-            bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_CHECK_DEVELOPERID_IN_THIRD_PARTY_BUNDLE_FAILED;
-    }
-    return ERR_OK;
 }
 
 void BaseBundleInstaller::NotifyBundleCallback(const NotifyType &type, int32_t uid)
