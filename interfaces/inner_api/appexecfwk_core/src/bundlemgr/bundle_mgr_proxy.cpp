@@ -4146,6 +4146,18 @@ ErrCode BundleMgrProxy::GetAppProvisionInfo(const std::string &bundleName, int32
         data, appProvisionInfo);
 }
 
+ErrCode BundleMgrProxy::GetAllAppInstallExtendedInfo(std::vector<AppInstallExtendedInfo>& appInstallExtendedInfos)
+{
+    HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAllAppInstallExtendedInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<AppInstallExtendedInfo>
+        (BundleMgrInterfaceCode::GET_ALL_APP_INSTALL_EXTENSION_INFO, data, appInstallExtendedInfos);
+}
+
 ErrCode BundleMgrProxy::GetAllAppProvisionInfo(const int32_t userId, std::vector<AppProvisionInfo> &appProvisionInfos)
 {
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);

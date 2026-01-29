@@ -42,6 +42,7 @@ ohos_shared_library("appexecfwk_base") {
 
   sources = [
     "src/ability_info.cpp",
+    "src/app_install_extended_info.cpp",
     "src/app_jump_control_rule.cpp",
     "src/app_provision_info.cpp",
     "src/app_running_control_rule.cpp",

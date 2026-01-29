@@ -24,6 +24,7 @@
 
 #include "ability_manager_client.h"
 #include "ability_info.h"
+#include "app_install_extended_info.h"
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
 #include "bundle_cache_mgr.h"
@@ -10243,5 +10244,101 @@ HWTEST_F(BmsBundleKitServiceTest, CheckSandboxPathImpl_0200, Function | SmallTes
     std::string destPath = TEST_PATH;
     auto ret = hostImpl->CheckSandboxPath(sourcePaths, destPath);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED);
+}
+
+/**
+ * @tc.number: GetAllAppInstallExtendedInfo_0100
+ * @tc.name: test GetAllAppInstallExtendedInfo normal case
+ * @tc.desc: 1. test GetAllAppInstallExtendedInfo with system app and permission
+ *           2. should return ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppInstallExtendedInfo_0100, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = hostImpl->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetAllAppInstallExtendedInfo_0200
+ * @tc.name: test GetAllAppInstallExtendedInfo with non-system app
+ * @tc.desc: 1. test GetAllAppInstallExtendedInfo when caller is non-system app
+ *           2. should return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppInstallExtendedInfo_0200, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(false);
+    SetNativeTokenTypeForTest(false);
+    SetVerifyCallingPermissionForTest(true);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = hostImpl->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetAllAppInstallExtendedInfo_0300
+ * @tc.name: test GetAllAppInstallExtendedInfo with no permission
+ * @tc.desc: 1. test GetAllAppInstallExtendedInfo when no permission granted
+ *           2. should return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppInstallExtendedInfo_0300, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetVerifyCallingPermissionForTest(false);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = hostImpl->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ResetTestValues();
+}
+
+/**
+ * @tc.number: GetAllAppInstallExtendedInfo_0400
+ * @tc.name: test GetAllAppInstallExtendedInfo with multiple bundles
+ * @tc.desc: 1. test GetAllAppInstallExtendedInfo with multiple installed bundles
+ *           2. should return all app install extended infos
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllAppInstallExtendedInfo_0400, Function | SmallTest | Level1)
+{
+    SetSystemAppForTest(true);
+    SetNativeTokenTypeForTest(true);
+    SetVerifyCallingPermissionForTest(true);
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    MockInstallBundle(BUNDLE_NAME_TEST1, MODULE_NAME_TEST, ABILITY_NAME_TEST1);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<AppInstallExtendedInfo> appInstallExtendedInfos;
+    ErrCode ret = hostImpl->GetAllAppInstallExtendedInfo(appInstallExtendedInfos);
+
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GE(appInstallExtendedInfos.size(), 2);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST1);
+    ResetTestValues();
 }
 }

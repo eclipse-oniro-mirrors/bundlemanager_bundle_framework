@@ -1032,6 +1032,9 @@ public:
     virtual ErrCode GetAllAppProvisionInfo(const int32_t userId,
         std::vector<AppProvisionInfo> &appProvisionInfos) override;
 
+    virtual ErrCode GetAllAppInstallExtendedInfo(
+        std::vector<AppInstallExtendedInfo> &appInstallExtendedInfos) override;
+
     virtual ErrCode GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) override;
     virtual ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
         std::vector<SharedBundleInfo> &sharedBundles) override;

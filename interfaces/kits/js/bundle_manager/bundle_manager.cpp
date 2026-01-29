@@ -4550,6 +4550,18 @@ void GetAppProvisionInfoExec(napi_env env, void *data)
     }
 }
 
+void GetAllAppInstallExtendedInfoExec(napi_env env, void* data)
+{
+    AllAppInstallExtendedInfoCallbackInfo* asyncCallbackInfo =
+        reinterpret_cast<AllAppInstallExtendedInfoCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = BundleManagerHelper::InnerGetAllAppInstallExtendedInfo(
+        asyncCallbackInfo->appInstallExtendedInfos);
+}
+
 void GetAllAppProvisionInfoExec(napi_env env, void *data)
 {
     AllAppProvisionInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<AllAppProvisionInfoCallbackInfo *>(data);
@@ -4582,6 +4594,29 @@ void GetAppProvisionInfoComplete(napi_env env, napi_status status, void *data)
     CommonFunc::NapiReturnDeferred<AppProvisionInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
+void GetAllAppInstallExtendedInfoComplete(napi_env env, napi_status status, void *data)
+{
+    AllAppInstallExtendedInfoCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<AllAppInstallExtendedInfoCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<AllAppInstallExtendedInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        CommonFunc::ConvertAllAppInstallExtendedInfos(env, asyncCallbackInfo->appInstallExtendedInfos,
+            result[ARGS_POS_ONE]);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_ALL_INSTALL_INFO, Constants::PERMISSION_GET_APP_INSTALL_INFO);
+    }
+    CommonFunc::NapiReturnDeferred<AllAppInstallExtendedInfoCallbackInfo>(env, asyncCallbackInfo,
+        result, ARGS_SIZE_TWO);
+}
+
 void GetAllAppProvisionInfoComplete(napi_env env, napi_status status, void *data)
 {
     AllAppProvisionInfoCallbackInfo *asyncCallbackInfo =
@@ -4601,6 +4636,48 @@ void GetAllAppProvisionInfoComplete(napi_env env, napi_status status, void *data
             GET_ALL_APP_PROVISION_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_AND_INTERACT_ACROSS_LOCAL_ACCOUNTS);
     }
     CommonFunc::NapiReturnDeferred<AllAppProvisionInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetAllInstallInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("napi GetAllInstallInfo called");
+    NapiArg args(env, info);
+    AllAppInstallExtendedInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow)
+        AllAppInstallExtendedInfoCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<AllAppInstallExtendedInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_POS_ZERO, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    if (args.GetMaxArgc() < ARGS_POS_ZERO) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0;i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
+            }
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<AllAppInstallExtendedInfoCallbackInfo>(env, asyncCallbackInfo,
+        GET_ALL_INSTALL_INFO, GetAllAppInstallExtendedInfoExec, GetAllAppInstallExtendedInfoComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetAllInstallInfo done");
+    return promise;
 }
 
 napi_value GetAllAppProvisionInfo(napi_env env, napi_callback_info info)

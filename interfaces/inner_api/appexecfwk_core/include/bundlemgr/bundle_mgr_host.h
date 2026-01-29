@@ -769,6 +769,8 @@ private:
 
     ErrCode HandleGetIconById(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAllAppInstallExtendedInfo(MessageParcel &data, MessageParcel &reply);
+    
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     ErrCode HandleGetDefaultAppProxy(MessageParcel &data, MessageParcel &reply);
 #endif

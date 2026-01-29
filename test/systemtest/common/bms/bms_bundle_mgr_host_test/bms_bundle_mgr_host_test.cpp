@@ -1576,6 +1576,20 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetAppProvisionInfo_0100, Function | Medium
 }
 
 /**
+ * @tc.number: HandleGetAllAppInstallExtendedInfo_0100
+ * @tc.name: test the HandleGetAllAppInstallExtendedInfo normal case
+ * @tc.desc: 1. test normal execution flow where WriteInt32 and WriteParcelableVector both succeed
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAllAppInstallExtendedInfo_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetAllAppInstallExtendedInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: HandleGetAllAppProvisionInfo_0100
  * @tc.name: test the HandleGetAllAppProvisionInfo normal case
  * @tc.desc: 1. test normal execution flow where WriteInt32 and WriteParcelableVector both succeed
