@@ -8815,9 +8815,6 @@ std::vector<int32_t> BundleDataMgr::GetUserIds(const std::string &bundleName) co
 void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t userId)
 {
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
-    CreateDirParam baseParam;
-    baseParam.bundleName = bundleName;
-    baseParam.userId = userId;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         auto bundleInfoItem = bundleInfos_.find(bundleName);
@@ -8830,10 +8827,6 @@ void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t 
             return;
         }
         dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
-        baseParam.apl = bundleInfoItem->second.GetAppPrivilegeLevel();
-        baseParam.isPreInstallApp = bundleInfoItem->second.IsPreInstallApp();
-        baseParam.debug = bundleInfoItem->second.GetBaseApplicationInfo().appProvisionType ==
-            Constants::APP_PROVISION_TYPE_DEBUG;
     }
     if (dataGroupInfoMap.empty()) {
         return;
@@ -8846,7 +8839,7 @@ void BundleDataMgr::CreateAppEl5GroupDir(const std::string &bundleName, int32_t 
             }
         }
     }
-    if (CreateEl5GroupDirs(dataGroupInfos, baseParam) != ERR_OK) {
+    if (CreateEl5GroupDirs(dataGroupInfos, userId) != ERR_OK) {
         APP_LOGW("create el5 group dirs for %{public}s %{public}d failed", bundleName.c_str(), userId);
     }
 }
@@ -8855,18 +8848,12 @@ bool BundleDataMgr::CreateAppGroupDir(const InnerBundleInfo &info, int32_t userI
 {
     auto dataGroupInfoMap = info.GetDataGroupInfos();
     bool needCreateEl5Dir = info.NeedCreateEl5Dir();
-    CreateDirParam baseParam;
-    baseParam.bundleName = info.GetBundleName();
-    baseParam.userId = userId;
-    baseParam.apl = info.GetAppPrivilegeLevel();
-    baseParam.isPreInstallApp = info.IsPreInstallApp();
-    baseParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-    return CreateAppGroupDir(dataGroupInfoMap, baseParam, needCreateEl5Dir, dirEl);
+    return CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl);
 }
 
 bool BundleDataMgr::CreateAppGroupDir(
     const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfoMap,
-    const CreateDirParam baseParam, bool needCreateEl5Dir, DataDirEl dirEl)
+    int32_t userId, bool needCreateEl5Dir, DataDirEl dirEl)
 {
     if (dataGroupInfoMap.empty()) {
         return true;
@@ -8874,22 +8861,19 @@ bool BundleDataMgr::CreateAppGroupDir(
     std::vector<DataGroupInfo> dataGroupInfos;
     for (const auto &groupItem : dataGroupInfoMap) {
         for (const DataGroupInfo &dataGroupInfo : groupItem.second) {
-            if (dataGroupInfo.userId == baseParam.userId) {
+            if (dataGroupInfo.userId == userId) {
                 dataGroupInfos.emplace_back(dataGroupInfo);
             }
         }
     }
     
-    return CreateGroupDirs(dataGroupInfos, baseParam, needCreateEl5Dir, dirEl) == ERR_OK;
+    return CreateGroupDirs(dataGroupInfos, userId, needCreateEl5Dir, dirEl) == ERR_OK;
 }
 
 bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t userId)
 {
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMap;
     bool needCreateEl5Dir = false;
-    CreateDirParam baseParam;
-    baseParam.bundleName = bundleName;
-    baseParam.userId = userId;
     {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         auto bundleInfoItem = bundleInfos_.find(bundleName);
@@ -8899,17 +8883,13 @@ bool BundleDataMgr::CreateAppGroupDir(const std::string &bundleName, int32_t use
         }
         dataGroupInfoMap = bundleInfoItem->second.GetDataGroupInfos();
         needCreateEl5Dir = bundleInfoItem->second.NeedCreateEl5Dir();
-        baseParam.apl = bundleInfoItem->second.GetAppPrivilegeLevel();
-        baseParam.isPreInstallApp = bundleInfoItem->second.IsPreInstallApp();
-        baseParam.debug = bundleInfoItem->second.GetBaseApplicationInfo().appProvisionType ==
-            Constants::APP_PROVISION_TYPE_DEBUG;
     }
 
-    return CreateAppGroupDir(dataGroupInfoMap, baseParam, needCreateEl5Dir);
+    return CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir);
 }
 
 ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos,
-    const CreateDirParam baseParam,
+    int32_t userId,
     bool needCreateEl5Dir, DataDirEl dirEl)
 {
     if (dataGroupInfos.empty()) {
@@ -8917,10 +8897,11 @@ ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGro
     }
     std::vector<CreateDirParam> params;
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
-        CreateDirParam param = baseParam;
+        CreateDirParam param;
         param.uuid = dataGroupInfo.uuid;
         param.uid = dataGroupInfo.uid;
         param.gid = dataGroupInfo.gid;
+        param.userId = dataGroupInfo.userId;
         params.emplace_back(param);
     }
     ErrCode res = ERR_OK;
@@ -8932,7 +8913,7 @@ ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGro
     if (!needCreateEl5Dir || (dirEl != DataDirEl::EL5 && dirEl != DataDirEl::NONE)) {
         return res;
     }
-    auto el5Res = CreateEl5GroupDirs(dataGroupInfos, baseParam);
+    auto el5Res = CreateEl5GroupDirs(dataGroupInfos, userId);
     if (el5Res != ERR_OK) {
         APP_LOGE("el5Res %{public}d", el5Res);
         res = el5Res;
@@ -8941,13 +8922,13 @@ ErrCode BundleDataMgr::CreateGroupDirs(const std::vector<DataGroupInfo> &dataGro
 }
 
 ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &dataGroupInfos,
-    const CreateDirParam baseParam)
+    int32_t userId)
 {
     if (dataGroupInfos.empty()) {
         return ERR_OK;
     }
     std::string parentDir = std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(baseParam.userId);
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId);
     if (!BundleUtil::IsExistDir(parentDir)) {
         APP_LOGE("parent dir(%{public}s) missing: el5", parentDir.c_str());
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
@@ -8960,19 +8941,12 @@ ErrCode BundleDataMgr::CreateEl5GroupDirs(const std::vector<DataGroupInfo> &data
             ServiceConstants::DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
             APP_LOGW("id %{public}s group dir %{private}s userId %{public}d failed",
-                dataGroupInfo.dataGroupId.c_str(), dataGroupInfo.uuid.c_str(), baseParam.userId);
+                dataGroupInfo.dataGroupId.c_str(), dataGroupInfo.uuid.c_str(), userId);
             res = result;
-        } else {
-            result = InstalldClient::GetInstance()->SetDirApl(dir, baseParam.bundleName, baseParam.apl,
-                baseParam.isPreInstallApp, baseParam.debug, dataGroupInfo.uid);
-            if (result != ERR_OK) {
-                APP_LOGW("fail to SetDirApl dir %{public}s, error is %{public}d", dir.c_str(), result);
-                res = result;
-            }
         }
         
         // set el5 group dirs encryption policy
-        EncryptionParam encryptionParam("", dataGroupInfo.uuid, dataGroupInfo.uid, baseParam.userId, EncryptionDirType::GROUP);
+        EncryptionParam encryptionParam("", dataGroupInfo.uuid, dataGroupInfo.uid, userId, EncryptionDirType::GROUP);
         std::string keyId = "";
         auto setPolicyRes = InstalldClient::GetInstance()->SetEncryptionPolicy(encryptionParam, keyId);
         if (setPolicyRes != ERR_OK) {
@@ -9441,6 +9415,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
 void BundleDataMgr::GenerateDataGroupInfos(const std::string &bundleName,
     const std::unordered_set<std::string> &dataGroupIdList, int32_t userId, bool needSaveStorage)
 {
+    APP_LOGD("called for user: %{public}d", userId);
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto bundleInfoItem = bundleInfos_.find(bundleName);
     if (bundleInfoItem == bundleInfos_.end()) {

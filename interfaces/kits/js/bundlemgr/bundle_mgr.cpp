@@ -4889,7 +4889,6 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_U1ENABLE_CAN_ONLY_INSTALL_IN_U1_WITH_NOT_SINGLETON):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_BUNDLE_CAN_NOT_BOTH_EXISTED_IN_U1_AND_OTHER_USERS):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_U1_ENABLE_NOT_SUPPORT_APP_SERVICE_AND_SHARED_BUNDLE):
-        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_CHECK_DEVELOPERID_IN_THIRD_PARTY_BUNDLE_FAILED):
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID);
             installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
             break;

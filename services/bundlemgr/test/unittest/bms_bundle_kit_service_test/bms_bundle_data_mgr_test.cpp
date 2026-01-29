@@ -6028,20 +6028,14 @@ HWTEST_F(BmsBundleDataMgrTest, CreateAppGroupDir_0100, Function | SmallTest | Le
     int32_t userId = 100;
     bool needCreateEl5Dir = true;
     DataDirEl dirEl = DataDirEl::EL5;
-    std::string bundleName = "com.test.CreateAppGroupDir_0100";
-    CreateDirParam baseParam;
-    baseParam.bundleName = bundleName;
-    baseParam.userId = userId;
-    baseParam.apl = "testapl";
-
-    auto ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, baseParam, needCreateEl5Dir, dirEl);
+    auto ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl);
     EXPECT_TRUE(ret);
 
     DataGroupInfo groupInfo;
     groupInfo.userId = 100;
     groupInfo.dataGroupId = "123";
     groupInfo.uuid = "321";
-    ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, baseParam, needCreateEl5Dir, dirEl);
+    ret = dataMgr->CreateAppGroupDir(dataGroupInfoMap, userId, needCreateEl5Dir, dirEl);
     EXPECT_TRUE(ret);
 }
 
