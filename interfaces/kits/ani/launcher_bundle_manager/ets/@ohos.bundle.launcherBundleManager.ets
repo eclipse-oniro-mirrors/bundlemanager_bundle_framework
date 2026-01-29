@@ -36,7 +36,7 @@ export default namespace launcherBundleManager {
       if (options != undefined) {
         startOptions = options;
       }
-      let cb = (): Any => {
+      let cb = () => {
         startShortcutNative(shortcutInfo, startOptions);
       }
       let p1 = taskpool.execute(cb);
@@ -154,7 +154,7 @@ export default namespace launcherBundleManager {
       if (options != undefined) {
         startOptions = options;
       }
-      let cb = (): Any => {
+      let cb = () => {
         startShortcutWithReasonNative(shortcutInfo, startReason, startOptions);
       }
       let p1 = taskpool.execute(cb);
