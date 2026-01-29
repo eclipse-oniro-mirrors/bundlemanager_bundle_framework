@@ -14728,11 +14728,11 @@ HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForHap_0100, Function | Smal
     codeSignatureParam.modulePath = TEST_ERROR_STRING;
     codeSignatureParam.isEnterpriseBundle = true;
     ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_ERR_PROFILE);
     codeSignatureParam.isEnterpriseBundle = false;
     codeSignatureParam.isInternaltestingBundle = true;
     ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_PATH_INVALID);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_ERR_PROFILE);
     codeSignatureParam.isInternaltestingBundle = false;
     codeSignatureParam.isPlugin = true;
     ret = impl.VerifyCodeSignatureForHap(codeSignatureParam);

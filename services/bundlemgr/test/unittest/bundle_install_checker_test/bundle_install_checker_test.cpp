@@ -1013,4 +1013,44 @@ HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0041, TestSize.Level
     uint32_t ret = bundleInstallChecker.GetVersionCode(infos);
     EXPECT_EQ(ret, 0);
 }
+
+/**
+ * @tc.number: BundleInstallCheckerTest_0042
+ * @tc.name: test ProcessCodeSignatureParam.
+ * @tc.desc: test ProcessCodeSignatureParam.
+ */
+HWTEST_F(BundleInstallCheckerTest, BundleInstallCheckerTest_0042, TestSize.Level2)
+{
+    BundleInstallChecker bundleInstallChecker;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    CodeSignatureParam codeSignatureParam;
+    bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
+    EXPECT_EQ(codeSignatureParam.profileBlockLength, 0);
+
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
+    EXPECT_EQ(codeSignatureParam.profileBlockLength, 0);
+
+    provisionInfo.profileBlockLength = 100;
+    provisionInfo.profileBlock = std::make_unique<unsigned char[]>(provisionInfo.profileBlockLength);
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_NORMAL;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    codeSignatureParam.profileBlockLength = 0;
+    bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
+    EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
+
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    codeSignatureParam.profileBlockLength = 0;
+    bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
+    EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
+
+    provisionInfo.distributionType = Security::Verify::AppDistType::INTERNALTESTING;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    codeSignatureParam.profileBlockLength = 0;
+    bundleInstallChecker.ProcessCodeSignatureParam(hapVerifyResult, codeSignatureParam);
+    EXPECT_EQ(codeSignatureParam.profileBlockLength, 100);
+}
 } // OHOS
