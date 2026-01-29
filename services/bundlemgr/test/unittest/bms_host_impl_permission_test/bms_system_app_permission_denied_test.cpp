@@ -973,6 +973,35 @@ HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0054, TestSize.Leve
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
+/*
+ * @tc.number: BundleMgrHostImpl_0055
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetLaunchWantForBundle SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0055, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    Want want;
+    int32_t userId = BundleUtil::GetUserIdByCallingUid();
+    auto ret = localBundleMgrHostImpl->GetLaunchWantForBundle("", want, userId, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/*
+ * @tc.number: BundleMgrHostImpl_0056
+ * @tc.name: BmsSystemAppPermissionDeniedTest
+ * @tc.desc: GetLaunchWantForBundle SystemAppPermission Denied
+ */
+HWTEST_F(BmsSystemAppPermissionDeniedTest, BundleMgrHostImpl_0056, TestSize.Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    Want want;
+    int32_t userId = 101;
+    auto ret = localBundleMgrHostImpl->GetLaunchWantForBundle("", want, userId, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 /**
  * @tc.number: BundleResourceHostImpl_0001

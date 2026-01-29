@@ -781,7 +781,8 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
      */
     virtual ErrCode GetLaunchWantForBundle(
-        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID)
+        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID,
+        bool isSync = false)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

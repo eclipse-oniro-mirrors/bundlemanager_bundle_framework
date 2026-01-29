@@ -554,7 +554,8 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns errCode otherwise.
      */
     virtual ErrCode GetLaunchWantForBundle(
-        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID,
+        bool isSync = false) override;
     /**
      * @brief Obtains detailed information about a specified permission.
      * @param permissionName Indicates the name of the ohos permission.

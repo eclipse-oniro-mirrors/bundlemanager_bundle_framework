@@ -1841,10 +1841,11 @@ ErrCode BundleMgrHost::HandleGetLaunchWantForBundle(MessageParcel &data, Message
     HITRACE_METER_NAME_EX(HITRACE_LEVEL_INFO, HITRACE_TAG_APP, __PRETTY_FUNCTION__, nullptr);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
+    bool isSync = data.ReadBool();
     APP_LOGD("name %{public}s", bundleName.c_str());
 
     Want want;
-    ErrCode ret = GetLaunchWantForBundle(bundleName, want, userId);
+    ErrCode ret = GetLaunchWantForBundle(bundleName, want, userId, isSync);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
