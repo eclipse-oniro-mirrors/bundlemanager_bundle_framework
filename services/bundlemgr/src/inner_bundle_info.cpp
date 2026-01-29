@@ -2927,7 +2927,7 @@ void InnerBundleInfo::ProcessBundleFlags(
             }
             if (!innerBundleUserInfoPtr) {
                 LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleUserInfo obtained by ProcessBundleFlags is null.");
-                return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+                return;
             }
             bundleInfo.applicationInfo.removable = GetUninstallState() && innerBundleUserInfoPtr->canUninstall;
         }
