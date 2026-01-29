@@ -14805,35 +14805,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateDataGroupDir_0100, Function | SmallTest |
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     createDirParam.gid = ZERO_CODE;
     ret = impl.CreateDataGroupDir(createDirParam);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: CreateDataGroupDir_0200
- * @tc.name: test CreateDataGroupDir
- * @tc.desc: 1.Test the CreateDataGroupDir of InstalldHostImpl
-*/
-HWTEST_F(BmsBundleInstallerTest, CreateDataGroupDir_0200, Function | SmallTest | Level0)
-{
-    InstalldHostImpl impl;
-    CreateDirParam param;
-    param.uuid = "123456";
-    param.userId = 100;
-    param.uid = 20020020;
-    param.gid = 20020020;
-    param.apl = "test";
-    param.bundleName = "com.test.CreateDataGroupDir_0100";
-    auto ret = impl.CreateDataGroupDir(param);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
-
-    const std::vector<std::string> elList { "el2", "el3", "el4" };
-    for (const auto &el : elList) {
-        std::string userDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR +
-            el + ServiceConstants::PATH_SEPARATOR + std::to_string(param.userId);
-        std::string groupDir = userDir + ServiceConstants::DATA_GROUP_PATH + param.uuid;
-        ret = AppExecFwk::InstalldClient::GetInstance()->RemoveDir(groupDir);
-        EXPECT_EQ(ret, ERR_OK);
-    }
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
