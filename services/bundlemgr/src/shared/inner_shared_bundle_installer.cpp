@@ -113,6 +113,7 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
 
     // check enterprise bundle
     /* At this place, hapVerifyResults cannot be empty and unnecessary to check it */
+    verifyRes_ = hapVerifyResults_[0];
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyResults_[0]);
     appIdentifier_ = (hapVerifyResults_[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyResults_[0].GetProvisionInfo().bundleInfo.appIdentifier;
@@ -821,6 +822,7 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std:
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
     codeSignatureParam.isCompressNativeLibrary = isCompressNativeLibs_;
+    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
@@ -838,6 +840,7 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForHsp(const std::string 
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle_;
+    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 

@@ -15,9 +15,11 @@
 
 #include "ipc/code_signature_param.h"
 
+#include "app_log_tag_wrapper.h"
 #include "bundle_constants.h"
 #include "nlohmann/json.hpp"
 #include "parcel_macro.h"
+#include "securec.h"
 #include "string_ex.h"
 
 namespace OHOS {
@@ -34,6 +36,7 @@ constexpr const char* CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY = "isCompileSdkO
 constexpr const char* CODE_SIGNATURE_IS_COMPRESS_NATIVE_LIBRARY = "isCompressNativeLibrary";
 constexpr const char* CODE_SIGNATURE_IS_PLUGIN = "isPlugin";
 constexpr const char* CODE_SIGNATURE_PLUGIN_ID = "pluginId";
+constexpr int32_t MAX_PROFILE_LENGTH = 1 * 1024 * 1000; // 1M
 } // namespace
 
 bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
@@ -49,6 +52,25 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
     isCompressNativeLibrary = parcel.ReadBool();
     isPlugin = parcel.ReadBool();
     pluginId = Str16ToStr8(parcel.ReadString16());
+    profileBlockLength = parcel.ReadUint32();
+    if (profileBlockLength > 0 && profileBlockLength < MAX_PROFILE_LENGTH) {
+        uint8_t* originData = const_cast<uint8_t*>(parcel.ReadBuffer(profileBlockLength));
+        if (originData == nullptr) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "Failed to read profile buffer");
+            return false;
+        }
+        auto tempProfilePtr = std::make_unique<unsigned char[]>(profileBlockLength);
+        unsigned char *tempProfileData = tempProfilePtr.get();
+        if (tempProfileData == nullptr) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "invalid tempProfileData");
+            return false;
+        }
+        if (memcpy_s(tempProfileData, profileBlockLength, originData, profileBlockLength) != 0) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "process CodeSignatureParam memcpy_s failed");
+            return false;
+        }
+        profileBlock = std::move(tempProfilePtr);
+    }
     return true;
 }
 
@@ -65,6 +87,13 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompressNativeLibrary);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPlugin);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pluginId));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, profileBlockLength);
+    if (profileBlockLength > 0 && profileBlockLength < MAX_PROFILE_LENGTH) {
+        if (!parcel.WriteBuffer(profileBlock.get(), profileBlockLength)) {
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "Failed to write profile buffer");
+            return false;
+        }
+    }
     return true;
 }
 

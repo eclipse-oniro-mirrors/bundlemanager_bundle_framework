@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_CODE_SIGNATURE_PARAM_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_CODE_SIGNATURE_PARAM_H
 
+#include <memory>
+
 #include "message_parcel.h"
 
 namespace OHOS {
@@ -33,6 +35,8 @@ struct CodeSignatureParam : public Parcelable {
     std::string signatureFileDir;
     std::string appIdentifier;
     std::string pluginId;
+    uint32_t profileBlockLength = 0;
+    std::shared_ptr<unsigned char[]> profileBlock;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);
