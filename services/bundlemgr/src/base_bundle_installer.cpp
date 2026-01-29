@@ -4827,6 +4827,46 @@ void BaseBundleInstaller::RemoveOldExtensionDirs() const
     }
 }
 
+std::string BaseBundleInstaller::GetCloneInstallSource(
+    const std::string &originalInstallSource, const std::string &callingBundleName) const
+{
+    if (originalInstallSource == ServiceConstants::INSTALL_SOURCE_PREINSTALL ||
+        originalInstallSource == ServiceConstants::INSTALL_SOURCE_OTA ||
+        originalInstallSource == ServiceConstants::INSTALL_SOURCE_RECOVERY ||
+        originalInstallSource == INSTALL_SOURCE_UNKNOWN) {
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "clone install source: %{public}s -> %{public}s",
+            callingBundleName.c_str(), originalInstallSource.c_str());
+        return std::string(ServiceConstants::INSTALL_SOURCE_PREFIX) +
+            callingBundleName + "+" + originalInstallSource;
+    }
+
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "dataMgr is nullptr, return calling bundle name");
+        return callingBundleName;
+    }
+
+    // Verify original install source bundle is installed
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(originalInstallSource, innerBundleInfo)) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "original install source bundle not installed: %{public}s",
+            originalInstallSource.c_str());
+        return callingBundleName;
+    }
+
+    // Verify original install source bundle is a system app
+    if (!innerBundleInfo.IsSystemApp()) {
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "original install source bundle is not system app: %{public}s",
+            originalInstallSource.c_str());
+        return callingBundleName;
+    }
+
+    // Format: +installSource:callingBundleName+originalInstallSource
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "clone install source: %{public}s -> %{public}s",
+        callingBundleName.c_str(), originalInstallSource.c_str());
+    return std::string(ServiceConstants::INSTALL_SOURCE_PREFIX) + callingBundleName + "+" + originalInstallSource;
+}
+
 std::string BaseBundleInstaller::GetInstallSource(const InstallParam &installParam) const
 {
     if (installParam.isPreInstallApp) {
@@ -4852,6 +4892,12 @@ std::string BaseBundleInstaller::GetInstallSource(const InstallParam &installPar
         LOG_I(BMS_TAG_INSTALLER, "get bundle name failed return unknown");
         return INSTALL_SOURCE_UNKNOWN;
     }
+
+    auto item = installParam.parameters.find(ServiceConstants::BMS_PARA_ORIGINAL_INSTALL_SOURCE);
+    if (item != installParam.parameters.end() && !item->second.empty()) {
+        return GetCloneInstallSource(item->second, callingBundleName);
+    }
+
     return callingBundleName;
 }
 

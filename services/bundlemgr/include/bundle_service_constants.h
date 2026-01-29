@@ -58,6 +58,7 @@ const std::map<std::string, std::string> ABI_MAP = {
     {X86, "x86"},
     {X86_64, "x86_64"},
 };
+constexpr const char* INSTALL_SOURCE_PREFIX = "+installSource:";
 constexpr const char* CLONE_BUNDLE_PREFIX = "clone_";
 constexpr const char* UNINSTALL_TMP_PREFIX = "=uninstall_tmp_";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
@@ -301,6 +302,8 @@ constexpr const char* CLOUD_PROFILE_PATH = "resources/base/profile/cloudkit_conf
 constexpr const char* BMS_PARA_INSTALL_BUNDLE_NAME = "ohos.bms.param.installBundleName";
 // for install downgrade
 constexpr const char* BMS_PARA_INSTALL_ALLOW_DOWNGRADE = "ohos.bms.param.installAllowDowngrade";
+// for original install source
+constexpr const char* BMS_PARA_ORIGINAL_INSTALL_SOURCE = "ohos.bms.param.originalInstallSource";
 
 //plugin file path
 constexpr const char* PLUGIN_FILE_PATH = "+plugins";

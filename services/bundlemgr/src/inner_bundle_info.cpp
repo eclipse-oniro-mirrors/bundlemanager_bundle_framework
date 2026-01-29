@@ -2695,6 +2695,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     AdaptMainLauncherResourceInfo(appInfo);
 
     GetPreInstallApplicationFlags(appInfo);
+    AdaptInstallSource(appInfo);
 }
 
 ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, ApplicationInfo &appInfo,
@@ -2755,6 +2756,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     AdaptMainLauncherResourceInfo(appInfo);
 
     GetPreInstallApplicationFlags(appInfo);
+    AdaptInstallSource(appInfo);
     return ERR_OK;
 }
 
@@ -2777,6 +2779,24 @@ void InnerBundleInfo::GetPreInstallApplicationFlags(ApplicationInfo &appInfo) co
         }
         applicationFlags |= static_cast<uint32_t>(ApplicationInfoFlag::FLAG_PREINSTALLED_APP_UPDATE);
         appInfo.applicationFlags = static_cast<int32_t>(applicationFlags);
+    }
+}
+
+void InnerBundleInfo::AdaptInstallSource(ApplicationInfo &appInfo) const
+{
+    if (appInfo.installSource.empty()) {
+        return;
+    }
+
+    if (appInfo.installSource.find(ServiceConstants::INSTALL_SOURCE_PREFIX) == 0) {
+        // Format: +installSource:callingBundleName+originalInstallSource/pre-installed/ota/recovery/unknown
+        size_t lastPlusPos = appInfo.installSource.rfind('+');
+        if (lastPlusPos != std::string::npos &&
+            lastPlusPos > strlen(ServiceConstants::INSTALL_SOURCE_PREFIX)) {
+            APP_LOGD("installSource converted from %{public}s for bundleName: %{public}s",
+                appInfo.installSource.c_str(), appInfo.bundleName.c_str());
+            appInfo.installSource = appInfo.installSource.substr(lastPlusPos + 1);
+        }
     }
 }
 

@@ -795,6 +795,8 @@ private:
     void RemoveOldExtensionDirs() const;
     ErrCode InnerProcessUpdateHapToken(const bool isOldSystemApp);
     bool InitDataMgr();
+    std::string GetCloneInstallSource(const std::string &originalInstallSource,
+        const std::string &callingBundleName) const;
     std::string GetInstallSource(const InstallParam &installParam) const;
     void SetApplicationFlagsAndInstallSource(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
