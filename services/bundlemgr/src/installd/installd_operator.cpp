@@ -1629,8 +1629,11 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
             FILE_ENTRY_ONLY : FILE_ENTRY_ADD;
         if (codeSignatureParam.isEnterpriseBundle) {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
-                codeSignatureParam.modulePath, entryMap, fileType, codeSignFlag);
+            Security::CodeSign::ByteBuffer byteBuffer;
+            byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(codeSignatureParam.profileBlock.get()),
+                codeSignatureParam.profileBlockLength);
+            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
+                codeSignatureParam.modulePath, entryMap, fileType, byteBuffer, codeSignFlag);
         } else {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForApp(

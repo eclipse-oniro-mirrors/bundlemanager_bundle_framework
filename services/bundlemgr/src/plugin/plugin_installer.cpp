@@ -251,6 +251,7 @@ ErrCode PluginInstaller::ParseFiles(const std::vector<std::string> &pluginFilePa
 
     // check enterprise bundle
     /* At this place, hapVerifyResults cannot be empty and unnecessary to check it */
+    verifyRes_ = hapVerifyResults[0];
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyResults[0]);
     appIdentifier_ = (hapVerifyResults[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyResults[0].GetProvisionInfo().bundleInfo.appIdentifier;
@@ -423,6 +424,7 @@ ErrCode PluginInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bu
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
     codeSignatureParam.isCompressNativeLibrary = isCompressNativeLibs_;
+    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
     if (InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam) != ERR_OK) {
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
@@ -444,6 +446,7 @@ ErrCode PluginInstaller::VerifyCodeSignatureForHsp(const std::string &hspPath,
     codeSignatureParam.isPreInstalledBundle = false;
     codeSignatureParam.isPlugin = true;
     codeSignatureParam.pluginId = JoinPluginId();
+    bundleInstallChecker_->ProcessCodeSignatureParam(verifyRes_, codeSignatureParam);
     if (InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam) != ERR_OK) {
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
