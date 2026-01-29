@@ -7114,6 +7114,7 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
             }
         } else {
             LOG_NOFUNC_E(BMS_TAG_QUERY, "The InnerBundleInfo obtained by ExplicitQueryExtensionInfoV9 is null");
+        }
     }
     extensionInfo.appIndex = appIndex;
     return ERR_OK;
