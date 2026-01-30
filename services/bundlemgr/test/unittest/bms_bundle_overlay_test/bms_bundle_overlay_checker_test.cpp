@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -59,6 +59,7 @@ const int32_t FOUR = 4;
 const int32_t DEFAULT_OVERLAY_BUNDLE_INFO = 0;
 const int32_t WAIT_TIME = 2; // init mocked bms
 constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
+const int32_t TEST_ENUM_FIVE = 5;
 } // namespace
 
 class BmsBundleOverlayCheckerTest : public testing::Test {
@@ -3255,5 +3256,70 @@ HWTEST_F(BmsBundleOverlayCheckerTest, BaseBundleInstaller_0400, Function | Small
     oldInfo.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
     ret = installer->NeedDeleteOldNativeLib(newInfos, oldInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckOverlayInstallation_0100
+ * @tc.name: test CheckOverlayInstallation
+ * @tc.desc: 1.Test the CheckOverlayInstallation
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckOverlayInstallation_0100, Function | SmallTest | Level0)
+{
+    BundleOverlayInstallChecker checker;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    int32_t userId = NOT_EXIST_USERID;
+    int32_t overlayType = OverlayType::OVERLAY_EXTERNAL_BUNDLE;
+    auto ret = checker.CheckOverlayInstallation(newInfos, userId, overlayType);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetOverlayType(TEST_ENUM_FIVE);
+    newInfos.emplace(TEST_BUNDLE_NAME, innerBundleInfo);
+    ret = checker.CheckOverlayInstallation(newInfos, userId, overlayType);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckExternalBundle_0300
+ * @tc.name: test CheckExternalBundle
+ * @tc.desc: 1.Test the CheckExternalBundle
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckExternalBundle_0300, Function | SmallTest | Level0)
+{
+    BundleOverlayInstallChecker checker;
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.entryInstallationFree = false;
+    bundleInfo.isPreInstallApp = true;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = TEST_BUNDLE_NAME;
+    applicationInfo.targetPriority = DEFAULT_TARGET_PRIORITY_SECOND;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetCurrentModulePackage(TEST_BUNDLE_NAME);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.targetPriority = DEFAULT_TARGET_PRIORITY_SECOND;
+    innerBundleInfo.innerModuleInfos_.emplace(TEST_BUNDLE_NAME, innerModuleInfo);
+    int32_t userId = USERID;
+    auto ret = checker.CheckExternalBundle(innerBundleInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: CheckVersionCode_0100
+ * @tc.name: test CheckVersionCode
+ * @tc.desc: 1.Test the CheckVersionCode
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckVersionCode_0100, Function | SmallTest | Level0)
+{
+    BundleOverlayInstallChecker checker;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo newInfo;
+    newInfo.SetCurrentModulePackage(TEST_BUNDLE_NAME);
+    newInfos.emplace(TEST_BUNDLE_NAME, newInfo);
+    InnerBundleInfo info;
+    auto ret = checker.CheckVersionCode(newInfos, info);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS

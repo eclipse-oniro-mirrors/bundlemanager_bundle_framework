@@ -46,6 +46,7 @@
 #include "file_ex.h"
 #include "hmp_bundle_installer.h"
 #include "install_param.h"
+#include "installd/installd_load_callback.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
@@ -292,6 +293,36 @@ public:
 
 private:
     ErrCode ret_;
+};
+
+class MockRemoteObject : public IRemoteObject {
+public:
+    explicit MockRemoteObject(const std::u16string& descriptor = u"MockDescriptor") : IRemoteObject(descriptor) {}
+
+    int32_t GetObjectRefCount()
+    {
+        return ERR_OK;
+    }
+
+    int32_t SendRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
+    {
+        return ERR_OK;
+    }
+
+    bool AddDeathRecipient(const sptr<DeathRecipient>& recipient)
+    {
+        return ERR_OK;
+    }
+
+    bool RemoveDeathRecipient(const sptr<DeathRecipient>& recipient)
+    {
+        return ERR_OK;
+    }
+
+    int Dump(int fd, const std::vector<std::u16string>& args)
+    {
+        return ERR_OK;
+    }
 };
 class BmsBundleInstallerTest : public testing::Test {
 public:
@@ -15477,5 +15508,32 @@ HWTEST_F(BmsBundleInstallerTest, InstallExisted_0004, Function | SmallTest | Lev
     
     ErrCode ret = bundleMultiUserInstaller.InstallExistedApp(bundleName, userId);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: OnLoadSystemAbilitySuccess_0100
+ * @tc.name: test OnLoadSystemAbilitySuccess
+ * @tc.desc: test OnLoadSystemAbilitySuccess of InstalldLoadCallback
+ */
+HWTEST_F(BmsBundleInstallerTest, OnLoadSystemAbilitySuccess_0100, Function | SmallTest | Level0)
+{
+    InstalldLoadCallback callback;
+    sptr<IRemoteObject> remoteObject = nullptr;
+    EXPECT_NO_THROW(callback.OnLoadSystemAbilitySuccess(ZERO_CODE, remoteObject));
+    EXPECT_NO_THROW(callback.OnLoadSystemAbilitySuccess(INSTALLD_SERVICE_ID, remoteObject));
+    sptr<IRemoteObject> mockRemoteObject = new MockRemoteObject();
+    EXPECT_NO_THROW(callback.OnLoadSystemAbilitySuccess(INSTALLD_SERVICE_ID, mockRemoteObject));
+}
+
+/**
+ * @tc.number: OnLoadSystemAbilityFail_0100
+ * @tc.name: test OnLoadSystemAbilityFail
+ * @tc.desc: test OnLoadSystemAbilityFail of InstalldLoadCallback
+ */
+HWTEST_F(BmsBundleInstallerTest, OnLoadSystemAbilityFail_0100, Function | SmallTest | Level0)
+{
+    InstalldLoadCallback callback;
+    EXPECT_NO_THROW(callback.OnLoadSystemAbilityFail(ZERO_CODE));
+    EXPECT_NO_THROW(callback.OnLoadSystemAbilityFail(INSTALLD_SERVICE_ID));
 }
 } // OHOS

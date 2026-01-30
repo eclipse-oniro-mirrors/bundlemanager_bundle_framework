@@ -691,5 +691,9 @@ ErrCode InstalldClient::DeleteCertAndRemoveKey(const std::vector<std::string> &c
     }
     return CallService(&IInstalld::DeleteCertAndRemoveKey, certPaths);
 }
+
+void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject>& remoteObject) {}
+
+void InstalldClient::OnLoadSystemAbilityFail() {}
 }  // namespace AppExecFwk
 }  // namespace OHOS
