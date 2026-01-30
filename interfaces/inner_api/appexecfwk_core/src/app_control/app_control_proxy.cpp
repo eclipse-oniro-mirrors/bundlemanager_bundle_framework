@@ -643,6 +643,38 @@ ErrCode AppControlProxy::GetDisposedRules(
     return ERR_OK;
 }
 
+ErrCode AppControlProxy::GetDisposedRulesBySetter(
+    const std::string &bundleName, int32_t appIndex, int32_t userId,
+    std::vector<DisposedRuleConfiguration>& disposedRuleConfigurations)
+{
+    LOG_D(BMS_TAG_DEFAULT, "proxy begin to GetDisposedRulesBySetter");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!data.WriteString(bundleName)) {
+        LOG_E(BMS_TAG_DEFAULT, "write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_DEFAULT, "write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = GetVectorParcelInfo<DisposedRuleConfiguration>(
+        AppControlManagerInterfaceCode::GET_ALL_DISPOSED_RULES_BY_SETTER, data, disposedRuleConfigurations);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_DEFAULT, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlProxy::GetAbilityRunningControlRule(
     const std::string &bundleName, int32_t userId, std::vector<DisposedRule> &rules, int32_t appIndex)
 {

@@ -44,8 +44,9 @@ using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 using OHOS::AAFwk::Want;
-
-
+void SetSystemAppForTest(bool value);
+void SetVerifyCallingPermissionForTest(bool value);
+void ResetTestValues();
 namespace OHOS {
 namespace {
 const std::string INSTALL_PATH = "/data/test/resource/bms/app_control/bmsThirdBundle1.hap";
@@ -140,6 +141,12 @@ public:
     }
     virtual ErrCode GetDisposedRules(
         int32_t userId, std::vector<DisposedRuleConfiguration>& disposedRuleConfigurations)
+    {
+        return ERR_OK;
+    }
+    virtual ErrCode GetDisposedRulesBySetter(
+        const std::string &bundleName, int32_t appIndex, int32_t userId,
+        std::vector<DisposedRuleConfiguration>& disposedRuleConfigurations)
     {
         return ERR_OK;
     }
@@ -5529,5 +5536,36 @@ HWTEST_F(BmsBundleAppControlTest, HandleDeleteDisposedRules_0200, Function | Sma
     data.WriteInt32(USERID);
     auto res = appControlHost->HandleDeleteDisposedRules(data, reply);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_0100
+ * @tc.name: test GetDisposedRulesBySetter by AppControlProxy
+ * @tc.desc: 1.GetDisposedRulesBySetter test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetDisposedRulesBySetter_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    ErrCode ret = appControlProxy->GetDisposedRulesBySetter("1", 0, TEST_USERID, disposedRuleConfigurations);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetDisposedRulesBySetter_0200
+ * @tc.name: test GetDisposedRulesBySetter by AppControlManagerHostImpl
+ * @tc.desc: 1.GetDisposedRulesBySetter test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetDisposedRulesBySetter_0200, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    std::vector<DisposedRuleConfiguration> disposedRuleConfigurations;
+    auto ret = impl->GetDisposedRulesBySetter("1", 0, TEST_USERID, disposedRuleConfigurations);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(disposedRuleConfigurations.size(), 0);
 }
 } // OHOS

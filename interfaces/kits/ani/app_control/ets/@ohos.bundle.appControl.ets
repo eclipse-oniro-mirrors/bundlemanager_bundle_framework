@@ -137,6 +137,7 @@ export default namespace appControl {
   native function deleteDisposedStatusNative(appId: string, appIndex: int, isSync: boolean): void;
   native function getDisposedRuleNative(appId: string, appIndex: int): DisposedRule;
   native function getAllDisposedRulesNative(): Array<DisposedRuleConfiguration>;
+  native function getAllDisposedRulesBySetterNative(bundleName: string): Array<DisposedRuleConfiguration>;
   native function setDisposedRuleNative(appId: string, rule: DisposedRule, appIndex: int): void;
   native function setUninstallDisposedRuleNative(appIdentifier: string, rule: UninstallDisposedRule, appIndex: int): void;
   native function getUninstallDisposedRuleNative(appIdentifier: string, appIndex: int): UninstallDisposedRule;
@@ -276,5 +277,10 @@ export default namespace appControl {
   {
     let appIndexInfo = appIndex ?? 0;
     deleteUninstallDisposedRuleNative(appIdentifier, appIndexInfo);
+  }
+
+  function getDisposedRulesByBundle(bundleName: string): Array<DisposedRuleConfiguration>
+  {
+    return getAllDisposedRulesBySetterNative(bundleName);
   }
 }
