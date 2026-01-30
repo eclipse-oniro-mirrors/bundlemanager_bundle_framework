@@ -481,5 +481,19 @@ HWTEST_F(BmsAppControlHostTest, HandleGetDisposedRuleForCloneApp_0100, Function 
     ErrCode res = appControlHost.HandleGetDisposedRuleForCloneApp(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: HandleGetDisposedRulesBySetter_0100
+ * @tc.name: test HandleGetDisposedRulesBySetter with empty data
+ * @tc.desc: 1. test HandleGetDisposedRulesBySetter with empty MessageParcel
+ */
+HWTEST_F(BmsAppControlHostTest, HandleGetDisposedRulesBySetter_0100, Function | MediumTest | Level1)
+{
+    AppControlHost appControlHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = appControlHost.HandleGetDisposedRulesBySetter(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS

@@ -3663,6 +3663,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0088
     ErrCode res = impl->GetDisposedRulesBySetter("name", 1, userId, disposedRuleConfigurations);
     EXPECT_EQ(res, ERR_OK);
     ResetCallingUid();
+    ResetTestValues();
 }
 
 /**
