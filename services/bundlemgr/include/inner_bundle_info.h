@@ -820,19 +820,25 @@ public:
 
     int32_t GetUid(int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const
     {
-        InnerBundleUserInfo innerBundleUserInfo;
-        if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        const InnerBundleUserInfo *innerBundleUserInfoPtr = nullptr;
+        if (!GetInnerBundleUserInfo(userId, innerBundleUserInfoPtr)) {
             return Constants::INVALID_UID;
         }
+
+        if (!innerBundleUserInfoPtr) {
+            APP_LOGE_NOFUNC("The InnerBundleInfo obtained by GetUid is null");
+            return Constants::INVALID_UID;
+        }
+        
         if (appIndex != 0) {
-            auto iter = innerBundleUserInfo.cloneInfos.find(std::to_string(appIndex));
-            if (iter != innerBundleUserInfo.cloneInfos.end()) {
+            auto iter = innerBundleUserInfoPtr->cloneInfos.find(std::to_string(appIndex));
+            if (iter != innerBundleUserInfoPtr->cloneInfos.end()) {
                 return iter->second.uid;
             }
             return Constants::INVALID_UID;
         }
 
-        return innerBundleUserInfo.uid;
+        return innerBundleUserInfoPtr->uid;
     }
     /**
      * @brief Get application gid.
@@ -1410,6 +1416,13 @@ public:
      * @return Return whether the user information is obtained successfully.
      */
     bool GetInnerBundleUserInfo(int32_t userId, InnerBundleUserInfo& userInfo) const;
+    /**
+     * @brief Set userId to add userinfo.
+     * @param userId Indicates the userInfo to set.
+     * @param userInfoPtr Indicates the userInfo to get.
+     * @return Return whether the user information is obtained successfully.
+     */
+    bool GetInnerBundleUserInfo(int32_t userId, const InnerBundleUserInfo *&userInfoPtr) const;
     /**
      * @brief  Check whether the user exists.
      * @param userId Indicates the userInfo to set.
